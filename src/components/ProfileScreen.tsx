@@ -3,15 +3,16 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, Trophy, Calendar, Settings, HelpCircle, LogOut } from 'lucide-react';
+import { User, Trophy, Calendar, Settings, HelpCircle, LogOut, Award, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ProfileScreenProps {
   onNavigateToSettings?: () => void;
   onNavigateToHelp?: () => void;
+  onNavigateToAchievements?: () => void;
 }
 
-const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreenProps) => {
+const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAchievements }: ProfileScreenProps) => {
   const { user, logout } = useAuth();
 
   // Usar dados reais do usuário em vez de mock
@@ -34,6 +35,14 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreen
       onNavigateToHelp();
     } else {
       console.log('Navegando para ajuda...');
+    }
+  };
+
+  const handleAchievements = () => {
+    if (onNavigateToAchievements) {
+      onNavigateToAchievements();
+    } else {
+      console.log('Navegando para conquistas...');
     }
   };
 
@@ -113,8 +122,17 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreen
 
       {/* Conquistas Recentes */}
       <Card className="mb-6">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Conquistas Recentes</CardTitle>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleAchievements}
+            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+          >
+            Ver Todas
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -136,6 +154,17 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreen
                 </div>
               </div>
             )}
+            <button
+              onClick={handleAchievements}
+              className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg hover:from-purple-100 hover:to-blue-100 transition-colors"
+            >
+              <Award className="w-8 h-8 text-purple-600" />
+              <div className="text-left">
+                <p className="font-medium text-gray-900">Explorar Conquistas</p>
+                <p className="text-sm text-gray-600">Descubra todos os troféus disponíveis</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400 ml-auto" />
+            </button>
           </div>
         </CardContent>
       </Card>

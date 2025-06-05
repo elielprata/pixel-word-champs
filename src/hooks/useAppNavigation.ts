@@ -8,6 +8,7 @@ export interface NavigationState {
   challengeRankingId: number | null;
   showSettings: boolean;
   showHelp: boolean;
+  showAchievements: boolean;
 }
 
 export const useAppNavigation = () => {
@@ -18,6 +19,7 @@ export const useAppNavigation = () => {
     challengeRankingId: null,
     showSettings: false,
     showHelp: false,
+    showAchievements: false,
   });
 
   const setActiveTab = (tab: string) => {
@@ -72,6 +74,14 @@ export const useAppNavigation = () => {
     setNavigationState(prev => ({ ...prev, showHelp: false }));
   };
 
+  const handleNavigateToAchievements = () => {
+    setNavigationState(prev => ({ ...prev, showAchievements: true }));
+  };
+
+  const handleBackFromAchievements = () => {
+    setNavigationState(prev => ({ ...prev, showAchievements: false }));
+  };
+
   return {
     navigationState,
     setActiveTab,
@@ -85,5 +95,7 @@ export const useAppNavigation = () => {
     handleBackFromSettings,
     handleNavigateToHelp,
     handleBackFromHelp,
+    handleNavigateToAchievements,
+    handleBackFromAchievements,
   };
 };

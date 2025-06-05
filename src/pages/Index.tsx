@@ -10,6 +10,7 @@ import FullRankingScreen from '@/components/FullRankingScreen';
 import ChallengeRankingScreen from '@/components/ChallengeRankingScreen';
 import SettingsScreen from '@/components/SettingsScreen';
 import HelpSupportScreen from '@/components/HelpSupportScreen';
+import AchievementsScreen from '@/components/AchievementsScreen';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
 
 const Index = () => {
@@ -26,6 +27,8 @@ const Index = () => {
     handleBackFromSettings,
     handleNavigateToHelp,
     handleBackFromHelp,
+    handleNavigateToAchievements,
+    handleBackFromAchievements,
   } = useAppNavigation();
 
   const {
@@ -34,7 +37,8 @@ const Index = () => {
     showFullRanking,
     challengeRankingId,
     showSettings,
-    showHelp
+    showHelp,
+    showAchievements
   } = navigationState;
 
   if (activeChallenge) {
@@ -73,6 +77,12 @@ const Index = () => {
     );
   }
 
+  if (showAchievements) {
+    return (
+      <AchievementsScreen onBack={handleBackFromAchievements} />
+    );
+  }
+
   const renderScreen = () => {
     switch (activeTab) {
       case 'home':
@@ -92,6 +102,7 @@ const Index = () => {
           <ProfileScreen 
             onNavigateToSettings={handleNavigateToSettings}
             onNavigateToHelp={handleNavigateToHelp}
+            onNavigateToAchievements={handleNavigateToAchievements}
           />
         );
       default:
