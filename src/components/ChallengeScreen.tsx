@@ -274,7 +274,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
             <div 
               key={player.position} 
               className={`flex items-center justify-between p-2 rounded-lg ${
-                player.isCurrentUser ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'
+                player.isUser ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -285,7 +285,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
                 }`}>
                   {player.position}
                 </div>
-                <span className={`font-medium ${player.isCurrentUser ? 'text-purple-800' : 'text-gray-800'}`}>
+                <span className={`font-medium ${player.isUser ? 'text-purple-800' : 'text-gray-800'}`}>
                   {player.playerName}
                 </span>
               </div>
