@@ -17,8 +17,8 @@ interface FullRankingScreenProps {
 }
 
 const FullRankingScreen = ({ onBack }: FullRankingScreenProps) => {
-  const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-  const [displayLimit, setDisplayLimit] = useState(8);
+  const [activeTab, setActiveTab] = useState<'daily' | 'weekly'>('daily');
+  const [displayLimit, setDisplayLimit] = useState(50);
 
   const dailyRanking: Player[] = [
     { id: 1, name: "João Silva", score: 2540, position: 1, level: 15, gamesPlayed: 12 },
@@ -61,28 +61,10 @@ const FullRankingScreen = ({ onBack }: FullRankingScreenProps) => {
     }))
   ];
 
-  const monthlyRanking: Player[] = [
-    { id: 1, name: "Ana Oliveira", score: 68420, position: 1, level: 25, gamesPlayed: 180 },
-    { id: 2, name: "João Silva", score: 65890, position: 2, level: 24, gamesPlayed: 175 },
-    { id: 3, name: "Maria Santos", score: 63210, position: 3, level: 23, gamesPlayed: 172 },
-    { id: 4, name: "Pedro Costa", score: 61450, position: 4, level: 22, gamesPlayed: 168 },
-    { id: 5, name: "Carlos Lima", score: 59800, position: 5, level: 21, gamesPlayed: 165 },
-    // Add more mock data
-    ...Array.from({ length: 95 }, (_, i) => ({
-      id: i + 6,
-      name: `Jogador ${i + 6}`,
-      score: 59750 - (i * 200),
-      position: i + 6,
-      level: Math.max(1, 21 - Math.floor(i / 5)),
-      gamesPlayed: Math.max(1, 165 - i)
-    }))
-  ];
-
   const getCurrentRanking = () => {
     switch (activeTab) {
       case 'daily': return dailyRanking;
       case 'weekly': return weeklyRanking;
-      case 'monthly': return monthlyRanking;
       default: return dailyRanking;
     }
   };
@@ -93,9 +75,9 @@ const FullRankingScreen = ({ onBack }: FullRankingScreenProps) => {
     setDisplayLimit(newLimit);
   };
 
-  const handleTabChange = (tab: 'daily' | 'weekly' | 'monthly') => {
+  const handleTabChange = (tab: 'daily' | 'weekly') => {
     setActiveTab(tab);
-    setDisplayLimit(8); // Reset to initial display limit when changing tabs
+    setDisplayLimit(50); // Reset to initial display limit when changing tabs
   };
 
   const getPositionIcon = (position: number) => {
@@ -142,8 +124,7 @@ const FullRankingScreen = ({ onBack }: FullRankingScreenProps) => {
       <div className="flex bg-white rounded-lg p-1 mb-6 shadow-sm">
         {[
           { key: 'daily', label: 'Diário' },
-          { key: 'weekly', label: 'Semanal' },
-          { key: 'monthly', label: 'Mensal' }
+          { key: 'weekly', label: 'Semanal' }
         ].map((tab) => (
           <button
             key={tab.key}
@@ -217,7 +198,7 @@ const FullRankingScreen = ({ onBack }: FullRankingScreenProps) => {
       )}
 
       {/* End of list message */}
-      {!hasMorePlayers && displayLimit > 8 && (
+      {!hasMorePlayers && displayLimit > 50 && (
         <div className="mt-6 text-center">
           <p className="text-gray-500 text-sm">
             Fim da lista • {currentRanking.length} jogadores no total
