@@ -39,9 +39,35 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
     { id: '3', username: 'player789', position: 3, pixKey: '(11) 99999-9999', holderName: 'Pedro Costa', consolidatedDate: '2024-01-17', prize: 250, paymentStatus: 'pending' },
     { id: '4', username: 'winner001', position: 4, pixKey: '987.654.321-00', holderName: 'Ana Lima', consolidatedDate: '2024-01-14', prize: 100, paymentStatus: 'paid' },
     { id: '5', username: 'champion2024', position: 5, pixKey: 'ana@email.com', holderName: 'Carlos Pereira', consolidatedDate: '2024-01-18', prize: 100, paymentStatus: 'pending' },
+    { id: '6', username: 'player2024', position: 8, pixKey: 'player@email.com', holderName: 'Luis Santos', consolidatedDate: '2024-01-19', prize: 50, paymentStatus: 'pending' },
+    { id: '7', username: 'gamer2024', position: 15, pixKey: 'gamer@email.com', holderName: 'Ana Costa', consolidatedDate: '2024-01-20', prize: 25, paymentStatus: 'pending' },
   ];
 
-  const [winners, setWinners] = useState<Winner[]>(mockWinners);
+  // Função para determinar as posições válidas para cada nível de premiação
+  const getValidPositions = (level: string): number[] => {
+    switch (level) {
+      case '1º Lugar':
+        return [1];
+      case 'Top 3':
+        return [1, 2, 3];
+      case 'Top 5':
+        return [1, 2, 3, 4, 5];
+      case 'Top 10':
+        return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      case 'Top 20':
+        return Array.from({ length: 20 }, (_, i) => i + 1);
+      default:
+        return [];
+    }
+  };
+
+  // Filtrar ganhadores baseado no nível de premiação
+  const getWinnersForPrizeLevel = (winners: Winner[], level: string): Winner[] => {
+    const validPositions = getValidPositions(level);
+    return winners.filter(winner => validPositions.includes(winner.position));
+  };
+
+  const [winners, setWinners] = useState<Winner[]>(() => getWinnersForPrizeLevel(mockWinners, prizeLevel));
 
   const handleFilter = () => {
     if (!startDate || !endDate) {
@@ -309,7 +335,7 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
                   {displayWinners.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center text-gray-500 py-4 text-xs">
-                        {isFiltered ? 'Nenhum ganhador no período.' : 'Nenhum ganhador encontrado.'}
+                        {isFiltered ? 'Nenhum ganhador no período.' : `Nenhum ganhador encontrado para ${prizeLevel}.`}
                       </TableCell>
                     </TableRow>
                   ) : (
