@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Clock, Lightbulb, RotateCcw } from 'lucide-react';
@@ -103,7 +104,17 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const cellSize = Math.min(280 / size, 45);
+  // Ajustar tamanho das células baseado no tamanho do tabuleiro
+  const getCellSize = (boardSize: number) => {
+    if (boardSize <= 5) return 45;
+    if (boardSize <= 6) return 38;
+    if (boardSize <= 7) return 33;
+    if (boardSize <= 8) return 29;
+    if (boardSize <= 9) return 26;
+    return 23; // Para 10x10 ou maior
+  };
+
+  const cellSize = getCellSize(size);
 
   return (
     <div className="flex flex-col items-center p-4 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
@@ -127,10 +138,12 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
       {/* Game Board */}
       <div 
         ref={boardRef}
-        className="grid gap-1 p-4 bg-white rounded-2xl shadow-lg mb-4"
+        className="grid p-4 bg-white rounded-2xl shadow-lg mb-4"
         style={{ 
           gridTemplateColumns: `repeat(${size}, 1fr)`,
-          maxWidth: '320px'
+          gap: size > 7 ? '2px' : '4px',
+          maxWidth: size > 7 ? '350px' : '320px',
+          width: '100%'
         }}
         onTouchEnd={handleCellEnd}
         onMouseUp={handleCellEnd}
@@ -140,7 +153,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
             <div
               key={`${rowIndex}-${colIndex}`}
               className={`
-                flex items-center justify-center font-bold text-lg cursor-pointer
+                flex items-center justify-center font-bold cursor-pointer
                 transition-all duration-200 rounded-lg border-2
                 ${isCellSelected(rowIndex, colIndex) 
                   ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white border-purple-300 shadow-lg scale-110' 
@@ -150,7 +163,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
               style={{ 
                 width: `${cellSize}px`, 
                 height: `${cellSize}px`,
-                fontSize: `${Math.max(cellSize * 0.4, 12)}px`
+                fontSize: `${Math.max(cellSize * 0.35, 10)}px`
               }}
               onTouchStart={() => handleCellStart(rowIndex, colIndex)}
               onTouchMove={(e) => {
