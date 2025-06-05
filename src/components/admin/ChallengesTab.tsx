@@ -56,13 +56,13 @@ export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabPr
         <CardContent>
           <div className="space-y-4">
             {challenges.map(challenge => (
-              <div key={challenge.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-semibold">{challenge.title}</h3>
-                  <div className="flex gap-4 text-sm text-gray-600">
-                    <span>{challenge.players} jogadores</span>
-                  </div>
+              <div key={challenge.id} className="flex flex-col items-center p-4 border rounded-lg space-y-3">
+                {/* Nome do desafio acima */}
+                <div className="w-full text-center">
+                  <h3 className="font-semibold text-lg">{challenge.title}</h3>
                 </div>
+                
+                {/* Botões no meio */}
                 <div className="flex items-center gap-2">
                   <Badge variant={
                     challenge.status === 'Ativo' ? 'default' :
@@ -92,6 +92,11 @@ export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabPr
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
+                </div>
+                
+                {/* Número de jogadores abaixo */}
+                <div className="w-full text-center">
+                  <span className="text-sm text-gray-600">{challenge.players} jogadores</span>
                 </div>
               </div>
             ))}
