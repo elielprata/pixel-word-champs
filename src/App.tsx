@@ -20,6 +20,8 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
+  console.log('AuthState:', { isAuthenticated, isLoading });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

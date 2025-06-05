@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { useAuthProvider, AuthContext } from '@/hooks/useAuth';
 
 interface AuthProviderProps {

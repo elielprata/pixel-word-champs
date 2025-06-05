@@ -14,7 +14,7 @@ interface AuthContextType {
   error: string | undefined;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -32,21 +32,32 @@ export const useAuthProvider = () => {
 
   // Verificar estado inicial de autenticação
   useEffect(() => {
+    console.log('Iniciando verificação de autenticação...');
+    
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Sessão encontrada:', !!session);
         
         if (session?.user) {
           const response = await authService.getCurrentUser();
+          console.log('Response do getCurrentUser:', response);
+          
           if (response.success) {
             setUser(response.data);
             setIsAuthenticated(true);
+            console.log('Usuário autenticado:', response.data.username);
+          } else {
+            console.log('Erro ao obter usuário:', response.error);
           }
+        } else {
+          console.log('Nenhuma sessão encontrada');
         }
       } catch (err) {
         console.error('Erro ao verificar autenticação:', err);
       } finally {
         setIsLoading(false);
+        console.log('Verificação de autenticação concluída');
       }
     };
 
@@ -55,15 +66,19 @@ export const useAuthProvider = () => {
     // Escutar mudanças na autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, !!session);
+        
         if (event === 'SIGNED_IN' && session?.user) {
           const response = await authService.getCurrentUser();
           if (response.success) {
             setUser(response.data);
             setIsAuthenticated(true);
+            console.log('Login realizado:', response.data.username);
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setIsAuthenticated(false);
+          console.log('Logout realizado');
         }
         setIsLoading(false);
       }
@@ -135,5 +150,3 @@ export const useAuthProvider = () => {
     error,
   };
 };
-
-export { AuthContext };
