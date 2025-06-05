@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { User, LoginForm, RegisterForm, ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { mapUserFromProfile } from '@/utils/userMapper';
+import { validateEmail, validatePassword, sanitizeInput } from '@/utils/validation';
 
 export interface AuthResponse {
   user: User;
@@ -13,13 +14,21 @@ export interface AuthResponse {
 class AuthService {
   async login(credentials: LoginForm): Promise<ApiResponse<AuthResponse>> {
     try {
-      // Validar inputs básicos
+      // Validações básicas
       if (!credentials.email || !credentials.password) {
         throw new Error('Email e senha são obrigatórios');
       }
 
+      // Validação de email
+      if (!validateEmail(credentials.email)) {
+        throw new Error('Email inválido');
+      }
+
+      // Sanitização de inputs
+      const sanitizedEmail = sanitizeInput(credentials.email);
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
+        email: sanitizedEmail,
         password: credentials.password
       });
 
@@ -28,7 +37,7 @@ class AuthService {
         throw new Error('Erro no login: dados incompletos');
       }
 
-      // Buscar perfil do usuário com timeout
+      // Buscar perfil com timeout mais curto e fallback mais rápido
       const profilePromise = supabase
         .from('profiles')
         .select('*')
@@ -36,7 +45,7 @@ class AuthService {
         .single();
 
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout ao buscar perfil')), 5000)
+        setTimeout(() => reject(new Error('Timeout ao buscar perfil')), 2000)
       );
 
       let profile = null;
@@ -47,12 +56,12 @@ class AuthService {
         ]) as any;
 
         if (profileError && profileError.code !== 'PGRST116') {
-          console.error('Erro ao buscar perfil:', profileError);
+          console.warn('Erro ao buscar perfil, usando fallback:', profileError);
         } else {
           profile = profileData;
         }
       } catch (timeoutError) {
-        console.warn('Timeout ao buscar perfil, continuando sem profile completo');
+        console.warn('Timeout ao buscar perfil, usando dados básicos da auth');
       }
 
       const user = mapUserFromProfile(profile, data.user);
@@ -74,16 +83,31 @@ class AuthService {
         throw new Error('Todos os campos são obrigatórios');
       }
 
+      // Validação de email
+      if (!validateEmail(userData.email)) {
+        throw new Error('Email inválido');
+      }
+
+      // Validação de senha
+      const passwordError = validatePassword(userData.password);
+      if (passwordError) {
+        throw new Error(passwordError);
+      }
+
       if (userData.password !== userData.confirmPassword) {
         throw new Error('Senhas não coincidem');
       }
 
+      // Sanitização de inputs
+      const sanitizedEmail = sanitizeInput(userData.email);
+      const sanitizedUsername = sanitizeInput(userData.username);
+
       const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
+        email: sanitizedEmail,
         password: userData.password,
         options: {
           data: {
-            username: userData.username
+            username: sanitizedUsername
           }
         }
       });
@@ -95,8 +119,8 @@ class AuthService {
 
       const user: User = {
         id: data.user.id,
-        username: userData.username,
-        email: userData.email,
+        username: sanitizedUsername,
+        email: sanitizedEmail,
         created_at: data.user.created_at || new Date().toISOString(),
         updated_at: data.user.updated_at || new Date().toISOString(),
         total_score: 0,
@@ -124,12 +148,27 @@ class AuthService {
       if (error) throw error;
       if (!user) throw new Error('Usuário não encontrado');
 
-      // Buscar perfil completo
-      const { data: profile } = await supabase
+      // Buscar perfil com timeout mais curto
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 2000)
+      );
+
+      let profile = null;
+      try {
+        const { data: profileData } = await Promise.race([
+          profilePromise,
+          timeoutPromise
+        ]) as any;
+        profile = profileData;
+      } catch {
+        console.warn('Timeout ao buscar perfil completo, usando dados básicos');
+      }
 
       const userData = mapUserFromProfile(profile, user);
       return createSuccessResponse(userData);

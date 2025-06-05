@@ -5,8 +5,8 @@ import { createFallbackUser as createFallback } from './userMapper';
 
 export const createFallbackUser = createFallback;
 
-// Tornar timeout configurável
-const DEFAULT_TIMEOUT_MS = 5000;
+// Timeout reduzido para 3 segundos
+const DEFAULT_TIMEOUT_MS = 3000;
 
 export const createTimeoutPromise = (timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<ApiResponse<User>> => {
   return new Promise((_, reject) => {

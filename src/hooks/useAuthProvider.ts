@@ -13,21 +13,30 @@ export const useAuthProvider = (): AuthContextType => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
 
+  // Controle de race conditions melhorado
+  let isProcessing = false;
+  let isMounted = true;
+
   const processAuthentication = async (session: any) => {
+    if (isProcessing || !isMounted) return;
+    isProcessing = true;
+
     if (!session?.user) {
       console.log('Nenhuma sessão encontrada');
       setIsAuthenticated(false);
       setUser(null);
       setIsLoading(false);
+      isProcessing = false;
       return;
     }
 
     console.log('Sessão encontrada para:', session.user.email);
     
     try {
-      console.log('Tentando getCurrentUser com timeout...');
+      console.log('Tentando getCurrentUser com timeout reduzido...');
       
-      const timeoutPromise = createTimeoutPromise(5000);
+      // Reduzir timeout para 3 segundos e usar fallback mais rápido
+      const timeoutPromise = createTimeoutPromise(3000);
       const getUserPromise = authService.getCurrentUser();
       
       const response = await Promise.race([getUserPromise, timeoutPromise]) as ApiResponse<User>;
@@ -39,40 +48,22 @@ export const useAuthProvider = (): AuthContextType => {
         setIsAuthenticated(true);
         setError(undefined);
       } else {
-        console.log('getCurrentUser falhou, verificando integridade da sessão');
-        // Verificar se a sessão ainda é válida antes de usar fallback
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (currentSession?.user?.id === session.user.id) {
-          console.log('Sessão válida, usando fallback');
-          const fallbackUser = createFallbackUser(session);
-          setUser(fallbackUser);
-          setIsAuthenticated(true);
-          setError(undefined);
-        } else {
-          console.log('Sessão inválida, rejeitando autenticação');
-          setIsAuthenticated(false);
-          setUser(null);
-          setError('Sessão expirada');
-        }
+        console.log('getCurrentUser falhou, usando fallback direto');
+        const fallbackUser = createFallbackUser(session);
+        setUser(fallbackUser);
+        setIsAuthenticated(true);
+        setError(undefined);
       }
     } catch (error) {
-      console.error('Erro ou timeout na getCurrentUser:', error);
-      // Verificar integridade da sessão antes de fallback
+      console.log('Timeout ou erro - usando fallback direto:', error);
+      // Em caso de timeout, usar fallback imediatamente
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (currentSession?.user?.id === session.user.id) {
-          console.log('Usando dados básicos da sessão após erro...');
-          const fallbackUser = createFallbackUser(session);
-          setUser(fallbackUser);
-          setIsAuthenticated(true);
-          setError(undefined);
-        } else {
-          setIsAuthenticated(false);
-          setUser(null);
-          setError('Erro de autenticação');
-        }
-      } catch (sessionError) {
-        console.error('Erro ao verificar sessão:', sessionError);
+        const fallbackUser = createFallbackUser(session);
+        setUser(fallbackUser);
+        setIsAuthenticated(true);
+        setError(undefined);
+      } catch (fallbackError) {
+        console.error('Erro ao criar fallback user:', fallbackError);
         setIsAuthenticated(false);
         setUser(null);
         setError('Erro de autenticação');
@@ -80,6 +71,7 @@ export const useAuthProvider = (): AuthContextType => {
     } finally {
       console.log('Finalizando processamento - definindo isLoading = false');
       setIsLoading(false);
+      isProcessing = false;
     }
   };
 
@@ -126,7 +118,7 @@ export const useAuthProvider = (): AuthContextType => {
           setError(undefined);
           setIsLoading(false);
         } else if (event === 'TOKEN_REFRESHED' && session) {
-          console.log('Token refreshed, atualizando usuário');
+          console.log('Token refreshed, mantendo usuário atual se for o mesmo');
           if (user?.id === session.user.id) {
             // Manter dados existentes se for o mesmo usuário
             setIsAuthenticated(true);
@@ -137,7 +129,10 @@ export const useAuthProvider = (): AuthContextType => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (credentials: LoginForm) => {
