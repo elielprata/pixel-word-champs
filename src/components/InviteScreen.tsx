@@ -23,21 +23,29 @@ const InviteScreen = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const shareInvite = () => {
-    // Tentar usar Web Share API primeiro (para dispositivos móveis)
-    if (navigator.share && navigator.canShare) {
+  const shareInvite = async () => {
+    // Verificar se Web Share API está disponível E se os dados são válidos para compartilhamento
+    if (navigator.share) {
+      const shareData = {
+        title: 'Letra Arena - Caça Palavras',
+        text: shareText,
+        url: inviteLink,
+      };
+      
+      // Verificar se os dados podem ser compartilhados
+      if (navigator.canShare && !navigator.canShare(shareData)) {
+        setShowShareModal(true);
+        return;
+      }
+      
       try {
-        navigator.share({
-          title: 'Letra Arena - Caça Palavras',
-          text: shareText,
-          url: inviteLink,
-        });
+        await navigator.share(shareData);
       } catch (error) {
-        // Se falhar, mostrar modal de compartilhamento
+        console.log('Web Share API falhou, usando modal:', error);
         setShowShareModal(true);
       }
     } else {
-      // Para desktop ou dispositivos sem suporte, mostrar modal
+      // Web Share API não disponível, usar modal
       setShowShareModal(true);
     }
   };
