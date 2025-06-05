@@ -30,11 +30,28 @@ const RegisterForm = () => {
       return;
     }
 
+    if (data.password.length < 6) {
+      form.setError('password', {
+        type: 'manual',
+        message: 'A senha deve ter pelo menos 6 caracteres'
+      });
+      return;
+    }
+
     try {
       await register(data);
     } catch (err) {
       console.error('Erro no registro:', err);
     }
+  };
+
+  // Função para preencher dados de teste
+  const handleTestRegister = () => {
+    const randomNum = Math.floor(Math.random() * 1000);
+    form.setValue('username', `usuario${randomNum}`);
+    form.setValue('email', `teste${randomNum}@exemplo.com`);
+    form.setValue('password', '123456');
+    form.setValue('confirmPassword', '123456');
   };
 
   return (
@@ -43,6 +60,7 @@ const RegisterForm = () => {
         <FormField
           control={form.control}
           name="username"
+          rules={{ required: 'Nome de usuário é obrigatório' }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nome de usuário</FormLabel>
@@ -60,6 +78,13 @@ const RegisterForm = () => {
         <FormField
           control={form.control}
           name="email"
+          rules={{ 
+            required: 'Email é obrigatório',
+            pattern: {
+              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+              message: 'Email inválido'
+            }
+          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
@@ -78,6 +103,13 @@ const RegisterForm = () => {
         <FormField
           control={form.control}
           name="password"
+          rules={{ 
+            required: 'Senha é obrigatória',
+            minLength: {
+              value: 6,
+              message: 'A senha deve ter pelo menos 6 caracteres'
+            }
+          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Senha</FormLabel>
@@ -96,6 +128,7 @@ const RegisterForm = () => {
         <FormField
           control={form.control}
           name="confirmPassword"
+          rules={{ required: 'Confirmação de senha é obrigatória' }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Confirmar senha</FormLabel>
@@ -127,6 +160,17 @@ const RegisterForm = () => {
             </FormItem>
           )}
         />
+
+        <div className="flex items-center justify-center">
+          <Button
+            type="button"
+            variant="link"
+            className="px-0 font-normal text-sm"
+            onClick={handleTestRegister}
+          >
+            Preencher dados de teste
+          </Button>
+        </div>
 
         {error && (
           <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">

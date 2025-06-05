@@ -3,7 +3,6 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAuth } from '@/hooks/useAuth';
 import { LoginForm as LoginFormType } from '@/types';
@@ -25,6 +24,12 @@ const LoginForm = () => {
     } catch (err) {
       console.error('Erro no login:', err);
     }
+  };
+
+  // Função para fazer login de teste
+  const handleTestLogin = () => {
+    form.setValue('email', 'teste@exemplo.com');
+    form.setValue('password', '123456');
   };
 
   return (
@@ -71,8 +76,9 @@ const LoginForm = () => {
             type="button"
             variant="link"
             className="px-0 font-normal"
+            onClick={handleTestLogin}
           >
-            Esqueci minha senha
+            Usar credenciais de teste
           </Button>
         </div>
 

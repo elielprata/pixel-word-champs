@@ -2,11 +2,10 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const SocialLogin = () => {
   const { toast } = useToast();
-  const { login } = useAuth();
 
   const handleGoogleLogin = async () => {
     try {
@@ -15,29 +14,20 @@ const SocialLogin = () => {
         description: "Redirecionando para autenticação...",
       });
       
-      // Simulação de login bem-sucedido (remover quando integrar com Supabase)
-      setTimeout(async () => {
-        try {
-          await login({
-            email: 'usuario@google.com',
-            password: 'mock_password'
-          });
-          toast({
-            title: "Login realizado com sucesso!",
-            description: "Bem-vindo ao Letra Arena",
-          });
-        } catch (error) {
-          toast({
-            title: "Erro no login",
-            description: "Não foi possível fazer login com Google",
-            variant: "destructive",
-          });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
         }
-      }, 1500);
+      });
+
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Falha ao conectar com Google",
+        description: "Falha ao conectar com Google. Use email e senha por enquanto.",
         variant: "destructive",
       });
     }
@@ -50,29 +40,20 @@ const SocialLogin = () => {
         description: "Redirecionando para autenticação...",
       });
       
-      // Simulação de login bem-sucedido (remover quando integrar com Supabase)
-      setTimeout(async () => {
-        try {
-          await login({
-            email: 'usuario@facebook.com',
-            password: 'mock_password'
-          });
-          toast({
-            title: "Login realizado com sucesso!",
-            description: "Bem-vindo ao Letra Arena",
-          });
-        } catch (error) {
-          toast({
-            title: "Erro no login",
-            description: "Não foi possível fazer login com Facebook",
-            variant: "destructive",
-          });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: {
+          redirectTo: `${window.location.origin}/`
         }
-      }, 1500);
+      });
+
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Falha ao conectar com Facebook",
+        description: "Falha ao conectar com Facebook. Use email e senha por enquanto.",
         variant: "destructive",
       });
     }
@@ -85,29 +66,20 @@ const SocialLogin = () => {
         description: "Redirecionando para autenticação...",
       });
       
-      // Simulação de login bem-sucedido (remover quando integrar com Supabase)
-      setTimeout(async () => {
-        try {
-          await login({
-            email: 'usuario@apple.com',
-            password: 'mock_password'
-          });
-          toast({
-            title: "Login realizado com sucesso!",
-            description: "Bem-vindo ao Letra Arena",
-          });
-        } catch (error) {
-          toast({
-            title: "Erro no login",
-            description: "Não foi possível fazer login com Apple",
-            variant: "destructive",
-          });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/`
         }
-      }, 1500);
+      });
+
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Falha ao conectar com Apple",
+        description: "Falha ao conectar com Apple. Use email e senha por enquanto.",
         variant: "destructive",
       });
     }
