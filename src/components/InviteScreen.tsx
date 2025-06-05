@@ -23,13 +23,19 @@ const InviteScreen = () => {
     });
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (navigator.share) {
-      navigator.share({
-        title: 'Letra Arena',
-        text: shareText,
-        url: shareUrl,
-      });
+      try {
+        await navigator.share({
+          title: 'Letra Arena',
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        // Se falhar na API nativa, mostrar modal como fallback
+        console.log('Native share failed, showing modal:', error);
+        setShowShareModal(true);
+      }
     } else {
       setShowShareModal(true);
     }
