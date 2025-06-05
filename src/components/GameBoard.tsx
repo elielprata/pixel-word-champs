@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Clock, Lightbulb, RotateCcw } from 'lucide-react';
 
@@ -26,21 +25,29 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
     return 10; // padrão para níveis além de 20
   };
 
-  const size = getBoardSize(level);
-  const [board] = useState(() => {
-    // Gerar letras aleatórias para demonstração
+  const generateBoard = (size: number) => {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     return Array(size).fill(null).map(() => 
       Array(size).fill(null).map(() => 
         letters[Math.floor(Math.random() * letters.length)]
       )
     );
-  });
+  };
 
+  const size = getBoardSize(level);
+  const [board, setBoard] = useState(() => generateBoard(size));
   const [selectedCells, setSelectedCells] = useState<Position[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const boardRef = useRef<HTMLDivElement>(null);
+
+  // Regenera o tabuleiro quando o nível muda
+  useEffect(() => {
+    const newSize = getBoardSize(level);
+    setBoard(generateBoard(newSize));
+    setSelectedCells([]);
+    setFoundWords([]);
+  }, [level]);
 
   const getPointsForWord = (word: string) => {
     const length = word.length;
