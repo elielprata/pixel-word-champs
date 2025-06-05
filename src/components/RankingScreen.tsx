@@ -25,8 +25,12 @@ interface CompetitionHistory {
   paymentDate?: string;
 }
 
-const RankingScreen = () => {
-  const [activeTab, setActiveTab] = useState('daily');
+interface RankingScreenProps {
+  challengeId?: number | null;
+}
+
+const RankingScreen = ({ challengeId }: RankingScreenProps) => {
+  const [activeTab, setActiveTab] = useState(challengeId ? 'challenge' : 'daily');
   const [shareModalData, setShareModalData] = useState<any>(null);
 
   const dailyRanking: Player[] = [
@@ -53,6 +57,14 @@ const RankingScreen = () => {
     { id: 8, name: "Fernanda Rocha", score: 13280, position: 8 },
     { id: 9, name: "Marcos Souza", score: 13050, position: 9 },
     { id: 10, name: "Patricia Dias", score: 12820, position: 10 },
+  ];
+
+  const challengeRanking: Player[] = [
+    { id: 1, name: "Pedro Costa", score: 890, position: 1 },
+    { id: 2, name: "Ana Oliveira", score: 875, position: 2 },
+    { id: 3, name: "João Silva", score: 860, position: 3 },
+    { id: 4, name: "Maria Santos", score: 840, position: 4 },
+    { id: 5, name: "Carlos Mendes", score: 820, position: 5 },
   ];
 
   const competitionHistory: CompetitionHistory[] = [
@@ -107,6 +119,15 @@ const RankingScreen = () => {
       paymentDate: '2023-12-19'
     }
   ];
+
+  const getChallengeTitle = (id: number) => {
+    const titles: { [key: number]: string } = {
+      1: "Desafio Matinal",
+      2: "Animais Selvagens", 
+      3: "Cidades do Brasil"
+    };
+    return titles[id] || `Desafio ${id}`;
+  };
 
   const getRankIcon = (position: number) => {
     switch (position) {
@@ -246,101 +267,143 @@ const RankingScreen = () => {
     <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
       {/* Header */}
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-purple-800 mb-2">Rankings</h1>
-        <p className="text-gray-600">Compete com jogadores do mundo todo</p>
+        <h1 className="text-2xl font-bold text-purple-800 mb-2">
+          {challengeId ? `Ranking - ${getChallengeTitle(challengeId)}` : 'Rankings'}
+        </h1>
+        <p className="text-gray-600">
+          {challengeId ? 'Veja sua posição neste desafio' : 'Compete com jogadores do mundo todo'}
+        </p>
       </div>
 
       {/* Prize Pool Card */}
-      <Card className="mb-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
-        <CardContent className="p-4 text-center">
-          <Trophy className="w-8 h-8 mx-auto mb-2" />
-          <div className="text-lg font-bold">Prêmio Semanal</div>
-          <div className="text-2xl font-bold">R$ 500,00</div>
-          <div className="text-sm opacity-80">Para os Top 3 da semana</div>
-        </CardContent>
-      </Card>
+      {!challengeId && (
+        <Card className="mb-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
+          <CardContent className="p-4 text-center">
+            <Trophy className="w-8 h-8 mx-auto mb-2" />
+            <div className="text-lg font-bold">Prêmio Semanal</div>
+            <div className="text-2xl font-bold">R$ 500,00</div>
+            <div className="text-sm opacity-80">Para os Top 3 da semana</div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="daily">Diário</TabsTrigger>
-          <TabsTrigger value="weekly">Semanal</TabsTrigger>
-          <TabsTrigger value="history">Histórico</TabsTrigger>
+        <TabsList className={`grid w-full ${challengeId ? 'grid-cols-1' : 'grid-cols-3'} mb-6`}>
+          {challengeId ? (
+            <TabsTrigger value="challenge">Ranking do Desafio</TabsTrigger>
+          ) : (
+            <>
+              <TabsTrigger value="daily">Diário</TabsTrigger>
+              <TabsTrigger value="weekly">Semanal</TabsTrigger>
+              <TabsTrigger value="history">Histórico</TabsTrigger>
+            </>
+          )}
         </TabsList>
 
-        <TabsContent value="daily" className="space-y-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-500" />
-                Ranking Diário
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {dailyRanking.slice(0, 10).map((player) => (
-                <PlayerRow key={player.id} player={player} />
-              ))}
-              
-              {/* Current user position if not in top 10 */}
-              <div className="border-t pt-3 mt-4">
-                <PlayerRow 
-                  player={{ id: 999, name: "Você", score: 1850, position: 42 }}
-                  isCurrentUser={true}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="weekly" className="space-y-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-purple-500" />
-                Ranking Semanal
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {weeklyRanking.slice(0, 10).map((player) => (
-                <PlayerRow key={player.id} player={player} />
-              ))}
-              
-              {/* Current user position if not in top 10 */}
-              <div className="border-t pt-3 mt-4">
-                <PlayerRow 
-                  player={{ id: 999, name: "Você", score: 8950, position: 38 }}
-                  isCurrentUser={true}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="history" className="space-y-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <History className="w-5 h-5 text-purple-500" />
-                Histórico de Competições
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {competitionHistory.map((competition) => (
-                  <CompetitionHistoryCard key={competition.id} competition={competition} />
+        {challengeId && (
+          <TabsContent value="challenge" className="space-y-3">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-purple-500" />
+                  {getChallengeTitle(challengeId)}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {challengeRanking.map((player) => (
+                  <PlayerRow key={player.id} player={player} />
                 ))}
-              </div>
-              
-              {competitionHistory.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhuma competição encontrada</p>
-                  <p className="text-sm">Participe das competições semanais para ver seu histórico aqui</p>
+                
+                {/* Current user position if not in top 10 */}
+                <div className="border-t pt-3 mt-4">
+                  <PlayerRow 
+                    player={{ id: 999, name: "Você", score: 720, position: 15 }}
+                    isCurrentUser={true}
+                  />
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        {!challengeId && (
+          <>
+            <TabsContent value="daily" className="space-y-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-yellow-500" />
+                    Ranking Diário
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {dailyRanking.slice(0, 10).map((player) => (
+                    <PlayerRow key={player.id} player={player} />
+                  ))}
+                  
+                  {/* Current user position if not in top 10 */}
+                  <div className="border-t pt-3 mt-4">
+                    <PlayerRow 
+                      player={{ id: 999, name: "Você", score: 1850, position: 42 }}
+                      isCurrentUser={true}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="weekly" className="space-y-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-purple-500" />
+                    Ranking Semanal
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {weeklyRanking.slice(0, 10).map((player) => (
+                    <PlayerRow key={player.id} player={player} />
+                  ))}
+                  
+                  {/* Current user position if not in top 10 */}
+                  <div className="border-t pt-3 mt-4">
+                    <PlayerRow 
+                      player={{ id: 999, name: "Você", score: 8950, position: 38 }}
+                      isCurrentUser={true}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="history" className="space-y-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <History className="w-5 h-5 text-purple-500" />
+                    Histórico de Competições
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {competitionHistory.map((competition) => (
+                      <CompetitionHistoryCard key={competition.id} competition={competition} />
+                    ))}
+                  </div>
+                  
+                  {competitionHistory.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>Nenhuma competição encontrada</p>
+                      <p className="text-sm">Participe das competições semanais para ver seu histórico aqui</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </>
+        )}
       </Tabs>
 
       {/* Modal de compartilhamento */}

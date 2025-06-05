@@ -12,6 +12,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [activeChallenge, setActiveChallenge] = useState<number | null>(null);
   const [showFullRanking, setShowFullRanking] = useState(false);
+  const [challengeRanking, setChallengeRanking] = useState<number | null>(null);
 
   const handleStartChallenge = (challengeId: number) => {
     setActiveChallenge(challengeId);
@@ -19,6 +20,7 @@ const Index = () => {
 
   const handleBackToHome = () => {
     setActiveChallenge(null);
+    setChallengeRanking(null);
     setActiveTab('home');
   };
 
@@ -28,6 +30,11 @@ const Index = () => {
 
   const handleBackFromFullRanking = () => {
     setShowFullRanking(false);
+  };
+
+  const handleViewChallengeRanking = (challengeId: number) => {
+    setChallengeRanking(challengeId);
+    setActiveTab('ranking');
   };
 
   if (activeChallenge) {
@@ -48,15 +55,27 @@ const Index = () => {
   const renderScreen = () => {
     switch (activeTab) {
       case 'home':
-        return <HomeScreen onStartChallenge={handleStartChallenge} onViewFullRanking={handleViewFullRanking} />;
+        return (
+          <HomeScreen 
+            onStartChallenge={handleStartChallenge} 
+            onViewFullRanking={handleViewFullRanking}
+            onViewChallengeRanking={handleViewChallengeRanking}
+          />
+        );
       case 'ranking':
-        return <RankingScreen />;
+        return <RankingScreen challengeId={challengeRanking} />;
       case 'invite':
         return <InviteScreen />;
       case 'profile':
         return <ProfileScreen />;
       default:
-        return <HomeScreen onStartChallenge={handleStartChallenge} onViewFullRanking={handleViewFullRanking} />;
+        return (
+          <HomeScreen 
+            onStartChallenge={handleStartChallenge} 
+            onViewFullRanking={handleViewFullRanking}
+            onViewChallengeRanking={handleViewChallengeRanking}
+          />
+        );
     }
   };
 
