@@ -66,88 +66,88 @@ export const PaymentsTab = () => {
   const totalPrize = prizeConfigs.reduce((total, config) => total + (config.winners * config.prize), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Sistema de Premiação</h2>
+        <h2 className="text-xl font-bold">Sistema de Premiação</h2>
         <div className="text-right">
-          <p className="text-sm text-gray-600">Total de Premiação</p>
-          <p className="text-2xl font-bold text-green-600">R$ {totalPrize.toLocaleString('pt-BR')}</p>
+          <p className="text-xs text-gray-600">Total de Premiação</p>
+          <p className="text-lg font-bold text-green-600">R$ {totalPrize.toLocaleString('pt-BR')}</p>
         </div>
       </div>
       
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <DollarSign className="h-4 w-4" />
             Configuração de Premiação por Colocação
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-3 font-semibold">Colocação</th>
-                  <th className="text-left p-3 font-semibold">Ganhadores</th>
-                  <th className="text-left p-3 font-semibold">Premiação Individual</th>
-                  <th className="text-left p-3 font-semibold">Total da Colocação</th>
-                  <th className="text-left p-3 font-semibold">Ações</th>
+                  <th className="text-left p-2 font-semibold text-xs">Colocação</th>
+                  <th className="text-left p-2 font-semibold text-xs">Ganhadores</th>
+                  <th className="text-left p-2 font-semibold text-xs">Premiação Individual</th>
+                  <th className="text-left p-2 font-semibold text-xs">Total da Colocação</th>
+                  <th className="text-left p-2 font-semibold text-xs">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {prizeConfigs.map((config) => (
                   <tr key={config.position} className="border-b hover:bg-gray-50">
-                    <td className="p-3 font-medium">{config.position}º lugar</td>
-                    <td className="p-3">
+                    <td className="p-2 font-medium text-sm">{config.position}º lugar</td>
+                    <td className="p-2 text-sm">
                       {editingRow === config.position ? (
                         <Input
                           type="number"
                           min="1"
                           value={editValues.winners}
                           onChange={(e) => setEditValues(prev => ({ ...prev, winners: parseInt(e.target.value) || 0 }))}
-                          className="w-20"
+                          className="w-16 h-7 text-xs"
                         />
                       ) : (
                         `${config.winners} ${config.winners === 1 ? 'ganhador' : 'ganhadores'}`
                       )}
                     </td>
-                    <td className="p-3">
+                    <td className="p-2 text-sm">
                       {editingRow === config.position ? (
                         <div className="flex items-center gap-1">
-                          <span>R$</span>
+                          <span className="text-xs">R$</span>
                           <Input
                             type="number"
                             min="0"
                             step="0.01"
                             value={editValues.prize}
                             onChange={(e) => setEditValues(prev => ({ ...prev, prize: parseFloat(e.target.value) || 0 }))}
-                            className="w-24"
+                            className="w-20 h-7 text-xs"
                           />
                         </div>
                       ) : (
                         `R$ ${config.prize.toLocaleString('pt-BR')}`
                       )}
                     </td>
-                    <td className="p-3 font-semibold text-green-600">
+                    <td className="p-2 font-semibold text-green-600 text-sm">
                       R$ {(config.winners * config.prize).toLocaleString('pt-BR')}
                     </td>
-                    <td className="p-3">
+                    <td className="p-2">
                       {editingRow === config.position ? (
                         <div className="flex gap-1">
                           <Button 
                             size="sm" 
                             onClick={() => handleSave(config.position)}
-                            className="h-8 w-8 p-0"
+                            className="h-6 w-6 p-0"
                           >
-                            <Save className="h-4 w-4" />
+                            <Save className="h-3 w-3" />
                           </Button>
                           <Button 
                             size="sm" 
                             variant="outline"
                             onClick={handleCancel}
-                            className="h-8 w-8 p-0"
+                            className="h-6 w-6 p-0"
                           >
-                            <X className="h-4 w-4" />
+                            <X className="h-3 w-3" />
                           </Button>
                         </div>
                       ) : (
@@ -155,9 +155,9 @@ export const PaymentsTab = () => {
                           size="sm" 
                           variant="outline"
                           onClick={() => handleEdit(config.position)}
-                          className="h-8 w-8 p-0"
+                          className="h-6 w-6 p-0"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3 w-3" />
                         </Button>
                       )}
                     </td>
@@ -170,26 +170,26 @@ export const PaymentsTab = () => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Resumo da Premiação</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Resumo da Premiação</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-gray-600">Total de Ganhadores</p>
-              <p className="text-2xl font-bold text-blue-600">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <p className="text-xs text-gray-600">Total de Ganhadores</p>
+              <p className="text-lg font-bold text-blue-600">
                 {prizeConfigs.reduce((total, config) => total + config.winners, 0)}
               </p>
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <p className="text-sm text-gray-600">Valor Total de Prêmios</p>
-              <p className="text-2xl font-bold text-green-600">
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <p className="text-xs text-gray-600">Valor Total de Prêmios</p>
+              <p className="text-lg font-bold text-green-600">
                 R$ {totalPrize.toLocaleString('pt-BR')}
               </p>
             </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <p className="text-sm text-gray-600">Maior Prêmio Individual</p>
-              <p className="text-2xl font-bold text-purple-600">
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <p className="text-xs text-gray-600">Maior Prêmio Individual</p>
+              <p className="text-lg font-bold text-purple-600">
                 R$ {Math.max(...prizeConfigs.map(c => c.prize)).toLocaleString('pt-BR')}
               </p>
             </div>
