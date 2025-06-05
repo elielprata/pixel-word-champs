@@ -1,6 +1,6 @@
 
 import config from '@/config/environment';
-import { ApiResponse, ApiError } from '@/types';
+import { ApiResponse } from '@/types';
 
 // Configuração base do cliente HTTP
 class ApiClient {
