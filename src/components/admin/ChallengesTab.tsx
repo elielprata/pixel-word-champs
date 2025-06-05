@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash2 } from 'lucide-react';
+import { Eye, Trash2, Edit } from 'lucide-react';
 import { ChallengeModal } from './ChallengeModal';
 
 interface Challenge {
@@ -11,7 +11,6 @@ interface Challenge {
   title: string;
   status: string;
   players: number;
-  avgScore: number;
 }
 
 interface ChallengesTabProps {
@@ -38,6 +37,11 @@ export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabPr
     // Implementar navegação para detalhes do desafio
   };
 
+  const handleEditChallenge = (challengeId: number) => {
+    console.log(`Editando desafio ${challengeId}`);
+    // Implementar edição do desafio
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -57,7 +61,6 @@ export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabPr
                   <h3 className="font-semibold">{challenge.title}</h3>
                   <div className="flex gap-4 text-sm text-gray-600">
                     <span>{challenge.players} jogadores</span>
-                    <span>Média: {challenge.avgScore} pts</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -73,6 +76,13 @@ export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabPr
                     onClick={() => handleViewChallenge(challenge.id)}
                   >
                     <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleEditChallenge(challenge.id)}
+                  >
+                    <Edit className="h-4 w-4" />
                   </Button>
                   <Button 
                     size="sm" 

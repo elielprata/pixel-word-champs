@@ -21,9 +21,9 @@ const AdminPanel = () => {
   };
 
   const mockChallenges = [
-    { id: 1, title: "Desafio Matinal", status: "Ativo", players: 450, avgScore: 280 },
-    { id: 2, title: "Animais Selvagens", status: "Agendado", players: 0, avgScore: 0 },
-    { id: 3, title: "Cidades do Brasil", status: "Finalizado", players: 320, avgScore: 315 }
+    { id: 1, title: "Desafio Matinal", status: "Ativo", players: 450 },
+    { id: 2, title: "Animais Selvagens", status: "Agendado", players: 0 },
+    { id: 3, title: "Cidades do Brasil", status: "Finalizado", players: 320 }
   ];
 
   const mockFraudAlerts = [

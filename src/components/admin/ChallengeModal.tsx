@@ -13,7 +13,6 @@ interface Challenge {
   title: string;
   status: string;
   players: number;
-  avgScore: number;
 }
 
 interface ChallengeModalProps {
@@ -36,8 +35,7 @@ export const ChallengeModal = ({ onAddChallenge }: ChallengeModalProps) => {
     const newChallenge = {
       title: formData.title,
       status: formData.status,
-      players: 0,
-      avgScore: 0
+      players: 0
     };
 
     onAddChallenge(newChallenge);
