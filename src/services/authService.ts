@@ -11,23 +11,16 @@ export interface AuthResponse {
 class AuthService {
   async login(credentials: LoginForm): Promise<ApiResponse<AuthResponse>> {
     try {
-      console.log('Tentando login com email:', credentials.email);
-      
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email.trim(),
+        email: credentials.email,
         password: credentials.password
       });
 
-      if (error) {
-        console.error('Erro no login:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (!data.user || !data.session) {
         throw new Error('Erro no login: dados incompletos');
       }
-
-      console.log('Login bem-sucedido:', data.user.email);
 
       // Buscar perfil do usuário
       const { data: profile, error: profileError } = await supabase
@@ -62,54 +55,31 @@ class AuthService {
         }
       };
     } catch (error: any) {
-      console.error('Erro detalhado no login:', error);
-      
-      let errorMessage = 'Erro no login';
-      
-      if (error.message?.includes('Invalid login credentials')) {
-        errorMessage = 'Email ou senha incorretos';
-      } else if (error.message?.includes('Email not confirmed')) {
-        errorMessage = 'Por favor, confirme seu email antes de fazer login';
-      } else if (error.message?.includes('Too many requests')) {
-        errorMessage = 'Muitas tentativas de login. Tente novamente em alguns minutos';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
       return {
         success: false,
-        error: errorMessage
+        error: error.message || 'Erro no login'
       };
     }
   }
 
   async register(userData: RegisterForm): Promise<ApiResponse<AuthResponse>> {
     try {
-      console.log('Tentando registro com email:', userData.email);
-      
       const { data, error } = await supabase.auth.signUp({
-        email: userData.email.trim(),
+        email: userData.email,
         password: userData.password,
         options: {
           data: {
             username: userData.username
-          },
-          emailRedirectTo: `${window.location.origin}/`
+          }
         }
       });
 
-      if (error) {
-        console.error('Erro no registro:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (!data.user) {
         throw new Error('Erro no registro: usuário não criado');
       }
 
-      console.log('Registro bem-sucedido:', data.user.email);
-
-      // O perfil é criado automaticamente pelo trigger
       const user: User = {
         id: data.user.id,
         username: userData.username,
@@ -129,33 +99,15 @@ class AuthService {
         }
       };
     } catch (error: any) {
-      console.error('Erro detalhado no registro:', error);
-      
-      let errorMessage = 'Erro no registro';
-      
-      if (error.message?.includes('User already registered')) {
-        errorMessage = 'Este email já está cadastrado';
-      } else if (error.message?.includes('Password should be at least 6 characters')) {
-        errorMessage = 'A senha deve ter pelo menos 6 caracteres';
-      } else if (error.message?.includes('Invalid email')) {
-        errorMessage = 'Email inválido';
-      } else if (error.message?.includes('Email address is invalid')) {
-        errorMessage = 'Endereço de email inválido';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
       return {
         success: false,
-        error: errorMessage
+        error: error.message || 'Erro no registro'
       };
     }
   }
 
   async logout(): Promise<void> {
-    console.log('Fazendo logout...');
     await supabase.auth.signOut();
-    console.log('Logout realizado');
   }
 
   async getCurrentUser(): Promise<ApiResponse<User>> {

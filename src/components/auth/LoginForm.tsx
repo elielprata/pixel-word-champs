@@ -26,12 +26,6 @@ const LoginForm = () => {
     }
   };
 
-  // Função para fazer login de teste
-  const handleTestLogin = () => {
-    form.setValue('email', 'teste@exemplo.com');
-    form.setValue('password', '123456');
-  };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -85,26 +79,9 @@ const LoginForm = () => {
           )}
         />
 
-        <div className="flex items-center justify-between">
-          <Button
-            type="button"
-            variant="link"
-            className="px-0 font-normal"
-            onClick={handleTestLogin}
-          >
-            Usar credenciais de teste
-          </Button>
-        </div>
-
         {error && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
-            <p className="font-medium">Erro no login</p>
-            <p className="text-xs mt-1">
-              {error.includes('Invalid login credentials') 
-                ? 'Email ou senha incorretos. Verifique suas credenciais e tente novamente.'
-                : error
-              }
-            </p>
+          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+            {error}
           </div>
         )}
 

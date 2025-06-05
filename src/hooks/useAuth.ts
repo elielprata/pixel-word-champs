@@ -55,10 +55,7 @@ export const useAuthProvider = () => {
     // Escutar mudanças na autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
-        
         if (event === 'SIGNED_IN' && session?.user) {
-          setError(undefined);
           const response = await authService.getCurrentUser();
           if (response.success) {
             setUser(response.data);
@@ -67,7 +64,6 @@ export const useAuthProvider = () => {
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setIsAuthenticated(false);
-          setError(undefined);
         }
         setIsLoading(false);
       }
@@ -85,24 +81,12 @@ export const useAuthProvider = () => {
       if (response.success && response.data) {
         setUser(response.data.user);
         setIsAuthenticated(true);
-        setError(undefined);
       } else {
-        let errorMessage = response.error || 'Erro no login';
-        
-        // Melhorar mensagens de erro específicas
-        if (errorMessage.includes('Invalid login credentials')) {
-          errorMessage = 'Email ou senha incorretos';
-        } else if (errorMessage.includes('Email not confirmed')) {
-          errorMessage = 'Por favor, confirme seu email antes de fazer login';
-        } else if (errorMessage.includes('Too many requests')) {
-          errorMessage = 'Muitas tentativas de login. Tente novamente em alguns minutos';
-        }
-        
-        setError(errorMessage);
+        setError(response.error || 'Erro no login');
       }
     } catch (err) {
       console.error('Erro no login:', err);
-      setError('Erro inesperado no login. Tente novamente');
+      setError('Erro inesperado no login');
     } finally {
       setIsLoading(false);
     }
@@ -117,24 +101,12 @@ export const useAuthProvider = () => {
       if (response.success && response.data) {
         setUser(response.data.user);
         setIsAuthenticated(true);
-        setError(undefined);
       } else {
-        let errorMessage = response.error || 'Erro no registro';
-        
-        // Melhorar mensagens de erro específicas
-        if (errorMessage.includes('User already registered')) {
-          errorMessage = 'Este email já está cadastrado';
-        } else if (errorMessage.includes('Password should be at least 6 characters')) {
-          errorMessage = 'A senha deve ter pelo menos 6 caracteres';
-        } else if (errorMessage.includes('Invalid email')) {
-          errorMessage = 'Email inválido';
-        }
-        
-        setError(errorMessage);
+        setError(response.error || 'Erro no registro');
       }
     } catch (err) {
       console.error('Erro no registro:', err);
-      setError('Erro inesperado no registro. Tente novamente');
+      setError('Erro inesperado no registro');
     } finally {
       setIsLoading(false);
     }
@@ -146,7 +118,6 @@ export const useAuthProvider = () => {
       await authService.logout();
       setUser(null);
       setIsAuthenticated(false);
-      setError(undefined);
     } catch (err) {
       console.error('Erro no logout:', err);
     } finally {
