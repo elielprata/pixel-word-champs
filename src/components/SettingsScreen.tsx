@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Bell, Globe, Volume2, Shield, User, Smartphone } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
+import LanguageSelectionScreen from './LanguageSelectionScreen';
+import ChangeUsernameScreen from './ChangeUsernameScreen';
+import DeleteAccountScreen from './DeleteAccountScreen';
+import PrivacyPolicyScreen from './PrivacyPolicyScreen';
+import TermsOfServiceScreen from './TermsOfServiceScreen';
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -13,6 +18,27 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const [notifications, setNotifications] = useState(true);
   const [sounds, setSounds] = useState(true);
   const [vibration, setVibration] = useState(true);
+  const [currentScreen, setCurrentScreen] = useState<'settings' | 'language' | 'username' | 'delete' | 'privacy' | 'terms'>('settings');
+
+  if (currentScreen === 'language') {
+    return <LanguageSelectionScreen onBack={() => setCurrentScreen('settings')} />;
+  }
+
+  if (currentScreen === 'username') {
+    return <ChangeUsernameScreen onBack={() => setCurrentScreen('settings')} />;
+  }
+
+  if (currentScreen === 'delete') {
+    return <DeleteAccountScreen onBack={() => setCurrentScreen('settings')} />;
+  }
+
+  if (currentScreen === 'privacy') {
+    return <PrivacyPolicyScreen onBack={() => setCurrentScreen('settings')} />;
+  }
+
+  if (currentScreen === 'terms') {
+    return <TermsOfServiceScreen onBack={() => setCurrentScreen('settings')} />;
+  }
 
   return (
     <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
@@ -83,7 +109,9 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
               <p className="font-medium">Português (Brasil)</p>
               <p className="text-sm text-gray-600">Idioma do aplicativo</p>
             </div>
-            <Button variant="outline" size="sm">Alterar</Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentScreen('language')}>
+              Alterar
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -97,10 +125,18 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button variant="outline" className="w-full justify-start">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={() => setCurrentScreen('username')}
+          >
             Alterar nome de usuário
           </Button>
-          <Button variant="outline" className="w-full justify-start">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={() => setCurrentScreen('delete')}
+          >
             Excluir conta
           </Button>
         </CardContent>
@@ -115,10 +151,18 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button variant="outline" className="w-full justify-start">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={() => setCurrentScreen('privacy')}
+          >
             Política de Privacidade
           </Button>
-          <Button variant="outline" className="w-full justify-start">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={() => setCurrentScreen('terms')}
+          >
             Termos de Uso
           </Button>
         </CardContent>
