@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Trash2, Edit } from 'lucide-react';
 import { ChallengeModal } from './ChallengeModal';
+import { useToast } from "@/components/ui/use-toast";
 
 interface Challenge {
   id: number;
@@ -19,6 +20,7 @@ interface ChallengesTabProps {
 
 export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabProps) => {
   const [challenges, setChallenges] = useState(initialChallenges);
+  const { toast } = useToast();
 
   const handleAddChallenge = (newChallengeData: Omit<Challenge, 'id'>) => {
     const newChallenge = {
@@ -26,20 +28,38 @@ export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabPr
       id: Math.max(...challenges.map(c => c.id), 0) + 1
     };
     setChallenges(prev => [newChallenge, ...prev]);
+    toast({
+      title: "Desafio criado",
+      description: `${newChallenge.title} foi criado com sucesso.`,
+    });
   };
 
   const handleDeleteChallenge = (challengeId: number) => {
+    const challenge = challenges.find(c => c.id === challengeId);
     setChallenges(prev => prev.filter(challenge => challenge.id !== challengeId));
+    toast({
+      title: "Desafio excluído",
+      description: `${challenge?.title} foi excluído com sucesso.`,
+      variant: "destructive",
+    });
   };
 
   const handleViewChallenge = (challengeId: number) => {
-    console.log(`Visualizando desafio ${challengeId}`);
-    // Implementar navegação para detalhes do desafio
+    const challenge = challenges.find(c => c.id === challengeId);
+    toast({
+      title: "Visualizando desafio",
+      description: `Abrindo detalhes de ${challenge?.title}`,
+    });
+    console.log(`Visualizando desafio ${challengeId}`, challenge);
   };
 
   const handleEditChallenge = (challengeId: number) => {
-    console.log(`Editando desafio ${challengeId}`);
-    // Implementar edição do desafio
+    const challenge = challenges.find(c => c.id === challengeId);
+    toast({
+      title: "Editando desafio",
+      description: `Abrindo editor para ${challenge?.title}`,
+    });
+    console.log(`Editando desafio ${challengeId}`, challenge);
   };
 
   return (
