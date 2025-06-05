@@ -6,10 +6,12 @@ import RankingScreen from '@/components/RankingScreen';
 import InviteScreen from '@/components/InviteScreen';
 import ProfileScreen from '@/components/ProfileScreen';
 import ChallengeScreen from '@/components/ChallengeScreen';
+import FullRankingScreen from '@/components/FullRankingScreen';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [activeChallenge, setActiveChallenge] = useState<number | null>(null);
+  const [showFullRanking, setShowFullRanking] = useState(false);
 
   const handleStartChallenge = (challengeId: number) => {
     setActiveChallenge(challengeId);
@@ -18,6 +20,14 @@ const Index = () => {
   const handleBackToHome = () => {
     setActiveChallenge(null);
     setActiveTab('home');
+  };
+
+  const handleViewFullRanking = () => {
+    setShowFullRanking(true);
+  };
+
+  const handleBackFromFullRanking = () => {
+    setShowFullRanking(false);
   };
 
   if (activeChallenge) {
@@ -29,10 +39,16 @@ const Index = () => {
     );
   }
 
+  if (showFullRanking) {
+    return (
+      <FullRankingScreen onBack={handleBackFromFullRanking} />
+    );
+  }
+
   const renderScreen = () => {
     switch (activeTab) {
       case 'home':
-        return <HomeScreen onStartChallenge={handleStartChallenge} />;
+        return <HomeScreen onStartChallenge={handleStartChallenge} onViewFullRanking={handleViewFullRanking} />;
       case 'ranking':
         return <RankingScreen />;
       case 'invite':
@@ -40,7 +56,7 @@ const Index = () => {
       case 'profile':
         return <ProfileScreen />;
       default:
-        return <HomeScreen onStartChallenge={handleStartChallenge} />;
+        return <HomeScreen onStartChallenge={handleStartChallenge} onViewFullRanking={handleViewFullRanking} />;
     }
   };
 
