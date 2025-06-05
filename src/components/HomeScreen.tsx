@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Play, Star, Clock, Users } from 'lucide-react';
+import { Play, Star, Clock, Users, Trophy } from 'lucide-react';
 
 interface Challenge {
   id: number;
@@ -107,8 +107,18 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
                   <CardTitle className="text-lg mb-1">{challenge.title}</CardTitle>
                   <p className="text-sm text-gray-600">{challenge.description}</p>
                 </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(challenge.difficulty)}`}>
-                  {getDifficultyText(challenge.difficulty)}
+                <div className="flex items-center gap-2">
+                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(challenge.difficulty)}`}>
+                    {getDifficultyText(challenge.difficulty)}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-8 w-8"
+                    onClick={() => {/* Navigate to challenge ranking */}}
+                  >
+                    <Trophy className="w-4 h-4 text-yellow-600" />
+                  </Button>
                 </div>
               </div>
             </CardHeader>
