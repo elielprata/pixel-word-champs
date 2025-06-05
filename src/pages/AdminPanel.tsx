@@ -50,13 +50,13 @@ const AdminPanel = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="challenges">Desafios</TabsTrigger>
-          <TabsTrigger value="rankings">Rankings</TabsTrigger>
-          <TabsTrigger value="payments">Premiação</TabsTrigger>
-          <TabsTrigger value="security">Segurança</TabsTrigger>
-          <TabsTrigger value="metrics">Métricas</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-1 h-auto p-1">
+          <TabsTrigger value="dashboard" className="text-xs lg:text-sm">Dashboard</TabsTrigger>
+          <TabsTrigger value="challenges" className="text-xs lg:text-sm">Desafios</TabsTrigger>
+          <TabsTrigger value="rankings" className="text-xs lg:text-sm">Rankings</TabsTrigger>
+          <TabsTrigger value="payments" className="text-xs lg:text-sm">Premiação</TabsTrigger>
+          <TabsTrigger value="security" className="text-xs lg:text-sm">Segurança</TabsTrigger>
+          <TabsTrigger value="metrics" className="text-xs lg:text-sm">Métricas</TabsTrigger>
         </TabsList>
 
         {/* Dashboard */}
