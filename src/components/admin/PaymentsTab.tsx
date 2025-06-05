@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { DollarSign, Edit, Save, X, Download } from 'lucide-react';
+import { DollarSign, Edit, Save, X, Download, Users } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { PixExportModal } from "./PixExportModal";
 
@@ -40,6 +40,14 @@ export const PaymentsTab = () => {
     { id: 'group2', name: '11º ao 50º', range: '11-50', totalWinners: 40, prizePerWinner: 50, active: true },
     { id: 'group3', name: '51º ao 100º', range: '51-100', totalWinners: 50, prizePerWinner: 25, active: false }
   ]);
+
+  // Mock data para ganhadores no período consolidado
+  const [consolidatedWinners] = useState({
+    individual: 3, // 3 primeiros colocados no período
+    group1: 5,     // 5 ganhadores do 4º ao 10º no período
+    group2: 28,    // 28 ganhadores do 11º ao 50º no período
+    group3: 35     // 35 ganhadores do 51º ao 100º no período
+  });
 
   const [editIndividualValue, setEditIndividualValue] = useState<number>(0);
   const [editGroupPrize, setEditGroupPrize] = useState<number>(0);
@@ -145,10 +153,18 @@ export const PaymentsTab = () => {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <DollarSign className="h-4 w-4" />
-              Premiação Individual (1º ao 3º)
-            </CardTitle>
+            <div className="flex items-center gap-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <DollarSign className="h-4 w-4" />
+                Premiação Individual (1º ao 3º)
+              </CardTitle>
+              <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md">
+                <Users className="h-3 w-3 text-blue-600" />
+                <span className="text-xs font-medium text-blue-600">
+                  {consolidatedWinners.individual} ganhadores no período
+                </span>
+              </div>
+            </div>
             <Button 
               size="sm" 
               variant="outline"
@@ -242,91 +258,103 @@ export const PaymentsTab = () => {
         </CardHeader>
         <CardContent className="p-3">
           <div className="space-y-3">
-            {groupPrizes.map((group) => (
-              <div key={group.id} className={`border rounded-lg p-3 ${!group.active ? 'opacity-50 bg-gray-50' : 'bg-white'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={group.active}
-                      onCheckedChange={() => handleToggleGroup(group.id)}
-                    />
-                    <span className="font-medium text-sm">{group.name}</span>
-                    <span className="text-xs text-gray-500">({group.totalWinners} ganhadores)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {editingGroup === group.id ? (
-                      <div className="flex items-center gap-1">
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleSaveGroup(group.id)}
-                          className="h-6 w-6 p-0"
-                          disabled={!group.active}
-                        >
-                          <Save className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={handleCancel}
-                          className="h-6 w-6 p-0"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+            {groupPrizes.map((group) => {
+              const winnersInPeriod = group.id === 'group1' ? consolidatedWinners.group1 :
+                                    group.id === 'group2' ? consolidatedWinners.group2 : 
+                                    consolidatedWinners.group3;
+              
+              return (
+                <div key={group.id} className={`border rounded-lg p-3 ${!group.active ? 'opacity-50 bg-gray-50' : 'bg-white'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={group.active}
+                        onCheckedChange={() => handleToggleGroup(group.id)}
+                      />
+                      <span className="font-medium text-sm">{group.name}</span>
+                      <span className="text-xs text-gray-500">({group.totalWinners} ganhadores)</span>
+                      <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md">
+                        <Users className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-600">
+                          {winnersInPeriod} no período
+                        </span>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleEditGroup(group.id)}
-                          className="h-6 w-6 p-0"
-                          disabled={!group.active}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleExportPix(group.name)}
-                          className="h-6 w-6 p-0"
-                          disabled={!group.active}
-                          title="Exportar PIX"
-                        >
-                          <Download className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {editingGroup === group.id ? (
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleSaveGroup(group.id)}
+                            className="h-6 w-6 p-0"
+                            disabled={!group.active}
+                          >
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={handleCancel}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEditGroup(group.id)}
+                            className="h-6 w-6 p-0"
+                            disabled={!group.active}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleExportPix(group.name)}
+                            className="h-6 w-6 p-0"
+                            disabled={!group.active}
+                            title="Exportar PIX"
+                          >
+                            <Download className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-600">Prêmio individual:</span>
-                    {editingGroup === group.id ? (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs">R$</span>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={editGroupPrize}
-                          onChange={(e) => setEditGroupPrize(parseFloat(e.target.value) || 0)}
-                          className="w-20 h-6 text-xs"
-                          disabled={!group.active}
-                        />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-600">Prêmio individual:</span>
+                      {editingGroup === group.id ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs">R$</span>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={editGroupPrize}
+                            onChange={(e) => setEditGroupPrize(parseFloat(e.target.value) || 0)}
+                            className="w-20 h-6 text-xs"
+                            disabled={!group.active}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-sm font-medium">R$ {group.prizePerWinner.toLocaleString('pt-BR')}</span>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-gray-600">Total do grupo:</span>
+                      <div className="font-semibold text-green-600 text-sm">
+                        {group.active ? `R$ ${(group.totalWinners * group.prizePerWinner).toLocaleString('pt-BR')}` : 'R$ 0'}
                       </div>
-                    ) : (
-                      <span className="text-sm font-medium">R$ {group.prizePerWinner.toLocaleString('pt-BR')}</span>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs text-gray-600">Total do grupo:</span>
-                    <div className="font-semibold text-green-600 text-sm">
-                      {group.active ? `R$ ${(group.totalWinners * group.prizePerWinner).toLocaleString('pt-BR')}` : 'R$ 0'}
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
