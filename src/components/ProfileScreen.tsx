@@ -1,10 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Trophy, Target, Calendar, Settings, HelpCircle, Star } from 'lucide-react';
+import SettingsScreen from './SettingsScreen';
+import HelpSupportScreen from './HelpSupportScreen';
 
 const ProfileScreen = () => {
+  const [currentScreen, setCurrentScreen] = useState<'profile' | 'settings' | 'help'>('profile');
+
   const userStats = {
     name: "João Silva",
     level: 15,
@@ -23,6 +27,14 @@ const ProfileScreen = () => {
     { name: "Streaker", description: "Jogue 7 dias seguidos", earned: false },
     { name: "Mestre das Letras", description: "Complete 50 desafios", earned: false },
   ];
+
+  if (currentScreen === 'settings') {
+    return <SettingsScreen onBack={() => setCurrentScreen('profile')} />;
+  }
+
+  if (currentScreen === 'help') {
+    return <HelpSupportScreen onBack={() => setCurrentScreen('profile')} />;
+  }
 
   return (
     <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
@@ -107,12 +119,22 @@ const ProfileScreen = () => {
 
       {/* Options */}
       <div className="space-y-3">
-        <Button variant="outline" className="w-full justify-start" size="lg">
+        <Button 
+          variant="outline" 
+          className="w-full justify-start" 
+          size="lg"
+          onClick={() => setCurrentScreen('settings')}
+        >
           <Settings className="w-5 h-5 mr-3" />
           Configurações
         </Button>
         
-        <Button variant="outline" className="w-full justify-start" size="lg">
+        <Button 
+          variant="outline" 
+          className="w-full justify-start" 
+          size="lg"
+          onClick={() => setCurrentScreen('help')}
+        >
           <HelpCircle className="w-5 h-5 mr-3" />
           Ajuda e Suporte
         </Button>
