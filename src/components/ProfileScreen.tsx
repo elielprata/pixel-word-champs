@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, Trophy, Calendar, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
-const ProfileScreen = () => {
+interface ProfileScreenProps {
+  onNavigateToSettings?: () => void;
+  onNavigateToHelp?: () => void;
+}
+
+const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreenProps) => {
   const { user, logout } = useAuth();
 
   const stats = [
@@ -15,10 +19,34 @@ const ProfileScreen = () => {
     { label: 'Pontos Total', value: '1,247', icon: User },
   ];
 
+  const handleSettings = () => {
+    if (onNavigateToSettings) {
+      onNavigateToSettings();
+    } else {
+      console.log('Navegando para configurações...');
+    }
+  };
+
+  const handleHelp = () => {
+    if (onNavigateToHelp) {
+      onNavigateToHelp();
+    } else {
+      console.log('Navegando para ajuda...');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
   const menuItems = [
-    { label: 'Configurações', icon: Settings, action: () => {} },
-    { label: 'Ajuda e Suporte', icon: HelpCircle, action: () => {} },
-    { label: 'Sair', icon: LogOut, action: logout, danger: true },
+    { label: 'Configurações', icon: Settings, action: handleSettings },
+    { label: 'Ajuda e Suporte', icon: HelpCircle, action: handleHelp },
+    { label: 'Sair', icon: LogOut, action: handleLogout, danger: true },
   ];
 
   return (
