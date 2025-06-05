@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Competition, CompetitionParticipation, ApiResponse } from '@/types';
+import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 
 class CompetitionService {
   async getActiveCompetitions(): Promise<ApiResponse<Competition[]>> {
@@ -27,15 +28,9 @@ class CompetitionService {
         updated_at: comp.updated_at || ''
       })) || [];
 
-      return {
-        success: true,
-        data: competitions
-      };
+      return createSuccessResponse(competitions);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao buscar competições'
-      };
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_GET_ACTIVE'));
     }
   }
 
@@ -64,15 +59,9 @@ class CompetitionService {
         updated_at: data.updated_at || ''
       };
 
-      return {
-        success: true,
-        data: competition
-      };
+      return createSuccessResponse(competition);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao buscar competição diária'
-      };
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_GET_DAILY'));
     }
   }
 
@@ -101,15 +90,9 @@ class CompetitionService {
         updated_at: data.updated_at || ''
       };
 
-      return {
-        success: true,
-        data: competition
-      };
+      return createSuccessResponse(competition);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao buscar competição semanal'
-      };
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_GET_WEEKLY'));
     }
   }
 
@@ -141,15 +124,9 @@ class CompetitionService {
         payment_date: data.payment_date || undefined
       };
 
-      return {
-        success: true,
-        data: participation
-      };
+      return createSuccessResponse(participation);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao entrar na competição'
-      };
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_JOIN'));
     }
   }
 
@@ -171,15 +148,9 @@ class CompetitionService {
 
       if (error) throw error;
 
-      return {
-        success: true,
-        data: data || []
-      };
+      return createSuccessResponse(data || []);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao buscar ranking'
-      };
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_RANKING'));
     }
   }
 }

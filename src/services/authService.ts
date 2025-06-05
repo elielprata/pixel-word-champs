@@ -1,6 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { User, LoginForm, RegisterForm, ApiResponse } from '@/types';
+import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { mapUserFromProfile } from '@/utils/userMapper';
 
 export interface AuthResponse {
   user: User;
@@ -17,7 +19,6 @@ class AuthService {
       });
 
       if (error) throw error;
-
       if (!data.user || !data.session) {
         throw new Error('Erro no login: dados incompletos');
       }
@@ -33,32 +34,15 @@ class AuthService {
         console.error('Erro ao buscar perfil:', profileError);
       }
 
-      const user: User = {
-        id: data.user.id,
-        username: profile?.username || data.user.email?.split('@')[0] || '',
-        email: data.user.email || '',
-        avatar_url: profile?.avatar_url,
-        created_at: profile?.created_at || data.user.created_at,
-        updated_at: profile?.updated_at || data.user.updated_at || '',
-        total_score: profile?.total_score || 0,
-        games_played: profile?.games_played || 0,
-        best_daily_position: profile?.best_daily_position,
-        best_weekly_position: profile?.best_weekly_position
-      };
+      const user = mapUserFromProfile(profile, data.user);
 
-      return {
-        success: true,
-        data: {
-          user,
-          token: data.session.access_token,
-          refreshToken: data.session.refresh_token
-        }
-      };
+      return createSuccessResponse({
+        user,
+        token: data.session.access_token,
+        refreshToken: data.session.refresh_token
+      });
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || 'Erro no login'
-      };
+      return createErrorResponse(handleServiceError(error, 'AUTH_LOGIN'));
     }
   }
 
@@ -75,7 +59,6 @@ class AuthService {
       });
 
       if (error) throw error;
-
       if (!data.user) {
         throw new Error('Erro no registro: usuário não criado');
       }
@@ -90,19 +73,13 @@ class AuthService {
         games_played: 0
       };
 
-      return {
-        success: true,
-        data: {
-          user,
-          token: data.session?.access_token || '',
-          refreshToken: data.session?.refresh_token || ''
-        }
-      };
+      return createSuccessResponse({
+        user,
+        token: data.session?.access_token || '',
+        refreshToken: data.session?.refresh_token || ''
+      });
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || 'Erro no registro'
-      };
+      return createErrorResponse(handleServiceError(error, 'AUTH_REGISTER'));
     }
   }
 
@@ -124,28 +101,10 @@ class AuthService {
         .eq('id', user.id)
         .single();
 
-      const userData: User = {
-        id: user.id,
-        username: profile?.username || user.email?.split('@')[0] || '',
-        email: user.email || '',
-        avatar_url: profile?.avatar_url,
-        created_at: profile?.created_at || user.created_at,
-        updated_at: profile?.updated_at || user.updated_at || '',
-        total_score: profile?.total_score || 0,
-        games_played: profile?.games_played || 0,
-        best_daily_position: profile?.best_daily_position,
-        best_weekly_position: profile?.best_weekly_position
-      };
-
-      return {
-        success: true,
-        data: userData
-      };
+      const userData = mapUserFromProfile(profile, user);
+      return createSuccessResponse(userData);
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || 'Erro ao buscar usuário'
-      };
+      return createErrorResponse(handleServiceError(error, 'AUTH_GET_USER'));
     }
   }
 

@@ -1,53 +1,105 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Trophy, Medal, ChevronRight, History, Users } from 'lucide-react';
+import { Trophy, Medal, ChevronRight, History, Users, Loader2 } from 'lucide-react';
 import RankingCard from './ui/RankingCard';
 import { RankingPlayer } from '@/types';
+import { profileService } from '@/services/profileService';
+import { useAuth } from '@/hooks/useAuth';
 
 const RankingScreen = () => {
   const [activeTab, setActiveTab] = useState('daily');
+  const [topPlayers, setTopPlayers] = useState<RankingPlayer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  // Mock data - em produção, isso viria da API
-  const mockDailyRanking: RankingPlayer[] = [
-    { pos: 1, name: "João Silva", score: 2540, avatar: "🥇" },
-    { pos: 2, name: "Maria Santos", score: 2410, avatar: "🥈" },
-    { pos: 3, name: "Pedro Costa", score: 2380, avatar: "🥉" },
-    { pos: 4, name: "Ana Lima", score: 2250, avatar: "👤" },
-    { pos: 5, name: "Carlos Souza", score: 2180, avatar: "👤" },
-  ];
+  useEffect(() => {
+    loadTopPlayers();
+  }, []);
 
-  const mockWeeklyRanking: RankingPlayer[] = [
-    { pos: 1, name: "Maria Santos", score: 15420, avatar: "🥇" },
-    { pos: 2, name: "João Silva", score: 14890, avatar: "🥈" },
-    { pos: 3, name: "Ana Lima", score: 13750, avatar: "🥉" },
-    { pos: 4, name: "Pedro Costa", score: 12980, avatar: "👤" },
-    { pos: 5, name: "Carlos Souza", score: 11650, avatar: "👤" },
-  ];
+  const loadTopPlayers = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await profileService.getTopPlayers(10);
+      if (response.success && response.data) {
+        const players: RankingPlayer[] = response.data.map((player, index) => ({
+          pos: index + 1,
+          name: player.username,
+          score: player.total_score,
+          avatar: player.avatar_url || "👤",
+          user_id: player.id
+        }));
+        setTopPlayers(players);
+      } else {
+        setError(response.error || 'Erro ao carregar ranking');
+      }
+    } catch (err) {
+      setError('Erro ao carregar ranking');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const mockHistoricalRanking: RankingPlayer[] = [
-    { pos: 1, name: "Ana Lima", score: 45820, avatar: "🥇" },
-    { pos: 2, name: "João Silva", score: 44230, avatar: "🥈" },
-    { pos: 3, name: "Maria Santos", score: 42150, avatar: "🥉" },
-    { pos: 4, name: "Pedro Costa", score: 38940, avatar: "👤" },
-    { pos: 5, name: "Carlos Souza", score: 35680, avatar: "👤" },
-  ];
+  const getUserPosition = () => {
+    if (!user) return null;
+    const userIndex = topPlayers.findIndex(player => player.user_id === user.id);
+    return userIndex !== -1 ? userIndex + 1 : null;
+  };
 
-  const renderRanking = (ranking: RankingPlayer[], showViewMore: boolean = false) => (
-    <div className="space-y-3">
-      {ranking.map((player) => (
-        <RankingCard key={player.pos} player={player} />
-      ))}
-      {showViewMore && (
-        <Button variant="outline" className="w-full mt-4 flex items-center justify-center gap-2">
-          Ver Ranking Completo
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      )}
-    </div>
-  );
+  const renderRanking = (ranking: RankingPlayer[], showViewMore: boolean = false) => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+          <span className="ml-2 text-gray-600">Carregando ranking...</span>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={loadTopPlayers} variant="outline">
+            Tentar Novamente
+          </Button>
+        </div>
+      );
+    }
+
+    if (ranking.length === 0) {
+      return (
+        <div className="text-center py-8 text-gray-600">
+          Nenhum jogador encontrado
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {ranking.map((player) => (
+          <RankingCard 
+            key={player.pos} 
+            player={player}
+            isCurrentUser={player.user_id === user?.id}
+          />
+        ))}
+        {showViewMore && (
+          <Button variant="outline" className="w-full mt-4 flex items-center justify-center gap-2">
+            Ver Ranking Completo
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  const userPosition = getUserPosition();
 
   return (
     <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
@@ -56,14 +108,16 @@ const RankingScreen = () => {
         <p className="text-gray-600">Compete com jogadores do mundo todo</p>
       </div>
 
-      <Card className="mb-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
-        <CardContent className="p-4 text-center">
-          <Trophy className="w-8 h-8 mx-auto mb-2" />
-          <p className="text-lg font-bold">Sua Melhor Posição</p>
-          <p className="text-2xl font-bold">#42</p>
-          <p className="text-sm opacity-80">Ranking Diário</p>
-        </CardContent>
-      </Card>
+      {userPosition && (
+        <Card className="mb-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
+          <CardContent className="p-4 text-center">
+            <Trophy className="w-8 h-8 mx-auto mb-2" />
+            <p className="text-lg font-bold">Sua Posição Atual</p>
+            <p className="text-2xl font-bold">#{userPosition}</p>
+            <p className="text-sm opacity-80">Ranking Geral</p>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
@@ -81,7 +135,7 @@ const RankingScreen = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {renderRanking(mockDailyRanking, true)}
+              {renderRanking(topPlayers, true)}
             </CardContent>
           </Card>
         </TabsContent>
@@ -95,7 +149,7 @@ const RankingScreen = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {renderRanking(mockWeeklyRanking, true)}
+              {renderRanking(topPlayers, true)}
             </CardContent>
           </Card>
         </TabsContent>
@@ -109,7 +163,7 @@ const RankingScreen = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {renderRanking(mockHistoricalRanking, true)}
+              {renderRanking(topPlayers, true)}
             </CardContent>
           </Card>
         </TabsContent>

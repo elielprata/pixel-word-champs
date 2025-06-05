@@ -1,6 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { User, ApiResponse } from '@/types';
+import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { mapUserFromProfile } from '@/utils/userMapper';
 
 class ProfileService {
   async getCurrentProfile(): Promise<ApiResponse<User>> {
@@ -16,26 +18,10 @@ class ProfileService {
 
       if (error) throw error;
 
-      return {
-        success: true,
-        data: {
-          id: data.id,
-          username: data.username,
-          email: user.email || '',
-          avatar_url: data.avatar_url,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          total_score: data.total_score,
-          games_played: data.games_played,
-          best_daily_position: data.best_daily_position,
-          best_weekly_position: data.best_weekly_position
-        }
-      };
+      const userData = mapUserFromProfile(data, user);
+      return createSuccessResponse(userData);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao buscar perfil'
-      };
+      return createErrorResponse(handleServiceError(error, 'PROFILE_GET'));
     }
   }
 
@@ -53,26 +39,10 @@ class ProfileService {
 
       if (error) throw error;
 
-      return {
-        success: true,
-        data: {
-          id: data.id,
-          username: data.username,
-          email: user.email || '',
-          avatar_url: data.avatar_url,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          total_score: data.total_score,
-          games_played: data.games_played,
-          best_daily_position: data.best_daily_position,
-          best_weekly_position: data.best_weekly_position
-        }
-      };
+      const userData = mapUserFromProfile(data, user);
+      return createSuccessResponse(userData);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao atualizar perfil'
-      };
+      return createErrorResponse(handleServiceError(error, 'PROFILE_UPDATE'));
     }
   }
 
@@ -86,15 +56,9 @@ class ProfileService {
 
       if (error) throw error;
 
-      return {
-        success: true,
-        data: data || []
-      };
+      return createSuccessResponse(data || []);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao buscar top jogadores'
-      };
+      return createErrorResponse(handleServiceError(error, 'PROFILE_TOP_PLAYERS'));
     }
   }
 }

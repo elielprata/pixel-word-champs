@@ -112,9 +112,9 @@ export interface AsyncState<T> {
   data?: T;
 }
 
-// Respostas da API
+// Respostas da API - CORRIGIDO: data sempre presente, null quando erro
 export interface ApiResponse<T> {
-  data?: T;
+  data: T | null;
   error?: string;
   success: boolean;
 }

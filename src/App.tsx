@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import AuthProvider from "./components/auth/AuthProvider";
 import AdminRoute from "./components/auth/AdminRoute";
 import { useAuth } from "./hooks/useAuth";
@@ -39,21 +39,31 @@ const AppContent = () => {
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       
-      {/* Rotas autenticadas */}
-      {isAuthenticated ? (
-        <>
-          <Route path="/" element={<Index />} />
-          <Route path="/admin" element={
+      {/* Rotas protegidas */}
+      <Route 
+        path="/" 
+        element={isAuthenticated ? <Index /> : <Navigate to="/auth" replace />} 
+      />
+      <Route 
+        path="/admin" 
+        element={
+          isAuthenticated ? (
             <AdminRoute>
               <AdminPanel />
             </AdminRoute>
-          } />
-        </>
-      ) : (
-        <Route path="*" element={<AuthScreen />} />
-      )}
+          ) : (
+            <Navigate to="/auth" replace />
+          )
+        } 
+      />
       
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      {/* Rota de autenticação */}
+      <Route 
+        path="/auth" 
+        element={!isAuthenticated ? <AuthScreen /> : <Navigate to="/" replace />} 
+      />
+      
+      {/* Rota catch-all */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

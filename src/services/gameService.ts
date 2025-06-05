@@ -7,6 +7,7 @@ import {
   Position, 
   ApiResponse 
 } from '@/types';
+import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 
 class GameService {
   async createGameSession(config: GameConfig): Promise<ApiResponse<GameSession>> {
@@ -14,14 +15,12 @@ class GameService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      // Gerar board básico (substituir por lógica real posteriormente)
-      const board = this.generateMockBoard(config.boardSize || 10);
+      const board = this.generateBoard(config.boardSize || 10);
 
       const { data, error } = await supabase
         .from('game_sessions')
         .insert({
           user_id: user.id,
-          competition_id: config.level > 0 ? undefined : undefined, // Será definido quando implementarmos competições
           level: config.level,
           board: board,
           words_found: [],
@@ -34,27 +33,10 @@ class GameService {
 
       if (error) throw error;
 
-      return {
-        success: true,
-        data: {
-          id: data.id,
-          user_id: data.user_id,
-          competition_id: data.competition_id,
-          level: data.level,
-          board: data.board as string[][],
-          words_found: this.parseWordsFound(data.words_found),
-          total_score: data.total_score,
-          time_elapsed: data.time_elapsed,
-          is_completed: data.is_completed,
-          started_at: data.started_at,
-          completed_at: data.completed_at
-        }
-      };
+      const session = this.mapGameSession(data);
+      return createSuccessResponse(session);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao criar sessão de jogo'
-      };
+      return createErrorResponse(handleServiceError(error, 'GAME_CREATE_SESSION'));
     }
   }
 
@@ -68,27 +50,10 @@ class GameService {
 
       if (error) throw error;
 
-      return {
-        success: true,
-        data: {
-          id: data.id,
-          user_id: data.user_id,
-          competition_id: data.competition_id,
-          level: data.level,
-          board: data.board as string[][],
-          words_found: this.parseWordsFound(data.words_found),
-          total_score: data.total_score,
-          time_elapsed: data.time_elapsed,
-          is_completed: data.is_completed,
-          started_at: data.started_at,
-          completed_at: data.completed_at
-        }
-      };
+      const session = this.mapGameSession(data);
+      return createSuccessResponse(session);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao buscar sessão de jogo'
-      };
+      return createErrorResponse(handleServiceError(error, 'GAME_GET_SESSION'));
     }
   }
 
@@ -113,23 +78,18 @@ class GameService {
 
       if (error) throw error;
 
-      // Atualizar pontuação da sessão
       await this.updateSessionScore(sessionId, points);
 
-      return {
-        success: true,
-        data: {
-          word: data.word,
-          points: data.points,
-          positions: this.parsePositions(data.positions),
-          foundAt: data.found_at
-        }
+      const wordFound: WordFound = {
+        word: data.word,
+        points: data.points,
+        positions: this.parsePositions(data.positions),
+        foundAt: data.found_at
       };
+
+      return createSuccessResponse(wordFound);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao submeter palavra'
-      };
+      return createErrorResponse(handleServiceError(error, 'GAME_SUBMIT_WORD'));
     }
   }
 
@@ -147,32 +107,14 @@ class GameService {
 
       if (error) throw error;
 
-      return {
-        success: true,
-        data: {
-          id: data.id,
-          user_id: data.user_id,
-          competition_id: data.competition_id,
-          level: data.level,
-          board: data.board as string[][],
-          words_found: this.parseWordsFound(data.words_found),
-          total_score: data.total_score,
-          time_elapsed: data.time_elapsed,
-          is_completed: data.is_completed,
-          started_at: data.started_at,
-          completed_at: data.completed_at
-        }
-      };
+      const session = this.mapGameSession(data);
+      return createSuccessResponse(session);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao completar sessão'
-      };
+      return createErrorResponse(handleServiceError(error, 'GAME_COMPLETE_SESSION'));
     }
   }
 
   private async updateSessionScore(sessionId: string, additionalPoints: number): Promise<void> {
-    // Buscar sessão atual e atualizar pontuação
     const { data: session } = await supabase
       .from('game_sessions')
       .select('total_score')
@@ -187,6 +129,22 @@ class GameService {
     }
   }
 
+  private mapGameSession(data: any): GameSession {
+    return {
+      id: data.id,
+      user_id: data.user_id,
+      competition_id: data.competition_id,
+      level: data.level,
+      board: data.board as string[][],
+      words_found: this.parseWordsFound(data.words_found),
+      total_score: data.total_score,
+      time_elapsed: data.time_elapsed,
+      is_completed: data.is_completed,
+      started_at: data.started_at,
+      completed_at: data.completed_at
+    };
+  }
+
   private parseWordsFound(wordsFoundData: any): string[] {
     if (!Array.isArray(wordsFoundData)) return [];
     return wordsFoundData;
@@ -194,7 +152,6 @@ class GameService {
 
   private parsePositions(positionsData: any): Position[] {
     if (!Array.isArray(positionsData)) return [];
-    
     return (positionsData as unknown[]).map((pos: any) => ({
       row: pos?.row || 0,
       col: pos?.col || 0
@@ -206,7 +163,6 @@ class GameService {
     const pointsTable: Record<number, number> = {
       3: 1, 4: 2, 5: 3, 6: 5, 7: 8, 8: 13, 9: 21, 10: 34
     };
-    
     return pointsTable[length] || Math.max(34, length * 5);
   }
 
@@ -225,7 +181,7 @@ class GameService {
     return true;
   }
 
-  private generateMockBoard(size: number): string[][] {
+  private generateBoard(size: number): string[][] {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const board: string[][] = [];
     
