@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -220,88 +219,80 @@ export const PaymentsTab = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-3">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2 font-semibold text-xs">Ativo</th>
-                  <th className="text-left p-2 font-semibold text-xs">Grupo</th>
-                  <th className="text-left p-2 font-semibold text-xs">Ganhadores</th>
-                  <th className="text-left p-2 font-semibold text-xs">Prêmio Individual</th>
-                  <th className="text-left p-2 font-semibold text-xs">Total do Grupo</th>
-                  <th className="text-left p-2 font-semibold text-xs">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {groupPrizes.map((group) => (
-                  <tr key={group.id} className={`border-b hover:bg-gray-50 ${!group.active ? 'opacity-50' : ''}`}>
-                    <td className="p-2">
-                      <Switch
-                        checked={group.active}
-                        onCheckedChange={() => handleToggleGroup(group.id)}
-                      />
-                    </td>
-                    <td className="p-2 font-medium text-sm">{group.name}</td>
-                    <td className="p-2 text-sm">
-                      {group.totalWinners} ganhadores
-                    </td>
-                    <td className="p-2 text-sm">
-                      {editingGroup === group.id ? (
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs">R$</span>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={editGroupPrize}
-                            onChange={(e) => setEditGroupPrize(parseFloat(e.target.value) || 0)}
-                            className="w-20 h-7 text-xs"
-                            disabled={!group.active}
-                          />
-                        </div>
-                      ) : (
-                        `R$ ${group.prizePerWinner.toLocaleString('pt-BR')}`
-                      )}
-                    </td>
-                    <td className="p-2 font-semibold text-green-600 text-sm">
-                      {group.active ? `R$ ${(group.totalWinners * group.prizePerWinner).toLocaleString('pt-BR')}` : 'R$ 0'}
-                    </td>
-                    <td className="p-2">
-                      {editingGroup === group.id ? (
-                        <div className="flex gap-1">
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleSaveGroup(group.id)}
-                            className="h-6 w-6 p-0"
-                            disabled={!group.active}
-                          >
-                            <Save className="h-3 w-3" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={handleCancel}
-                            className="h-6 w-6 p-0"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ) : (
+          <div className="space-y-3">
+            {groupPrizes.map((group) => (
+              <div key={group.id} className={`border rounded-lg p-3 ${!group.active ? 'opacity-50 bg-gray-50' : 'bg-white'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={group.active}
+                      onCheckedChange={() => handleToggleGroup(group.id)}
+                    />
+                    <span className="font-medium text-sm">{group.name}</span>
+                    <span className="text-xs text-gray-500">({group.totalWinners} ganhadores)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {editingGroup === group.id ? (
+                      <div className="flex items-center gap-1">
                         <Button 
                           size="sm" 
-                          variant="outline"
-                          onClick={() => handleEditGroup(group.id)}
+                          onClick={() => handleSaveGroup(group.id)}
                           className="h-6 w-6 p-0"
                           disabled={!group.active}
                         >
-                          <Edit className="h-3 w-3" />
+                          <Save className="h-3 w-3" />
                         </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={handleCancel}
+                          className="h-6 w-6 p-0"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleEditGroup(group.id)}
+                        className="h-6 w-6 p-0"
+                        disabled={!group.active}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-600">Prêmio individual:</span>
+                    {editingGroup === group.id ? (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs">R$</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={editGroupPrize}
+                          onChange={(e) => setEditGroupPrize(parseFloat(e.target.value) || 0)}
+                          className="w-20 h-6 text-xs"
+                          disabled={!group.active}
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-sm font-medium">R$ {group.prizePerWinner.toLocaleString('pt-BR')}</span>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-gray-600">Total do grupo:</span>
+                    <div className="font-semibold text-green-600 text-sm">
+                      {group.active ? `R$ ${(group.totalWinners * group.prizePerWinner).toLocaleString('pt-BR')}` : 'R$ 0'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
