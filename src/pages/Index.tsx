@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import BottomNavigation from '@/components/BottomNavigation';
 import HomeScreen from '@/components/HomeScreen';
 import RankingScreen from '@/components/RankingScreen';
@@ -10,55 +10,32 @@ import FullRankingScreen from '@/components/FullRankingScreen';
 import ChallengeRankingScreen from '@/components/ChallengeRankingScreen';
 import SettingsScreen from '@/components/SettingsScreen';
 import HelpSupportScreen from '@/components/HelpSupportScreen';
+import { useAppNavigation } from '@/hooks/useAppNavigation';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('home');
-  const [activeChallenge, setActiveChallenge] = useState<number | null>(null);
-  const [showFullRanking, setShowFullRanking] = useState(false);
-  const [challengeRankingId, setChallengeRankingId] = useState<number | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
+  const {
+    navigationState,
+    setActiveTab,
+    handleStartChallenge,
+    handleBackToHome,
+    handleViewFullRanking,
+    handleBackFromFullRanking,
+    handleViewChallengeRanking,
+    handleBackFromChallengeRanking,
+    handleNavigateToSettings,
+    handleBackFromSettings,
+    handleNavigateToHelp,
+    handleBackFromHelp,
+  } = useAppNavigation();
 
-  const handleStartChallenge = (challengeId: number) => {
-    setActiveChallenge(challengeId);
-  };
-
-  const handleBackToHome = () => {
-    setActiveChallenge(null);
-    setActiveTab('home');
-  };
-
-  const handleViewFullRanking = () => {
-    setShowFullRanking(true);
-  };
-
-  const handleBackFromFullRanking = () => {
-    setShowFullRanking(false);
-  };
-
-  const handleViewChallengeRanking = (challengeId: number) => {
-    setChallengeRankingId(challengeId);
-  };
-
-  const handleBackFromChallengeRanking = () => {
-    setChallengeRankingId(null);
-  };
-
-  const handleNavigateToSettings = () => {
-    setShowSettings(true);
-  };
-
-  const handleBackFromSettings = () => {
-    setShowSettings(false);
-  };
-
-  const handleNavigateToHelp = () => {
-    setShowHelp(true);
-  };
-
-  const handleBackFromHelp = () => {
-    setShowHelp(false);
-  };
+  const {
+    activeTab,
+    activeChallenge,
+    showFullRanking,
+    challengeRankingId,
+    showSettings,
+    showHelp
+  } = navigationState;
 
   if (activeChallenge) {
     return (

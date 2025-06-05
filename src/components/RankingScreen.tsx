@@ -2,12 +2,16 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Trophy, Medal, ChevronRight, History, Users } from 'lucide-react';
+import RankingCard from './ui/RankingCard';
+import { RankingPlayer } from '@/types';
 
 const RankingScreen = () => {
   const [activeTab, setActiveTab] = useState('daily');
 
-  const mockDailyRanking = [
+  // Mock data - em produção, isso viria da API
+  const mockDailyRanking: RankingPlayer[] = [
     { pos: 1, name: "João Silva", score: 2540, avatar: "🥇" },
     { pos: 2, name: "Maria Santos", score: 2410, avatar: "🥈" },
     { pos: 3, name: "Pedro Costa", score: 2380, avatar: "🥉" },
@@ -15,7 +19,7 @@ const RankingScreen = () => {
     { pos: 5, name: "Carlos Souza", score: 2180, avatar: "👤" },
   ];
 
-  const mockWeeklyRanking = [
+  const mockWeeklyRanking: RankingPlayer[] = [
     { pos: 1, name: "Maria Santos", score: 15420, avatar: "🥇" },
     { pos: 2, name: "João Silva", score: 14890, avatar: "🥈" },
     { pos: 3, name: "Ana Lima", score: 13750, avatar: "🥉" },
@@ -23,38 +27,25 @@ const RankingScreen = () => {
     { pos: 5, name: "Carlos Souza", score: 11650, avatar: "👤" },
   ];
 
-  const getRankingIcon = (position: number) => {
-    switch (position) {
-      case 1: return <Trophy className="w-5 h-5 text-yellow-500" />;
-      case 2: return <Medal className="w-5 h-5 text-gray-400" />;
-      case 3: return <Award className="w-5 h-5 text-orange-500" />;
-      default: return <span className="w-5 h-5 flex items-center justify-center text-sm font-bold text-gray-600">{position}</span>;
-    }
-  };
+  const mockHistoricalRanking: RankingPlayer[] = [
+    { pos: 1, name: "Ana Lima", score: 45820, avatar: "🥇" },
+    { pos: 2, name: "João Silva", score: 44230, avatar: "🥈" },
+    { pos: 3, name: "Maria Santos", score: 42150, avatar: "🥉" },
+    { pos: 4, name: "Pedro Costa", score: 38940, avatar: "👤" },
+    { pos: 5, name: "Carlos Souza", score: 35680, avatar: "👤" },
+  ];
 
-  const renderRanking = (ranking: typeof mockDailyRanking) => (
+  const renderRanking = (ranking: RankingPlayer[], showViewMore: boolean = false) => (
     <div className="space-y-3">
       {ranking.map((player) => (
-        <Card key={player.pos} className="overflow-hidden">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8">
-                  {getRankingIcon(player.pos)}
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">{player.name}</p>
-                  <p className="text-sm text-gray-500">#{player.pos}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-purple-600">{player.score.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">pontos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <RankingCard key={player.pos} player={player} />
       ))}
+      {showViewMore && (
+        <Button variant="outline" className="w-full mt-4 flex items-center justify-center gap-2">
+          Ver Ranking Completo
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      )}
     </div>
   );
 
@@ -75,9 +66,10 @@ const RankingScreen = () => {
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="daily">Diário</TabsTrigger>
           <TabsTrigger value="weekly">Semanal</TabsTrigger>
+          <TabsTrigger value="historical">Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="daily" className="space-y-4">
@@ -89,7 +81,7 @@ const RankingScreen = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {renderRanking(mockDailyRanking)}
+              {renderRanking(mockDailyRanking, true)}
             </CardContent>
           </Card>
         </TabsContent>
@@ -103,7 +95,21 @@ const RankingScreen = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {renderRanking(mockWeeklyRanking)}
+              {renderRanking(mockWeeklyRanking, true)}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="historical" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <History className="w-5 h-5 text-blue-500" />
+                Ranking Histórico
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {renderRanking(mockHistoricalRanking, true)}
             </CardContent>
           </Card>
         </TabsContent>
