@@ -1,8 +1,7 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, LoginForm, RegisterForm } from '@/types';
 import { authService } from '@/services/authService';
-import { useAsyncOperation } from './useAsync';
+import { useAsyncOperation } from './useAsyncOperation';
 
 interface AuthContextType {
   user: User | null;
