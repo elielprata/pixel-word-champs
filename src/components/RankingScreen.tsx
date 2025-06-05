@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award, User } from 'lucide-react';
+import { Trophy, Medal, Award, User, History, CheckCircle, Clock, DollarSign } from 'lucide-react';
 
 interface Player {
   id: number;
@@ -10,6 +9,18 @@ interface Player {
   score: number;
   position: number;
   avatar?: string;
+}
+
+interface CompetitionHistory {
+  id: string;
+  weekStart: string;
+  weekEnd: string;
+  userPosition: number;
+  userScore: number;
+  totalParticipants: number;
+  prize?: number;
+  paymentStatus?: 'pending' | 'paid' | 'not_eligible';
+  paymentDate?: string;
 }
 
 const RankingScreen = () => {
@@ -39,6 +50,59 @@ const RankingScreen = () => {
     { id: 8, name: "Fernanda Rocha", score: 13280, position: 8 },
     { id: 9, name: "Marcos Souza", score: 13050, position: 9 },
     { id: 10, name: "Patricia Dias", score: 12820, position: 10 },
+  ];
+
+  const competitionHistory: CompetitionHistory[] = [
+    {
+      id: '2024-w02',
+      weekStart: '2024-01-08',
+      weekEnd: '2024-01-14',
+      userPosition: 2,
+      userScore: 14850,
+      totalParticipants: 1247,
+      prize: 500,
+      paymentStatus: 'paid',
+      paymentDate: '2024-01-16'
+    },
+    {
+      id: '2024-w01',
+      weekStart: '2024-01-01',
+      weekEnd: '2024-01-07',
+      userPosition: 15,
+      userScore: 12340,
+      totalParticipants: 982,
+      paymentStatus: 'not_eligible'
+    },
+    {
+      id: '2023-w52',
+      weekStart: '2023-12-25',
+      weekEnd: '2023-12-31',
+      userPosition: 8,
+      userScore: 13200,
+      totalParticipants: 1105,
+      prize: 50,
+      paymentStatus: 'pending'
+    },
+    {
+      id: '2023-w51',
+      weekStart: '2023-12-18',
+      weekEnd: '2023-12-24',
+      userPosition: 42,
+      userScore: 9850,
+      totalParticipants: 1328,
+      paymentStatus: 'not_eligible'
+    },
+    {
+      id: '2023-w50',
+      weekStart: '2023-12-11',
+      weekEnd: '2023-12-17',
+      userPosition: 3,
+      userScore: 15620,
+      totalParticipants: 1456,
+      prize: 250,
+      paymentStatus: 'paid',
+      paymentDate: '2023-12-19'
+    }
   ];
 
   const getRankIcon = (position: number) => {
@@ -88,6 +152,83 @@ const RankingScreen = () => {
     </div>
   );
 
+  const getCompetitionBadge = (position: number) => {
+    if (position === 1) return 'bg-yellow-500 text-white';
+    if (position === 2) return 'bg-gray-400 text-white';
+    if (position === 3) return 'bg-orange-500 text-white';
+    if (position <= 10) return 'bg-purple-100 text-purple-700';
+    return 'bg-gray-100 text-gray-600';
+  };
+
+  const getPaymentStatusIcon = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'pending':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const formatDateRange = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    return `${startDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+  };
+
+  const CompetitionHistoryCard = ({ competition }: { competition: CompetitionHistory }) => (
+    <Card className="mb-3">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="font-semibold text-gray-800">Semana {competition.id.split('-w')[1]}</h3>
+            <p className="text-sm text-gray-500">{formatDateRange(competition.weekStart, competition.weekEnd)}</p>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-sm font-bold ${getCompetitionBadge(competition.userPosition)}`}>
+            #{competition.userPosition}
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Pontuação:</span>
+            <span className="font-semibold text-purple-600">{competition.userScore.toLocaleString()}</span>
+          </div>
+          <div className="text-sm text-gray-500">
+            de {competition.totalParticipants.toLocaleString()} jogadores
+          </div>
+        </div>
+
+        {competition.prize && (
+          <div className="mt-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800">
+                  Prêmio: R$ {competition.prize.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {getPaymentStatusIcon(competition.paymentStatus!)}
+                <span className={`text-xs font-medium ${
+                  competition.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'
+                }`}>
+                  {competition.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
+                </span>
+              </div>
+            </div>
+            {competition.paymentStatus === 'paid' && competition.paymentDate && (
+              <p className="text-xs text-green-600 mt-1">
+                Pago em {new Date(competition.paymentDate).toLocaleDateString('pt-BR')}
+              </p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
       {/* Header */}
@@ -108,9 +249,10 @@ const RankingScreen = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="daily">Diário</TabsTrigger>
           <TabsTrigger value="weekly">Semanal</TabsTrigger>
+          <TabsTrigger value="history">Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="daily" className="space-y-3">
@@ -157,6 +299,32 @@ const RankingScreen = () => {
                   isCurrentUser={true}
                 />
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <History className="w-5 h-5 text-purple-500" />
+                Histórico de Competições
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {competitionHistory.map((competition) => (
+                  <CompetitionHistoryCard key={competition.id} competition={competition} />
+                ))}
+              </div>
+              
+              {competitionHistory.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhuma competição encontrada</p>
+                  <p className="text-sm">Participe das competições semanais para ver seu histórico aqui</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
