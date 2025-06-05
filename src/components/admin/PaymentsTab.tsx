@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -154,10 +153,9 @@ export const PaymentsTab = () => {
               size="sm" 
               variant="outline"
               onClick={() => handleExportPix('1º ao 3º lugar')}
-              className="h-8 px-3 text-xs"
+              className="h-6 px-2 text-xs"
             >
-              <Download className="h-3 w-3 mr-1" />
-              Exportar PIX
+              <Download className="h-3 w-3" />
             </Button>
           </div>
         </CardHeader>
