@@ -1,17 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Play, Star, Clock, Users, Trophy } from 'lucide-react';
-
-interface Challenge {
-  id: number;
-  title: string;
-  description: string;
-  completed: boolean;
-  levels: number;
-  players: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-}
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Trophy, Clock, Users, Star, ChevronRight } from 'lucide-react';
+import ExplanationButtons from './ExplanationButtons';
 
 interface HomeScreenProps {
   onStartChallenge: (challengeId: number) => void;
@@ -20,182 +12,113 @@ interface HomeScreenProps {
 }
 
 const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewChallengeRanking }: HomeScreenProps) => {
-  const challenges: Challenge[] = [
-    {
-      id: 1,
-      title: "Desafio Matinal",
-      description: "Palavras relacionadas ao café da manhã",
-      completed: false,
-      levels: 20,
-      players: 1247,
-      difficulty: 'easy'
-    },
-    {
-      id: 2,
-      title: "Animais Selvagens",
-      description: "Encontre os animais escondidos",
-      completed: false,
-      levels: 20,
-      players: 892,
-      difficulty: 'medium'
-    },
-    {
-      id: 3,
-      title: "Cidades do Brasil",
-      description: "Conheça as cidades brasileiras",
-      completed: true,
-      levels: 20,
-      players: 2103,
-      difficulty: 'hard'
-    }
+  const mockChallenges = [
+    { id: 1, title: 'Desafio de Sinônimos', description: 'Encontre o sinônimo perfeito para cada palavra.', reward: 150, timeLimit: 60 },
+    { id: 2, title: 'Desafio de Antônimos', description: 'Descubra o antônimo correto para cada termo.', reward: 180, timeLimit: 75 },
+    { id: 3, title: 'Desafio de Ortografia', description: 'Corrija as palavras com erros ortográficos.', reward: 200, timeLimit: 90 },
   ];
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'text-green-600 bg-green-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'hard': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
+  const mockRanking = [
+    { id: 1, name: 'João', score: 5200 },
+    { id: 2, name: 'Maria', score: 4850 },
+    { id: 3, name: 'Carlos', score: 4500 },
+  ];
 
-  const getDifficultyText = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'Fácil';
-      case 'medium': return 'Médio';
-      case 'hard': return 'Difícil';
-      default: return 'Normal';
-    }
+  const handleViewRanking = () => {
+    onViewFullRanking();
   };
 
   return (
-    <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
+    <div className="p-4 pb-20 space-y-6">
       {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-purple-800 mb-2">Letra Arena</h1>
-        <p className="text-gray-600">Desafios únicos todos os dias</p>
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-bold text-gray-900">Letra Arena</h1>
+        <p className="text-gray-600">Desafie suas habilidades com palavras</p>
       </div>
 
-      {/* Daily Stats */}
-      <Card className="mb-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0">
-        <CardContent className="p-4">
-          <div className="flex justify-between items-center">
-            <div className="text-center">
-              <div className="text-2xl font-bold">3</div>
-              <div className="text-sm opacity-80">Desafios Hoje</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">1,247</div>
-              <div className="text-sm opacity-80">Jogadores Online</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">#42</div>
-              <div className="text-sm opacity-80">Sua Posição</div>
-            </div>
+      {/* Explanation Buttons */}
+      <ExplanationButtons />
+
+      {/* User Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Estatísticas do Jogador</CardTitle>
+          <CardDescription>Seu progresso e conquistas</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 grid-cols-3">
+          <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50">
+            <Trophy className="w-6 h-6 text-yellow-500 mb-1" />
+            <span className="text-sm font-medium">Ranking</span>
+            <span className="text-xs text-gray-500">Top 10%</span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50">
+            <Star className="w-6 h-6 text-blue-500 mb-1" />
+            <span className="text-sm font-medium">Pontuação</span>
+            <span className="text-xs text-gray-500">7,850</span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50">
+            <Clock className="w-6 h-6 text-green-500 mb-1" />
+            <span className="text-sm font-medium">Tempo Jogado</span>
+            <span className="text-xs text-gray-500">24h 15m</span>
           </div>
         </CardContent>
       </Card>
 
-      {/* Challenges */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Desafios de Hoje</h2>
-        
-        {challenges.map((challenge) => (
-          <Card key={challenge.id} className="overflow-hidden shadow-md">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <CardTitle className="text-lg mb-1">{challenge.title}</CardTitle>
-                  <p className="text-sm text-gray-600">{challenge.description}</p>
+      {/* Challenges Section */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-900">Desafios Diários</h2>
+          <Badge variant="secondary">3 novos</Badge>
+        </div>
+        <div className="space-y-2">
+          {mockChallenges.map(challenge => (
+            <Card key={challenge.id} className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-medium">{challenge.title}</CardTitle>
+                <CardDescription>{challenge.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-4">
+                  <Trophy className="w-4 h-4 text-yellow-500" />
+                  <span>Recompensa: {challenge.reward} pontos</span>
+                  <Clock className="w-4 h-4 text-blue-500" />
+                  <span>Tempo: {challenge.timeLimit} segundos</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(challenge.difficulty)}`}>
-                    {getDifficultyText(challenge.difficulty)}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="p-1 h-8 w-8"
-                    onClick={() => onViewChallengeRanking(challenge.id)}
-                  >
-                    <Trophy className="w-4 h-4 text-yellow-600" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4" />
-                    <span>{challenge.levels} níveis</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>{challenge.players.toLocaleString()}</span>
-                  </div>
-                </div>
-                
-                {challenge.completed && (
-                  <div className="flex items-center gap-1 text-green-600">
-                    <Star className="w-4 h-4 fill-current" />
-                    <span className="text-sm font-medium">Concluído</span>
-                  </div>
-                )}
-              </div>
-              
-              <Button 
-                onClick={() => onStartChallenge(challenge.id)}
-                disabled={challenge.completed}
-                className="w-full"
-                size="lg"
-              >
-                {challenge.completed ? (
-                  'Concluído'
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    Jogar Agora
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" onClick={() => onStartChallenge(challenge.id)}>
+                  Começar <ChevronRight className="ml-2 w-4 h-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </section>
 
-      {/* Quick Ranking Preview */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg">Ranking Global - Hoje</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {[
-              { pos: 1, name: "João Silva", score: 2540 },
-              { pos: 2, name: "Maria Santos", score: 2410 },
-              { pos: 3, name: "Pedro Costa", score: 2380 },
-            ].map((player) => (
-              <div key={player.pos} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                    player.pos === 1 ? 'bg-yellow-500' : 
-                    player.pos === 2 ? 'bg-gray-400' : 'bg-orange-500'
-                  }`}>
-                    {player.pos}
-                  </div>
-                  <span className="font-medium">{player.name}</span>
+      {/* Ranking Section */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-900">Ranking Global</h2>
+          <Button variant="link" onClick={handleViewRanking}>Ver tudo</Button>
+        </div>
+        <Card className="bg-white shadow-sm">
+          <CardHeader>
+            <CardTitle>Top Jogadores</CardTitle>
+            <CardDescription>Veja quem está liderando</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {mockRanking.map(player => (
+              <div key={player.id} className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Users className="w-4 h-4 text-gray-500" />
+                  <span>{player.name}</span>
                 </div>
-                <span className="text-purple-600 font-bold">{player.score}pts</span>
+                <span className="font-medium">{player.score}</span>
               </div>
             ))}
-          </div>
-          <Button variant="outline" className="w-full mt-3" onClick={onViewFullRanking}>
-            Ver Ranking Completo
-          </Button>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 };
