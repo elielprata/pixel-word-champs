@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Clock, Lightbulb, RotateCcw } from 'lucide-react';
@@ -16,18 +17,18 @@ interface GameBoardProps {
 
 const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) => {
   const getBoardSize = (level: number) => {
-    if (level >= 1 && level <= 2) return 5;   // 5x5
-    if (level >= 3 && level <= 4) return 6;   // 6x6
-    if (level >= 5 && level <= 6) return 7;   // 7x7
-    if (level >= 7 && level <= 8) return 8;   // 8x8
-    if (level >= 9 && level <= 10) return 9;  // 9x9
-    if (level >= 11 && level <= 20) return 10; // 10x10
-    return 10; // default for levels beyond 20
+    if (level === 1 || level === 2) return 5;   // Níveis 1-2: 5x5
+    if (level === 3 || level === 4) return 6;   // Níveis 3-4: 6x6
+    if (level === 5 || level === 6) return 7;   // Níveis 5-6: 7x7
+    if (level === 7 || level === 8) return 8;   // Níveis 7-8: 8x8
+    if (level === 9 || level === 10) return 9;  // Níveis 9-10: 9x9
+    if (level >= 11 && level <= 20) return 10;  // Níveis 11-20: 10x10
+    return 10; // padrão para níveis além de 20
   };
 
   const size = getBoardSize(level);
   const [board] = useState(() => {
-    // Generate random letters for demo
+    // Gerar letras aleatórias para demonstração
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     return Array(size).fill(null).map(() => 
       Array(size).fill(null).map(() => 
@@ -105,7 +106,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
           <Clock className="w-4 h-4 text-blue-600" />
           <span className="text-sm font-bold text-gray-800">{formatTime(timeLeft)}</span>
         </div>
-        <div className="text-lg font-bold text-purple-600">Nível {level}</div>
+        <div className="text-lg font-bold text-purple-600">Nível {level} ({size}x{size})</div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="rounded-full">
             <Lightbulb className="w-4 h-4" />
