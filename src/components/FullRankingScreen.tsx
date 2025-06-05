@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Trophy, Medal, Award, User, ArrowLeft, Calendar, TrendingUp, Crown } from 'lucide-react';
+import { Trophy, Medal, Award, User, ArrowLeft, Calendar, TrendingUp, Crown, Flame, Target } from 'lucide-react';
 
 interface Player {
   id: number;
@@ -93,26 +93,30 @@ const FullRankingScreen = ({ onBack }: FullRankingScreenProps) => {
   const getRankIcon = (position: number) => {
     switch (position) {
       case 1:
-        return <Trophy className="w-5 h-5 text-yellow-500" />;
+        return <Trophy className="w-6 h-6 text-yellow-500" />;
       case 2:
-        return <Medal className="w-5 h-5 text-gray-400" />;
+        return <Medal className="w-6 h-6 text-gray-400" />;
       case 3:
-        return <Award className="w-5 h-5 text-orange-500" />;
+        return <Award className="w-6 h-6 text-orange-500" />;
       default:
-        return <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-white">{position}</div>;
+        return (
+          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+            <span className="text-sm font-bold text-gray-600">#{position}</span>
+          </div>
+        );
     }
   };
 
   const getPositionStyle = (position: number) => {
     switch (position) {
       case 1:
-        return 'bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200';
+        return 'bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200 shadow-md';
       case 2:
-        return 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200';
+        return 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 shadow-md';
       case 3:
-        return 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200';
+        return 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200 shadow-md';
       default:
-        return 'bg-white border-gray-100';
+        return 'bg-white border-gray-100 hover:bg-gray-50';
     }
   };
 
@@ -130,158 +134,235 @@ const FullRankingScreen = ({ onBack }: FullRankingScreenProps) => {
   };
 
   const PlayerRow = ({ player, isCurrentUser = false }: { player: Player; isCurrentUser?: boolean }) => (
-    <div className={`flex items-center justify-between p-4 rounded-lg border-2 ${getPositionStyle(player.position)} ${isCurrentUser ? 'ring-2 ring-purple-500' : ''}`}>
-      <div className="flex items-center gap-3">
-        {getRankIcon(player.position)}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-white" />
+    <div className={`relative overflow-hidden rounded-xl border-2 transition-all duration-200 ${getPositionStyle(player.position)} ${isCurrentUser ? 'ring-2 ring-purple-400 shadow-lg' : ''}`}>
+      {/* Top players crown decoration */}
+      {player.position <= 3 && (
+        <div className="absolute top-0 right-0 bg-gradient-to-l from-yellow-400 to-yellow-300 text-yellow-800 px-2 py-1 rounded-bl-lg">
+          <Crown className="w-3 h-3" />
+        </div>
+      )}
+      
+      <div className="p-5">
+        {/* Header with position and name */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-4">
+            {getRankIcon(player.position)}
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-lg text-gray-800">{player.name}</h3>
+                {isCurrentUser && (
+                  <span className="bg-purple-100 text-purple-600 text-xs px-2 py-1 rounded-full font-medium">
+                    Você
+                  </span>
+                )}
+              </div>
+              <div className="text-sm text-gray-500">
+                Posição #{player.position}
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="font-medium text-gray-800 flex items-center gap-2">
-              {player.name}
-              {player.position <= 3 && <Crown className="w-4 h-4 text-yellow-500" />}
+          
+          {/* Score */}
+          <div className="text-right">
+            <div className="text-2xl font-bold text-purple-600">
+              {player.score.toLocaleString()}
             </div>
-            {isCurrentUser && <div className="text-xs text-purple-600 font-medium">Você</div>}
-            <div className="text-xs text-gray-500 flex items-center gap-2">
-              <span>🔥 {player.streak} sequência</span>
-              <span>🎯 {player.gamesPlayed} jogos</span>
-            </div>
+            <div className="text-sm text-gray-500">pontos</div>
           </div>
         </div>
-      </div>
-      <div className="text-right">
-        <div className="font-bold text-purple-600">{player.score.toLocaleString()}pts</div>
-        <div className="text-xs text-gray-500">#{player.position}</div>
+
+        {/* Stats row */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+          <div className="flex items-center gap-6">
+            {/* Streak */}
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-orange-100 rounded-lg">
+                <Flame className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-800">{player.streak}</div>
+                <div className="text-xs text-gray-500">sequência</div>
+              </div>
+            </div>
+            
+            {/* Games played */}
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-blue-100 rounded-lg">
+                <Target className="w-4 h-4 text-blue-500" />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-800">{player.gamesPlayed}</div>
+                <div className="text-xs text-gray-500">jogos</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Avatar */}
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center shadow-lg">
+            <User className="w-6 h-6 text-white" />
+          </div>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={onBack}
-          className="h-10 w-10"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-purple-800">Ranking Completo</h1>
-          <p className="text-gray-600">Top jogadores em todas as categorias</p>
-        </div>
-      </div>
-
-      {/* Stats Overview */}
-      <Card className="mb-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0">
-        <CardContent className="p-4">
-          <div className="flex justify-between items-center">
-            <div className="text-center">
-              <div className="text-2xl font-bold">12,847</div>
-              <div className="text-sm opacity-80">Total de Jogadores</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">R$ 2.500</div>
-              <div className="text-sm opacity-80">Prêmios Mensais</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">#42</div>
-              <div className="text-sm opacity-80">Sua Posição Geral</div>
-            </div>
+    <div className="bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
+      <div className="max-w-4xl mx-auto p-4 pb-20">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onBack}
+            className="h-12 w-12 rounded-full bg-white shadow-md hover:shadow-lg"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-purple-800">Ranking Completo</h1>
+            <p className="text-gray-600">Veja a classificação dos melhores jogadores</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="daily" className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            Diário
-          </TabsTrigger>
-          <TabsTrigger value="weekly" className="flex items-center gap-1">
-            <TrendingUp className="w-4 h-4" />
-            Semanal
-          </TabsTrigger>
-          <TabsTrigger value="monthly" className="flex items-center gap-1">
-            <Trophy className="w-4 h-4" />
-            Mensal
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="daily" className="space-y-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-500" />
-                Ranking Diário - Top 20
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {getCurrentRanking().map((player) => (
-                <PlayerRow key={player.id} player={player} />
-              ))}
-              
-              {/* Current user position */}
-              <div className="border-t pt-3 mt-4">
-                <PlayerRow 
-                  player={{ id: 999, name: "Você", score: 1850, position: 42, streak: 2, gamesPlayed: 6 }}
-                  isCurrentUser={true}
-                />
+        {/* Stats Overview */}
+        <Card className="mb-8 bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0 shadow-xl">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold mb-1">12,847</div>
+                <div className="text-sm opacity-90">Total de Jogadores</div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="weekly" className="space-y-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-purple-500" />
-                Ranking Semanal - Top 20
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {getCurrentRanking().map((player) => (
-                <PlayerRow key={player.id} player={player} />
-              ))}
-              
-              <div className="border-t pt-3 mt-4">
-                <PlayerRow 
-                  player={{ id: 999, name: "Você", score: 8950, position: 38, streak: 5, gamesPlayed: 45 }}
-                  isCurrentUser={true}
-                />
+              <div className="text-center border-x border-white/20">
+                <div className="text-3xl font-bold mb-1">R$ 2.500</div>
+                <div className="text-sm opacity-90">Prêmios Mensais</div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="monthly" className="space-y-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Crown className="w-5 h-5 text-yellow-500" />
-                Ranking Mensal - Top 20
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {getCurrentRanking().map((player) => (
-                <PlayerRow key={player.id} player={player} />
-              ))}
-              
-              <div className="border-t pt-3 mt-4">
-                <PlayerRow 
-                  player={{ id: 999, name: "Você", score: 18750, position: 95, streak: 12, gamesPlayed: 156 }}
-                  isCurrentUser={true}
-                />
+              <div className="text-center">
+                <div className="text-3xl font-bold mb-1">#42</div>
+                <div className="text-sm opacity-90">Sua Posição Geral</div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8 h-14">
+            <TabsTrigger value="daily" className="flex items-center gap-2 text-base">
+              <Calendar className="w-5 h-5" />
+              <span>Diário</span>
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="flex items-center gap-2 text-base">
+              <TrendingUp className="w-5 h-5" />
+              <span>Semanal</span>
+            </TabsTrigger>
+            <TabsTrigger value="monthly" className="flex items-center gap-2 text-base">
+              <Trophy className="w-5 h-5" />
+              <span>Mensal</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="daily" className="space-y-4">
+            <Card className="shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-yellow-50 to-orange-50 border-b">
+                <CardTitle className="text-xl flex items-center gap-3">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <Trophy className="w-6 h-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <div>Ranking Diário</div>
+                    <div className="text-sm font-normal text-gray-600">Top 20 jogadores de hoje</div>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                {getCurrentRanking().map((player) => (
+                  <PlayerRow key={player.id} player={player} />
+                ))}
+                
+                {/* Current user position */}
+                <div className="border-t-2 border-dashed border-gray-200 pt-6 mt-6">
+                  <div className="mb-3 text-center">
+                    <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm font-medium">
+                      Sua Posição
+                    </span>
+                  </div>
+                  <PlayerRow 
+                    player={{ id: 999, name: "Você", score: 1850, position: 42, streak: 2, gamesPlayed: 6 }}
+                    isCurrentUser={true}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="weekly" className="space-y-4">
+            <Card className="shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50 border-b">
+                <CardTitle className="text-xl flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <TrendingUp className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <div>Ranking Semanal</div>
+                    <div className="text-sm font-normal text-gray-600">Top 20 jogadores da semana</div>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                {getCurrentRanking().map((player) => (
+                  <PlayerRow key={player.id} player={player} />
+                ))}
+                
+                <div className="border-t-2 border-dashed border-gray-200 pt-6 mt-6">
+                  <div className="mb-3 text-center">
+                    <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm font-medium">
+                      Sua Posição
+                    </span>
+                  </div>
+                  <PlayerRow 
+                    player={{ id: 999, name: "Você", score: 8950, position: 38, streak: 5, gamesPlayed: 45 }}
+                    isCurrentUser={true}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="monthly" className="space-y-4">
+            <Card className="shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-yellow-50 to-orange-50 border-b">
+                <CardTitle className="text-xl flex items-center gap-3">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <Crown className="w-6 h-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <div>Ranking Mensal</div>
+                    <div className="text-sm font-normal text-gray-600">Top 20 jogadores do mês</div>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                {getCurrentRanking().map((player) => (
+                  <PlayerRow key={player.id} player={player} />
+                ))}
+                
+                <div className="border-t-2 border-dashed border-gray-200 pt-6 mt-6">
+                  <div className="mb-3 text-center">
+                    <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm font-medium">
+                      Sua Posição
+                    </span>
+                  </div>
+                  <PlayerRow 
+                    player={{ id: 999, name: "Você", score: 18750, position: 95, streak: 12, gamesPlayed: 156 }}
+                    isCurrentUser={true}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
