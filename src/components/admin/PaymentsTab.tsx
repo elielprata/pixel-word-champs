@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { DollarSign, Edit, Save, X } from 'lucide-react';
+import { DollarSign, Edit, Save, X, Download } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { PixExportModal } from "./PixExportModal";
 
 interface IndividualPrize {
   position: number;
@@ -25,6 +26,8 @@ export const PaymentsTab = () => {
   const { toast } = useToast();
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [selectedPrizeLevel, setSelectedPrizeLevel] = useState<string>('');
   
   const [individualPrizes, setIndividualPrizes] = useState<IndividualPrize[]>([
     { position: 1, prize: 1000 },
@@ -104,6 +107,11 @@ export const PaymentsTab = () => {
     setEditGroupPrize(0);
   };
 
+  const handleExportPix = (prizeLevel: string) => {
+    setSelectedPrizeLevel(prizeLevel);
+    setExportModalOpen(true);
+  };
+
   const calculateTotalPrize = () => {
     const individualTotal = individualPrizes.reduce((total, prize) => total + prize.prize, 0);
     const groupTotal = groupPrizes
@@ -173,34 +181,47 @@ export const PaymentsTab = () => {
                       )}
                     </td>
                     <td className="p-2">
-                      {editingRow === prize.position ? (
-                        <div className="flex gap-1">
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleSaveIndividual(prize.position)}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Save className="h-3 w-3" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={handleCancel}
-                            className="h-6 w-6 p-0"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleEditIndividual(prize.position)}
-                          className="h-6 w-6 p-0"
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                      )}
+                      <div className="flex gap-1">
+                        {editingRow === prize.position ? (
+                          <>
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleSaveIndividual(prize.position)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Save className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={handleCancel}
+                              className="h-6 w-6 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditIndividual(prize.position)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleExportPix(`${prize.position}º lugar`)}
+                              className="h-6 w-6 p-0"
+                              title="Exportar PIX"
+                            >
+                              <Download className="h-3 w-3" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -252,15 +273,27 @@ export const PaymentsTab = () => {
                         </Button>
                       </div>
                     ) : (
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleEditGroup(group.id)}
-                        className="h-6 w-6 p-0"
-                        disabled={!group.active}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditGroup(group.id)}
+                          className="h-6 w-6 p-0"
+                          disabled={!group.active}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleExportPix(group.name)}
+                          className="h-6 w-6 p-0"
+                          disabled={!group.active}
+                          title="Exportar PIX"
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -320,6 +353,12 @@ export const PaymentsTab = () => {
           </div>
         </CardContent>
       </Card>
+
+      <PixExportModal 
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
+        prizeLevel={selectedPrizeLevel}
+      />
     </div>
   );
 };
