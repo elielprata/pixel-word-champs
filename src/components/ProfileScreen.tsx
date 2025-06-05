@@ -14,10 +14,11 @@ interface ProfileScreenProps {
 const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreenProps) => {
   const { user, logout } = useAuth();
 
+  // Usar dados reais do usuário em vez de mock
   const stats = [
-    { label: 'Desafios Jogados', value: '23', icon: Calendar },
-    { label: 'Melhor Posição', value: '#12', icon: Trophy },
-    { label: 'Pontos Total', value: '1,247', icon: User },
+    { label: 'Desafios Jogados', value: user?.games_played?.toString() || '0', icon: Calendar },
+    { label: 'Melhor Posição', value: user?.best_daily_position ? `#${user.best_daily_position}` : '-', icon: Trophy },
+    { label: 'Pontos Total', value: user?.total_score?.toLocaleString() || '0', icon: User },
   ];
 
   const handleSettings = () => {
@@ -50,6 +51,17 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreen
     { label: 'Sair', icon: LogOut, action: handleLogout, danger: true },
   ];
 
+  // Corrigir avatar fallback para lidar com username vazio
+  const getAvatarFallback = () => {
+    if (user?.username && user.username.length > 0) {
+      return user.username.charAt(0).toUpperCase();
+    }
+    if (user?.email && user.email.length > 0) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
   return (
     <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
       <div className="text-center mb-6">
@@ -63,7 +75,7 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreen
           <Avatar className="w-20 h-20 mx-auto mb-4 border-4 border-white">
             <AvatarImage src={user?.avatar_url} />
             <AvatarFallback className="text-purple-600 text-xl font-bold">
-              {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+              {getAvatarFallback()}
             </AvatarFallback>
           </Avatar>
           <h2 className="text-xl font-bold mb-1">{user?.username || 'Usuário'}</h2>
@@ -106,20 +118,24 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreen
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
-              <Trophy className="w-8 h-8 text-yellow-600" />
-              <div>
-                <p className="font-medium text-gray-900">Top 20 Diário</p>
-                <p className="text-sm text-gray-600">Alcançou posição #18 ontem</p>
+            {user?.best_daily_position && (
+              <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
+                <Trophy className="w-8 h-8 text-yellow-600" />
+                <div>
+                  <p className="font-medium text-gray-900">Melhor Posição Diária</p>
+                  <p className="text-sm text-gray-600">Posição #{user.best_daily_position}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-              <Calendar className="w-8 h-8 text-purple-600" />
-              <div>
-                <p className="font-medium text-gray-900">Sequência de 7 dias</p>
-                <p className="text-sm text-gray-600">Jogou por uma semana seguida</p>
+            )}
+            {user?.games_played && user.games_played > 0 && (
+              <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                <Calendar className="w-8 h-8 text-purple-600" />
+                <div>
+                  <p className="font-medium text-gray-900">Jogos Completados</p>
+                  <p className="text-sm text-gray-600">{user.games_played} jogos realizados</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>

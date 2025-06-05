@@ -31,8 +31,8 @@ const RankingScreen = () => {
           pos: index + 1,
           name: player.username,
           score: player.total_score,
-          avatar: player.avatar_url || "👤",
-          user_id: player.id
+          avatar_url: player.avatar_url, // Corrigido para avatar_url
+          user_id: player.id // Corrigido para usar id retornado da query
         }));
         setTopPlayers(players);
       } else {

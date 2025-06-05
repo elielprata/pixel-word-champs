@@ -52,12 +52,13 @@ export interface CompetitionParticipation {
   payment_date?: string;
 }
 
+// Corrigir RankingPlayer para consistência com User
 export interface RankingPlayer {
   pos: number;
   name: string;
   score: number;
-  avatar: string;
-  user_id?: string;
+  avatar_url?: string; // Alterado de 'avatar' para 'avatar_url'
+  user_id: string; // Removido opcional - sempre necessário para comparações
 }
 
 export interface Challenge {
@@ -86,10 +87,12 @@ export interface RegisterForm {
   inviteCode?: string;
 }
 
-// Tipos para game
+// Tipos para game - Expandir Position interface
 export interface Position {
   row: number;
   col: number;
+  direction?: 'horizontal' | 'vertical' | 'diagonal';
+  length?: number;
 }
 
 export interface WordFound {
@@ -112,7 +115,7 @@ export interface AsyncState<T> {
   data?: T;
 }
 
-// Respostas da API - CORRIGIDO: data sempre presente, null quando erro
+// Corrigir ApiResponse para ter tipos mais específicos
 export interface ApiResponse<T> {
   data: T | null;
   error?: string;

@@ -3,7 +3,7 @@ import { User } from '@/types';
 
 export const mapUserFromProfile = (profile: any, authUser: any): User => ({
   id: profile.id || authUser.id,
-  username: profile.username || authUser.email?.split('@')[0] || '',
+  username: profile.username || authUser.email?.split('@')[0] || 'Usuário', // Corrigir fallback vazio
   email: authUser.email || '',
   avatar_url: profile.avatar_url,
   created_at: profile.created_at || authUser.created_at,
@@ -16,7 +16,7 @@ export const mapUserFromProfile = (profile: any, authUser: any): User => ({
 
 export const createFallbackUser = (session: any): User => ({
   id: session.user.id,
-  username: session.user.email?.split('@')[0] || '',
+  username: session.user.email?.split('@')[0] || 'Usuário', // Corrigir fallback vazio
   email: session.user.email || '',
   created_at: session.user.created_at,
   updated_at: session.user.updated_at || '',
