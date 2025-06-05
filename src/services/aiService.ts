@@ -15,6 +15,12 @@ export interface AIGeneratedData {
 }
 
 class AIService {
+  private apiKey: string | null = null;
+
+  setApiKey(key: string) {
+    this.apiKey = key;
+  }
+
   async generateWordsForBoard(board: string[][], level: number): Promise<AIGeneratedData> {
     // Mock implementation - substituir por integração real com OpenAI
     const mockWords: WordPosition[] = [

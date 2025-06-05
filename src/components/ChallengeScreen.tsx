@@ -15,6 +15,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const [timeRemaining, setTimeRemaining] = useState(180); // 3 minutos
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
+  const [score, setScore] = useState(0);
 
   const challengeData = {
     1: { title: "Desafio Matinal", description: "Palavras relacionadas ao café da manhã" },
@@ -40,6 +41,15 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const startGame = () => {
     setShowInstructions(false);
     setIsGameStarted(true);
+  };
+
+  const handleWordFound = (word: string, points: number) => {
+    setScore(prev => prev + points);
+  };
+
+  const handleTimeUp = () => {
+    // Lógica quando o tempo acaba
+    console.log('Tempo esgotado!');
   };
 
   if (showInstructions) {
@@ -119,7 +129,12 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
         </div>
       </div>
 
-      <GameBoard level={currentLevel} />
+      <GameBoard 
+        level={currentLevel} 
+        timeLeft={timeRemaining}
+        onWordFound={handleWordFound}
+        onTimeUp={handleTimeUp}
+      />
     </div>
   );
 };
