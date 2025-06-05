@@ -120,49 +120,49 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
+      <DialogContent className="w-[95vw] max-w-4xl h-[90vh] max-h-[600px] overflow-y-auto p-3 sm:p-6">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
+            <Download className="h-4 w-4" />
             Exportar PIX - {prizeLevel}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Filtros */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-medium mb-3 flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Filtrar por Data Consolidada
+          <div className="bg-gray-50 p-2 sm:p-3 rounded-lg">
+            <h3 className="font-medium mb-2 flex items-center gap-2 text-sm">
+              <Filter className="h-3 w-3" />
+              Filtrar por Data
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
-                <Label htmlFor="startDate">Data Início</Label>
+                <Label htmlFor="startDate" className="text-xs">Início</Label>
                 <Input
                   id="startDate"
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="mt-1"
+                  className="h-8 text-xs"
                 />
               </div>
               <div>
-                <Label htmlFor="endDate">Data Fim</Label>
+                <Label htmlFor="endDate" className="text-xs">Fim</Label>
                 <Input
                   id="endDate"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="mt-1"
+                  className="h-8 text-xs"
                 />
               </div>
-              <div className="flex items-end gap-2">
-                <Button onClick={handleFilter} className="flex-1">
-                  <Filter className="h-4 w-4 mr-2" />
+              <div className="flex items-end gap-1">
+                <Button onClick={handleFilter} className="flex-1 h-8 text-xs">
+                  <Filter className="h-3 w-3 mr-1" />
                   Filtrar
                 </Button>
                 {isFiltered && (
-                  <Button variant="outline" onClick={handleClearFilter}>
+                  <Button variant="outline" onClick={handleClearFilter} className="h-8 px-2 text-xs">
                     Limpar
                   </Button>
                 )}
@@ -171,60 +171,72 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
           </div>
 
           {/* Resumo */}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <div>
-              <p className="text-sm text-gray-600">
-                {isFiltered ? 'Ganhadores filtrados:' : 'Total de ganhadores:'} 
+              <p className="text-xs text-gray-600">
+                {isFiltered ? 'Filtrados:' : 'Total:'} 
                 <span className="font-bold ml-1">{displayWinners.length}</span>
               </p>
               {isFiltered && (
                 <p className="text-xs text-blue-600">
-                  Período: {new Date(startDate).toLocaleDateString('pt-BR')} até {new Date(endDate).toLocaleDateString('pt-BR')}
+                  {new Date(startDate).toLocaleDateString('pt-BR')} - {new Date(endDate).toLocaleDateString('pt-BR')}
                 </p>
               )}
             </div>
-            <Button onClick={handleExport} disabled={displayWinners.length === 0}>
-              <Download className="h-4 w-4 mr-2" />
+            <Button onClick={handleExport} disabled={displayWinners.length === 0} className="h-8 text-xs">
+              <Download className="h-3 w-3 mr-1" />
               Exportar CSV
             </Button>
           </div>
 
           {/* Tabela de Ganhadores */}
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Posição</TableHead>
-                  <TableHead>Usuário</TableHead>
-                  <TableHead>Chave PIX</TableHead>
-                  <TableHead>Nome do Titular</TableHead>
-                  <TableHead>Data Consolidada</TableHead>
-                  <TableHead className="text-right">Prêmio</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {displayWinners.length === 0 ? (
+          <div className="border rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-gray-500 py-8">
-                      {isFiltered ? 'Nenhum ganhador encontrado no período selecionado.' : 'Nenhum ganhador encontrado.'}
-                    </TableCell>
+                    <TableHead className="text-xs p-2">Pos.</TableHead>
+                    <TableHead className="text-xs p-2">Usuário</TableHead>
+                    <TableHead className="text-xs p-2 hidden sm:table-cell">Chave PIX</TableHead>
+                    <TableHead className="text-xs p-2 hidden md:table-cell">Titular</TableHead>
+                    <TableHead className="text-xs p-2 hidden lg:table-cell">Data</TableHead>
+                    <TableHead className="text-xs p-2 text-right">Prêmio</TableHead>
                   </TableRow>
-                ) : (
-                  displayWinners.map((winner) => (
-                    <TableRow key={winner.id}>
-                      <TableCell className="font-medium">{winner.position}º</TableCell>
-                      <TableCell>{winner.username}</TableCell>
-                      <TableCell className="font-mono text-sm">{winner.pixKey}</TableCell>
-                      <TableCell>{winner.holderName}</TableCell>
-                      <TableCell>{new Date(winner.consolidatedDate).toLocaleDateString('pt-BR')}</TableCell>
-                      <TableCell className="text-right font-medium text-green-600">
-                        R$ {winner.prize.toLocaleString('pt-BR')}
+                </TableHeader>
+                <TableBody>
+                  {displayWinners.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-gray-500 py-4 text-xs">
+                        {isFiltered ? 'Nenhum ganhador no período.' : 'Nenhum ganhador encontrado.'}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    displayWinners.map((winner) => (
+                      <TableRow key={winner.id}>
+                        <TableCell className="font-medium text-xs p-2">{winner.position}º</TableCell>
+                        <TableCell className="text-xs p-2">{winner.username}</TableCell>
+                        <TableCell className="font-mono text-xs p-2 hidden sm:table-cell">
+                          <div className="truncate max-w-[100px]" title={winner.pixKey}>
+                            {winner.pixKey}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs p-2 hidden md:table-cell">
+                          <div className="truncate max-w-[80px]" title={winner.holderName}>
+                            {winner.holderName}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs p-2 hidden lg:table-cell">
+                          {new Date(winner.consolidatedDate).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-green-600 text-xs p-2">
+                          R$ {winner.prize.toLocaleString('pt-BR')}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
       </DialogContent>
