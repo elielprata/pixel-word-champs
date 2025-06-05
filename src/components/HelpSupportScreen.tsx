@@ -1,14 +1,22 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, MessageCircle, Mail, BookOpen, Star, HelpCircle, Bug } from 'lucide-react';
+import LiveChatScreen from './LiveChatScreen';
+import SendEmailScreen from './SendEmailScreen';
+import ReportBugScreen from './ReportBugScreen';
+import BasicTutorialScreen from './BasicTutorialScreen';
+import AdvancedStrategiesScreen from './AdvancedStrategiesScreen';
+import RankingSystemScreen from './RankingSystemScreen';
 
 interface HelpSupportScreenProps {
   onBack: () => void;
 }
 
 const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
+  const [currentScreen, setCurrentScreen] = useState<'help' | 'chat' | 'email' | 'bug' | 'basic' | 'advanced' | 'ranking'>('help');
+
   const faqs = [
     {
       question: "Como funciona a pontuação?",
@@ -27,6 +35,30 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
       answer: "Assista anúncios para ganhar +30 segundos extras em qualquer nível, quantas vezes quiser"
     }
   ];
+
+  if (currentScreen === 'chat') {
+    return <LiveChatScreen onBack={() => setCurrentScreen('help')} />;
+  }
+
+  if (currentScreen === 'email') {
+    return <SendEmailScreen onBack={() => setCurrentScreen('help')} />;
+  }
+
+  if (currentScreen === 'bug') {
+    return <ReportBugScreen onBack={() => setCurrentScreen('help')} />;
+  }
+
+  if (currentScreen === 'basic') {
+    return <BasicTutorialScreen onBack={() => setCurrentScreen('help')} />;
+  }
+
+  if (currentScreen === 'advanced') {
+    return <AdvancedStrategiesScreen onBack={() => setCurrentScreen('help')} />;
+  }
+
+  if (currentScreen === 'ranking') {
+    return <RankingSystemScreen onBack={() => setCurrentScreen('help')} />;
+  }
 
   return (
     <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
@@ -47,15 +79,30 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button variant="outline" className="w-full justify-start" size="lg">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            size="lg"
+            onClick={() => setCurrentScreen('chat')}
+          >
             <MessageCircle className="w-5 h-5 mr-3" />
             Chat ao Vivo
           </Button>
-          <Button variant="outline" className="w-full justify-start" size="lg">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            size="lg"
+            onClick={() => setCurrentScreen('email')}
+          >
             <Mail className="w-5 h-5 mr-3" />
             Enviar Email
           </Button>
-          <Button variant="outline" className="w-full justify-start" size="lg">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            size="lg"
+            onClick={() => setCurrentScreen('bug')}
+          >
             <Bug className="w-5 h-5 mr-3" />
             Reportar Bug
           </Button>
@@ -90,13 +137,25 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={() => setCurrentScreen('basic')}
+            >
               Como jogar - Básico
             </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={() => setCurrentScreen('advanced')}
+            >
               Estratégias avançadas
             </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={() => setCurrentScreen('ranking')}
+            >
               Sistema de ranking
             </Button>
           </div>
