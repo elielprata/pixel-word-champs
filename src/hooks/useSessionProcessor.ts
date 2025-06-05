@@ -4,18 +4,25 @@ import { User } from '@/types';
 import { authService } from '@/services/authService';
 import { createFallbackUser, createTimeoutPromise } from '@/utils/authHelpers';
 import type { ApiResponse } from '@/types';
-import { useAuthState } from './useAuthState';
+import { useAuthStateCore } from './useAuthStateCore';
+import { useAuthRefs } from './useAuthRefs';
 
-export const useSessionProcessor = (authState: ReturnType<typeof useAuthState>) => {
+export const useSessionProcessor = (
+  authState: ReturnType<typeof useAuthStateCore>,
+  authRefs: ReturnType<typeof useAuthRefs>
+) => {
   const {
     setUser,
     setIsAuthenticated,
     setIsLoading,
     setError,
+  } = authState;
+
+  const {
     isProcessingRef,
     isMountedRef,
     lastProcessedSessionRef,
-  } = authState;
+  } = authRefs;
 
   const processAuthentication = useCallback(async (session: any) => {
     // Prevent multiple simultaneous processing of the same session

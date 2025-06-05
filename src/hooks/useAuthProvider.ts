@@ -2,14 +2,16 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { AuthContextType } from '@/types/auth';
-import { useAuthState } from './useAuthState';
+import { useAuthStateCore } from './useAuthStateCore';
+import { useAuthRefs } from './useAuthRefs';
 import { useAuthOperations } from './useAuthOperations';
 import { useSessionProcessor } from './useSessionProcessor';
 
 export const useAuthProvider = (): AuthContextType => {
-  const authState = useAuthState();
-  const { processAuthentication } = useSessionProcessor(authState);
-  const authOperations = useAuthOperations(authState);
+  const authState = useAuthStateCore();
+  const authRefs = useAuthRefs();
+  const { processAuthentication } = useSessionProcessor(authState, authRefs);
+  const authOperations = useAuthOperations(authState, authRefs);
   
   const {
     user,
@@ -20,10 +22,13 @@ export const useAuthProvider = (): AuthContextType => {
     setUser,
     setError,
     setIsLoading,
+  } = authState;
+
+  const {
     isMountedRef,
     isProcessingRef,
     lastProcessedSessionRef,
-  } = authState;
+  } = authRefs;
 
   useEffect(() => {
     console.log('Iniciando verificação de autenticação...');

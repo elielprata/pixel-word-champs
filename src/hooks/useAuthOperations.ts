@@ -1,16 +1,21 @@
 
 import { LoginForm, RegisterForm } from '@/types';
 import { authService } from '@/services/authService';
-import { useAuthState } from './useAuthState';
+import { useAuthStateCore } from './useAuthStateCore';
+import { useAuthRefs } from './useAuthRefs';
 
-export const useAuthOperations = (authState: ReturnType<typeof useAuthState>) => {
+export const useAuthOperations = (
+  authState: ReturnType<typeof useAuthStateCore>,
+  authRefs: ReturnType<typeof useAuthRefs>
+) => {
   const { 
     setUser, 
     setIsAuthenticated, 
     setIsLoading, 
-    setError,
-    lastProcessedSessionRef 
+    setError
   } = authState;
+
+  const { lastProcessedSessionRef } = authRefs;
 
   const login = async (credentials: LoginForm) => {
     setIsLoading(true);
