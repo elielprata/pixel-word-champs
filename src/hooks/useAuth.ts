@@ -29,6 +29,67 @@ export const useAuthProvider = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
 
+  // Função para criar usuário fallback
+  const createFallbackUser = (session: any): User => {
+    console.log('Criando usuário fallback com dados da sessão');
+    return {
+      id: session.user.id,
+      username: session.user.email?.split('@')[0] || '',
+      email: session.user.email || '',
+      createdAt: session.user.created_at,
+      updatedAt: session.user.updated_at || '',
+      totalScore: 0,
+      gamesPlayed: 0
+    };
+  };
+
+  // Função para processar autenticação com timeout
+  const processAuthentication = async (session: any) => {
+    if (!session?.user) {
+      console.log('Nenhuma sessão encontrada');
+      setIsAuthenticated(false);
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
+    console.log('Sessão encontrada para:', session.user.email);
+    
+    try {
+      console.log('Tentando getCurrentUser com timeout...');
+      
+      // Criar uma Promise com timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout na chamada getCurrentUser')), 5000);
+      });
+
+      const getUserPromise = authService.getCurrentUser();
+      
+      const response = await Promise.race([getUserPromise, timeoutPromise]);
+      console.log('Response do getCurrentUser:', response);
+      
+      if (response.success && response.data) {
+        console.log('Definindo usuário autenticado:', response.data.username);
+        setUser(response.data);
+        setIsAuthenticated(true);
+      } else {
+        console.log('getCurrentUser não retornou dados válidos, usando fallback');
+        const fallbackUser = createFallbackUser(session);
+        setUser(fallbackUser);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error('Erro ou timeout na getCurrentUser:', error);
+      console.log('Usando dados básicos da sessão...');
+      const fallbackUser = createFallbackUser(session);
+      setUser(fallbackUser);
+      setIsAuthenticated(true);
+    } finally {
+      console.log('Finalizando processamento - definindo isLoading = false');
+      setIsLoading(false);
+    }
+  };
+
   // Verificar estado inicial de autenticação
   useEffect(() => {
     console.log('Iniciando verificação de autenticação...');
@@ -36,64 +97,14 @@ export const useAuthProvider = () => {
     const checkAuth = async () => {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        console.log('Sessão encontrada:', !!session, 'Erro:', sessionError);
+        console.log('getSession - Sessão encontrada:', !!session, 'Erro:', sessionError);
         
-        if (session?.user) {
-          console.log('Usuário da sessão:', session.user.email);
-          console.log('Chamando authService.getCurrentUser()...');
-          
-          try {
-            const response = await authService.getCurrentUser();
-            console.log('Response do getCurrentUser:', response);
-            
-            if (response.success && response.data) {
-              console.log('Definindo usuário autenticado:', response.data.username);
-              setUser(response.data);
-              setIsAuthenticated(true);
-            } else {
-              console.log('Erro ao obter dados do usuário:', response.error);
-              console.log('Usando dados básicos da sessão...');
-              // Se há sessão mas falha em obter dados, ainda considera autenticado
-              setIsAuthenticated(true);
-              setUser({
-                id: session.user.id,
-                username: session.user.email?.split('@')[0] || '',
-                email: session.user.email || '',
-                createdAt: session.user.created_at,
-                updatedAt: session.user.updated_at || '',
-                totalScore: 0,
-                gamesPlayed: 0
-              });
-              console.log('Usuário definido com dados básicos');
-            }
-          } catch (authError) {
-            console.error('Erro ao chamar getCurrentUser:', authError);
-            console.log('Usando dados básicos da sessão por causa do erro...');
-            setIsAuthenticated(true);
-            setUser({
-              id: session.user.id,
-              username: session.user.email?.split('@')[0] || '',
-              email: session.user.email || '',
-              createdAt: session.user.created_at,
-              updatedAt: session.user.updated_at || '',
-              totalScore: 0,
-              gamesPlayed: 0
-            });
-            console.log('Usuário definido com dados básicos após erro');
-          }
-        } else {
-          console.log('Nenhuma sessão encontrada');
-          setIsAuthenticated(false);
-          setUser(null);
-        }
+        await processAuthentication(session);
       } catch (err) {
-        console.error('Erro ao verificar autenticação:', err);
+        console.error('Erro ao verificar autenticação inicial:', err);
         setIsAuthenticated(false);
         setUser(null);
-      } finally {
-        console.log('Finalizando verificação - definindo isLoading = false');
         setIsLoading(false);
-        console.log('Verificação de autenticação concluída');
       }
     };
 
@@ -106,50 +117,13 @@ export const useAuthProvider = () => {
         
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('Processando login para:', session.user.email);
-          
-          try {
-            const response = await authService.getCurrentUser();
-            console.log('getCurrentUser response no login:', response);
-            
-            if (response.success && response.data) {
-              setUser(response.data);
-              setIsAuthenticated(true);
-              console.log('Login realizado:', response.data.username);
-            } else {
-              console.log('Usando fallback no login...');
-              // Fallback se getCurrentUser falhar
-              setIsAuthenticated(true);
-              setUser({
-                id: session.user.id,
-                username: session.user.email?.split('@')[0] || '',
-                email: session.user.email || '',
-                createdAt: session.user.created_at,
-                updatedAt: session.user.updated_at || '',
-                totalScore: 0,
-                gamesPlayed: 0
-              });
-              console.log('Login realizado com dados básicos');
-            }
-          } catch (loginError) {
-            console.error('Erro no getCurrentUser durante login:', loginError);
-            setIsAuthenticated(true);
-            setUser({
-              id: session.user.id,
-              username: session.user.email?.split('@')[0] || '',
-              email: session.user.email || '',
-              createdAt: session.user.created_at,
-              updatedAt: session.user.updated_at || '',
-              totalScore: 0,
-              gamesPlayed: 0
-            });
-            console.log('Login realizado com dados básicos após erro');
-          }
+          await processAuthentication(session);
         } else if (event === 'SIGNED_OUT') {
+          console.log('Processando logout');
           setUser(null);
           setIsAuthenticated(false);
-          console.log('Logout realizado');
+          setIsLoading(false);
         }
-        setIsLoading(false);
       }
     );
 
