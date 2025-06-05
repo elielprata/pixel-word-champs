@@ -37,7 +37,7 @@ class AuthService {
         throw new Error('Erro no login: dados incompletos');
       }
 
-      // Buscar perfil com timeout mais curto e fallback mais rápido
+      // Buscar perfil com timeout mais curto
       const profilePromise = supabase
         .from('profiles')
         .select('*')
@@ -156,7 +156,7 @@ class AuthService {
         .single();
 
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 2000)
+        setTimeout(() => reject(new Error('Timeout')), 1500)
       );
 
       let profile = null;
