@@ -3,22 +3,46 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, Trophy, Calendar, Settings, HelpCircle, LogOut } from 'lucide-react';
+import { User, Trophy, Calendar, Settings, HelpCircle, LogOut, History } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const ProfileScreen = () => {
   const { user, logout } = useAuth();
 
   const stats = [
-    { label: 'Desafios Jogados', value: '23', icon: Calendar },
-    { label: 'Melhor Posição', value: '#12', icon: Trophy },
-    { label: 'Pontos Total', value: '1,247', icon: User },
+    { label: 'Jogos Totais', value: user?.gamesPlayed?.toString() || '0', icon: Calendar },
+    { label: 'Melhor Posição Diária', value: user?.bestDailyPosition ? `#${user.bestDailyPosition}` : '-', icon: Trophy },
+    { label: 'Pontuação Total', value: user?.totalScore?.toLocaleString() || '0', icon: User },
   ];
 
+  const handleSettings = () => {
+    console.log('Configurações clicadas');
+    // Navegar para tela de configurações
+  };
+
+  const handleHelp = () => {
+    console.log('Ajuda clicada');
+    // Navegar para tela de ajuda
+  };
+
+  const handleHistory = () => {
+    console.log('Histórico clicado');
+    // Navegar para tela de histórico
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
   const menuItems = [
-    { label: 'Configurações', icon: Settings, action: () => {} },
-    { label: 'Ajuda e Suporte', icon: HelpCircle, action: () => {} },
-    { label: 'Sair', icon: LogOut, action: logout, danger: true },
+    { label: 'Histórico de Jogos', icon: History, action: handleHistory },
+    { label: 'Configurações', icon: Settings, action: handleSettings },
+    { label: 'Ajuda e Suporte', icon: HelpCircle, action: handleHelp },
+    { label: 'Sair', icon: LogOut, action: handleLogout, danger: true },
   ];
 
   return (
@@ -48,6 +72,12 @@ const ProfileScreen = () => {
               <p className="text-2xl font-bold">{user?.gamesPlayed || 0}</p>
               <p className="text-xs opacity-80">Jogos</p>
             </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">
+                {user?.bestDailyPosition ? `#${user.bestDailyPosition}` : '-'}
+              </p>
+              <p className="text-xs opacity-80">Melhor Posição</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -55,7 +85,7 @@ const ProfileScreen = () => {
       {/* Estatísticas */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-lg">Estatísticas</CardTitle>
+          <CardTitle className="text-lg">Estatísticas Detalhadas</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4">
@@ -77,20 +107,29 @@ const ProfileScreen = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
-              <Trophy className="w-8 h-8 text-yellow-600" />
-              <div>
-                <p className="font-medium text-gray-900">Top 20 Diário</p>
-                <p className="text-sm text-gray-600">Alcançou posição #18 ontem</p>
+            {user?.bestDailyPosition && user.bestDailyPosition <= 20 && (
+              <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
+                <Trophy className="w-8 h-8 text-yellow-600" />
+                <div>
+                  <p className="font-medium text-gray-900">Top 20 Diário</p>
+                  <p className="text-sm text-gray-600">Alcançou posição #{user.bestDailyPosition}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-              <Calendar className="w-8 h-8 text-purple-600" />
-              <div>
-                <p className="font-medium text-gray-900">Sequência de 7 dias</p>
-                <p className="text-sm text-gray-600">Jogou por uma semana seguida</p>
+            )}
+            {user?.gamesPlayed && user.gamesPlayed >= 7 && (
+              <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                <Calendar className="w-8 h-8 text-purple-600" />
+                <div>
+                  <p className="font-medium text-gray-900">Jogador Ativo</p>
+                  <p className="text-sm text-gray-600">Já jogou {user.gamesPlayed} partidas</p>
+                </div>
               </div>
-            </div>
+            )}
+            {(!user?.bestDailyPosition || user.bestDailyPosition > 20) && (!user?.gamesPlayed || user.gamesPlayed < 7) && (
+              <div className="text-center py-4 text-gray-500">
+                <p>Continue jogando para desbloquear conquistas!</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -103,7 +142,7 @@ const ProfileScreen = () => {
               key={index}
               onClick={item.action}
               className={`w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors border-b last:border-b-0 ${
-                item.danger ? 'text-red-600' : 'text-gray-700'
+                item.danger ? 'text-red-600 hover:bg-red-50' : 'text-gray-700'
               }`}
             >
               <item.icon className="w-5 h-5" />
