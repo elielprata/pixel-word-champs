@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Play, Star, Clock, Users } from 'lucide-react';
+import { Play, Star, Clock, Users, Trophy } from 'lucide-react';
 
 interface Challenge {
   id: number;
@@ -46,6 +47,36 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
       levels: 20,
       players: 2103,
       difficulty: 'hard'
+    }
+  ];
+
+  const challengeRankings = [
+    {
+      challengeId: 1,
+      title: "Desafio Matinal",
+      topPlayers: [
+        { name: "Ana Silva", score: 2840 },
+        { name: "Carlos Santos", score: 2650 },
+        { name: "Maria Costa", score: 2420 }
+      ]
+    },
+    {
+      challengeId: 2,
+      title: "Animais Selvagens",
+      topPlayers: [
+        { name: "Pedro Oliveira", score: 3120 },
+        { name: "Julia Ferreira", score: 2980 },
+        { name: "Roberto Lima", score: 2760 }
+      ]
+    },
+    {
+      challengeId: 3,
+      title: "Cidades do Brasil",
+      topPlayers: [
+        { name: "Fernanda Rocha", score: 3450 },
+        { name: "Lucas Almeida", score: 3200 },
+        { name: "Camila Dias", score: 3080 }
+      ]
     }
   ];
 
@@ -95,63 +126,110 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
         </CardContent>
       </Card>
 
-      {/* Challenges */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Desafios de Hoje</h2>
-        
-        {challenges.map((challenge) => (
-          <Card key={challenge.id} className="overflow-hidden shadow-md">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <CardTitle className="text-lg mb-1">{challenge.title}</CardTitle>
-                  <p className="text-sm text-gray-600">{challenge.description}</p>
-                </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(challenge.difficulty)}`}>
-                  {getDifficultyText(challenge.difficulty)}
-                </div>
-              </div>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4" />
-                    <span>{challenge.levels} níveis</span>
+      {/* Grid Layout for Challenges and Rankings */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Challenges Section */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Desafios de Hoje</h2>
+          
+          {challenges.map((challenge) => (
+            <Card key={challenge.id} className="overflow-hidden shadow-md">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg mb-1">{challenge.title}</CardTitle>
+                    <p className="text-sm text-gray-600">{challenge.description}</p>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>{challenge.players.toLocaleString()}</span>
+                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(challenge.difficulty)}`}>
+                    {getDifficultyText(challenge.difficulty)}
                   </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4" />
+                      <span>{challenge.levels} níveis</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      <span>{challenge.players.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  
+                  {challenge.completed && (
+                    <div className="flex items-center gap-1 text-green-600">
+                      <Star className="w-4 h-4 fill-current" />
+                      <span className="text-sm font-medium">Concluído</span>
+                    </div>
+                  )}
                 </div>
                 
-                {challenge.completed && (
-                  <div className="flex items-center gap-1 text-green-600">
-                    <Star className="w-4 h-4 fill-current" />
-                    <span className="text-sm font-medium">Concluído</span>
-                  </div>
-                )}
-              </div>
+                <Button 
+                  onClick={() => onStartChallenge(challenge.id)}
+                  disabled={challenge.completed}
+                  className="w-full"
+                  size="lg"
+                >
+                  {challenge.completed ? (
+                    'Concluído'
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      Jogar Agora
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Challenge Rankings Section */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            Rankings dos Desafios
+          </h2>
+          
+          {challengeRankings.map((ranking) => (
+            <Card key={ranking.challengeId} className="overflow-hidden shadow-md">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">{ranking.title}</CardTitle>
+              </CardHeader>
               
-              <Button 
-                onClick={() => onStartChallenge(challenge.id)}
-                disabled={challenge.completed}
-                className="w-full"
-                size="lg"
-              >
-                {challenge.completed ? (
-                  'Concluído'
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    Jogar Agora
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+              <CardContent>
+                <div className="space-y-2">
+                  {ranking.topPlayers.map((player, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                          index === 0 ? 'bg-yellow-500' : 
+                          index === 1 ? 'bg-gray-400' : 'bg-orange-500'
+                        }`}>
+                          {index + 1}
+                        </div>
+                        <span className="font-medium text-sm">{player.name}</span>
+                      </div>
+                      <span className="text-purple-600 font-bold text-sm">{player.score}pts</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-3"
+                  onClick={() => onStartChallenge(ranking.challengeId)}
+                >
+                  Ver Ranking Completo
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       {/* Quick Ranking Preview */}
