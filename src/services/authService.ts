@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, LoginForm, RegisterForm, ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -89,9 +88,8 @@ class AuthService {
       }
 
       // Validação de senha
-      const passwordError = validatePassword(userData.password);
-      if (passwordError) {
-        throw new Error(passwordError);
+      if (!validatePassword(userData.password)) {
+        throw new Error('Senha deve ter pelo menos 8 caracteres com maiúscula, minúscula e número');
       }
 
       if (userData.password !== userData.confirmPassword) {
