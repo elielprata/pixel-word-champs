@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AuthProvider from "./components/auth/AuthProvider";
+import AdminRoute from "./components/auth/AdminRoute";
 import { useAuth } from "./hooks/useAuth";
 import AuthScreen from "./components/auth/AuthScreen";
 import Index from "./pages/Index";
@@ -41,7 +42,11 @@ const AppContent = () => {
         {isAuthenticated ? (
           <>
             <Route path="/" element={<Index />} />
-            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/admin" element={
+              <AdminRoute>
+                <AdminPanel />
+              </AdminRoute>
+            } />
           </>
         ) : (
           <Route path="*" element={<AuthScreen />} />
