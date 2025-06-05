@@ -8,12 +8,16 @@ import ProfileScreen from '@/components/ProfileScreen';
 import ChallengeScreen from '@/components/ChallengeScreen';
 import FullRankingScreen from '@/components/FullRankingScreen';
 import ChallengeRankingScreen from '@/components/ChallengeRankingScreen';
+import SettingsScreen from '@/components/SettingsScreen';
+import HelpSupportScreen from '@/components/HelpSupportScreen';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [activeChallenge, setActiveChallenge] = useState<number | null>(null);
   const [showFullRanking, setShowFullRanking] = useState(false);
   const [challengeRankingId, setChallengeRankingId] = useState<number | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const handleStartChallenge = (challengeId: number) => {
     setActiveChallenge(challengeId);
@@ -40,6 +44,22 @@ const Index = () => {
     setChallengeRankingId(null);
   };
 
+  const handleNavigateToSettings = () => {
+    setShowSettings(true);
+  };
+
+  const handleBackFromSettings = () => {
+    setShowSettings(false);
+  };
+
+  const handleNavigateToHelp = () => {
+    setShowHelp(true);
+  };
+
+  const handleBackFromHelp = () => {
+    setShowHelp(false);
+  };
+
   if (activeChallenge) {
     return (
       <ChallengeScreen 
@@ -64,6 +84,18 @@ const Index = () => {
     );
   }
 
+  if (showSettings) {
+    return (
+      <SettingsScreen onBack={handleBackFromSettings} />
+    );
+  }
+
+  if (showHelp) {
+    return (
+      <HelpSupportScreen onBack={handleBackFromHelp} />
+    );
+  }
+
   const renderScreen = () => {
     switch (activeTab) {
       case 'home':
@@ -79,7 +111,12 @@ const Index = () => {
       case 'invite':
         return <InviteScreen />;
       case 'profile':
-        return <ProfileScreen />;
+        return (
+          <ProfileScreen 
+            onNavigateToSettings={handleNavigateToSettings}
+            onNavigateToHelp={handleNavigateToHelp}
+          />
+        );
       default:
         return (
           <HomeScreen 
