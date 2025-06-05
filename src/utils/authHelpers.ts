@@ -1,5 +1,6 @@
 
 import { User } from '@/types';
+import type { ApiResponse } from '@/types';
 
 export const createFallbackUser = (session: any): User => {
   console.log('Criando usuário fallback com dados da sessão');
@@ -14,7 +15,7 @@ export const createFallbackUser = (session: any): User => {
   };
 };
 
-export const createTimeoutPromise = (timeoutMs: number) => {
+export const createTimeoutPromise = (timeoutMs: number): Promise<ApiResponse<User>> => {
   return new Promise((_, reject) => {
     setTimeout(() => reject(new Error(`Timeout na chamada getCurrentUser`)), timeoutMs);
   });

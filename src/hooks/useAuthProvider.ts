@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { User, LoginForm, RegisterForm } from '@/types';
 import { authService } from '@/services/authService';
 import { supabase } from '@/integrations/supabase/client';
 import { createFallbackUser, createTimeoutPromise } from '@/utils/authHelpers';
 import type { AuthContextType } from '@/types/auth';
+import type { ApiResponse } from '@/types';
 
 export const useAuthProvider = (): AuthContextType => {
   const [user, setUser] = useState<User | null>(null);
@@ -29,7 +29,7 @@ export const useAuthProvider = (): AuthContextType => {
       const timeoutPromise = createTimeoutPromise(5000);
       const getUserPromise = authService.getCurrentUser();
       
-      const response = await Promise.race([getUserPromise, timeoutPromise]) as any;
+      const response = await Promise.race([getUserPromise, timeoutPromise]) as ApiResponse<User>;
       console.log('Response do getCurrentUser:', response);
       
       if (response?.success && response?.data) {
