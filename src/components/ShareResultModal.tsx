@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Share2, Copy, Check, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import config from '@/config/environment';
 
 interface ShareResultModalProps {
   competition: {
@@ -22,8 +22,9 @@ const ShareResultModal = ({ competition, onClose }: ShareResultModalProps) => {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   
-  const inviteCode = "ARENA2024";
-  const inviteLink = `https://letraarena.com/join/${inviteCode}`;
+  // Usando configurações do ambiente
+  const inviteCode = config.invite.defaultCode;
+  const inviteLink = `${config.invite.baseUrl}/join/${inviteCode}`;
   
   const formatDateRange = (start: string, end: string) => {
     const startDate = new Date(start);
