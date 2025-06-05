@@ -9,6 +9,7 @@ import ChangeUsernameScreen from './ChangeUsernameScreen';
 import DeleteAccountScreen from './DeleteAccountScreen';
 import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 import TermsOfServiceScreen from './TermsOfServiceScreen';
+import PixConfigScreen from './PixConfigScreen';
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -18,7 +19,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const [notifications, setNotifications] = useState(true);
   const [sounds, setSounds] = useState(true);
   const [vibration, setVibration] = useState(true);
-  const [currentScreen, setCurrentScreen] = useState<'settings' | 'language' | 'username' | 'delete' | 'privacy' | 'terms'>('settings');
+  const [currentScreen, setCurrentScreen] = useState<'settings' | 'language' | 'username' | 'delete' | 'privacy' | 'terms' | 'pix'>('settings');
 
   if (currentScreen === 'language') {
     return <LanguageSelectionScreen onBack={() => setCurrentScreen('settings')} />;
@@ -38,6 +39,10 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
 
   if (currentScreen === 'terms') {
     return <TermsOfServiceScreen onBack={() => setCurrentScreen('settings')} />;
+  }
+
+  if (currentScreen === 'pix') {
+    return <PixConfigScreen onBack={() => setCurrentScreen('settings')} />;
   }
 
   return (
@@ -131,6 +136,13 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             onClick={() => setCurrentScreen('username')}
           >
             Alterar nome de usuário
+          </Button>
+          <Button 
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={() => setCurrentScreen('pix')}
+          >
+            PIX para recebimento
           </Button>
           <Button 
             variant="outline" 
