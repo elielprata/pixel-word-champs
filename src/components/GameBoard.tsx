@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Clock, Lightbulb, RotateCcw } from 'lucide-react';
@@ -17,12 +16,13 @@ interface GameBoardProps {
 
 const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) => {
   const getBoardSize = (level: number) => {
-    if (level <= 2) return 5;
-    if (level <= 4) return 6;
-    if (level <= 6) return 7;
-    if (level <= 8) return 8;
-    if (level <= 10) return 9;
-    return 10;
+    if (level >= 1 && level <= 2) return 5;   // 5x5
+    if (level >= 3 && level <= 4) return 6;   // 6x6
+    if (level >= 5 && level <= 6) return 7;   // 7x7
+    if (level >= 7 && level <= 8) return 8;   // 8x8
+    if (level >= 9 && level <= 10) return 9;  // 9x9
+    if (level >= 11 && level <= 20) return 10; // 10x10
+    return 10; // default for levels beyond 20
   };
 
   const size = getBoardSize(level);
