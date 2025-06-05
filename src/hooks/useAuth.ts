@@ -36,25 +36,41 @@ export const useAuthProvider = () => {
     
     const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('Sessão encontrada:', !!session);
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('Sessão encontrada:', !!session, 'Erro:', sessionError);
         
         if (session?.user) {
+          console.log('Usuário da sessão:', session.user.email);
           const response = await authService.getCurrentUser();
           console.log('Response do getCurrentUser:', response);
           
-          if (response.success) {
+          if (response.success && response.data) {
+            console.log('Definindo usuário autenticado:', response.data.username);
             setUser(response.data);
             setIsAuthenticated(true);
-            console.log('Usuário autenticado:', response.data.username);
           } else {
-            console.log('Erro ao obter usuário:', response.error);
+            console.log('Erro ao obter dados do usuário:', response.error);
+            // Se há sessão mas falha em obter dados, ainda considera autenticado
+            setIsAuthenticated(true);
+            setUser({
+              id: session.user.id,
+              username: session.user.email?.split('@')[0] || '',
+              email: session.user.email || '',
+              createdAt: session.user.created_at,
+              updatedAt: session.user.updated_at || '',
+              totalScore: 0,
+              gamesPlayed: 0
+            });
           }
         } else {
           console.log('Nenhuma sessão encontrada');
+          setIsAuthenticated(false);
+          setUser(null);
         }
       } catch (err) {
         console.error('Erro ao verificar autenticação:', err);
+        setIsAuthenticated(false);
+        setUser(null);
       } finally {
         setIsLoading(false);
         console.log('Verificação de autenticação concluída');
@@ -69,11 +85,25 @@ export const useAuthProvider = () => {
         console.log('Auth state changed:', event, !!session);
         
         if (event === 'SIGNED_IN' && session?.user) {
+          console.log('Processando login para:', session.user.email);
           const response = await authService.getCurrentUser();
-          if (response.success) {
+          if (response.success && response.data) {
             setUser(response.data);
             setIsAuthenticated(true);
             console.log('Login realizado:', response.data.username);
+          } else {
+            // Fallback se getCurrentUser falhar
+            setIsAuthenticated(true);
+            setUser({
+              id: session.user.id,
+              username: session.user.email?.split('@')[0] || '',
+              email: session.user.email || '',
+              createdAt: session.user.created_at,
+              updatedAt: session.user.updated_at || '',
+              totalScore: 0,
+              gamesPlayed: 0
+            });
+            console.log('Login realizado com dados básicos');
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
