@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, LoginForm, RegisterForm } from '@/types';
 import { authService } from '@/services/authService';
@@ -41,16 +40,35 @@ export const useAuthProvider = () => {
         
         if (session?.user) {
           console.log('Usuário da sessão:', session.user.email);
-          const response = await authService.getCurrentUser();
-          console.log('Response do getCurrentUser:', response);
+          console.log('Chamando authService.getCurrentUser()...');
           
-          if (response.success && response.data) {
-            console.log('Definindo usuário autenticado:', response.data.username);
-            setUser(response.data);
-            setIsAuthenticated(true);
-          } else {
-            console.log('Erro ao obter dados do usuário:', response.error);
-            // Se há sessão mas falha em obter dados, ainda considera autenticado
+          try {
+            const response = await authService.getCurrentUser();
+            console.log('Response do getCurrentUser:', response);
+            
+            if (response.success && response.data) {
+              console.log('Definindo usuário autenticado:', response.data.username);
+              setUser(response.data);
+              setIsAuthenticated(true);
+            } else {
+              console.log('Erro ao obter dados do usuário:', response.error);
+              console.log('Usando dados básicos da sessão...');
+              // Se há sessão mas falha em obter dados, ainda considera autenticado
+              setIsAuthenticated(true);
+              setUser({
+                id: session.user.id,
+                username: session.user.email?.split('@')[0] || '',
+                email: session.user.email || '',
+                createdAt: session.user.created_at,
+                updatedAt: session.user.updated_at || '',
+                totalScore: 0,
+                gamesPlayed: 0
+              });
+              console.log('Usuário definido com dados básicos');
+            }
+          } catch (authError) {
+            console.error('Erro ao chamar getCurrentUser:', authError);
+            console.log('Usando dados básicos da sessão por causa do erro...');
             setIsAuthenticated(true);
             setUser({
               id: session.user.id,
@@ -61,6 +79,7 @@ export const useAuthProvider = () => {
               totalScore: 0,
               gamesPlayed: 0
             });
+            console.log('Usuário definido com dados básicos após erro');
           }
         } else {
           console.log('Nenhuma sessão encontrada');
@@ -72,6 +91,7 @@ export const useAuthProvider = () => {
         setIsAuthenticated(false);
         setUser(null);
       } finally {
+        console.log('Finalizando verificação - definindo isLoading = false');
         setIsLoading(false);
         console.log('Verificação de autenticação concluída');
       }
@@ -86,13 +106,32 @@ export const useAuthProvider = () => {
         
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('Processando login para:', session.user.email);
-          const response = await authService.getCurrentUser();
-          if (response.success && response.data) {
-            setUser(response.data);
-            setIsAuthenticated(true);
-            console.log('Login realizado:', response.data.username);
-          } else {
-            // Fallback se getCurrentUser falhar
+          
+          try {
+            const response = await authService.getCurrentUser();
+            console.log('getCurrentUser response no login:', response);
+            
+            if (response.success && response.data) {
+              setUser(response.data);
+              setIsAuthenticated(true);
+              console.log('Login realizado:', response.data.username);
+            } else {
+              console.log('Usando fallback no login...');
+              // Fallback se getCurrentUser falhar
+              setIsAuthenticated(true);
+              setUser({
+                id: session.user.id,
+                username: session.user.email?.split('@')[0] || '',
+                email: session.user.email || '',
+                createdAt: session.user.created_at,
+                updatedAt: session.user.updated_at || '',
+                totalScore: 0,
+                gamesPlayed: 0
+              });
+              console.log('Login realizado com dados básicos');
+            }
+          } catch (loginError) {
+            console.error('Erro no getCurrentUser durante login:', loginError);
             setIsAuthenticated(true);
             setUser({
               id: session.user.id,
@@ -103,7 +142,7 @@ export const useAuthProvider = () => {
               totalScore: 0,
               gamesPlayed: 0
             });
-            console.log('Login realizado com dados básicos');
+            console.log('Login realizado com dados básicos após erro');
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
