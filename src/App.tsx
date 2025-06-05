@@ -9,6 +9,8 @@ import { useAuth } from "./hooks/useAuth";
 import AuthScreen from "./components/auth/AuthScreen";
 import Index from "./pages/Index";
 import AdminPanel from "./pages/AdminPanel";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +33,10 @@ const AppContent = () => {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Rotas públicas */}
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        
         {/* Rotas autenticadas */}
         {isAuthenticated ? (
           <>
