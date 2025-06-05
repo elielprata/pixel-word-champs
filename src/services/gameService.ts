@@ -42,12 +42,7 @@ class GameService {
           challengeId: data.competition_id,
           level: data.level,
           board: data.board as string[][],
-          wordsFound: (data.words_found as any[])?.map(w => ({
-            word: w.word,
-            points: w.points,
-            positions: w.positions as Position[],
-            foundAt: w.foundAt
-          })) || [],
+          wordsFound: this.parseWordsFound(data.words_found),
           totalScore: data.total_score,
           timeElapsed: data.time_elapsed,
           isCompleted: data.is_completed,
@@ -81,12 +76,7 @@ class GameService {
           challengeId: data.competition_id,
           level: data.level,
           board: data.board as string[][],
-          wordsFound: (data.words_found as any[])?.map(w => ({
-            word: w.word,
-            points: w.points,
-            positions: w.positions as Position[],
-            foundAt: w.foundAt
-          })) || [],
+          wordsFound: this.parseWordsFound(data.words_found),
           totalScore: data.total_score,
           timeElapsed: data.time_elapsed,
           isCompleted: data.is_completed,
@@ -131,7 +121,7 @@ class GameService {
         data: {
           word: data.word,
           points: data.points,
-          positions: data.positions as Position[],
+          positions: this.parsePositions(data.positions),
           foundAt: data.found_at
         }
       };
@@ -165,12 +155,7 @@ class GameService {
           challengeId: data.competition_id,
           level: data.level,
           board: data.board as string[][],
-          wordsFound: (data.words_found as any[])?.map(w => ({
-            word: w.word,
-            points: w.points,
-            positions: w.positions as Position[],
-            foundAt: w.foundAt
-          })) || [],
+          wordsFound: this.parseWordsFound(data.words_found),
           totalScore: data.total_score,
           timeElapsed: data.time_elapsed,
           isCompleted: data.is_completed,
@@ -200,6 +185,26 @@ class GameService {
         .update({ total_score: session.total_score + additionalPoints })
         .eq('id', sessionId);
     }
+  }
+
+  private parseWordsFound(wordsFoundData: any): WordFound[] {
+    if (!Array.isArray(wordsFoundData)) return [];
+    
+    return wordsFoundData.map((item: any) => ({
+      word: item.word || '',
+      points: item.points || 0,
+      positions: this.parsePositions(item.positions),
+      foundAt: item.foundAt || new Date().toISOString()
+    }));
+  }
+
+  private parsePositions(positionsData: any): Position[] {
+    if (!Array.isArray(positionsData)) return [];
+    
+    return (positionsData as unknown[]).map((pos: any) => ({
+      row: pos?.row || 0,
+      col: pos?.col || 0
+    }));
   }
 
   calculateWordPoints(word: string): number {
