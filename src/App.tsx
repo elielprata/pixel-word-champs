@@ -9,6 +9,8 @@ import { useAuth } from "./hooks/useAuth";
 import AuthScreen from "./components/auth/AuthScreen";
 import Index from "./pages/Index";
 import AdminPanel from "./pages/AdminPanel";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,15 +30,23 @@ const AppContent = () => {
     );
   }
 
-  if (!isAuthenticated) {
-    return <AuthScreen />;
-  }
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/admin" element={<AdminPanel />} />
+        {/* Rotas públicas */}
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        
+        {/* Rotas autenticadas */}
+        {isAuthenticated ? (
+          <>
+            <Route path="/" element={<Index />} />
+            <Route path="/admin" element={<AdminPanel />} />
+          </>
+        ) : (
+          <Route path="*" element={<AuthScreen />} />
+        )}
+        
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link } from 'react-router-dom';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import SocialLogin from './SocialLogin';
@@ -90,9 +91,13 @@ const AuthScreen = () => {
         <div className="text-center mt-6">
           <p className="text-purple-200 text-sm">
             Ao continuar, você concorda com nossos{' '}
-            <button className="underline hover:text-white">Termos de Uso</button>
+            <Link to="/terms" className="underline hover:text-white">
+              Termos de Uso
+            </Link>
             {' '}e{' '}
-            <button className="underline hover:text-white">Política de Privacidade</button>
+            <Link to="/privacy" className="underline hover:text-white">
+              Política de Privacidade
+            </Link>
           </p>
         </div>
       </div>
