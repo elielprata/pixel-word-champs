@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { User, LoginForm, RegisterForm } from '@/types';
 import { authService } from '@/services/authService';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,34 +13,49 @@ export const useAuthProvider = (): AuthContextType => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
 
-  // Controle de race conditions melhorado
-  let isProcessing = false;
-  let isMounted = true;
+  // Use refs to prevent race conditions
+  const isProcessingRef = useRef(false);
+  const isMountedRef = useRef(true);
+  const lastProcessedSessionRef = useRef<string | null>(null);
 
-  const processAuthentication = async (session: any) => {
-    if (isProcessing || !isMounted) return;
-    isProcessing = true;
+  const processAuthentication = useCallback(async (session: any) => {
+    // Prevent multiple simultaneous processing of the same session
+    const sessionId = session?.user?.id || null;
+    if (isProcessingRef.current || !isMountedRef.current) {
+      console.log('Processamento já em andamento ou componente desmontado');
+      return;
+    }
+
+    if (lastProcessedSessionRef.current === sessionId) {
+      console.log('Sessão já processada:', sessionId);
+      return;
+    }
 
     if (!session?.user) {
       console.log('Nenhuma sessão encontrada');
       setIsAuthenticated(false);
       setUser(null);
       setIsLoading(false);
-      isProcessing = false;
+      setError(undefined);
+      lastProcessedSessionRef.current = null;
       return;
     }
 
-    console.log('Sessão encontrada para:', session.user.email);
+    isProcessingRef.current = true;
+    lastProcessedSessionRef.current = sessionId;
+
+    console.log('Processando sessão para:', session.user.email);
     
     try {
       console.log('Tentando getCurrentUser com timeout reduzido...');
       
-      // Reduzir timeout para 3 segundos e usar fallback mais rápido
       const timeoutPromise = createTimeoutPromise(3000);
       const getUserPromise = authService.getCurrentUser();
       
       const response = await Promise.race([getUserPromise, timeoutPromise]) as ApiResponse<User>;
       console.log('Response do getCurrentUser:', response);
+      
+      if (!isMountedRef.current) return;
       
       if (response?.success && response?.data) {
         console.log('Definindo usuário autenticado:', response.data.username);
@@ -56,7 +71,8 @@ export const useAuthProvider = (): AuthContextType => {
       }
     } catch (error) {
       console.log('Timeout ou erro - usando fallback direto:', error);
-      // Em caso de timeout, usar fallback imediatamente
+      if (!isMountedRef.current) return;
+      
       try {
         const fallbackUser = createFallbackUser(session);
         setUser(fallbackUser);
@@ -69,14 +85,17 @@ export const useAuthProvider = (): AuthContextType => {
         setError('Erro de autenticação');
       }
     } finally {
-      console.log('Finalizando processamento - definindo isLoading = false');
-      setIsLoading(false);
-      isProcessing = false;
+      if (isMountedRef.current) {
+        console.log('Finalizando processamento - definindo isLoading = false');
+        setIsLoading(false);
+      }
+      isProcessingRef.current = false;
     }
-  };
+  }, []);
 
   useEffect(() => {
     console.log('Iniciando verificação de autenticação...');
+    isMountedRef.current = true;
     
     const checkAuth = async () => {
       try {
@@ -117,12 +136,11 @@ export const useAuthProvider = (): AuthContextType => {
           setIsAuthenticated(false);
           setError(undefined);
           setIsLoading(false);
+          lastProcessedSessionRef.current = null;
         } else if (event === 'TOKEN_REFRESHED' && session) {
-          console.log('Token refreshed, mantendo usuário atual se for o mesmo');
-          if (user?.id === session.user.id) {
-            // Manter dados existentes se for o mesmo usuário
-            setIsAuthenticated(true);
-          } else {
+          console.log('Token refreshed para:', session.user.email);
+          // Para token refresh, só processar se for um usuário diferente
+          if (!user || user.id !== session.user.id) {
             await processAuthentication(session);
           }
         }
@@ -130,10 +148,11 @@ export const useAuthProvider = (): AuthContextType => {
     );
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
+      isProcessingRef.current = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [processAuthentication]); // Apenas processAuthentication como dependência
 
   const login = async (credentials: LoginForm) => {
     setIsLoading(true);
@@ -192,6 +211,7 @@ export const useAuthProvider = (): AuthContextType => {
       setUser(null);
       setIsAuthenticated(false);
       setError(undefined);
+      lastProcessedSessionRef.current = null;
     } catch (err) {
       console.error('Erro no logout:', err);
       setError('Erro no logout');
