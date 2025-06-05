@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, Download, Filter } from 'lucide-react';
+import { Calendar, Download, Filter, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -21,6 +22,7 @@ interface Winner {
   holderName: string;
   consolidatedDate: string;
   prize: number;
+  paymentStatus: 'pending' | 'paid';
 }
 
 export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModalProps) => {
@@ -32,12 +34,14 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
 
   // Mock data - em produção viria da API
   const mockWinners: Winner[] = [
-    { id: '1', username: 'jogador123', position: 1, pixKey: '123.456.789-00', holderName: 'João Silva', consolidatedDate: '2024-01-15', prize: 1000 },
-    { id: '2', username: 'gamer456', position: 2, pixKey: 'joao@email.com', holderName: 'Maria Santos', consolidatedDate: '2024-01-16', prize: 500 },
-    { id: '3', username: 'player789', position: 3, pixKey: '(11) 99999-9999', holderName: 'Pedro Costa', consolidatedDate: '2024-01-17', prize: 250 },
-    { id: '4', username: 'winner001', position: 4, pixKey: '987.654.321-00', holderName: 'Ana Lima', consolidatedDate: '2024-01-14', prize: 100 },
-    { id: '5', username: 'champion2024', position: 5, pixKey: 'ana@email.com', holderName: 'Carlos Pereira', consolidatedDate: '2024-01-18', prize: 100 },
+    { id: '1', username: 'jogador123', position: 1, pixKey: '123.456.789-00', holderName: 'João Silva', consolidatedDate: '2024-01-15', prize: 1000, paymentStatus: 'pending' },
+    { id: '2', username: 'gamer456', position: 2, pixKey: 'joao@email.com', holderName: 'Maria Santos', consolidatedDate: '2024-01-16', prize: 500, paymentStatus: 'paid' },
+    { id: '3', username: 'player789', position: 3, pixKey: '(11) 99999-9999', holderName: 'Pedro Costa', consolidatedDate: '2024-01-17', prize: 250, paymentStatus: 'pending' },
+    { id: '4', username: 'winner001', position: 4, pixKey: '987.654.321-00', holderName: 'Ana Lima', consolidatedDate: '2024-01-14', prize: 100, paymentStatus: 'paid' },
+    { id: '5', username: 'champion2024', position: 5, pixKey: 'ana@email.com', holderName: 'Carlos Pereira', consolidatedDate: '2024-01-18', prize: 100, paymentStatus: 'pending' },
   ];
+
+  const [winners, setWinners] = useState<Winner[]>(mockWinners);
 
   const handleFilter = () => {
     if (!startDate || !endDate) {
@@ -49,7 +53,7 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
       return;
     }
 
-    const filtered = mockWinners.filter(winner => {
+    const filtered = winners.filter(winner => {
       const consolidatedDate = new Date(winner.consolidatedDate);
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -65,10 +69,68 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
     });
   };
 
+  const handleMarkAsPaid = (winnerId: string) => {
+    setWinners(prev => 
+      prev.map(winner => 
+        winner.id === winnerId 
+          ? { ...winner, paymentStatus: 'paid' as const }
+          : winner
+      )
+    );
+
+    if (isFiltered) {
+      setFilteredWinners(prev => 
+        prev.map(winner => 
+          winner.id === winnerId 
+            ? { ...winner, paymentStatus: 'paid' as const }
+            : winner
+        )
+      );
+    }
+
+    toast({
+      title: "Pagamento confirmado",
+      description: "O pagamento foi marcado como realizado.",
+    });
+  };
+
+  const handleMarkAllAsPaid = () => {
+    const winnersToUpdate = isFiltered ? filteredWinners : winners;
+    const pendingWinners = winnersToUpdate.filter(w => w.paymentStatus === 'pending');
+
+    if (pendingWinners.length === 0) {
+      toast({
+        title: "Todos já foram pagos",
+        description: "Todos os ganhadores já foram marcados como pagos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setWinners(prev => 
+      prev.map(winner => 
+        winnersToUpdate.some(w => w.id === winner.id)
+          ? { ...winner, paymentStatus: 'paid' as const }
+          : winner
+      )
+    );
+
+    if (isFiltered) {
+      setFilteredWinners(prev => 
+        prev.map(winner => ({ ...winner, paymentStatus: 'paid' as const }))
+      );
+    }
+
+    toast({
+      title: "Pagamentos confirmados",
+      description: `${pendingWinners.length} pagamentos foram marcados como realizados.`,
+    });
+  };
+
   const handleExport = () => {
-    const winners = isFiltered ? filteredWinners : mockWinners;
+    const winnersToExport = isFiltered ? filteredWinners : winners;
     
-    if (winners.length === 0) {
+    if (winnersToExport.length === 0) {
       toast({
         title: "Nenhum ganhador",
         description: "Não há ganhadores para exportar no período selecionado.",
@@ -78,16 +140,17 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
     }
 
     // Criar CSV
-    const headers = ['Posição', 'Usuário', 'Chave PIX', 'Nome do Titular', 'Data Consolidada', 'Prêmio'];
+    const headers = ['Posição', 'Usuário', 'Chave PIX', 'Nome do Titular', 'Data Consolidada', 'Prêmio', 'Status Pagamento'];
     const csvContent = [
       headers.join(','),
-      ...winners.map(winner => [
+      ...winnersToExport.map(winner => [
         winner.position,
         winner.username,
         `"${winner.pixKey}"`,
         `"${winner.holderName}"`,
         winner.consolidatedDate,
-        `R$ ${winner.prize.toLocaleString('pt-BR')}`
+        `R$ ${winner.prize.toLocaleString('pt-BR')}`,
+        winner.paymentStatus === 'paid' ? 'Pago' : 'Pendente'
       ].join(','))
     ].join('\n');
 
@@ -104,7 +167,7 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
 
     toast({
       title: "Exportação concluída",
-      description: `${winners.length} chaves PIX exportadas com sucesso.`,
+      description: `${winnersToExport.length} chaves PIX exportadas com sucesso.`,
     });
   };
 
@@ -120,7 +183,9 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
     });
   };
 
-  const displayWinners = isFiltered ? filteredWinners : mockWinners;
+  const displayWinners = isFiltered ? filteredWinners : winners;
+  const pendingCount = displayWinners.filter(w => w.paymentStatus === 'pending').length;
+  const paidCount = displayWinners.filter(w => w.paymentStatus === 'paid').length;
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
@@ -180,6 +245,31 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
             </div>
           </div>
 
+          {/* Status dos Pagamentos */}
+          <div className="bg-blue-50 p-2 sm:p-3 rounded-lg">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+              <h3 className="font-medium text-sm">Status dos Pagamentos</h3>
+              <Button 
+                onClick={handleMarkAllAsPaid} 
+                disabled={pendingCount === 0}
+                className="h-8 text-xs"
+              >
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Marcar Todos como Pagos
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-orange-500" />
+                <span className="text-xs">Pendentes: <strong>{pendingCount}</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="text-xs">Pagos: <strong>{paidCount}</strong></span>
+              </div>
+            </div>
+          </div>
+
           {/* Resumo */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <div>
@@ -211,12 +301,14 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
                     <TableHead className="text-xs p-2 hidden md:table-cell">Titular</TableHead>
                     <TableHead className="text-xs p-2 hidden lg:table-cell">Data</TableHead>
                     <TableHead className="text-xs p-2 text-right">Prêmio</TableHead>
+                    <TableHead className="text-xs p-2 text-center">Status</TableHead>
+                    <TableHead className="text-xs p-2 text-center">Ação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {displayWinners.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-gray-500 py-4 text-xs">
+                      <TableCell colSpan={8} className="text-center text-gray-500 py-4 text-xs">
                         {isFiltered ? 'Nenhum ganhador no período.' : 'Nenhum ganhador encontrado.'}
                       </TableCell>
                     </TableRow>
@@ -240,6 +332,31 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
                         </TableCell>
                         <TableCell className="text-right font-medium text-green-600 text-xs p-2">
                           R$ {winner.prize.toLocaleString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="text-center text-xs p-2">
+                          {winner.paymentStatus === 'paid' ? (
+                            <div className="flex items-center justify-center gap-1 text-green-600">
+                              <CheckCircle className="h-3 w-3" />
+                              <span>Pago</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center gap-1 text-orange-600">
+                              <Clock className="h-3 w-3" />
+                              <span>Pendente</span>
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center text-xs p-2">
+                          {winner.paymentStatus === 'pending' && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleMarkAsPaid(winner.id)}
+                              className="h-6 px-2 text-xs"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Pagar
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))
