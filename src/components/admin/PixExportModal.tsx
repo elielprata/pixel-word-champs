@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -114,12 +113,23 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
     setIsFiltered(false);
     setStartDate('');
     setEndDate('');
+    
+    toast({
+      title: "Filtros limpos",
+      description: "Todos os filtros foram removidos.",
+    });
   };
 
   const displayWinners = isFiltered ? filteredWinners : mockWinners;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen) {
+        // Limpar estado quando fechar o modal
+        handleClearFilter();
+      }
+      onOpenChange(newOpen);
+    }}>
       <DialogContent className="w-[95vw] max-w-4xl h-[90vh] max-h-[600px] overflow-y-auto p-3 sm:p-6">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
