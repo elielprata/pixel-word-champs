@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { gamepad, trophy, users } from 'lucide-react';
+import { Gamepad, Trophy, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import ExplanationModal from './ExplanationModal';
 
@@ -55,7 +55,7 @@ const ExplanationButtons = () => {
           className="flex flex-col items-center space-y-2 text-white hover:bg-white/20 p-4 rounded-lg transition-all duration-200"
           onClick={() => openModal('challenges')}
         >
-          <gamepad className="w-8 h-8" />
+          <Gamepad className="w-8 h-8" />
           <span className="text-sm font-medium">Desafios Diários</span>
         </Button>
 
@@ -64,7 +64,7 @@ const ExplanationButtons = () => {
           className="flex flex-col items-center space-y-2 text-white hover:bg-white/20 p-4 rounded-lg transition-all duration-200"
           onClick={() => openModal('prizes')}
         >
-          <trophy className="w-8 h-8" />
+          <Trophy className="w-8 h-8" />
           <span className="text-sm font-medium">Prêmios Reais</span>
         </Button>
 
@@ -73,7 +73,7 @@ const ExplanationButtons = () => {
           className="flex flex-col items-center space-y-2 text-white hover:bg-white/20 p-4 rounded-lg transition-all duration-200"
           onClick={() => openModal('competitions')}
         >
-          <users className="w-8 h-8" />
+          <Users className="w-8 h-8" />
           <span className="text-sm font-medium">Competições</span>
         </Button>
       </div>
