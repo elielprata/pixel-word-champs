@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Trash2, Edit } from 'lucide-react';
 import { ChallengeModal } from './ChallengeModal';
+import { ChallengeViewModal } from './ChallengeViewModal';
+import { ChallengeEditModal } from './ChallengeEditModal';
 import { useToast } from "@/components/ui/use-toast";
 
 interface Challenge {
@@ -20,6 +22,8 @@ interface ChallengesTabProps {
 
 export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabProps) => {
   const [challenges, setChallenges] = useState(initialChallenges);
+  const [viewChallenge, setViewChallenge] = useState<Challenge | null>(null);
+  const [editChallenge, setEditChallenge] = useState<Challenge | null>(null);
   const { toast } = useToast();
 
   const handleAddChallenge = (newChallengeData: Omit<Challenge, 'id'>) => {
@@ -46,20 +50,38 @@ export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabPr
 
   const handleViewChallenge = (challengeId: number) => {
     const challenge = challenges.find(c => c.id === challengeId);
-    toast({
-      title: "Visualizando desafio",
-      description: `Abrindo detalhes de ${challenge?.title}`,
-    });
-    console.log(`Visualizando desafio ${challengeId}`, challenge);
+    if (challenge) {
+      setViewChallenge(challenge);
+      toast({
+        title: "Abrindo detalhes",
+        description: `Visualizando ${challenge.title}`,
+      });
+    }
   };
 
   const handleEditChallenge = (challengeId: number) => {
     const challenge = challenges.find(c => c.id === challengeId);
+    if (challenge) {
+      setEditChallenge(challenge);
+      toast({
+        title: "Abrindo editor",
+        description: `Editando ${challenge.title}`,
+      });
+    }
+  };
+
+  const handleSaveEditChallenge = (challengeId: number, updatedChallenge: Omit<Challenge, 'id'>) => {
+    setChallenges(prev => 
+      prev.map(challenge => 
+        challenge.id === challengeId 
+          ? { ...updatedChallenge, id: challengeId }
+          : challenge
+      )
+    );
     toast({
-      title: "Editando desafio",
-      description: `Abrindo editor para ${challenge?.title}`,
+      title: "Desafio atualizado",
+      description: `${updatedChallenge.title} foi atualizado com sucesso.`,
     });
-    console.log(`Editando desafio ${challengeId}`, challenge);
   };
 
   return (
@@ -123,6 +145,20 @@ export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabPr
           </div>
         </CardContent>
       </Card>
+
+      {/* Modais */}
+      <ChallengeViewModal 
+        challenge={viewChallenge}
+        isOpen={!!viewChallenge}
+        onClose={() => setViewChallenge(null)}
+      />
+      
+      <ChallengeEditModal 
+        challenge={editChallenge}
+        isOpen={!!editChallenge}
+        onClose={() => setEditChallenge(null)}
+        onSave={handleSaveEditChallenge}
+      />
     </div>
   );
 };
