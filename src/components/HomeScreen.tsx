@@ -16,10 +16,9 @@ interface Challenge {
 interface HomeScreenProps {
   onStartChallenge: (challengeId: number) => void;
   onViewFullRanking: () => void;
-  onViewChallengeRanking?: (challengeId: number) => void;
 }
 
-const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewChallengeRanking }: HomeScreenProps) => {
+const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) => {
   const challenges: Challenge[] = [
     {
       id: 1,
@@ -116,7 +115,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewChallengeRankin
                     variant="ghost"
                     size="sm"
                     className="p-1 h-8 w-8"
-                    onClick={() => onViewChallengeRanking && onViewChallengeRanking(challenge.id)}
+                    onClick={() => {/* Navigate to challenge ranking */}}
                   >
                     <Trophy className="w-4 h-4 text-yellow-600" />
                   </Button>
