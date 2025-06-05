@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { User, LoginForm, RegisterForm } from '@/types';
 import { authService } from '@/services/authService';
@@ -36,18 +37,46 @@ export const useAuthProvider = (): AuthContextType => {
         console.log('Definindo usuário autenticado:', response.data.username);
         setUser(response.data);
         setIsAuthenticated(true);
+        setError(undefined);
       } else {
-        console.log('getCurrentUser não retornou dados válidos, usando fallback');
-        const fallbackUser = createFallbackUser(session);
-        setUser(fallbackUser);
-        setIsAuthenticated(true);
+        console.log('getCurrentUser falhou, verificando integridade da sessão');
+        // Verificar se a sessão ainda é válida antes de usar fallback
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession?.user?.id === session.user.id) {
+          console.log('Sessão válida, usando fallback');
+          const fallbackUser = createFallbackUser(session);
+          setUser(fallbackUser);
+          setIsAuthenticated(true);
+          setError(undefined);
+        } else {
+          console.log('Sessão inválida, rejeitando autenticação');
+          setIsAuthenticated(false);
+          setUser(null);
+          setError('Sessão expirada');
+        }
       }
     } catch (error) {
       console.error('Erro ou timeout na getCurrentUser:', error);
-      console.log('Usando dados básicos da sessão...');
-      const fallbackUser = createFallbackUser(session);
-      setUser(fallbackUser);
-      setIsAuthenticated(true);
+      // Verificar integridade da sessão antes de fallback
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession?.user?.id === session.user.id) {
+          console.log('Usando dados básicos da sessão após erro...');
+          const fallbackUser = createFallbackUser(session);
+          setUser(fallbackUser);
+          setIsAuthenticated(true);
+          setError(undefined);
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+          setError('Erro de autenticação');
+        }
+      } catch (sessionError) {
+        console.error('Erro ao verificar sessão:', sessionError);
+        setIsAuthenticated(false);
+        setUser(null);
+        setError('Erro de autenticação');
+      }
     } finally {
       console.log('Finalizando processamento - definindo isLoading = false');
       setIsLoading(false);
@@ -62,11 +91,21 @@ export const useAuthProvider = (): AuthContextType => {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         console.log('getSession - Sessão encontrada:', !!session, 'Erro:', sessionError);
         
+        if (sessionError) {
+          console.error('Erro ao obter sessão:', sessionError);
+          setError('Erro ao verificar autenticação');
+          setIsAuthenticated(false);
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+        
         await processAuthentication(session);
       } catch (err) {
         console.error('Erro ao verificar autenticação inicial:', err);
         setIsAuthenticated(false);
         setUser(null);
+        setError('Erro de conexão');
         setIsLoading(false);
       }
     };
@@ -84,7 +123,16 @@ export const useAuthProvider = (): AuthContextType => {
           console.log('Processando logout');
           setUser(null);
           setIsAuthenticated(false);
+          setError(undefined);
           setIsLoading(false);
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          console.log('Token refreshed, atualizando usuário');
+          if (user?.id === session.user.id) {
+            // Manter dados existentes se for o mesmo usuário
+            setIsAuthenticated(true);
+          } else {
+            await processAuthentication(session);
+          }
         }
       }
     );
@@ -101,12 +149,17 @@ export const useAuthProvider = (): AuthContextType => {
       if (response.success && response.data) {
         setUser(response.data.user);
         setIsAuthenticated(true);
+        setError(undefined);
       } else {
         setError(response.error || 'Erro no login');
+        setIsAuthenticated(false);
+        setUser(null);
       }
     } catch (err) {
       console.error('Erro no login:', err);
       setError('Erro inesperado no login');
+      setIsAuthenticated(false);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -121,12 +174,17 @@ export const useAuthProvider = (): AuthContextType => {
       if (response.success && response.data) {
         setUser(response.data.user);
         setIsAuthenticated(true);
+        setError(undefined);
       } else {
         setError(response.error || 'Erro no registro');
+        setIsAuthenticated(false);
+        setUser(null);
       }
     } catch (err) {
       console.error('Erro no registro:', err);
       setError('Erro inesperado no registro');
+      setIsAuthenticated(false);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -138,8 +196,10 @@ export const useAuthProvider = (): AuthContextType => {
       await authService.logout();
       setUser(null);
       setIsAuthenticated(false);
+      setError(undefined);
     } catch (err) {
       console.error('Erro no logout:', err);
+      setError('Erro no logout');
     } finally {
       setIsLoading(false);
     }

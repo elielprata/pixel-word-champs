@@ -13,6 +13,11 @@ export interface AuthResponse {
 class AuthService {
   async login(credentials: LoginForm): Promise<ApiResponse<AuthResponse>> {
     try {
+      // Validar inputs básicos
+      if (!credentials.email || !credentials.password) {
+        throw new Error('Email e senha são obrigatórios');
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
@@ -23,15 +28,31 @@ class AuthService {
         throw new Error('Erro no login: dados incompletos');
       }
 
-      // Buscar perfil do usuário
-      const { data: profile, error: profileError } = await supabase
+      // Buscar perfil do usuário com timeout
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', data.user.id)
         .single();
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Erro ao buscar perfil:', profileError);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout ao buscar perfil')), 5000)
+      );
+
+      let profile = null;
+      try {
+        const { data: profileData, error: profileError } = await Promise.race([
+          profilePromise,
+          timeoutPromise
+        ]) as any;
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Erro ao buscar perfil:', profileError);
+        } else {
+          profile = profileData;
+        }
+      } catch (timeoutError) {
+        console.warn('Timeout ao buscar perfil, continuando sem profile completo');
       }
 
       const user = mapUserFromProfile(profile, data.user);
@@ -48,6 +69,15 @@ class AuthService {
 
   async register(userData: RegisterForm): Promise<ApiResponse<AuthResponse>> {
     try {
+      // Validações básicas
+      if (!userData.email || !userData.password || !userData.username) {
+        throw new Error('Todos os campos são obrigatórios');
+      }
+
+      if (userData.password !== userData.confirmPassword) {
+        throw new Error('Senhas não coincidem');
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -67,8 +97,8 @@ class AuthService {
         id: data.user.id,
         username: userData.username,
         email: userData.email,
-        created_at: data.user.created_at,
-        updated_at: data.user.updated_at || '',
+        created_at: data.user.created_at || new Date().toISOString(),
+        updated_at: data.user.updated_at || new Date().toISOString(),
         total_score: 0,
         games_played: 0
       };

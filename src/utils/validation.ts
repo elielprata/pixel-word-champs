@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 // Esquemas de validação
@@ -41,15 +40,17 @@ export const wordValidationSchema = z.object({
 
 // Funções de validação
 export const validateEmail = (email: string): boolean => {
-  return z.string().email().safeParse(email).success;
+  if (!email || typeof email !== 'string') return false;
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 254;
 };
 
 export const validateUsername = (username: string): boolean => {
-  return z.string()
-    .min(3)
-    .max(20)
-    .regex(/^[a-zA-Z0-9_]+$/)
-    .safeParse(username).success;
+  if (!username || typeof username !== 'string') return false;
+  
+  const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+  return usernameRegex.test(username) && username.length >= 3 && username.length <= 30;
 };
 
 export const validatePassword = (password: string): boolean => {
@@ -74,6 +75,39 @@ export const sanitizeUsername = (username: string): string => {
 
 export const sanitizeWord = (word: string): string => {
   return word.trim().toUpperCase().replace(/[^A-Z]/g, '');
+};
+
+// Adicionar validações de segurança básicas
+export const sanitizeInput = (input: string): string => {
+  if (!input || typeof input !== 'string') return '';
+  
+  return input
+    .trim()
+    .replace(/[<>]/g, '') // Remove tags básicos
+    .substring(0, 1000); // Limita tamanho
+};
+
+export const validatePixKey = (pixKey: string): boolean => {
+  if (!pixKey || typeof pixKey !== 'string') return false;
+  
+  const cleanKey = pixKey.replace(/\D/g, '');
+  
+  // CPF (11 dígitos)
+  if (cleanKey.length === 11) return true;
+  
+  // CNPJ (14 dígitos)  
+  if (cleanKey.length === 14) return true;
+  
+  // Email
+  if (validateEmail(pixKey)) return true;
+  
+  // Telefone (10-11 dígitos)
+  if (cleanKey.length >= 10 && cleanKey.length <= 11) return true;
+  
+  // Chave aleatória (32 caracteres)
+  if (pixKey.length === 32 && /^[a-f0-9-]+$/i.test(pixKey)) return true;
+  
+  return false;
 };
 
 // Validação de tipos TypeScript

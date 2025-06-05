@@ -8,10 +8,11 @@ export const useProfile = () => {
   const [profile, setProfile] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const fetchProfile = async () => {
     if (!isAuthenticated) {
+      setProfile(null);
       setIsLoading(false);
       return;
     }
@@ -21,13 +22,16 @@ export const useProfile = () => {
 
     try {
       const response = await profileService.getCurrentProfile();
-      if (response.success) {
+      if (response.success && response.data) {
         setProfile(response.data);
+        setError(null);
       } else {
         setError(response.error || 'Erro ao carregar perfil');
+        setProfile(null);
       }
     } catch (err) {
       setError('Erro ao carregar perfil do usuário');
+      setProfile(null);
     } finally {
       setIsLoading(false);
     }
@@ -36,7 +40,7 @@ export const useProfile = () => {
   const updateProfile = async (updates: Partial<{ username: string; avatar_url: string }>) => {
     try {
       const response = await profileService.updateProfile(updates);
-      if (response.success) {
+      if (response.success && response.data) {
         setProfile(response.data);
         return { success: true };
       } else {
@@ -47,9 +51,17 @@ export const useProfile = () => {
     }
   };
 
+  // Sincronizar com mudanças de autenticação e usuário
   useEffect(() => {
     fetchProfile();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id]);
+
+  // Sincronizar profile com user quando user é atualizado externamente
+  useEffect(() => {
+    if (user && !profile) {
+      setProfile(user);
+    }
+  }, [user, profile]);
 
   return {
     profile,

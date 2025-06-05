@@ -12,7 +12,7 @@ interface State {
   hasError: boolean;
   error?: Error;
   errorInfo?: ErrorInfo;
-  errorCategory: 'auth' | 'network' | 'rendering' | 'unknown';
+  errorCategory: 'auth' | 'network' | 'rendering' | 'database' | 'validation' | 'unknown';
 }
 
 class ErrorBoundary extends Component<Props, State> {
@@ -30,18 +30,68 @@ class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  private static categorizeError(error: Error): 'auth' | 'network' | 'rendering' | 'unknown' {
+  private static categorizeError(error: Error): 'auth' | 'network' | 'rendering' | 'database' | 'validation' | 'unknown' {
     const message = error.message.toLowerCase();
+    const stack = error.stack?.toLowerCase() || '';
     
-    if (message.includes('auth') || message.includes('login') || message.includes('token')) {
+    // Verificação mais precisa para erros de autenticação
+    if (
+      message.includes('auth') || 
+      message.includes('login') || 
+      message.includes('token') ||
+      message.includes('unauthorized') ||
+      message.includes('forbidden') ||
+      message.includes('session') ||
+      stack.includes('auth')
+    ) {
       return 'auth';
     }
     
-    if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+    // Verificação para erros de rede
+    if (
+      message.includes('network') || 
+      message.includes('fetch') || 
+      message.includes('connection') ||
+      message.includes('timeout') ||
+      message.includes('cors') ||
+      error.name === 'NetworkError' ||
+      error.name === 'TypeError' && message.includes('failed to fetch')
+    ) {
       return 'network';
     }
     
-    if (message.includes('render') || message.includes('component') || message.includes('hook')) {
+    // Verificação para erros de banco de dados
+    if (
+      message.includes('supabase') ||
+      message.includes('database') ||
+      message.includes('sql') ||
+      message.includes('row level security') ||
+      message.includes('pgrst') ||
+      stack.includes('supabase')
+    ) {
+      return 'database';
+    }
+    
+    // Verificação para erros de validação
+    if (
+      message.includes('validation') ||
+      message.includes('invalid') ||
+      message.includes('required') ||
+      message.includes('format') ||
+      error.name === 'ValidationError'
+    ) {
+      return 'validation';
+    }
+    
+    // Verificação para erros de renderização
+    if (
+      message.includes('render') || 
+      message.includes('component') || 
+      message.includes('hook') ||
+      message.includes('react') ||
+      stack.includes('react') ||
+      error.name === 'ChunkLoadError'
+    ) {
       return 'rendering';
     }
     
@@ -65,13 +115,30 @@ class ErrorBoundary extends Component<Props, State> {
   private getErrorMessage(): string {
     switch (this.state.errorCategory) {
       case 'auth':
-        return 'Erro de autenticação. Tente fazer login novamente.';
+        return 'Erro de autenticação. Faça login novamente ou entre em contato com o suporte.';
       case 'network':
         return 'Erro de conexão. Verifique sua internet e tente novamente.';
+      case 'database':
+        return 'Erro no banco de dados. Tente novamente em alguns instantes.';
+      case 'validation':
+        return 'Dados inválidos. Verifique as informações inseridas.';
       case 'rendering':
         return 'Erro na interface. A página será recarregada.';
       default:
         return 'Ocorreu um erro inesperado. Por favor, tente novamente.';
+    }
+  }
+
+  private getErrorAction(): string {
+    switch (this.state.errorCategory) {
+      case 'auth':
+        return 'Fazer Login Novamente';
+      case 'network':
+        return 'Tentar Reconectar';
+      case 'rendering':
+        return 'Recarregar Página';
+      default:
+        return 'Tentar Novamente';
     }
   }
 
@@ -95,19 +162,32 @@ class ErrorBoundary extends Component<Props, State> {
                   <summary className="cursor-pointer font-medium">
                     Detalhes do erro (desenvolvimento)
                   </summary>
-                  <pre className="mt-2 whitespace-pre-wrap break-words text-xs">
-                    {this.state.error.stack}
-                  </pre>
-                  {this.state.errorInfo && (
-                    <pre className="mt-2 whitespace-pre-wrap break-words text-xs border-t pt-2">
-                      {this.state.errorInfo.componentStack}
+                  <div className="mt-2 space-y-2">
+                    <div>
+                      <strong>Categoria:</strong> {this.state.errorCategory}
+                    </div>
+                    <div>
+                      <strong>Tipo:</strong> {this.state.error.name}
+                    </div>
+                    <pre className="whitespace-pre-wrap break-words text-xs">
+                      {this.state.error.message}
                     </pre>
-                  )}
+                    {this.state.error.stack && (
+                      <pre className="whitespace-pre-wrap break-words text-xs border-t pt-2">
+                        {this.state.error.stack}
+                      </pre>
+                    )}
+                    {this.state.errorInfo && (
+                      <pre className="whitespace-pre-wrap break-words text-xs border-t pt-2">
+                        {this.state.errorInfo.componentStack}
+                      </pre>
+                    )}
+                  </div>
                 </details>
               )}
               <Button onClick={this.handleReset} className="w-full">
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Tentar Novamente
+                {this.getErrorAction()}
               </Button>
             </CardContent>
           </Card>
