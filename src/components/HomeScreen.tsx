@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,10 +16,9 @@ interface Challenge {
 
 interface HomeScreenProps {
   onStartChallenge: (challengeId: number) => void;
-  onViewFullRanking: () => void;
 }
 
-const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) => {
+const HomeScreen = ({ onStartChallenge }: HomeScreenProps) => {
   const challenges: Challenge[] = [
     {
       id: 1,
@@ -180,7 +180,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
               </div>
             ))}
           </div>
-          <Button variant="outline" className="w-full mt-3" onClick={onViewFullRanking}>
+          <Button variant="outline" className="w-full mt-3">
             Ver Ranking Completo
           </Button>
         </CardContent>
