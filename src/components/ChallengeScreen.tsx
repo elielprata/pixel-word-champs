@@ -1,10 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Play, ArrowLeft, Trophy, Clock, Star, Users } from 'lucide-react';
+import { Play, ArrowLeft, Trophy, Clock, Star } from 'lucide-react';
 import GameBoard from './GameBoard';
-import ChallengeRankingModal from './ChallengeRankingModal';
-import { useChallengeRanking } from '@/hooks/useChallengeRanking';
 
 interface ChallengeScreenProps {
   challengeId: number;
@@ -16,9 +15,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(180); // 3 minutes
-  const [showRanking, setShowRanking] = useState(false);
-
-  const { ranking, isLoading: rankingLoading, refetch: refetchRanking } = useChallengeRanking(challengeId);
 
   const challenge = {
     1: { title: "Desafio Matinal", description: "Palavras relacionadas ao café da manhã" },
@@ -72,27 +68,16 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     return (
       <div className="p-4 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onBack}
-              className="mr-3"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <h1 className="text-xl font-bold text-purple-800">Desafio #{challengeId}</h1>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowRanking(true)}
-            className="flex items-center gap-2"
+        <div className="flex items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onBack}
+            className="mr-3"
           >
-            <Trophy className="w-4 h-4" />
-            Ranking
+            <ArrowLeft className="w-4 h-4" />
           </Button>
+          <h1 className="text-xl font-bold text-purple-800">Desafio #{challengeId}</h1>
         </div>
 
         {/* Challenge Info */}
@@ -156,16 +141,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
           <Play className="w-5 h-5 mr-2" />
           Iniciar Desafio
         </Button>
-
-        {/* Ranking Modal */}
-        <ChallengeRankingModal
-          isOpen={showRanking}
-          onClose={() => setShowRanking(false)}
-          ranking={ranking}
-          isLoading={rankingLoading}
-          onRefresh={refetchRanking}
-          challengeTitle={challenge.title}
-        />
       </div>
     );
   }
@@ -181,18 +156,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
             className="bg-white/80 backdrop-blur-sm"
           >
             <ArrowLeft className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="absolute top-4 right-4 z-10">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowRanking(true)}
-            className="bg-white/80 backdrop-blur-sm flex items-center gap-2"
-          >
-            <Trophy className="w-4 h-4" />
-            Ranking
           </Button>
         </div>
         
@@ -226,16 +189,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
             </CardContent>
           </Card>
         </div>
-
-        {/* Ranking Modal */}
-        <ChallengeRankingModal
-          isOpen={showRanking}
-          onClose={() => setShowRanking(false)}
-          ranking={ranking}
-          isLoading={rankingLoading}
-          onRefresh={refetchRanking}
-          challengeTitle={challenge.title}
-        />
       </div>
     );
   }
@@ -257,36 +210,32 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
       </Card>
 
       <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <CardHeader>
           <CardTitle className="text-lg">Ranking do Desafio</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowRanking(true)}
-            className="flex items-center gap-2"
-          >
-            <Trophy className="w-4 h-4" />
-            Ver Completo
-          </Button>
         </CardHeader>
         <CardContent className="space-y-2">
-          {ranking?.rankings.slice(0, 4).map((player) => (
+          {[
+            { pos: 1, name: "Maria Santos", score: 2840 },
+            { pos: 2, name: "João Silva", score: 2650 },
+            { pos: 3, name: "Pedro Costa", score: 2420 },
+            { pos: 15, name: "Você", score: totalScore, isUser: true },
+          ].map((player) => (
             <div 
-              key={player.position} 
+              key={player.pos} 
               className={`flex items-center justify-between p-2 rounded-lg ${
                 player.isUser ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                  player.position === 1 ? 'bg-yellow-500' : 
-                  player.position === 2 ? 'bg-gray-400' : 
-                  player.position === 3 ? 'bg-orange-500' : 'bg-purple-500'
+                  player.pos === 1 ? 'bg-yellow-500' : 
+                  player.pos === 2 ? 'bg-gray-400' : 
+                  player.pos === 3 ? 'bg-orange-500' : 'bg-purple-500'
                 }`}>
-                  {player.position}
+                  {player.pos}
                 </div>
                 <span className={`font-medium ${player.isUser ? 'text-purple-800' : 'text-gray-800'}`}>
-                  {player.playerName}
+                  {player.name}
                 </span>
               </div>
               <span className="text-purple-600 font-bold">{player.score}pts</span>
@@ -311,16 +260,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
           Voltar ao Início
         </Button>
       </div>
-
-      {/* Ranking Modal */}
-      <ChallengeRankingModal
-        isOpen={showRanking}
-        onClose={() => setShowRanking(false)}
-        ranking={ranking}
-        isLoading={rankingLoading}
-        onRefresh={refetchRanking}
-        challengeTitle={challenge.title}
-      />
     </div>
   );
 };
