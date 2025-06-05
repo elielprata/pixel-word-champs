@@ -40,10 +40,7 @@ export const PaymentsTab = () => {
   ]);
 
   const [editIndividualValue, setEditIndividualValue] = useState<number>(0);
-  const [editGroupValues, setEditGroupValues] = useState<{ totalWinners: number; prizePerWinner: number }>({
-    totalWinners: 0,
-    prizePerWinner: 0
-  });
+  const [editGroupPrize, setEditGroupPrize] = useState<number>(0);
 
   const handleEditIndividual = (position: number) => {
     const prize = individualPrizes.find(p => p.position === position);
@@ -71,7 +68,7 @@ export const PaymentsTab = () => {
   const handleEditGroup = (groupId: string) => {
     const group = groupPrizes.find(g => g.id === groupId);
     if (group) {
-      setEditGroupValues({ totalWinners: group.totalWinners, prizePerWinner: group.prizePerWinner });
+      setEditGroupPrize(group.prizePerWinner);
       setEditingGroup(groupId);
     }
   };
@@ -80,7 +77,7 @@ export const PaymentsTab = () => {
     setGroupPrizes(prev => 
       prev.map(group => 
         group.id === groupId 
-          ? { ...group, totalWinners: editGroupValues.totalWinners, prizePerWinner: editGroupValues.prizePerWinner }
+          ? { ...group, prizePerWinner: editGroupPrize }
           : group
       )
     );
@@ -105,7 +102,7 @@ export const PaymentsTab = () => {
     setEditingRow(null);
     setEditingGroup(null);
     setEditIndividualValue(0);
-    setEditGroupValues({ totalWinners: 0, prizePerWinner: 0 });
+    setEditGroupPrize(0);
   };
 
   const calculateTotalPrize = () => {
@@ -246,18 +243,7 @@ export const PaymentsTab = () => {
                     </td>
                     <td className="p-2 font-medium text-sm">{group.name}</td>
                     <td className="p-2 text-sm">
-                      {editingGroup === group.id ? (
-                        <Input
-                          type="number"
-                          min="1"
-                          value={editGroupValues.totalWinners}
-                          onChange={(e) => setEditGroupValues(prev => ({ ...prev, totalWinners: parseInt(e.target.value) || 0 }))}
-                          className="w-16 h-7 text-xs"
-                          disabled={!group.active}
-                        />
-                      ) : (
-                        `${group.totalWinners} ganhadores`
-                      )}
+                      {group.totalWinners} ganhadores
                     </td>
                     <td className="p-2 text-sm">
                       {editingGroup === group.id ? (
@@ -267,8 +253,8 @@ export const PaymentsTab = () => {
                             type="number"
                             min="0"
                             step="0.01"
-                            value={editGroupValues.prizePerWinner}
-                            onChange={(e) => setEditGroupValues(prev => ({ ...prev, prizePerWinner: parseFloat(e.target.value) || 0 }))}
+                            value={editGroupPrize}
+                            onChange={(e) => setEditGroupPrize(parseFloat(e.target.value) || 0)}
                             className="w-20 h-7 text-xs"
                             disabled={!group.active}
                           />
