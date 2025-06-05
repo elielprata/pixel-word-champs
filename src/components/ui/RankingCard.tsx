@@ -6,9 +6,10 @@ import { RankingPlayer } from '@/types';
 
 interface RankingCardProps {
   player: RankingPlayer;
+  isCurrentUser?: boolean;
 }
 
-const RankingCard = ({ player }: RankingCardProps) => {
+const RankingCard = ({ player, isCurrentUser = false }: RankingCardProps) => {
   const getRankingIcon = (position: number) => {
     switch (position) {
       case 1: return <Trophy className="w-5 h-5 text-yellow-500" />;
@@ -23,7 +24,7 @@ const RankingCard = ({ player }: RankingCardProps) => {
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={`overflow-hidden ${isCurrentUser ? 'bg-purple-50 border-purple-200 shadow-md' : ''}`}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -31,12 +32,17 @@ const RankingCard = ({ player }: RankingCardProps) => {
               {getRankingIcon(player.pos)}
             </div>
             <div>
-              <p className="font-medium text-gray-900">{player.name}</p>
+              <p className={`font-medium ${isCurrentUser ? 'text-purple-900' : 'text-gray-900'}`}>
+                {player.name}
+                {isCurrentUser && <span className="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">Você</span>}
+              </p>
               <p className="text-sm text-gray-500">#{player.pos}</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="font-bold text-purple-600">{player.score.toLocaleString()}</p>
+            <p className={`font-bold ${isCurrentUser ? 'text-purple-700' : 'text-purple-600'}`}>
+              {player.score.toLocaleString()}
+            </p>
             <p className="text-xs text-gray-500">pontos</p>
           </div>
         </div>
