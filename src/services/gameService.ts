@@ -42,7 +42,12 @@ class GameService {
           challengeId: data.competition_id,
           level: data.level,
           board: data.board as string[][],
-          wordsFound: data.words_found as WordFound[],
+          wordsFound: (data.words_found as any[])?.map(w => ({
+            word: w.word,
+            points: w.points,
+            positions: w.positions as Position[],
+            foundAt: w.foundAt
+          })) || [],
           totalScore: data.total_score,
           timeElapsed: data.time_elapsed,
           isCompleted: data.is_completed,
@@ -76,7 +81,12 @@ class GameService {
           challengeId: data.competition_id,
           level: data.level,
           board: data.board as string[][],
-          wordsFound: data.words_found as WordFound[],
+          wordsFound: (data.words_found as any[])?.map(w => ({
+            word: w.word,
+            points: w.points,
+            positions: w.positions as Position[],
+            foundAt: w.foundAt
+          })) || [],
           totalScore: data.total_score,
           timeElapsed: data.time_elapsed,
           isCompleted: data.is_completed,
@@ -106,7 +116,7 @@ class GameService {
           session_id: sessionId,
           word: word.toUpperCase(),
           points,
-          positions
+          positions: positions as any
         })
         .select()
         .single();
@@ -155,7 +165,12 @@ class GameService {
           challengeId: data.competition_id,
           level: data.level,
           board: data.board as string[][],
-          wordsFound: data.words_found as WordFound[],
+          wordsFound: (data.words_found as any[])?.map(w => ({
+            word: w.word,
+            points: w.points,
+            positions: w.positions as Position[],
+            foundAt: w.foundAt
+          })) || [],
           totalScore: data.total_score,
           timeElapsed: data.time_elapsed,
           isCompleted: data.is_completed,
@@ -172,25 +187,18 @@ class GameService {
   }
 
   private async updateSessionScore(sessionId: string, additionalPoints: number): Promise<void> {
-    const { error } = await supabase.rpc('increment_session_score', {
-      session_id: sessionId,
-      points: additionalPoints
-    });
+    // Buscar sessão atual e atualizar pontuação
+    const { data: session } = await supabase
+      .from('game_sessions')
+      .select('total_score')
+      .eq('id', sessionId)
+      .single();
 
-    if (error) {
-      // Fallback: buscar sessão atual e atualizar
-      const { data: session } = await supabase
+    if (session) {
+      await supabase
         .from('game_sessions')
-        .select('total_score')
-        .eq('id', sessionId)
-        .single();
-
-      if (session) {
-        await supabase
-          .from('game_sessions')
-          .update({ total_score: session.total_score + additionalPoints })
-          .eq('id', sessionId);
-      }
+        .update({ total_score: session.total_score + additionalPoints })
+        .eq('id', sessionId);
     }
   }
 

@@ -142,8 +142,9 @@ class AuthService {
     }
   }
 
-  isAuthenticated(): boolean {
-    return supabase.auth.getSession().then(({ data }) => !!data.session);
+  async isAuthenticated(): Promise<boolean> {
+    const { data } = await supabase.auth.getSession();
+    return !!data.session;
   }
 
   async getSession() {

@@ -113,10 +113,10 @@ export interface InviteData {
   isActive: boolean;
 }
 
-// Tipos de API
+// Tipos de API - Corrigido para ter data opcional em caso de erro
 export interface ApiResponse<T> {
-  data: T;
   success: boolean;
+  data?: T;
   message?: string;
   error?: string;
 }
