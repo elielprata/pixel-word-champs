@@ -38,6 +38,13 @@ const LoginForm = () => {
         <FormField
           control={form.control}
           name="email"
+          rules={{ 
+            required: 'Email é obrigatório',
+            pattern: {
+              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+              message: 'Email inválido'
+            }
+          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
@@ -56,6 +63,13 @@ const LoginForm = () => {
         <FormField
           control={form.control}
           name="password"
+          rules={{ 
+            required: 'Senha é obrigatória',
+            minLength: {
+              value: 6,
+              message: 'A senha deve ter pelo menos 6 caracteres'
+            }
+          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Senha</FormLabel>
@@ -83,8 +97,14 @@ const LoginForm = () => {
         </div>
 
         {error && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-            {error}
+          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
+            <p className="font-medium">Erro no login</p>
+            <p className="text-xs mt-1">
+              {error.includes('Invalid login credentials') 
+                ? 'Email ou senha incorretos. Verifique suas credenciais e tente novamente.'
+                : error
+              }
+            </p>
           </div>
         )}
 
