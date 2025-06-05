@@ -38,16 +38,16 @@ class GameService {
         success: true,
         data: {
           id: data.id,
-          userId: data.user_id,
-          challengeId: data.competition_id,
+          user_id: data.user_id,
+          competition_id: data.competition_id,
           level: data.level,
           board: data.board as string[][],
-          wordsFound: this.parseWordsFound(data.words_found),
-          totalScore: data.total_score,
-          timeElapsed: data.time_elapsed,
-          isCompleted: data.is_completed,
-          startedAt: data.started_at,
-          completedAt: data.completed_at
+          words_found: this.parseWordsFound(data.words_found),
+          total_score: data.total_score,
+          time_elapsed: data.time_elapsed,
+          is_completed: data.is_completed,
+          started_at: data.started_at,
+          completed_at: data.completed_at
         }
       };
     } catch (error) {
@@ -72,16 +72,16 @@ class GameService {
         success: true,
         data: {
           id: data.id,
-          userId: data.user_id,
-          challengeId: data.competition_id,
+          user_id: data.user_id,
+          competition_id: data.competition_id,
           level: data.level,
           board: data.board as string[][],
-          wordsFound: this.parseWordsFound(data.words_found),
-          totalScore: data.total_score,
-          timeElapsed: data.time_elapsed,
-          isCompleted: data.is_completed,
-          startedAt: data.started_at,
-          completedAt: data.completed_at
+          words_found: this.parseWordsFound(data.words_found),
+          total_score: data.total_score,
+          time_elapsed: data.time_elapsed,
+          is_completed: data.is_completed,
+          started_at: data.started_at,
+          completed_at: data.completed_at
         }
       };
     } catch (error) {
@@ -151,16 +151,16 @@ class GameService {
         success: true,
         data: {
           id: data.id,
-          userId: data.user_id,
-          challengeId: data.competition_id,
+          user_id: data.user_id,
+          competition_id: data.competition_id,
           level: data.level,
           board: data.board as string[][],
-          wordsFound: this.parseWordsFound(data.words_found),
-          totalScore: data.total_score,
-          timeElapsed: data.time_elapsed,
-          isCompleted: data.is_completed,
-          startedAt: data.started_at,
-          completedAt: data.completed_at
+          words_found: this.parseWordsFound(data.words_found),
+          total_score: data.total_score,
+          time_elapsed: data.time_elapsed,
+          is_completed: data.is_completed,
+          started_at: data.started_at,
+          completed_at: data.completed_at
         }
       };
     } catch (error) {
@@ -187,15 +187,9 @@ class GameService {
     }
   }
 
-  private parseWordsFound(wordsFoundData: any): WordFound[] {
+  private parseWordsFound(wordsFoundData: any): string[] {
     if (!Array.isArray(wordsFoundData)) return [];
-    
-    return wordsFoundData.map((item: any) => ({
-      word: item.word || '',
-      points: item.points || 0,
-      positions: this.parsePositions(item.positions),
-      foundAt: item.foundAt || new Date().toISOString()
-    }));
+    return wordsFoundData;
   }
 
   private parsePositions(positionsData: any): Position[] {

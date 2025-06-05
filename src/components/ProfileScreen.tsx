@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,7 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreen
       <Card className="mb-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0">
         <CardContent className="p-6 text-center">
           <Avatar className="w-20 h-20 mx-auto mb-4 border-4 border-white">
-            <AvatarImage src={user?.avatar} />
+            <AvatarImage src={user?.avatar_url} />
             <AvatarFallback className="text-purple-600 text-xl font-bold">
               {user?.username?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
@@ -69,11 +70,11 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp }: ProfileScreen
           <p className="text-sm opacity-80">{user?.email}</p>
           <div className="mt-4 flex justify-center gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold">{user?.totalScore || 0}</p>
+              <p className="text-2xl font-bold">{user?.total_score || 0}</p>
               <p className="text-xs opacity-80">Pontos Total</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold">{user?.gamesPlayed || 0}</p>
+              <p className="text-2xl font-bold">{user?.games_played || 0}</p>
               <p className="text-xs opacity-80">Jogos</p>
             </div>
           </div>

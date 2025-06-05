@@ -8,10 +8,10 @@ export const createFallbackUser = (session: any): User => {
     id: session.user.id,
     username: session.user.email?.split('@')[0] || '',
     email: session.user.email || '',
-    createdAt: session.user.created_at,
-    updatedAt: session.user.updated_at || '',
-    totalScore: 0,
-    gamesPlayed: 0
+    created_at: session.user.created_at,
+    updated_at: session.user.updated_at || '',
+    total_score: 0,
+    games_played: 0
   };
 };
 

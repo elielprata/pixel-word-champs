@@ -22,13 +22,13 @@ class ProfileService {
           id: data.id,
           username: data.username,
           email: user.email || '',
-          avatar: data.avatar_url,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
-          totalScore: data.total_score,
-          gamesPlayed: data.games_played,
-          bestDailyPosition: data.best_daily_position,
-          bestWeeklyPosition: data.best_weekly_position
+          avatar_url: data.avatar_url,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          total_score: data.total_score,
+          games_played: data.games_played,
+          best_daily_position: data.best_daily_position,
+          best_weekly_position: data.best_weekly_position
         }
       };
     } catch (error) {
@@ -59,13 +59,13 @@ class ProfileService {
           id: data.id,
           username: data.username,
           email: user.email || '',
-          avatar: data.avatar_url,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
-          totalScore: data.total_score,
-          gamesPlayed: data.games_played,
-          bestDailyPosition: data.best_daily_position,
-          bestWeeklyPosition: data.best_weekly_position
+          avatar_url: data.avatar_url,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          total_score: data.total_score,
+          games_played: data.games_played,
+          best_daily_position: data.best_daily_position,
+          best_weekly_position: data.best_weekly_position
         }
       };
     } catch (error) {

@@ -37,13 +37,13 @@ class AuthService {
         id: data.user.id,
         username: profile?.username || data.user.email?.split('@')[0] || '',
         email: data.user.email || '',
-        avatar: profile?.avatar_url,
-        createdAt: profile?.created_at || data.user.created_at,
-        updatedAt: profile?.updated_at || data.user.updated_at || '',
-        totalScore: profile?.total_score || 0,
-        gamesPlayed: profile?.games_played || 0,
-        bestDailyPosition: profile?.best_daily_position,
-        bestWeeklyPosition: profile?.best_weekly_position
+        avatar_url: profile?.avatar_url,
+        created_at: profile?.created_at || data.user.created_at,
+        updated_at: profile?.updated_at || data.user.updated_at || '',
+        total_score: profile?.total_score || 0,
+        games_played: profile?.games_played || 0,
+        best_daily_position: profile?.best_daily_position,
+        best_weekly_position: profile?.best_weekly_position
       };
 
       return {
@@ -84,10 +84,10 @@ class AuthService {
         id: data.user.id,
         username: userData.username,
         email: userData.email,
-        createdAt: data.user.created_at,
-        updatedAt: data.user.updated_at || '',
-        totalScore: 0,
-        gamesPlayed: 0
+        created_at: data.user.created_at,
+        updated_at: data.user.updated_at || '',
+        total_score: 0,
+        games_played: 0
       };
 
       return {
@@ -128,13 +128,13 @@ class AuthService {
         id: user.id,
         username: profile?.username || user.email?.split('@')[0] || '',
         email: user.email || '',
-        avatar: profile?.avatar_url,
-        createdAt: profile?.created_at || user.created_at,
-        updatedAt: profile?.updated_at || user.updated_at || '',
-        totalScore: profile?.total_score || 0,
-        gamesPlayed: profile?.games_played || 0,
-        bestDailyPosition: profile?.best_daily_position,
-        bestWeeklyPosition: profile?.best_weekly_position
+        avatar_url: profile?.avatar_url,
+        created_at: profile?.created_at || user.created_at,
+        updated_at: profile?.updated_at || user.updated_at || '',
+        total_score: profile?.total_score || 0,
+        games_played: profile?.games_played || 0,
+        best_daily_position: profile?.best_daily_position,
+        best_weekly_position: profile?.best_weekly_position
       };
 
       return {

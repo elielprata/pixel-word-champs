@@ -8,11 +8,14 @@ interface ErrorWithCode {
   message: string;
 }
 
-export type AppError = ErrorWithMessage | ErrorWithCode | Error;
+export type AppError = ErrorWithMessage | ErrorWithCode | Error | string | unknown;
 
 export const errorHandler = {
   getErrorMessage(error: AppError): string {
-    if ('message' in error) {
+    if (typeof error === 'string') {
+      return error;
+    }
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
       return error.message;
     }
     if (error instanceof Error) {
@@ -28,7 +31,7 @@ export const errorHandler = {
   handleApiError(error: AppError): string {
     this.logError(error, 'API_ERROR');
     
-    if ('code' in error) {
+    if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
       switch (error.code) {
         case 'PGRST116':
           return 'Dados não encontrados';

@@ -18,13 +18,13 @@ class CompetitionService {
         type: comp.type as 'daily' | 'weekly' | 'challenge',
         title: comp.title,
         description: comp.description || '',
-        weekStart: comp.week_start || '',
-        weekEnd: comp.week_end || '',
-        isActive: comp.is_active || false,
-        totalParticipants: comp.total_participants || 0,
-        prizePool: Number(comp.prize_pool) || 0,
-        prizeDistribution: [], // Será preenchido em outra query se necessário
-        createdAt: comp.created_at || ''
+        week_start: comp.week_start || '',
+        week_end: comp.week_end || '',
+        is_active: comp.is_active || false,
+        total_participants: comp.total_participants || 0,
+        prize_pool: Number(comp.prize_pool) || 0,
+        created_at: comp.created_at || '',
+        updated_at: comp.updated_at || ''
       })) || [];
 
       return {
@@ -55,13 +55,13 @@ class CompetitionService {
         type: data.type as 'daily' | 'weekly' | 'challenge',
         title: data.title,
         description: data.description || '',
-        weekStart: data.week_start || '',
-        weekEnd: data.week_end || '',
-        isActive: data.is_active || false,
-        totalParticipants: data.total_participants || 0,
-        prizePool: Number(data.prize_pool) || 0,
-        prizeDistribution: [],
-        createdAt: data.created_at || ''
+        week_start: data.week_start || '',
+        week_end: data.week_end || '',
+        is_active: data.is_active || false,
+        total_participants: data.total_participants || 0,
+        prize_pool: Number(data.prize_pool) || 0,
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || ''
       };
 
       return {
@@ -92,13 +92,13 @@ class CompetitionService {
         type: data.type as 'daily' | 'weekly' | 'challenge',
         title: data.title,
         description: data.description || '',
-        weekStart: data.week_start || '',
-        weekEnd: data.week_end || '',
-        isActive: data.is_active || false,
-        totalParticipants: data.total_participants || 0,
-        prizePool: Number(data.prize_pool) || 0,
-        prizeDistribution: [],
-        createdAt: data.created_at || ''
+        week_start: data.week_start || '',
+        week_end: data.week_end || '',
+        is_active: data.is_active || false,
+        total_participants: data.total_participants || 0,
+        prize_pool: Number(data.prize_pool) || 0,
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || ''
       };
 
       return {
@@ -132,13 +132,13 @@ class CompetitionService {
 
       const participation: CompetitionParticipation = {
         id: data.id,
-        competitionId: data.competition_id || '',
-        userId: data.user_id || '',
-        userPosition: data.user_position || 0,
-        userScore: data.user_score || 0,
+        competition_id: data.competition_id || '',
+        user_id: data.user_id || '',
+        user_position: data.user_position || 0,
+        user_score: data.user_score || 0,
         prize: data.prize ? Number(data.prize) : undefined,
-        paymentStatus: data.payment_status as 'pending' | 'paid' | 'not_eligible' || 'pending',
-        paymentDate: data.payment_date || undefined
+        payment_status: data.payment_status as 'pending' | 'paid' | 'not_eligible' || 'pending',
+        payment_date: data.payment_date || undefined
       };
 
       return {
