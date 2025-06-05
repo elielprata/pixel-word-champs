@@ -9,11 +9,6 @@ const SocialLogin = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      toast({
-        title: "Login com Google",
-        description: "Redirecionando para autenticação...",
-      });
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -35,11 +30,6 @@ const SocialLogin = () => {
 
   const handleFacebookLogin = async () => {
     try {
-      toast({
-        title: "Login com Facebook",
-        description: "Redirecionando para autenticação...",
-      });
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
         options: {
@@ -61,11 +51,6 @@ const SocialLogin = () => {
 
   const handleAppleLogin = async () => {
     try {
-      toast({
-        title: "Login com Apple",
-        description: "Redirecionando para autenticação...",
-      });
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
