@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award, User, History, CheckCircle, Clock, DollarSign } from 'lucide-react';
+import { Trophy, Medal, Award, User, History, CheckCircle, Clock, DollarSign, Share2 } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import ShareResultModal from './ShareResultModal';
 
 interface Player {
   id: number;
@@ -25,6 +27,7 @@ interface CompetitionHistory {
 
 const RankingScreen = () => {
   const [activeTab, setActiveTab] = useState('daily');
+  const [shareModalData, setShareModalData] = useState<any>(null);
 
   const dailyRanking: Player[] = [
     { id: 1, name: "João Silva", score: 2540, position: 1 },
@@ -185,8 +188,18 @@ const RankingScreen = () => {
             <h3 className="font-semibold text-gray-800">Semana {competition.id.split('-w')[1]}</h3>
             <p className="text-sm text-gray-500">{formatDateRange(competition.weekStart, competition.weekEnd)}</p>
           </div>
-          <div className={`px-3 py-1 rounded-full text-sm font-bold ${getCompetitionBadge(competition.userPosition)}`}>
-            #{competition.userPosition}
+          <div className="flex items-center gap-2">
+            <div className={`px-3 py-1 rounded-full text-sm font-bold ${getCompetitionBadge(competition.userPosition)}`}>
+              #{competition.userPosition}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShareModalData(competition)}
+              className="h-8 w-8 p-0"
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
           </div>
         </div>
         
@@ -329,6 +342,14 @@ const RankingScreen = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modal de compartilhamento */}
+      {shareModalData && (
+        <ShareResultModal
+          competition={shareModalData}
+          onClose={() => setShareModalData(null)}
+        />
+      )}
     </div>
   );
 };
