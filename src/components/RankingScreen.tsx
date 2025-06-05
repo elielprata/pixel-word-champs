@@ -17,6 +17,7 @@ const RankingScreen = () => {
   const {
     dailyRanking,
     weeklyRanking,
+    historicalCompetitions,
     isLoading,
     error,
     canLoadMoreDaily,
@@ -100,33 +101,6 @@ const RankingScreen = () => {
       </div>
     );
   };
-
-  const mockHistoricalData = [
-    {
-      week: "Semana 15-21 Jan",
-      position: 5,
-      score: 1250,
-      totalParticipants: 156,
-      prize: 25.50,
-      paymentStatus: 'paid' as const
-    },
-    {
-      week: "Semana 8-14 Jan",
-      position: 12,
-      score: 980,
-      totalParticipants: 142,
-      prize: 0,
-      paymentStatus: 'not_eligible' as const
-    },
-    {
-      week: "Semana 1-7 Jan",
-      position: 3,
-      score: 1680,
-      totalParticipants: 198,
-      prize: 75.00,
-      paymentStatus: 'pending' as const
-    }
-  ];
 
   const userDailyPosition = getUserPosition(dailyRanking);
   const userWeeklyPosition = getUserPosition(weeklyRanking);
@@ -213,9 +187,14 @@ const RankingScreen = () => {
               <p className="text-sm text-gray-600">Seus resultados e prêmios conquistados</p>
             </CardHeader>
             <CardContent>
-              {mockHistoricalData.length > 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+                  <span className="ml-2 text-gray-600">Carregando histórico...</span>
+                </div>
+              ) : historicalCompetitions.length > 0 ? (
                 <div className="space-y-4">
-                  {mockHistoricalData.map((competition, index) => (
+                  {historicalCompetitions.map((competition, index) => (
                     <HistoricalCompetitionCard key={index} competition={competition} />
                   ))}
                 </div>

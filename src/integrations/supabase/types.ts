@@ -95,6 +95,41 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_rankings: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          position: number
+          score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          position: number
+          score?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          position?: number
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_rankings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_sessions: {
         Row: {
           board: Json
@@ -267,6 +302,53 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_rankings: {
+        Row: {
+          created_at: string
+          id: string
+          payment_date: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
+          position: number
+          prize: number | null
+          score: number
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payment_date?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          position: number
+          prize?: number | null
+          score?: number
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payment_date?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          position?: number
+          prize?: number | null
+          score?: number
+          user_id?: string
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_rankings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       words_found: {
         Row: {
           found_at: string | null
@@ -313,6 +395,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      update_daily_ranking: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_weekly_ranking: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {

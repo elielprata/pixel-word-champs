@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { rankingApi } from '@/api/rankingApi';
-import { competitionService } from '@/services/competitionService';
 import { RankingPlayer } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -20,15 +19,18 @@ export const useRankingData = () => {
     setError(null);
     
     try {
-      const [daily, weekly] = await Promise.all([
+      const [daily, weekly, historical] = await Promise.all([
         rankingApi.getDailyRanking(),
-        rankingApi.getWeeklyRanking()
+        rankingApi.getWeeklyRanking(),
+        user?.id ? rankingApi.getHistoricalRanking(user.id) : Promise.resolve([])
       ]);
 
       setDailyRanking(daily);
       setWeeklyRanking(weekly);
+      setHistoricalCompetitions(historical);
     } catch (err) {
       setError('Erro ao carregar rankings');
+      console.error('Error loading ranking data:', err);
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +56,7 @@ export const useRankingData = () => {
 
   useEffect(() => {
     loadRankingData();
-  }, []);
+  }, [user?.id]);
 
   return {
     dailyRanking: dailyRanking.slice(0, dailyLimit),
