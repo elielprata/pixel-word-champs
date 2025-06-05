@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Eye } from 'lucide-react';
+import { Eye, Trash2 } from 'lucide-react';
+import { ChallengeModal } from './ChallengeModal';
 
 interface Challenge {
   id: number;
@@ -17,15 +18,31 @@ interface ChallengesTabProps {
   challenges: Challenge[];
 }
 
-export const ChallengesTab = ({ challenges }: ChallengesTabProps) => {
+export const ChallengesTab = ({ challenges: initialChallenges }: ChallengesTabProps) => {
+  const [challenges, setChallenges] = useState(initialChallenges);
+
+  const handleAddChallenge = (newChallengeData: Omit<Challenge, 'id'>) => {
+    const newChallenge = {
+      ...newChallengeData,
+      id: Math.max(...challenges.map(c => c.id), 0) + 1
+    };
+    setChallenges(prev => [newChallenge, ...prev]);
+  };
+
+  const handleDeleteChallenge = (challengeId: number) => {
+    setChallenges(prev => prev.filter(challenge => challenge.id !== challengeId));
+  };
+
+  const handleViewChallenge = (challengeId: number) => {
+    console.log(`Visualizando desafio ${challengeId}`);
+    // Implementar navegação para detalhes do desafio
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestão de Desafios</h2>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Desafio
-        </Button>
+        <ChallengeModal onAddChallenge={handleAddChallenge} />
       </div>
 
       <Card>
@@ -50,8 +67,20 @@ export const ChallengesTab = ({ challenges }: ChallengesTabProps) => {
                   }>
                     {challenge.status}
                   </Badge>
-                  <Button size="sm" variant="outline">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleViewChallenge(challenge.id)}
+                  >
                     <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleDeleteChallenge(challenge.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
