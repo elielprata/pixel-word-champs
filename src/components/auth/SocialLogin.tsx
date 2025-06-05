@@ -1,21 +1,116 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/hooks/useAuth';
 
 const SocialLogin = () => {
-  const handleGoogleLogin = () => {
-    console.log('Login com Google');
-    // TODO: Implementar login com Google via Supabase
+  const { toast } = useToast();
+  const { login } = useAuth();
+
+  const handleGoogleLogin = async () => {
+    try {
+      toast({
+        title: "Login com Google",
+        description: "Redirecionando para autenticação...",
+      });
+      
+      // Simulação de login bem-sucedido (remover quando integrar com Supabase)
+      setTimeout(async () => {
+        try {
+          await login({
+            email: 'usuario@google.com',
+            password: 'mock_password'
+          });
+          toast({
+            title: "Login realizado com sucesso!",
+            description: "Bem-vindo ao Letra Arena",
+          });
+        } catch (error) {
+          toast({
+            title: "Erro no login",
+            description: "Não foi possível fazer login com Google",
+            variant: "destructive",
+          });
+        }
+      }, 1500);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao conectar com Google",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleFacebookLogin = () => {
-    console.log('Login com Facebook');
-    // TODO: Implementar login com Facebook via Supabase
+  const handleFacebookLogin = async () => {
+    try {
+      toast({
+        title: "Login com Facebook",
+        description: "Redirecionando para autenticação...",
+      });
+      
+      // Simulação de login bem-sucedido (remover quando integrar com Supabase)
+      setTimeout(async () => {
+        try {
+          await login({
+            email: 'usuario@facebook.com',
+            password: 'mock_password'
+          });
+          toast({
+            title: "Login realizado com sucesso!",
+            description: "Bem-vindo ao Letra Arena",
+          });
+        } catch (error) {
+          toast({
+            title: "Erro no login",
+            description: "Não foi possível fazer login com Facebook",
+            variant: "destructive",
+          });
+        }
+      }, 1500);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao conectar com Facebook",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAppleLogin = () => {
-    console.log('Login com Apple');
-    // TODO: Implementar login com Apple via Supabase
+  const handleAppleLogin = async () => {
+    try {
+      toast({
+        title: "Login com Apple",
+        description: "Redirecionando para autenticação...",
+      });
+      
+      // Simulação de login bem-sucedido (remover quando integrar com Supabase)
+      setTimeout(async () => {
+        try {
+          await login({
+            email: 'usuario@apple.com',
+            password: 'mock_password'
+          });
+          toast({
+            title: "Login realizado com sucesso!",
+            description: "Bem-vindo ao Letra Arena",
+          });
+        } catch (error) {
+          toast({
+            title: "Erro no login",
+            description: "Não foi possível fazer login com Apple",
+            variant: "destructive",
+          });
+        }
+      }, 1500);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao conectar com Apple",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
