@@ -73,8 +73,7 @@ const RankingSystemScreen = ({ onBack }: RankingSystemScreenProps) => {
             
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <h4 className="font-medium text-blue-800 mb-2">🏆 Premiações Estendidas</h4>
-              <p className="text-sm text-blue-700 mb-1">Alguns torneios especiais podem oferecer premiações até a <strong>100ª posição</strong>!</p>
-              <p className="text-xs text-blue-600">As configurações de cada torneio são definidas no painel administrativo e podem variar por evento.</p>
+              <p className="text-sm text-blue-700">Alguns torneios especiais podem oferecer premiações até a <strong>100ª posição</strong>!</p>
             </div>
           </CardContent>
         </Card>
