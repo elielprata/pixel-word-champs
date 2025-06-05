@@ -1,16 +1,17 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Share2, Copy, Gift, Users, Check } from 'lucide-react';
+import { Share2, Copy, Gift, Users, Check, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 const InviteScreen = () => {
   const [copied, setCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const { toast } = useToast();
   
   const inviteCode = "ARENA2024";
   const inviteLink = `https://letraarena.com/join/${inviteCode}`;
+  const shareText = "Jogue comigo no Letra Arena! O melhor jogo de caça-palavras do Brasil!";
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(inviteLink);
@@ -23,14 +24,60 @@ const InviteScreen = () => {
   };
 
   const shareInvite = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Letra Arena - Caça Palavras',
-        text: 'Jogue comigo no Letra Arena! O melhor jogo de caça-palavras do Brasil!',
-        url: inviteLink,
-      });
+    // Tentar usar Web Share API primeiro (para dispositivos móveis)
+    if (navigator.share && navigator.canShare) {
+      try {
+        navigator.share({
+          title: 'Letra Arena - Caça Palavras',
+          text: shareText,
+          url: inviteLink,
+        });
+      } catch (error) {
+        // Se falhar, mostrar modal de compartilhamento
+        setShowShareModal(true);
+      }
     } else {
-      copyToClipboard();
+      // Para desktop ou dispositivos sem suporte, mostrar modal
+      setShowShareModal(true);
+    }
+  };
+
+  const shareOnSocial = (platform: string) => {
+    const encodedText = encodeURIComponent(shareText);
+    const encodedUrl = encodeURIComponent(inviteLink);
+    
+    let shareUrl = '';
+    
+    switch (platform) {
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodedText}%20${encodedUrl}`;
+        break;
+      case 'telegram':
+        shareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        break;
+      case 'instagram':
+        // Instagram não permite compartilhamento direto via URL, então copiamos o texto
+        copyToClipboard();
+        toast({
+          title: "Link copiado!",
+          description: "Cole no Instagram Stories ou posts.",
+        });
+        setShowShareModal(false);
+        return;
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+      setShowShareModal(false);
     }
   };
 
@@ -160,6 +207,86 @@ const InviteScreen = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Compartilhamento */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-800">Compartilhar</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowShareModal(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <button
+                onClick={() => shareOnSocial('whatsapp')}
+                className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">W</span>
+                </div>
+                <span className="text-xs text-gray-600">WhatsApp</span>
+              </button>
+              
+              <button
+                onClick={() => shareOnSocial('telegram')}
+                className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">T</span>
+                </div>
+                <span className="text-xs text-gray-600">Telegram</span>
+              </button>
+              
+              <button
+                onClick={() => shareOnSocial('facebook')}
+                className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">F</span>
+                </div>
+                <span className="text-xs text-gray-600">Facebook</span>
+              </button>
+              
+              <button
+                onClick={() => shareOnSocial('twitter')}
+                className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-12 h-12 bg-sky-500 rounded-full flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">X</span>
+                </div>
+                <span className="text-xs text-gray-600">Twitter</span>
+              </button>
+              
+              <button
+                onClick={() => shareOnSocial('linkedin')}
+                className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">in</span>
+                </div>
+                <span className="text-xs text-gray-600">LinkedIn</span>
+              </button>
+              
+              <button
+                onClick={() => shareOnSocial('instagram')}
+                className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">IG</span>
+                </div>
+                <span className="text-xs text-gray-600">Instagram</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
