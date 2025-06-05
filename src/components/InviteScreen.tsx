@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Share2, Copy, Users, Gift, Star, Trophy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import SocialShareModal from './SocialShareModal';
 
 const InviteScreen = () => {
   const [inviteCode] = useState('ARENA2024XYZ');
+  const [showShareModal, setShowShareModal] = useState(false);
   const { toast } = useToast();
 
   const shareText = `Jogue Letra Arena comigo! Use meu código ${inviteCode} e ganhe bônus especiais! 🎮`;
@@ -30,11 +31,7 @@ const InviteScreen = () => {
         url: shareUrl,
       });
     } else {
-      navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-      toast({
-        title: "Link copiado!",
-        description: "Cole onde quiser para compartilhar.",
-      });
+      setShowShareModal(true);
     }
   };
 
@@ -209,6 +206,15 @@ const InviteScreen = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Social Share Modal */}
+      <SocialShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        inviteCode={inviteCode}
+        shareText={shareText}
+        shareUrl={shareUrl}
+      />
     </div>
   );
 };
