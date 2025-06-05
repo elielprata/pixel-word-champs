@@ -144,10 +144,22 @@ export const PaymentsTab = () => {
       {/* Prêmios Individuais */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <DollarSign className="h-4 w-4" />
-            Premiação Individual (1º ao 3º)
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <DollarSign className="h-4 w-4" />
+              Premiação Individual (1º ao 3º)
+            </CardTitle>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => handleExportPix('1º ao 3º lugar')}
+              className="h-8 px-3 text-xs"
+              title="Exportar PIX dos 3 primeiros colocados"
+            >
+              <Download className="h-3 w-3 mr-1" />
+              Exportar PIX
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="p-3">
           <div className="overflow-x-auto">
@@ -201,25 +213,14 @@ export const PaymentsTab = () => {
                             </Button>
                           </>
                         ) : (
-                          <>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditIndividual(prize.position)}
-                              className="h-6 w-6 p-0"
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleExportPix(`${prize.position}º lugar`)}
-                              className="h-6 w-6 p-0"
-                              title="Exportar PIX"
-                            >
-                              <Download className="h-3 w-3" />
-                            </Button>
-                          </>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEditIndividual(prize.position)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
                         )}
                       </div>
                     </td>
