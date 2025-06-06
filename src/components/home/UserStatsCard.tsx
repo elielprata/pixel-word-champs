@@ -27,7 +27,7 @@ const UserStatsCard = () => {
               <TrendingUp className="w-6 h-6" />
             </div>
             <div className="text-2xl font-bold">5</div>
-            <div className="text-sm opacity-90">Streak</div>
+            <div className="text-sm opacity-90">Sequência</div>
           </div>
         </div>
       </CardContent>
