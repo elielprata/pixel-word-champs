@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from 'lucide-react';
 
@@ -24,17 +23,34 @@ export const ChallengeModal = ({ onAddChallenge }: ChallengeModalProps) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    status: 'Agendado'
+    startDate: '',
+    endDate: ''
   });
+
+  const getStatusFromDates = (startDate: string, endDate: string) => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (now < start) {
+      return 'Agendado';
+    } else if (now >= start && now <= end) {
+      return 'Ativo';
+    } else {
+      return 'Finalizado';
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title.trim()) return;
+    if (!formData.title.trim() || !formData.startDate || !formData.endDate) return;
+
+    const status = getStatusFromDates(formData.startDate, formData.endDate);
 
     const newChallenge = {
       title: formData.title,
-      status: formData.status,
+      status: status,
       players: 0
     };
 
@@ -44,7 +60,8 @@ export const ChallengeModal = ({ onAddChallenge }: ChallengeModalProps) => {
     setFormData({
       title: '',
       description: '',
-      status: 'Agendado'
+      startDate: '',
+      endDate: ''
     });
     
     setIsOpen(false);
@@ -89,19 +106,37 @@ export const ChallengeModal = ({ onAddChallenge }: ChallengeModalProps) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="status">Status Inicial</Label>
-            <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Agendado">Agendado</SelectItem>
-                <SelectItem value="Ativo">Ativo</SelectItem>
-                <SelectItem value="Finalizado">Finalizado</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Data de Início</Label>
+              <Input
+                id="startDate"
+                type="datetime-local"
+                value={formData.startDate}
+                onChange={(e) => handleInputChange('startDate', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="endDate">Data de Fim</Label>
+              <Input
+                id="endDate"
+                type="datetime-local"
+                value={formData.endDate}
+                onChange={(e) => handleInputChange('endDate', e.target.value)}
+                required
+              />
+            </div>
           </div>
+
+          {formData.startDate && formData.endDate && (
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <p className="text-sm text-gray-600">
+                Status calculado: <strong>{getStatusFromDates(formData.startDate, formData.endDate)}</strong>
+              </p>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
