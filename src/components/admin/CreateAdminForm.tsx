@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, UserPlus } from 'lucide-react';
+import { Loader2, UserPlus, Mail, User, Key } from 'lucide-react';
 
 export const CreateAdminForm = () => {
   const [email, setEmail] = useState('');
@@ -119,17 +119,22 @@ export const CreateAdminForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UserPlus className="h-5 w-5" />
-          Criar Usuário Admin
+    <Card className="border-slate-200 shadow-sm">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200">
+        <CardTitle className="flex items-center gap-2 text-slate-800">
+          <div className="bg-blue-100 p-2 rounded-lg">
+            <UserPlus className="h-4 w-4 text-blue-600" />
+          </div>
+          <span>Novo Administrador</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <CardContent className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <Mail className="h-4 w-4 text-slate-500" />
+              Email
+            </Label>
             <Input
               id="email"
               type="email"
@@ -137,11 +142,15 @@ export const CreateAdminForm = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@exemplo.com"
               disabled={isLoading}
+              className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="username">Nome de Usuário</Label>
+            <Label htmlFor="username" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <User className="h-4 w-4 text-slate-500" />
+              Nome de Usuário
+            </Label>
             <Input
               id="username"
               type="text"
@@ -149,11 +158,15 @@ export const CreateAdminForm = () => {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="nomedousuario"
               disabled={isLoading}
+              className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <Key className="h-4 w-4 text-slate-500" />
+              Senha
+            </Label>
             <Input
               id="password"
               type="password"
@@ -162,23 +175,25 @@ export const CreateAdminForm = () => {
               placeholder="••••••••"
               disabled={isLoading}
               minLength={6}
+              className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
             />
           </div>
 
           <Button 
             type="submit" 
-            className="w-full" 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm" 
             disabled={isLoading}
+            size="lg"
           >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Criando...
+                Criando Administrador...
               </>
             ) : (
               <>
                 <UserPlus className="mr-2 h-4 w-4" />
-                Criar Admin
+                Criar Administrador
               </>
             )}
           </Button>
