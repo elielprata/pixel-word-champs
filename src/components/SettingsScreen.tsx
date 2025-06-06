@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Bell, Globe, Volume2, Shield, User, Smartphone } from 'lucide-react';
+import { ArrowLeft, Bell, Globe, Volume2, Shield, User, Smartphone, Palette, Moon } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import LanguageSelectionScreen from './LanguageSelectionScreen';
 import ChangeUsernameScreen from './ChangeUsernameScreen';
@@ -19,6 +19,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const [notifications, setNotifications] = useState(true);
   const [sounds, setSounds] = useState(true);
   const [vibration, setVibration] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const [currentScreen, setCurrentScreen] = useState<'settings' | 'language' | 'username' | 'delete' | 'privacy' | 'terms' | 'pix'>('settings');
 
   if (currentScreen === 'language') {
@@ -45,148 +46,190 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
     return <PixConfigScreen onBack={() => setCurrentScreen('settings')} />;
   }
 
+  const settingsGroups = [
+    {
+      title: "Notificações",
+      icon: Bell,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      settings: [
+        {
+          label: "Novos desafios",
+          description: "Receba avisos sobre novos jogos",
+          value: notifications,
+          onChange: setNotifications
+        }
+      ]
+    },
+    {
+      title: "Experiência",
+      icon: Palette,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      settings: [
+        {
+          label: "Sons do jogo",
+          description: "Efeitos sonoros durante partidas",
+          value: sounds,
+          onChange: setSounds
+        },
+        {
+          label: "Vibração",
+          description: "Feedback tátil ao jogar",
+          value: vibration,
+          onChange: setVibration
+        },
+        {
+          label: "Modo escuro",
+          description: "Interface com tema escuro",
+          value: darkMode,
+          onChange: setDarkMode
+        }
+      ]
+    }
+  ];
+
+  const actionGroups = [
+    {
+      title: "Conta",
+      icon: User,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      actions: [
+        {
+          label: "Alterar nome",
+          description: "Escolha um novo nome de usuário",
+          action: () => setCurrentScreen('username')
+        },
+        {
+          label: "PIX para prêmios",
+          description: "Configure sua chave PIX",
+          action: () => setCurrentScreen('pix')
+        }
+      ]
+    },
+    {
+      title: "Sistema",
+      icon: Globe,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      actions: [
+        {
+          label: "Idioma",
+          description: "Português (Brasil)",
+          action: () => setCurrentScreen('language')
+        }
+      ]
+    },
+    {
+      title: "Privacidade",
+      icon: Shield,
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      actions: [
+        {
+          label: "Política de Privacidade",
+          description: "Como protegemos seus dados",
+          action: () => setCurrentScreen('privacy')
+        },
+        {
+          label: "Termos de Uso",
+          description: "Regras e condições do app",
+          action: () => setCurrentScreen('terms')
+        },
+        {
+          label: "Excluir conta",
+          description: "Remover permanentemente",
+          action: () => setCurrentScreen('delete'),
+          danger: true
+        }
+      ]
+    }
+  ];
+
   return (
-    <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
+    <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
       {/* Header */}
-      <div className="flex items-center mb-6">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="w-6 h-6" />
+      <div className="flex items-center gap-3 mb-6">
+        <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
+          <ArrowLeft className="w-5 h-5" />
         </Button>
-        <h1 className="text-2xl font-bold text-purple-800 ml-3">Configurações</h1>
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">Configurações</h1>
+          <p className="text-sm text-gray-600">Personalize sua experiência</p>
+        </div>
       </div>
 
-      {/* Notifications */}
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Bell className="w-5 h-5 text-blue-500" />
-            Notificações
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Novos desafios</p>
-              <p className="text-sm text-gray-600">Receba notificações sobre novos desafios diários</p>
-            </div>
-            <Switch checked={notifications} onCheckedChange={setNotifications} />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        {/* Grupos de configurações com switches */}
+        {settingsGroups.map((group, groupIndex) => (
+          <Card key={groupIndex} className="shadow-sm border-0">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-3">
+                <div className={`w-8 h-8 ${group.bgColor} rounded-lg flex items-center justify-center`}>
+                  <group.icon className={`w-4 h-4 ${group.color}`} />
+                </div>
+                {group.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-3">
+              {group.settings.map((setting, settingIndex) => (
+                <div key={settingIndex} className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{setting.label}</p>
+                    <p className="text-sm text-gray-600">{setting.description}</p>
+                  </div>
+                  <Switch 
+                    checked={setting.value} 
+                    onCheckedChange={setting.onChange}
+                    className="shrink-0"
+                  />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
 
-      {/* Sound & Vibration */}
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Volume2 className="w-5 h-5 text-green-500" />
-            Som e Vibração
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Efeitos sonoros</p>
-              <p className="text-sm text-gray-600">Sons durante o jogo</p>
-            </div>
-            <Switch checked={sounds} onCheckedChange={setSounds} />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Vibração</p>
-              <p className="text-sm text-gray-600">Feedback tátil durante o jogo</p>
-            </div>
-            <Switch checked={vibration} onCheckedChange={setVibration} />
-          </div>
-        </CardContent>
-      </Card>
+        {/* Grupos de ações */}
+        {actionGroups.map((group, groupIndex) => (
+          <Card key={groupIndex} className="shadow-sm border-0">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-3">
+                <div className={`w-8 h-8 ${group.bgColor} rounded-lg flex items-center justify-center`}>
+                  <group.icon className={`w-4 h-4 ${group.color}`} />
+                </div>
+                {group.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 p-0">
+              {group.actions.map((action, actionIndex) => (
+                <button
+                  key={actionIndex}
+                  onClick={action.action}
+                  className={`w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors border-b last:border-b-0 ${
+                    action.danger ? 'hover:bg-red-50' : ''
+                  }`}
+                >
+                  <div>
+                    <p className={`font-medium ${action.danger ? 'text-red-600' : 'text-gray-900'}`}>
+                      {action.label}
+                    </p>
+                    <p className="text-sm text-gray-600">{action.description}</p>
+                  </div>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      {/* Language */}
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Globe className="w-5 h-5 text-purple-500" />
-            Idioma
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Português (Brasil)</p>
-              <p className="text-sm text-gray-600">Idioma do aplicativo</p>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setCurrentScreen('language')}>
-              Alterar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Account */}
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <User className="w-5 h-5 text-orange-500" />
-            Conta
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={() => setCurrentScreen('username')}
-          >
-            Alterar nome de usuário
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={() => setCurrentScreen('pix')}
-          >
-            PIX para recebimento
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={() => setCurrentScreen('delete')}
-          >
-            Excluir conta
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Privacy */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Shield className="w-5 h-5 text-red-500" />
-            Privacidade
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={() => setCurrentScreen('privacy')}
-          >
-            Política de Privacidade
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={() => setCurrentScreen('terms')}
-          >
-            Termos de Uso
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* App Info */}
-      <div className="text-center text-gray-500 text-sm">
-        <div className="flex items-center justify-center gap-2 mb-2">
+      {/* Informações do app */}
+      <div className="text-center mt-6 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
           <Smartphone className="w-4 h-4" />
           <span>Letra Arena v1.0.0</span>
         </div>
-        <p>Feito com ❤️ para gamers brasileiros</p>
+        <p className="text-xs text-gray-400 mt-1">Feito com ❤️ para gamers brasileiros</p>
       </div>
     </div>
   );
