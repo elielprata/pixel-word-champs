@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { AlertTriangle, Clock, CheckCircle2, Eye } from 'lucide-react';
 
 interface FraudAlert {
@@ -20,10 +21,17 @@ interface SecurityAlertsProps {
 
 export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'investigating' | 'resolved'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const alertsPerPage = 9;
 
   const filteredAlerts = alerts.filter(alert => 
     filter === 'all' || alert.status === filter
   );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredAlerts.length / alertsPerPage);
+  const startIndex = (currentPage - 1) * alertsPerPage;
+  const paginatedAlerts = filteredAlerts.slice(startIndex, startIndex + alertsPerPage);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -36,10 +44,10 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return <Clock className="h-4 w-4 text-orange-500" />;
-      case 'investigating': return <Eye className="h-4 w-4 text-blue-500" />;
-      case 'resolved': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      default: return <AlertTriangle className="h-4 w-4 text-gray-500" />;
+      case 'pending': return <Clock className="h-3 w-3 text-orange-500" />;
+      case 'investigating': return <Eye className="h-3 w-3 text-blue-500" />;
+      case 'resolved': return <CheckCircle2 className="h-3 w-3 text-green-500" />;
+      default: return <AlertTriangle className="h-3 w-3 text-gray-500" />;
     }
   };
 
@@ -67,7 +75,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setFilter('all')}
+            onClick={() => { setFilter('all'); setCurrentPage(1); }}
             className="h-7 px-2 text-xs"
           >
             Todos
@@ -75,7 +83,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
           <Button
             variant={filter === 'pending' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setFilter('pending')}
+            onClick={() => { setFilter('pending'); setCurrentPage(1); }}
             className="h-7 px-2 text-xs"
           >
             Pendentes
@@ -83,7 +91,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
           <Button
             variant={filter === 'investigating' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setFilter('investigating')}
+            onClick={() => { setFilter('investigating'); setCurrentPage(1); }}
             className="h-7 px-2 text-xs"
           >
             Investigando
@@ -91,7 +99,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
           <Button
             variant={filter === 'resolved' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setFilter('resolved')}
+            onClick={() => { setFilter('resolved'); setCurrentPage(1); }}
             className="h-7 px-2 text-xs"
           >
             Resolvidos
@@ -99,43 +107,76 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {filteredAlerts.length > 0 ? (
-            filteredAlerts.map(alert => (
-              <div key={alert.id} className="flex flex-col sm:flex-row items-start justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4">
-                <div className="flex-1 w-full">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    {getStatusIcon(alert.status)}
-                    <span className="font-medium text-gray-900">{alert.user}</span>
-                    <Badge variant={getSeverityColor(alert.severity)}>
-                      {alert.severity === 'high' ? 'Alto' : 
-                       alert.severity === 'medium' ? 'Médio' : 'Baixo'}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1">{alert.reason}</p>
-                  <p className="text-xs text-gray-400">
-                    {alert.timestamp} • Status: {getStatusLabel(alert.status)}
-                  </p>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mb-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+
+        {/* 3x3 Grid */}
+        {paginatedAlerts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {paginatedAlerts.map(alert => (
+              <div key={alert.id} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  {getStatusIcon(alert.status)}
+                  <span className="font-medium text-sm truncate">{alert.user}</span>
+                  <Badge variant={getSeverityColor(alert.severity)} className="text-xs">
+                    {alert.severity === 'high' ? 'Alto' : 
+                     alert.severity === 'medium' ? 'Médio' : 'Baixo'}
+                  </Badge>
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                <p className="text-xs text-gray-600 line-clamp-2">{alert.reason}</p>
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs text-gray-400">{alert.timestamp}</p>
+                  <p className="text-xs text-gray-400">Status: {getStatusLabel(alert.status)}</p>
+                </div>
+                <div className="flex gap-1">
+                  <Button variant="outline" size="sm" className="text-xs h-6 px-2 flex-1">
                     Detalhes
                   </Button>
                   {alert.status === 'pending' && (
-                    <Button variant="default" size="sm" className="flex-1 sm:flex-none">
+                    <Button variant="default" size="sm" className="text-xs h-6 px-2 flex-1">
                       Investigar
                     </Button>
                   )}
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p>Nenhum alerta encontrado para o filtro selecionado</p>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-30" />
+            <p>Nenhum alerta encontrado para o filtro selecionado</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
