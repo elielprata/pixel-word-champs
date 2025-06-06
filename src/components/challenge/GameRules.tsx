@@ -19,27 +19,21 @@ const GameRules = () => {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <h4 className="font-semibold text-gray-800 mb-3">📝 Mecânica do Jogo</h4>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
-                <div>
-                  <p className="font-medium text-green-800">Arraste para selecionar</p>
-                  <p className="text-sm text-green-600">Toque e arraste o dedo conectando letras adjacentes</p>
-                </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="text-center p-2 bg-green-50 rounded-lg border border-green-200">
+                <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-1">1</div>
+                <h4 className="font-semibold text-green-800 mb-0.5 text-sm">Arraste</h4>
+                <p className="text-xs text-green-600">Conecte letras adjacentes</p>
               </div>
-              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
-                <div>
-                  <p className="font-medium text-blue-800">Qualquer direção</p>
-                  <p className="text-sm text-blue-600">Horizontal, vertical e diagonal são válidas</p>
-                </div>
+              <div className="text-center p-2 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-1">2</div>
+                <h4 className="font-semibold text-blue-800 mb-0.5 text-sm">Direções</h4>
+                <p className="text-xs text-blue-600">Qualquer direção válida</p>
               </div>
-              <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
-                <div>
-                  <p className="font-medium text-purple-800">Solte para confirmar</p>
-                  <p className="text-sm text-purple-600">Levante o dedo para formar a palavra</p>
-                </div>
+              <div className="text-center p-2 bg-purple-50 rounded-lg border border-purple-200">
+                <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-1">3</div>
+                <h4 className="font-semibold text-purple-800 mb-0.5 text-sm">Solte</h4>
+                <p className="text-xs text-purple-600">Confirme a palavra</p>
               </div>
             </div>
           </div>
