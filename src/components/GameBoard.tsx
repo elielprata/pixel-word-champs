@@ -3,6 +3,7 @@ import GameProgressBar from './game/GameProgressBar';
 import GameStats from './game/GameStats';
 import GameCell from './game/GameCell';
 import WordsList from './game/WordsList';
+import GameOverModal from './game/GameOverModal';
 
 interface Position {
   row: number;
@@ -58,6 +59,9 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
   const [levelWords] = useState(getLevelWords(level));
   const [permanentlyMarkedCells, setPermanentlyMarkedCells] = useState<Position[]>([]);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [showGameOver, setShowGameOver] = useState(false);
+  const [canRevive, setCanRevive] = useState(true);
+  const [hintHighlightedCells, setHintHighlightedCells] = useState<Position[]>([]);
   const boardRef = useRef<HTMLDivElement>(null);
 
   // Regenera o tabuleiro quando o nível muda
@@ -69,6 +73,13 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
     setPermanentlyMarkedCells([]);
     setHintsUsed(0);
   }, [level]);
+
+  // Detecta quando o tempo acaba
+  useEffect(() => {
+    if (timeLeft === 0 && !showGameOver) {
+      setShowGameOver(true);
+    }
+  }, [timeLeft, showGameOver]);
 
   // Verifica se completou o nível
   useEffect(() => {
@@ -135,14 +146,50 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
     return permanentlyMarkedCells.some(pos => pos.row === row && pos.col === col);
   };
 
+  const isCellHintHighlighted = (row: number, col: number) => {
+    return hintHighlightedCells.some(pos => pos.row === row && pos.col === col);
+  };
+
   const useHint = () => {
     if (hintsUsed >= 1) return;
     
     const remainingWords = levelWords.filter(word => !foundWords.some(fw => fw.word === word));
     if (remainingWords.length > 0) {
       setHintsUsed(prev => prev + 1);
-      console.log(`Dica: Procure por "${remainingWords[0]}"`);
+      
+      // Simular posições da palavra (em um jogo real, você teria as posições reais)
+      const hintWord = remainingWords[0];
+      const mockPositions: Position[] = [];
+      
+      // Gerar posições mockadas para demonstração
+      for (let i = 0; i < hintWord.length; i++) {
+        mockPositions.push({ row: 1, col: i });
+      }
+      
+      setHintHighlightedCells(mockPositions);
+      
+      // Remover o destaque após 3 segundos
+      setTimeout(() => {
+        setHintHighlightedCells([]);
+      }, 3000);
+      
+      console.log(`Dica: Procure por "${hintWord}"`);
     }
+  };
+
+  const handleRevive = () => {
+    if (!canRevive) return;
+    
+    // Simular assistir anúncio (em produção seria integrado com sistema de anúncios)
+    setCanRevive(false);
+    setShowGameOver(false);
+    
+    // Adicionar 30 segundos (isso seria feito no componente pai)
+    console.log('Revive ativado! +30 segundos');
+  };
+
+  const handleGoHome = () => {
+    onTimeUp();
   };
 
   const getCellSize = (boardSize: number) => {
@@ -195,6 +242,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
               colIndex={colIndex}
               isSelected={isCellSelected(rowIndex, colIndex)}
               isPermanent={isCellPermanentlyMarked(rowIndex, colIndex)}
+              isHintHighlighted={isCellHintHighlighted(rowIndex, colIndex)}
               cellSize={cellSize}
               onCellStart={handleCellStart}
               onCellMove={handleCellMove}
@@ -207,6 +255,16 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
       <WordsList 
         levelWords={levelWords}
         foundWords={foundWords}
+      />
+
+      <GameOverModal
+        isOpen={showGameOver}
+        score={foundWords.reduce((sum, fw) => sum + fw.points, 0)}
+        wordsFound={foundWords.length}
+        totalWords={5}
+        onRevive={handleRevive}
+        onGoHome={handleGoHome}
+        canRevive={canRevive}
       />
     </div>
   );
