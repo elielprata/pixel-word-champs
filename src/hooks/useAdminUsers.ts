@@ -126,8 +126,8 @@ export const useAdminUsers = () => {
     }
   };
 
-  // Ensure usersList is always an array of AdminUser type
-  const usersList: AdminUser[] = adminUsers || [];
+  // Explicitly type usersList and provide safe default
+  const usersList = (adminUsers ?? []) as AdminUser[];
 
   return {
     usersList,
