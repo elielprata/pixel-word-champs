@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -148,7 +147,7 @@ export const AdminUsersList = () => {
     );
   }
 
-  // Garantir que adminUsers seja um array
+  // Garantir que adminUsers seja um array com tipagem explícita
   const usersList: AdminUser[] = Array.isArray(adminUsers) ? adminUsers : [];
 
   return (
