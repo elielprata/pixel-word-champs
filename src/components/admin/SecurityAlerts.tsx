@@ -62,21 +62,21 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between flex-wrap gap-2">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between flex-wrap gap-2 text-lg">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-orange-500" />
+            <AlertTriangle className="h-4 w-4 text-orange-500" />
             Alertas de Segurança
           </div>
-          <Badge variant="outline">{filteredAlerts.length}</Badge>
+          <Badge variant="outline" className="text-xs">{filteredAlerts.length}</Badge>
         </CardTitle>
         
-        <div className="flex flex-wrap gap-1 mt-4">
+        <div className="flex flex-wrap gap-1 mt-2">
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => { setFilter('all'); setCurrentPage(1); }}
-            className="h-7 px-2 text-xs"
+            className="h-6 px-2 text-xs"
           >
             Todos
           </Button>
@@ -84,7 +84,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             variant={filter === 'pending' ? 'default' : 'outline'}
             size="sm"
             onClick={() => { setFilter('pending'); setCurrentPage(1); }}
-            className="h-7 px-2 text-xs"
+            className="h-6 px-2 text-xs"
           >
             Pendentes
           </Button>
@@ -92,7 +92,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             variant={filter === 'investigating' ? 'default' : 'outline'}
             size="sm"
             onClick={() => { setFilter('investigating'); setCurrentPage(1); }}
-            className="h-7 px-2 text-xs"
+            className="h-6 px-2 text-xs"
           >
             Investigando
           </Button>
@@ -100,16 +100,16 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             variant={filter === 'resolved' ? 'default' : 'outline'}
             size="sm"
             onClick={() => { setFilter('resolved'); setCurrentPage(1); }}
-            className="h-7 px-2 text-xs"
+            className="h-6 px-2 text-xs"
           >
             Resolvidos
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="mb-4">
+          <div className="mb-3">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
@@ -140,30 +140,30 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
           </div>
         )}
 
-        {/* 3x3 Grid */}
+        {/* 3x3 Grid - Mais compacto */}
         {paginatedAlerts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {paginatedAlerts.map(alert => (
-              <div key={alert.id} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors space-y-2">
-                <div className="flex items-center gap-2 mb-2">
+              <div key={alert.id} className="p-2 border rounded-lg hover:bg-gray-50 transition-colors space-y-1.5 min-h-[120px]">
+                <div className="flex items-center gap-1.5 mb-1">
                   {getStatusIcon(alert.status)}
-                  <span className="font-medium text-sm truncate">{alert.user}</span>
-                  <Badge variant={getSeverityColor(alert.severity)} className="text-xs">
+                  <span className="font-medium text-xs truncate">{alert.user}</span>
+                  <Badge variant={getSeverityColor(alert.severity)} className="text-[10px] px-1 py-0">
                     {alert.severity === 'high' ? 'Alto' : 
                      alert.severity === 'medium' ? 'Médio' : 'Baixo'}
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-600 line-clamp-2">{alert.reason}</p>
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs text-gray-400">{alert.timestamp}</p>
-                  <p className="text-xs text-gray-400">Status: {getStatusLabel(alert.status)}</p>
+                <p className="text-[11px] text-gray-600 line-clamp-2 leading-tight">{alert.reason}</p>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[10px] text-gray-400">{alert.timestamp}</p>
+                  <p className="text-[10px] text-gray-400">Status: {getStatusLabel(alert.status)}</p>
                 </div>
-                <div className="flex gap-1">
-                  <Button variant="outline" size="sm" className="text-xs h-6 px-2 flex-1">
+                <div className="flex gap-1 pt-1">
+                  <Button variant="outline" size="sm" className="text-[10px] h-5 px-1.5 flex-1">
                     Detalhes
                   </Button>
                   {alert.status === 'pending' && (
-                    <Button variant="default" size="sm" className="text-xs h-6 px-2 flex-1">
+                    <Button variant="default" size="sm" className="text-[10px] h-5 px-1.5 flex-1">
                       Investigar
                     </Button>
                   )}
@@ -172,9 +172,9 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-30" />
-            <p>Nenhum alerta encontrado para o filtro selecionado</p>
+          <div className="text-center py-6 text-gray-500">
+            <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">Nenhum alerta encontrado para o filtro selecionado</p>
           </div>
         )}
       </CardContent>
