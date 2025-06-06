@@ -7,7 +7,7 @@ import { Settings, Shield, Zap, Database } from 'lucide-react';
 
 export const SecuritySettings = () => {
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Settings className="h-5 w-5 text-gray-600" />
@@ -15,7 +15,7 @@ export const SecuritySettings = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
             <h4 className="font-medium flex items-center gap-2">
               <Shield className="h-4 w-4 text-blue-600" />

@@ -53,9 +53,9 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
   };
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-orange-500" />
             Alertas de Segurança
@@ -63,7 +63,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
           <Badge variant="outline">{filteredAlerts.length}</Badge>
         </CardTitle>
         
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 mt-4">
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
             size="sm"
@@ -98,9 +98,9 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
         <div className="space-y-3">
           {filteredAlerts.length > 0 ? (
             filteredAlerts.map(alert => (
-              <div key={alert.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+              <div key={alert.id} className="flex flex-col sm:flex-row items-start justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4">
+                <div className="flex-1 w-full">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     {getStatusIcon(alert.status)}
                     <span className="font-medium text-gray-900">{alert.user}</span>
                     <Badge variant={getSeverityColor(alert.severity)}>
@@ -113,12 +113,12 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
                     {alert.timestamp} • Status: {getStatusLabel(alert.status)}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                     Detalhes
                   </Button>
                   {alert.status === 'pending' && (
-                    <Button variant="default" size="sm">
+                    <Button variant="default" size="sm" className="flex-1 sm:flex-none">
                       Investigar
                     </Button>
                   )}
