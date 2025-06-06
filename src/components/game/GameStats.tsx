@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Lightbulb, Trophy } from 'lucide-react';
+import { Lightbulb } from 'lucide-react';
 
 interface GameStatsProps {
   timeLeft: number;
@@ -23,11 +23,6 @@ const GameStats = ({ timeLeft, hintsUsed, totalScore, onUseHint }: GameStatsProp
         <Lightbulb className="w-4 h-4" />
         {hintsUsed >= 1 ? '0' : '1'}
       </Button>
-      
-      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-md">
-        <Trophy className="w-4 h-4 text-amber-600" />
-        <span className="text-sm font-bold text-gray-800">{totalScore}</span>
-      </div>
     </div>
   );
 };
