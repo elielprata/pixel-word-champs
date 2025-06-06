@@ -131,19 +131,21 @@ export const AdminUsersList = () => {
     );
   }
 
+  const usersList = adminUsers || [];
+
   return (
     <>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Administradores ({adminUsers?.length || 0})
+            Administradores ({usersList.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {adminUsers && adminUsers.length > 0 ? (
-              adminUsers.map((user) => (
+            {usersList.length > 0 ? (
+              usersList.map((user: AdminUser) => (
                 <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
