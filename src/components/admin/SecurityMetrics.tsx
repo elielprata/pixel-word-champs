@@ -28,7 +28,7 @@ export const SecurityMetrics = () => {
             
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Tempo de Resposta</span>
-              <Badge variant="outline">< 5min</Badge>
+              <Badge variant="outline">&lt; 5min</Badge>
             </div>
           </div>
         </CardContent>
