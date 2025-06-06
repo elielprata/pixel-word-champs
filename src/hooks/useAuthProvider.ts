@@ -31,6 +31,7 @@ export const useAuthProvider = (): AuthContextType => {
   } = authRefs;
 
   useEffect(() => {
+    console.log('=== AUTH PROVIDER DEBUG ===');
     console.log('Iniciando verificação de autenticação...');
     isMountedRef.current = true;
     
@@ -38,6 +39,13 @@ export const useAuthProvider = (): AuthContextType => {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         console.log('getSession - Sessão encontrada:', !!session, 'Erro:', sessionError);
+        
+        if (session?.user) {
+          console.log('📧 Email do usuário da sessão:', session.user.email);
+          console.log('🆔 ID do usuário da sessão:', session.user.id);
+          console.log('📅 Sessão criada em:', session.user.created_at);
+          console.log('🔗 Metadados:', session.user.user_metadata);
+        }
         
         if (sessionError) {
           console.error('Erro ao obter sessão:', sessionError);
@@ -62,7 +70,14 @@ export const useAuthProvider = (): AuthContextType => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, !!session);
+        console.log('=== AUTH STATE CHANGE ===');
+        console.log('Event:', event);
+        console.log('Session exists:', !!session);
+        
+        if (session?.user) {
+          console.log('📧 Email:', session.user.email);
+          console.log('🆔 ID:', session.user.id);
+        }
         
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('Processando login para:', session.user.email);
@@ -96,6 +111,13 @@ export const useAuthProvider = (): AuthContextType => {
       subscription.unsubscribe();
     };
   }, []); // Removido processAuthentication das dependências para evitar loop infinito
+
+  // Log do estado atual
+  console.log('🎯 Estado atual do Auth:');
+  console.log('- User:', user);
+  console.log('- IsAuthenticated:', isAuthenticated);
+  console.log('- IsLoading:', isLoading);
+  console.log('- Error:', error);
 
   return {
     user,
