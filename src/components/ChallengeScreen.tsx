@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Clock, Target, Lightbulb, Star, Zap, Trophy, Play, Info } from 'lucide-react';
+import { ArrowLeft, Clock, Target, Lightbulb, Star, Play, Info } from 'lucide-react';
 import GameBoard from './GameBoard';
 
 interface ChallengeScreenProps {
@@ -116,66 +116,53 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
             </div>
           </div>
 
-          {/* Regras do Jogo */}
+          {/* Regras Compactas */}
           <Card className="border-0 shadow-lg">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
               <CardTitle className="flex items-center gap-3 text-blue-900">
                 <div className="bg-blue-500 p-2 rounded-lg">
                   <Info className="w-5 h-5 text-white" />
                 </div>
-                Como Jogar
+                Como Jogar & Pontuação
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-800 mb-3">📝 Mecânica do Jogo</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
-                      <div>
-                        <p className="font-medium text-green-800">Arraste para selecionar</p>
-                        <p className="text-sm text-green-600">Toque e arraste o dedo conectando letras adjacentes</p>
-                      </div>
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-800">🎮 Mecânica</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">1</span>
+                      <span>Arraste para conectar letras adjacentes</span>
                     </div>
-                    <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
-                      <div>
-                        <p className="font-medium text-blue-800">Qualquer direção</p>
-                        <p className="text-sm text-blue-600">Horizontal, vertical e diagonal são válidas</p>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">2</span>
+                      <span>Qualquer direção (horizontal, vertical, diagonal)</span>
                     </div>
-                    <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                      <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
-                      <div>
-                        <p className="font-medium text-purple-800">Solte para confirmar</p>
-                        <p className="text-sm text-purple-600">Levante o dedo para formar a palavra</p>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs">3</span>
+                      <span>Solte para confirmar a palavra</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-800 mb-3">🏆 Sistema de Pontuação</h4>
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-800">🏆 Pontuação</h4>
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium">3 letras</span>
-                      <Badge className="bg-green-100 text-green-700 border-green-200">1 ponto</Badge>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>3-4 letras</span>
+                      <Badge className="bg-green-100 text-green-700">1-2 pts</Badge>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium">4 letras</span>
-                      <Badge className="bg-blue-100 text-blue-700 border-blue-200">2 pontos</Badge>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>5-6 letras</span>
+                      <Badge className="bg-blue-100 text-blue-700">3-5 pts</Badge>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium">5 letras</span>
-                      <Badge className="bg-purple-100 text-purple-700 border-purple-200">3 pontos</Badge>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>7+ letras</span>
+                      <Badge className="bg-purple-100 text-purple-700">8+ pts</Badge>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium">6+ letras</span>
-                      <Badge className="bg-amber-100 text-amber-700 border-amber-200">5+ pontos</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                      <span className="text-sm font-medium">⭐ Palavras raras</span>
+                    <div className="flex justify-between items-center text-sm border-t pt-2">
+                      <span>⭐ Palavras raras</span>
                       <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white">Bônus!</Badge>
                     </div>
                   </div>
@@ -184,40 +171,23 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
             </CardContent>
           </Card>
 
-          {/* Power-ups e Dicas */}
+          {/* Power-ups Compactos */}
           <Card className="border-0 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100">
-              <CardTitle className="flex items-center gap-3 text-purple-900">
-                <div className="bg-purple-500 p-2 rounded-lg">
-                  <Zap className="w-5 h-5 text-white" />
-                </div>
-                Power-ups Disponíveis
-              </CardTitle>
-            </CardHeader>
             <CardContent className="p-6">
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-                  <div className="bg-yellow-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Lightbulb className="w-6 h-6 text-yellow-600" />
-                  </div>
-                  <h4 className="font-semibold text-yellow-800 mb-1">Dica Grátis</h4>
-                  <p className="text-sm text-yellow-600">1 dica por nível</p>
+              <h4 className="font-semibold text-purple-900 mb-4 flex items-center gap-2">
+                <Star className="w-5 h-5" />
+                Power-ups Disponíveis
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <Lightbulb className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+                  <h5 className="font-medium text-yellow-800">Dica Grátis</h5>
+                  <p className="text-xs text-yellow-600">1 por nível</p>
                 </div>
-                
-                <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-200">
-                  <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Clock className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h4 className="font-semibold text-blue-800 mb-1">Tempo Extra</h4>
-                  <p className="text-sm text-blue-600">+30s com anúncio</p>
-                </div>
-                
-                <div className="text-center p-4 bg-green-50 rounded-xl border border-green-200">
-                  <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Star className="w-6 h-6 text-green-600" />
-                  </div>
-                  <h4 className="font-semibold text-green-800 mb-1">Palavra Bônus</h4>
-                  <p className="text-sm text-green-600">Pontos dobrados</p>
+                <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <Clock className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                  <h5 className="font-medium text-blue-800">Tempo Extra</h5>
+                  <p className="text-xs text-blue-600">+30s com anúncio</p>
                 </div>
               </div>
             </CardContent>
@@ -266,7 +236,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
             </div>
             
             <div className="flex items-center gap-2 bg-purple-100 rounded-lg px-3 py-1">
-              <Trophy className="w-4 h-4 text-purple-600" />
+              <Star className="w-4 h-4 text-purple-600" />
               <span className="text-sm font-bold text-purple-700">{score} pts</span>
             </div>
           </div>
