@@ -20,7 +20,7 @@ export const AdminUsersList = () => {
 
   const { data: adminUsers, isLoading, refetch } = useQuery({
     queryKey: ['adminUsers'],
-    queryFn: async () => {
+    queryFn: async (): Promise<AdminUser[]> => {
       console.log('🔍 Buscando usuários admin...');
       
       // Buscar todos os usuários que têm role admin
@@ -68,7 +68,7 @@ export const AdminUsersList = () => {
       }
 
       // Combinar dados do auth com profiles
-      const combinedData = profiles?.map(profile => {
+      const combinedData: AdminUser[] = profiles?.map(profile => {
         const authUser = authUsers.users.find(u => u.id === profile.id);
         return {
           id: profile.id,
@@ -140,7 +140,7 @@ export const AdminUsersList = () => {
       <CardContent>
         <div className="space-y-3">
           {adminUsers && adminUsers.length > 0 ? (
-            adminUsers.map((user) => (
+            adminUsers.map((user: AdminUser) => (
               <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
