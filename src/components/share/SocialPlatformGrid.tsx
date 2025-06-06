@@ -120,21 +120,21 @@ const SocialPlatformGrid = ({ shareText, shareUrl, onCopy }: SocialPlatformGridP
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="text-center">
         <h4 className="text-lg font-semibold text-gray-800 mb-1">Onde compartilhar?</h4>
         <p className="text-sm text-gray-600">Escolha sua plataforma favorita</p>
       </div>
       
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         {socialPlatforms.map((platform) => (
           <button
             key={platform.key}
             onClick={() => shareOnSocial(platform.key)}
-            className={`${platform.color} text-white p-4 rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg active:scale-95`}
+            className={`${platform.color} text-white p-3 rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg active:scale-95`}
           >
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-2xl">{platform.icon}</span>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xl">{platform.icon}</span>
               <div className="text-center">
                 <span className="block text-sm font-semibold">{platform.name}</span>
                 <span className="block text-xs opacity-80">{platform.description}</span>

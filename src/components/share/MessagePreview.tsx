@@ -9,7 +9,7 @@ interface MessagePreviewProps {
 
 const MessagePreview = ({ shareText, shareUrl }: MessagePreviewProps) => {
   return (
-    <div className="bg-gray-50 p-4 rounded-xl border">
+    <div className="bg-gray-50 p-3 rounded-xl border">
       <div className="flex items-center gap-2 mb-2">
         <Users className="w-4 h-4 text-gray-600" />
         <span className="text-sm font-medium text-gray-700">Prévia da mensagem</span>

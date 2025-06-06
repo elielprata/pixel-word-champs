@@ -30,7 +30,7 @@ const SocialShareModal = ({ isOpen, onClose, inviteCode, shareText, shareUrl }: 
       <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto border-0 bg-white shadow-2xl animate-scale-in">
         <ShareHeader onClose={onClose} />
         
-        <CardContent className="p-6 space-y-6">
+        <CardContent className="p-4 space-y-4">
           <InviteCodeDisplay inviteCode={inviteCode} />
           <MessagePreview shareText={shareText} shareUrl={shareUrl} />
           <CopyButton fullMessage={fullMessage} />
