@@ -22,7 +22,7 @@ interface SecurityAlertsProps {
 export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'investigating' | 'resolved'>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const alertsPerPage = 9;
+  const alertsPerPage = 6;
 
   const filteredAlerts = alerts.filter(alert => 
     filter === 'all' || alert.status === filter
@@ -76,7 +76,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             variant={filter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => { setFilter('all'); setCurrentPage(1); }}
-            className="h-6 px-2 text-xs"
+            className="h-5 px-2 text-[10px]"
           >
             Todos
           </Button>
@@ -84,7 +84,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             variant={filter === 'pending' ? 'default' : 'outline'}
             size="sm"
             onClick={() => { setFilter('pending'); setCurrentPage(1); }}
-            className="h-6 px-2 text-xs"
+            className="h-5 px-2 text-[10px]"
           >
             Pendentes
           </Button>
@@ -92,7 +92,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             variant={filter === 'investigating' ? 'default' : 'outline'}
             size="sm"
             onClick={() => { setFilter('investigating'); setCurrentPage(1); }}
-            className="h-6 px-2 text-xs"
+            className="h-5 px-2 text-[10px]"
           >
             Investigando
           </Button>
@@ -100,7 +100,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             variant={filter === 'resolved' ? 'default' : 'outline'}
             size="sm"
             onClick={() => { setFilter('resolved'); setCurrentPage(1); }}
-            className="h-6 px-2 text-xs"
+            className="h-5 px-2 text-[10px]"
           >
             Resolvidos
           </Button>
@@ -140,7 +140,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
           </div>
         )}
 
-        {/* 3x3 Grid - Mais compacto */}
+        {/* 2x3 Grid - 6 items */}
         {paginatedAlerts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {paginatedAlerts.map(alert => (
