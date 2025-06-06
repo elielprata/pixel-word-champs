@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,15 @@ interface GroupPrize {
   active: boolean;
 }
 
+const formatCurrency = (value: number): string => {
+  return value.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 export const PaymentsTab = () => {
   const { toast } = useToast();
   const [editingRow, setEditingRow] = useState<number | null>(null);
@@ -41,22 +51,36 @@ export const PaymentsTab = () => {
     { id: 'group3', name: '51º ao 100º', range: '51-100', totalWinners: 50, prizePerWinner: 25, active: false }
   ]);
 
-  const [editIndividualValue, setEditIndividualValue] = useState<number>(0);
-  const [editGroupPrize, setEditGroupPrize] = useState<number>(0);
+  const [editIndividualValue, setEditIndividualValue] = useState<string>('');
+  const [editGroupPrize, setEditGroupPrize] = useState<string>('');
+
+  const parseInputValue = (value: string): number => {
+    // Remove R$, espaços e converte vírgula para ponto
+    const cleanValue = value.replace(/[R$\s]/g, '').replace(',', '.');
+    return parseFloat(cleanValue) || 0;
+  };
+
+  const formatInputValue = (value: number): string => {
+    return value.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
 
   const handleEditIndividual = (position: number) => {
     const prize = individualPrizes.find(p => p.position === position);
     if (prize) {
-      setEditIndividualValue(prize.prize);
+      setEditIndividualValue(formatInputValue(prize.prize));
       setEditingRow(position);
     }
   };
 
   const handleSaveIndividual = (position: number) => {
+    const numericValue = parseInputValue(editIndividualValue);
     setIndividualPrizes(prev => 
       prev.map(prize => 
         prize.position === position 
-          ? { ...prize, prize: editIndividualValue }
+          ? { ...prize, prize: numericValue }
           : prize
       )
     );
@@ -70,16 +94,17 @@ export const PaymentsTab = () => {
   const handleEditGroup = (groupId: string) => {
     const group = groupPrizes.find(g => g.id === groupId);
     if (group) {
-      setEditGroupPrize(group.prizePerWinner);
+      setEditGroupPrize(formatInputValue(group.prizePerWinner));
       setEditingGroup(groupId);
     }
   };
 
   const handleSaveGroup = (groupId: string) => {
+    const numericValue = parseInputValue(editGroupPrize);
     setGroupPrizes(prev => 
       prev.map(group => 
         group.id === groupId 
-          ? { ...group, prizePerWinner: editGroupPrize }
+          ? { ...group, prizePerWinner: numericValue }
           : group
       )
     );
@@ -103,8 +128,8 @@ export const PaymentsTab = () => {
   const handleCancel = () => {
     setEditingRow(null);
     setEditingGroup(null);
-    setEditIndividualValue(0);
-    setEditGroupPrize(0);
+    setEditIndividualValue('');
+    setEditGroupPrize('');
   };
 
   const handleExportPix = (prizeLevel: string) => {
@@ -137,7 +162,7 @@ export const PaymentsTab = () => {
         <h2 className="text-xl font-bold">Sistema de Premiação</h2>
         <div className="text-right">
           <p className="text-xs text-gray-600">Total de Premiação</p>
-          <p className="text-lg font-bold text-green-600">R$ {totalPrize.toLocaleString('pt-BR')}</p>
+          <p className="text-lg font-bold text-green-600">{formatCurrency(totalPrize)}</p>
         </div>
       </div>
       
@@ -178,16 +203,15 @@ export const PaymentsTab = () => {
                         <div className="flex items-center gap-1">
                           <span className="text-xs">R$</span>
                           <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
+                            type="text"
                             value={editIndividualValue}
-                            onChange={(e) => setEditIndividualValue(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => setEditIndividualValue(e.target.value)}
                             className="w-20 h-7 text-xs"
+                            placeholder="0,00"
                           />
                         </div>
                       ) : (
-                        `R$ ${prize.prize.toLocaleString('pt-BR')}`
+                        formatCurrency(prize.prize)
                       )}
                     </td>
                     <td className="p-2">
@@ -303,23 +327,22 @@ export const PaymentsTab = () => {
                       <div className="flex items-center gap-1">
                         <span className="text-xs">R$</span>
                         <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
+                          type="text"
                           value={editGroupPrize}
-                          onChange={(e) => setEditGroupPrize(parseFloat(e.target.value) || 0)}
+                          onChange={(e) => setEditGroupPrize(e.target.value)}
                           className="w-20 h-6 text-xs"
                           disabled={!group.active}
+                          placeholder="0,00"
                         />
                       </div>
                     ) : (
-                      <span className="text-sm font-medium">R$ {group.prizePerWinner.toLocaleString('pt-BR')}</span>
+                      <span className="text-sm font-medium">{formatCurrency(group.prizePerWinner)}</span>
                     )}
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-gray-600">Total do grupo:</span>
                     <div className="font-semibold text-green-600 text-sm">
-                      {group.active ? `R$ ${(group.totalWinners * group.prizePerWinner).toLocaleString('pt-BR')}` : 'R$ 0'}
+                      {group.active ? formatCurrency(group.totalWinners * group.prizePerWinner) : 'R$ 0,00'}
                     </div>
                   </div>
                 </div>
@@ -341,12 +364,12 @@ export const PaymentsTab = () => {
             </div>
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <p className="text-xs text-gray-600">Valor Total de Prêmios</p>
-              <p className="text-lg font-bold text-green-600">R$ {totalPrize.toLocaleString('pt-BR')}</p>
+              <p className="text-lg font-bold text-green-600">{formatCurrency(totalPrize)}</p>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-lg">
               <p className="text-xs text-gray-600">Maior Prêmio Individual</p>
               <p className="text-lg font-bold text-purple-600">
-                R$ {Math.max(...individualPrizes.map(p => p.prize)).toLocaleString('pt-BR')}
+                {formatCurrency(Math.max(...individualPrizes.map(p => p.prize)))}
               </p>
             </div>
           </div>
