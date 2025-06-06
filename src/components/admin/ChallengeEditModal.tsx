@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 interface Challenge {
@@ -24,16 +23,32 @@ interface ChallengeEditModalProps {
 export const ChallengeEditModal = ({ challenge, isOpen, onClose, onSave }: ChallengeEditModalProps) => {
   const [formData, setFormData] = useState({
     title: '',
-    status: 'Agendado',
-    description: ''
+    description: '',
+    startDate: '',
+    endDate: ''
   });
+
+  const getStatusFromDates = (startDate: string, endDate: string) => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (now < start) {
+      return 'Agendado';
+    } else if (now >= start && now <= end) {
+      return 'Ativo';
+    } else {
+      return 'Finalizado';
+    }
+  };
 
   useEffect(() => {
     if (challenge) {
       setFormData({
         title: challenge.title,
-        status: challenge.status,
-        description: ''
+        description: '',
+        startDate: '',
+        endDate: ''
       });
     }
   }, [challenge]);
@@ -41,11 +56,13 @@ export const ChallengeEditModal = ({ challenge, isOpen, onClose, onSave }: Chall
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!challenge || !formData.title.trim()) return;
+    if (!challenge || !formData.title.trim() || !formData.startDate || !formData.endDate) return;
+
+    const status = getStatusFromDates(formData.startDate, formData.endDate);
 
     const updatedChallenge = {
       title: formData.title,
-      status: formData.status,
+      status: status,
       players: challenge.players // Manter o número atual de jogadores
     };
 
@@ -89,19 +106,37 @@ export const ChallengeEditModal = ({ challenge, isOpen, onClose, onSave }: Chall
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-status">Status</Label>
-            <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Agendado">Agendado</SelectItem>
-                <SelectItem value="Ativo">Ativo</SelectItem>
-                <SelectItem value="Finalizado">Finalizado</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-startDate">Data de Início</Label>
+              <Input
+                id="edit-startDate"
+                type="datetime-local"
+                value={formData.startDate}
+                onChange={(e) => handleInputChange('startDate', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-endDate">Data de Fim</Label>
+              <Input
+                id="edit-endDate"
+                type="datetime-local"
+                value={formData.endDate}
+                onChange={(e) => handleInputChange('endDate', e.target.value)}
+                required
+              />
+            </div>
           </div>
+
+          {formData.startDate && formData.endDate && (
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <p className="text-sm text-gray-600">
+                Status calculado: <strong>{getStatusFromDates(formData.startDate, formData.endDate)}</strong>
+              </p>
+            </div>
+          )}
 
           <div className="bg-gray-50 p-3 rounded-lg">
             <span className="text-sm text-gray-600">
