@@ -98,8 +98,8 @@ const AdminPanel = () => {
               <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
                 <div className="relative z-10">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1">
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="lg:col-span-2">
                       <h2 className="text-2xl font-bold mb-2">Visão Geral do Sistema</h2>
                       <p className="text-blue-100 mb-6">Acompanhe as principais métricas da plataforma em tempo real</p>
                       <div className="flex flex-wrap gap-4">
@@ -116,21 +116,20 @@ const AdminPanel = () => {
                     
                     <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
                       <div className="flex items-center gap-3 mb-4">
+                        <Users className="h-6 w-6" />
+                        <span className="font-semibold">Usuários Ativos</span>
+                      </div>
+                      <div className="text-3xl font-bold mb-2">{mockStats.dau.toLocaleString()}</div>
+                      <div className="text-sm text-blue-100">Hoje • +12% vs ontem</div>
+                    </div>
+                    
+                    <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
+                      <div className="flex items-center gap-3 mb-4">
                         <TrendingUp className="h-6 w-6" />
                         <span className="font-semibold">Receita Mensal</span>
                       </div>
                       <div className="text-3xl font-bold mb-2">R$ {mockStats.revenue.toLocaleString()}</div>
                       <div className="text-sm text-blue-100">Este mês • +8% vs anterior</div>
-                    </div>
-                    
-                    {/* Espaço reservado para nova métrica */}
-                    <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm border-2 border-white/20 border-dashed">
-                      <div className="flex items-center justify-center h-full">
-                        <div className="text-center">
-                          <div className="text-sm text-blue-100 mb-2">Espaço Reservado</div>
-                          <div className="text-lg font-semibold text-white/70">Nova Métrica</div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
