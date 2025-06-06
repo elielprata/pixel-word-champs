@@ -9,7 +9,7 @@ interface MetricsTabProps {
 export const MetricsTab = ({ retention }: MetricsTabProps) => {
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Métricas e Analytics</h2>
+      <h3 className="text-xl font-bold">Métricas e Analytics</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>

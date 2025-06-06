@@ -35,19 +35,19 @@ const AdminPanel = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-1 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-1 h-auto p-1">
           <TabsTrigger value="dashboard" className="text-xs lg:text-sm">Dashboard</TabsTrigger>
           <TabsTrigger value="challenges" className="text-xs lg:text-sm">Desafios</TabsTrigger>
           <TabsTrigger value="rankings" className="text-xs lg:text-sm">Rankings</TabsTrigger>
           <TabsTrigger value="payments" className="text-xs lg:text-sm">Premiação</TabsTrigger>
           <TabsTrigger value="users" className="text-xs lg:text-sm">Usuários</TabsTrigger>
           <TabsTrigger value="security" className="text-xs lg:text-sm">Segurança</TabsTrigger>
-          <TabsTrigger value="metrics" className="text-xs lg:text-sm">Métricas</TabsTrigger>
         </TabsList>
 
         {/* Dashboard */}
         <TabsContent value="dashboard" className="space-y-6">
           <DashboardStats stats={mockStats} totalChallenges={mockChallenges.length} />
+          <MetricsTab retention={mockStats.retention} />
         </TabsContent>
 
         {/* Gestão de Desafios */}
@@ -73,11 +73,6 @@ const AdminPanel = () => {
         {/* Segurança */}
         <TabsContent value="security" className="space-y-6">
           <SecurityTab />
-        </TabsContent>
-
-        {/* Métricas */}
-        <TabsContent value="metrics" className="space-y-6">
-          <MetricsTab retention={mockStats.retention} />
         </TabsContent>
       </Tabs>
     </div>
