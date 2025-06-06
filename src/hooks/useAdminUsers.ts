@@ -12,6 +12,12 @@ interface AdminUser {
   role: string;
 }
 
+interface ProfileData {
+  id: string;
+  username: string | null;
+  created_at: string | null;
+}
+
 export const useAdminUsers = () => {
   const { toast } = useToast();
 
@@ -56,7 +62,7 @@ export const useAdminUsers = () => {
       if (authError) {
         console.error('❌ Erro ao buscar dados do auth:', authError);
         // Se não conseguir buscar do auth, usar apenas dados do profiles
-        return (profiles || []).map(profile => ({
+        return (profiles || []).map((profile: ProfileData) => ({
           id: profile.id,
           email: 'Email não disponível',
           username: profile.username || 'Username não disponível',
@@ -67,7 +73,7 @@ export const useAdminUsers = () => {
 
       // Combinar dados do auth com profiles - fix the type issue here
       const safeProfiles = profiles || [];
-      const combinedData: AdminUser[] = safeProfiles.map(profile => {
+      const combinedData: AdminUser[] = safeProfiles.map((profile: ProfileData) => {
         const authUser = authUsers.users.find(u => u.id === profile.id);
         return {
           id: profile.id,
@@ -86,7 +92,7 @@ export const useAdminUsers = () => {
     try {
       console.log('🗑️ Removendo role admin do usuário:', userId);
       
-      // Remover role admin - explicitly type the response
+      // Remover role admin
       const { error: deleteError } = await supabase
         .from('user_roles')
         .delete()
@@ -98,7 +104,7 @@ export const useAdminUsers = () => {
         throw deleteError;
       }
 
-      // Adicionar role user se não existir - explicitly type the response
+      // Adicionar role user se não existir
       const { error: insertError } = await supabase
         .from('user_roles')
         .insert({
