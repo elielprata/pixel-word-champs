@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -123,13 +122,12 @@ const AdminPanel = () => {
                       <div className="text-sm text-blue-100">Hoje • +12% vs ontem</div>
                     </div>
                     
-                    <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
-                      <div className="flex items-center gap-3 mb-4">
-                        <TrendingUp className="h-6 w-6" />
-                        <span className="font-semibold">Receita Mensal</span>
+                    {/* Espaço reservado para futura métrica */}
+                    <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border-2 border-dashed border-white/20">
+                      <div className="text-center text-white/60">
+                        <div className="text-sm mb-2">Espaço Disponível</div>
+                        <div className="text-xs">Para nova métrica</div>
                       </div>
-                      <div className="text-3xl font-bold mb-2">R$ {mockStats.revenue.toLocaleString()}</div>
-                      <div className="text-sm text-blue-100">Este mês • +8% vs anterior</div>
                     </div>
                   </div>
                 </div>
