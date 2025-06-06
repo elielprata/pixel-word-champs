@@ -18,7 +18,7 @@ export const UserHeaderSection = () => {
                 <p className="text-blue-100 mt-1">Administre usuários e suas permissões na plataforma</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
                 <div className="text-sm text-blue-100">Crescimento</div>
                 <div className="text-xl font-bold">+12%</div>
@@ -30,10 +30,6 @@ export const UserHeaderSection = () => {
               <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
                 <div className="text-sm text-blue-100">Engajamento</div>
                 <div className="text-xl font-bold">94%</div>
-              </div>
-              <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                <div className="text-sm text-blue-100">Satisfação</div>
-                <div className="text-xl font-bold">4.8/5</div>
               </div>
             </div>
           </div>
