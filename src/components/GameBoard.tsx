@@ -4,6 +4,7 @@ import GameStats from './game/GameStats';
 import GameCell from './game/GameCell';
 import WordsList from './game/WordsList';
 import GameOverModal from './game/GameOverModal';
+import LevelCompleteModal from './game/LevelCompleteModal';
 
 interface Position {
   row: number;
@@ -172,6 +173,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
   const [permanentlyMarkedCells, setPermanentlyMarkedCells] = useState<Position[]>([]);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [showGameOver, setShowGameOver] = useState(false);
+  const [showLevelComplete, setShowLevelComplete] = useState(false);
   const [canRevive, setCanRevive] = useState(true);
   const [hintHighlightedCells, setHintHighlightedCells] = useState<Position[]>([]);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -196,13 +198,10 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
 
   // Verifica se completou o nível
   useEffect(() => {
-    if (foundWords.length === 5) {
-      setTimeout(() => {
-        // Aqui você pode adicionar lógica para avançar para o próximo nível
-        console.log('Nível completado! Avançando...');
-      }, 1500);
+    if (foundWords.length === 5 && !showLevelComplete) {
+      setShowLevelComplete(true);
     }
-  }, [foundWords.length]);
+  }, [foundWords.length, showLevelComplete]);
 
   const getPointsForWord = (word: string) => {
     const length = word.length;
@@ -210,6 +209,41 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
     if (length === 4) return 20;
     if (length === 5) return 30;
     return 50 + Math.max(0, length - 6) * 10;
+  };
+
+  // Função para validar se as células formam uma linha válida (horizontal, vertical ou diagonal)
+  const isValidWordDirection = (positions: Position[]): boolean => {
+    if (positions.length < 2) return true;
+
+    const first = positions[0];
+    const second = positions[1];
+    
+    const deltaRow = second.row - first.row;
+    const deltaCol = second.col - first.col;
+    
+    // Verificar se é horizontal, vertical ou diagonal
+    const isHorizontal = deltaRow === 0 && Math.abs(deltaCol) === 1;
+    const isVertical = deltaCol === 0 && Math.abs(deltaRow) === 1;
+    const isDiagonal = Math.abs(deltaRow) === 1 && Math.abs(deltaCol) === 1;
+    
+    if (!isHorizontal && !isVertical && !isDiagonal) {
+      return false;
+    }
+    
+    // Verificar se todas as posições seguem a mesma direção
+    for (let i = 2; i < positions.length; i++) {
+      const curr = positions[i];
+      const prev = positions[i - 1];
+      
+      const currDeltaRow = curr.row - prev.row;
+      const currDeltaCol = curr.col - prev.col;
+      
+      if (currDeltaRow !== deltaRow || currDeltaCol !== deltaCol) {
+        return false;
+      }
+    }
+    
+    return true;
   };
 
   const handleCellStart = (row: number, col: number) => {
@@ -224,13 +258,19 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
     setSelectedCells(prev => {
       if (prev.length === 0) return [newPosition];
       
-      const lastPos = prev[prev.length - 1];
-      const isValid = Math.abs(row - lastPos.row) <= 1 && Math.abs(col - lastPos.col) <= 1;
-      
-      if (isValid && !prev.some(p => p.row === row && p.col === col)) {
-        return [...prev, newPosition];
+      // Verificar se a nova posição já está selecionada
+      if (prev.some(p => p.row === row && p.col === col)) {
+        return prev;
       }
-      return prev;
+      
+      const newPath = [...prev, newPosition];
+      
+      // Validar se o caminho forma uma direção válida
+      if (!isValidWordDirection(newPath)) {
+        return prev;
+      }
+      
+      return newPath;
     });
   };
 
@@ -238,7 +278,10 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
     if (selectedCells.length >= 3) {
       const word = selectedCells.map(pos => boardData.board[pos.row][pos.col]).join('');
       
-      if (levelWords.includes(word) && !foundWords.some(fw => fw.word === word)) {
+      // Verificar se é uma palavra válida e se a direção é permitida
+      if (levelWords.includes(word) && 
+          !foundWords.some(fw => fw.word === word) && 
+          isValidWordDirection(selectedCells)) {
         const points = getPointsForWord(word);
         const newFoundWord = { word, positions: [...selectedCells], points };
         
@@ -285,6 +328,16 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
       
       console.log(`Dica: Procure por "${hintWord}"`);
     }
+  };
+
+  const handleAdvanceLevel = () => {
+    setShowLevelComplete(false);
+    console.log(`Avançando para o nível ${level + 1}`);
+    // Aqui você pode adicionar lógica para avançar para o próximo nível
+  };
+
+  const handleStayLevel = () => {
+    setShowLevelComplete(false);
   };
 
   const handleRevive = () => {
@@ -375,6 +428,14 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
         onRevive={handleRevive}
         onGoHome={handleGoHome}
         canRevive={canRevive}
+      />
+
+      <LevelCompleteModal
+        isOpen={showLevelComplete}
+        level={level}
+        score={foundWords.reduce((sum, fw) => sum + fw.points, 0)}
+        onAdvance={handleAdvanceLevel}
+        onStay={handleStayLevel}
       />
     </div>
   );
