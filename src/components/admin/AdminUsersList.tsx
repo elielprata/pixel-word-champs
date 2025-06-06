@@ -14,6 +14,7 @@ interface AdminUser {
   email: string;
   username: string;
   created_at: string;
+  role: string;
 }
 
 export const AdminUsersList = () => {
@@ -65,7 +66,8 @@ export const AdminUsersList = () => {
           id: profile.id,
           email: 'Email não disponível',
           username: profile.username || 'Username não disponível',
-          created_at: profile.created_at || new Date().toISOString()
+          created_at: profile.created_at || new Date().toISOString(),
+          role: 'admin'
         }));
       }
 
@@ -76,7 +78,8 @@ export const AdminUsersList = () => {
           id: profile.id,
           email: authUser?.email || 'Email não disponível',
           username: profile.username || 'Username não disponível',
-          created_at: authUser?.created_at || profile.created_at || new Date().toISOString()
+          created_at: authUser?.created_at || profile.created_at || new Date().toISOString(),
+          role: 'admin'
         };
       });
 
@@ -88,20 +91,34 @@ export const AdminUsersList = () => {
     try {
       console.log('🗑️ Removendo role admin do usuário:', userId);
       
-      const { error } = await supabase
+      // Remover role admin
+      const { error: deleteError } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
         .eq('role', 'admin');
 
-      if (error) {
-        console.error('❌ Erro ao remover role admin:', error);
-        throw error;
+      if (deleteError) {
+        console.error('❌ Erro ao remover role admin:', deleteError);
+        throw deleteError;
+      }
+
+      // Adicionar role user se não existir
+      const { error: insertError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: 'user'
+        });
+
+      if (insertError) {
+        console.error('❌ Erro ao adicionar role user:', insertError);
+        throw insertError;
       }
 
       toast({
         title: "Sucesso!",
-        description: `Permissões de admin removidas de ${username}`,
+        description: `${username} agora é um usuário comum`,
       });
 
       refetch();
@@ -109,7 +126,7 @@ export const AdminUsersList = () => {
       console.error('❌ Erro:', error);
       toast({
         title: "Erro",
-        description: "Erro ao remover permissões de admin",
+        description: "Erro ao alterar permissões",
         variant: "destructive",
       });
     }
@@ -131,8 +148,8 @@ export const AdminUsersList = () => {
     );
   }
 
-  // Explicitly handle the case where adminUsers might be undefined
-  const usersList = Array.isArray(adminUsers) ? adminUsers : [];
+  // Garantir que adminUsers seja um array
+  const usersList: AdminUser[] = Array.isArray(adminUsers) ? adminUsers : [];
 
   return (
     <>
