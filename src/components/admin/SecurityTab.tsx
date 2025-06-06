@@ -43,19 +43,14 @@ export const SecurityTab = () => {
   ];
 
   return (
-    <div className="space-y-6 max-w-full">
-      <div className="border-b border-gray-200 pb-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Centro de Segurança</h2>
-        <p className="text-sm text-gray-600 mt-1">Monitoramento e controle de segurança do sistema</p>
-      </div>
-      
+    <div className="space-y-6">
       <SecurityOverview />
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
           <SecurityAlerts alerts={mockFraudAlerts} />
         </div>
-        <div className="space-y-6">
+        <div>
           <SecurityMetrics />
         </div>
       </div>
