@@ -7,6 +7,7 @@ import { RankingsTab } from "@/components/admin/RankingsTab";
 import { PaymentsTab } from "@/components/admin/PaymentsTab";
 import { SecurityTab } from "@/components/admin/SecurityTab";
 import { MetricsTab } from "@/components/admin/MetricsTab";
+import { UsersTab } from "@/components/admin/UsersTab";
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -34,11 +35,12 @@ const AdminPanel = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-1 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-1 h-auto p-1">
           <TabsTrigger value="dashboard" className="text-xs lg:text-sm">Dashboard</TabsTrigger>
           <TabsTrigger value="challenges" className="text-xs lg:text-sm">Desafios</TabsTrigger>
           <TabsTrigger value="rankings" className="text-xs lg:text-sm">Rankings</TabsTrigger>
           <TabsTrigger value="payments" className="text-xs lg:text-sm">Premiação</TabsTrigger>
+          <TabsTrigger value="users" className="text-xs lg:text-sm">Usuários</TabsTrigger>
           <TabsTrigger value="security" className="text-xs lg:text-sm">Segurança</TabsTrigger>
           <TabsTrigger value="metrics" className="text-xs lg:text-sm">Métricas</TabsTrigger>
         </TabsList>
@@ -61,6 +63,11 @@ const AdminPanel = () => {
         {/* Premiação */}
         <TabsContent value="payments" className="space-y-6">
           <PaymentsTab />
+        </TabsContent>
+
+        {/* Usuários */}
+        <TabsContent value="users" className="space-y-6">
+          <UsersTab />
         </TabsContent>
 
         {/* Segurança */}

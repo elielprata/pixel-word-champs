@@ -26,13 +26,7 @@ export const AdminUsersList = () => {
       // Buscar todos os usuários que têm role admin
       const { data: adminRoles, error: rolesError } = await supabase
         .from('user_roles')
-        .select(`
-          user_id,
-          profiles!inner (
-            id,
-            username
-          )
-        `)
+        .select('user_id')
         .eq('role', 'admin');
 
       if (rolesError) {
@@ -40,36 +34,49 @@ export const AdminUsersList = () => {
         throw rolesError;
       }
 
-      console.log('📋 Admins encontrados:', adminRoles);
+      console.log('📋 Admin roles encontrados:', adminRoles);
+
+      if (!adminRoles || adminRoles.length === 0) {
+        return [];
+      }
+
+      // Buscar dados dos usuários nos profiles
+      const userIds = adminRoles.map(r => r.user_id);
+      
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, created_at')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('❌ Erro ao buscar profiles:', profilesError);
+        throw profilesError;
+      }
 
       // Buscar dados adicionais dos usuários do auth
-      const userIds = adminRoles?.map(r => r.user_id) || [];
-      
-      if (userIds.length === 0) return [];
-
       const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
       
       if (authError) {
         console.error('❌ Erro ao buscar dados do auth:', authError);
         // Se não conseguir buscar do auth, usar apenas dados do profiles
-        return adminRoles.map(role => ({
-          id: role.user_id,
+        return profiles?.map(profile => ({
+          id: profile.id,
           email: 'Email não disponível',
-          username: role.profiles?.username || 'Username não disponível',
-          created_at: new Date().toISOString()
-        }));
+          username: profile.username || 'Username não disponível',
+          created_at: profile.created_at || new Date().toISOString()
+        })) || [];
       }
 
       // Combinar dados do auth com profiles
-      const combinedData = adminRoles.map(role => {
-        const authUser = authUsers.users.find(u => u.id === role.user_id);
+      const combinedData = profiles?.map(profile => {
+        const authUser = authUsers.users.find(u => u.id === profile.id);
         return {
-          id: role.user_id,
+          id: profile.id,
           email: authUser?.email || 'Email não disponível',
-          username: role.profiles?.username || 'Username não disponível',
-          created_at: authUser?.created_at || new Date().toISOString()
+          username: profile.username || 'Username não disponível',
+          created_at: authUser?.created_at || profile.created_at || new Date().toISOString()
         };
-      });
+      }) || [];
 
       return combinedData;
     },
