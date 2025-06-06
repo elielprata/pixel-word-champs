@@ -89,7 +89,7 @@ export const useAuthProvider = (): AuthContextType => {
       isProcessingRef.current = false;
       subscription.unsubscribe();
     };
-  }, [processAuthentication]); // Apenas processAuthentication como dependência
+  }, []); // Removido processAuthentication das dependências para evitar loop infinito
 
   return {
     user,
