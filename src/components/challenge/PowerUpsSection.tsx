@@ -15,29 +15,29 @@ const PowerUpsSection = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-3">
-        <div className="grid md:grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-            <div className="bg-yellow-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Lightbulb className="w-6 h-6 text-yellow-600" />
+        <div className="grid grid-cols-3 gap-2">
+          <div className="text-center p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+            <div className="bg-yellow-100 w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-1">
+              <Lightbulb className="w-4 h-4 text-yellow-600" />
             </div>
-            <h4 className="font-semibold text-yellow-800 mb-1">Dica Grátis</h4>
-            <p className="text-sm text-yellow-600">1 dica por nível</p>
+            <h4 className="font-semibold text-yellow-800 mb-0.5 text-sm">Dica Grátis</h4>
+            <p className="text-xs text-yellow-600">1 dica por nível</p>
           </div>
           
-          <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Clock className="w-6 h-6 text-blue-600" />
+          <div className="text-center p-2 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-1">
+              <Clock className="w-4 h-4 text-blue-600" />
             </div>
-            <h4 className="font-semibold text-blue-800 mb-1">Tempo Extra</h4>
-            <p className="text-sm text-blue-600">+30s com anúncio</p>
+            <h4 className="font-semibold text-blue-800 mb-0.5 text-sm">Tempo Extra</h4>
+            <p className="text-xs text-blue-600">+30s com anúncio</p>
           </div>
           
-          <div className="text-center p-4 bg-green-50 rounded-xl border border-green-200">
-            <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Star className="w-6 h-6 text-green-600" />
+          <div className="text-center p-2 bg-green-50 rounded-lg border border-green-200">
+            <div className="bg-green-100 w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-1">
+              <Star className="w-4 h-4 text-green-600" />
             </div>
-            <h4 className="font-semibold text-green-800 mb-1">Palavra Bônus</h4>
-            <p className="text-sm text-green-600">Pontos dobrados</p>
+            <h4 className="font-semibold text-green-800 mb-0.5 text-sm">Palavra Bônus</h4>
+            <p className="text-xs text-green-600">Pontos dobrados</p>
           </div>
         </div>
       </CardContent>
