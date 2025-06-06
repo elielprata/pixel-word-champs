@@ -131,7 +131,7 @@ export const AdminUsersList = () => {
     );
   }
 
-  const usersList: AdminUser[] = adminUsers || [];
+  const usersList: AdminUser[] = adminUsers || ([] as AdminUser[]);
 
   return (
     <>
