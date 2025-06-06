@@ -10,7 +10,7 @@ import { PaymentsTab } from "@/components/admin/PaymentsTab";
 import { SecurityTab } from "@/components/admin/SecurityTab";
 import { MetricsTab } from "@/components/admin/MetricsTab";
 import { UsersTab } from "@/components/admin/UsersTab";
-import { BarChart3, Shield, Users, Trophy, CreditCard, Target, Activity, TrendingUp, AlertCircle } from 'lucide-react';
+import { BarChart3, Shield, Users, Trophy, CreditCard, Target, Activity, TrendingUp, AlertCircle, Plus } from 'lucide-react';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -123,13 +123,13 @@ const AdminPanel = () => {
                       <div className="text-sm text-blue-100">Hoje • +12% vs ontem</div>
                     </div>
                     
-                    <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
+                    <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm border-2 border-dashed border-white/20">
                       <div className="flex items-center gap-3 mb-4">
-                        <TrendingUp className="h-6 w-6" />
-                        <span className="font-semibold">Receita Mensal</span>
+                        <Plus className="h-6 w-6 text-white/60" />
+                        <span className="font-semibold text-white/60">Nova Métrica</span>
                       </div>
-                      <div className="text-3xl font-bold mb-2">R$ {mockStats.revenue.toLocaleString()}</div>
-                      <div className="text-sm text-blue-100">Este mês • +8% vs anterior</div>
+                      <div className="text-2xl font-bold mb-2 text-white/60">Em breve</div>
+                      <div className="text-sm text-blue-100/60">Espaço reservado para futura métrica</div>
                     </div>
                   </div>
                 </div>
@@ -220,7 +220,7 @@ const AdminPanel = () => {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+              </div>
 
               {/* Métricas Detalhadas */}
               <MetricsTab retention={mockStats.retention} />
