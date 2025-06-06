@@ -1,6 +1,6 @@
 
 import React, { useRef, useState } from 'react';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera, Loader2, Plus } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -78,25 +78,34 @@ const AvatarUpload = ({ currentAvatar, fallback, onAvatarUpdate, size = 'lg' }: 
 
   return (
     <div className="relative inline-block">
-      <Avatar className={`${sizeClasses[size]} border-4 border-white shadow-lg`}>
+      <Avatar className={`${sizeClasses[size]} border-4 border-white shadow-lg cursor-pointer hover:opacity-80 transition-opacity`} onClick={handleUploadClick}>
         <AvatarImage src={currentAvatar} />
-        <AvatarFallback className="text-gray-700 text-lg font-bold bg-white">
-          {fallback}
+        <AvatarFallback 
+          className="text-gray-700 text-lg font-bold bg-white cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-center"
+        >
+          {currentAvatar ? fallback : (
+            <div className="flex flex-col items-center justify-center">
+              <Plus className="w-6 h-6 text-gray-400 mb-1" />
+              <span className="text-xs text-gray-400">Foto</span>
+            </div>
+          )}
         </AvatarFallback>
       </Avatar>
       
-      <Button
-        onClick={handleUploadClick}
-        disabled={isUploading}
-        size="sm"
-        className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full p-0 bg-blue-500 hover:bg-blue-600"
-      >
-        {isUploading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Camera className="w-4 h-4" />
-        )}
-      </Button>
+      {currentAvatar && (
+        <Button
+          onClick={handleUploadClick}
+          disabled={isUploading}
+          size="sm"
+          className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full p-0 bg-blue-500 hover:bg-blue-600"
+        >
+          {isUploading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Camera className="w-4 h-4" />
+          )}
+        </Button>
+      )}
 
       <input
         ref={fileInputRef}
