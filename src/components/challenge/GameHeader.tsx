@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Target, Trophy } from 'lucide-react';
+import { ArrowLeft, Clock, Target } from 'lucide-react';
 
 interface GameHeaderProps {
   onBack: () => void;
@@ -36,11 +36,6 @@ const GameHeader = ({ onBack, currentLevel, timeRemaining, score }: GameHeaderPr
             <span className="text-sm font-bold">
               {formatTime(timeRemaining)}
             </span>
-          </div>
-          
-          <div className="flex items-center gap-2 bg-purple-100 rounded-lg px-3 py-1">
-            <Trophy className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-bold text-purple-700">{score} pts</span>
           </div>
         </div>
       </div>
