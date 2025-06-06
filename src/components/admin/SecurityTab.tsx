@@ -1,51 +1,66 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { SecurityAlerts } from "./SecurityAlerts";
+import { SecurityOverview } from './SecurityOverview';
+import { SecurityMetrics } from './SecurityMetrics';
+import { SecurityAlerts } from './SecurityAlerts';
+import { SecuritySettings } from './SecuritySettings';
 
 interface FraudAlert {
   id: number;
   user: string;
   reason: string;
-  severity: 'high' | 'medium';
+  severity: 'high' | 'medium' | 'low';
+  timestamp: string;
+  status: 'pending' | 'resolved' | 'investigating';
 }
 
 export const SecurityTab = () => {
   const mockFraudAlerts: FraudAlert[] = [
-    { id: 1, user: "user_123", reason: "Pontuação suspeita", severity: "high" as const },
-    { id: 2, user: "user_456", reason: "Tempo inconsistente", severity: "medium" as const }
+    { 
+      id: 1, 
+      user: "user_123", 
+      reason: "Pontuação suspeita detectada", 
+      severity: "high",
+      timestamp: "2024-06-06 14:30",
+      status: "pending"
+    },
+    { 
+      id: 2, 
+      user: "user_456", 
+      reason: "Tempo de jogo inconsistente", 
+      severity: "medium",
+      timestamp: "2024-06-06 13:15",
+      status: "investigating"
+    },
+    { 
+      id: 3, 
+      user: "user_789", 
+      reason: "Múltiplos dispositivos detectados", 
+      severity: "low",
+      timestamp: "2024-06-06 12:45",
+      status: "resolved"
+    }
   ];
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Segurança e Logs</h2>
+      <div className="border-b border-gray-200 pb-4">
+        <h2 className="text-2xl font-semibold text-gray-900">Centro de Segurança</h2>
+        <p className="text-sm text-gray-600 mt-1">Monitoramento e controle de segurança do sistema</p>
+      </div>
       
-      {/* Alertas de Segurança */}
-      <SecurityAlerts alerts={mockFraudAlerts} />
+      <SecurityOverview />
       
-      {/* Sistema Antifraude */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sistema Antifraude</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span>Detecção automática ativa</span>
-              <Badge variant="default">Ativo</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>Alertas em tempo real</span>
-              <Badge variant="default">Ativo</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>Validação de pontuação</span>
-              <Badge variant="default">Ativo</Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <SecurityAlerts alerts={mockFraudAlerts} />
+        </div>
+        <div>
+          <SecurityMetrics />
+        </div>
+      </div>
+      
+      <SecuritySettings />
     </div>
   );
 };
