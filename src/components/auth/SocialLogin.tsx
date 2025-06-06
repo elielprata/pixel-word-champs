@@ -2,18 +2,37 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/hooks/use-toast";
 
 const SocialLogin = () => {
-  const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`
-      }
-    });
+  const { toast } = useToast();
 
-    if (error) {
-      console.error('Erro ao fazer login com Google:', error);
+  const handleGoogleLogin = async () => {
+    try {
+      console.log('Iniciando login com Google...');
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao fazer login com Google:', error);
+        toast({
+          title: "Erro no login",
+          description: "Não foi possível fazer login com Google. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('Erro inesperado no login social:', err);
+      toast({
+        title: "Erro no login",
+        description: "Erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 

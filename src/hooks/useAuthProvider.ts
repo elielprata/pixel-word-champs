@@ -80,6 +80,12 @@ export const useAuthProvider = (): AuthContextType => {
           if (!user || user.id !== session.user.id) {
             await processAuthentication(session);
           }
+        } else if (event === 'INITIAL_SESSION' && !session) {
+          // Garantir que o loading pare quando não há sessão inicial
+          console.log('Nenhuma sessão inicial encontrada - parando loading');
+          setIsLoading(false);
+          setIsAuthenticated(false);
+          setUser(null);
         }
       }
     );
