@@ -14,7 +14,7 @@ const PowerUpsSection = () => {
           Power-ups Disponíveis
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="p-3">
         <div className="grid md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-yellow-50 rounded-xl border border-yellow-200">
             <div className="bg-yellow-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
