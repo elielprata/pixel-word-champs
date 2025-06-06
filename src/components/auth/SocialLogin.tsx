@@ -9,7 +9,9 @@ const SocialLogin = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      console.log('Iniciando login com Google...');
+      console.log('=== INÍCIO DO LOGIN GOOGLE ===');
+      console.log('URL atual:', window.location.origin);
+      console.log('Redirect URL configurado:', `${window.location.origin}/`);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -18,19 +20,44 @@ const SocialLogin = () => {
         }
       });
 
+      console.log('Resposta do signInWithOAuth:');
+      console.log('- Data:', data);
+      console.log('- Error:', error);
+
       if (error) {
-        console.error('Erro ao fazer login com Google:', error);
+        console.error('=== ERRO DETALHADO DO GOOGLE LOGIN ===');
+        console.error('Código do erro:', error.message);
+        console.error('Detalhes completos:', error);
+        
+        let errorMessage = "Não foi possível fazer login com Google.";
+        
+        if (error.message.includes('Invalid login credentials')) {
+          errorMessage = "Credenciais do Google não configuradas no Supabase.";
+        } else if (error.message.includes('redirect')) {
+          errorMessage = "URL de redirecionamento não configurada corretamente.";
+        } else if (error.message.includes('provider')) {
+          errorMessage = "Provedor Google não habilitado no Supabase.";
+        }
+        
         toast({
-          title: "Erro no login",
-          description: "Não foi possível fazer login com Google. Tente novamente.",
+          title: "Erro no login com Google",
+          description: errorMessage + " Verifique a configuração no Supabase.",
           variant: "destructive",
         });
+      } else {
+        console.log('=== LOGIN GOOGLE INICIADO COM SUCESSO ===');
+        console.log('Redirecionando para Google...');
       }
-    } catch (err) {
-      console.error('Erro inesperado no login social:', err);
+    } catch (err: any) {
+      console.error('=== ERRO INESPERADO NO LOGIN GOOGLE ===');
+      console.error('Tipo do erro:', typeof err);
+      console.error('Mensagem:', err?.message);
+      console.error('Stack:', err?.stack);
+      console.error('Objeto completo:', err);
+      
       toast({
-        title: "Erro no login",
-        description: "Erro inesperado. Tente novamente.",
+        title: "Erro inesperado",
+        description: `Erro técnico: ${err?.message || 'Desconhecido'}`,
         variant: "destructive",
       });
     }
