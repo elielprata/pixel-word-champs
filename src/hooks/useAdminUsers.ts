@@ -81,7 +81,7 @@ export const useAdminUsers = () => {
     },
   });
 
-  const removeAdminRole = async (userId: string, username: string) => {
+  const removeAdminRole = async (userId: string, username: string): Promise<void> => {
     try {
       console.log('🗑️ Removendo role admin do usuário:', userId);
       
@@ -126,8 +126,8 @@ export const useAdminUsers = () => {
     }
   };
 
-  // Explicitly type usersList and provide safe default
-  const usersList = (adminUsers ?? []) as AdminUser[];
+  // Explicitly type usersList with safe default and proper typing
+  const usersList: AdminUser[] = adminUsers ?? [];
 
   return {
     usersList,
