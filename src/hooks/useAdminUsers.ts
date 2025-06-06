@@ -126,7 +126,8 @@ export const useAdminUsers = () => {
     }
   };
 
-  const usersList: AdminUser[] = Array.isArray(adminUsers) ? adminUsers : [];
+  // Ensure usersList is always an array of AdminUser type
+  const usersList: AdminUser[] = adminUsers || [];
 
   return {
     usersList,
