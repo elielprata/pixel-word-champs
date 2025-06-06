@@ -49,10 +49,10 @@ const SocialPlatformGrid = ({ shareText, shareUrl, onCopy }: SocialPlatformGridP
       description: 'Amigos'
     },
     {
-      name: 'Twitter',
+      name: 'X',
       key: 'twitter',
-      icon: '🐦',
-      color: 'bg-sky-500 hover:bg-sky-600',
+      icon: '✖️',
+      color: 'bg-black hover:bg-gray-800',
       description: 'Timeline'
     },
     {
@@ -120,22 +120,22 @@ const SocialPlatformGrid = ({ shareText, shareUrl, onCopy }: SocialPlatformGridP
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div className="text-center">
-        <h4 className="text-sm font-semibold text-gray-800">Onde compartilhar?</h4>
+        <h4 className="text-xs font-semibold text-gray-800">Onde compartilhar?</h4>
         <p className="text-xs text-gray-600">Escolha sua plataforma favorita</p>
       </div>
       
-      <div className="grid grid-cols-2 gap-1">
+      <div className="grid grid-cols-1 gap-1">
         {socialPlatforms.map((platform) => (
           <button
             key={platform.key}
             onClick={() => shareOnSocial(platform.key)}
-            className={`${platform.color} text-white p-2 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg active:scale-95`}
+            className={`${platform.color} text-white p-1.5 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg active:scale-95`}
           >
-            <div className="flex flex-col items-center gap-0.5">
+            <div className="flex items-center gap-2">
               <span className="text-sm">{platform.icon}</span>
-              <div className="text-center">
+              <div className="text-left flex-1">
                 <span className="block text-xs font-semibold">{platform.name}</span>
                 <span className="block text-xs opacity-80">{platform.description}</span>
               </div>
