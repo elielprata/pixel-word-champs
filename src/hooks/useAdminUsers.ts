@@ -65,8 +65,9 @@ export const useAdminUsers = () => {
         }));
       }
 
-      // Combinar dados do auth com profiles
-      const combinedData: AdminUser[] = (profiles || []).map(profile => {
+      // Combinar dados do auth com profiles - fix the type issue here
+      const safeProfiles = profiles || [];
+      const combinedData: AdminUser[] = safeProfiles.map(profile => {
         const authUser = authUsers.users.find(u => u.id === profile.id);
         return {
           id: profile.id,
