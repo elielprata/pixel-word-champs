@@ -49,10 +49,9 @@ const LevelCompleteModal = ({
             
             <Button 
               onClick={onStay}
-              variant="outline"
-              className="w-full"
+              className="w-full bg-red-500 hover:bg-red-600 text-white"
             >
-              Continuar Jogando
+              Quero Parar
             </Button>
           </div>
         </CardContent>
