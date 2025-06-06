@@ -62,7 +62,8 @@ export const useAdminUsers = () => {
       if (authError) {
         console.error('❌ Erro ao buscar dados do auth:', authError);
         // Se não conseguir buscar do auth, usar apenas dados do profiles
-        return (profiles || []).map((profile: ProfileData) => ({
+        const safeProfiles: ProfileData[] = profiles || [];
+        return safeProfiles.map((profile: ProfileData) => ({
           id: profile.id,
           email: 'Email não disponível',
           username: profile.username || 'Username não disponível',
@@ -71,8 +72,8 @@ export const useAdminUsers = () => {
         }));
       }
 
-      // Combinar dados do auth com profiles - fix the type issue here
-      const safeProfiles = profiles || [];
+      // Combinar dados do auth com profiles
+      const safeProfiles: ProfileData[] = profiles || [];
       const combinedData: AdminUser[] = safeProfiles.map((profile: ProfileData) => {
         const authUser = authUsers.users.find(u => u.id === profile.id);
         return {
