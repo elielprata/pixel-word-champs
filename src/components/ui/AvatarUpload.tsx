@@ -1,0 +1,112 @@
+
+import React, { useRef, useState } from 'react';
+import { Camera, Loader2 } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { avatarService } from '@/services/avatarService';
+import { profileService } from '@/services/profileService';
+import { useAuth } from '@/hooks/useAuth';
+
+interface AvatarUploadProps {
+  currentAvatar?: string;
+  fallback: string;
+  onAvatarUpdate?: (newAvatarUrl: string) => void;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const AvatarUpload = ({ currentAvatar, fallback, onAvatarUpdate, size = 'lg' }: AvatarUploadProps) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const sizeClasses = {
+    sm: 'w-12 h-12',
+    md: 'w-16 h-16',
+    lg: 'w-24 h-24'
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    setIsUploading(true);
+
+    try {
+      // Upload da imagem
+      const uploadResponse = await avatarService.uploadAvatar(file, user.id);
+      
+      if (!uploadResponse.success) {
+        throw new Error(uploadResponse.error);
+      }
+
+      // Atualizar perfil com nova URL
+      const updateResponse = await profileService.updateProfile({
+        avatar_url: uploadResponse.data
+      });
+
+      if (!updateResponse.success) {
+        throw new Error(updateResponse.error);
+      }
+
+      toast({
+        title: "Foto atualizada!",
+        description: "Sua foto de perfil foi atualizada com sucesso.",
+      });
+
+      onAvatarUpdate?.(uploadResponse.data);
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      toast({
+        title: "Erro no upload",
+        description: error instanceof Error ? error.message : "Erro inesperado",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      // Limpar input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  return (
+    <div className="relative inline-block">
+      <Avatar className={`${sizeClasses[size]} border-4 border-white shadow-lg`}>
+        <AvatarImage src={currentAvatar} />
+        <AvatarFallback className="text-gray-700 text-lg font-bold bg-white">
+          {fallback}
+        </AvatarFallback>
+      </Avatar>
+      
+      <Button
+        onClick={handleUploadClick}
+        disabled={isUploading}
+        size="sm"
+        className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full p-0 bg-blue-500 hover:bg-blue-600"
+      >
+        {isUploading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Camera className="w-4 h-4" />
+        )}
+      </Button>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+    </div>
+  );
+};
+
+export default AvatarUpload;

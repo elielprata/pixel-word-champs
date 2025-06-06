@@ -1,11 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { User, Trophy, Calendar, Settings, HelpCircle, LogOut, Award, ChevronRight, Star, Zap, Target, Crown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import AvatarUpload from '@/components/ui/AvatarUpload';
 
 interface ProfileScreenProps {
   onNavigateToSettings?: () => void;
@@ -15,6 +15,7 @@ interface ProfileScreenProps {
 
 const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAchievements }: ProfileScreenProps) => {
   const { user, logout } = useAuth();
+  const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url);
 
   const getPlayerLevel = () => {
     const score = user?.total_score || 0;
@@ -150,9 +151,13 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
     return 'U';
   };
 
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    setCurrentAvatar(newAvatarUrl);
+  };
+
   return (
     <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
-      {/* Header com nível do jogador */}
+      {/* Header */}
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-1">Seu Perfil</h1>
         <p className="text-sm text-gray-600">Estatísticas e progressão</p>
@@ -163,12 +168,12 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <Avatar className="w-16 h-16 border-3 border-white shadow-lg">
-                <AvatarImage src={user?.avatar_url} />
-                <AvatarFallback className="text-gray-700 text-lg font-bold bg-white">
-                  {getAvatarFallback()}
-                </AvatarFallback>
-              </Avatar>
+              <AvatarUpload
+                currentAvatar={currentAvatar || undefined}
+                fallback={getAvatarFallback()}
+                onAvatarUpdate={handleAvatarUpdate}
+                size="lg"
+              />
               <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
                 <LevelIcon className="w-4 h-4 text-gray-700" />
               </div>
