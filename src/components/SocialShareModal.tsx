@@ -26,11 +26,11 @@ const SocialShareModal = ({ isOpen, onClose, inviteCode, shareText, shareUrl }: 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto border-0 bg-white shadow-2xl animate-scale-in">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-3 backdrop-blur-sm">
+      <Card className="w-full max-w-md max-h-[85vh] overflow-y-auto border-0 bg-white shadow-2xl animate-scale-in">
         <ShareHeader onClose={onClose} />
         
-        <CardContent className="p-4 space-y-4">
+        <CardContent className="p-2 space-y-2">
           <InviteCodeDisplay inviteCode={inviteCode} />
           <MessagePreview shareText={shareText} shareUrl={shareUrl} />
           <CopyButton fullMessage={fullMessage} />

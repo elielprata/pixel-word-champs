@@ -25,7 +25,7 @@ const CopyButton = ({ fullMessage }: CopyButtonProps) => {
   return (
     <Button 
       onClick={copyToClipboard}
-      className={`w-full h-10 text-sm font-semibold transition-all duration-200 ${
+      className={`w-full h-8 text-xs font-semibold transition-all duration-200 ${
         copied 
           ? 'bg-green-500 hover:bg-green-600' 
           : 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600'
@@ -33,13 +33,13 @@ const CopyButton = ({ fullMessage }: CopyButtonProps) => {
     >
       {copied ? (
         <>
-          <Check className="w-4 h-4 mr-2" />
-          ✨ Copiado com sucesso!
+          <Check className="w-3 h-3 mr-1" />
+          ✨ Copiado!
         </>
       ) : (
         <>
-          <Copy className="w-4 h-4 mr-2" />
-          📋 Copiar Mensagem Completa
+          <Copy className="w-3 h-3 mr-1" />
+          📋 Copiar Mensagem
         </>
       )}
     </Button>

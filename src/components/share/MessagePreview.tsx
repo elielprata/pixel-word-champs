@@ -9,13 +9,13 @@ interface MessagePreviewProps {
 
 const MessagePreview = ({ shareText, shareUrl }: MessagePreviewProps) => {
   return (
-    <div className="bg-gray-50 p-3 rounded-xl border">
-      <div className="flex items-center gap-2 mb-2">
-        <Users className="w-4 h-4 text-gray-600" />
-        <span className="text-sm font-medium text-gray-700">Prévia da mensagem</span>
+    <div className="bg-gray-50 p-2 rounded-lg border">
+      <div className="flex items-center gap-1 mb-1">
+        <Users className="w-3 h-3 text-gray-600" />
+        <span className="text-xs font-medium text-gray-700">Prévia da mensagem</span>
       </div>
-      <p className="text-sm text-gray-700 mb-2">{shareText}</p>
-      <p className="text-sm text-purple-600 font-medium break-all">{shareUrl}</p>
+      <p className="text-xs text-gray-700 mb-1">{shareText}</p>
+      <p className="text-xs text-purple-600 font-medium break-all">{shareUrl}</p>
     </div>
   );
 };
