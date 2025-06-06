@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardStats } from "@/components/admin/DashboardStats";
-import { SecurityAlerts } from "@/components/admin/SecurityAlerts";
 import { ChallengesTab } from "@/components/admin/ChallengesTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { PaymentsTab } from "@/components/admin/PaymentsTab";
@@ -26,11 +25,6 @@ const AdminPanel = () => {
     { id: 3, title: "Cidades do Brasil", status: "Finalizado", players: 320 }
   ];
 
-  const mockFraudAlerts = [
-    { id: 1, user: "user_123", reason: "Pontuação suspeita", severity: "high" as const },
-    { id: 2, user: "user_456", reason: "Tempo inconsistente", severity: "medium" as const }
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       {/* Header */}
@@ -52,7 +46,6 @@ const AdminPanel = () => {
         {/* Dashboard */}
         <TabsContent value="dashboard" className="space-y-6">
           <DashboardStats stats={mockStats} totalChallenges={mockChallenges.length} />
-          <SecurityAlerts alerts={mockFraudAlerts} />
         </TabsContent>
 
         {/* Gestão de Desafios */}
