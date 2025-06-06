@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SecurityAlerts } from "./SecurityAlerts";
+import { AdminManagement } from "./AdminManagement";
 
 interface FraudAlert {
   id: number;
@@ -21,8 +22,13 @@ export const SecurityTab = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Segurança e Logs</h2>
       
+      {/* Gerenciamento de Administradores */}
+      <AdminManagement />
+      
+      {/* Alertas de Segurança */}
       <SecurityAlerts alerts={mockFraudAlerts} />
       
+      {/* Sistema Antifraude */}
       <Card>
         <CardHeader>
           <CardTitle>Sistema Antifraude</CardTitle>
