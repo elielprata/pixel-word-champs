@@ -220,7 +220,7 @@ const AdminPanel = () => {
                     </div>
                   </div>
                 </CardContent>
-              </div>
+              </Card>
 
               {/* Métricas Detalhadas */}
               <MetricsTab retention={mockStats.retention} />
