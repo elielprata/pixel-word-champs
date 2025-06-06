@@ -85,7 +85,7 @@ export const useAdminUsers = () => {
     try {
       console.log('🗑️ Removendo role admin do usuário:', userId);
       
-      // Remover role admin
+      // Remover role admin - explicitly type the response
       const { error: deleteError } = await supabase
         .from('user_roles')
         .delete()
@@ -97,7 +97,7 @@ export const useAdminUsers = () => {
         throw deleteError;
       }
 
-      // Adicionar role user se não existir
+      // Adicionar role user se não existir - explicitly type the response
       const { error: insertError } = await supabase
         .from('user_roles')
         .insert({
