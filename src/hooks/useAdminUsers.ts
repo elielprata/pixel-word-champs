@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -75,7 +74,7 @@ export const useAdminUsers = () => {
       // Combinar dados do auth com profiles
       const safeProfiles: ProfileData[] = profiles || [];
       const combinedData: AdminUser[] = safeProfiles.map((profile: ProfileData) => {
-        const authUser = authUsers.users.find(u => u.id === profile.id);
+        const authUser = authUsers.users.find((u: any) => u.id === profile.id);
         return {
           id: profile.id,
           email: authUser?.email || 'Email não disponível',
