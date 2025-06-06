@@ -19,20 +19,20 @@ const GameHeader = ({ onBack, currentLevel, timeRemaining, score }: GameHeaderPr
 
   return (
     <div className="bg-white border-b border-slate-200 shadow-sm">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={onBack} className="flex items-center gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Sair</span>
-          </Button>
-          
-          <div className="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1">
-            <Target className="w-4 h-4 text-slate-600" />
-            <span className="text-sm font-medium text-slate-700">Nível {currentLevel}/20</span>
-          </div>
-        </div>
+      <div className="relative flex items-center justify-center p-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onBack} 
+          className="absolute left-4 flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Sair</span>
+        </Button>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1">
+          <Target className="w-4 h-4 text-slate-600" />
+          <span className="text-sm font-medium text-slate-700">Nível {currentLevel}/20</span>
         </div>
       </div>
     </div>
