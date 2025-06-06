@@ -131,7 +131,8 @@ export const AdminUsersList = () => {
     );
   }
 
-  const usersList: AdminUser[] = adminUsers ?? [];
+  // Explicitly handle the case where adminUsers might be undefined
+  const usersList = Array.isArray(adminUsers) ? adminUsers : [];
 
   return (
     <>
