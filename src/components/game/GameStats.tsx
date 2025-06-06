@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Clock, Lightbulb, Trophy } from 'lucide-react';
+import { Lightbulb, Trophy } from 'lucide-react';
 
 interface GameStatsProps {
   timeLeft: number;
@@ -11,19 +11,8 @@ interface GameStatsProps {
 }
 
 const GameStats = ({ timeLeft, hintsUsed, totalScore, onUseHint }: GameStatsProps) => {
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
     <div className="flex justify-between items-center gap-3">
-      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-md">
-        <Clock className="w-4 h-4 text-blue-600" />
-        <span className="text-sm font-bold text-gray-800">{formatTime(timeLeft)}</span>
-      </div>
-      
       <Button 
         size="sm" 
         variant="outline" 
