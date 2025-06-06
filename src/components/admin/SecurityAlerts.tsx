@@ -63,11 +63,12 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
           <Badge variant="outline">{filteredAlerts.length}</Badge>
         </CardTitle>
         
-        <div className="flex flex-wrap gap-2 mt-4">
+        <div className="flex flex-wrap gap-1 mt-4">
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('all')}
+            className="h-7 px-2 text-xs"
           >
             Todos
           </Button>
@@ -75,6 +76,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             variant={filter === 'pending' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('pending')}
+            className="h-7 px-2 text-xs"
           >
             Pendentes
           </Button>
@@ -82,6 +84,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             variant={filter === 'investigating' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('investigating')}
+            className="h-7 px-2 text-xs"
           >
             Investigando
           </Button>
@@ -89,6 +92,7 @@ export const SecurityAlerts = ({ alerts }: SecurityAlertsProps) => {
             variant={filter === 'resolved' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('resolved')}
+            className="h-7 px-2 text-xs"
           >
             Resolvidos
           </Button>
