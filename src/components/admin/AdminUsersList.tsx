@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -147,8 +148,8 @@ export const AdminUsersList = () => {
     );
   }
 
-  // Garantir que adminUsers seja um array com tipagem explícita
-  const usersList: AdminUser[] = Array.isArray(adminUsers) ? adminUsers : [];
+  // Garantir que adminUsers seja um array válido
+  const usersList = adminUsers || [];
 
   return (
     <>
@@ -162,7 +163,7 @@ export const AdminUsersList = () => {
         <CardContent>
           <div className="space-y-3">
             {usersList.length > 0 ? (
-              usersList.map((user) => (
+              usersList.map((user: AdminUser) => (
                 <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
