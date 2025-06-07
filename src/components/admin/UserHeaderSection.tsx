@@ -52,7 +52,7 @@ export const UserHeaderSection = () => {
               <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
                 <div className="text-sm text-blue-100">Engajamento</div>
                 <div className="text-xl font-bold">
-                  {stats.isLoading ? '...' : `${engajementRate}%`}
+                  {stats.isLoading ? '...' : `${engagementRate}%`}
                 </div>
               </div>
             </div>
