@@ -95,6 +95,57 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_competitions: {
+        Row: {
+          competition_type: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string
+          entry_requirements: Json | null
+          id: string
+          max_participants: number | null
+          prize_pool: number | null
+          rules: Json | null
+          start_date: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          competition_type: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date: string
+          entry_requirements?: Json | null
+          id?: string
+          max_participants?: number | null
+          prize_pool?: number | null
+          rules?: Json | null
+          start_date: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          competition_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string
+          entry_requirements?: Json | null
+          id?: string
+          max_participants?: number | null
+          prize_pool?: number | null
+          rules?: Json | null
+          start_date?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       daily_rankings: {
         Row: {
           created_at: string
@@ -180,6 +231,39 @@ export type Database = {
           },
         ]
       }
+      game_settings: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          setting_key: string
+          setting_type: string | null
+          setting_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_type?: string | null
+          setting_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_type?: string | null
+          setting_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       invites: {
         Row: {
           code: string
@@ -207,6 +291,39 @@ export type Database = {
           is_active?: boolean | null
           used_at?: string | null
           used_by?: string | null
+        }
+        Relationships: []
+      }
+      level_words: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          difficulty: string | null
+          id: string
+          is_active: boolean | null
+          level: number
+          updated_at: string | null
+          word: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          difficulty?: string | null
+          id?: string
+          is_active?: boolean | null
+          level: number
+          updated_at?: string | null
+          word: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          difficulty?: string | null
+          id?: string
+          is_active?: boolean | null
+          level?: number
+          updated_at?: string | null
+          word?: string
         }
         Relationships: []
       }
@@ -278,6 +395,48 @@ export type Database = {
           total_score?: number | null
           updated_at?: string | null
           username?: string
+        }
+        Relationships: []
+      }
+      user_reports: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          id: string
+          message: string
+          priority: string | null
+          report_type: string
+          resolution: string | null
+          status: string | null
+          subject: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          priority?: string | null
+          report_type: string
+          resolution?: string | null
+          status?: string | null
+          subject: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          priority?: string | null
+          report_type?: string
+          resolution?: string | null
+          status?: string | null
+          subject?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

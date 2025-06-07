@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 import GameProgressBar from './game/GameProgressBar';
 import GameStats from './game/GameStats';
 import GameCell from './game/GameCell';

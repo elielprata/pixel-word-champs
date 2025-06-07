@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { ChallengesTab } from "@/components/admin/ChallengesTab";
+import { GameContentTab } from "@/components/admin/GameContentTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { PaymentsTab } from "@/components/admin/PaymentsTab";
 import { SecurityTab } from "@/components/admin/SecurityTab";
 import { MetricsTab } from "@/components/admin/MetricsTab";
 import { UsersTab } from "@/components/admin/UsersTab";
-import { BarChart3, Shield, Users, Trophy, CreditCard, Target, Activity, TrendingUp, AlertCircle, Plus } from 'lucide-react';
+import { SupportTab } from "@/components/admin/SupportTab";
+import { BarChart3, Shield, Users, Trophy, CreditCard, Target, Activity, TrendingUp, AlertCircle, Plus, Gamepad2, MessageSquare } from 'lucide-react';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -32,9 +34,11 @@ const AdminPanel = () => {
   const tabConfig = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'challenges', label: 'Desafios', icon: Target },
+    { id: 'content', label: 'Conteúdo', icon: Gamepad2 },
     { id: 'rankings', label: 'Rankings', icon: Trophy },
     { id: 'payments', label: 'Premiação', icon: CreditCard },
     { id: 'users', label: 'Usuários', icon: Users },
+    { id: 'support', label: 'Suporte', icon: MessageSquare },
     { id: 'security', label: 'Segurança', icon: Shield },
   ];
 
@@ -92,7 +96,7 @@ const AdminPanel = () => {
 
           {/* Tab Contents */}
           <div className="space-y-8">
-            {/* Dashboard Reformulado */}
+            {/* Dashboard */}
             <TabsContent value="dashboard" className="space-y-8 mt-0">
               {/* Hero Section com estatísticas principais */}
               <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white relative overflow-hidden">
@@ -231,6 +235,10 @@ const AdminPanel = () => {
               <ChallengesTab challenges={mockChallenges} />
             </TabsContent>
 
+            <TabsContent value="content" className="mt-0">
+              <GameContentTab />
+            </TabsContent>
+
             <TabsContent value="rankings" className="mt-0">
               <RankingsTab />
             </TabsContent>
@@ -241,6 +249,10 @@ const AdminPanel = () => {
 
             <TabsContent value="users" className="mt-0">
               <UsersTab />
+            </TabsContent>
+
+            <TabsContent value="support" className="mt-0">
+              <SupportTab />
             </TabsContent>
 
             <TabsContent value="security" className="mt-0">
