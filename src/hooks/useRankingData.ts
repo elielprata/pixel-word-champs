@@ -20,11 +20,16 @@ export const useRankingData = () => {
     setError(null);
     
     try {
-      // Atualizar rankings antes de carregar para garantir valores corretos de prêmio
-      await Promise.all([
-        rankingService.updateDailyRanking(),
-        rankingService.updateWeeklyRanking()
-      ]);
+      // Tentar atualizar rankings - se falhar, continuar sem impedir o carregamento
+      try {
+        await Promise.all([
+          rankingService.updateDailyRanking(),
+          rankingService.updateWeeklyRanking()
+        ]);
+        console.log('Rankings updated successfully');
+      } catch (updateError) {
+        console.warn('Error updating rankings, continuing with existing data:', updateError);
+      }
 
       const [daily, weekly, historical] = await Promise.all([
         rankingApi.getDailyRanking(),
