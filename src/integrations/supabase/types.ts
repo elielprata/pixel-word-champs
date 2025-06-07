@@ -9,6 +9,89 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      challenge_progress: {
+        Row: {
+          challenge_id: number
+          completed_at: string | null
+          created_at: string | null
+          current_level: number | null
+          id: string
+          is_completed: boolean | null
+          total_score: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id: number
+          completed_at?: string | null
+          created_at?: string | null
+          current_level?: number | null
+          id?: string
+          is_completed?: boolean | null
+          total_score?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: number
+          completed_at?: string | null
+          created_at?: string | null
+          current_level?: number | null
+          id?: string
+          is_completed?: boolean | null
+          total_score?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          difficulty: string | null
+          id: number
+          is_active: boolean | null
+          levels: number | null
+          theme: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          id: number
+          is_active?: boolean | null
+          levels?: number | null
+          theme?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          id?: number
+          is_active?: boolean | null
+          levels?: number | null
+          theme?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       competition_participations: {
         Row: {
           competition_id: string | null

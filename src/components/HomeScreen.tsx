@@ -4,16 +4,8 @@ import { Trophy } from 'lucide-react';
 import UserStatsCard from './home/UserStatsCard';
 import ChallengeCard from './home/ChallengeCard';
 import RankingPreview from './home/RankingPreview';
-
-interface Challenge {
-  id: number;
-  title: string;
-  description: string;
-  completed: boolean;
-  levels: number;
-  players: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-}
+import { useChallenges } from '@/hooks/useChallenges';
+import { useChallengeProgress } from '@/hooks/useChallengeProgress';
 
 interface HomeScreenProps {
   onStartChallenge: (challengeId: number) => void;
@@ -22,35 +14,19 @@ interface HomeScreenProps {
 }
 
 const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewChallengeRanking }: HomeScreenProps) => {
-  const challenges: Challenge[] = [
-    {
-      id: 1,
-      title: "Desafio Matinal",
-      description: "Palavras relacionadas ao café da manhã",
-      completed: false,
-      levels: 20,
-      players: 1247,
-      difficulty: 'easy'
-    },
-    {
-      id: 2,
-      title: "Animais Selvagens",
-      description: "Encontre os animais escondidos",
-      completed: false,
-      levels: 20,
-      players: 892,
-      difficulty: 'medium'
-    },
-    {
-      id: 3,
-      title: "Cidades do Brasil",
-      description: "Conheça as cidades brasileiras",
-      completed: true,
-      levels: 20,
-      players: 2103,
-      difficulty: 'hard'
-    }
-  ];
+  const { challenges, isLoading: challengesLoading } = useChallenges();
+  const { progress, isLoading: progressLoading } = useChallengeProgress();
+
+  if (challengesLoading || progressLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando desafios...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
@@ -73,18 +49,31 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewChallengeRankin
             <h2 className="text-xl font-bold text-gray-900">Desafios de Hoje</h2>
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>3 ativos</span>
+              <span>{challenges.length} ativos</span>
             </div>
           </div>
           
-          {challenges.map((challenge) => (
-            <ChallengeCard
-              key={challenge.id}
-              challenge={challenge}
-              onStartChallenge={onStartChallenge}
-              onViewChallengeRanking={onViewChallengeRanking}
-            />
-          ))}
+          {challenges.map((challenge) => {
+            const challengeProgress = progress[challenge.id];
+            const isCompleted = challengeProgress?.is_completed || false;
+            
+            return (
+              <ChallengeCard
+                key={challenge.id}
+                challenge={{
+                  id: challenge.id,
+                  title: challenge.title,
+                  description: challenge.description,
+                  completed: isCompleted,
+                  levels: challenge.levels,
+                  players: 0, // Será preenchido pelo useChallengeParticipants
+                  difficulty: challenge.difficulty
+                }}
+                onStartChallenge={onStartChallenge}
+                onViewChallengeRanking={onViewChallengeRanking}
+              />
+            );
+          })}
         </div>
 
         {/* Ranking Preview */}

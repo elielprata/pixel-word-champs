@@ -3,6 +3,7 @@ import React from 'react';
 import { useLevelProgression } from '@/hooks/useLevelProgression';
 import { useChallengeData } from '@/hooks/useChallengeData';
 import { useChallengeGameState } from '@/hooks/useChallengeGameState';
+import { useChallengeProgress } from '@/hooks/useChallengeProgress';
 import ChallengeCompletedState from './challenge/ChallengeCompletedState';
 import ChallengeInstructionsScreen from './challenge/ChallengeInstructionsScreen';
 import ChallengeGameScreen from './challenge/ChallengeGameScreen';
@@ -14,6 +15,7 @@ interface ChallengeScreenProps {
 
 const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const challengeData = useChallengeData(challengeId);
+  const { progress, completeChallenge } = useChallengeProgress();
   const {
     currentLevel,
     timeRemaining,
@@ -36,7 +38,8 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     saveLevelProgress
   } = useLevelProgression(challengeId);
 
-  const isChallengeCompleted = completedChallenges.has(challengeId);
+  const challengeProgress = progress[challengeId];
+  const isChallengeCompleted = challengeProgress?.is_completed || false;
 
   const handleWordFound = (word: string, points: number) => {
     console.log(`Palavra encontrada: ${word} = ${points} pontos (configuração do painel admin)`);
@@ -56,12 +59,13 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     }
   };
 
-  const handleStopGame = () => {
+  const handleStopGame = async () => {
     console.log(`Usuário parou no desafio ${challengeId} - competição sendo marcada como concluída`);
     console.log(`Apenas níveis completados foram contabilizados: ${completedLevelsScore} pontos`);
     const isCompleted = stopGame();
     if (isCompleted) {
       console.log(`Desafio ${challengeId} marcado como concluído - usuário não pode mais jogar esta competição`);
+      await completeChallenge(challengeId);
       handleBackToHome();
     }
   };
