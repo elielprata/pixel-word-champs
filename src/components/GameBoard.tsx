@@ -1,20 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+import React from 'react';
 import GameProgressBar from './game/GameProgressBar';
 import GameStats from './game/GameStats';
-import GameCell from './game/GameCell';
 import WordsList from './game/WordsList';
-import GameOverModal from './game/GameOverModal';
-import LevelCompleteModal from './game/LevelCompleteModal';
+import GameBoardGrid from './game/GameBoardGrid';
+import GameModals from './game/GameModals';
 import { useBoard } from '@/hooks/useBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
 import { useWordValidation } from '@/hooks/useWordValidation';
-import { getCellSize, getPointsForWord, type Position } from '@/utils/boardUtils';
-
-interface FoundWord {
-  word: string;
-  positions: Position[];
-  points: number;
-}
+import { useGameLogic } from '@/hooks/useGameLogic';
+import { useGameInteractions } from '@/hooks/useGameInteractions';
+import { type Position } from '@/utils/boardUtils';
 
 interface GameBoardProps {
   level: number;
@@ -38,37 +34,33 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
   } = useBoardInteraction();
   const { isValidWordDirection } = useWordValidation();
 
-  const [foundWords, setFoundWords] = useState<FoundWord[]>([]);
-  const [permanentlyMarkedCells, setPermanentlyMarkedCells] = useState<Position[]>([]);
-  const [hintsUsed, setHintsUsed] = useState(0);
-  const [showGameOver, setShowGameOver] = useState(false);
-  const [showLevelComplete, setShowLevelComplete] = useState(false);
-  const [canRevive, setCanRevive] = useState(true);
-  const [hintHighlightedCells, setHintHighlightedCells] = useState<Position[]>([]);
-  const boardRef = useRef<HTMLDivElement>(null);
+  const {
+    foundWords,
+    hintsUsed,
+    showGameOver,
+    showLevelComplete,
+    canRevive,
+    setHintsUsed,
+    setCanRevive,
+    setShowGameOver,
+    setHintHighlightedCells,
+    addFoundWord,
+    isCellPermanentlyMarked,
+    isCellHintHighlighted
+  } = useGameLogic(level, timeLeft, levelWords, onWordFound, onLevelComplete);
 
-  // Reset state when level changes
-  useEffect(() => {
-    setFoundWords([]);
-    setPermanentlyMarkedCells([]);
-    setHintsUsed(0);
-  }, [level]);
-
-  // Detecta quando o tempo acaba
-  useEffect(() => {
-    if (timeLeft === 0 && !showGameOver) {
-      setShowGameOver(true);
-    }
-  }, [timeLeft, showGameOver]);
-
-  // Verifica se completou o nível
-  useEffect(() => {
-    if (foundWords.length === 5 && !showLevelComplete) {
-      const levelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
-      setShowLevelComplete(true);
-      onLevelComplete(levelScore);
-    }
-  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete]);
+  const { useHint, handleRevive, handleGoHome } = useGameInteractions(
+    foundWords,
+    levelWords,
+    boardData,
+    hintsUsed,
+    setHintsUsed,
+    setHintHighlightedCells,
+    canRevive,
+    setCanRevive,
+    setShowGameOver,
+    onTimeUp
+  );
 
   const handleCellEndWithValidation = () => {
     const finalSelection = handleCellEnd();
@@ -80,74 +72,14 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
       if (levelWords.includes(word) && 
           !foundWords.some(fw => fw.word === word) && 
           isValidWordDirection(finalSelection)) {
-        const points = getPointsForWord(word);
-        const newFoundWord = { word, positions: [...finalSelection], points };
-        
-        setFoundWords(prev => [...prev, newFoundWord]);
-        setPermanentlyMarkedCells(prev => [...prev, ...finalSelection]);
-        onWordFound(word, points);
+        addFoundWord(word, finalSelection);
       }
     }
   };
 
-  const isCellPermanentlyMarked = (row: number, col: number) => {
-    return permanentlyMarkedCells.some(pos => pos.row === row && pos.col === col);
+  const handleCellMoveWithValidation = (row: number, col: number) => {
+    handleCellMove(row, col, isValidWordDirection);
   };
-
-  const isCellHintHighlighted = (row: number, col: number) => {
-    return hintHighlightedCells.some(pos => pos.row === row && pos.col === col);
-  };
-
-  const useHint = () => {
-    if (hintsUsed >= 1) return;
-    
-    const remainingWords = levelWords.filter(word => !foundWords.some(fw => fw.word === word));
-    if (remainingWords.length > 0) {
-      setHintsUsed(prev => prev + 1);
-      
-      // Encontrar a primeira palavra não encontrada e destacar suas posições
-      const hintWord = remainingWords[0];
-      const wordPlacement = boardData.placedWords.find(pw => pw.word === hintWord);
-      
-      if (wordPlacement) {
-        setHintHighlightedCells(wordPlacement.positions);
-        
-        // Remover o destaque após 3 segundos
-        setTimeout(() => {
-          setHintHighlightedCells([]);
-        }, 3000);
-      }
-      
-      console.log(`Dica: Procure por "${hintWord}"`);
-    }
-  };
-
-  const handleAdvanceLevelClick = () => {
-    setShowLevelComplete(false);
-    onAdvanceLevel();
-  };
-
-  const handleStayLevel = () => {
-    setShowLevelComplete(false);
-    onStopGame();
-  };
-
-  const handleRevive = () => {
-    if (!canRevive) return;
-    
-    // Simular assistir anúncio (em produção seria integrado com sistema de anúncios)
-    setCanRevive(false);
-    setShowGameOver(false);
-    
-    // Adicionar 30 segundos (isso seria feito no componente pai)
-    console.log('Revive ativado! +30 segundos');
-  };
-
-  const handleGoHome = () => {
-    onTimeUp();
-  };
-
-  const cellSize = getCellSize(size);
 
   return (
     <div className="flex flex-col items-center p-4 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
@@ -166,65 +98,34 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
         />
       </div>
 
-      <div 
-        ref={boardRef}
-        className="grid p-4 bg-white rounded-2xl shadow-lg mb-6"
-        style={{ 
-          gridTemplateColumns: `repeat(${size}, 1fr)`,
-          gap: size > 7 ? '2px' : '4px',
-          maxWidth: size > 7 ? '350px' : '320px',
-          width: '100%',
-          touchAction: 'none' // Previne zoom e outros gestos
-        }}
-        onTouchEnd={(e) => {
-          e.preventDefault();
-          handleCellEndWithValidation();
-        }}
-        onMouseUp={(e) => {
-          e.preventDefault();
-          handleCellEndWithValidation();
-        }}
-      >
-        {boardData.board.map((row, rowIndex) =>
-          row.map((letter, colIndex) => (
-            <GameCell
-              key={`${rowIndex}-${colIndex}`}
-              letter={letter}
-              rowIndex={rowIndex}
-              colIndex={colIndex}
-              isSelected={isCellSelected(rowIndex, colIndex)}
-              isPermanent={isCellPermanentlyMarked(rowIndex, colIndex)}
-              isHintHighlighted={isCellHintHighlighted(rowIndex, colIndex)}
-              cellSize={cellSize}
-              onCellStart={handleCellStart}
-              onCellMove={(row, col) => handleCellMove(row, col, isValidWordDirection)}
-              isSelecting={isSelecting}
-            />
-          ))
-        )}
-      </div>
+      <GameBoardGrid
+        boardData={boardData}
+        size={size}
+        selectedCells={selectedCells}
+        isSelecting={isSelecting}
+        isCellSelected={isCellSelected}
+        isCellPermanentlyMarked={isCellPermanentlyMarked}
+        isCellHintHighlighted={isCellHintHighlighted}
+        handleCellStart={handleCellStart}
+        handleCellMove={handleCellMoveWithValidation}
+        handleCellEndWithValidation={handleCellEndWithValidation}
+      />
 
       <WordsList 
         levelWords={levelWords}
         foundWords={foundWords}
       />
 
-      <GameOverModal
-        isOpen={showGameOver}
-        score={foundWords.reduce((sum, fw) => sum + fw.points, 0)}
-        wordsFound={foundWords.length}
-        totalWords={5}
+      <GameModals
+        showGameOver={showGameOver}
+        showLevelComplete={showLevelComplete}
+        foundWords={foundWords}
+        level={level}
+        canRevive={canRevive}
         onRevive={handleRevive}
         onGoHome={handleGoHome}
-        canRevive={canRevive}
-      />
-
-      <LevelCompleteModal
-        isOpen={showLevelComplete}
-        level={level}
-        score={foundWords.reduce((sum, fw) => sum + fw.points, 0)}
-        onAdvance={handleAdvanceLevelClick}
-        onStay={handleStayLevel}
+        onAdvanceLevel={onAdvanceLevel}
+        onStopGame={onStopGame}
       />
     </div>
   );
