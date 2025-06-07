@@ -13,6 +13,19 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
       setIsLoading(true);
       console.log(`🔄 Atualizando role para ${newRole} do usuário:`, userId);
 
+      // Verificar roles atuais antes de modificar
+      const { data: currentRoles, error: fetchError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (fetchError) {
+        console.error('❌ Erro ao buscar roles atuais:', fetchError);
+        throw fetchError;
+      }
+
+      console.log('📋 Roles atuais:', currentRoles);
+
       // Primeiro, remover todos os roles existentes
       const { error: deleteError } = await supabase
         .from('user_roles')
@@ -23,6 +36,8 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
         console.error('❌ Erro ao remover roles existentes:', deleteError);
         throw deleteError;
       }
+
+      console.log('✅ Roles existentes removidos');
 
       // Depois, adicionar o novo role
       const { error: insertError } = await supabase
@@ -37,17 +52,23 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
         throw insertError;
       }
 
+      console.log('✅ Novo role adicionado:', newRole);
+
       toast({
         title: "Sucesso!",
         description: `Permissão atualizada para ${newRole === 'admin' ? 'Administrador' : 'Usuário'} para ${username}`,
       });
 
-      onUserUpdated();
+      // Aguardar um pouco antes de atualizar para garantir que a transação foi commitada
+      setTimeout(() => {
+        onUserUpdated();
+      }, 500);
+
     } catch (error: any) {
-      console.error('❌ Erro:', error);
+      console.error('❌ Erro completo:', error);
       toast({
         title: "Erro",
-        description: `Erro ao atualizar permissão`,
+        description: `Erro ao atualizar permissão: ${error.message || 'Erro desconhecido'}`,
         variant: "destructive",
       });
     } finally {
@@ -86,7 +107,7 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
       console.error('❌ Erro:', error);
       toast({
         title: "Erro",
-        description: "Erro ao atualizar senha",
+        description: `Erro ao atualizar senha: ${error.message || 'Erro desconhecido'}`,
         variant: "destructive",
       });
     } finally {

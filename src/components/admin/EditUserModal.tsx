@@ -17,11 +17,12 @@ interface EditUserModalProps {
 }
 
 export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated }: EditUserModalProps) => {
-  const { data: userData, isLoading: userLoading, refetch } = useUserData(userId, isOpen);
+  const { data: userData, isLoading: userLoading, refetch, error } = useUserData(userId, isOpen);
   const { updateUserRole, updatePassword, isLoading, isChangingPassword } = useUserActions(
     userId, 
     username, 
     () => {
+      console.log('🔄 Usuário atualizado, recarregando dados...');
       refetch();
       onUserUpdated();
     }
@@ -29,15 +30,43 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
 
   const currentRole = userData?.roles?.[0] || 'user';
 
+  console.log('🔍 Estado do modal:', { 
+    isOpen, 
+    userId, 
+    username, 
+    userData, 
+    currentRole, 
+    userLoading, 
+    error 
+  });
+
   if (userLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Editando usuário: {username}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-gray-500">Carregando...</p>
+            <p className="text-gray-500">Carregando dados do usuário...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (error) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editando usuário: {username}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-red-500">Erro ao carregar dados: {error.message}</p>
+            <Button onClick={() => refetch()} className="mt-4">
+              Tentar Novamente
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -53,7 +82,7 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
         
         <div className="space-y-6 py-4">
           <UserInfoDisplay 
-            username={username} 
+            username={userData?.username || username} 
             email={userData?.email || 'Email não disponível'} 
           />
 

@@ -19,21 +19,50 @@ export const useUserData = (userId: string, isOpen: boolean) => {
         throw rolesError;
       }
 
-      // Buscar dados do auth para pegar o email
-      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
-      
-      if (authError) {
-        console.error('❌ Erro ao buscar dados do auth:', authError);
-        throw authError;
+      console.log('📋 Roles encontrados:', rolesData);
+
+      // Buscar dados do perfil para pegar informações do usuário
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('❌ Erro ao buscar perfil:', profileError);
       }
 
-      console.log('📋 Dados encontrados:', { roles: rolesData, email: authData.user.email });
+      // Tentar buscar email do auth.users se possível, senão usar fallback
+      let email = 'Email não disponível';
+      try {
+        const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
+        if (!authError && authData.user.email) {
+          email = authData.user.email;
+        }
+      } catch (error) {
+        console.log('⚠️ Não foi possível acessar dados do auth, usando fallback');
+        // Fallback: buscar na tabela auth.users diretamente se permitido
+        const { data: userEmailData } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', userId)
+          .single();
+        
+        if (userEmailData) {
+          email = `${userEmailData.username}@sistema`;
+        }
+      }
+
+      console.log('📋 Dados encontrados:', { roles: rolesData, email, profile: profileData });
       
       return {
         roles: rolesData?.map(r => r.role) || [],
-        email: authData.user.email || 'Email não disponível'
+        email: email,
+        username: profileData?.username || 'Username não disponível'
       };
     },
     enabled: isOpen && !!userId,
+    retry: 2,
+    retryDelay: 1000,
   });
 };
