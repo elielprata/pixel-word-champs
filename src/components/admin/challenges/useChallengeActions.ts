@@ -24,7 +24,13 @@ export const useChallengeActions = (challenges: any[], refetch: () => void) => {
       const nextId = getNextId();
       const challengeData = {
         id: nextId,
-        ...formData
+        title: formData.title,
+        description: formData.description,
+        theme: formData.theme,
+        color: formData.color,
+        difficulty: formData.difficulty,
+        levels: formData.levels,
+        is_active: formData.is_active
       };
 
       const { error } = await supabase
@@ -55,9 +61,19 @@ export const useChallengeActions = (challenges: any[], refetch: () => void) => {
     if (!editingChallenge) return;
 
     try {
+      const updateData = {
+        title: formData.title,
+        description: formData.description,
+        theme: formData.theme,
+        color: formData.color,
+        difficulty: formData.difficulty,
+        levels: formData.levels,
+        is_active: formData.is_active
+      };
+
       const { error } = await supabase
         .from('challenges')
-        .update(formData)
+        .update(updateData)
         .eq('id', editingChallenge.id);
 
       if (error) throw error;
@@ -84,11 +100,11 @@ export const useChallengeActions = (challenges: any[], refetch: () => void) => {
     setFormData({
       title: challenge.title,
       description: challenge.description || '',
-      theme: challenge.theme,
-      color: challenge.color,
-      difficulty: challenge.difficulty,
-      levels: challenge.levels,
-      is_active: challenge.is_active
+      theme: challenge.theme || 'default',
+      color: challenge.color || 'blue',
+      difficulty: challenge.difficulty || 'medium',
+      levels: challenge.levels || 20,
+      is_active: challenge.is_active !== false
     });
     setEditingChallenge(challenge);
   };

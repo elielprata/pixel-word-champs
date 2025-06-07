@@ -27,9 +27,11 @@ export const ChallengeForm = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{editingChallenge ? 'Editar Desafio' : 'Criar Novo Desafio'}</CardTitle>
+        <CardTitle>
+          {editingChallenge ? 'Editar Desafio' : 'Criar Novo Desafio'}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="title">Título</Label>
@@ -37,13 +39,41 @@ export const ChallengeForm = ({
               id="title"
               value={formData.title}
               onChange={(e) => onFormDataChange({ title: e.target.value })}
-              placeholder="Ex: Animais do Brasil"
+              placeholder="Nome do desafio"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="difficulty">Dificuldade</Label>
-            <Select value={formData.difficulty} onValueChange={(value) => onFormDataChange({ difficulty: value })}>
+            <Label htmlFor="levels">Níveis</Label>
+            <Input
+              id="levels"
+              type="number"
+              value={formData.levels}
+              onChange={(e) => onFormDataChange({ levels: parseInt(e.target.value) || 20 })}
+              min="1"
+              max="100"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Descrição</Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => onFormDataChange({ description: e.target.value })}
+            placeholder="Descrição do desafio"
+            rows={3}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Dificuldade</Label>
+            <Select 
+              value={formData.difficulty} 
+              onValueChange={(value) => onFormDataChange({ difficulty: value as any })}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -56,18 +86,29 @@ export const ChallengeForm = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="theme">Tema</Label>
-            <Input
-              id="theme"
-              value={formData.theme}
-              onChange={(e) => onFormDataChange({ theme: e.target.value })}
-              placeholder="Ex: nature, geography"
-            />
+            <Label>Tema</Label>
+            <Select 
+              value={formData.theme} 
+              onValueChange={(value) => onFormDataChange({ theme: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Padrão</SelectItem>
+                <SelectItem value="morning">Matinal</SelectItem>
+                <SelectItem value="nature">Natureza</SelectItem>
+                <SelectItem value="geography">Geografia</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="color">Cor</Label>
-            <Select value={formData.color} onValueChange={(value) => onFormDataChange({ color: value })}>
+            <Label>Cor</Label>
+            <Select 
+              value={formData.color} 
+              onValueChange={(value) => onFormDataChange({ color: value })}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -80,50 +121,22 @@ export const ChallengeForm = ({
               </SelectContent>
             </Select>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="levels">Níveis</Label>
-            <Input
-              id="levels"
-              type="number"
-              value={formData.levels}
-              onChange={(e) => onFormDataChange({ levels: parseInt(e.target.value) })}
-              min="1"
-              max="100"
-            />
-          </div>
-
-          <div className="space-y-2 flex items-center gap-2">
-            <Switch
-              checked={formData.is_active}
-              onCheckedChange={(checked) => onFormDataChange({ is_active: checked })}
-            />
-            <Label>Ativo</Label>
-          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description">Descrição</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => onFormDataChange({ description: e.target.value })}
-            placeholder="Descreva o tema do desafio..."
-            rows={3}
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="is_active"
+            checked={formData.is_active}
+            onCheckedChange={(checked) => onFormDataChange({ is_active: checked })}
           />
+          <Label htmlFor="is_active">Desafio ativo</Label>
         </div>
 
-        <div className="flex gap-2">
-          <Button 
-            onClick={onSubmit}
-            disabled={!formData.title.trim()}
-          >
-            {editingChallenge ? 'Atualizar' : 'Criar'}
+        <div className="flex gap-3 pt-4">
+          <Button onClick={onSubmit} className="flex-1">
+            {editingChallenge ? 'Atualizar' : 'Criar'} Desafio
           </Button>
-          <Button 
-            variant="outline" 
-            onClick={onCancel}
-          >
+          <Button variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
         </div>
