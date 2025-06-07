@@ -32,7 +32,7 @@ const GameBoard = ({
   onLevelComplete, 
   onAdvanceLevel, 
   onStopGame,
-  canRevive = false,
+  canRevive = true,
   onRevive
 }: GameBoardProps) => {
   const { boardData, size, levelWords } = useBoard(level);
@@ -93,14 +93,8 @@ const GameBoard = ({
 
   const handleReviveClick = () => {
     if (onRevive) {
-      // TODO: Aqui será integrado com AdMob quando disponível
-      console.log('Iniciando processo de anúncio via AdMob...');
-      
-      // Simulação temporária do anúncio
-      setTimeout(() => {
-        console.log('Anúncio concluído - ativando revive');
-        onRevive();
-      }, 1000);
+      console.log('Iniciando processo de revive...');
+      onRevive();
     }
   };
 

@@ -96,7 +96,7 @@ function gameStateReducer(state: GameState, action: GameAction): GameState {
 
 export const useChallengeGameState = (challengeId: number) => {
   const [state, dispatch] = useReducer(gameStateReducer, initialState);
-  const { timeRemaining, hasRevived, extendTime, canRevive } = useGameTimer(180, state.isGameStarted);
+  const { timeRemaining, extendTime, canRevive } = useGameTimer(180, state.isGameStarted);
 
   // Reset to level 1 when component mounts (when entering the challenge)
   useEffect(() => {
@@ -174,7 +174,6 @@ export const useChallengeGameState = (challengeId: number) => {
     completedChallenges: state.completedChallenges,
     isAdvancing: state.isAdvancing,
     canRevive,
-    hasRevived,
     setCurrentLevelScore,
     startGame,
     resetToHome,

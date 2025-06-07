@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, StopCircle, Trophy, Play } from 'lucide-react';
+import { StopCircle, Trophy, Play } from 'lucide-react';
 
 interface GameOverModalProps {
   isOpen: boolean;
@@ -23,26 +23,38 @@ const GameOverModal = ({
   onGoHome,
   canRevive 
 }: GameOverModalProps) => {
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+
   if (!isOpen) return null;
 
   const handleReviveClick = () => {
-    // TODO: Integrar com AdMob para mostrar anúncio
-    // Por enquanto, simula o processo de assistir anúncio
-    console.log('Iniciando processo de anúncio via AdMob...');
+    console.log('Iniciando anúncio para revive...');
+    setIsWatchingAd(true);
     
-    // Em produção, isso seria substituído pela chamada real do AdMob:
-    // AdMob.showRewardedAd().then(() => {
-    //   onRevive();
-    // }).catch((error) => {
-    //   console.error('Erro ao exibir anúncio:', error);
-    // });
-    
-    // Simulação temporária do anúncio
+    // Simular anúncio de 30 segundos
     setTimeout(() => {
       console.log('Anúncio concluído - ativando revive');
+      setIsWatchingAd(false);
       onRevive();
-    }, 1000);
+    }, 3000); // 3 segundos para demo, seria 30s real
   };
+
+  if (isWatchingAd) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+        <Card className="w-80 m-4">
+          <CardContent className="p-6 text-center">
+            <div className="animate-spin w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <h3 className="text-lg font-bold mb-2 text-white">Anúncio em Exibição</h3>
+            <p className="text-gray-300">Aguarde para receber +30 segundos...</p>
+            <div className="mt-4 bg-gray-800 rounded-lg p-3">
+              <p className="text-sm text-gray-400">O anúncio será fechado automaticamente</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -65,15 +77,13 @@ const GameOverModal = ({
           </div>
           
           <div className="space-y-3">
-            {canRevive && (
-              <Button 
-                onClick={handleReviveClick}
-                className="w-full bg-green-500 hover:bg-green-600 text-white"
-              >
-                <Play className="w-4 h-4 mr-2" />
-                Reviver (+30s) - Assistir Anúncio
-              </Button>
-            )}
+            <Button 
+              onClick={handleReviveClick}
+              className="w-full bg-green-500 hover:bg-green-600 text-white"
+            >
+              <Play className="w-4 h-4 mr-2" />
+              Reviver (+30s) - Assistir Anúncio
+            </Button>
             
             <Button 
               onClick={onGoHome}
@@ -84,11 +94,9 @@ const GameOverModal = ({
             </Button>
           </div>
           
-          {!canRevive && (
-            <p className="text-sm text-gray-500 mt-2">
-              Você já usou seu revive neste nível
-            </p>
-          )}
+          <p className="text-sm text-green-600 mt-2">
+            💡 Você pode usar o revive quantas vezes quiser!
+          </p>
         </CardContent>
       </Card>
     </div>
