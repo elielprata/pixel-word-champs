@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,7 +137,7 @@ const AdminPanel = () => {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-emerald-500 p-3 rounded-xl">
-                        <Target className="h-6 w-6 text-white" />
+                        <Trophy className="h-6 w-6 text-white" />
                       </div>
                       <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Ativo</Badge>
                     </div>
