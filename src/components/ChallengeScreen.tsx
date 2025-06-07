@@ -64,18 +64,20 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     }
   }, [isGameStarted, timeRemaining]);
 
-  // Initialize current level based on progress
+  // Reset to level 1 when component mounts (when entering the challenge)
   useEffect(() => {
-    if (!isLoading) {
-      const highestLevel = getHighestCompletedLevel();
-      setCurrentLevel(Math.max(1, highestLevel + 1));
-    }
-  }, [isLoading, getHighestCompletedLevel]);
+    setCurrentLevel(1);
+    setScore(0);
+    setCurrentLevelScore(0);
+    setTimeRemaining(180);
+    setIsGameStarted(false);
+    setShowInstructions(true);
+  }, [challengeId]);
 
   const startGame = () => {
     setShowInstructions(false);
     setIsGameStarted(true);
-    setScore(totalScore);
+    setScore(0); // Always start with 0 score
     setCurrentLevelScore(0);
   };
 
@@ -109,10 +111,21 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     console.log('Tempo esgotado!');
   };
 
+  // Always restart from level 1 when going back
+  const handleBackToHome = () => {
+    setCurrentLevel(1);
+    setScore(0);
+    setCurrentLevelScore(0);
+    setTimeRemaining(180);
+    setIsGameStarted(false);
+    setShowInstructions(true);
+    onBack();
+  };
+
   if (showInstructions) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-        <ChallengeHeader onBack={onBack} theme={challengeData.theme} />
+        <ChallengeHeader onBack={handleBackToHome} theme={challengeData.theme} />
         
         <div className="max-w-4xl mx-auto p-4 space-y-4">
           <ChallengeHeroSection 
@@ -134,7 +147,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <GameHeader 
-        onBack={onBack}
+        onBack={handleBackToHome}
         currentLevel={currentLevel}
         timeRemaining={timeRemaining}
         score={score}
