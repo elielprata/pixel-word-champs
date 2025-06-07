@@ -59,11 +59,10 @@ class GameService {
   async submitWord(
     sessionId: string, 
     word: string, 
-    positions: Position[]
+    positions: Position[],
+    points: number
   ): Promise<ApiResponse<WordFound>> {
     try {
-      const points = this.calculateWordPoints(word);
-
       const { data, error } = await supabase
         .from('words_found')
         .insert({
