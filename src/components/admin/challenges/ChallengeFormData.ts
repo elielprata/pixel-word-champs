@@ -7,6 +7,8 @@ export interface ChallengeFormData {
   difficulty: 'easy' | 'medium' | 'hard';
   levels: number;
   is_active: boolean;
+  start_date?: string;
+  end_date?: string;
 }
 
 export const getDefaultFormData = (): ChallengeFormData => ({
@@ -16,7 +18,9 @@ export const getDefaultFormData = (): ChallengeFormData => ({
   color: 'blue',
   difficulty: 'medium',
   levels: 20,
-  is_active: true
+  is_active: true,
+  start_date: '',
+  end_date: ''
 });
 
 export const difficultyOptions = [

@@ -43,7 +43,10 @@ export const ChallengeForm = ({
 
           <div className="space-y-2">
             <Label htmlFor="difficulty">Dificuldade</Label>
-            <Select value={formData.difficulty} onValueChange={(value) => onFormDataChange({ difficulty: value })}>
+            <Select 
+              value={formData.difficulty} 
+              onValueChange={(value: 'easy' | 'medium' | 'hard') => onFormDataChange({ difficulty: value })}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -99,6 +102,26 @@ export const ChallengeForm = ({
               onCheckedChange={(checked) => onFormDataChange({ is_active: checked })}
             />
             <Label>Ativo</Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="start_date">Data/Hora Início</Label>
+            <Input
+              id="start_date"
+              type="datetime-local"
+              value={formData.start_date}
+              onChange={(e) => onFormDataChange({ start_date: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="end_date">Data/Hora Fim</Label>
+            <Input
+              id="end_date"
+              type="datetime-local"
+              value={formData.end_date}
+              onChange={(e) => onFormDataChange({ end_date: e.target.value })}
+            />
           </div>
         </div>
 

@@ -19,12 +19,20 @@ export const useChallengeActions = (challenges: any[], refetch: () => void) => {
     return Math.max(...challenges.map(c => c.id)) + 1;
   };
 
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm format
+  };
+
   const handleCreate = async () => {
     try {
       const nextId = getNextId();
       const challengeData = {
         id: nextId,
-        ...formData
+        ...formData,
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null
       };
 
       const { error } = await supabase
@@ -55,9 +63,15 @@ export const useChallengeActions = (challenges: any[], refetch: () => void) => {
     if (!editingChallenge) return;
 
     try {
+      const updateData = {
+        ...formData,
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null
+      };
+
       const { error } = await supabase
         .from('challenges')
-        .update(formData)
+        .update(updateData)
         .eq('id', editingChallenge.id);
 
       if (error) throw error;
@@ -81,6 +95,8 @@ export const useChallengeActions = (challenges: any[], refetch: () => void) => {
   };
 
   const handleEdit = (challenge: any) => {
+    console.log('🔧 Carregando dados para edição:', challenge);
+    
     setFormData({
       title: challenge.title,
       description: challenge.description || '',
@@ -88,9 +104,17 @@ export const useChallengeActions = (challenges: any[], refetch: () => void) => {
       color: challenge.color,
       difficulty: challenge.difficulty,
       levels: challenge.levels,
-      is_active: challenge.is_active
+      is_active: challenge.is_active,
+      start_date: formatDateForInput(challenge.start_date),
+      end_date: formatDateForInput(challenge.end_date)
     });
+    
     setEditingChallenge(challenge);
+    
+    console.log('🔧 FormData configurado:', {
+      start_date: formatDateForInput(challenge.start_date),
+      end_date: formatDateForInput(challenge.end_date)
+    });
   };
 
   const handleDelete = async (challengeId: number) => {
