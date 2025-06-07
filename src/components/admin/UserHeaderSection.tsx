@@ -16,11 +16,6 @@ export const UserHeaderSection = () => {
     ? Math.min(((stats.activeUsers / stats.totalUsers) * 100), 100).toFixed(0)
     : '0';
 
-  // Engajamento: média de jogos por usuário (normalizado para percentual)
-  const engagementRate = stats.totalUsers > 0 && stats.totalGamesPlayed > 0
-    ? Math.min(((stats.totalGamesPlayed / stats.totalUsers) / 10 * 100), 100).toFixed(0)
-    : '0';
-
   return (
     <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white relative overflow-hidden">
       <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
@@ -36,7 +31,7 @@ export const UserHeaderSection = () => {
                 <p className="text-blue-100 mt-1">Administre usuários e suas permissões na plataforma</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
                 <div className="text-sm text-blue-100">Crescimento Diário</div>
                 <div className="text-xl font-bold">
@@ -50,9 +45,21 @@ export const UserHeaderSection = () => {
                 </div>
               </div>
               <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                <div className="text-sm text-blue-100">Engajamento</div>
+                <div className="text-sm text-blue-100">Retenção D1</div>
                 <div className="text-xl font-bold">
-                  {stats.isLoading ? '...' : `${engagementRate}%`}
+                  {stats.isLoading ? '...' : `${stats.retentionD1}%`}
+                </div>
+              </div>
+              <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                <div className="text-sm text-blue-100">Retenção D3</div>
+                <div className="text-xl font-bold">
+                  {stats.isLoading ? '...' : `${stats.retentionD3}%`}
+                </div>
+              </div>
+              <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                <div className="text-sm text-blue-100">Retenção D7</div>
+                <div className="text-xl font-bold">
+                  {stats.isLoading ? '...' : `${stats.retentionD7}%`}
                 </div>
               </div>
             </div>

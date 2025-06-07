@@ -9,6 +9,9 @@ interface RealUserStats {
   totalAdmins: number;
   averageScore: number;
   totalGamesPlayed: number;
+  retentionD1: number;
+  retentionD3: number;
+  retentionD7: number;
   isLoading: boolean;
 }
 
@@ -20,12 +23,54 @@ export const useRealUserStats = () => {
     totalAdmins: 0,
     averageScore: 0,
     totalGamesPlayed: 0,
+    retentionD1: 0,
+    retentionD3: 0,
+    retentionD7: 0,
     isLoading: true
   });
 
   useEffect(() => {
     loadRealStats();
   }, []);
+
+  const calculateRetention = async (daysAgo: number) => {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - daysAgo);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    // Usuários que se registraram no dia alvo
+    const { data: usersRegistered, error: registeredError } = await supabase
+      .from('profiles')
+      .select('id')
+      .gte('created_at', targetDate.toISOString())
+      .lt('created_at', nextDay.toISOString());
+
+    if (registeredError) throw registeredError;
+
+    if (!usersRegistered || usersRegistered.length === 0) {
+      return 0;
+    }
+
+    // Verificar quantos desses usuários jogaram hoje
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { data: activeSessions, error: activeError } = await supabase
+      .from('game_sessions')
+      .select('user_id')
+      .gte('started_at', today.toISOString())
+      .in('user_id', usersRegistered.map(u => u.id));
+
+    if (activeError) throw activeError;
+
+    const uniqueActiveUsers = new Set(activeSessions?.map(session => session.user_id) || []);
+    
+    const retention = (uniqueActiveUsers.size / usersRegistered.length) * 100;
+    return Math.min(retention, 100); // Limitar a 100%
+  };
 
   const loadRealStats = async () => {
     try {
@@ -86,6 +131,13 @@ export const useRealUserStats = () => {
 
       const totalGamesPlayed = profilesData?.reduce((sum, p) => sum + (p.games_played || 0), 0) || 0;
 
+      // Calcular retenções D1, D3 e D7
+      const [retentionD1, retentionD3, retentionD7] = await Promise.all([
+        calculateRetention(1),
+        calculateRetention(3),
+        calculateRetention(7)
+      ]);
+
       const realStats = {
         totalUsers: totalUsers || 0,
         activeUsers,
@@ -93,11 +145,15 @@ export const useRealUserStats = () => {
         totalAdmins: totalAdmins || 0,
         averageScore,
         totalGamesPlayed,
+        retentionD1: Math.round(retentionD1),
+        retentionD3: Math.round(retentionD3),
+        retentionD7: Math.round(retentionD7),
         isLoading: false
       };
 
       console.log('📊 Estatísticas reais carregadas:', realStats);
       console.log(`👥 Usuários únicos ativos nas últimas 24h: ${activeUsers} (de ${activeSessions?.length || 0} sessões)`);
+      console.log(`📈 Retenção - D1: ${retentionD1}%, D3: ${retentionD3}%, D7: ${retentionD7}%`);
       setStats(realStats);
     } catch (error) {
       console.error('❌ Erro ao carregar estatísticas reais:', error);
