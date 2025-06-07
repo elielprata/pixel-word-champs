@@ -28,19 +28,19 @@ export const useInvites = () => {
       // Carregar código de convite
       const codeResponse = await inviteService.generateInviteCode();
       if (codeResponse.success && codeResponse.data) {
-        setInviteCode(codeResponse.data.code);
+        setInviteCode((codeResponse.data as { code: string }).code);
       }
 
       // Carregar amigos convidados
       const friendsResponse = await inviteService.getInvitedFriends();
       if (friendsResponse.success && friendsResponse.data) {
-        setInvitedFriends(friendsResponse.data);
+        setInvitedFriends(friendsResponse.data as InvitedFriend[]);
       }
 
       // Carregar estatísticas
       const statsResponse = await inviteService.getInviteStats();
       if (statsResponse.success && statsResponse.data) {
-        setStats(statsResponse.data);
+        setStats(statsResponse.data as { totalPoints: number; activeFriends: number; totalInvites: number; });
       }
     } catch (err) {
       setError('Erro ao carregar dados de convites');
