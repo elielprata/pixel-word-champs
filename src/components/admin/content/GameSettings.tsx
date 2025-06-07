@@ -12,6 +12,7 @@ export const GameSettings = () => {
     saving,
     updateSetting,
     saveSettings,
+    setAsDefaults,
     resetToDefaults
   } = useGameSettings();
 
@@ -40,6 +41,7 @@ export const GameSettings = () => {
       <GameSettingsHeader
         onSave={saveSettings}
         onReset={resetToDefaults}
+        onSetAsDefault={setAsDefaults}
         saving={saving}
       />
 
