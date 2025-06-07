@@ -9,7 +9,7 @@ import { ChallengeCard } from './challenges/ChallengeCard';
 import { useChallengeActions } from './challenges/useChallengeActions';
 
 export const ChallengeManagementTab = () => {
-  const { challenges, isLoading, refetch } = useChallenges();
+  const { challenges, isLoading, refetch } = useChallenges({ activeOnly: false });
   const {
     isCreating,
     setIsCreating,

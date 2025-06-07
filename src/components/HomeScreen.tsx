@@ -14,7 +14,7 @@ interface HomeScreenProps {
 }
 
 const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewChallengeRanking }: HomeScreenProps) => {
-  const { challenges, isLoading: challengesLoading } = useChallenges();
+  const { challenges, isLoading: challengesLoading } = useChallenges({ activeOnly: true });
   const { progress, isLoading: progressLoading } = useChallengeProgress();
 
   console.log('HomeScreen - Challenges:', challenges);

@@ -13,21 +13,32 @@ interface Challenge {
   is_active: boolean;
 }
 
-export const useChallenges = () => {
+interface UseChallengesOptions {
+  activeOnly?: boolean;
+}
+
+export const useChallenges = (options: UseChallengesOptions = {}) => {
+  const { activeOnly = true } = options;
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadChallenges();
-  }, []);
+  }, [activeOnly]);
 
   const loadChallenges = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('challenges')
         .select('*')
-        .eq('is_active', true)
         .order('id');
+
+      // Only filter by is_active if activeOnly is true
+      if (activeOnly) {
+        query = query.eq('is_active', true);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       
@@ -42,7 +53,7 @@ export const useChallenges = () => {
       setChallenges(typedChallenges);
     } catch (error) {
       console.error('Error loading challenges:', error);
-      setChallenges([]); // Clear mocked data on error
+      setChallenges([]);
     } finally {
       setIsLoading(false);
     }
