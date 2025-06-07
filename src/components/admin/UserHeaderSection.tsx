@@ -11,10 +11,12 @@ export const UserHeaderSection = () => {
     ? ((stats.newUsersToday / stats.totalUsers) * 100).toFixed(1)
     : '0.0';
 
-  const retentionRate = stats.totalUsers > 0 && stats.activeUsers > 0
-    ? ((stats.activeUsers / stats.totalUsers) * 100).toFixed(0)
+  // Taxa de atividade: percentual de usuários ativos em relação ao total (máximo 100%)
+  const activityRate = stats.totalUsers > 0 && stats.activeUsers > 0
+    ? Math.min(((stats.activeUsers / stats.totalUsers) * 100), 100).toFixed(0)
     : '0';
 
+  // Engajamento: média de jogos por usuário (normalizado para percentual)
   const engagementRate = stats.totalUsers > 0 && stats.totalGamesPlayed > 0
     ? Math.min(((stats.totalGamesPlayed / stats.totalUsers) / 10 * 100), 100).toFixed(0)
     : '0';
@@ -44,13 +46,13 @@ export const UserHeaderSection = () => {
               <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
                 <div className="text-sm text-blue-100">Taxa de Atividade</div>
                 <div className="text-xl font-bold">
-                  {stats.isLoading ? '...' : `${retentionRate}%`}
+                  {stats.isLoading ? '...' : `${activityRate}%`}
                 </div>
               </div>
               <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
                 <div className="text-sm text-blue-100">Engajamento</div>
                 <div className="text-xl font-bold">
-                  {stats.isLoading ? '...' : `${engagementRate}%`}
+                  {stats.isLoading ? '...' : `${engajementRate}%`}
                 </div>
               </div>
             </div>
