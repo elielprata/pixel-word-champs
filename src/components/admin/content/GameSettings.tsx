@@ -34,6 +34,7 @@ export const GameSettings = () => {
       const { data, error } = await supabase
         .from('game_settings')
         .select('*')
+        .in('category', ['scoring', 'gameplay']) // Removido 'prizes' da busca
         .order('category', { ascending: true })
         .order('setting_key', { ascending: true });
 
@@ -93,13 +94,7 @@ export const GameSettings = () => {
         'points_per_5_letter_word': '30',
         'base_time_limit': '300',
         'hints_per_level': '1',
-        'revive_time_bonus': '30',
-        'daily_prize_1st': '100',
-        'daily_prize_2nd': '50',
-        'daily_prize_3rd': '25',
-        'weekly_prize_1st': '500',
-        'weekly_prize_2nd': '250',
-        'weekly_prize_3rd': '100'
+        'revive_time_bonus': '30'
       };
 
       const promises = Object.entries(defaultSettings).map(([key, value]) =>
@@ -138,7 +133,6 @@ export const GameSettings = () => {
     switch (category) {
       case 'scoring': return 'Sistema de Pontuação';
       case 'gameplay': return 'Mecânicas do Jogo';
-      case 'prizes': return 'Valores de Premiação';
       default: return category;
     }
   };
@@ -147,7 +141,6 @@ export const GameSettings = () => {
     switch (category) {
       case 'scoring': return 'from-blue-50 to-cyan-50 border-blue-200';
       case 'gameplay': return 'from-green-50 to-emerald-50 border-green-200';
-      case 'prizes': return 'from-amber-50 to-orange-50 border-amber-200';
       default: return 'from-gray-50 to-slate-50 border-gray-200';
     }
   };
@@ -172,7 +165,7 @@ export const GameSettings = () => {
             <div>
               <CardTitle className="text-lg text-slate-800">Configurações do Jogo</CardTitle>
               <p className="text-sm text-slate-600">
-                Ajuste pontuações, tempo limite e valores de premiação
+                Ajuste pontuações e mecânicas do jogo. Para valores de premiação, acesse o menu "Premiação".
               </p>
             </div>
             <div className="flex gap-2">

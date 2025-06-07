@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { rankingApi } from '@/api/rankingApi';
 import { RankingPlayer } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
+import { rankingService } from '@/services/rankingService';
 
 export const useRankingData = () => {
   const [dailyRanking, setDailyRanking] = useState<RankingPlayer[]>([]);
@@ -19,6 +20,12 @@ export const useRankingData = () => {
     setError(null);
     
     try {
+      // Atualizar rankings antes de carregar para garantir valores corretos de prêmio
+      await Promise.all([
+        rankingService.updateDailyRanking(),
+        rankingService.updateWeeklyRanking()
+      ]);
+
       const [daily, weekly, historical] = await Promise.all([
         rankingApi.getDailyRanking(),
         rankingApi.getWeeklyRanking(),
