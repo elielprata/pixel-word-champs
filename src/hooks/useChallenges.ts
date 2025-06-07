@@ -31,6 +31,8 @@ export const useChallenges = () => {
 
       if (error) throw error;
       
+      console.log('Challenges loaded from database:', data);
+      
       // Cast the difficulty to the correct type
       const typedChallenges = (data || []).map(challenge => ({
         ...challenge,
@@ -40,6 +42,7 @@ export const useChallenges = () => {
       setChallenges(typedChallenges);
     } catch (error) {
       console.error('Error loading challenges:', error);
+      setChallenges([]); // Clear mocked data on error
     } finally {
       setIsLoading(false);
     }
