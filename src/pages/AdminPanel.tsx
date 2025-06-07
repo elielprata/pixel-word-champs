@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -198,7 +199,7 @@ const AdminPanel = () => {
               </Badge>
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
                 <Users className="h-3 w-3 mr-2" />
-                {(dashboardData?.totalUsers || mockStats.totalUsers).toLocaleString()} usuários
+                {(Number(dashboardData?.totalUsers) || mockStats.totalUsers).toLocaleString()} usuários
               </Badge>
               {supportStats.pending > 0 && (
                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 px-3 py-1">
@@ -259,11 +260,11 @@ const AdminPanel = () => {
                       <div className="flex flex-wrap gap-4">
                         <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
                           <div className="text-sm text-blue-100">Total de Usuários</div>
-                          <div className="text-xl font-bold">{(dashboardData?.totalUsers || mockStats.totalUsers).toLocaleString()}</div>
+                          <div className="text-xl font-bold">{(Number(dashboardData?.totalUsers) || mockStats.totalUsers).toLocaleString()}</div>
                         </div>
                         <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
                           <div className="text-sm text-blue-100">Pool de Prêmios</div>
-                          <div className="text-xl font-bold">R$ {(dashboardData?.totalPrizePool || 2850).toFixed(0)}</div>
+                          <div className="text-xl font-bold">R$ {(Number(dashboardData?.totalPrizePool) || 2850).toFixed(0)}</div>
                         </div>
                       </div>
                     </div>
@@ -273,7 +274,7 @@ const AdminPanel = () => {
                         <Activity className="h-6 w-6" />
                         <span className="font-semibold">Sistema</span>
                       </div>
-                      <div className="text-3xl font-bold mb-2">{dashboardData?.activeCompetitions || 0}</div>
+                      <div className="text-3xl font-bold mb-2">{Number(dashboardData?.activeCompetitions) || 0}</div>
                       <div className="text-sm text-blue-100">Competições ativas</div>
                     </div>
                     
@@ -308,7 +309,7 @@ const AdminPanel = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-purple-600">Competições</span>
-                        <span className="font-bold text-purple-700">{dashboardData?.activeCompetitions || 3}</span>
+                        <span className="font-bold text-purple-700">{Number(dashboardData?.activeCompetitions) || 3}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -327,7 +328,7 @@ const AdminPanel = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-amber-600">Ganhadores</span>
-                        <span className="font-bold text-amber-700">{dashboardData?.weeklyWinners || 45}</span>
+                        <span className="font-bold text-amber-700">{Number(dashboardData?.weeklyWinners) || 45}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-amber-600">Posições Top 10</span>
@@ -350,7 +351,7 @@ const AdminPanel = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-green-600">Pool Total</span>
-                        <span className="font-bold text-green-700">R$ {(dashboardData?.totalPrizePool || 2850).toFixed(0)}</span>
+                        <span className="font-bold text-green-700">R$ {(Number(dashboardData?.totalPrizePool) || 2850).toFixed(0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-green-600">Pagamentos</span>
@@ -373,7 +374,7 @@ const AdminPanel = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-blue-600">Total</span>
-                        <span className="font-bold text-blue-700">{((dashboardData?.totalUsers || mockStats.totalUsers) / 1000).toFixed(1)}k</span>
+                        <span className="font-bold text-blue-700">{((Number(dashboardData?.totalUsers) || mockStats.totalUsers) / 1000).toFixed(1)}k</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-blue-600">Retenção D1</span>
@@ -453,14 +454,14 @@ const AdminPanel = () => {
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                       <div>
                         <h4 className="font-medium text-blue-800">Competições Ativas</h4>
-                        <p className="text-sm text-blue-600 mt-1">{dashboardData?.activeCompetitions || 3} em andamento</p>
+                        <p className="text-sm text-blue-600 mt-1">{Number(dashboardData?.activeCompetitions) || 3} em andamento</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
                       <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
                       <div>
                         <h4 className="font-medium text-purple-800">Usuários Ativos</h4>
-                        <p className="text-sm text-purple-600 mt-1">{(dashboardData?.totalUsers || mockStats.totalUsers).toLocaleString()} registrados</p>
+                        <p className="text-sm text-purple-600 mt-1">{(Number(dashboardData?.totalUsers) || mockStats.totalUsers).toLocaleString()} registrados</p>
                       </div>
                     </div>
                     {supportStats.pending > 0 && (
