@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -198,7 +199,7 @@ const AdminPanel = () => {
               </Badge>
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
                 <Users className="h-3 w-3 mr-2" />
-                {dashboardData?.totalUsers?.toLocaleString() || mockStats.totalUsers.toLocaleString()} usuários
+                {(dashboardData?.totalUsers || mockStats.totalUsers).toLocaleString()} usuários
               </Badge>
               <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 px-3 py-1">
                 <Activity className="h-3 w-3 mr-2" />
@@ -267,7 +268,7 @@ const AdminPanel = () => {
                         </div>
                         <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
                           <div className="text-sm text-blue-100">Total Prêmios</div>
-                          <div className="text-xl font-bold">R$ {dashboardData?.totalPrizePool?.toFixed(0) || '0'}</div>
+                          <div className="text-xl font-bold">R$ {(dashboardData?.totalPrizePool || 0).toFixed(0)}</div>
                         </div>
                       </div>
                     </div>
@@ -305,7 +306,7 @@ const AdminPanel = () => {
                       <Badge className="bg-purple-100 text-purple-700 border-purple-200">Configurações</Badge>
                     </div>
                     <h3 className="font-semibold text-slate-700 mb-1">Conteúdo do Jogo</h3>
-                    <div className="text-3xl font-bold text-purple-700 mb-2">{dashboardData?.gameSettings || 15}</div>
+                    <div className="text-3xl font-bold text-purple-700 mb-2">{(dashboardData?.gameSettings || 15)}</div>
                     <p className="text-sm text-purple-600">Configurações ativas • {dashboardData?.activeCompetitions || 3} competições</p>
                   </CardContent>
                 </Card>
@@ -335,7 +336,7 @@ const AdminPanel = () => {
                       <Badge className="bg-green-100 text-green-700 border-green-200">Ativo</Badge>
                     </div>
                     <h3 className="font-semibold text-slate-700 mb-1">Premiação</h3>
-                    <div className="text-3xl font-bold text-green-700 mb-2">R$ {dashboardData?.totalPrizePool?.toFixed(0) || '2.850'}</div>
+                    <div className="text-3xl font-bold text-green-700 mb-2">R$ {(dashboardData?.totalPrizePool || 2850).toFixed(0)}</div>
                     <p className="text-sm text-green-600">Pool de prêmios • Pagamentos automáticos</p>
                   </CardContent>
                 </Card>
