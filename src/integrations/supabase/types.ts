@@ -267,36 +267,6 @@ export type Database = {
           },
         ]
       }
-      default_game_settings: {
-        Row: {
-          category: string | null
-          created_at: string | null
-          description: string | null
-          id: string
-          setting_key: string
-          setting_value: string
-          updated_at: string | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          setting_key: string
-          setting_value: string
-          updated_at?: string | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          setting_key?: string
-          setting_value?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       game_sessions: {
         Row: {
           board: Json

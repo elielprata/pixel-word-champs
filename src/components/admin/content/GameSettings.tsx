@@ -11,8 +11,7 @@ export const GameSettings = () => {
     loading,
     saving,
     updateSetting,
-    saveSettings,
-    resetToDefaults
+    saveSettings
   } = useGameSettings();
 
   if (loading) {
@@ -39,7 +38,6 @@ export const GameSettings = () => {
     <div className="space-y-6">
       <GameSettingsHeader
         onSave={saveSettings}
-        onReset={resetToDefaults}
         saving={saving}
       />
 
