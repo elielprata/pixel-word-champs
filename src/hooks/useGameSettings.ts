@@ -77,21 +77,28 @@ export const useGameSettings = () => {
 
   const resetToDefaults = async () => {
     try {
-      const defaultSettings = {
-        'points_per_3_letter_word': '10',
-        'points_per_4_letter_word': '20',
-        'points_per_5_letter_word': '30',
-        'points_per_expert_word': '50',
-        'base_time_limit': '300',
-        'hints_per_level': '1',
-        'revive_time_bonus': '30'
-      };
+      // Buscar configurações padrão do banco de dados
+      const { data: defaultSettings, error: fetchError } = await supabase
+        .from('default_game_settings')
+        .select('setting_key, setting_value');
 
-      const promises = Object.entries(defaultSettings).map(([key, value]) =>
+      if (fetchError) throw fetchError;
+
+      if (!defaultSettings || defaultSettings.length === 0) {
+        toast({
+          title: "Erro",
+          description: "Nenhuma configuração padrão encontrada",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Atualizar as configurações atuais com os valores padrão
+      const promises = defaultSettings.map(defaultSetting =>
         supabase
           .from('game_settings')
-          .update({ setting_value: value })
-          .eq('setting_key', key)
+          .update({ setting_value: defaultSetting.setting_value })
+          .eq('setting_key', defaultSetting.setting_key)
       );
 
       await Promise.all(promises);
@@ -110,6 +117,37 @@ export const useGameSettings = () => {
     }
   };
 
+  const setAsDefaults = async () => {
+    try {
+      // Atualizar as configurações padrão com os valores atuais
+      const promises = settings.map(setting =>
+        supabase
+          .from('default_game_settings')
+          .upsert({
+            setting_key: setting.setting_key,
+            setting_value: setting.setting_value,
+            description: setting.description,
+            category: setting.category
+          }, {
+            onConflict: 'setting_key'
+          })
+      );
+
+      await Promise.all(promises);
+
+      toast({
+        title: "Sucesso",
+        description: "Configurações atuais definidas como padrão"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível definir as configurações como padrão",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -120,6 +158,7 @@ export const useGameSettings = () => {
     saving,
     updateSetting,
     saveSettings,
-    resetToDefaults
+    resetToDefaults,
+    setAsDefaults
   };
 };
