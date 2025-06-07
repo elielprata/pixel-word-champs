@@ -115,6 +115,36 @@ export const useGameSettings = () => {
     }
   };
 
+  const setAsDefaults = async () => {
+    try {
+      const promises = settings.map(setting =>
+        supabase
+          .from('default_game_settings')
+          .upsert({
+            setting_key: setting.setting_key,
+            setting_value: setting.setting_value,
+            description: setting.description,
+            category: setting.category
+          }, {
+            onConflict: 'setting_key'
+          })
+      );
+
+      await Promise.all(promises);
+
+      toast({
+        title: "Sucesso",
+        description: "Configurações atuais definidas como padrão no banco de dados"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível definir as configurações como padrão",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -125,6 +155,7 @@ export const useGameSettings = () => {
     saving,
     updateSetting,
     saveSettings,
-    resetToDefaults
+    resetToDefaults,
+    setAsDefaults
   };
 };
