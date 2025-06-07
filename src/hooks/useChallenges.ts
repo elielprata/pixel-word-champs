@@ -31,7 +31,13 @@ export const useChallenges = () => {
 
       if (error) throw error;
       
-      setChallenges(data || []);
+      // Cast the difficulty to the correct type
+      const typedChallenges = (data || []).map(challenge => ({
+        ...challenge,
+        difficulty: challenge.difficulty as 'easy' | 'medium' | 'hard'
+      }));
+      
+      setChallenges(typedChallenges);
     } catch (error) {
       console.error('Error loading challenges:', error);
     } finally {

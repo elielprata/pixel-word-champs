@@ -45,7 +45,7 @@ export const ChallengeManagementTab = () => {
     try {
       const { error } = await supabase
         .from('challenges')
-        .insert([formData]);
+        .insert(formData);
 
       if (error) throw error;
 
