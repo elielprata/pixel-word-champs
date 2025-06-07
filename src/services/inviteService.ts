@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ApiResponse } from '@/types';
+import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 
 export interface Invite {
   id: string;
@@ -36,11 +36,11 @@ export interface InvitedFriend {
 
 class InviteService {
   // Gerar código de convite único para o usuário
-  async generateInviteCode(): Promise<ApiResponse<{ code: string }>> {
+  async generateInviteCode() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return { success: false, error: 'Usuário não autenticado' };
+        return createErrorResponse('Usuário não autenticado');
       }
 
       // Verificar se já existe um código ativo para o usuário
@@ -52,7 +52,7 @@ class InviteService {
         .single();
 
       if (existingInvite) {
-        return { success: true, data: { code: existingInvite.code } };
+        return createSuccessResponse({ code: existingInvite.code });
       }
 
       // Gerar novo código único
@@ -69,21 +69,21 @@ class InviteService {
         .single();
 
       if (error) {
-        return { success: false, error: error.message };
+        return createErrorResponse(error.message);
       }
 
-      return { success: true, data: { code: data.code } };
+      return createSuccessResponse({ code: data.code });
     } catch (error) {
-      return { success: false, error: 'Erro ao gerar código de convite' };
+      return createErrorResponse(handleServiceError(error, 'generateInviteCode'));
     }
   }
 
   // Buscar convites do usuário
-  async getUserInvites(): Promise<ApiResponse<Invite[]>> {
+  async getUserInvites() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return { success: false, error: 'Usuário não autenticado' };
+        return createErrorResponse('Usuário não autenticado');
       }
 
       const { data, error } = await supabase
@@ -93,21 +93,21 @@ class InviteService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        return { success: false, error: error.message };
+        return createErrorResponse(error.message);
       }
 
-      return { success: true, data: data || [] };
+      return createSuccessResponse(data || []);
     } catch (error) {
-      return { success: false, error: 'Erro ao buscar convites' };
+      return createErrorResponse(handleServiceError(error, 'getUserInvites'));
     }
   }
 
   // Buscar amigos convidados com informações do perfil
-  async getInvitedFriends(): Promise<ApiResponse<InvitedFriend[]>> {
+  async getInvitedFriends() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return { success: false, error: 'Usuário não autenticado' };
+        return createErrorResponse('Usuário não autenticado');
       }
 
       const { data: invites, error } = await supabase
@@ -125,7 +125,7 @@ class InviteService {
         .not('used_by', 'is', null);
 
       if (error) {
-        return { success: false, error: error.message };
+        return createErrorResponse(error.message);
       }
 
       const friends: InvitedFriend[] = (invites || []).map(invite => {
@@ -141,18 +141,18 @@ class InviteService {
         };
       });
 
-      return { success: true, data: friends };
+      return createSuccessResponse(friends);
     } catch (error) {
-      return { success: false, error: 'Erro ao buscar amigos convidados' };
+      return createErrorResponse(handleServiceError(error, 'getInvitedFriends'));
     }
   }
 
   // Usar código de convite
-  async useInviteCode(code: string): Promise<ApiResponse<boolean>> {
+  async useInviteCode(code: string) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return { success: false, error: 'Usuário não autenticado' };
+        return createErrorResponse('Usuário não autenticado');
       }
 
       // Verificar se o código existe e está ativo
@@ -165,12 +165,12 @@ class InviteService {
         .single();
 
       if (fetchError || !invite) {
-        return { success: false, error: 'Código de convite inválido ou já usado' };
+        return createErrorResponse('Código de convite inválido ou já usado');
       }
 
       // Verificar se não é o próprio usuário
       if (invite.invited_by === user.id) {
-        return { success: false, error: 'Você não pode usar seu próprio código de convite' };
+        return createErrorResponse('Você não pode usar seu próprio código de convite');
       }
 
       // Marcar convite como usado
@@ -183,7 +183,7 @@ class InviteService {
         .eq('id', invite.id);
 
       if (updateError) {
-        return { success: false, error: updateError.message };
+        return createErrorResponse(updateError.message);
       }
 
       // Criar recompensa pendente
@@ -197,18 +197,18 @@ class InviteService {
           status: 'pending'
         });
 
-      return { success: true, data: true };
+      return createSuccessResponse(true);
     } catch (error) {
-      return { success: false, error: 'Erro ao usar código de convite' };
+      return createErrorResponse(handleServiceError(error, 'useInviteCode'));
     }
   }
 
   // Buscar estatísticas de convites
-  async getInviteStats(): Promise<ApiResponse<{ totalPoints: number; activeFriends: number; totalInvites: number }>> {
+  async getInviteStats() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return { success: false, error: 'Usuário não autenticado' };
+        return createErrorResponse('Usuário não autenticado');
       }
 
       // Buscar recompensas processadas
@@ -237,12 +237,9 @@ class InviteService {
 
       const totalInvites = (usedInvites || []).length;
 
-      return { 
-        success: true, 
-        data: { totalPoints, activeFriends, totalInvites } 
-      };
+      return createSuccessResponse({ totalPoints, activeFriends, totalInvites });
     } catch (error) {
-      return { success: false, error: 'Erro ao buscar estatísticas' };
+      return createErrorResponse(handleServiceError(error, 'getInviteStats'));
     }
   }
 
