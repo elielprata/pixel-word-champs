@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Fingerprint, Brain, Key, Settings, Save, TestTube, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { aiService } from '@/services/aiService';
 
 interface IntegrationConfig {
   id: string;
@@ -47,14 +48,25 @@ export const IntegrationsTab = () => {
       model: 'gpt-4o-mini',
       maxTokens: 1000,
       temperature: 0.7,
-      enableModeration: true,
-      systemPrompt: 'Você é um assistente especializado em jogos de palavras.'
+      enableModeration: false,
+      systemPrompt: 'Você é um assistente especializado em encontrar palavras em tabuleiros de letras para jogos de caça-palavras.'
     }
   });
 
   const handleSaveIntegration = async (integration: IntegrationConfig) => {
     setLoading(true);
     try {
+      // Configurar o aiService se for OpenAI
+      if (integration.id === 'openai' && integration.enabled && integration.apiKey) {
+        aiService.setApiKey(integration.apiKey);
+        aiService.setConfig({
+          model: integration.config.model,
+          maxTokens: integration.config.maxTokens,
+          temperature: integration.config.temperature,
+          systemPrompt: integration.config.systemPrompt
+        });
+      }
+      
       // Aqui você salvaria as configurações no banco de dados
       // Por enquanto, vamos simular o salvamento
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -77,7 +89,20 @@ export const IntegrationsTab = () => {
   const testConnection = async (integrationId: string) => {
     setTestingConnection(integrationId);
     try {
-      // Simular teste de conexão
+      if (integrationId === 'openai') {
+        // Testar conexão com OpenAI
+        const response = await fetch('https://api.openai.com/v1/models', {
+          headers: {
+            'Authorization': `Bearer ${openAI.apiKey}`,
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Conexão falhada');
+        }
+      }
+      
+      // Simular teste de conexão para outros serviços
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast({
@@ -248,7 +273,7 @@ export const IntegrationsTab = () => {
                 </div>
                 <div>
                   <CardTitle className="text-lg text-green-800">OpenAI</CardTitle>
-                  <p className="text-sm text-green-600 mt-1">Inteligência artificial para análise e moderação</p>
+                  <p className="text-sm text-green-600 mt-1">Geração inteligente de palavras para o jogo</p>
                 </div>
               </div>
               <Switch
@@ -338,7 +363,7 @@ export const IntegrationsTab = () => {
                 <Label htmlFor="openai-system-prompt">System Prompt</Label>
                 <Textarea
                   id="openai-system-prompt"
-                  placeholder="Defina o comportamento do assistente..."
+                  placeholder="Defina o comportamento do assistente para geração de palavras..."
                   value={openAI.config.systemPrompt}
                   onChange={(e) => setOpenAI(prev => ({
                     ...prev,
@@ -346,19 +371,6 @@ export const IntegrationsTab = () => {
                   }))}
                   disabled={!openAI.enabled}
                   rows={3}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="openai-moderation">Moderação Automática</Label>
-                <Switch
-                  id="openai-moderation"
-                  checked={openAI.config.enableModeration}
-                  onCheckedChange={(checked) => setOpenAI(prev => ({
-                    ...prev,
-                    config: { ...prev.config, enableModeration: checked }
-                  }))}
-                  disabled={!openAI.enabled}
                 />
               </div>
             </div>
@@ -418,7 +430,7 @@ export const IntegrationsTab = () => {
                 <Brain className="h-5 w-5 text-green-600" />
                 <div>
                   <p className="font-medium text-green-800">OpenAI</p>
-                  <p className="text-sm text-green-600">Inteligência artificial</p>
+                  <p className="text-sm text-green-600">Geração de palavras</p>
                 </div>
               </div>
               <Badge className={openAI.enabled && openAI.apiKey ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}>
