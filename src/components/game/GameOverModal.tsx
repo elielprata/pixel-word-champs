@@ -35,7 +35,7 @@ const GameOverModal = ({
   const handleCloseAd = () => {
     console.log('Anúncio fechado - ativando revive e adicionando tempo');
     setIsWatchingAd(false);
-    onRevive();
+    onRevive(); // Isso adiciona o tempo e fecha o modal do Game Over
   };
 
   if (isWatchingAd) {

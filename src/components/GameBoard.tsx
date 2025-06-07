@@ -56,7 +56,8 @@ const GameBoard = ({
     setHintHighlightedCells,
     addFoundWord,
     isCellPermanentlyMarked,
-    isCellHintHighlighted
+    isCellHintHighlighted,
+    closeGameOver
   } = useGameLogic(level, timeLeft, levelWords, onWordFound, onLevelComplete);
 
   const { useHint, handleRevive, handleGoHome } = useGameInteractions(
@@ -95,6 +96,8 @@ const GameBoard = ({
     if (onRevive) {
       console.log('Iniciando processo de revive...');
       onRevive();
+      // Fechar o modal do Game Over após ativar o revive
+      closeGameOver();
     }
   };
 

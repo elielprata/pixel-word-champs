@@ -72,6 +72,11 @@ export const useGameLogic = (
     return hintHighlightedCells.some(pos => pos.row === row && pos.col === col);
   };
 
+  // Função para fechar o modal do Game Over (usado no revive)
+  const closeGameOver = () => {
+    setShowGameOver(false);
+  };
+
   return {
     foundWords,
     permanentlyMarkedCells,
@@ -85,6 +90,7 @@ export const useGameLogic = (
     setHintHighlightedCells,
     addFoundWord,
     isCellPermanentlyMarked,
-    isCellHintHighlighted
+    isCellHintHighlighted,
+    closeGameOver
   };
 };
