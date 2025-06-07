@@ -1,22 +1,22 @@
 
 import React from 'react';
 import { Users } from 'lucide-react';
-import { useUserStats } from '@/hooks/useUserStats';
+import { useRealUserStats } from '@/hooks/useRealUserStats';
 
 export const UserHeaderSection = () => {
-  const { stats, isLoading } = useUserStats();
+  const { stats } = useRealUserStats();
 
-  // Calcular métricas dinâmicas - usando valores simulados já que não temos essas métricas específicas
-  const growthRate = stats?.gamesPlayed && stats?.totalScore 
-    ? ((stats.gamesPlayed / Math.max(stats.totalScore / 100, 1)) * 100).toFixed(1)
+  // Calcular métricas dinâmicas baseadas em dados reais
+  const growthRate = stats.totalUsers > 0 && stats.newUsersToday > 0
+    ? ((stats.newUsersToday / stats.totalUsers) * 100).toFixed(1)
     : '0.0';
 
-  const retentionRate = stats?.winStreak
-    ? Math.min(stats.winStreak * 10, 100).toFixed(0)
+  const retentionRate = stats.totalUsers > 0 && stats.activeUsers > 0
+    ? ((stats.activeUsers / stats.totalUsers) * 100).toFixed(0)
     : '0';
 
-  const engagementRate = stats?.gamesPlayed
-    ? Math.min(stats.gamesPlayed * 5, 100).toFixed(0)
+  const engagementRate = stats.totalUsers > 0 && stats.totalGamesPlayed > 0
+    ? Math.min(((stats.totalGamesPlayed / stats.totalUsers) / 10 * 100), 100).toFixed(0)
     : '0';
 
   return (
@@ -36,21 +36,21 @@ export const UserHeaderSection = () => {
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                <div className="text-sm text-blue-100">Crescimento</div>
+                <div className="text-sm text-blue-100">Crescimento Diário</div>
                 <div className="text-xl font-bold">
-                  {isLoading ? '...' : `+${growthRate}%`}
+                  {stats.isLoading ? '...' : `+${growthRate}%`}
                 </div>
               </div>
               <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                <div className="text-sm text-blue-100">Retenção</div>
+                <div className="text-sm text-blue-100">Taxa de Atividade</div>
                 <div className="text-xl font-bold">
-                  {isLoading ? '...' : `${retentionRate}%`}
+                  {stats.isLoading ? '...' : `${retentionRate}%`}
                 </div>
               </div>
               <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
                 <div className="text-sm text-blue-100">Engajamento</div>
                 <div className="text-xl font-bold">
-                  {isLoading ? '...' : `${engagementRate}%`}
+                  {stats.isLoading ? '...' : `${engagementRate}%`}
                 </div>
               </div>
             </div>
