@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -179,7 +178,7 @@ const AdminPanel = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {/* Header Reformulado */}
+      {/* Header */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -200,10 +199,6 @@ const AdminPanel = () => {
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
                 <Users className="h-3 w-3 mr-2" />
                 {(dashboardData?.totalUsers || mockStats.totalUsers).toLocaleString()} usuários
-              </Badge>
-              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 px-3 py-1">
-                <Activity className="h-3 w-3 mr-2" />
-                {mockStats.dau.toLocaleString()} DAU
               </Badge>
               {supportStats.pending > 0 && (
                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 px-3 py-1">
@@ -228,7 +223,7 @@ const AdminPanel = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          {/* Navigation Tabs Reformulada */}
+          {/* Navigation Tabs */}
           <div className="mb-8">
             <TabsList className="bg-white p-1.5 shadow-lg border border-slate-200 rounded-xl h-auto">
               {tabConfig.map((tab) => (
@@ -251,35 +246,35 @@ const AdminPanel = () => {
 
           {/* Tab Contents */}
           <div className="space-y-8">
-            {/* Dashboard */}
+            {/* Dashboard - Apenas 2 métricas principais de cada seção */}
             <TabsContent value="dashboard" className="space-y-8 mt-0">
-              {/* Hero Section com estatísticas principais */}
+              {/* Hero Section - Resumo Executivo */}
               <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
                 <div className="relative z-10">
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <div className="lg:col-span-2">
                       <h2 className="text-2xl font-bold mb-2">Visão Geral do Sistema</h2>
-                      <p className="text-blue-100 mb-6">Resumo executivo de todas as áreas administrativas</p>
+                      <p className="text-blue-100 mb-6">Métricas principais consolidadas</p>
                       <div className="flex flex-wrap gap-4">
                         <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
-                          <div className="text-sm text-blue-100">Competições Ativas</div>
-                          <div className="text-xl font-bold">{dashboardData?.activeCompetitions || 0}</div>
+                          <div className="text-sm text-blue-100">Total de Usuários</div>
+                          <div className="text-xl font-bold">{(dashboardData?.totalUsers || mockStats.totalUsers).toLocaleString()}</div>
                         </div>
                         <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
-                          <div className="text-sm text-blue-100">Total Prêmios</div>
-                          <div className="text-xl font-bold">R$ {(dashboardData?.totalPrizePool || 0).toFixed(0)}</div>
+                          <div className="text-sm text-blue-100">Pool de Prêmios</div>
+                          <div className="text-xl font-bold">R$ {(dashboardData?.totalPrizePool || 2850).toFixed(0)}</div>
                         </div>
                       </div>
                     </div>
                     
                     <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
                       <div className="flex items-center gap-3 mb-4">
-                        <Users className="h-6 w-6" />
-                        <span className="font-semibold">Base de Usuários</span>
+                        <Activity className="h-6 w-6" />
+                        <span className="font-semibold">Sistema</span>
                       </div>
-                      <div className="text-3xl font-bold mb-2">{(dashboardData?.totalUsers || mockStats.totalUsers).toLocaleString()}</div>
-                      <div className="text-sm text-blue-100">{mockStats.dau.toLocaleString()} ativos hoje</div>
+                      <div className="text-3xl font-bold mb-2">{dashboardData?.activeCompetitions || 0}</div>
+                      <div className="text-sm text-blue-100">Competições ativas</div>
                     </div>
                     
                     <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
@@ -287,236 +282,157 @@ const AdminPanel = () => {
                         <MessageSquare className="h-6 w-6" />
                         <span className="font-semibold">Suporte</span>
                       </div>
-                      <div className="text-3xl font-bold mb-2">{supportStats.total}</div>
-                      <div className="text-sm text-blue-100">{supportStats.pending} pendentes • {supportStats.resolved} resolvidos</div>
+                      <div className="text-3xl font-bold mb-2">{supportStats.pending}</div>
+                      <div className="text-sm text-blue-100">Tickets pendentes</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Cards de Overview por Seção */}
+              {/* Cards Principais - 2 métricas por seção */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Conteúdo do Jogo */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-violet-100 hover:shadow-xl transition-shadow">
+                {/* Conteúdo do Jogo - Top 2 métricas */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-violet-100">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-purple-500 p-3 rounded-xl">
                         <Gamepad2 className="h-6 w-6 text-white" />
                       </div>
-                      <Badge className="bg-purple-100 text-purple-700 border-purple-200">Configurações</Badge>
+                      <Badge className="bg-purple-100 text-purple-700">Conteúdo</Badge>
                     </div>
-                    <h3 className="font-semibold text-slate-700 mb-1">Conteúdo do Jogo</h3>
-                    <div className="text-3xl font-bold text-purple-700 mb-2">{(dashboardData?.gameSettings || 15)}</div>
-                    <p className="text-sm text-purple-600">Configurações ativas • {dashboardData?.activeCompetitions || 3} competições</p>
+                    <h3 className="font-semibold text-slate-700 mb-3">Conteúdo do Jogo</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-purple-600">Configurações</span>
+                        <span className="font-bold text-purple-700">{Number(dashboardData?.gameSettings) || 15}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-purple-600">Competições</span>
+                        <span className="font-bold text-purple-700">{dashboardData?.activeCompetitions || 3}</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Rankings */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-orange-100 hover:shadow-xl transition-shadow">
+                {/* Rankings - Top 2 métricas */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-orange-100">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-amber-500 p-3 rounded-xl">
                         <Trophy className="h-6 w-6 text-white" />
                       </div>
-                      <Badge className="bg-amber-100 text-amber-700 border-amber-200">Semanal</Badge>
+                      <Badge className="bg-amber-100 text-amber-700">Rankings</Badge>
                     </div>
-                    <h3 className="font-semibold text-slate-700 mb-1">Rankings</h3>
-                    <div className="text-3xl font-bold text-amber-700 mb-2">{dashboardData?.weeklyWinners || 45}</div>
-                    <p className="text-sm text-amber-600">Ganhadores esta semana • Top 10 premiados</p>
+                    <h3 className="font-semibold text-slate-700 mb-3">Rankings</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-amber-600">Ganhadores</span>
+                        <span className="font-bold text-amber-700">{dashboardData?.weeklyWinners || 45}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-amber-600">Posições Top 10</span>
+                        <span className="font-bold text-amber-700">10</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Premiação */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-100 hover:shadow-xl transition-shadow">
+                {/* Premiação - Top 2 métricas */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-100">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-green-500 p-3 rounded-xl">
                         <DollarSign className="h-6 w-6 text-white" />
                       </div>
-                      <Badge className="bg-green-100 text-green-700 border-green-200">Ativo</Badge>
+                      <Badge className="bg-green-100 text-green-700">Premiação</Badge>
                     </div>
-                    <h3 className="font-semibold text-slate-700 mb-1">Premiação</h3>
-                    <div className="text-3xl font-bold text-green-700 mb-2">R$ {(dashboardData?.totalPrizePool || 2850).toFixed(0)}</div>
-                    <p className="text-sm text-green-600">Pool de prêmios • Pagamentos automáticos</p>
+                    <h3 className="font-semibold text-slate-700 mb-3">Premiação</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-green-600">Pool Total</span>
+                        <span className="font-bold text-green-700">R$ {(dashboardData?.totalPrizePool || 2850).toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-green-600">Pagamentos</span>
+                        <span className="font-bold text-green-700">Automático</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Usuários */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-cyan-100 hover:shadow-xl transition-shadow">
+                {/* Usuários - Top 2 métricas */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-cyan-100">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-blue-500 p-3 rounded-xl">
                         <Users className="h-6 w-6 text-white" />
                       </div>
-                      <Badge className="bg-blue-100 text-blue-700 border-blue-200">Crescendo</Badge>
+                      <Badge className="bg-blue-100 text-blue-700">Usuários</Badge>
                     </div>
-                    <h3 className="font-semibold text-slate-700 mb-1">Gestão de Usuários</h3>
-                    <div className="text-3xl font-bold text-blue-700 mb-2">{((dashboardData?.totalUsers || mockStats.totalUsers) / 1000).toFixed(1)}k</div>
-                    <p className="text-sm text-blue-600">Total cadastrados • {mockStats.retention.d1}% retenção D1</p>
+                    <h3 className="font-semibold text-slate-700 mb-3">Usuários</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-blue-600">Total</span>
+                        <span className="font-bold text-blue-700">{((dashboardData?.totalUsers || mockStats.totalUsers) / 1000).toFixed(1)}k</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-blue-600">Retenção D1</span>
+                        <span className="font-bold text-blue-700">{mockStats.retention.d1}%</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Suporte */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-indigo-50 to-purple-100 hover:shadow-xl transition-shadow">
+                {/* Suporte - Top 2 métricas */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-indigo-50 to-purple-100">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-indigo-500 p-3 rounded-xl">
                         <MessageSquare className="h-6 w-6 text-white" />
                       </div>
-                      <Badge className={supportStats.pending > 0 ? "bg-red-100 text-red-700 border-red-200" : "bg-green-100 text-green-700 border-green-200"}>
-                        {supportStats.pending > 0 ? "Requer Atenção" : "OK"}
+                      <Badge className={supportStats.pending > 0 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}>
+                        {supportStats.pending > 0 ? "Atenção" : "OK"}
                       </Badge>
                     </div>
-                    <h3 className="font-semibold text-slate-700 mb-1">Central de Suporte</h3>
-                    <div className="text-3xl font-bold text-indigo-700 mb-2">{supportStats.pending}</div>
-                    <p className="text-sm text-indigo-600">Tickets pendentes • {supportStats.total} total processados</p>
+                    <h3 className="font-semibold text-slate-700 mb-3">Suporte</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-indigo-600">Pendentes</span>
+                        <span className="font-bold text-indigo-700">{supportStats.pending}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-indigo-600">Resolvidos</span>
+                        <span className="font-bold text-indigo-700">{supportStats.resolved}</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Segurança */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-red-50 to-pink-100 hover:shadow-xl transition-shadow">
+                {/* Segurança - Top 2 métricas */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-red-50 to-pink-100">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-red-500 p-3 rounded-xl">
                         <Shield className="h-6 w-6 text-white" />
                       </div>
-                      <Badge className="bg-green-100 text-green-700 border-green-200">Seguro</Badge>
+                      <Badge className="bg-green-100 text-green-700">Seguro</Badge>
                     </div>
-                    <h3 className="font-semibold text-slate-700 mb-1">Segurança</h3>
-                    <div className="text-3xl font-bold text-red-700 mb-2">98.5%</div>
-                    <p className="text-sm text-red-600">Taxa de detecção • 12 bloqueios hoje</p>
+                    <h3 className="font-semibold text-slate-700 mb-3">Segurança</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-red-600">Taxa Detecção</span>
+                        <span className="font-bold text-red-700">98.5%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-red-600">Bloqueios Hoje</span>
+                        <span className="font-bold text-red-700">12</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Seções Detalhadas do Dashboard */}
-              <div className="space-y-8">
-                {/* Visão Geral de Usuários */}
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    <Users className="h-5 w-5 text-blue-600" />
-                    Estatísticas de Usuários
-                  </h3>
-                  <UserStatsCards />
-                </div>
-
-                {/* Métricas e Atividade */}
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                    Métricas e Atividade
-                  </h3>
-                  <UserMetricsGrid />
-                </div>
-
-                {/* Visão Geral de Segurança */}
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-red-600" />
-                    Monitoramento de Segurança
-                  </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    <div className="lg:col-span-3">
-                      <SecurityOverview />
-                    </div>
-                    <div className="lg:col-span-1">
-                      <SecurityMetrics />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Seção de Suporte Detalhada */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Estatísticas de Suporte */}
-                  <Card className="lg:col-span-1 border-0 shadow-lg">
-                    <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
-                      <div className="flex items-center gap-3">
-                        <MessageSquare className="h-5 w-5 text-indigo-600" />
-                        <CardTitle className="text-lg text-indigo-800">Status do Suporte</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-yellow-600" />
-                            <span className="text-sm font-medium text-yellow-800">Pendentes</span>
-                          </div>
-                          <span className="text-xl font-bold text-yellow-700">{supportStats.pending}</span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <div className="flex items-center gap-2">
-                            <Activity className="h-4 w-4 text-blue-600" />
-                            <span className="text-sm font-medium text-blue-800">Em Progresso</span>
-                          </div>
-                          <span className="text-xl font-bold text-blue-700">{supportStats.inProgress}</span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                            <span className="text-sm font-medium text-green-800">Resolvidos</span>
-                          </div>
-                          <span className="text-xl font-bold text-green-700">{supportStats.resolved}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Reports Recentes */}
-                  <Card className="lg:col-span-2 border-0 shadow-lg">
-                    <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <AlertCircle className="h-5 w-5 text-slate-600" />
-                          <CardTitle className="text-lg text-slate-800">Reports Recentes</CardTitle>
-                        </div>
-                        <Badge variant="outline" className="bg-slate-100">
-                          {getRecentReports().length} de {supportStats.total}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      {loading ? (
-                        <div className="text-center py-4 text-gray-500">Carregando reports...</div>
-                      ) : getRecentReports().length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                          <p>Nenhum report encontrado</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {getRecentReports().map((report) => (
-                            <div key={report.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                              <div className="flex items-center gap-3">
-                                <div className="flex-shrink-0">
-                                  {report.report_type === 'bug' ? (
-                                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                                  ) : (
-                                    <MessageSquare className="h-4 w-4 text-blue-500" />
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="font-medium text-slate-800 capitalize">
-                                    {getReportTypeLabel(report.report_type)}
-                                  </p>
-                                  <p className="text-sm text-slate-600">{formatDate(report.created_at)}</p>
-                                </div>
-                              </div>
-                              <Badge className={getStatusColor(report.status)}>
-                                {getStatusLabel(report.status)}
-                              </Badge>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Alertas e Status do Sistema */}
+              {/* Status Geral do Sistema */}
               <Card className="border-l-4 border-l-blue-500 shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-blue-100">
                   <div className="flex items-center gap-3">
@@ -536,15 +452,15 @@ const AdminPanel = () => {
                     <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                       <div>
-                        <h4 className="font-medium text-blue-800">Dashboard Integrado</h4>
-                        <p className="text-sm text-blue-600 mt-1">Todas as métricas centralizadas</p>
+                        <h4 className="font-medium text-blue-800">Competições Ativas</h4>
+                        <p className="text-sm text-blue-600 mt-1">{dashboardData?.activeCompetitions || 3} em andamento</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
                       <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
                       <div>
-                        <h4 className="font-medium text-purple-800">Competições Ativas</h4>
-                        <p className="text-sm text-purple-600 mt-1">{dashboardData?.activeCompetitions || 3} em andamento</p>
+                        <h4 className="font-medium text-purple-800">Usuários Ativos</h4>
+                        <p className="text-sm text-purple-600 mt-1">{(dashboardData?.totalUsers || mockStats.totalUsers).toLocaleString()} registrados</p>
                       </div>
                     </div>
                     {supportStats.pending > 0 && (
@@ -561,7 +477,7 @@ const AdminPanel = () => {
               </Card>
             </TabsContent>
 
-            {/* Content Tab */}
+            {/* Other Tabs */}
             <TabsContent value="content" className="mt-0">
               <GameContentTab />
             </TabsContent>
