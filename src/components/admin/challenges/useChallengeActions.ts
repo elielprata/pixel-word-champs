@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -19,10 +18,33 @@ export const useChallengeActions = (challenges: any[], refetch: () => void) => {
     return Math.max(...challenges.map(c => c.id)) + 1;
   };
 
-  const formatDateForInput = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm format
+  const formatDateForInput = (dateString: string | null | undefined) => {
+    console.log('🔧 Formatando data:', dateString);
+    
+    if (!dateString) {
+      console.log('🔧 Data vazia/null, retornando string vazia');
+      return '';
+    }
+    
+    try {
+      const date = new Date(dateString);
+      console.log('🔧 Data parseada:', date);
+      
+      if (isNaN(date.getTime())) {
+        console.log('🔧 Data inválida, retornando string vazia');
+        return '';
+      }
+      
+      // Converter para timezone local e formatar para datetime-local
+      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+      const formatted = localDate.toISOString().slice(0, 16);
+      console.log('🔧 Data formatada para input:', formatted);
+      
+      return formatted;
+    } catch (error) {
+      console.error('🔧 Erro ao formatar data:', error);
+      return '';
+    }
   };
 
   const handleCreate = async () => {
@@ -96,6 +118,14 @@ export const useChallengeActions = (challenges: any[], refetch: () => void) => {
 
   const handleEdit = (challenge: any) => {
     console.log('🔧 Carregando dados para edição:', challenge);
+    console.log('🔧 start_date original:', challenge.start_date);
+    console.log('🔧 end_date original:', challenge.end_date);
+    
+    const formattedStartDate = formatDateForInput(challenge.start_date);
+    const formattedEndDate = formatDateForInput(challenge.end_date);
+    
+    console.log('🔧 start_date formatada:', formattedStartDate);
+    console.log('🔧 end_date formatada:', formattedEndDate);
     
     setFormData({
       title: challenge.title,
@@ -105,15 +135,15 @@ export const useChallengeActions = (challenges: any[], refetch: () => void) => {
       difficulty: challenge.difficulty,
       levels: challenge.levels,
       is_active: challenge.is_active,
-      start_date: formatDateForInput(challenge.start_date),
-      end_date: formatDateForInput(challenge.end_date)
+      start_date: formattedStartDate,
+      end_date: formattedEndDate
     });
     
     setEditingChallenge(challenge);
     
-    console.log('🔧 FormData configurado:', {
-      start_date: formatDateForInput(challenge.start_date),
-      end_date: formatDateForInput(challenge.end_date)
+    console.log('🔧 FormData final configurado:', {
+      start_date: formattedStartDate,
+      end_date: formattedEndDate
     });
   };
 
