@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,10 +55,6 @@ const GameRules = () => {
               <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
                 <span className="text-sm font-medium">6+ letras</span>
                 <Badge className="bg-amber-100 text-amber-700 border-amber-200">5+ pontos</Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                <span className="text-sm font-medium">⭐ Palavras raras</span>
-                <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white">Bônus!</Badge>
               </div>
             </div>
           </div>
