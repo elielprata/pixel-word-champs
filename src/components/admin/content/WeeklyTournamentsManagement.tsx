@@ -43,9 +43,9 @@ export const WeeklyTournamentsManagement = () => {
   // Calcular pool de prêmios automaticamente
   const currentPrizePool = calculateTotalPrize();
   
-  // Calcular pool total de todos os torneios ativos
-  const totalActivePrizePool = tournaments
-    .filter(t => t.status === 'active' || t.status === 'scheduled')
+  // Calcular pool total de todos os torneios finalizados
+  const totalCompletedPrizePool = tournaments
+    .filter(t => t.status === 'completed')
     .reduce((total, tournament) => total + tournament.prize_pool, 0);
 
   useEffect(() => {
@@ -346,8 +346,8 @@ export const WeeklyTournamentsManagement = () => {
                 </div>
                 <div>
                   <p className="text-sm text-purple-600 font-medium">Finalizados</p>
-                  <p className="text-2xl font-bold text-purple-700">
-                    {tournaments.filter(t => t.status === 'completed').length}
+                  <p className="text-xl font-bold text-purple-700">
+                    R$ {totalCompletedPrizePool.toFixed(2)}
                   </p>
                 </div>
               </div>
