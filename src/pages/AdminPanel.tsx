@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,10 +11,21 @@ import { SecurityTab } from "@/components/admin/SecurityTab";
 import { MetricsTab } from "@/components/admin/MetricsTab";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { SupportTab } from "@/components/admin/SupportTab";
-import { BarChart3, Shield, Users, Trophy, CreditCard, Activity, TrendingUp, AlertCircle, Plus, Gamepad2, MessageSquare } from 'lucide-react';
+import { BarChart3, Shield, Users, Trophy, CreditCard, Activity, TrendingUp, AlertCircle, Plus, Gamepad2, MessageSquare, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+
+interface Report {
+  id: string;
+  report_type: string;
+  status: string;
+  priority: string;
+  created_at: string;
+}
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const mockStats = {
     dau: 1250,
@@ -22,6 +33,79 @@ const AdminPanel = () => {
     revenue: 2850,
     activeChallenges: 3,
     totalUsers: 8500
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_reports')
+        .select('id, report_type, status, priority, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setReports(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar reports:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getRecentReports = () => {
+    return reports.slice(0, 5);
+  };
+
+  const getSupportStats = () => {
+    return {
+      pending: reports.filter(r => r.status === 'pending').length,
+      inProgress: reports.filter(r => r.status === 'in_progress').length,
+      resolved: reports.filter(r => r.status === 'resolved').length,
+      highPriority: reports.filter(r => r.priority === 'high').length,
+      total: reports.length
+    };
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getReportTypeLabel = (type: string) => {
+    switch (type) {
+      case 'bug': return 'Bug';
+      case 'feature': return 'Recurso';
+      case 'support': return 'Suporte';
+      case 'other': return 'Outro';
+      default: return type;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'in_progress': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'resolved': return 'bg-green-100 text-green-700 border-green-200';
+      case 'closed': return 'bg-gray-100 text-gray-700 border-gray-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pendente';
+      case 'in_progress': return 'Em Progresso';
+      case 'resolved': return 'Resolvido';
+      case 'closed': return 'Fechado';
+      default: return status;
+    }
   };
 
   const tabConfig = [
@@ -33,6 +117,8 @@ const AdminPanel = () => {
     { id: 'support', label: 'Suporte', icon: MessageSquare },
     { id: 'security', label: 'Segurança', icon: Shield },
   ];
+
+  const supportStats = getSupportStats();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -62,6 +148,12 @@ const AdminPanel = () => {
                 <Activity className="h-3 w-3 mr-2" />
                 {mockStats.dau.toLocaleString()} DAU
               </Badge>
+              {supportStats.pending > 0 && (
+                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 px-3 py-1">
+                  <Clock className="h-3 w-3 mr-2" />
+                  {supportStats.pending} pendentes
+                </Badge>
+              )}
             </div>
           </div>
         </div>
@@ -81,6 +173,11 @@ const AdminPanel = () => {
                 >
                   <tab.icon className="h-4 w-4" />
                   <span className="hidden sm:inline font-medium">{tab.label}</span>
+                  {tab.id === 'support' && supportStats.pending > 0 && (
+                    <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 ml-1">
+                      {supportStats.pending}
+                    </Badge>
+                  )}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -119,20 +216,20 @@ const AdminPanel = () => {
                       <div className="text-sm text-blue-100">Hoje • +12% vs ontem</div>
                     </div>
                     
-                    <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm border-2 border-dashed border-white/20">
+                    <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
                       <div className="flex items-center gap-3 mb-4">
-                        <Plus className="h-6 w-6 text-white/60" />
-                        <span className="font-semibold text-white/60">Nova Métrica</span>
+                        <MessageSquare className="h-6 w-6" />
+                        <span className="font-semibold">Suporte</span>
                       </div>
-                      <div className="text-2xl font-bold mb-2 text-white/60">Em breve</div>
-                      <div className="text-sm text-blue-100/60">Espaço reservado para futura métrica</div>
+                      <div className="text-3xl font-bold mb-2">{supportStats.total}</div>
+                      <div className="text-sm text-blue-100">{supportStats.pending} pendentes • {supportStats.resolved} resolvidos</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Cards de Métricas Detalhadas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Cards de Métricas Detalhadas incluindo Suporte */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-50 to-green-100 hover:shadow-xl transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -188,6 +285,121 @@ const AdminPanel = () => {
                     <p className="text-sm text-purple-600">45 ganhadores esta semana</p>
                   </CardContent>
                 </Card>
+
+                {/* Card de Suporte */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-indigo-50 to-blue-100 hover:shadow-xl transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="bg-indigo-500 p-3 rounded-xl">
+                        <MessageSquare className="h-6 w-6 text-white" />
+                      </div>
+                      <Badge className={supportStats.pending > 0 ? "bg-red-100 text-red-700 border-red-200" : "bg-green-100 text-green-700 border-green-200"}>
+                        {supportStats.pending > 0 ? "Atenção" : "OK"}
+                      </Badge>
+                    </div>
+                    <h3 className="font-semibold text-slate-700 mb-1">Suporte</h3>
+                    <div className="text-3xl font-bold text-indigo-700 mb-2">{supportStats.pending}</div>
+                    <p className="text-sm text-indigo-600">Pendentes • {supportStats.total} total</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Seção de Suporte Integrada */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Estatísticas de Suporte */}
+                <Card className="lg:col-span-1 border-0 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
+                    <div className="flex items-center gap-3">
+                      <MessageSquare className="h-5 w-5 text-indigo-600" />
+                      <CardTitle className="text-lg text-indigo-800">Estatísticas de Suporte</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-yellow-600" />
+                          <span className="text-sm font-medium text-yellow-800">Pendentes</span>
+                        </div>
+                        <span className="text-xl font-bold text-yellow-700">{supportStats.pending}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">Em Progresso</span>
+                        </div>
+                        <span className="text-xl font-bold text-blue-700">{supportStats.inProgress}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-800">Resolvidos</span>
+                        </div>
+                        <span className="text-xl font-bold text-green-700">{supportStats.resolved}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-red-600" />
+                          <span className="text-sm font-medium text-red-800">Alta Prioridade</span>
+                        </div>
+                        <span className="text-xl font-bold text-red-700">{supportStats.highPriority}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Reports Recentes */}
+                <Card className="lg:col-span-2 border-0 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <AlertCircle className="h-5 w-5 text-slate-600" />
+                        <CardTitle className="text-lg text-slate-800">Reports Recentes</CardTitle>
+                      </div>
+                      <Badge variant="outline" className="bg-slate-100">
+                        {getRecentReports().length} de {supportStats.total}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    {loading ? (
+                      <div className="text-center py-4 text-gray-500">Carregando reports...</div>
+                    ) : getRecentReports().length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                        <p>Nenhum report encontrado</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {getRecentReports().map((report) => (
+                          <div key={report.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <div className="flex items-center gap-3">
+                              <div className="flex-shrink-0">
+                                {report.report_type === 'bug' ? (
+                                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                                ) : (
+                                  <MessageSquare className="h-4 w-4 text-blue-500" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-medium text-slate-800 capitalize">
+                                  {getReportTypeLabel(report.report_type)}
+                                </p>
+                                <p className="text-sm text-slate-600">{formatDate(report.created_at)}</p>
+                              </div>
+                            </div>
+                            <Badge className={getStatusColor(report.status)}>
+                              {getStatusLabel(report.status)}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Alertas e Notificações */}
@@ -210,10 +422,19 @@ const AdminPanel = () => {
                     <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                       <div>
-                        <h4 className="font-medium text-blue-800">Backup automático concluído</h4>
-                        <p className="text-sm text-blue-600 mt-1">Último backup realizado com sucesso às 03:00</p>
+                        <h4 className="font-medium text-blue-800">Sistema de suporte integrado</h4>
+                        <p className="text-sm text-blue-600 mt-1">Reports sendo monitorados em tempo real - {supportStats.total} reports no total</p>
                       </div>
                     </div>
+                    {supportStats.pending > 5 && (
+                      <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div className="w-2 h-2 bg-amber-500 rounded-full mt-2"></div>
+                        <div>
+                          <h4 className="font-medium text-amber-800">Atenção: Muitos reports pendentes</h4>
+                          <p className="text-sm text-amber-600 mt-1">{supportStats.pending} reports aguardando análise</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
