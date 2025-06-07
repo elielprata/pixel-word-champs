@@ -1,86 +1,116 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Users, UserPlus, Shield, Activity, TrendingUp, UserCheck } from 'lucide-react';
+import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2 } from 'lucide-react';
+import { useUserStats } from '@/hooks/useUserStats';
 
 export const UserStatsCards = () => {
+  const { data: stats, isLoading, error } = useUserStats();
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(6)].map((_, index) => (
+          <Card key={index} className="border-slate-200 shadow-lg animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-20 bg-slate-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="border-red-200 shadow-lg">
+          <CardContent className="p-6">
+            <p className="text-red-600">Erro ao carregar estatísticas</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const cards = [
+    {
+      title: "Total de Usuários",
+      value: stats?.totalUsers?.toLocaleString('pt-BR') || '0',
+      icon: Users,
+      color: "blue",
+      description: "Usuários cadastrados"
+    },
+    {
+      title: "Usuários Ativos",
+      value: stats?.activeUsers?.toLocaleString('pt-BR') || '0',
+      icon: UserCheck,
+      color: "green",
+      description: "Últimos 7 dias"
+    },
+    {
+      title: "Novos Hoje",
+      value: stats?.newUsersToday?.toLocaleString('pt-BR') || '0',
+      icon: UserPlus,
+      color: "purple",
+      description: "Registros hoje"
+    },
+    {
+      title: "Administradores",
+      value: stats?.totalAdmins?.toLocaleString('pt-BR') || '0',
+      icon: Shield,
+      color: "orange",
+      description: "Usuários admin"
+    },
+    {
+      title: "Pontuação Média",
+      value: stats?.averageScore?.toLocaleString('pt-BR') || '0',
+      icon: TrendingUp,
+      color: "cyan",
+      description: "Por usuário"
+    },
+    {
+      title: "Jogos Totais",
+      value: stats?.totalGamesPlayed?.toLocaleString('pt-BR') || '0',
+      icon: Gamepad2,
+      color: "pink",
+      description: "Partidas jogadas"
+    }
+  ];
+
+  const getColorClasses = (color: string) => {
+    const colors = {
+      blue: "from-blue-100 to-blue-200 text-blue-700",
+      green: "from-green-100 to-green-200 text-green-700",
+      purple: "from-purple-100 to-purple-200 text-purple-700",
+      orange: "from-orange-100 to-orange-200 text-orange-700",
+      cyan: "from-cyan-100 to-cyan-200 text-cyan-700",
+      pink: "from-pink-100 to-pink-200 text-pink-700"
+    };
+    return colors[color as keyof typeof colors] || colors.blue;
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-cyan-100 hover:shadow-xl transition-all duration-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <div>
-            <CardTitle className="text-sm font-semibold text-blue-800">Total de Usuários</CardTitle>
-            <div className="text-3xl font-bold text-blue-700 mt-2">8,524</div>
-          </div>
-          <div className="bg-blue-500 p-3 rounded-xl">
-            <Users className="h-6 w-6 text-white" />
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-medium text-green-600">+12% este mês</span>
-          </div>
-          <p className="text-xs text-blue-600 mt-1">Base de usuários crescendo</p>
-        </CardContent>
-      </Card>
-
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-100 hover:shadow-xl transition-all duration-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <div>
-            <CardTitle className="text-sm font-semibold text-green-800">Usuários Ativos</CardTitle>
-            <div className="text-3xl font-bold text-green-700 mt-2">1,250</div>
-          </div>
-          <div className="bg-green-500 p-3 rounded-xl">
-            <Activity className="h-6 w-6 text-white" />
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-green-600">Últimas 24h</span>
-          </div>
-          <p className="text-xs text-green-600 mt-1">14.7% da base total</p>
-        </CardContent>
-      </Card>
-
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-violet-100 hover:shadow-xl transition-all duration-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <div>
-            <CardTitle className="text-sm font-semibold text-purple-800">Administradores</CardTitle>
-            <div className="text-3xl font-bold text-purple-700 mt-2">3</div>
-          </div>
-          <div className="bg-purple-500 p-3 rounded-xl">
-            <Shield className="h-6 w-6 text-white" />
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
-            Acesso Total
-          </Badge>
-          <p className="text-xs text-purple-600 mt-1">Usuários com acesso admin</p>
-        </CardContent>
-      </Card>
-
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-orange-100 hover:shadow-xl transition-all duration-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <div>
-            <CardTitle className="text-sm font-semibold text-amber-800">Novos Usuários</CardTitle>
-            <div className="text-3xl font-bold text-amber-700 mt-2">45</div>
-          </div>
-          <div className="bg-amber-500 p-3 rounded-xl">
-            <UserPlus className="h-6 w-6 text-white" />
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex items-center gap-2">
-            <UserCheck className="h-4 w-4 text-amber-600" />
-            <span className="text-sm font-medium text-amber-600">Esta semana</span>
-          </div>
-          <p className="text-xs text-amber-600 mt-1">6.4 novos usuários/dia</p>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {cards.map((card, index) => {
+        const Icon = card.icon;
+        return (
+          <Card key={index} className="border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-slate-600">{card.title}</p>
+                  <p className="text-3xl font-bold text-slate-900">{card.value}</p>
+                  <p className="text-xs text-slate-500">{card.description}</p>
+                </div>
+                <div className={`bg-gradient-to-br ${getColorClasses(card.color)} p-4 rounded-xl`}>
+                  <Icon className="h-8 w-8" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };
