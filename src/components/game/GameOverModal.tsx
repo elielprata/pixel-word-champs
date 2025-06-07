@@ -38,6 +38,11 @@ const GameOverModal = ({
     onRevive(); // Isso adiciona o tempo e fecha o modal do Game Over
   };
 
+  const handleStopGame = () => {
+    console.log('Usuário escolheu parar o jogo - encerrando e marcando competição como concluída');
+    onGoHome();
+  };
+
   if (isWatchingAd) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
@@ -88,16 +93,18 @@ const GameOverModal = ({
           </div>
           
           <div className="space-y-3">
-            <Button 
-              onClick={handleReviveClick}
-              className="w-full bg-green-500 hover:bg-green-600 text-white"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Reviver (+30s) - Assistir Anúncio
-            </Button>
+            {canRevive && (
+              <Button 
+                onClick={handleReviveClick}
+                className="w-full bg-green-500 hover:bg-green-600 text-white"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Reviver (+30s) - Assistir Anúncio
+              </Button>
+            )}
             
             <Button 
-              onClick={onGoHome}
+              onClick={handleStopGame}
               className="w-full bg-red-500 hover:bg-red-600 text-white"
             >
               <StopCircle className="w-4 h-4 mr-2" />
@@ -105,9 +112,11 @@ const GameOverModal = ({
             </Button>
           </div>
           
-          <p className="text-sm text-green-600 mt-2">
-            💡 Você pode usar o revive quantas vezes quiser!
-          </p>
+          {canRevive && (
+            <p className="text-sm text-green-600 mt-2">
+              💡 Você pode usar o revive quantas vezes quiser!
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
