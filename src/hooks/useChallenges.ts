@@ -28,27 +28,36 @@ export const useChallenges = (options: UseChallengesOptions = {}) => {
 
   const loadChallenges = async () => {
     try {
+      console.log('Loading challenges with activeOnly:', activeOnly);
+      
       let query = supabase
         .from('challenges')
         .select('*')
         .order('id');
 
-      // Only filter by is_active if activeOnly is true
+      // Apply filter based on activeOnly parameter
       if (activeOnly) {
         query = query.eq('is_active', true);
+        console.log('Filtering for active challenges only');
+      } else {
+        console.log('Loading all challenges (including inactive)');
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
       
-      console.log('Challenges loaded from database:', data);
+      console.log('Raw challenges from database:', data);
+      console.log('ActiveOnly setting:', activeOnly);
       
       // Cast the difficulty to the correct type
       const typedChallenges = (data || []).map(challenge => ({
         ...challenge,
         difficulty: challenge.difficulty as 'easy' | 'medium' | 'hard'
       }));
+      
+      console.log('Processed challenges:', typedChallenges);
+      console.log('Number of challenges returned:', typedChallenges.length);
       
       setChallenges(typedChallenges);
     } catch (error) {
