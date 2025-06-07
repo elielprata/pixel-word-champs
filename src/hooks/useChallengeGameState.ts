@@ -10,6 +10,7 @@ interface GameState {
   currentLevelScore: number;
   completedChallenges: Set<number>;
   isAdvancing: boolean;
+  completedLevelsScore: number; // Nova propriedade para rastrear pontos de níveis completados
 }
 
 type GameAction = 
@@ -17,7 +18,7 @@ type GameAction =
   | { type: 'RESET_TO_HOME' }
   | { type: 'SET_CURRENT_LEVEL_SCORE'; payload: number }
   | { type: 'UPDATE_CURRENT_LEVEL_SCORE'; payload: (prev: number) => number }
-  | { type: 'ADVANCE_LEVEL'; payload: { nextLevel: number; newScore: number } }
+  | { type: 'ADVANCE_LEVEL'; payload: { nextLevel: number; newScore: number; completedLevelScore: number } }
   | { type: 'COMPLETE_CHALLENGE'; challengeId: number }
   | { type: 'SET_ADVANCING'; payload: boolean }
   | { type: 'RESET_FOR_CHALLENGE'; challengeId: number };
@@ -29,7 +30,8 @@ const initialState: GameState = {
   score: 0,
   currentLevelScore: 0,
   completedChallenges: new Set(),
-  isAdvancing: false
+  isAdvancing: false,
+  completedLevelsScore: 0
 };
 
 function gameStateReducer(state: GameState, action: GameAction): GameState {
@@ -40,7 +42,8 @@ function gameStateReducer(state: GameState, action: GameAction): GameState {
         showInstructions: false,
         isGameStarted: true,
         score: 0,
-        currentLevelScore: 0
+        currentLevelScore: 0,
+        completedLevelsScore: 0
       };
     
     case 'RESET_TO_HOME':
@@ -67,7 +70,8 @@ function gameStateReducer(state: GameState, action: GameAction): GameState {
         currentLevel: action.payload.nextLevel,
         score: action.payload.newScore,
         currentLevelScore: 0,
-        isAdvancing: false
+        isAdvancing: false,
+        completedLevelsScore: state.completedLevelsScore + action.payload.completedLevelScore
       };
     
     case 'COMPLETE_CHALLENGE':
@@ -127,18 +131,22 @@ export const useChallengeGameState = (challengeId: number) => {
 
     dispatch({ type: 'SET_ADVANCING', payload: true });
     
-    const newScore = state.score + state.currentLevelScore;
-    console.log(`Total score updated: ${state.score} + ${state.currentLevelScore} = ${newScore}`);
+    // Apenas os pontos do nível completado são somados ao score total
+    const completedLevelScore = state.currentLevelScore;
+    const newScore = state.score + completedLevelScore;
+    
+    console.log(`Nível ${state.currentLevel} completado! Pontos do nível: ${completedLevelScore}`);
+    console.log(`Score total atualizado: ${state.score} + ${completedLevelScore} = ${newScore}`);
     
     if (state.currentLevel < 20) {
       const nextLevel = state.currentLevel + 1;
-      console.log(`Advancing from level ${state.currentLevel} to ${nextLevel}`);
+      console.log(`Avançando do nível ${state.currentLevel} para ${nextLevel}`);
       
       // Use setTimeout to prevent state update conflicts
       setTimeout(() => {
         dispatch({ 
           type: 'ADVANCE_LEVEL', 
-          payload: { nextLevel, newScore }
+          payload: { nextLevel, newScore, completedLevelScore }
         });
       }, 50);
       
@@ -152,6 +160,7 @@ export const useChallengeGameState = (challengeId: number) => {
 
   const stopGame = () => {
     console.log(`Usuário escolheu parar no desafio ${challengeId} - marcando como concluído`);
+    console.log(`Pontuação final contabilizada: ${state.completedLevelsScore} pontos (apenas níveis completados)`);
     dispatch({ type: 'COMPLETE_CHALLENGE', challengeId });
     return true;
   };
@@ -169,8 +178,9 @@ export const useChallengeGameState = (challengeId: number) => {
     timeRemaining,
     isGameStarted: state.isGameStarted,
     showInstructions: state.showInstructions,
-    score: state.score,
-    currentLevelScore: state.currentLevelScore,
+    score: state.score, // Score total (apenas níveis completados)
+    currentLevelScore: state.currentLevelScore, // Score do nível atual (pode não ser contabilizado)
+    completedLevelsScore: state.completedLevelsScore, // Score apenas dos níveis completados
     completedChallenges: state.completedChallenges,
     isAdvancing: state.isAdvancing,
     canRevive,

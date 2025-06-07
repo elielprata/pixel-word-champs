@@ -27,12 +27,12 @@ export const useLevelProgression = (challengeId: number) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Load existing game sessions for this challenge
+      // Load existing game sessions for this challenge (apenas sessões completadas)
       const { data: sessions, error } = await supabase
         .from('game_sessions')
         .select('level, total_score, completed_at')
         .eq('user_id', user.id)
-        .eq('is_completed', true)
+        .eq('is_completed', true) // Apenas sessões completadas
         .order('level', { ascending: true });
 
       if (error) {
@@ -60,7 +60,9 @@ export const useLevelProgression = (challengeId: number) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Create a new game session for this level
+      console.log(`Salvando progresso do nível ${level} com score ${score} pontos (nível completado)`);
+
+      // Create a new game session for this completed level
       const { data: session, error: sessionError } = await supabase
         .from('game_sessions')
         .insert({
@@ -68,7 +70,7 @@ export const useLevelProgression = (challengeId: number) => {
           level: level,
           board: [], // Empty board for now
           total_score: score,
-          is_completed: true,
+          is_completed: true, // Marca como completado apenas quando todas as palavras foram encontradas
           completed_at: new Date().toISOString()
         })
         .select()
@@ -79,11 +81,12 @@ export const useLevelProgression = (challengeId: number) => {
         return;
       }
 
-      // Update user's total score in profile
+      // Update user's total score in profile (apenas com pontos de níveis completados)
+      const newTotalScore = totalScore + score;
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          total_score: totalScore + score,
+          total_score: newTotalScore,
           games_played: levelProgresses.length + 1
         })
         .eq('id', user.id);
@@ -100,9 +103,9 @@ export const useLevelProgression = (challengeId: number) => {
       };
 
       setLevelProgresses(prev => [...prev, newProgress]);
-      setTotalScore(prev => prev + score);
+      setTotalScore(newTotalScore);
 
-      console.log(`Level ${level} progress saved with score ${score}`);
+      console.log(`Nível ${level} salvo! Score total atualizado para ${newTotalScore} pontos`);
     } catch (error) {
       console.error('Error saving level progress:', error);
     }

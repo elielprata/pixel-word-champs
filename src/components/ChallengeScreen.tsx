@@ -21,6 +21,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     showInstructions,
     score,
     currentLevelScore,
+    completedLevelsScore,
     completedChallenges,
     canRevive,
     setCurrentLevelScore,
@@ -44,6 +45,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   const handleLevelComplete = async (levelScore: number) => {
     console.log(`Nível ${currentLevel} completado com ${levelScore} pontos! (usando sistema de pontos do painel admin)`);
+    console.log(`Salvando apenas os pontos deste nível completado: ${levelScore} pontos`);
     await saveLevelProgress(currentLevel, levelScore);
   };
 
@@ -56,6 +58,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   const handleStopGame = () => {
     console.log(`Usuário parou no desafio ${challengeId} - competição sendo marcada como concluída`);
+    console.log(`Apenas níveis completados foram contabilizados: ${completedLevelsScore} pontos`);
     const isCompleted = stopGame();
     if (isCompleted) {
       console.log(`Desafio ${challengeId} marcado como concluído - usuário não pode mais jogar esta competição`);
@@ -64,7 +67,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleTimeUp = () => {
-    console.log('Tempo esgotado!');
+    console.log('Tempo esgotado! Pontos do nível atual não serão contabilizados (nível incompleto)');
   };
 
   const handleBackToHome = () => {
