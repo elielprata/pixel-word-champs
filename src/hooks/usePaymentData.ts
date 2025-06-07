@@ -1,33 +1,21 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { prizeService, PrizeConfiguration } from '@/services/prizeService';
-
-interface IndividualPrize {
-  position: number;
-  prize: number;
-  id: string;
-}
-
-interface GroupPrize {
-  id: string;
-  name: string;
-  range: string;
-  totalWinners: number;
-  prizePerWinner: number;
-  active: boolean;
-}
+import { prizeService } from '@/services/prizeService';
+import { IndividualPrize, GroupPrize } from '@/types/payment';
+import { useIndividualPrizes } from './useIndividualPrizes';
+import { useGroupPrizes } from './useGroupPrizes';
+import { usePrizeCalculations } from './usePrizeCalculations';
 
 export const usePaymentData = () => {
   const { toast } = useToast();
-  const [editingRow, setEditingRow] = useState<number | null>(null);
-  const [editingGroup, setEditingGroup] = useState<string | null>(null);
-  const [editIndividualValue, setEditIndividualValue] = useState<string>('');
-  const [editGroupPrize, setEditGroupPrize] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  
   const [individualPrizes, setIndividualPrizes] = useState<IndividualPrize[]>([]);
   const [groupPrizes, setGroupPrizes] = useState<GroupPrize[]>([]);
+
+  const individualPrizesHook = useIndividualPrizes();
+  const groupPrizesHook = useGroupPrizes();
+  const { calculateTotalPrize, calculateTotalWinners } = usePrizeCalculations();
 
   useEffect(() => {
     loadPrizeConfigurations();
@@ -73,161 +61,49 @@ export const usePaymentData = () => {
     }
   };
 
-  const parseInputValue = (value: string): number => {
-    const cleanValue = value.replace(/[R$\s]/g, '').replace(',', '.');
-    return parseFloat(cleanValue) || 0;
-  };
-
-  const formatInputValue = (value: number): string => {
-    return value.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-
   const handleEditIndividual = (position: number) => {
-    const prize = individualPrizes.find(p => p.position === position);
-    if (prize) {
-      setEditIndividualValue(formatInputValue(prize.prize));
-      setEditingRow(position);
-    }
+    individualPrizesHook.handleEditIndividual(position, individualPrizes);
   };
 
   const handleSaveIndividual = async (position: number) => {
-    const numericValue = parseInputValue(editIndividualValue);
-    const prize = individualPrizes.find(p => p.position === position);
-    
-    if (!prize) return;
-
-    const result = await prizeService.updatePrizeConfiguration(prize.id, {
-      prize_amount: numericValue
-    });
-
-    if (result.success) {
-      setIndividualPrizes(prev => 
-        prev.map(p => 
-          p.position === position 
-            ? { ...p, prize: numericValue }
-            : p
-        )
-      );
-      setEditingRow(null);
-      toast({
-        title: "Premiação atualizada",
-        description: `Configuração do ${position}º lugar foi atualizada.`,
-      });
-    } else {
-      toast({
-        title: "Erro ao atualizar",
-        description: result.error,
-        variant: "destructive",
-      });
-    }
+    await individualPrizesHook.handleSaveIndividual(position, individualPrizes, setIndividualPrizes);
   };
 
   const handleEditGroup = (groupId: string) => {
-    const group = groupPrizes.find(g => g.id === groupId);
-    if (group) {
-      setEditGroupPrize(formatInputValue(group.prizePerWinner));
-      setEditingGroup(groupId);
-    }
+    groupPrizesHook.handleEditGroup(groupId, groupPrizes);
   };
 
   const handleSaveGroup = async (groupId: string) => {
-    const numericValue = parseInputValue(editGroupPrize);
-    
-    const result = await prizeService.updatePrizeConfiguration(groupId, {
-      prize_amount: numericValue
-    });
-
-    if (result.success) {
-      setGroupPrizes(prev => 
-        prev.map(group => 
-          group.id === groupId 
-            ? { ...group, prizePerWinner: numericValue }
-            : group
-        )
-      );
-      setEditingGroup(null);
-      toast({
-        title: "Premiação atualizada",
-        description: "Configuração do grupo foi atualizada.",
-      });
-    } else {
-      toast({
-        title: "Erro ao atualizar",
-        description: result.error,
-        variant: "destructive",
-      });
-    }
+    await groupPrizesHook.handleSaveGroup(groupId, groupPrizes, setGroupPrizes);
   };
 
   const handleToggleGroup = async (groupId: string) => {
-    const group = groupPrizes.find(g => g.id === groupId);
-    if (!group) return;
-
-    const result = await prizeService.updatePrizeConfiguration(groupId, {
-      active: !group.active
-    });
-
-    if (result.success) {
-      setGroupPrizes(prev => 
-        prev.map(g => 
-          g.id === groupId 
-            ? { ...g, active: !g.active }
-            : g
-        )
-      );
-    } else {
-      toast({
-        title: "Erro ao atualizar",
-        description: result.error,
-        variant: "destructive",
-      });
-    }
+    await groupPrizesHook.handleToggleGroup(groupId, groupPrizes, setGroupPrizes);
   };
 
   const handleCancel = () => {
-    setEditingRow(null);
-    setEditingGroup(null);
-    setEditIndividualValue('');
-    setEditGroupPrize('');
-  };
-
-  const calculateTotalPrize = () => {
-    const individualTotal = individualPrizes.reduce((total, prize) => total + prize.prize, 0);
-    const groupTotal = groupPrizes
-      .filter(group => group.active)
-      .reduce((total, group) => total + (group.totalWinners * group.prizePerWinner), 0);
-    return individualTotal + groupTotal;
-  };
-
-  const calculateTotalWinners = () => {
-    const individualWinners = individualPrizes.length;
-    const groupWinners = groupPrizes
-      .filter(group => group.active)
-      .reduce((total, group) => total + group.totalWinners, 0);
-    return individualWinners + groupWinners;
+    individualPrizesHook.handleCancel();
+    groupPrizesHook.handleCancel();
   };
 
   return {
     individualPrizes,
     groupPrizes,
-    editingRow,
-    editingGroup,
-    editIndividualValue,
-    editGroupPrize,
+    editingRow: individualPrizesHook.editingRow,
+    editingGroup: groupPrizesHook.editingGroup,
+    editIndividualValue: individualPrizesHook.editIndividualValue,
+    editGroupPrize: groupPrizesHook.editGroupPrize,
     isLoading,
-    setEditIndividualValue,
-    setEditGroupPrize,
+    setEditIndividualValue: individualPrizesHook.setEditIndividualValue,
+    setEditGroupPrize: groupPrizesHook.setEditGroupPrize,
     handleEditIndividual,
     handleSaveIndividual,
     handleEditGroup,
     handleSaveGroup,
     handleToggleGroup,
     handleCancel,
-    calculateTotalPrize,
-    calculateTotalWinners,
+    calculateTotalPrize: () => calculateTotalPrize(individualPrizes, groupPrizes),
+    calculateTotalWinners: () => calculateTotalWinners(individualPrizes, groupPrizes),
     refetch: loadPrizeConfigurations
   };
 };

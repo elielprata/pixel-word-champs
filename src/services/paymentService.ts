@@ -13,6 +13,7 @@ export interface PaymentRecord {
   pix_holder_name?: string;
   notes?: string;
   created_at: string;
+  updated_at: string;
   username?: string;
   position?: number;
 }
@@ -20,35 +21,58 @@ export interface PaymentRecord {
 export const paymentService = {
   async getWinnersForPrizeLevel(prizeLevel: string): Promise<PaymentRecord[]> {
     try {
-      let query = supabase
+      // Create a more specific query that includes position from daily_rankings
+      const { data, error } = await supabase
         .from('payment_history')
         .select(`
-          *,
-          profiles!inner(username)
+          id,
+          user_id,
+          ranking_type,
+          ranking_id,
+          prize_amount,
+          payment_status,
+          payment_date,
+          pix_key,
+          pix_holder_name,
+          notes,
+          created_at,
+          updated_at,
+          profiles!inner(username),
+          daily_rankings!left(position)
         `)
         .order('created_at', { ascending: false });
 
-      // Filtrar por nível de prêmio
-      if (prizeLevel.includes('1º ao 3º')) {
-        // Para o pódio, buscar posições 1-3
-        query = query.in('position', [1, 2, 3]);
-      } else if (prizeLevel.includes('4º ao 10º')) {
-        query = query.gte('position', 4).lte('position', 10);
-      } else if (prizeLevel.includes('11º ao 50º')) {
-        query = query.gte('position', 11).lte('position', 50);
-      } else if (prizeLevel.includes('51º ao 100º')) {
-        query = query.gte('position', 51).lte('position', 100);
-      }
-
-      const { data, error } = await query;
-
       if (error) throw error;
 
-      return (data || []).map(record => ({
-        ...record,
+      const records = (data || []).map((record: any) => ({
+        id: record.id,
+        user_id: record.user_id,
+        ranking_type: record.ranking_type,
+        ranking_id: record.ranking_id,
+        prize_amount: record.prize_amount,
+        payment_status: record.payment_status,
+        payment_date: record.payment_date,
+        pix_key: record.pix_key,
+        pix_holder_name: record.pix_holder_name,
+        notes: record.notes,
+        created_at: record.created_at,
+        updated_at: record.updated_at,
         username: record.profiles?.username || 'Usuário',
-        position: record.position || 0
+        position: record.daily_rankings?.position || 0
       }));
+
+      // Filter by prize level
+      if (prizeLevel.includes('1º ao 3º')) {
+        return records.filter(r => r.position >= 1 && r.position <= 3);
+      } else if (prizeLevel.includes('4º ao 10º')) {
+        return records.filter(r => r.position >= 4 && r.position <= 10);
+      } else if (prizeLevel.includes('11º ao 50º')) {
+        return records.filter(r => r.position >= 11 && r.position <= 50);
+      } else if (prizeLevel.includes('51º ao 100º')) {
+        return records.filter(r => r.position >= 51 && r.position <= 100);
+      }
+
+      return records;
     } catch (error) {
       console.error('Error fetching winners:', error);
       return [];
@@ -129,8 +153,7 @@ export const paymentService = {
             prize_amount: prizeAmount,
             payment_status: 'pending',
             pix_key: ranking.profiles.pix_key,
-            pix_holder_name: ranking.profiles.pix_holder_name,
-            position: ranking.position
+            pix_holder_name: ranking.profiles.pix_holder_name
           });
         }
       }
