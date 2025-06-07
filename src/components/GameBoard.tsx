@@ -1,29 +1,20 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+
+import React, { useState, useRef, useEffect } from 'react';
 import GameProgressBar from './game/GameProgressBar';
 import GameStats from './game/GameStats';
 import GameCell from './game/GameCell';
 import WordsList from './game/WordsList';
 import GameOverModal from './game/GameOverModal';
 import LevelCompleteModal from './game/LevelCompleteModal';
-
-interface Position {
-  row: number;
-  col: number;
-}
+import { useBoard } from '@/hooks/useBoard';
+import { useBoardInteraction } from '@/hooks/useBoardInteraction';
+import { useWordValidation } from '@/hooks/useWordValidation';
+import { getCellSize, getPointsForWord, type Position } from '@/utils/boardUtils';
 
 interface FoundWord {
   word: string;
   positions: Position[];
   points: number;
-}
-
-interface PlacedWord {
-  word: string;
-  startRow: number;
-  startCol: number;
-  direction: 'horizontal' | 'vertical' | 'diagonal';
-  positions: Position[];
 }
 
 interface GameBoardProps {
@@ -36,142 +27,17 @@ interface GameBoardProps {
 }
 
 const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, onAdvanceLevel }: GameBoardProps) => {
-  const getBoardSize = (level: number) => {
-    if (level === 1 || level === 2) return 5;
-    if (level === 3 || level === 4) return 6;
-    if (level === 5 || level === 6) return 7;
-    if (level === 7 || level === 8) return 8;
-    if (level === 9 || level === 10) return 9;
-    return 10;
-  };
+  const { boardData, size, levelWords } = useBoard(level);
+  const { 
+    selectedCells, 
+    isSelecting, 
+    handleCellStart, 
+    handleCellMove, 
+    handleCellEnd, 
+    isCellSelected 
+  } = useBoardInteraction();
+  const { isValidWordDirection } = useWordValidation();
 
-  const getLevelWords = (level: number) => {
-    const wordSets = {
-      1: ['CASA', 'GATO', 'SOL', 'MAR', 'PAZ'],
-      2: ['VIDA', 'AMOR', 'FLOR', 'AZUL', 'FELIZ'],
-      3: ['SONHO', 'TERRA', 'VENTO', 'CHUVA', 'FLORES'],
-    };
-    return wordSets[level as keyof typeof wordSets] || ['PALAVRA', 'TESTE', 'JOGO', 'NIVEL', 'DESAFIO'];
-  };
-
-  const generateSmartBoard = useCallback((size: number, words: string[]) => {
-    const board: string[][] = Array(size).fill(null).map(() => Array(size).fill(''));
-    const placedWords: PlacedWord[] = [];
-    const directions: Array<'horizontal' | 'vertical' | 'diagonal'> = ['horizontal', 'vertical', 'diagonal'];
-    
-    // Tentar colocar cada palavra no tabuleiro
-    for (const word of words) {
-      let placed = false;
-      let attempts = 0;
-      const maxAttempts = 100;
-      
-      while (!placed && attempts < maxAttempts) {
-        attempts++;
-        
-        // Escolher direção aleatória
-        const direction = directions[Math.floor(Math.random() * directions.length)];
-        
-        // Calcular limites baseados na direção e tamanho da palavra
-        let maxRow, maxCol;
-        switch (direction) {
-          case 'horizontal':
-            maxRow = size;
-            maxCol = size - word.length + 1;
-            break;
-          case 'vertical':
-            maxRow = size - word.length + 1;
-            maxCol = size;
-            break;
-          case 'diagonal':
-            maxRow = size - word.length + 1;
-            maxCol = size - word.length + 1;
-            break;
-        }
-        
-        if (maxRow <= 0 || maxCol <= 0) continue;
-        
-        // Posição inicial aleatória
-        const startRow = Math.floor(Math.random() * maxRow);
-        const startCol = Math.floor(Math.random() * maxCol);
-        
-        // Verificar se a posição está livre
-        const positions: Position[] = [];
-        let canPlace = true;
-        
-        for (let i = 0; i < word.length; i++) {
-          let row = startRow;
-          let col = startCol;
-          
-          switch (direction) {
-            case 'horizontal':
-              col += i;
-              break;
-            case 'vertical':
-              row += i;
-              break;
-            case 'diagonal':
-              row += i;
-              col += i;
-              break;
-          }
-          
-          positions.push({ row, col });
-          
-          // Verificar se a posição está ocupada por outra palavra
-          if (board[row][col] !== '' && board[row][col] !== word[i]) {
-            canPlace = false;
-            break;
-          }
-        }
-        
-        if (canPlace) {
-          // Colocar a palavra
-          positions.forEach((pos, i) => {
-            board[pos.row][pos.col] = word[i];
-          });
-          
-          placedWords.push({
-            word,
-            startRow,
-            startCol,
-            direction,
-            positions
-          });
-          
-          placed = true;
-        }
-      }
-      
-      // Se não conseguiu colocar a palavra, forçar horizontalmente
-      if (!placed) {
-        console.warn(`Não foi possível colocar a palavra ${word} aleatoriamente, forçando posição`);
-        const startRow = Math.floor(Math.random() * size);
-        const startCol = Math.min(Math.floor(Math.random() * size), size - word.length);
-        
-        for (let i = 0; i < word.length; i++) {
-          board[startRow][startCol + i] = word[i];
-        }
-      }
-    }
-    
-    // Preencher espaços vazios com letras aleatórias
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
-        if (board[row][col] === '') {
-          board[row][col] = letters[Math.floor(Math.random() * letters.length)];
-        }
-      }
-    }
-    
-    return { board, placedWords };
-  }, []);
-
-  const size = getBoardSize(level);
-  const levelWords = getLevelWords(level);
-  const [boardData, setBoardData] = useState(() => generateSmartBoard(size, levelWords));
-  const [selectedCells, setSelectedCells] = useState<Position[]>([]);
-  const [isSelecting, setIsSelecting] = useState(false);
   const [foundWords, setFoundWords] = useState<FoundWord[]>([]);
   const [permanentlyMarkedCells, setPermanentlyMarkedCells] = useState<Position[]>([]);
   const [hintsUsed, setHintsUsed] = useState(0);
@@ -181,16 +47,12 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
   const [hintHighlightedCells, setHintHighlightedCells] = useState<Position[]>([]);
   const boardRef = useRef<HTMLDivElement>(null);
 
-  // Regenera o tabuleiro quando o nível muda
+  // Reset state when level changes
   useEffect(() => {
-    const newSize = getBoardSize(level);
-    const newLevelWords = getLevelWords(level);
-    setBoardData(generateSmartBoard(newSize, newLevelWords));
-    setSelectedCells([]);
     setFoundWords([]);
     setPermanentlyMarkedCells([]);
     setHintsUsed(0);
-  }, [level, generateSmartBoard]);
+  }, [level]);
 
   // Detecta quando o tempo acaba
   useEffect(() => {
@@ -208,99 +70,24 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
     }
   }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete]);
 
-  const getPointsForWord = (word: string) => {
-    const length = word.length;
-    if (length === 3) return 10;
-    if (length === 4) return 20;
-    if (length === 5) return 30;
-    return 50 + Math.max(0, length - 6) * 10;
-  };
-
-  // Função para validar se as células formam uma linha válida (horizontal, vertical ou diagonal)
-  const isValidWordDirection = (positions: Position[]): boolean => {
-    if (positions.length < 2) return true;
-
-    const first = positions[0];
-    const second = positions[1];
+  const handleCellEndWithValidation = () => {
+    const finalSelection = handleCellEnd();
     
-    const deltaRow = second.row - first.row;
-    const deltaCol = second.col - first.col;
-    
-    // Verificar se é horizontal, vertical ou diagonal
-    const isHorizontal = deltaRow === 0 && Math.abs(deltaCol) === 1;
-    const isVertical = deltaCol === 0 && Math.abs(deltaRow) === 1;
-    const isDiagonal = Math.abs(deltaRow) === 1 && Math.abs(deltaCol) === 1;
-    
-    if (!isHorizontal && !isVertical && !isDiagonal) {
-      return false;
-    }
-    
-    // Verificar se todas as posições seguem a mesma direção
-    for (let i = 2; i < positions.length; i++) {
-      const curr = positions[i];
-      const prev = positions[i - 1];
-      
-      const currDeltaRow = curr.row - prev.row;
-      const currDeltaCol = curr.col - prev.col;
-      
-      if (currDeltaRow !== deltaRow || currDeltaCol !== deltaCol) {
-        return false;
-      }
-    }
-    
-    return true;
-  };
-
-  const handleCellStart = (row: number, col: number) => {
-    setIsSelecting(true);
-    setSelectedCells([{ row, col }]);
-  };
-
-  const handleCellMove = (row: number, col: number) => {
-    if (!isSelecting) return;
-    
-    const newPosition = { row, col };
-    setSelectedCells(prev => {
-      if (prev.length === 0) return [newPosition];
-      
-      // Verificar se a nova posição já está selecionada
-      if (prev.some(p => p.row === row && p.col === col)) {
-        return prev;
-      }
-      
-      const newPath = [...prev, newPosition];
-      
-      // Validar se o caminho forma uma direção válida
-      if (!isValidWordDirection(newPath)) {
-        return prev;
-      }
-      
-      return newPath;
-    });
-  };
-
-  const handleCellEnd = () => {
-    if (selectedCells.length >= 3) {
-      const word = selectedCells.map(pos => boardData.board[pos.row][pos.col]).join('');
+    if (finalSelection.length >= 3) {
+      const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
       // Verificar se é uma palavra válida e se a direção é permitida
       if (levelWords.includes(word) && 
           !foundWords.some(fw => fw.word === word) && 
-          isValidWordDirection(selectedCells)) {
+          isValidWordDirection(finalSelection)) {
         const points = getPointsForWord(word);
-        const newFoundWord = { word, positions: [...selectedCells], points };
+        const newFoundWord = { word, positions: [...finalSelection], points };
         
         setFoundWords(prev => [...prev, newFoundWord]);
-        setPermanentlyMarkedCells(prev => [...prev, ...selectedCells]);
+        setPermanentlyMarkedCells(prev => [...prev, ...finalSelection]);
         onWordFound(word, points);
       }
     }
-    setIsSelecting(false);
-    setSelectedCells([]);
-  };
-
-  const isCellSelected = (row: number, col: number) => {
-    return selectedCells.some(pos => pos.row === row && pos.col === col);
   };
 
   const isCellPermanentlyMarked = (row: number, col: number) => {
@@ -335,7 +122,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
     }
   };
 
-  const handleAdvanceLevel = () => {
+  const handleAdvanceLevelClick = () => {
     setShowLevelComplete(false);
     onAdvanceLevel();
   };
@@ -359,17 +146,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
     onTimeUp();
   };
 
-  const getCellSize = (boardSize: number) => {
-    if (boardSize <= 5) return 45;
-    if (boardSize <= 6) return 38;
-    if (boardSize <= 7) return 33;
-    if (boardSize <= 8) return 29;
-    if (boardSize <= 9) return 26;
-    return 23;
-  };
-
   const cellSize = getCellSize(size);
-  const progress = (foundWords.length / 5) * 100;
 
   return (
     <div className="flex flex-col items-center p-4 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
@@ -397,8 +174,8 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
           maxWidth: size > 7 ? '350px' : '320px',
           width: '100%'
         }}
-        onTouchEnd={handleCellEnd}
-        onMouseUp={handleCellEnd}
+        onTouchEnd={handleCellEndWithValidation}
+        onMouseUp={handleCellEndWithValidation}
       >
         {boardData.board.map((row, rowIndex) =>
           row.map((letter, colIndex) => (
@@ -412,7 +189,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
               isHintHighlighted={isCellHintHighlighted(rowIndex, colIndex)}
               cellSize={cellSize}
               onCellStart={handleCellStart}
-              onCellMove={handleCellMove}
+              onCellMove={(row, col) => handleCellMove(row, col, isValidWordDirection)}
               isSelecting={isSelecting}
             />
           ))
@@ -438,7 +215,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
         isOpen={showLevelComplete}
         level={level}
         score={foundWords.reduce((sum, fw) => sum + fw.points, 0)}
-        onAdvance={handleAdvanceLevel}
+        onAdvance={handleAdvanceLevelClick}
         onStay={handleStayLevel}
       />
     </div>
