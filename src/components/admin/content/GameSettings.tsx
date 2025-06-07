@@ -2,8 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useGameSettings } from "@/hooks/useGameSettings";
-import { GameSettingsHeader } from './GameSettingsHeader';
-import { GameSettingsCategory } from './GameSettingsCategory';
+import { GameSettingsForm } from './GameSettingsForm';
 
 export const GameSettings = () => {
   const {
@@ -26,34 +25,26 @@ export const GameSettings = () => {
     );
   }
 
-  const groupedSettings = settings.reduce((groups, setting) => {
-    const category = setting.category;
-    if (!groups[category]) {
-      groups[category] = [];
-    }
-    groups[category].push(setting);
-    return groups;
-  }, {} as Record<string, typeof settings>);
+  const handleSaveSettings = async (updatedSettings: typeof settings) => {
+    // Atualizar estado local primeiro
+    updatedSettings.forEach(setting => {
+      updateSetting(setting.setting_key, setting.setting_value);
+    });
+    
+    // Salvar no banco
+    await saveSettings();
+  };
 
   return (
     <div className="space-y-6">
-      <GameSettingsHeader
-        onSave={saveSettings}
+      <GameSettingsForm
+        settings={settings}
+        onSave={handleSaveSettings}
         onReset={resetToDefaults}
         saving={saving}
       />
 
-      {/* Configurações agrupadas por categoria */}
-      {Object.entries(groupedSettings).map(([category, categorySettings]) => (
-        <GameSettingsCategory
-          key={category}
-          category={category}
-          settings={categorySettings}
-          onUpdateSetting={updateSetting}
-        />
-      ))}
-
-      {Object.keys(groupedSettings).length === 0 && (
+      {settings.length === 0 && (
         <Card>
           <CardContent className="p-8 text-center text-gray-500">
             <p>Nenhuma configuração encontrada</p>

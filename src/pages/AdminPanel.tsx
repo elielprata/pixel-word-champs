@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -210,6 +209,7 @@ const AdminPanel = () => {
     { id: 'users', label: 'Usuários', icon: Users },
     { id: 'support', label: 'Suporte', icon: MessageSquare },
     { id: 'security', label: 'Segurança', icon: Shield },
+    { id: 'system', label: 'Sistema', icon: Settings },
   ];
 
   const supportStats = getSupportStats();
@@ -549,6 +549,10 @@ const AdminPanel = () => {
 
             <TabsContent value="security" className="mt-0">
               <SecurityTab />
+            </TabsContent>
+
+            <TabsContent value="system" className="mt-0">
+              <SystemManagementTab />
             </TabsContent>
           </div>
         </Tabs>
