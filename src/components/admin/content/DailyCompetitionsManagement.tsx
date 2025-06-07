@@ -9,15 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Trophy, Calendar, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Target, Calendar, Users, Trophy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Competition {
+interface DailyCompetition {
   id: string;
   title: string;
   description: string;
-  competition_type: string;
+  theme: string;
   start_date: string;
   end_date: string;
   prize_pool: number;
@@ -26,21 +26,38 @@ interface Competition {
   created_at: string;
 }
 
-export const CompetitionsManagement = () => {
-  const [competitions, setCompetitions] = useState<Competition[]>([]);
+export const DailyCompetitionsManagement = () => {
+  const [competitions, setCompetitions] = useState<DailyCompetition[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingCompetition, setEditingCompetition] = useState<Competition | null>(null);
+  const [editingCompetition, setEditingCompetition] = useState<DailyCompetition | null>(null);
   const [newCompetition, setNewCompetition] = useState({
     title: '',
     description: '',
-    competition_type: 'challenge',
+    theme: '',
     start_date: '',
     end_date: '',
     prize_pool: 0,
-    max_participants: 100
+    max_participants: 500
   });
   const { toast } = useToast();
+
+  const themes = [
+    'Animais',
+    'Profissões',
+    'Esportes',
+    'Comidas',
+    'Países',
+    'Cores',
+    'Natureza',
+    'Tecnologia',
+    'Música',
+    'Cinema',
+    'Literatura',
+    'História',
+    'Ciência',
+    'Geografia'
+  ];
 
   useEffect(() => {
     fetchCompetitions();
@@ -51,6 +68,7 @@ export const CompetitionsManagement = () => {
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
+        .eq('competition_type', 'daily')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -58,7 +76,7 @@ export const CompetitionsManagement = () => {
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Não foi possível carregar as competições",
+        description: "Não foi possível carregar as competições diárias",
         variant: "destructive"
       });
     } finally {
@@ -72,31 +90,32 @@ export const CompetitionsManagement = () => {
         .from('custom_competitions')
         .insert([{
           ...newCompetition,
-          status: 'draft'
+          competition_type: 'daily',
+          status: 'scheduled'
         }]);
 
       if (error) throw error;
 
       toast({
         title: "Sucesso",
-        description: "Competição criada com sucesso"
+        description: "Competição diária criada com sucesso"
       });
 
       setNewCompetition({
         title: '',
         description: '',
-        competition_type: 'challenge',
+        theme: '',
         start_date: '',
         end_date: '',
         prize_pool: 0,
-        max_participants: 100
+        max_participants: 500
       });
       setIsAddModalOpen(false);
       fetchCompetitions();
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Não foi possível criar a competição",
+        description: "Não foi possível criar a competição diária",
         variant: "destructive"
       });
     }
@@ -111,7 +130,7 @@ export const CompetitionsManagement = () => {
         .update({
           title: editingCompetition.title,
           description: editingCompetition.description,
-          competition_type: editingCompetition.competition_type,
+          theme: editingCompetition.theme,
           start_date: editingCompetition.start_date,
           end_date: editingCompetition.end_date,
           prize_pool: editingCompetition.prize_pool,
@@ -124,7 +143,7 @@ export const CompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição atualizada com sucesso"
+        description: "Competição diária atualizada com sucesso"
       });
 
       setEditingCompetition(null);
@@ -132,7 +151,7 @@ export const CompetitionsManagement = () => {
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar a competição",
+        description: "Não foi possível atualizar a competição diária",
         variant: "destructive"
       });
     }
@@ -149,14 +168,14 @@ export const CompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição removida com sucesso"
+        description: "Competição diária removida com sucesso"
       });
 
       fetchCompetitions();
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Não foi possível remover a competição",
+        description: "Não foi possível remover a competição diária",
         variant: "destructive"
       });
     }
@@ -169,16 +188,6 @@ export const CompetitionsManagement = () => {
       case 'scheduled': return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'completed': return 'bg-purple-100 text-purple-700 border-purple-200';
       case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'daily': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'weekly': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'challenge': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'tournament': return 'bg-red-100 text-red-700 border-red-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
@@ -198,21 +207,24 @@ export const CompetitionsManagement = () => {
       <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <CardTitle className="text-lg text-slate-800">Competições Personalizadas</CardTitle>
+            <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-600" />
+              Competições Diárias
+            </CardTitle>
             <p className="text-sm text-slate-600">
-              Crie e gerencie competições especiais para engajar os usuários
+              Gerencie competições diárias com temas específicos
             </p>
           </div>
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
+              <Button className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="h-4 w-4 mr-2" />
-                Nova Competição
+                Nova Competição Diária
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Criar Nova Competição</DialogTitle>
+                <DialogTitle>Criar Nova Competição Diária</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 <div>
@@ -220,44 +232,33 @@ export const CompetitionsManagement = () => {
                   <Input 
                     value={newCompetition.title}
                     onChange={(e) => setNewCompetition({...newCompetition, title: e.target.value})}
-                    placeholder="Nome da competição"
+                    placeholder="Ex: Desafio Diário - Animais"
                   />
+                </div>
+                <div>
+                  <Label>Tema</Label>
+                  <Select 
+                    value={newCompetition.theme} 
+                    onValueChange={(value) => setNewCompetition({...newCompetition, theme: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um tema" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {themes.map(theme => (
+                        <SelectItem key={theme} value={theme}>{theme}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>Descrição</Label>
                   <Textarea 
                     value={newCompetition.description}
                     onChange={(e) => setNewCompetition({...newCompetition, description: e.target.value})}
-                    placeholder="Descreva a competição..."
+                    placeholder="Descreva o desafio diário..."
                     rows={3}
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Tipo</Label>
-                    <Select 
-                      value={newCompetition.competition_type} 
-                      onValueChange={(value) => setNewCompetition({...newCompetition, competition_type: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="challenge">Desafio</SelectItem>
-                        <SelectItem value="tournament">Torneio</SelectItem>
-                        <SelectItem value="daily">Diário</SelectItem>
-                        <SelectItem value="weekly">Semanal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Máx. Participantes</Label>
-                    <Input 
-                      type="number"
-                      value={newCompetition.max_participants}
-                      onChange={(e) => setNewCompetition({...newCompetition, max_participants: parseInt(e.target.value)})}
-                    />
-                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -277,17 +278,27 @@ export const CompetitionsManagement = () => {
                     />
                   </div>
                 </div>
-                <div>
-                  <Label>Pool de Prêmios (R$)</Label>
-                  <Input 
-                    type="number"
-                    step="0.01"
-                    value={newCompetition.prize_pool}
-                    onChange={(e) => setNewCompetition({...newCompetition, prize_pool: parseFloat(e.target.value)})}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Pool de Prêmios (R$)</Label>
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      value={newCompetition.prize_pool}
+                      onChange={(e) => setNewCompetition({...newCompetition, prize_pool: parseFloat(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <Label>Máx. Participantes</Label>
+                    <Input 
+                      type="number"
+                      value={newCompetition.max_participants}
+                      onChange={(e) => setNewCompetition({...newCompetition, max_participants: parseInt(e.target.value)})}
+                    />
+                  </div>
                 </div>
                 <Button onClick={addCompetition} className="w-full">
-                  Criar Competição
+                  Criar Competição Diária
                 </Button>
               </div>
             </DialogContent>
@@ -298,29 +309,29 @@ export const CompetitionsManagement = () => {
       <CardContent className="p-6">
         {/* Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50">
+          <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="bg-emerald-100 p-2 rounded-lg">
-                  <Trophy className="h-4 w-4 text-emerald-600" />
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <Target className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-emerald-600 font-medium">Total</p>
-                  <p className="text-2xl font-bold text-emerald-700">{competitions.length}</p>
+                  <p className="text-sm text-blue-600 font-medium">Total</p>
+                  <p className="text-2xl font-bold text-blue-700">{competitions.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
+          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <Calendar className="h-4 w-4 text-blue-600" />
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <Calendar className="h-4 w-4 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-blue-600 font-medium">Ativas</p>
-                  <p className="text-2xl font-bold text-blue-700">
+                  <p className="text-sm text-green-600 font-medium">Ativas</p>
+                  <p className="text-2xl font-bold text-green-700">
                     {competitions.filter(c => c.status === 'active').length}
                   </p>
                 </div>
@@ -367,7 +378,7 @@ export const CompetitionsManagement = () => {
             <TableHeader>
               <TableRow className="bg-slate-50">
                 <TableHead className="font-semibold">Título</TableHead>
-                <TableHead className="font-semibold">Tipo</TableHead>
+                <TableHead className="font-semibold">Tema</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold">Início</TableHead>
                 <TableHead className="font-semibold">Fim</TableHead>
@@ -380,10 +391,8 @@ export const CompetitionsManagement = () => {
                 <TableRow key={competition.id} className="hover:bg-slate-50">
                   <TableCell className="font-medium">{competition.title}</TableCell>
                   <TableCell>
-                    <Badge className={getTypeColor(competition.competition_type)}>
-                      {competition.competition_type === 'challenge' ? 'Desafio' :
-                       competition.competition_type === 'tournament' ? 'Torneio' :
-                       competition.competition_type === 'daily' ? 'Diário' : 'Semanal'}
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      {competition.theme}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -424,9 +433,9 @@ export const CompetitionsManagement = () => {
 
         {competitions.length === 0 && !loading && (
           <div className="text-center py-8 text-gray-500">
-            <Trophy className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>Nenhuma competição criada ainda</p>
-            <p className="text-sm">Crie sua primeira competição personalizada</p>
+            <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>Nenhuma competição diária criada ainda</p>
+            <p className="text-sm">Crie sua primeira competição diária com tema</p>
           </div>
         )}
 
@@ -435,7 +444,7 @@ export const CompetitionsManagement = () => {
           <Dialog open={!!editingCompetition} onOpenChange={() => setEditingCompetition(null)}>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Editar Competição</DialogTitle>
+                <DialogTitle>Editar Competição Diária</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 <div>
@@ -446,6 +455,22 @@ export const CompetitionsManagement = () => {
                   />
                 </div>
                 <div>
+                  <Label>Tema</Label>
+                  <Select 
+                    value={editingCompetition.theme} 
+                    onValueChange={(value) => setEditingCompetition({...editingCompetition, theme: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {themes.map(theme => (
+                        <SelectItem key={theme} value={theme}>{theme}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label>Descrição</Label>
                   <Textarea 
                     value={editingCompetition.description}
@@ -454,23 +479,6 @@ export const CompetitionsManagement = () => {
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Tipo</Label>
-                    <Select 
-                      value={editingCompetition.competition_type} 
-                      onValueChange={(value) => setEditingCompetition({...editingCompetition, competition_type: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="challenge">Desafio</SelectItem>
-                        <SelectItem value="tournament">Torneio</SelectItem>
-                        <SelectItem value="daily">Diário</SelectItem>
-                        <SelectItem value="weekly">Semanal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                   <div>
                     <Label>Status</Label>
                     <Select 
@@ -489,14 +497,14 @@ export const CompetitionsManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-                <div>
-                  <Label>Máx. Participantes</Label>
-                  <Input 
-                    type="number"
-                    value={editingCompetition.max_participants}
-                    onChange={(e) => setEditingCompetition({...editingCompetition, max_participants: parseInt(e.target.value)})}
-                  />
+                  <div>
+                    <Label>Máx. Participantes</Label>
+                    <Input 
+                      type="number"
+                      value={editingCompetition.max_participants}
+                      onChange={(e) => setEditingCompetition({...editingCompetition, max_participants: parseInt(e.target.value)})}
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>

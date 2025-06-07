@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Settings, Gamepad2, Trophy } from 'lucide-react';
+import { BookOpen, Settings, Gamepad2, Trophy, Calendar, Target } from 'lucide-react';
 import { WordsManagement } from './content/WordsManagement';
 import { GameSettings } from './content/GameSettings';
-import { CompetitionsManagement } from './content/CompetitionsManagement';
+import { DailyCompetitionsManagement } from './content/DailyCompetitionsManagement';
+import { WeeklyTournamentsManagement } from './content/WeeklyTournamentsManagement';
 
 export const GameContentTab = () => {
   return (
@@ -20,7 +21,7 @@ export const GameContentTab = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Gestão de Conteúdo</h1>
-            <p className="text-emerald-100 text-sm">Configure palavras, regras e competições do jogo</p>
+            <p className="text-emerald-100 text-sm">Configure palavras, regras, competições diárias e torneios semanais</p>
           </div>
         </div>
       </div>
@@ -43,11 +44,18 @@ export const GameContentTab = () => {
             <span className="font-medium">Configurações</span>
           </TabsTrigger>
           <TabsTrigger 
-            value="competitions" 
+            value="daily-competitions" 
+            className="flex items-center gap-2 px-6 py-3 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+          >
+            <Target className="h-4 w-4" />
+            <span className="font-medium">Competições Diárias</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="weekly-tournaments" 
             className="flex items-center gap-2 px-6 py-3 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
           >
             <Trophy className="h-4 w-4" />
-            <span className="font-medium">Competições</span>
+            <span className="font-medium">Torneios Semanais</span>
           </TabsTrigger>
         </TabsList>
 
@@ -59,8 +67,12 @@ export const GameContentTab = () => {
           <GameSettings />
         </TabsContent>
 
-        <TabsContent value="competitions">
-          <CompetitionsManagement />
+        <TabsContent value="daily-competitions">
+          <DailyCompetitionsManagement />
+        </TabsContent>
+
+        <TabsContent value="weekly-tournaments">
+          <WeeklyTournamentsManagement />
         </TabsContent>
       </Tabs>
     </div>
