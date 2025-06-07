@@ -28,7 +28,7 @@ const LevelCompleteModal = ({
           <div className="mb-4">
             <Trophy className="w-16 h-16 mx-auto text-amber-500 mb-2" />
             <h2 className="text-xl font-bold text-gray-800">Nível {level} Completado!</h2>
-            <p className="text-gray-600 mt-2">Excelente trabalho! Você demonstrou grande habilidade neste nível.</p>
+            <p className="text-gray-600 mt-2">Parabéns! Você encontrou todas as palavras.</p>
           </div>
           
           <div className="bg-gray-50 rounded-lg p-4 mb-4">
@@ -44,7 +44,7 @@ const LevelCompleteModal = ({
               className="w-full bg-green-500 hover:bg-green-600 text-white"
             >
               <ArrowRight className="w-4 h-4 mr-2" />
-              Iniciar
+              Iniciar próximo nível
             </Button>
             
             <Button 
