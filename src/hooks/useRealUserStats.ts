@@ -38,16 +38,20 @@ export const useRealUserStats = () => {
 
       if (usersError) throw usersError;
 
-      // Usuários ativos (que jogaram nas últimas 24h)
+      // Usuários ativos (usuários únicos que jogaram nas últimas 24h)
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-      const { count: activeUsers, error: activeError } = await supabase
+      const { data: activeSessions, error: activeError } = await supabase
         .from('game_sessions')
-        .select('user_id', { count: 'exact', head: true })
+        .select('user_id')
         .gte('started_at', twentyFourHoursAgo.toISOString());
 
       if (activeError) throw activeError;
+
+      // Contar usuários únicos que jogaram
+      const uniqueActiveUsers = new Set(activeSessions?.map(session => session.user_id) || []);
+      const activeUsers = uniqueActiveUsers.size;
 
       // Novos usuários hoje
       const today = new Date();
@@ -84,7 +88,7 @@ export const useRealUserStats = () => {
 
       const realStats = {
         totalUsers: totalUsers || 0,
-        activeUsers: activeUsers || 0,
+        activeUsers,
         newUsersToday: newUsersToday || 0,
         totalAdmins: totalAdmins || 0,
         averageScore,
@@ -93,6 +97,7 @@ export const useRealUserStats = () => {
       };
 
       console.log('📊 Estatísticas reais carregadas:', realStats);
+      console.log(`👥 Usuários únicos ativos nas últimas 24h: ${activeUsers} (de ${activeSessions?.length || 0} sessões)`);
       setStats(realStats);
     } catch (error) {
       console.error('❌ Erro ao carregar estatísticas reais:', error);
