@@ -109,6 +109,7 @@ export type Database = {
           rules: Json | null
           start_date: string
           status: string | null
+          theme: string | null
           title: string
           updated_at: string | null
         }
@@ -125,6 +126,7 @@ export type Database = {
           rules?: Json | null
           start_date: string
           status?: string | null
+          theme?: string | null
           title: string
           updated_at?: string | null
         }
@@ -141,6 +143,7 @@ export type Database = {
           rules?: Json | null
           start_date?: string
           status?: string | null
+          theme?: string | null
           title?: string
           updated_at?: string | null
         }

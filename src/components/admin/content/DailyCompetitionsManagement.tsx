@@ -72,7 +72,22 @@ export const DailyCompetitionsManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCompetitions(data || []);
+      
+      // Map the data to match our interface
+      const mappedCompetitions: DailyCompetition[] = (data || []).map(comp => ({
+        id: comp.id,
+        title: comp.title,
+        description: comp.description || '',
+        theme: comp.theme || 'Geral',
+        start_date: comp.start_date,
+        end_date: comp.end_date,
+        prize_pool: comp.prize_pool || 0,
+        max_participants: comp.max_participants || 500,
+        status: comp.status || 'draft',
+        created_at: comp.created_at
+      }));
+      
+      setCompetitions(mappedCompetitions);
     } catch (error) {
       toast({
         title: "Erro",
