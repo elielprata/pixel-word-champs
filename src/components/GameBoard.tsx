@@ -23,9 +23,10 @@ interface GameBoardProps {
   onTimeUp: () => void;
   onLevelComplete: (levelScore: number) => void;
   onAdvanceLevel: () => void;
+  onStopGame: () => void;
 }
 
-const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, onAdvanceLevel }: GameBoardProps) => {
+const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, onAdvanceLevel, onStopGame }: GameBoardProps) => {
   const { boardData, size, levelWords } = useBoard(level);
   const { 
     selectedCells, 
@@ -128,6 +129,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
 
   const handleStayLevel = () => {
     setShowLevelComplete(false);
+    onStopGame();
   };
 
   const handleRevive = () => {
