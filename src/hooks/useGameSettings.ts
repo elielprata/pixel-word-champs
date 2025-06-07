@@ -81,6 +81,7 @@ export const useGameSettings = () => {
         'points_per_3_letter_word': '10',
         'points_per_4_letter_word': '20',
         'points_per_5_letter_word': '30',
+        'points_per_expert_word': '50',
         'base_time_limit': '300',
         'hints_per_level': '1',
         'revive_time_bonus': '30'
