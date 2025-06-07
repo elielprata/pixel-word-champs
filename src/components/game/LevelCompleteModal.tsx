@@ -44,7 +44,7 @@ const LevelCompleteModal = ({
               className="w-full bg-green-500 hover:bg-green-600 text-white"
             >
               <ArrowRight className="w-4 h-4 mr-2" />
-              Avançar para Nível {level + 1}
+              Iniciar
             </Button>
             
             <Button 
