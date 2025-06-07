@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DashboardStats } from "@/components/admin/DashboardStats";
-import { ChallengesTab } from "@/components/admin/ChallengesTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { PaymentsTab } from "@/components/admin/PaymentsTab";
@@ -12,7 +10,7 @@ import { SecurityTab } from "@/components/admin/SecurityTab";
 import { MetricsTab } from "@/components/admin/MetricsTab";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { SupportTab } from "@/components/admin/SupportTab";
-import { BarChart3, Shield, Users, Trophy, CreditCard, Target, Activity, TrendingUp, AlertCircle, Plus, Gamepad2, MessageSquare } from 'lucide-react';
+import { BarChart3, Shield, Users, Trophy, CreditCard, Activity, TrendingUp, AlertCircle, Plus, Gamepad2, MessageSquare } from 'lucide-react';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -25,15 +23,8 @@ const AdminPanel = () => {
     totalUsers: 8500
   };
 
-  const mockChallenges = [
-    { id: 1, title: "Desafio Matinal", status: "Ativo", players: 450 },
-    { id: 2, title: "Animais Selvagens", status: "Agendado", players: 0 },
-    { id: 3, title: "Cidades do Brasil", status: "Finalizado", players: 320 }
-  ];
-
   const tabConfig = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'challenges', label: 'Desafios', icon: Target },
     { id: 'content', label: 'Conteúdo', icon: Gamepad2 },
     { id: 'rankings', label: 'Rankings', icon: Trophy },
     { id: 'payments', label: 'Premiação', icon: CreditCard },
@@ -230,11 +221,7 @@ const AdminPanel = () => {
               <MetricsTab retention={mockStats.retention} />
             </TabsContent>
 
-            {/* Other Tabs */}
-            <TabsContent value="challenges" className="mt-0">
-              <ChallengesTab challenges={mockChallenges} />
-            </TabsContent>
-
+            {/* Content Tab */}
             <TabsContent value="content" className="mt-0">
               <GameContentTab />
             </TabsContent>
