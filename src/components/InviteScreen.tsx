@@ -1,21 +1,33 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Share2, Copy, Users, Gift, Star, Trophy } from 'lucide-react';
+import { Share2, Copy, Users, Gift, Star, Trophy, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import SocialShareModal from './SocialShareModal';
+import { useInvites } from '@/hooks/useInvites';
+import { useAuth } from '@/hooks/useAuth';
 
 const InviteScreen = () => {
-  const [inviteCode] = useState('ARENA2024XYZ');
   const [showShareModal, setShowShareModal] = useState(false);
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const {
+    inviteCode,
+    invitedFriends,
+    stats,
+    isLoading,
+    error
+  } = useInvites();
 
   const shareText = `Jogue Letra Arena comigo! Use meu código ${inviteCode} e ganhe bônus especiais! 🎮`;
   const shareUrl = `https://letraarena.com/convite/${inviteCode}`;
 
   const handleCopyCode = () => {
+    if (!inviteCode) return;
+    
     navigator.clipboard.writeText(inviteCode);
     toast({
       title: "Código copiado!",
@@ -24,6 +36,8 @@ const InviteScreen = () => {
   };
 
   const handleShare = async () => {
+    if (!inviteCode) return;
+    
     if (navigator.share) {
       try {
         await navigator.share({
@@ -32,7 +46,6 @@ const InviteScreen = () => {
           url: shareUrl,
         });
       } catch (error) {
-        // Se falhar na API nativa, mostrar modal como fallback
         console.log('Native share failed, showing modal:', error);
         setShowShareModal(true);
       }
@@ -41,16 +54,47 @@ const InviteScreen = () => {
     }
   };
 
-  const invitedFriends = [
-    { name: "Ana Silva", status: "Ativo", reward: 50, level: 3 },
-    { name: "Pedro Costa", status: "Pendente", reward: 0, level: 0 },
-    { name: "Maria Santos", status: "Ativo", reward: 50, level: 2 },
-  ];
-
-  const totalPoints = invitedFriends.reduce((sum, friend) => sum + friend.reward, 0);
-  const activeFriends = invitedFriends.filter(friend => friend.status === 'Ativo').length;
   const nextRewardAt = 5;
-  const progressToNextReward = (activeFriends / nextRewardAt) * 100;
+  const progressToNextReward = (stats.activeFriends / nextRewardAt) * 100;
+
+  if (!isAuthenticated) {
+    return (
+      <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen flex items-center justify-center">
+        <Card className="text-center p-8">
+          <CardContent>
+            <h2 className="text-xl font-semibold mb-4">Faça login para convidar amigos</h2>
+            <p className="text-gray-600">Você precisa estar logado para acessar o sistema de convites.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen flex items-center justify-center">
+        <Card className="text-center p-8">
+          <CardContent className="flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin mr-2" />
+            <span>Carregando dados de convites...</span>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen flex items-center justify-center">
+        <Card className="text-center p-8">
+          <CardContent>
+            <h2 className="text-xl font-semibold mb-4 text-red-600">Erro ao carregar</h2>
+            <p className="text-gray-600">{error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen">
@@ -67,19 +111,19 @@ const InviteScreen = () => {
       <div className="grid grid-cols-3 gap-3 mb-6">
         <Card className="text-center border-0 bg-white/80 backdrop-blur-sm shadow-sm">
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-purple-600">{totalPoints}</div>
+            <div className="text-2xl font-bold text-purple-600">{stats.totalPoints}</div>
             <div className="text-xs text-gray-600 mt-1">Pontos Ganhos</div>
           </CardContent>
         </Card>
         <Card className="text-center border-0 bg-white/80 backdrop-blur-sm shadow-sm">
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">{activeFriends}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.activeFriends}</div>
             <div className="text-xs text-gray-600 mt-1">Amigos Ativos</div>
           </CardContent>
         </Card>
         <Card className="text-center border-0 bg-white/80 backdrop-blur-sm shadow-sm">
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">{invitedFriends.length}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.totalInvites}</div>
             <div className="text-xs text-gray-600 mt-1">Total Convites</div>
           </CardContent>
         </Card>
@@ -94,49 +138,51 @@ const InviteScreen = () => {
               <span className="font-semibold text-gray-800">Próxima Recompensa</span>
             </div>
             <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-              {activeFriends}/{nextRewardAt} amigos
+              {stats.activeFriends}/{nextRewardAt} amigos
             </Badge>
           </div>
           <Progress value={progressToNextReward} className="h-2 mb-2" />
           <p className="text-sm text-gray-600">
-            Convide mais {nextRewardAt - activeFriends} amigos para ganhar <span className="font-semibold text-yellow-600">100 pontos bônus!</span>
+            Convide mais {Math.max(0, nextRewardAt - stats.activeFriends)} amigos para ganhar <span className="font-semibold text-yellow-600">100 pontos bônus!</span>
           </p>
         </CardContent>
       </Card>
 
       {/* Invite Code */}
-      <Card className="mb-6 border-0 bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-center text-lg font-semibold">
-            Seu Código Especial
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold tracking-widest">{inviteCode}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={handleCopyCode}
-              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white"
-            >
-              <Copy className="w-4 h-4 mr-2" />
-              Copiar
-            </Button>
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={handleShare}
-              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white"
-            >
-              <Share2 className="w-4 h-4 mr-2" />
-              Compartilhar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {inviteCode && (
+        <Card className="mb-6 border-0 bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-center text-lg font-semibold">
+              Seu Código Especial
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold tracking-widest">{inviteCode}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={handleCopyCode}
+                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copiar
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={handleShare}
+                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Compartilhar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* How it Works */}
       <Card className="mb-6 border-0 bg-white/80 backdrop-blur-sm shadow-sm">
@@ -174,7 +220,11 @@ const InviteScreen = () => {
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full flex items-center justify-center text-white font-semibold">
-                      {friend.name.charAt(0)}
+                      {friend.avatar_url ? (
+                        <img src={friend.avatar_url} alt={friend.name} className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        friend.name.charAt(0)
+                      )}
                     </div>
                     <div>
                       <p className="font-medium text-gray-800">{friend.name}</p>
@@ -214,13 +264,15 @@ const InviteScreen = () => {
       </Card>
 
       {/* Social Share Modal */}
-      <SocialShareModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        inviteCode={inviteCode}
-        shareText={shareText}
-        shareUrl={shareUrl}
-      />
+      {inviteCode && (
+        <SocialShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          inviteCode={inviteCode}
+          shareText={shareText}
+          shareUrl={shareUrl}
+        />
+      )}
     </div>
   );
 };

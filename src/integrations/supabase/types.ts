@@ -267,13 +267,49 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_rewards: {
+        Row: {
+          created_at: string | null
+          id: string
+          invite_code: string
+          invited_user_id: string
+          processed_at: string | null
+          reward_amount: number | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invite_code: string
+          invited_user_id: string
+          processed_at?: string | null
+          reward_amount?: number | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invite_code?: string
+          invited_user_id?: string
+          processed_at?: string | null
+          reward_amount?: number | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       invites: {
         Row: {
           code: string
           created_at: string | null
           id: string
           invited_by: string | null
+          invited_user_level: number | null
+          invited_user_score: number | null
           is_active: boolean | null
+          rewards_earned: number | null
           used_at: string | null
           used_by: string | null
         }
@@ -282,7 +318,10 @@ export type Database = {
           created_at?: string | null
           id?: string
           invited_by?: string | null
+          invited_user_level?: number | null
+          invited_user_score?: number | null
           is_active?: boolean | null
+          rewards_earned?: number | null
           used_at?: string | null
           used_by?: string | null
         }
@@ -291,7 +330,10 @@ export type Database = {
           created_at?: string | null
           id?: string
           invited_by?: string | null
+          invited_user_level?: number | null
+          invited_user_score?: number | null
           is_active?: boolean | null
+          rewards_earned?: number | null
           used_at?: string | null
           used_by?: string | null
         }
