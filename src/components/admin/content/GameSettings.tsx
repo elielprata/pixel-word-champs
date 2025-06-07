@@ -12,8 +12,7 @@ export const GameSettings = () => {
     saving,
     updateSetting,
     saveSettings,
-    resetToDefaults,
-    setAsDefaults
+    resetToDefaults
   } = useGameSettings();
 
   if (loading) {
@@ -41,7 +40,6 @@ export const GameSettings = () => {
       <GameSettingsHeader
         onSave={saveSettings}
         onReset={resetToDefaults}
-        onSetAsDefaults={setAsDefaults}
         saving={saving}
       />
 

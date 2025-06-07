@@ -77,7 +77,6 @@ export const useGameSettings = () => {
 
   const resetToDefaults = async () => {
     try {
-      // Buscar configurações padrão do banco de dados
       const { data: defaultSettings, error: fetchError } = await supabase
         .from('default_game_settings')
         .select('setting_key, setting_value');
@@ -93,7 +92,6 @@ export const useGameSettings = () => {
         return;
       }
 
-      // Atualizar as configurações atuais com os valores padrão
       const promises = defaultSettings.map(defaultSetting =>
         supabase
           .from('game_settings')
@@ -117,37 +115,6 @@ export const useGameSettings = () => {
     }
   };
 
-  const setAsDefaults = async () => {
-    try {
-      // Atualizar as configurações padrão com os valores atuais
-      const promises = settings.map(setting =>
-        supabase
-          .from('default_game_settings')
-          .upsert({
-            setting_key: setting.setting_key,
-            setting_value: setting.setting_value,
-            description: setting.description,
-            category: setting.category
-          }, {
-            onConflict: 'setting_key'
-          })
-      );
-
-      await Promise.all(promises);
-
-      toast({
-        title: "Sucesso",
-        description: "Configurações atuais definidas como padrão"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível definir as configurações como padrão",
-        variant: "destructive"
-      });
-    }
-  };
-
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -158,7 +125,6 @@ export const useGameSettings = () => {
     saving,
     updateSetting,
     saveSettings,
-    resetToDefaults,
-    setAsDefaults
+    resetToDefaults
   };
 };
