@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -41,40 +42,19 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
         throw rolesError;
       }
 
-      // Primeiro tentar buscar email do perfil (se disponível)
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      let userEmail = 'Email não disponível';
-
-      // Se não tiver no perfil, tentar buscar do auth.users via admin API
-      try {
-        const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
-        
-        if (!authError && authData.user) {
-          userEmail = authData.user.email || 'Email não disponível';
-        }
-      } catch (error) {
-        console.log('⚠️ Não foi possível acessar dados do auth (permissões limitadas)');
-        // Fallback: tentar extrair email do username se tiver formato de email
-        if (username && username.includes('@')) {
-          userEmail = username;
-        }
+      // Buscar dados do auth para pegar o email
+      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
+      
+      if (authError) {
+        console.error('❌ Erro ao buscar dados do auth:', authError);
+        throw authError;
       }
 
-      console.log('📋 Dados encontrados:', { 
-        roles: rolesData, 
-        email: userEmail,
-        profile: profileData 
-      });
+      console.log('📋 Dados encontrados:', { roles: rolesData, email: authData.user.email });
       
       return {
         roles: rolesData?.map(r => r.role) || [],
-        email: userEmail,
-        profile: profileData
+        email: authData.user.email || 'Email não disponível'
       };
     },
     enabled: isOpen && !!userId,
@@ -200,7 +180,7 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
             <h4 className="text-sm font-medium">Informações do usuário</h4>
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-sm"><strong>Username:</strong> {username}</p>
-              <p className="text-sm"><strong>Email:</strong> {userData?.email || 'Carregando...'}</p>
+              <p className="text-sm"><strong>Email:</strong> {userData?.email}</p>
             </div>
           </div>
 
