@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { 
   FileText, 
   BarChart3, 
@@ -17,22 +18,8 @@ import {
   RefreshCw,
   Crown
 } from 'lucide-react';
-
-const mockDailyRanking = [
-  { pos: 1, name: "João Silva", score: 2540, avatar: "JS", trend: "+15" },
-  { pos: 2, name: "Maria Santos", score: 2410, avatar: "MS", trend: "+8" },
-  { pos: 3, name: "Pedro Costa", score: 2380, avatar: "PC", trend: "+12" },
-  { pos: 4, name: "Ana Oliveira", score: 2200, avatar: "AO", trend: "+5" },
-  { pos: 5, name: "Carlos Lima", score: 2150, avatar: "CL", trend: "+3" },
-];
-
-const mockWeeklyRanking = [
-  { pos: 1, name: "Maria Santos", score: 15240, avatar: "MS", trend: "+120" },
-  { pos: 2, name: "João Silva", score: 14890, avatar: "JS", trend: "+95" },
-  { pos: 3, name: "Pedro Costa", score: 14210, avatar: "PC", trend: "+88" },
-  { pos: 4, name: "Ana Oliveira", score: 13550, avatar: "AO", trend: "+72" },
-  { pos: 5, name: "Carlos Lima", score: 13200, avatar: "CL", trend: "+65" },
-];
+import { useRankings } from '@/hooks/useRankings';
+import { rankingExportService } from '@/services/rankingExportService';
 
 const getRankingIcon = (position: number) => {
   switch (position) {
@@ -57,20 +44,49 @@ const getRankingColors = (position: number) => {
 };
 
 export const RankingsTab = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('daily');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { 
+    dailyRanking, 
+    weeklyRanking, 
+    totalPlayers, 
+    isLoading, 
+    refreshData 
+  } = useRankings();
 
   const handleRefresh = async () => {
-    setIsRefreshing(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsRefreshing(false);
+    await refreshData();
+    toast({
+      title: "Dados atualizados",
+      description: "Rankings foram atualizados com sucesso.",
+    });
   };
 
-  const handleExport = () => {
-    // Export functionality
-    console.log('Exporting rankings...');
+  const handleExport = async () => {
+    try {
+      if (activeTab === 'daily') {
+        const data = await rankingExportService.exportDailyRankings();
+        rankingExportService.exportToCSV(data, `ranking_diario_${new Date().toISOString().split('T')[0]}.csv`);
+      } else {
+        const data = await rankingExportService.exportWeeklyRankings();
+        rankingExportService.exportToCSV(data, `ranking_semanal_${new Date().toISOString().split('T')[0]}.csv`);
+      }
+      
+      toast({
+        title: "Exportação concluída",
+        description: "Ranking exportado com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro na exportação",
+        description: "Não foi possível exportar o ranking.",
+        variant: "destructive",
+      });
+    }
   };
+
+  const currentRanking = activeTab === 'daily' ? dailyRanking : weeklyRanking;
+  const activeCompetitions = activeTab === 'daily' ? 1 : 1; // Can be made dynamic later
 
   return (
     <div className="space-y-6">
@@ -96,15 +112,16 @@ export const RankingsTab = () => {
                 variant="outline" 
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20"
                 onClick={handleRefresh}
-                disabled={isRefreshing}
+                disabled={isLoading}
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Atualizar
               </Button>
               <Button 
                 variant="outline"
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20"
                 onClick={handleExport}
+                disabled={isLoading || currentRanking.length === 0}
               >
                 <Download className="h-4 w-4 mr-2" />
                 Exportar CSV
@@ -119,8 +136,8 @@ export const RankingsTab = () => {
                 <Users className="h-5 w-5" />
                 <span className="font-semibold">Jogadores Ativos</span>
               </div>
-              <div className="text-2xl font-bold">1,247</div>
-              <div className="text-sm text-blue-100">Participando hoje</div>
+              <div className="text-2xl font-bold">{totalPlayers.toLocaleString()}</div>
+              <div className="text-sm text-blue-100">Com pontuação</div>
             </div>
             
             <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
@@ -128,7 +145,7 @@ export const RankingsTab = () => {
                 <TrendingUp className="h-5 w-5" />
                 <span className="font-semibold">Competições</span>
               </div>
-              <div className="text-2xl font-bold">3</div>
+              <div className="text-2xl font-bold">{activeCompetitions}</div>
               <div className="text-sm text-blue-100">Ativas esta semana</div>
             </div>
             
@@ -179,48 +196,59 @@ export const RankingsTab = () => {
                   <p className="text-sm text-gray-600 mt-1">Top jogadores de hoje</p>
                 </div>
                 <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                  {mockDailyRanking.length} participantes
+                  {dailyRanking.length} participantes
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="space-y-1">
-                {mockDailyRanking.map((player) => (
-                  <div 
-                    key={player.pos} 
-                    className={`flex items-center gap-4 p-4 border-l-4 hover:shadow-md transition-all ${getRankingColors(player.pos)}`}
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="flex items-center justify-center">
-                        {getRankingIcon(player.pos)}
+              {isLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+                  <span className="ml-2 text-gray-600">Carregando rankings...</span>
+                </div>
+              ) : dailyRanking.length === 0 ? (
+                <div className="flex items-center justify-center p-8">
+                  <p className="text-gray-600">Nenhum ranking disponível para hoje</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {dailyRanking.map((player) => (
+                    <div 
+                      key={player.user_id} 
+                      className={`flex items-center gap-4 p-4 border-l-4 hover:shadow-md transition-all ${getRankingColors(player.pos)}`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="flex items-center justify-center">
+                          {getRankingIcon(player.pos)}
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            {player.avatar}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">{player.name}</p>
+                            <p className="text-sm text-gray-500">Posição #{player.pos}</p>
+                          </div>
+                        </div>
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                          {player.avatar}
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-purple-600">
+                            {player.score.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-gray-500">pontos</p>
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">{player.name}</p>
-                          <p className="text-sm text-gray-500">Posição #{player.pos}</p>
-                        </div>
+                        
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          {player.trend}
+                        </Badge>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-purple-600">
-                          {player.score.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-500">pontos</p>
-                      </div>
-                      
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        {player.trend}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -234,48 +262,59 @@ export const RankingsTab = () => {
                   <p className="text-sm text-gray-600 mt-1">Top jogadores desta semana</p>
                 </div>
                 <Badge className="bg-purple-100 text-purple-800 border-purple-200">
-                  {mockWeeklyRanking.length} participantes
+                  {weeklyRanking.length} participantes
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="space-y-1">
-                {mockWeeklyRanking.map((player) => (
-                  <div 
-                    key={player.pos} 
-                    className={`flex items-center gap-4 p-4 border-l-4 hover:shadow-md transition-all ${getRankingColors(player.pos)}`}
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="flex items-center justify-center">
-                        {getRankingIcon(player.pos)}
+              {isLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+                  <span className="ml-2 text-gray-600">Carregando rankings...</span>
+                </div>
+              ) : weeklyRanking.length === 0 ? (
+                <div className="flex items-center justify-center p-8">
+                  <p className="text-gray-600">Nenhum ranking disponível para esta semana</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {weeklyRanking.map((player) => (
+                    <div 
+                      key={player.user_id} 
+                      className={`flex items-center gap-4 p-4 border-l-4 hover:shadow-md transition-all ${getRankingColors(player.pos)}`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="flex items-center justify-center">
+                          {getRankingIcon(player.pos)}
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            {player.avatar}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">{player.name}</p>
+                            <p className="text-sm text-gray-500">Posição #{player.pos}</p>
+                          </div>
+                        </div>
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                          {player.avatar}
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-purple-600">
+                            {player.score.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-gray-500">pontos</p>
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">{player.name}</p>
-                          <p className="text-sm text-gray-500">Posição #{player.pos}</p>
-                        </div>
+                        
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          {player.trend}
+                        </Badge>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-purple-600">
-                          {player.score.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-500">pontos</p>
-                      </div>
-                      
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        {player.trend}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -290,7 +329,7 @@ export const RankingsTab = () => {
               <h4 className="font-semibold text-blue-900 mb-2">Informações sobre Rankings</h4>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• Rankings são atualizados automaticamente em tempo real</li>
-                <li>• Dados são somente leitura e não podem ser editados manualmente</li>
+                <li>• Dados são carregados diretamente do banco de dados</li>
                 <li>• Rankings diários são resetados a cada 24 horas às 00:00</li>
                 <li>• Rankings semanais são resetados toda segunda-feira</li>
               </ul>
