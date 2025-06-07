@@ -98,7 +98,15 @@ export const useSecurityData = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAlerts(data || []);
+      
+      // Fazer cast explícito dos tipos para garantir compatibilidade
+      const typedAlerts: FraudAlert[] = (data || []).map(alert => ({
+        ...alert,
+        severity: alert.severity as 'low' | 'medium' | 'high' | 'critical',
+        status: alert.status as 'pending' | 'investigating' | 'resolved' | 'false_positive'
+      }));
+      
+      setAlerts(typedAlerts);
     } catch (error) {
       console.error('Erro ao buscar alertas:', error);
       toast({
@@ -236,14 +244,18 @@ export const useSecurityData = () => {
     }
   };
 
+  const refreshData = async (): Promise<void> => {
+    await Promise.all([
+      fetchSecurityStats(),
+      fetchAlerts(),
+      fetchSettings()
+    ]);
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([
-        fetchSecurityStats(),
-        fetchAlerts(),
-        fetchSettings()
-      ]);
+      await refreshData();
       setLoading(false);
     };
 
@@ -258,6 +270,6 @@ export const useSecurityData = () => {
     updateAlertStatus,
     updateSetting,
     exportSecurityReport,
-    refreshData: () => Promise.all([fetchSecurityStats(), fetchAlerts(), fetchSettings()])
+    refreshData
   };
 };
