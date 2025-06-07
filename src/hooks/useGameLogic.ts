@@ -26,9 +26,14 @@ export const useGameLogic = (
 
   // Reset state when level changes
   useEffect(() => {
+    console.log(`Resetting game state for level ${level}`);
     setFoundWords([]);
     setPermanentlyMarkedCells([]);
     setHintsUsed(0);
+    setShowLevelComplete(false);
+    setShowGameOver(false);
+    setCanRevive(true);
+    setHintHighlightedCells([]);
   }, [level]);
 
   // Detecta quando o tempo acaba
@@ -42,10 +47,11 @@ export const useGameLogic = (
   useEffect(() => {
     if (foundWords.length === 5 && !showLevelComplete) {
       const levelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
+      console.log(`Level ${level} completed with score ${levelScore}`);
       setShowLevelComplete(true);
       onLevelComplete(levelScore);
     }
-  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete]);
+  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete, level]);
 
   const addFoundWord = (word: string, positions: Position[]) => {
     const points = getPointsForWord(word);

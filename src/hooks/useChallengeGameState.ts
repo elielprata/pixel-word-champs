@@ -9,6 +9,7 @@ export const useChallengeGameState = (challengeId: number) => {
   const [score, setScore] = useState(0);
   const [currentLevelScore, setCurrentLevelScore] = useState(0);
   const [completedChallenges, setCompletedChallenges] = useState<Set<number>>(new Set());
+  const [isAdvancing, setIsAdvancing] = useState(false);
 
   // Timer effect
   useEffect(() => {
@@ -28,6 +29,7 @@ export const useChallengeGameState = (challengeId: number) => {
     setTimeRemaining(180);
     setIsGameStarted(false);
     setShowInstructions(true);
+    setIsAdvancing(false);
   }, [challengeId]);
 
   const startGame = () => {
@@ -44,21 +46,43 @@ export const useChallengeGameState = (challengeId: number) => {
     setTimeRemaining(180);
     setIsGameStarted(false);
     setShowInstructions(true);
+    setIsAdvancing(false);
   };
 
   const advanceLevel = () => {
-    setScore(prev => prev + currentLevelScore);
+    if (isAdvancing) {
+      console.log('Already advancing level, ignoring duplicate call');
+      return false;
+    }
+
+    setIsAdvancing(true);
+    
+    // Add current level score to total score
+    setScore(prev => {
+      const newScore = prev + currentLevelScore;
+      console.log(`Total score updated: ${prev} + ${currentLevelScore} = ${newScore}`);
+      return newScore;
+    });
     
     if (currentLevel < 20) {
-      setCurrentLevel(prev => prev + 1);
+      const nextLevel = currentLevel + 1;
+      console.log(`Advancing from level ${currentLevel} to ${nextLevel}`);
+      
+      setCurrentLevel(nextLevel);
       setTimeRemaining(180);
       setCurrentLevelScore(0);
-      console.log(`Avançando para o nível ${currentLevel + 1}`);
+      
+      // Reset advancing flag after a short delay to allow state updates
+      setTimeout(() => {
+        setIsAdvancing(false);
+      }, 100);
+      
+      return false;
     } else {
       console.log('Desafio completado! Todos os níveis foram concluídos.');
+      setIsAdvancing(false);
       return true; // Indicates challenge completed
     }
-    return false;
   };
 
   const stopGame = () => {
@@ -75,6 +99,7 @@ export const useChallengeGameState = (challengeId: number) => {
     score,
     currentLevelScore,
     completedChallenges,
+    isAdvancing,
     setCurrentLevelScore,
     startGame,
     resetToHome,

@@ -35,10 +35,12 @@ const GameModals = ({
   const totalScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
 
   const handleAdvanceLevelClick = () => {
+    console.log(`Advancing to next level from level ${level}`);
     onAdvanceLevel();
   };
 
   const handleStayLevel = () => {
+    console.log(`User chose to stop at level ${level}`);
     onStopGame();
   };
 
