@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Trophy, ArrowRight } from 'lucide-react';
+import { Trophy, ArrowRight, StopCircle } from 'lucide-react';
 
 interface LevelCompleteModalProps {
   isOpen: boolean;
@@ -51,6 +51,7 @@ const LevelCompleteModal = ({
               onClick={onStay}
               className="w-full bg-red-500 hover:bg-red-600 text-white"
             >
+              <StopCircle className="w-4 h-4 mr-2" />
               Quero Parar
             </Button>
           </div>

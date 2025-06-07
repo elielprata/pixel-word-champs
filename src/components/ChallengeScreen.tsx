@@ -52,6 +52,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleStopGame = () => {
+    console.log(`Usuário parou no desafio ${challengeId} - marcando como concluído`);
     stopGame();
     handleBackToHome();
   };
@@ -61,6 +62,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleBackToHome = () => {
+    console.log(`Voltando para tela inicial - desafio ${challengeId} marcado como concluído`);
     resetToHome();
     onBack();
   };
