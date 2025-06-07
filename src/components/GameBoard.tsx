@@ -31,9 +31,11 @@ interface GameBoardProps {
   timeLeft: number;
   onWordFound: (word: string, points: number) => void;
   onTimeUp: () => void;
+  onLevelComplete: (levelScore: number) => void;
+  onAdvanceLevel: () => void;
 }
 
-const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) => {
+const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, onAdvanceLevel }: GameBoardProps) => {
   const getBoardSize = (level: number) => {
     if (level === 1 || level === 2) return 5;
     if (level === 3 || level === 4) return 6;
@@ -200,9 +202,11 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
   // Verifica se completou o nível
   useEffect(() => {
     if (foundWords.length === 5 && !showLevelComplete) {
+      const levelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
       setShowLevelComplete(true);
+      onLevelComplete(levelScore);
     }
-  }, [foundWords.length, showLevelComplete]);
+  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete]);
 
   const getPointsForWord = (word: string) => {
     const length = word.length;
@@ -333,8 +337,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp }: GameBoardProps) =
 
   const handleAdvanceLevel = () => {
     setShowLevelComplete(false);
-    console.log(`Avançando para o nível ${level + 1}`);
-    // Aqui você pode adicionar lógica para avançar para o próximo nível
+    onAdvanceLevel();
   };
 
   const handleStayLevel = () => {

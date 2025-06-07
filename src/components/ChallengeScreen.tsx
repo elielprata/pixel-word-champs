@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import GameBoard from './GameBoard';
 import ChallengeHeader from './challenge/ChallengeHeader';
@@ -6,6 +7,7 @@ import GameRules from './challenge/GameRules';
 import PowerUpsSection from './challenge/PowerUpsSection';
 import StartButton from './challenge/StartButton';
 import GameHeader from './challenge/GameHeader';
+import { useLevelProgression } from '@/hooks/useLevelProgression';
 
 interface ChallengeScreenProps {
   challengeId: number;
@@ -18,6 +20,14 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
   const [score, setScore] = useState(0);
+  const [currentLevelScore, setCurrentLevelScore] = useState(0);
+  
+  const { 
+    totalScore, 
+    saveLevelProgress, 
+    getHighestCompletedLevel,
+    isLoading 
+  } = useLevelProgression(challengeId);
 
   const challengeData = {
     1: { 
@@ -54,13 +64,45 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     }
   }, [isGameStarted, timeRemaining]);
 
+  // Initialize current level based on progress
+  useEffect(() => {
+    if (!isLoading) {
+      const highestLevel = getHighestCompletedLevel();
+      setCurrentLevel(Math.max(1, highestLevel + 1));
+    }
+  }, [isLoading, getHighestCompletedLevel]);
+
   const startGame = () => {
     setShowInstructions(false);
     setIsGameStarted(true);
+    setScore(totalScore);
+    setCurrentLevelScore(0);
   };
 
   const handleWordFound = (word: string, points: number) => {
-    setScore(prev => prev + points);
+    setCurrentLevelScore(prev => prev + points);
+  };
+
+  const handleLevelComplete = async (levelScore: number) => {
+    console.log(`Nível ${currentLevel} completado com ${levelScore} pontos!`);
+    
+    // Save progress to database
+    await saveLevelProgress(currentLevel, levelScore);
+    
+    // Update total score
+    setScore(prev => prev + levelScore);
+  };
+
+  const handleAdvanceLevel = () => {
+    if (currentLevel < 20) {
+      setCurrentLevel(prev => prev + 1);
+      setTimeRemaining(180); // Reset time for new level
+      setCurrentLevelScore(0); // Reset level score
+      console.log(`Avançando para o nível ${currentLevel + 1}`);
+    } else {
+      console.log('Desafio completado! Todos os níveis foram concluídos.');
+      onBack(); // Return to home if all levels completed
+    }
   };
 
   const handleTimeUp = () => {
@@ -104,6 +146,8 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
           timeLeft={timeRemaining}
           onWordFound={handleWordFound}
           onTimeUp={handleTimeUp}
+          onLevelComplete={handleLevelComplete}
+          onAdvanceLevel={handleAdvanceLevel}
         />
       </div>
     </div>
