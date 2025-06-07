@@ -11,9 +11,9 @@ export const UserGrowthMetrics = () => {
   if (isLoading) {
     return (
       <Card className="border-slate-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <TrendingUp className="h-4 w-4 text-blue-600" />
             Crescimento de Usuários
           </CardTitle>
         </CardHeader>
@@ -29,9 +29,9 @@ export const UserGrowthMetrics = () => {
   if (error) {
     return (
       <Card className="border-slate-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-red-600" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <TrendingUp className="h-4 w-4 text-red-600" />
             Crescimento de Usuários
           </CardTitle>
         </CardHeader>
@@ -63,10 +63,10 @@ export const UserGrowthMetrics = () => {
 
   return (
     <Card className="border-slate-200 shadow-lg">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <TrendingUp className="h-4 w-4 text-blue-600" />
             Crescimento de Usuários
           </CardTitle>
           <div className="text-right">
