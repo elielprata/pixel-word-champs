@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { StopCircle, Trophy, Play } from 'lucide-react';
+import { StopCircle, Trophy, Play, X } from 'lucide-react';
 
 interface GameOverModalProps {
   isOpen: boolean;
@@ -30,25 +30,36 @@ const GameOverModal = ({
   const handleReviveClick = () => {
     console.log('Iniciando anúncio para revive...');
     setIsWatchingAd(true);
-    
-    // Simular anúncio de 30 segundos
-    setTimeout(() => {
-      console.log('Anúncio concluído - ativando revive');
-      setIsWatchingAd(false);
-      onRevive();
-    }, 3000); // 3 segundos para demo, seria 30s real
+  };
+
+  const handleCloseAd = () => {
+    console.log('Anúncio fechado - ativando revive e adicionando tempo');
+    setIsWatchingAd(false);
+    onRevive();
   };
 
   if (isWatchingAd) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
         <Card className="w-80 m-4">
-          <CardContent className="p-6 text-center">
-            <div className="animate-spin w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <CardContent className="p-6 text-center relative">
+            <Button 
+              onClick={handleCloseAd}
+              className="absolute top-2 right-2 w-8 h-8 p-0 bg-gray-600 hover:bg-gray-700"
+              variant="secondary"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            
+            <div className="animate-pulse w-16 h-16 bg-gray-300 rounded-lg mx-auto mb-4 flex items-center justify-center">
+              <Play className="w-8 h-8 text-gray-600" />
+            </div>
+            
             <h3 className="text-lg font-bold mb-2 text-white">Anúncio em Exibição</h3>
-            <p className="text-gray-300">Aguarde para receber +30 segundos...</p>
-            <div className="mt-4 bg-gray-800 rounded-lg p-3">
-              <p className="text-sm text-gray-400">O anúncio será fechado automaticamente</p>
+            <p className="text-gray-300 mb-4">Assista ao anúncio para receber +30 segundos</p>
+            
+            <div className="bg-gray-800 rounded-lg p-3">
+              <p className="text-sm text-gray-400">Clique no X quando o anúncio terminar</p>
             </div>
           </CardContent>
         </Card>
