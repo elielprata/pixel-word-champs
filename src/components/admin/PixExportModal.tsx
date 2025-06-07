@@ -85,7 +85,7 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
         const updateWinners = (winners: PaymentRecord[]) =>
           winners.map(winner => 
             winner.id === winnerId 
-              ? { ...winner, payment_status: 'paid' as const, payment_date: new Date().toISOString() }
+              ? { ...winner, payment_status: 'paid', payment_date: new Date().toISOString() }
               : winner
           );
 
@@ -136,7 +136,7 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
       const updateWinners = (winners: PaymentRecord[]) =>
         winners.map(winner => 
           pendingWinners.some(w => w.id === winner.id)
-            ? { ...winner, payment_status: 'paid' as const, payment_date: new Date().toISOString() }
+            ? { ...winner, payment_status: 'paid', payment_date: new Date().toISOString() }
             : winner
         );
 
@@ -179,7 +179,7 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
       holderName: winner.pix_holder_name || 'Não informado',
       consolidatedDate: winner.created_at,
       prize: winner.prize_amount,
-      paymentStatus: winner.payment_status
+      paymentStatus: winner.payment_status as 'pending' | 'paid' | 'cancelled'
     }));
 
     exportToCSV(exportData, prizeLevel);
@@ -215,7 +215,7 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
     holderName: winner.pix_holder_name || 'Não informado',
     consolidatedDate: winner.created_at,
     prize: winner.prize_amount,
-    paymentStatus: winner.payment_status
+    paymentStatus: winner.payment_status as 'pending' | 'paid' | 'cancelled'
   }));
 
   return (

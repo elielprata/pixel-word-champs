@@ -12,7 +12,7 @@ export const exportToCSV = (winners: Winner[], prizeLevel: string): void => {
       `"${winner.holderName}"`,
       winner.consolidatedDate,
       `R$ ${winner.prize.toLocaleString('pt-BR')}`,
-      winner.paymentStatus === 'paid' ? 'Pago' : 'Pendente'
+      winner.paymentStatus === 'paid' ? 'Pago' : winner.paymentStatus === 'cancelled' ? 'Cancelado' : 'Pendente'
     ].join(','))
   ].join('\n');
 

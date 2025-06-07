@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface PrizeConfiguration {
   id: string;
-  type: 'individual' | 'group';
+  type: string;
   position?: number;
   position_range?: string;
   prize_amount: number;

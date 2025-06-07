@@ -4,10 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 export interface PaymentRecord {
   id: string;
   user_id: string;
-  ranking_type: 'daily' | 'weekly';
+  ranking_type: string;
   ranking_id?: string;
   prize_amount: number;
-  payment_status: 'pending' | 'paid' | 'cancelled';
+  payment_status: string;
   payment_date?: string;
   pix_key?: string;
   pix_holder_name?: string;
@@ -124,10 +124,10 @@ export const paymentService = {
         if (prizeAmount > 0) {
           paymentRecords.push({
             user_id: ranking.user_id,
-            ranking_type: 'daily' as const,
+            ranking_type: 'daily',
             ranking_id: ranking.id,
             prize_amount: prizeAmount,
-            payment_status: 'pending' as const,
+            payment_status: 'pending',
             pix_key: ranking.profiles.pix_key,
             pix_holder_name: ranking.profiles.pix_holder_name,
             position: ranking.position

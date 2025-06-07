@@ -7,5 +7,5 @@ export interface Winner {
   holderName: string;
   consolidatedDate: string;
   prize: number;
-  paymentStatus: 'pending' | 'paid';
+  paymentStatus: 'pending' | 'paid' | 'cancelled';
 }
