@@ -28,7 +28,8 @@ export const useChallenges = (options: UseChallengesOptions = {}) => {
 
   const loadChallenges = async () => {
     try {
-      console.log('Loading challenges with activeOnly:', activeOnly);
+      console.log('🔍 Carregando desafios...');
+      console.log('Parâmetro activeOnly:', activeOnly);
       
       let query = supabase
         .from('challenges')
@@ -38,17 +39,33 @@ export const useChallenges = (options: UseChallengesOptions = {}) => {
       // Apply filter based on activeOnly parameter
       if (activeOnly) {
         query = query.eq('is_active', true);
-        console.log('Filtering for active challenges only');
+        console.log('✅ Aplicando filtro: is_active = true');
       } else {
-        console.log('Loading all challenges (including inactive)');
+        console.log('📋 Buscando TODOS os desafios (ativos e inativos)');
       }
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao buscar desafios:', error);
+        throw error;
+      }
       
-      console.log('Raw challenges from database:', data);
-      console.log('ActiveOnly setting:', activeOnly);
+      console.log('📊 Dados brutos do banco:', data);
+      console.log('📊 Total de registros encontrados:', data?.length || 0);
+      
+      if (data && data.length > 0) {
+        data.forEach((challenge, index) => {
+          console.log(`📝 Desafio ${index + 1}:`, {
+            id: challenge.id,
+            title: challenge.title,
+            is_active: challenge.is_active,
+            created_at: challenge.created_at
+          });
+        });
+      } else {
+        console.log('🚫 Nenhum desafio encontrado no banco de dados');
+      }
       
       // Cast the difficulty to the correct type
       const typedChallenges = (data || []).map(challenge => ({
@@ -56,12 +73,10 @@ export const useChallenges = (options: UseChallengesOptions = {}) => {
         difficulty: challenge.difficulty as 'easy' | 'medium' | 'hard'
       }));
       
-      console.log('Processed challenges:', typedChallenges);
-      console.log('Number of challenges returned:', typedChallenges.length);
-      
+      console.log('✅ Desafios processados:', typedChallenges.length);
       setChallenges(typedChallenges);
     } catch (error) {
-      console.error('Error loading challenges:', error);
+      console.error('❌ Erro crítico ao carregar desafios:', error);
       setChallenges([]);
     } finally {
       setIsLoading(false);

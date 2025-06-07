@@ -9,6 +9,7 @@ import { ChallengeCard } from './challenges/ChallengeCard';
 import { useChallengeActions } from './challenges/useChallengeActions';
 
 export const ChallengeManagementTab = () => {
+  // No admin, queremos ver TODOS os desafios (ativos e inativos)
   const { challenges, isLoading, refetch } = useChallenges({ activeOnly: false });
   const {
     isCreating,
@@ -23,9 +24,21 @@ export const ChallengeManagementTab = () => {
     updateFormData
   } = useChallengeActions(challenges, refetch);
 
+  console.log('⚙️ ChallengeManagementTab - Estado:', {
+    isLoading,
+    totalChallenges: challenges.length,
+    challenges: challenges.map(c => ({
+      id: c.id,
+      title: c.title,
+      is_active: c.is_active
+    }))
+  });
+
   if (isLoading) {
     return <div className="flex justify-center p-8">Carregando...</div>;
   }
+
+  console.log('⚙️ ChallengeManagementTab - Renderizando com', challenges.length, 'desafios');
 
   return (
     <div className="space-y-6">
@@ -61,6 +74,13 @@ export const ChallengeManagementTab = () => {
           />
         ))}
       </div>
+
+      {challenges.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Nenhum desafio encontrado no banco de dados.</p>
+          <p className="text-sm text-gray-500 mt-2">Clique em "Novo Desafio" para criar o primeiro.</p>
+        </div>
+      )}
     </div>
   );
 };

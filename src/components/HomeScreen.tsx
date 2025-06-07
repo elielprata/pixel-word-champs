@@ -17,10 +17,15 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewChallengeRankin
   const { challenges, isLoading: challengesLoading } = useChallenges({ activeOnly: true });
   const { progress, isLoading: progressLoading } = useChallengeProgress();
 
-  console.log('HomeScreen - Challenges:', challenges);
-  console.log('HomeScreen - Progress:', progress);
+  console.log('🏠 HomeScreen - Estado de carregamento:', {
+    challengesLoading,
+    progressLoading
+  });
+  console.log('🏠 HomeScreen - Desafios recebidos:', challenges);
+  console.log('🏠 HomeScreen - Progresso recebido:', progress);
 
   if (challengesLoading || progressLoading) {
+    console.log('⏳ HomeScreen - Ainda carregando dados...');
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 flex items-center justify-center">
         <div className="text-center">
@@ -32,6 +37,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewChallengeRankin
   }
 
   if (challenges.length === 0) {
+    console.log('🚫 HomeScreen - Nenhum desafio ativo encontrado');
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
         <div className="p-6 pb-24 max-w-lg mx-auto">
@@ -56,6 +62,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewChallengeRankin
       </div>
     );
   }
+
+  console.log('✅ HomeScreen - Renderizando com', challenges.length, 'desafios');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
@@ -86,7 +94,11 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewChallengeRankin
             const challengeProgress = progress[challenge.id];
             const isCompleted = challengeProgress?.is_completed || false;
             
-            console.log(`Challenge ${challenge.id} progress:`, challengeProgress);
+            console.log(`🎯 Renderizando desafio ${challenge.id}:`, {
+              title: challenge.title,
+              isCompleted,
+              progress: challengeProgress
+            });
             
             return (
               <ChallengeCard
