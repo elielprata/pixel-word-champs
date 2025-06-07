@@ -39,32 +39,60 @@ const GameCell = ({
     return 'bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 border-gray-200 hover:border-purple-300 hover:scale-105';
   };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault(); // Previne scroll durante seleção
+    
+    const touch = e.touches[0];
+    if (touch) {
+      const element = document.elementFromPoint(touch.clientX, touch.clientY);
+      
+      // Verificar se é uma célula válida
+      let targetCell = element;
+      
+      // Se não encontrou uma célula, procurar nos elementos pais
+      while (targetCell && !targetCell.hasAttribute('data-cell')) {
+        targetCell = targetCell.parentElement;
+      }
+      
+      if (targetCell && targetCell.hasAttribute('data-cell')) {
+        const row = parseInt(targetCell.getAttribute('data-row') || '0');
+        const col = parseInt(targetCell.getAttribute('data-col') || '0');
+        onCellMove(row, col);
+      }
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isSelecting) {
+      // Para mouse, usar as coordenadas do elemento atual
+      onCellMove(rowIndex, colIndex);
+    }
+  };
+
   return (
     <div
       className={`
         flex items-center justify-center font-bold cursor-pointer
-        transition-all duration-200 rounded-lg border-2
+        transition-all duration-200 rounded-lg border-2 select-none
         ${getCellClasses()}
       `}
       style={{ 
         width: `${cellSize}px`, 
         height: `${cellSize}px`,
-        fontSize: `${Math.max(cellSize * 0.35, 10)}px`
+        fontSize: `${Math.max(cellSize * 0.35, 10)}px`,
+        touchAction: 'none' // Importante para prevenir comportamentos padrão do touch
       }}
-      onTouchStart={() => onCellStart(rowIndex, colIndex)}
-      onTouchMove={(e) => {
-        const touch = e.touches[0];
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        const cell = element?.closest('[data-cell]');
-        if (cell) {
-          const row = parseInt(cell.getAttribute('data-row') || '0');
-          const col = parseInt(cell.getAttribute('data-col') || '0');
-          onCellMove(row, col);
-        }
+      onTouchStart={(e) => {
+        e.preventDefault();
+        onCellStart(rowIndex, colIndex);
       }}
-      onMouseDown={() => onCellStart(rowIndex, colIndex)}
-      onMouseEnter={() => isSelecting && onCellMove(rowIndex, colIndex)}
-      data-cell
+      onTouchMove={handleTouchMove}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onCellStart(rowIndex, colIndex);
+      }}
+      onMouseEnter={handleMouseMove}
+      data-cell="true"
       data-row={rowIndex}
       data-col={colIndex}
     >

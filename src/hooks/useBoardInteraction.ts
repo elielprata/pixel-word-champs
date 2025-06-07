@@ -1,17 +1,17 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 
 export const useBoardInteraction = () => {
   const [selectedCells, setSelectedCells] = useState<Position[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
 
-  const handleCellStart = (row: number, col: number) => {
+  const handleCellStart = useCallback((row: number, col: number) => {
     setIsSelecting(true);
     setSelectedCells([{ row, col }]);
-  };
+  }, []);
 
-  const handleCellMove = (row: number, col: number, isValidWordDirection: (positions: Position[]) => boolean) => {
+  const handleCellMove = useCallback((row: number, col: number, isValidWordDirection: (positions: Position[]) => boolean) => {
     if (!isSelecting) return;
     
     const newPosition = { row, col };
@@ -19,7 +19,8 @@ export const useBoardInteraction = () => {
       if (prev.length === 0) return [newPosition];
       
       // Verificar se a nova posição já está selecionada
-      if (prev.some(p => p.row === row && p.col === col)) {
+      const isAlreadySelected = prev.some(p => p.row === row && p.col === col);
+      if (isAlreadySelected) {
         return prev;
       }
       
@@ -32,18 +33,18 @@ export const useBoardInteraction = () => {
       
       return newPath;
     });
-  };
+  }, [isSelecting]);
 
-  const handleCellEnd = () => {
+  const handleCellEnd = useCallback(() => {
     setIsSelecting(false);
     const finalSelection = [...selectedCells];
     setSelectedCells([]);
     return finalSelection;
-  };
+  }, [selectedCells]);
 
-  const isCellSelected = (row: number, col: number) => {
+  const isCellSelected = useCallback((row: number, col: number) => {
     return selectedCells.some(pos => pos.row === row && pos.col === col);
-  };
+  }, [selectedCells]);
 
   return {
     selectedCells,

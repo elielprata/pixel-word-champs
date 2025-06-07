@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import GameProgressBar from './game/GameProgressBar';
 import GameStats from './game/GameStats';
@@ -172,10 +171,17 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
           gridTemplateColumns: `repeat(${size}, 1fr)`,
           gap: size > 7 ? '2px' : '4px',
           maxWidth: size > 7 ? '350px' : '320px',
-          width: '100%'
+          width: '100%',
+          touchAction: 'none' // Previne zoom e outros gestos
         }}
-        onTouchEnd={handleCellEndWithValidation}
-        onMouseUp={handleCellEndWithValidation}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          handleCellEndWithValidation();
+        }}
+        onMouseUp={(e) => {
+          e.preventDefault();
+          handleCellEndWithValidation();
+        }}
       >
         {boardData.board.map((row, rowIndex) =>
           row.map((letter, colIndex) => (
