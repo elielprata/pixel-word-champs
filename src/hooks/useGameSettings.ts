@@ -75,30 +75,6 @@ export const useGameSettings = () => {
     }
   };
 
-  const setAsDefaults = async () => {
-    try {
-      // Criar um mapeamento das configurações atuais para usar como padrão
-      const currentDefaults = settings.reduce((defaults, setting) => {
-        defaults[setting.setting_key] = setting.setting_value;
-        return defaults;
-      }, {} as Record<string, string>);
-
-      // Aqui você pode salvar os valores atuais como novos padrões
-      // Por exemplo, salvando em uma tabela de configurações padrão ou atualizando uma configuração específica
-      
-      toast({
-        title: "Sucesso",
-        description: "Configurações atuais definidas como padrão"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível definir as configurações como padrão",
-        variant: "destructive"
-      });
-    }
-  };
-
   const resetToDefaults = async () => {
     try {
       const defaultSettings = {
@@ -144,7 +120,6 @@ export const useGameSettings = () => {
     saving,
     updateSetting,
     saveSettings,
-    setAsDefaults,
     resetToDefaults
   };
 };

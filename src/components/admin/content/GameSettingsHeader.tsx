@@ -2,16 +2,15 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Save, RotateCcw, Settings } from 'lucide-react';
+import { Save, RotateCcw } from 'lucide-react';
 
 interface GameSettingsHeaderProps {
   onSave: () => void;
   onReset: () => void;
-  onSetAsDefault: () => void;
   saving: boolean;
 }
 
-export const GameSettingsHeader = ({ onSave, onReset, onSetAsDefault, saving }: GameSettingsHeaderProps) => {
+export const GameSettingsHeader = ({ onSave, onReset, saving }: GameSettingsHeaderProps) => {
   return (
     <Card className="border-slate-200 shadow-sm">
       <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200">
@@ -22,15 +21,7 @@ export const GameSettingsHeader = ({ onSave, onReset, onSetAsDefault, saving }: 
               Ajuste pontuações e mecânicas do jogo. Para valores de premiação, acesse o menu "Premiação".
             </p>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              onClick={onSetAsDefault}
-              className="flex items-center gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              Definir como Padrão
-            </Button>
+          <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={onReset}
