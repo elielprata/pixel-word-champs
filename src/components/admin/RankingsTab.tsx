@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useRankings } from '@/hooks/useRankings';
+import { useCompetitions } from '@/hooks/useCompetitions';
 import { rankingExportService } from '@/services/rankingExportService';
 import { RankingHeader } from './rankings/RankingHeader';
 import { RankingTabs } from './rankings/RankingTabs';
@@ -19,6 +20,8 @@ export const RankingsTab = () => {
     isLoading, 
     refreshData 
   } = useRankings();
+  
+  const { competitions } = useCompetitions();
 
   const handleRefresh = async () => {
     await refreshData();
@@ -57,6 +60,7 @@ export const RankingsTab = () => {
     <div className="space-y-6">
       <RankingHeader
         totalPlayers={totalPlayers}
+        activeCompetitions={competitions.length}
         isLoading={isLoading}
         onRefresh={handleRefresh}
         onExport={handleExport}
