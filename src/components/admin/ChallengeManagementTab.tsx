@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,11 +40,22 @@ export const ChallengeManagementTab = () => {
     });
   };
 
+  const getNextId = () => {
+    if (challenges.length === 0) return 1;
+    return Math.max(...challenges.map(c => c.id)) + 1;
+  };
+
   const handleCreate = async () => {
     try {
+      const nextId = getNextId();
+      const challengeData = {
+        id: nextId,
+        ...formData
+      };
+
       const { error } = await supabase
         .from('challenges')
-        .insert(formData);
+        .insert(challengeData);
 
       if (error) throw error;
 
