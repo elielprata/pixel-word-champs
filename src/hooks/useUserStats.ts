@@ -35,6 +35,8 @@ export const useUserStats = () => {
 
     setIsLoading(true);
     try {
+      console.log('📊 Carregando estatísticas do usuário:', user.id);
+
       // Buscar perfil do usuário
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -52,25 +54,28 @@ export const useUserStats = () => {
         .eq('date', new Date().toISOString().split('T')[0])
         .maybeSingle();
 
-      if (dailyError) throw dailyError;
+      if (dailyError && dailyError.code !== 'PGRST116') {
+        console.warn('Erro ao buscar ranking diário:', dailyError);
+      }
 
-      // Calcular sequência de vitórias (níveis completados nos últimos 7 dias)
+      // Calcular sequência de vitórias baseada em jogos completados recentemente
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
       const { data: recentSessions, error: sessionsError } = await supabase
         .from('game_sessions')
-        .select('completed_at')
+        .select('completed_at, is_completed')
         .eq('user_id', user.id)
         .eq('is_completed', true)
         .gte('completed_at', sevenDaysAgo.toISOString())
         .order('completed_at', { ascending: false });
 
-      if (sessionsError) throw sessionsError;
+      if (sessionsError) {
+        console.warn('Erro ao buscar sessões:', sessionsError);
+      }
 
-      // Calcular sequência contínua
+      // Calcular sequência contínua de dias com jogos
       let streak = 0;
-      const today = new Date().toDateString();
       const completedDates = new Set(
         recentSessions?.map(session => 
           new Date(session.completed_at).toDateString()
@@ -87,16 +92,19 @@ export const useUserStats = () => {
         }
       }
 
-      setStats({
+      const userStats = {
         position: dailyRanking?.position || null,
         totalScore: profile?.total_score || 0,
         gamesPlayed: profile?.games_played || 0,
         winStreak: streak,
         bestDailyPosition: profile?.best_daily_position || null,
         bestWeeklyPosition: profile?.best_weekly_position || null
-      });
+      };
+
+      console.log('📊 Estatísticas do usuário carregadas:', userStats);
+      setStats(userStats);
     } catch (error) {
-      console.error('Error loading user stats:', error);
+      console.error('❌ Erro ao carregar estatísticas do usuário:', error);
     } finally {
       setIsLoading(false);
     }

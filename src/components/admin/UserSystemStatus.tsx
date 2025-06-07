@@ -36,7 +36,7 @@ const useSystemStatus = () => {
         const { data: authData, error: authError } = await supabase.auth.getSession();
         authentication = authError ? 'offline' : 'online';
 
-        // Simular conexões ativas (baseado em sessões recentes)
+        // Calcular conexões ativas baseado em sessões recentes
         const oneHourAgo = new Date();
         oneHourAgo.setHours(oneHourAgo.getHours() - 1);
 
