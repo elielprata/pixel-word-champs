@@ -151,8 +151,8 @@ export const useChallengeGameState = (challengeId: number) => {
   };
 
   const stopGame = () => {
+    console.log(`Usuário escolheu parar no desafio ${challengeId} - marcando como concluído`);
     dispatch({ type: 'COMPLETE_CHALLENGE', challengeId });
-    console.log(`Usuário parou no desafio ${challengeId}`);
     return true;
   };
 

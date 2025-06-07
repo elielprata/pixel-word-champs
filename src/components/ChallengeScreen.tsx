@@ -55,9 +55,12 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleStopGame = () => {
-    console.log(`Usuário parou no desafio ${challengeId} - marcando como concluído`);
-    stopGame();
-    handleBackToHome();
+    console.log(`Usuário parou no desafio ${challengeId} - competição sendo marcada como concluída`);
+    const isCompleted = stopGame();
+    if (isCompleted) {
+      console.log(`Desafio ${challengeId} marcado como concluído - usuário não pode mais jogar esta competição`);
+      handleBackToHome();
+    }
   };
 
   const handleTimeUp = () => {
@@ -65,7 +68,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleBackToHome = () => {
-    console.log(`Voltando para tela inicial - desafio ${challengeId} marcado como concluído`);
+    console.log(`Voltando para tela inicial - desafio ${challengeId} ${isChallengeCompleted ? 'já está' : 'foi'} marcado como concluído`);
     resetToHome();
     onBack();
   };
