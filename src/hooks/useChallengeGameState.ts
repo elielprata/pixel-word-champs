@@ -1,9 +1,9 @@
 
 import { useReducer, useEffect } from 'react';
+import { useGameTimer } from './useGameTimer';
 
 interface GameState {
   currentLevel: number;
-  timeRemaining: number;
   isGameStarted: boolean;
   showInstructions: boolean;
   score: number;
@@ -20,12 +20,10 @@ type GameAction =
   | { type: 'ADVANCE_LEVEL'; payload: { nextLevel: number; newScore: number } }
   | { type: 'COMPLETE_CHALLENGE'; challengeId: number }
   | { type: 'SET_ADVANCING'; payload: boolean }
-  | { type: 'TICK_TIMER' }
   | { type: 'RESET_FOR_CHALLENGE'; challengeId: number };
 
 const initialState: GameState = {
   currentLevel: 1,
-  timeRemaining: 180,
   isGameStarted: false,
   showInstructions: true,
   score: 0,
@@ -68,7 +66,6 @@ function gameStateReducer(state: GameState, action: GameAction): GameState {
         ...state,
         currentLevel: action.payload.nextLevel,
         score: action.payload.newScore,
-        timeRemaining: 180,
         currentLevelScore: 0,
         isAdvancing: false
       };
@@ -86,12 +83,6 @@ function gameStateReducer(state: GameState, action: GameAction): GameState {
         isAdvancing: action.payload
       };
     
-    case 'TICK_TIMER':
-      return {
-        ...state,
-        timeRemaining: Math.max(0, state.timeRemaining - 1)
-      };
-    
     case 'RESET_FOR_CHALLENGE':
       return {
         ...initialState,
@@ -105,16 +96,7 @@ function gameStateReducer(state: GameState, action: GameAction): GameState {
 
 export const useChallengeGameState = (challengeId: number) => {
   const [state, dispatch] = useReducer(gameStateReducer, initialState);
-
-  // Timer effect
-  useEffect(() => {
-    if (state.isGameStarted && state.timeRemaining > 0) {
-      const timer = setInterval(() => {
-        dispatch({ type: 'TICK_TIMER' });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [state.isGameStarted, state.timeRemaining]);
+  const { timeRemaining, hasRevived, extendTime, canRevive } = useGameTimer(180, state.isGameStarted);
 
   // Reset to level 1 when component mounts (when entering the challenge)
   useEffect(() => {
@@ -174,19 +156,30 @@ export const useChallengeGameState = (challengeId: number) => {
     return true;
   };
 
+  const handleRevive = () => {
+    const success = extendTime();
+    if (success) {
+      console.log(`Revive usado! Tempo estendido com base na configuração do painel admin`);
+    }
+    return success;
+  };
+
   return {
     currentLevel: state.currentLevel,
-    timeRemaining: state.timeRemaining,
+    timeRemaining,
     isGameStarted: state.isGameStarted,
     showInstructions: state.showInstructions,
     score: state.score,
     currentLevelScore: state.currentLevelScore,
     completedChallenges: state.completedChallenges,
     isAdvancing: state.isAdvancing,
+    canRevive,
+    hasRevived,
     setCurrentLevelScore,
     startGame,
     resetToHome,
     advanceLevel,
-    stopGame
+    stopGame,
+    handleRevive
   };
 };

@@ -48,7 +48,10 @@ export const getCellSize = (boardSize: number): number => {
   return 23;
 };
 
+// Esta função agora será substituída pelo hook useGamePointsConfig
+// Mantida apenas para compatibilidade
 export const getPointsForWord = (word: string): number => {
+  console.warn('getPointsForWord deprecated - use useGamePointsConfig hook instead');
   const length = word.length;
   if (length === 3) return 10;
   if (length === 4) return 20;

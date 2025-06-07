@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   GameSession, 
@@ -156,14 +155,6 @@ class GameService {
       row: pos?.row || 0,
       col: pos?.col || 0
     }));
-  }
-
-  calculateWordPoints(word: string): number {
-    const length = word.length;
-    const pointsTable: Record<number, number> = {
-      3: 1, 4: 2, 5: 3, 6: 5, 7: 8, 8: 13, 9: 21, 10: 34
-    };
-    return pointsTable[length] || Math.max(34, length * 5);
   }
 
   validateAdjacentPositions(positions: Position[]): boolean {

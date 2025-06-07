@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { type Position } from '@/utils/boardUtils';
-import { getPointsForWord } from '@/utils/boardUtils';
+import { useGamePointsConfig } from './useGamePointsConfig';
 
 interface FoundWord {
   word: string;
@@ -21,8 +21,9 @@ export const useGameLogic = (
   const [hintsUsed, setHintsUsed] = useState(0);
   const [showGameOver, setShowGameOver] = useState(false);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
-  const [canRevive, setCanRevive] = useState(true);
   const [hintHighlightedCells, setHintHighlightedCells] = useState<Position[]>([]);
+  
+  const { getPointsForWord } = useGamePointsConfig();
 
   // Reset state when level changes
   useEffect(() => {
@@ -32,7 +33,6 @@ export const useGameLogic = (
     setHintsUsed(0);
     setShowLevelComplete(false);
     setShowGameOver(false);
-    setCanRevive(true);
     setHintHighlightedCells([]);
   }, [level]);
 
@@ -57,6 +57,8 @@ export const useGameLogic = (
     const points = getPointsForWord(word);
     const newFoundWord = { word, positions: [...positions], points };
     
+    console.log(`Palavra encontrada: ${word} = ${points} pontos (usando configuração do painel admin)`);
+    
     setFoundWords(prev => [...prev, newFoundWord]);
     setPermanentlyMarkedCells(prev => [...prev, ...positions]);
     onWordFound(word, points);
@@ -76,10 +78,8 @@ export const useGameLogic = (
     hintsUsed,
     showGameOver,
     showLevelComplete,
-    canRevive,
     hintHighlightedCells,
     setHintsUsed,
-    setCanRevive,
     setShowGameOver,
     setShowLevelComplete,
     setHintHighlightedCells,

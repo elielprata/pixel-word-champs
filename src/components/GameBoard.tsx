@@ -20,9 +20,21 @@ interface GameBoardProps {
   onLevelComplete: (levelScore: number) => void;
   onAdvanceLevel: () => void;
   onStopGame: () => void;
+  canRevive?: boolean;
+  onRevive?: () => void;
 }
 
-const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, onAdvanceLevel, onStopGame }: GameBoardProps) => {
+const GameBoard = ({ 
+  level, 
+  timeLeft, 
+  onWordFound, 
+  onTimeUp, 
+  onLevelComplete, 
+  onAdvanceLevel, 
+  onStopGame,
+  canRevive = false,
+  onRevive
+}: GameBoardProps) => {
   const { boardData, size, levelWords } = useBoard(level);
   const { 
     selectedCells, 
@@ -39,9 +51,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
     hintsUsed,
     showGameOver,
     showLevelComplete,
-    canRevive,
     setHintsUsed,
-    setCanRevive,
     setShowGameOver,
     setHintHighlightedCells,
     addFoundWord,
@@ -57,7 +67,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
     setHintsUsed,
     setHintHighlightedCells,
     canRevive,
-    setCanRevive,
+    () => {}, // setCanRevive não é mais necessário aqui
     setShowGameOver,
     onTimeUp
   );
@@ -79,6 +89,19 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
 
   const handleCellMoveWithValidation = (row: number, col: number) => {
     handleCellMove(row, col, isValidWordDirection);
+  };
+
+  const handleReviveClick = () => {
+    if (onRevive) {
+      // TODO: Aqui será integrado com AdMob quando disponível
+      console.log('Iniciando processo de anúncio via AdMob...');
+      
+      // Simulação temporária do anúncio
+      setTimeout(() => {
+        console.log('Anúncio concluído - ativando revive');
+        onRevive();
+      }, 1000);
+    }
   };
 
   return (
@@ -122,7 +145,7 @@ const GameBoard = ({ level, timeLeft, onWordFound, onTimeUp, onLevelComplete, on
         foundWords={foundWords}
         level={level}
         canRevive={canRevive}
-        onRevive={handleRevive}
+        onRevive={handleReviveClick}
         onGoHome={handleGoHome}
         onAdvanceLevel={onAdvanceLevel}
         onStopGame={onStopGame}

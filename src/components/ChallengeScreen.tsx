@@ -22,11 +22,13 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     score,
     currentLevelScore,
     completedChallenges,
+    canRevive,
     setCurrentLevelScore,
     startGame,
     resetToHome,
     advanceLevel,
-    stopGame
+    stopGame,
+    handleRevive
   } = useChallengeGameState(challengeId);
   
   const { 
@@ -36,11 +38,12 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const isChallengeCompleted = completedChallenges.has(challengeId);
 
   const handleWordFound = (word: string, points: number) => {
+    console.log(`Palavra encontrada: ${word} = ${points} pontos (configuração do painel admin)`);
     setCurrentLevelScore(prev => prev + points);
   };
 
   const handleLevelComplete = async (levelScore: number) => {
-    console.log(`Nível ${currentLevel} completado com ${levelScore} pontos!`);
+    console.log(`Nível ${currentLevel} completado com ${levelScore} pontos! (usando sistema de pontos do painel admin)`);
     await saveLevelProgress(currentLevel, levelScore);
   };
 
@@ -67,6 +70,15 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     onBack();
   };
 
+  const handleReviveClick = () => {
+    const success = handleRevive();
+    if (success) {
+      console.log('Revive ativado com sucesso! Tempo estendido usando configuração do painel admin.');
+    } else {
+      console.log('Revive não disponível - já foi usado neste nível.');
+    }
+  };
+
   if (isChallengeCompleted) {
     return <ChallengeCompletedState onBack={handleBackToHome} />;
   }
@@ -86,12 +98,14 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
       currentLevel={currentLevel}
       timeRemaining={timeRemaining}
       score={score}
+      canRevive={canRevive}
       onBack={handleBackToHome}
       onWordFound={handleWordFound}
       onTimeUp={handleTimeUp}
       onLevelComplete={handleLevelComplete}
       onAdvanceLevel={handleAdvanceLevel}
       onStopGame={handleStopGame}
+      onRevive={handleReviveClick}
     />
   );
 };
