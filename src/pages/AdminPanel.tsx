@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
@@ -11,8 +11,10 @@ import { SecurityTab } from "@/components/admin/SecurityTab";
 import { MetricsTab } from "@/components/admin/MetricsTab";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { SupportTab } from "@/components/admin/SupportTab";
-import { BarChart3, Shield, Users, Trophy, CreditCard, Activity, TrendingUp, AlertCircle, Plus, Gamepad2, MessageSquare, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { BarChart3, Shield, Users, Trophy, CreditCard, Activity, TrendingUp, AlertCircle, Plus, Gamepad2, MessageSquare, Clock, CheckCircle, AlertTriangle, LogOut } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface Report {
   id: string;
@@ -26,6 +28,8 @@ const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const { logout } = useAuth();
+  const { toast } = useToast();
 
   const mockStats = {
     dau: 1250,
@@ -52,6 +56,23 @@ const AdminPanel = () => {
       console.error('Erro ao carregar reports:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      toast({
+        title: "Erro no logout",
+        description: "Ocorreu um erro ao tentar desconectar.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -154,6 +175,15 @@ const AdminPanel = () => {
                   {supportStats.pending} pendentes
                 </Badge>
               )}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleLogout}
+                className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+              >
+                <LogOut className="h-4 w-4" />
+                Sair
+              </Button>
             </div>
           </div>
         </div>
