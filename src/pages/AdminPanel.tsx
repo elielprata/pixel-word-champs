@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,15 +7,13 @@ import { DashboardStats } from "@/components/admin/DashboardStats";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { PaymentsTab } from "@/components/admin/PaymentsTab";
-import { SecurityTab } from "@/components/admin/SecurityTab";
+import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
 import { MetricsTab } from "@/components/admin/MetricsTab";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { UserStatsCards } from "@/components/admin/UserStatsCards";
 import { UserMetricsGrid } from "@/components/admin/UserMetricsGrid";
-import { SecurityOverview } from "@/components/admin/SecurityOverview";
-import { SecurityMetrics } from "@/components/admin/SecurityMetrics";
-import { BarChart3, Shield, Users, Trophy, CreditCard, Activity, TrendingUp, AlertCircle, Plus, Gamepad2, MessageSquare, Clock, CheckCircle, AlertTriangle, LogOut, Calendar, DollarSign, Settings, Zap } from 'lucide-react';
+import { BarChart3, Users, Trophy, CreditCard, Activity, TrendingUp, AlertCircle, Plus, Gamepad2, MessageSquare, Clock, CheckCircle, AlertTriangle, LogOut, Calendar, DollarSign, Settings, Zap, Puzzle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -209,7 +206,7 @@ const AdminPanel = () => {
     { id: 'payments', label: 'Premiação', icon: CreditCard },
     { id: 'users', label: 'Usuários', icon: Users },
     { id: 'support', label: 'Suporte', icon: MessageSquare },
-    { id: 'security', label: 'Segurança', icon: Shield },
+    { id: 'integrations', label: 'Integrações', icon: Puzzle },
   ];
 
   const supportStats = getSupportStats();
@@ -457,24 +454,24 @@ const AdminPanel = () => {
                   </CardContent>
                 </Card>
 
-                {/* Segurança - Top 2 métricas */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-red-50 to-pink-100">
+                {/* Integrações - Nova seção */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-pink-100">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div className="bg-red-500 p-3 rounded-xl">
-                        <Shield className="h-6 w-6 text-white" />
+                      <div className="bg-purple-500 p-3 rounded-xl">
+                        <Puzzle className="h-6 w-6 text-white" />
                       </div>
-                      <Badge className="bg-green-100 text-green-700">Seguro</Badge>
+                      <Badge className="bg-blue-100 text-blue-700">Integrações</Badge>
                     </div>
-                    <h3 className="font-semibold text-slate-700 mb-3">Segurança</h3>
+                    <h3 className="font-semibold text-slate-700 mb-3">Integrações</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm text-red-600">Sistema</span>
-                        <span className="font-bold text-red-700">Online</span>
+                        <span className="text-sm text-purple-600">FingerprintJS</span>
+                        <span className="font-bold text-purple-700">Configurar</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-red-600">Status</span>
-                        <span className="font-bold text-red-700">Protegido</span>
+                        <span className="text-sm text-purple-600">OpenAI</span>
+                        <span className="font-bold text-purple-700">Configurar</span>
                       </div>
                     </div>
                   </CardContent>
@@ -547,8 +544,8 @@ const AdminPanel = () => {
               <SupportTab />
             </TabsContent>
 
-            <TabsContent value="security" className="mt-0">
-              <SecurityTab />
+            <TabsContent value="integrations" className="mt-0">
+              <IntegrationsTab />
             </TabsContent>
           </div>
         </Tabs>
