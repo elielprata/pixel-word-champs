@@ -37,39 +37,76 @@ const AdminPanel = () => {
   const { logout } = useAuth();
   const { toast } = useToast();
 
-  const mockStats = {
-    dau: 1250,
-    retention: { d1: 85, d3: 65, d7: 45 },
-    revenue: 2850,
-    activeChallenges: 3,
-    totalUsers: 8500
-  };
-
-  // Query para buscar dados do dashboard
-  const { data: dashboardData } = useQuery({
-    queryKey: ['dashboard-summary'],
+  // Query para buscar dados completos do dashboard
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+    queryKey: ['admin-dashboard'],
     queryFn: async () => {
+      console.log('🔍 Carregando dados do dashboard...');
+      
       const [
-        { data: totalUsers },
+        { data: totalUsers, count: totalUsersCount },
         { data: activeCompetitions },
         { data: weeklyWinners },
-        { data: gameSettings },
-        { data: recentReports }
+        { data: gameSettings, count: gameSettingsCount },
+        { data: pendingReports },
+        { data: resolvedReports },
+        { data: gameSessions, count: gamesPlayedCount },
+        { data: paymentHistory }
       ] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('competitions').select('id').eq('is_active', true),
-        supabase.from('weekly_rankings').select('id, prize').not('prize', 'is', null).gte('prize', 1),
-        supabase.from('game_settings').select('id', { count: 'exact', head: true }),
-        supabase.from('user_reports').select('id, status, priority').eq('status', 'pending').limit(5)
+        supabase.from('profiles').select('total_score', { count: 'exact' }),
+        supabase.from('competitions').select('id, prize_pool').eq('is_active', true),
+        supabase.from('weekly_rankings').select('id, prize, position').not('prize', 'is', null).gte('prize', 1),
+        supabase.from('game_settings').select('id', { count: 'exact' }),
+        supabase.from('user_reports').select('id').eq('status', 'pending'),
+        supabase.from('user_reports').select('id').eq('status', 'resolved'),
+        supabase.from('game_sessions').select('id', { count: 'exact' }),
+        supabase.from('payment_history').select('payment_status')
       ]);
 
+      console.log('📊 Dados coletados:', {
+        totalUsers: totalUsersCount,
+        activeCompetitions: activeCompetitions?.length,
+        weeklyWinners: weeklyWinners?.length,
+        gameSettings: gameSettingsCount,
+        pendingReports: pendingReports?.length,
+        resolvedReports: resolvedReports?.length,
+        gamesPlayed: gamesPlayedCount
+      });
+
+      // Calcular retenção D1 baseada em dados reais
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const { data: yesterdayUsers } = await supabase
+        .from('profiles')
+        .select('id')
+        .gte('created_at', yesterday.toISOString().split('T')[0])
+        .lt('created_at', today.toISOString().split('T')[0]);
+
+      const { data: todayActiveSessions } = await supabase
+        .from('game_sessions')
+        .select('user_id')
+        .gte('started_at', today.toISOString().split('T')[0]);
+
+      const retentionD1 = yesterdayUsers && todayActiveSessions 
+        ? Math.round((todayActiveSessions.length / Math.max(yesterdayUsers.length, 1)) * 100)
+        : 0;
+
       return {
-        totalUsers: totalUsers || 0,
+        totalUsers: totalUsersCount || 0,
         activeCompetitions: activeCompetitions?.length || 0,
         weeklyWinners: weeklyWinners?.length || 0,
         totalPrizePool: weeklyWinners?.reduce((sum, w) => sum + (Number(w.prize) || 0), 0) || 0,
-        gameSettings: gameSettings || 0,
-        pendingReports: recentReports?.length || 0
+        gameSettings: gameSettingsCount || 0,
+        pendingReports: pendingReports?.length || 0,
+        resolvedReports: resolvedReports?.length || 0,
+        gamesPlayed: gamesPlayedCount || 0,
+        retentionD1: retentionD1,
+        averageScore: totalUsers?.length 
+          ? Math.round(totalUsers.reduce((sum, u) => sum + (u.total_score || 0), 0) / totalUsers.length)
+          : 0,
+        pendingPayments: paymentHistory?.filter(p => p.payment_status === 'pending').length || 0
       };
     },
     refetchInterval: 30000,
@@ -177,6 +214,17 @@ const AdminPanel = () => {
 
   const supportStats = getSupportStats();
 
+  if (dashboardLoading || loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Carregando dados do painel...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Header */}
@@ -199,7 +247,7 @@ const AdminPanel = () => {
               </Badge>
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
                 <Users className="h-3 w-3 mr-2" />
-                {(Number(dashboardData?.totalUsers) || mockStats.totalUsers).toLocaleString()} usuários
+                {(dashboardData?.totalUsers || 0).toLocaleString()} usuários
               </Badge>
               {supportStats.pending > 0 && (
                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 px-3 py-1">
@@ -260,11 +308,11 @@ const AdminPanel = () => {
                       <div className="flex flex-wrap gap-4">
                         <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
                           <div className="text-sm text-blue-100">Total de Usuários</div>
-                          <div className="text-xl font-bold">{(Number(dashboardData?.totalUsers) || mockStats.totalUsers).toLocaleString()}</div>
+                          <div className="text-xl font-bold">{(dashboardData?.totalUsers || 0).toLocaleString()}</div>
                         </div>
                         <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
                           <div className="text-sm text-blue-100">Pool de Prêmios</div>
-                          <div className="text-xl font-bold">R$ {(Number(dashboardData?.totalPrizePool) || 2850).toFixed(0)}</div>
+                          <div className="text-xl font-bold">R$ {(dashboardData?.totalPrizePool || 0).toFixed(0)}</div>
                         </div>
                       </div>
                     </div>
@@ -274,7 +322,7 @@ const AdminPanel = () => {
                         <Activity className="h-6 w-6" />
                         <span className="font-semibold">Sistema</span>
                       </div>
-                      <div className="text-3xl font-bold mb-2">{Number(dashboardData?.activeCompetitions) || 0}</div>
+                      <div className="text-3xl font-bold mb-2">{dashboardData?.activeCompetitions || 0}</div>
                       <div className="text-sm text-blue-100">Competições ativas</div>
                     </div>
                     
@@ -283,7 +331,7 @@ const AdminPanel = () => {
                         <MessageSquare className="h-6 w-6" />
                         <span className="font-semibold">Suporte</span>
                       </div>
-                      <div className="text-3xl font-bold mb-2">{supportStats.pending}</div>
+                      <div className="text-3xl font-bold mb-2">{dashboardData?.pendingReports || 0}</div>
                       <div className="text-sm text-blue-100">Tickets pendentes</div>
                     </div>
                   </div>
@@ -305,11 +353,11 @@ const AdminPanel = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-purple-600">Configurações</span>
-                        <span className="font-bold text-purple-700">{Number(dashboardData?.gameSettings) || 15}</span>
+                        <span className="font-bold text-purple-700">{dashboardData?.gameSettings || 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-purple-600">Competições</span>
-                        <span className="font-bold text-purple-700">{Number(dashboardData?.activeCompetitions) || 3}</span>
+                        <span className="font-bold text-purple-700">{dashboardData?.activeCompetitions || 0}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -328,11 +376,11 @@ const AdminPanel = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-amber-600">Ganhadores</span>
-                        <span className="font-bold text-amber-700">{Number(dashboardData?.weeklyWinners) || 45}</span>
+                        <span className="font-bold text-amber-700">{dashboardData?.weeklyWinners || 0}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-amber-600">Posições Top 10</span>
-                        <span className="font-bold text-amber-700">10</span>
+                        <span className="text-sm text-amber-600">Jogos Realizados</span>
+                        <span className="font-bold text-amber-700">{dashboardData?.gamesPlayed || 0}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -351,11 +399,11 @@ const AdminPanel = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-green-600">Pool Total</span>
-                        <span className="font-bold text-green-700">R$ {(Number(dashboardData?.totalPrizePool) || 2850).toFixed(0)}</span>
+                        <span className="font-bold text-green-700">R$ {(dashboardData?.totalPrizePool || 0).toFixed(0)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-green-600">Pagamentos</span>
-                        <span className="font-bold text-green-700">Automático</span>
+                        <span className="text-sm text-green-600">Pendentes</span>
+                        <span className="font-bold text-green-700">{dashboardData?.pendingPayments || 0}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -374,11 +422,11 @@ const AdminPanel = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-blue-600">Total</span>
-                        <span className="font-bold text-blue-700">{((Number(dashboardData?.totalUsers) || mockStats.totalUsers) / 1000).toFixed(1)}k</span>
+                        <span className="font-bold text-blue-700">{(dashboardData?.totalUsers || 0).toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-blue-600">Retenção D1</span>
-                        <span className="font-bold text-blue-700">{mockStats.retention.d1}%</span>
+                        <span className="font-bold text-blue-700">{dashboardData?.retentionD1 || 0}%</span>
                       </div>
                     </div>
                   </CardContent>
@@ -391,19 +439,19 @@ const AdminPanel = () => {
                       <div className="bg-indigo-500 p-3 rounded-xl">
                         <MessageSquare className="h-6 w-6 text-white" />
                       </div>
-                      <Badge className={supportStats.pending > 0 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}>
-                        {supportStats.pending > 0 ? "Atenção" : "OK"}
+                      <Badge className={dashboardData?.pendingReports ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}>
+                        {dashboardData?.pendingReports ? "Atenção" : "OK"}
                       </Badge>
                     </div>
                     <h3 className="font-semibold text-slate-700 mb-3">Suporte</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-indigo-600">Pendentes</span>
-                        <span className="font-bold text-indigo-700">{supportStats.pending}</span>
+                        <span className="font-bold text-indigo-700">{dashboardData?.pendingReports || 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-indigo-600">Resolvidos</span>
-                        <span className="font-bold text-indigo-700">{supportStats.resolved}</span>
+                        <span className="font-bold text-indigo-700">{dashboardData?.resolvedReports || 0}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -421,12 +469,12 @@ const AdminPanel = () => {
                     <h3 className="font-semibold text-slate-700 mb-3">Segurança</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm text-red-600">Taxa Detecção</span>
-                        <span className="font-bold text-red-700">98.5%</span>
+                        <span className="text-sm text-red-600">Sistema</span>
+                        <span className="font-bold text-red-700">Online</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-red-600">Bloqueios Hoje</span>
-                        <span className="font-bold text-red-700">12</span>
+                        <span className="text-sm text-red-600">Status</span>
+                        <span className="font-bold text-red-700">Protegido</span>
                       </div>
                     </div>
                   </CardContent>
@@ -454,22 +502,22 @@ const AdminPanel = () => {
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                       <div>
                         <h4 className="font-medium text-blue-800">Competições Ativas</h4>
-                        <p className="text-sm text-blue-600 mt-1">{Number(dashboardData?.activeCompetitions) || 3} em andamento</p>
+                        <p className="text-sm text-blue-600 mt-1">{dashboardData?.activeCompetitions || 0} em andamento</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
                       <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
                       <div>
                         <h4 className="font-medium text-purple-800">Usuários Ativos</h4>
-                        <p className="text-sm text-purple-600 mt-1">{(Number(dashboardData?.totalUsers) || mockStats.totalUsers).toLocaleString()} registrados</p>
+                        <p className="text-sm text-purple-600 mt-1">{(dashboardData?.totalUsers || 0).toLocaleString()} registrados</p>
                       </div>
                     </div>
-                    {supportStats.pending > 0 && (
+                    {(dashboardData?.pendingReports || 0) > 0 && (
                       <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
                         <div className="w-2 h-2 bg-amber-500 rounded-full mt-2"></div>
                         <div>
                           <h4 className="font-medium text-amber-800">Atenção: Suporte</h4>
-                          <p className="text-sm text-amber-600 mt-1">{supportStats.pending} tickets pendentes</p>
+                          <p className="text-sm text-amber-600 mt-1">{dashboardData?.pendingReports} tickets pendentes</p>
                         </div>
                       </div>
                     )}
