@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MessageSquare, AlertTriangle, CheckCircle, Clock, User } from 'lucide-react';
+import { MessageSquare, AlertTriangle, CheckCircle, Clock, User, RefreshCw } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,7 +19,7 @@ interface Report {
   message: string;
   status: string;
   priority: string;
-  resolution: string;
+  resolution: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -31,6 +31,7 @@ export const SupportTab = () => {
   const [resolution, setResolution] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [updating, setUpdating] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export const SupportTab = () => {
 
   const fetchReports = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('user_reports')
         .select('*')
@@ -47,6 +49,7 @@ export const SupportTab = () => {
       if (error) throw error;
       setReports(data || []);
     } catch (error) {
+      console.error('Erro ao carregar reports:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar os reports",
@@ -59,7 +62,12 @@ export const SupportTab = () => {
 
   const updateReportStatus = async (reportId: string, newStatus: string, newResolution?: string) => {
     try {
-      const updateData: any = { status: newStatus };
+      setUpdating(true);
+      const updateData: any = { 
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      };
+      
       if (newResolution) {
         updateData.resolution = newResolution;
       }
@@ -73,18 +81,21 @@ export const SupportTab = () => {
 
       toast({
         title: "Sucesso",
-        description: "Status do report atualizado"
+        description: "Status do report atualizado com sucesso"
       });
 
-      fetchReports();
+      await fetchReports();
       setSelectedReport(null);
       setResolution('');
     } catch (error) {
+      console.error('Erro ao atualizar report:', error);
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o report",
         variant: "destructive"
       });
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -132,18 +143,59 @@ export const SupportTab = () => {
     });
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pendente';
+      case 'in_progress': return 'Em Progresso';
+      case 'resolved': return 'Resolvido';
+      case 'closed': return 'Fechado';
+      default: return status;
+    }
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'low': return 'Baixa';
+      case 'medium': return 'Média';
+      case 'high': return 'Alta';
+      default: return priority;
+    }
+  };
+
+  const getReportTypeLabel = (type: string) => {
+    switch (type) {
+      case 'bug': return 'Bug';
+      case 'feature': return 'Recurso';
+      case 'support': return 'Suporte';
+      case 'other': return 'Outro';
+      default: return type;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Principal */}
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white">
-        <div className="flex items-center gap-4">
-          <div className="bg-white/20 p-3 rounded-xl">
-            <MessageSquare className="h-6 w-6" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 p-3 rounded-xl">
+              <MessageSquare className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Central de Suporte</h1>
+              <p className="text-indigo-100 text-sm">Gerencie reports de usuários e solicitações de suporte</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">Central de Suporte</h1>
-            <p className="text-indigo-100 text-sm">Gerencie reports de usuários e solicitações de suporte</p>
-          </div>
+          <Button
+            onClick={fetchReports}
+            variant="outline"
+            size="sm"
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
         </div>
       </div>
 
@@ -253,60 +305,64 @@ export const SupportTab = () => {
         </CardHeader>
 
         <CardContent className="p-6">
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="font-semibold">Tipo</TableHead>
-                  <TableHead className="font-semibold">Assunto</TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold">Prioridade</TableHead>
-                  <TableHead className="font-semibold">Data</TableHead>
-                  <TableHead className="font-semibold text-center">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredReports.map((report) => (
-                  <TableRow key={report.id} className="hover:bg-slate-50">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getReportTypeIcon(report.report_type)}
-                        <span className="capitalize">{report.report_type}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium max-w-xs truncate">
-                      {report.subject}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(report.status)}>
-                        {report.status === 'pending' ? 'Pendente' :
-                         report.status === 'in_progress' ? 'Em Progresso' :
-                         report.status === 'resolved' ? 'Resolvido' : 'Fechado'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getPriorityColor(report.priority)}>
-                        {report.priority === 'low' ? 'Baixa' :
-                         report.priority === 'medium' ? 'Média' : 'Alta'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{formatDate(report.created_at)}</TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedReport(report)}
-                      >
-                        Ver Detalhes
-                      </Button>
-                    </TableCell>
+          {loading ? (
+            <div className="text-center py-8">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+              <p className="text-gray-500">Carregando reports...</p>
+            </div>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="font-semibold">Tipo</TableHead>
+                    <TableHead className="font-semibold">Assunto</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">Prioridade</TableHead>
+                    <TableHead className="font-semibold">Data</TableHead>
+                    <TableHead className="font-semibold text-center">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredReports.map((report) => (
+                    <TableRow key={report.id} className="hover:bg-slate-50">
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {getReportTypeIcon(report.report_type)}
+                          <span className="capitalize">{getReportTypeLabel(report.report_type)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium max-w-xs truncate">
+                        {report.subject}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(report.status)}>
+                          {getStatusLabel(report.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getPriorityColor(report.priority)}>
+                          {getPriorityLabel(report.priority)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{formatDate(report.created_at)}</TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedReport(report)}
+                        >
+                          Ver Detalhes
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
-          {filteredReports.length === 0 && !loading && (
+          {!loading && filteredReports.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p>Nenhum report encontrado</p>
@@ -319,45 +375,44 @@ export const SupportTab = () => {
       {/* Modal de detalhes do report */}
       {selectedReport && (
         <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Detalhes do Report</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-semibold">Tipo</Label>
-                  <p className="capitalize">{selectedReport.report_type}</p>
+                  <label className="text-sm font-semibold block mb-1">Tipo</label>
+                  <p className="capitalize">{getReportTypeLabel(selectedReport.report_type)}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold">Prioridade</Label>
+                  <label className="text-sm font-semibold block mb-1">Prioridade</label>
                   <Badge className={getPriorityColor(selectedReport.priority)}>
-                    {selectedReport.priority === 'low' ? 'Baixa' :
-                     selectedReport.priority === 'medium' ? 'Média' : 'Alta'}
+                    {getPriorityLabel(selectedReport.priority)}
                   </Badge>
                 </div>
               </div>
               
               <div>
-                <Label className="text-sm font-semibold">Assunto</Label>
+                <label className="text-sm font-semibold block mb-1">Assunto</label>
                 <p>{selectedReport.subject}</p>
               </div>
               
               <div>
-                <Label className="text-sm font-semibold">Mensagem</Label>
+                <label className="text-sm font-semibold block mb-1">Mensagem</label>
                 <div className="bg-gray-50 p-3 rounded-lg border">
                   <p className="whitespace-pre-wrap">{selectedReport.message}</p>
                 </div>
               </div>
               
               <div>
-                <Label className="text-sm font-semibold">Data de Criação</Label>
+                <label className="text-sm font-semibold block mb-1">Data de Criação</label>
                 <p>{formatDate(selectedReport.created_at)}</p>
               </div>
 
               {selectedReport.resolution && (
                 <div>
-                  <Label className="text-sm font-semibold">Resolução</Label>
+                  <label className="text-sm font-semibold block mb-1">Resolução</label>
                   <div className="bg-green-50 p-3 rounded-lg border border-green-200">
                     <p className="whitespace-pre-wrap">{selectedReport.resolution}</p>
                   </div>
@@ -366,7 +421,7 @@ export const SupportTab = () => {
 
               {selectedReport.status !== 'resolved' && selectedReport.status !== 'closed' && (
                 <div>
-                  <Label className="text-sm font-semibold">Resolução</Label>
+                  <label className="text-sm font-semibold block mb-1">Resolução</label>
                   <Textarea
                     value={resolution}
                     onChange={(e) => setResolution(e.target.value)}
@@ -376,11 +431,12 @@ export const SupportTab = () => {
                 </div>
               )}
 
-              <div className="flex gap-2 pt-4">
+              <div className="flex gap-2 pt-4 border-t">
                 {selectedReport.status === 'pending' && (
                   <Button 
                     onClick={() => updateReportStatus(selectedReport.id, 'in_progress')}
                     className="bg-blue-600 hover:bg-blue-700"
+                    disabled={updating}
                   >
                     Marcar como Em Progresso
                   </Button>
@@ -389,7 +445,7 @@ export const SupportTab = () => {
                 {(selectedReport.status === 'pending' || selectedReport.status === 'in_progress') && (
                   <Button 
                     onClick={() => updateReportStatus(selectedReport.id, 'resolved', resolution)}
-                    disabled={!resolution.trim()}
+                    disabled={!resolution.trim() || updating}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     Marcar como Resolvido
@@ -400,6 +456,7 @@ export const SupportTab = () => {
                   <Button 
                     onClick={() => updateReportStatus(selectedReport.id, 'closed')}
                     variant="outline"
+                    disabled={updating}
                   >
                     Fechar Report
                   </Button>
@@ -412,7 +469,3 @@ export const SupportTab = () => {
     </div>
   );
 };
-
-function Label({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <label className={`block text-sm font-medium text-gray-700 mb-1 ${className || ''}`}>{children}</label>;
-}

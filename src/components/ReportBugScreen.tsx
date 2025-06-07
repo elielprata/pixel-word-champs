@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Bug, Send, AlertTriangle } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReportBugScreenProps {
   onBack: () => void;
@@ -13,6 +16,8 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
   const [description, setDescription] = useState('');
   const [steps, setSteps] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   const bugTypes = [
     { value: 'gameplay', label: 'Problema durante o jogo' },
@@ -23,13 +28,49 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
   ];
 
   const handleSubmitBug = async () => {
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para reportar um bug",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
-    // Simular envio do bug report
-    setTimeout(() => {
-      setIsSubmitting(false);
-      alert('Bug reportado com sucesso! Obrigado por ajudar a melhorar o jogo.');
+    
+    try {
+      const fullMessage = `Tipo: ${bugTypes.find(t => t.value === bugType)?.label}\n\nDescrição:\n${description}\n\nPassos para reproduzir:\n${steps}`;
+      
+      const { error } = await supabase
+        .from('user_reports')
+        .insert({
+          user_id: user.id,
+          report_type: 'bug',
+          subject: `Bug Report: ${bugTypes.find(t => t.value === bugType)?.label}`,
+          message: fullMessage,
+          priority: 'high',
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Bug reportado com sucesso!",
+        description: "Obrigado por ajudar a melhorar o jogo. Nossa equipe irá analisar o report.",
+      });
+      
       onBack();
-    }, 2000);
+    } catch (error) {
+      console.error('Erro ao reportar bug:', error);
+      toast({
+        title: "Erro ao reportar bug",
+        description: "Tente novamente mais tarde",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

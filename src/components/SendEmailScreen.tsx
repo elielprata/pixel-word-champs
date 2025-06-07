@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Mail, Send } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SendEmailScreenProps {
   onBack: () => void;
@@ -11,17 +14,53 @@ interface SendEmailScreenProps {
 const SendEmailScreen = ({ onBack }: SendEmailScreenProps) => {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
-  const [priority, setPriority] = useState('normal');
+  const [priority, setPriority] = useState('medium');
   const [isSending, setIsSending] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSendEmail = async () => {
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para enviar um email",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSending(true);
-    // Simular envio de email
-    setTimeout(() => {
-      setIsSending(false);
-      alert('Email enviado com sucesso! Responderemos em até 24 horas.');
+    
+    try {
+      const { error } = await supabase
+        .from('user_reports')
+        .insert({
+          user_id: user.id,
+          report_type: 'support',
+          subject: subject.trim(),
+          message: message.trim(),
+          priority: priority as 'low' | 'medium' | 'high',
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado com sucesso!",
+        description: "Sua mensagem foi enviada. Responderemos em até 24 horas.",
+      });
+      
       onBack();
-    }, 2000);
+    } catch (error) {
+      console.error('Erro ao enviar email:', error);
+      toast({
+        title: "Erro ao enviar email",
+        description: "Tente novamente mais tarde",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -51,7 +90,7 @@ const SendEmailScreen = ({ onBack }: SendEmailScreenProps) => {
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
               <option value="low">Baixa - Sugestão ou dúvida geral</option>
-              <option value="normal">Normal - Problema no jogo</option>
+              <option value="medium">Média - Problema no jogo</option>
               <option value="high">Alta - Problema urgente</option>
             </select>
           </div>
