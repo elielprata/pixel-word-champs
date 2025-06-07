@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const rankingService = {
   async updateDailyRanking(): Promise<void> {
     try {
-      const { error } = await supabase.rpc('update_daily_ranking_safe');
+      const { error } = await supabase.rpc('update_daily_ranking');
       if (error) throw error;
       console.log('Daily ranking updated successfully');
     } catch (error) {

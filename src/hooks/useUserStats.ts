@@ -1,106 +1,110 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserStats {
-  totalUsers: number;
-  activeUsers: number;
-  newUsersToday: number;
-  totalAdmins: number;
-  averageScore: number;
-  totalGamesPlayed: number;
+  position: number | null;
+  totalScore: number;
+  gamesPlayed: number;
+  winStreak: number;
+  bestDailyPosition: number | null;
+  bestWeeklyPosition: number | null;
 }
 
 export const useUserStats = () => {
-  return useQuery({
-    queryKey: ['userStats'],
-    queryFn: async (): Promise<UserStats> => {
-      console.log('🔍 Buscando estatísticas dos usuários...');
+  const { user } = useAuth();
+  const [stats, setStats] = useState<UserStats>({
+    position: null,
+    totalScore: 0,
+    gamesPlayed: 0,
+    winStreak: 0,
+    bestDailyPosition: null,
+    bestWeeklyPosition: null
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
-      // Buscar total de usuários
-      const { count: totalUsers, error: totalUsersError } = await supabase
+  useEffect(() => {
+    if (user) {
+      loadUserStats();
+    }
+  }, [user]);
+
+  const loadUserStats = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      // Buscar perfil do usuário
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-      if (totalUsersError) {
-        console.error('❌ Erro ao buscar total de usuários:', totalUsersError);
-        throw totalUsersError;
-      }
+      if (profileError) throw profileError;
 
-      // Buscar usuários ativos (que jogaram nos últimos 7 dias)
+      // Buscar posição no ranking diário
+      const { data: dailyRanking, error: dailyError } = await supabase
+        .from('daily_rankings')
+        .select('position')
+        .eq('user_id', user.id)
+        .eq('date', new Date().toISOString().split('T')[0])
+        .maybeSingle();
+
+      if (dailyError) throw dailyError;
+
+      // Calcular sequência de vitórias (níveis completados nos últimos 7 dias)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const { count: activeUsers, error: activeUsersError } = await supabase
+      const { data: recentSessions, error: sessionsError } = await supabase
         .from('game_sessions')
-        .select('user_id', { count: 'exact', head: true })
-        .gte('started_at', sevenDaysAgo.toISOString());
+        .select('completed_at')
+        .eq('user_id', user.id)
+        .eq('is_completed', true)
+        .gte('completed_at', sevenDaysAgo.toISOString())
+        .order('completed_at', { ascending: false });
 
-      if (activeUsersError) {
-        console.error('❌ Erro ao buscar usuários ativos:', activeUsersError);
+      if (sessionsError) throw sessionsError;
+
+      // Calcular sequência contínua
+      let streak = 0;
+      const today = new Date().toDateString();
+      const completedDates = new Set(
+        recentSessions?.map(session => 
+          new Date(session.completed_at).toDateString()
+        ) || []
+      );
+
+      for (let i = 0; i < 7; i++) {
+        const checkDate = new Date();
+        checkDate.setDate(checkDate.getDate() - i);
+        if (completedDates.has(checkDate.toDateString())) {
+          streak++;
+        } else if (i > 0) {
+          break; // Quebra na primeira data sem atividade (exceto hoje)
+        }
       }
 
-      // Buscar novos usuários hoje
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const { count: newUsersToday, error: newUsersTodayError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', today.toISOString());
-
-      if (newUsersTodayError) {
-        console.error('❌ Erro ao buscar novos usuários hoje:', newUsersTodayError);
-      }
-
-      // Buscar total de admins
-      const { count: totalAdmins, error: totalAdminsError } = await supabase
-        .from('user_roles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'admin');
-
-      if (totalAdminsError) {
-        console.error('❌ Erro ao buscar total de admins:', totalAdminsError);
-      }
-
-      // Buscar estatísticas de pontuação e jogos
-      const { data: scoreStats, error: scoreStatsError } = await supabase
-        .from('profiles')
-        .select('total_score, games_played')
-        .not('total_score', 'is', null)
-        .not('games_played', 'is', null);
-
-      if (scoreStatsError) {
-        console.error('❌ Erro ao buscar estatísticas de pontuação:', scoreStatsError);
-      }
-
-      const averageScore = scoreStats?.length 
-        ? Math.round(scoreStats.reduce((sum, user) => sum + (user.total_score || 0), 0) / scoreStats.length)
-        : 0;
-
-      const totalGamesPlayed = scoreStats?.length
-        ? scoreStats.reduce((sum, user) => sum + (user.games_played || 0), 0)
-        : 0;
-
-      console.log('📊 Estatísticas calculadas:', {
-        totalUsers: totalUsers || 0,
-        activeUsers: activeUsers || 0,
-        newUsersToday: newUsersToday || 0,
-        totalAdmins: totalAdmins || 0,
-        averageScore,
-        totalGamesPlayed
+      setStats({
+        position: dailyRanking?.position || null,
+        totalScore: profile?.total_score || 0,
+        gamesPlayed: profile?.games_played || 0,
+        winStreak: streak,
+        bestDailyPosition: profile?.best_daily_position || null,
+        bestWeeklyPosition: profile?.best_weekly_position || null
       });
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      return {
-        totalUsers: totalUsers || 0,
-        activeUsers: activeUsers || 0,
-        newUsersToday: newUsersToday || 0,
-        totalAdmins: totalAdmins || 0,
-        averageScore,
-        totalGamesPlayed
-      };
-    },
-    retry: 2,
-    refetchInterval: 30000, // Atualizar a cada 30 segundos
-  });
+  return {
+    stats,
+    isLoading,
+    refetch: loadUserStats
+  };
 };
