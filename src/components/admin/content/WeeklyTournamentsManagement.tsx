@@ -42,6 +42,11 @@ export const WeeklyTournamentsManagement = () => {
 
   // Calcular pool de prêmios automaticamente
   const currentPrizePool = calculateTotalPrize();
+  
+  // Calcular pool total de todos os torneios ativos
+  const totalActivePrizePool = tournaments
+    .filter(t => t.status === 'active' || t.status === 'scheduled')
+    .reduce((total, tournament) => total + tournament.prize_pool, 0);
 
   useEffect(() => {
     fetchTournaments();
@@ -340,9 +345,9 @@ export const WeeklyTournamentsManagement = () => {
                   <Crown className="h-4 w-4 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">Pool Atual</p>
+                  <p className="text-sm text-purple-600 font-medium">Pool Total</p>
                   <p className="text-xl font-bold text-purple-700">
-                    R$ {currentPrizePool.toFixed(2)}
+                    R$ {totalActivePrizePool.toFixed(2)}
                   </p>
                 </div>
               </div>
