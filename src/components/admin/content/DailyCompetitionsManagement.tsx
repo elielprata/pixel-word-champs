@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -383,7 +382,7 @@ export const DailyCompetitionsManagement = () => {
                       {competition.status === 'draft' ? 'Rascunho' :
                        competition.status === 'active' ? 'Ativo' :
                        competition.status === 'scheduled' ? 'Agendado' :
-                       competition.status === 'completed' ? 'Finalizado' : 'Cancelado'}
+                       competition.status === 'completed' ? 'Finalizado' : competition.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">{formatDate(competition.start_date)}</TableCell>
@@ -476,7 +475,6 @@ export const DailyCompetitionsManagement = () => {
                         <SelectItem value="scheduled">Agendado</SelectItem>
                         <SelectItem value="active">Ativo</SelectItem>
                         <SelectItem value="completed">Finalizado</SelectItem>
-                        <SelectItem value="cancelled">Cancelado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

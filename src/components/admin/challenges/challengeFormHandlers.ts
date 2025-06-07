@@ -5,7 +5,7 @@ import { createChallenge, updateChallenge, deleteChallenge } from './challengeAp
 
 export const createFormHandlers = (
   formData: ChallengeFormData,
-  setFormData: (data: ChallengeFormData) => void,
+  setFormData: (data: ChallengeFormData | ((prev: ChallengeFormData) => ChallengeFormData)) => void,
   setIsCreating: (value: boolean) => void,
   setEditingChallenge: (challenge: any) => void,
   challenges: any[],
