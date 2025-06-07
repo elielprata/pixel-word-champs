@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Winner } from '@/types/winner';
-import { getWinnersForPrizeLevel } from '@/utils/prizeLevel';
+import { paymentService, PaymentRecord } from '@/services/paymentService';
 import { exportToCSV } from '@/utils/csvExport';
 import { PixFilters } from './pix/PixFilters';
 import { PaymentStatus } from './pix/PaymentStatus';
@@ -20,29 +20,35 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
   const { toast } = useToast();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [filteredWinners, setFilteredWinners] = useState<Winner[]>([]);
+  const [filteredWinners, setFilteredWinners] = useState<PaymentRecord[]>([]);
+  const [allWinners, setAllWinners] = useState<PaymentRecord[]>([]);
   const [isFiltered, setIsFiltered] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data expandido para testar o layout
-  const mockWinners: Winner[] = [
-    { id: '1', username: 'jogador123', position: 1, pixKey: '123.456.789-00', holderName: 'João Silva Santos', consolidatedDate: '2024-01-15', prize: 1000, paymentStatus: 'pending' },
-    { id: '2', username: 'gamer456', position: 2, pixKey: 'joao.silva@email.com', holderName: 'Maria Santos Oliveira', consolidatedDate: '2024-01-16', prize: 500, paymentStatus: 'paid' },
-    { id: '3', username: 'player789', position: 3, pixKey: '(11) 99999-9999', holderName: 'Pedro Costa Lima', consolidatedDate: '2024-01-17', prize: 250, paymentStatus: 'pending' },
-    { id: '4', username: 'winner001', position: 4, pixKey: '987.654.321-00', holderName: 'Ana Lima Pereira', consolidatedDate: '2024-01-14', prize: 100, paymentStatus: 'paid' },
-    { id: '5', username: 'champion2024', position: 5, pixKey: 'ana.lima@email.com', holderName: 'Carlos Pereira Santos', consolidatedDate: '2024-01-18', prize: 100, paymentStatus: 'pending' },
-    { id: '6', username: 'player2024', position: 8, pixKey: 'player@email.com', holderName: 'Luis Santos Costa', consolidatedDate: '2024-01-19', prize: 50, paymentStatus: 'pending' },
-    { id: '7', username: 'gamer2024', position: 15, pixKey: 'gamer@email.com', holderName: 'Ana Costa Silva', consolidatedDate: '2024-01-20', prize: 25, paymentStatus: 'pending' },
-    { id: '8', username: 'superplayer99', position: 16, pixKey: '456.789.123-45', holderName: 'Ricardo Almeida', consolidatedDate: '2024-01-21', prize: 25, paymentStatus: 'paid' },
-    { id: '9', username: 'masterchef', position: 22, pixKey: 'ricardo@email.com', holderName: 'Fernanda Costa', consolidatedDate: '2024-01-22', prize: 10, paymentStatus: 'pending' },
-    { id: '10', username: 'gamepro', position: 28, pixKey: '(21) 88888-8888', holderName: 'Roberto Silva', consolidatedDate: '2024-01-23', prize: 10, paymentStatus: 'pending' },
-    { id: '11', username: 'wordmaster', position: 35, pixKey: 'roberto.silva@email.com', holderName: 'Juliana Santos', consolidatedDate: '2024-01-24', prize: 5, paymentStatus: 'paid' },
-    { id: '12', username: 'letraexperto', position: 42, pixKey: '789.123.456-78', holderName: 'Marcos Oliveira', consolidatedDate: '2024-01-25', prize: 5, paymentStatus: 'pending' },
-    { id: '13', username: 'puzzleking', position: 48, pixKey: 'marcos@email.com', holderName: 'Patricia Lima', consolidatedDate: '2024-01-26', prize: 2, paymentStatus: 'pending' },
-    { id: '14', username: 'brainstorm', position: 55, pixKey: '(85) 77777-7777', holderName: 'Alexandre Santos', consolidatedDate: '2024-01-27', prize: 2, paymentStatus: 'paid' },
-    { id: '15', username: 'wordwizard', position: 67, pixKey: 'alexandre@email.com', holderName: 'Carla Pereira', consolidatedDate: '2024-01-28', prize: 1, paymentStatus: 'pending' },
-  ];
+  useEffect(() => {
+    if (open) {
+      loadWinners();
+    }
+  }, [open, prizeLevel]);
 
-  const [winners, setWinners] = useState<Winner[]>(() => getWinnersForPrizeLevel(mockWinners, prizeLevel));
+  const loadWinners = async () => {
+    setIsLoading(true);
+    try {
+      const winners = await paymentService.getWinnersForPrizeLevel(prizeLevel);
+      setAllWinners(winners);
+      setFilteredWinners([]);
+      setIsFiltered(false);
+    } catch (error) {
+      console.error('Error loading winners:', error);
+      toast({
+        title: "Erro ao carregar dados",
+        description: "Não foi possível carregar os ganhadores.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleFilter = () => {
     if (!startDate || !endDate) {
@@ -54,8 +60,8 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
       return;
     }
 
-    const filtered = winners.filter(winner => {
-      const consolidatedDate = new Date(winner.consolidatedDate);
+    const filtered = allWinners.filter(winner => {
+      const consolidatedDate = new Date(winner.created_at);
       const start = new Date(startDate);
       const end = new Date(endDate);
       return consolidatedDate >= start && consolidatedDate <= end;
@@ -70,34 +76,47 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
     });
   };
 
-  const handleMarkAsPaid = (winnerId: string) => {
-    setWinners(prev => 
-      prev.map(winner => 
-        winner.id === winnerId 
-          ? { ...winner, paymentStatus: 'paid' as const }
-          : winner
-      )
-    );
+  const handleMarkAsPaid = async (winnerId: string) => {
+    try {
+      const result = await paymentService.markAsPaid(winnerId);
+      
+      if (result.success) {
+        // Atualizar o estado local
+        const updateWinners = (winners: PaymentRecord[]) =>
+          winners.map(winner => 
+            winner.id === winnerId 
+              ? { ...winner, payment_status: 'paid' as const, payment_date: new Date().toISOString() }
+              : winner
+          );
 
-    if (isFiltered) {
-      setFilteredWinners(prev => 
-        prev.map(winner => 
-          winner.id === winnerId 
-            ? { ...winner, paymentStatus: 'paid' as const }
-            : winner
-        )
-      );
+        setAllWinners(updateWinners);
+        if (isFiltered) {
+          setFilteredWinners(updateWinners);
+        }
+
+        toast({
+          title: "Pagamento confirmado",
+          description: "O pagamento foi marcado como realizado.",
+        });
+      } else {
+        toast({
+          title: "Erro ao confirmar pagamento",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao confirmar pagamento",
+        description: "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
     }
-
-    toast({
-      title: "Pagamento confirmado",
-      description: "O pagamento foi marcado como realizado.",
-    });
   };
 
-  const handleMarkAllAsPaid = () => {
-    const winnersToUpdate = isFiltered ? filteredWinners : winners;
-    const pendingWinners = winnersToUpdate.filter(w => w.paymentStatus === 'pending');
+  const handleMarkAllAsPaid = async () => {
+    const winnersToUpdate = isFiltered ? filteredWinners : allWinners;
+    const pendingWinners = winnersToUpdate.filter(w => w.payment_status === 'pending');
 
     if (pendingWinners.length === 0) {
       toast({
@@ -108,28 +127,39 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
       return;
     }
 
-    setWinners(prev => 
-      prev.map(winner => 
-        winnersToUpdate.some(w => w.id === winner.id)
-          ? { ...winner, paymentStatus: 'paid' as const }
-          : winner
-      )
-    );
+    try {
+      // Marcar todos como pagos no banco
+      const promises = pendingWinners.map(winner => paymentService.markAsPaid(winner.id));
+      await Promise.all(promises);
 
-    if (isFiltered) {
-      setFilteredWinners(prev => 
-        prev.map(winner => ({ ...winner, paymentStatus: 'paid' as const }))
-      );
+      // Atualizar estado local
+      const updateWinners = (winners: PaymentRecord[]) =>
+        winners.map(winner => 
+          pendingWinners.some(w => w.id === winner.id)
+            ? { ...winner, payment_status: 'paid' as const, payment_date: new Date().toISOString() }
+            : winner
+        );
+
+      setAllWinners(updateWinners);
+      if (isFiltered) {
+        setFilteredWinners(updateWinners);
+      }
+
+      toast({
+        title: "Pagamentos confirmados",
+        description: `${pendingWinners.length} pagamentos foram marcados como realizados.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao confirmar pagamentos",
+        description: "Ocorreu um erro ao processar os pagamentos.",
+        variant: "destructive",
+      });
     }
-
-    toast({
-      title: "Pagamentos confirmados",
-      description: `${pendingWinners.length} pagamentos foram marcados como realizados.`,
-    });
   };
 
   const handleExport = () => {
-    const winnersToExport = isFiltered ? filteredWinners : winners;
+    const winnersToExport = isFiltered ? filteredWinners : allWinners;
     
     if (winnersToExport.length === 0) {
       toast({
@@ -140,7 +170,19 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
       return;
     }
 
-    exportToCSV(winnersToExport, prizeLevel);
+    // Converter para formato esperado pelo exportToCSV
+    const exportData = winnersToExport.map(winner => ({
+      id: winner.id,
+      username: winner.username || 'Usuário',
+      position: winner.position || 0,
+      pixKey: winner.pix_key || 'Não informado',
+      holderName: winner.pix_holder_name || 'Não informado',
+      consolidatedDate: winner.created_at,
+      prize: winner.prize_amount,
+      paymentStatus: winner.payment_status
+    }));
+
+    exportToCSV(exportData, prizeLevel);
 
     toast({
       title: "Exportação concluída",
@@ -160,9 +202,21 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
     });
   };
 
-  const displayWinners = isFiltered ? filteredWinners : winners;
-  const pendingCount = displayWinners.filter(w => w.paymentStatus === 'pending').length;
-  const paidCount = displayWinners.filter(w => w.paymentStatus === 'paid').length;
+  const displayWinners = isFiltered ? filteredWinners : allWinners;
+  const pendingCount = displayWinners.filter(w => w.payment_status === 'pending').length;
+  const paidCount = displayWinners.filter(w => w.payment_status === 'paid').length;
+
+  // Converter para formato esperado pelo WinnersTable
+  const tableWinners = displayWinners.map(winner => ({
+    id: winner.id,
+    username: winner.username || 'Usuário',
+    position: winner.position || 0,
+    pixKey: winner.pix_key || 'Não informado',
+    holderName: winner.pix_holder_name || 'Não informado',
+    consolidatedDate: winner.created_at,
+    prize: winner.prize_amount,
+    paymentStatus: winner.payment_status
+  }));
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
@@ -202,7 +256,7 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
                 {isFiltered ? 'Filtrados:' : 'Total:'} 
                 <span className="font-bold ml-1">{displayWinners.length}</span>
               </p>
-              {isFiltered && (
+              {isFiltered && startDate && endDate && (
                 <p className="text-xs text-blue-600">
                   {new Date(startDate).toLocaleDateString('pt-BR')} - {new Date(endDate).toLocaleDateString('pt-BR')}
                 </p>
@@ -214,12 +268,18 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
             </Button>
           </div>
 
-          <WinnersTable
-            winners={displayWinners}
-            onMarkAsPaid={handleMarkAsPaid}
-            prizeLevel={prizeLevel}
-            isFiltered={isFiltered}
-          />
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Carregando ganhadores...</p>
+            </div>
+          ) : (
+            <WinnersTable
+              winners={tableWinners}
+              onMarkAsPaid={handleMarkAsPaid}
+              prizeLevel={prizeLevel}
+              isFiltered={isFiltered}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>

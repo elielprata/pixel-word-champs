@@ -327,6 +327,98 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_history: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          payment_date: string | null
+          payment_status: string
+          pix_holder_name: string | null
+          pix_key: string | null
+          prize_amount: number
+          ranking_id: string | null
+          ranking_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_status?: string
+          pix_holder_name?: string | null
+          pix_key?: string | null
+          prize_amount: number
+          ranking_id?: string | null
+          ranking_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_status?: string
+          pix_holder_name?: string | null
+          pix_key?: string | null
+          prize_amount?: number
+          ranking_id?: string | null
+          ranking_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prize_configurations: {
+        Row: {
+          active: boolean
+          created_at: string
+          group_name: string | null
+          id: string
+          position: number | null
+          position_range: string | null
+          prize_amount: number
+          total_winners: number | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          group_name?: string | null
+          id?: string
+          position?: number | null
+          position_range?: string | null
+          prize_amount?: number
+          total_winners?: number | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          group_name?: string | null
+          id?: string
+          position?: number | null
+          position_range?: string | null
+          prize_amount?: number
+          total_winners?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       prize_distributions: {
         Row: {
           amount: number
@@ -370,6 +462,8 @@ export type Database = {
           created_at: string | null
           games_played: number | null
           id: string
+          pix_holder_name: string | null
+          pix_key: string | null
           total_score: number | null
           updated_at: string | null
           username: string
@@ -381,6 +475,8 @@ export type Database = {
           created_at?: string | null
           games_played?: number | null
           id: string
+          pix_holder_name?: string | null
+          pix_key?: string | null
           total_score?: number | null
           updated_at?: string | null
           username: string
@@ -392,6 +488,8 @@ export type Database = {
           created_at?: string | null
           games_played?: number | null
           id?: string
+          pix_holder_name?: string | null
+          pix_key?: string | null
           total_score?: number | null
           updated_at?: string | null
           username?: string

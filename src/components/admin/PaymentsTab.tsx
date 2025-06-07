@@ -18,6 +18,7 @@ export const PaymentsTab = () => {
     editingGroup,
     editIndividualValue,
     editGroupPrize,
+    isLoading,
     setEditIndividualValue,
     setEditGroupPrize,
     handleEditIndividual,
@@ -37,6 +38,19 @@ export const PaymentsTab = () => {
 
   const totalPrize = calculateTotalPrize();
   const totalWinners = calculateTotalWinners();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <span className="ml-3">Carregando configurações de premiação...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
