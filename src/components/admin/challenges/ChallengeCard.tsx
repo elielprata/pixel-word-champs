@@ -23,15 +23,6 @@ interface ChallengeCardProps {
 }
 
 export const ChallengeCard = ({ challenge, onEdit, onDelete }: ChallengeCardProps) => {
-  const getDifficultyLabel = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'Fácil';
-      case 'medium': return 'Médio';
-      case 'hard': return 'Difícil';
-      default: return 'Médio';
-    }
-  };
-
   return (
     <Card>
       <CardContent className="p-4">
@@ -46,7 +37,7 @@ export const ChallengeCard = ({ challenge, onEdit, onDelete }: ChallengeCardProp
         </div>
         
         <div className="space-y-2 mb-4 text-sm text-gray-600">
-          <div>Dificuldade: <span className="font-medium">{getDifficultyLabel(challenge.difficulty)}</span></div>
+          <div>Dificuldade: <span className="font-medium">{challenge.difficulty}</span></div>
           <div>Níveis: <span className="font-medium">{challenge.levels}</span></div>
           <div>Tema: <span className="font-medium">{challenge.theme}</span></div>
         </div>

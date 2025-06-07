@@ -26,19 +26,15 @@ export const useChallenges = () => {
       const { data, error } = await supabase
         .from('challenges')
         .select('*')
+        .eq('is_active', true)
         .order('id');
 
       if (error) throw error;
       
-      // Garantir que os dados estão no formato correto
+      // Cast the difficulty to the correct type
       const typedChallenges = (data || []).map(challenge => ({
         ...challenge,
-        difficulty: challenge.difficulty as 'easy' | 'medium' | 'hard',
-        description: challenge.description || '',
-        theme: challenge.theme || 'default',
-        color: challenge.color || 'blue',
-        levels: challenge.levels || 20,
-        is_active: challenge.is_active !== false
+        difficulty: challenge.difficulty as 'easy' | 'medium' | 'hard'
       }));
       
       setChallenges(typedChallenges);
