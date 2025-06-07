@@ -26,8 +26,17 @@ export const getLevelWords = (level: number): string[] => {
     1: ['CASA', 'GATO', 'SOL', 'MAR', 'PAZ'],
     2: ['VIDA', 'AMOR', 'FLOR', 'AZUL', 'FELIZ'],
     3: ['SONHO', 'TERRA', 'VENTO', 'CHUVA', 'FLORES'],
+    4: ['ESTRELA', 'MONTANHA', 'OCEANO', 'JARDIM', 'LIBERDADE'],
+    5: ['FAMILIA', 'AMIZADE', 'CORAGEM', 'ESPERANCA', 'ALEGRIA'],
+    6: ['NATUREZA', 'HARMONIA', 'BELEZA', 'CRIACAO', 'AVENTURA'],
+    7: ['DESCOBERTA', 'CONHECIMENTO', 'SABEDORIA', 'PACIENCIA', 'GRATIDAO'],
+    8: ['INSPIRACAO', 'TRANSFORMACAO', 'PERSEVERANCA', 'DETERMINACAO', 'SUPERACAO'],
+    9: ['ORIGINALIDADE', 'CRIATIVIDADE', 'INOVACAO', 'EXCELENCIA', 'REALIZACAO'],
+    10: ['EXTRAORDINARIO', 'MAGNIFICENCIA', 'TRANSCENDENCIA', 'REVOLUCIONARIO', 'INCOMPARAVEL']
   };
-  return wordSets[level as keyof typeof wordSets] || ['PALAVRA', 'TESTE', 'JOGO', 'NIVEL', 'DESAFIO'];
+  
+  const defaultWords = ['PALAVRA', 'TESTE', 'JOGO', 'NIVEL', 'DESAFIO'];
+  return wordSets[level as keyof typeof wordSets] || defaultWords;
 };
 
 export const getCellSize = (boardSize: number): number => {
@@ -44,5 +53,7 @@ export const getPointsForWord = (word: string): number => {
   if (length === 3) return 10;
   if (length === 4) return 20;
   if (length === 5) return 30;
-  return 50 + Math.max(0, length - 6) * 10;
+  if (length === 6) return 40;
+  if (length === 7) return 50;
+  return 50 + Math.max(0, length - 7) * 10;
 };
