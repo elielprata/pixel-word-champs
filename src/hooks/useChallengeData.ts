@@ -11,6 +11,8 @@ interface ChallengeData {
   timeLimit: number;
   instructions: string[];
   isActive: boolean;
+  theme: string;
+  color: string;
 }
 
 export const useChallengeData = (challengeId: number) => {
@@ -26,7 +28,9 @@ export const useChallengeData = (challengeId: number) => {
       'Você tem tempo limitado para completar cada nível',
       'Use revive assistindo anúncios para ganhar tempo extra'
     ],
-    isActive: true
+    isActive: true,
+    theme: 'default',
+    color: 'blue'
   });
   const { config } = useGamePointsConfig();
 
@@ -55,6 +59,8 @@ export const useChallengeData = (challengeId: number) => {
         1: {
           title: "Desafio Matinal",
           description: "Palavras relacionadas ao café da manhã",
+          theme: "morning",
+          color: "orange",
           instructions: [
             'Encontre palavras sobre café da manhã',
             'Pão, café, leite, açúcar e outras delícias',
@@ -65,6 +71,8 @@ export const useChallengeData = (challengeId: number) => {
         2: {
           title: "Animais Selvagens",
           description: "Encontre os animais escondidos",
+          theme: "nature",
+          color: "green",
           instructions: [
             'Descubra animais selvagens no tabuleiro',
             'Leão, tigre, elefante e muitos outros',
@@ -75,6 +83,8 @@ export const useChallengeData = (challengeId: number) => {
         3: {
           title: "Cidades do Brasil",
           description: "Conheça as cidades brasileiras",
+          theme: "geography",
+          color: "blue",
           instructions: [
             'Encontre nomes de cidades brasileiras',
             'São Paulo, Rio de Janeiro, Salvador...',
@@ -84,7 +94,10 @@ export const useChallengeData = (challengeId: number) => {
         }
       };
 
-      const specificData = challengeMap[challengeId] || {};
+      const specificData = challengeMap[challengeId] || {
+        theme: 'default',
+        color: 'purple'
+      };
 
       setChallengeData(prev => ({
         ...prev,
