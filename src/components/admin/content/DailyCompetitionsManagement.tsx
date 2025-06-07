@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Target, Calendar, Users, Trophy } from 'lucide-react';
+import { Plus, Edit, Trash2, Target, Calendar, Users } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -20,7 +20,6 @@ interface DailyCompetition {
   theme: string;
   start_date: string;
   end_date: string;
-  prize_pool: number;
   max_participants: number;
   status: string;
   created_at: string;
@@ -37,7 +36,6 @@ export const DailyCompetitionsManagement = () => {
     theme: '',
     start_date: '',
     end_date: '',
-    prize_pool: 0,
     max_participants: 500
   });
   const { toast } = useToast();
@@ -81,7 +79,6 @@ export const DailyCompetitionsManagement = () => {
         theme: comp.theme || 'Geral',
         start_date: comp.start_date,
         end_date: comp.end_date,
-        prize_pool: comp.prize_pool || 0,
         max_participants: comp.max_participants || 500,
         status: comp.status || 'draft',
         created_at: comp.created_at
@@ -122,7 +119,6 @@ export const DailyCompetitionsManagement = () => {
         theme: '',
         start_date: '',
         end_date: '',
-        prize_pool: 0,
         max_participants: 500
       });
       setIsAddModalOpen(false);
@@ -148,7 +144,6 @@ export const DailyCompetitionsManagement = () => {
           theme: editingCompetition.theme,
           start_date: editingCompetition.start_date,
           end_date: editingCompetition.end_date,
-          prize_pool: editingCompetition.prize_pool,
           max_participants: editingCompetition.max_participants,
           status: editingCompetition.status
         })
@@ -227,7 +222,7 @@ export const DailyCompetitionsManagement = () => {
               Competições Diárias
             </CardTitle>
             <p className="text-sm text-slate-600">
-              Gerencie competições diárias com temas específicos
+              Gerencie competições diárias com temas específicos (sem premiação)
             </p>
           </div>
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
@@ -293,24 +288,13 @@ export const DailyCompetitionsManagement = () => {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Pool de Prêmios (R$)</Label>
-                    <Input 
-                      type="number"
-                      step="0.01"
-                      value={newCompetition.prize_pool}
-                      onChange={(e) => setNewCompetition({...newCompetition, prize_pool: parseFloat(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <Label>Máx. Participantes</Label>
-                    <Input 
-                      type="number"
-                      value={newCompetition.max_participants}
-                      onChange={(e) => setNewCompetition({...newCompetition, max_participants: parseInt(e.target.value)})}
-                    />
-                  </div>
+                <div>
+                  <Label>Máx. Participantes</Label>
+                  <Input 
+                    type="number"
+                    value={newCompetition.max_participants}
+                    onChange={(e) => setNewCompetition({...newCompetition, max_participants: parseInt(e.target.value)})}
+                  />
                 </div>
                 <Button onClick={addCompetition} className="w-full">
                   Criar Competição Diária
@@ -323,7 +307,7 @@ export const DailyCompetitionsManagement = () => {
 
       <CardContent className="p-6">
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -369,22 +353,6 @@ export const DailyCompetitionsManagement = () => {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-purple-100 p-2 rounded-lg">
-                  <Trophy className="h-4 w-4 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">Pool Total</p>
-                  <p className="text-xl font-bold text-purple-700">
-                    R$ {competitions.reduce((sum, c) => sum + c.prize_pool, 0).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Tabela de competições */}
@@ -397,7 +365,7 @@ export const DailyCompetitionsManagement = () => {
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold">Início</TableHead>
                 <TableHead className="font-semibold">Fim</TableHead>
-                <TableHead className="font-semibold">Prêmio</TableHead>
+                <TableHead className="font-semibold">Máx. Participantes</TableHead>
                 <TableHead className="font-semibold text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -420,7 +388,7 @@ export const DailyCompetitionsManagement = () => {
                   </TableCell>
                   <TableCell className="text-sm">{formatDate(competition.start_date)}</TableCell>
                   <TableCell className="text-sm">{formatDate(competition.end_date)}</TableCell>
-                  <TableCell className="font-semibold">R$ {competition.prize_pool.toFixed(2)}</TableCell>
+                  <TableCell className="font-semibold">{competition.max_participants}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex gap-2 justify-center">
                       <Button
@@ -538,15 +506,6 @@ export const DailyCompetitionsManagement = () => {
                       onChange={(e) => setEditingCompetition({...editingCompetition, end_date: e.target.value})}
                     />
                   </div>
-                </div>
-                <div>
-                  <Label>Pool de Prêmios (R$)</Label>
-                  <Input 
-                    type="number"
-                    step="0.01"
-                    value={editingCompetition.prize_pool}
-                    onChange={(e) => setEditingCompetition({...editingCompetition, prize_pool: parseFloat(e.target.value)})}
-                  />
                 </div>
                 <Button onClick={updateCompetition} className="w-full">
                   Salvar Alterações
