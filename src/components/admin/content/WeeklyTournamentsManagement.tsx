@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Trophy, Calendar, Users, Crown } from 'lucide-react';
+import { Plus, Edit, Trash2, Trophy, Calendar, Users, Crown, Info } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { usePaymentData } from "@/hooks/usePaymentData";
 
 interface WeeklyTournament {
   id: string;
@@ -35,10 +35,13 @@ export const WeeklyTournamentsManagement = () => {
     description: '',
     start_date: '',
     end_date: '',
-    prize_pool: 0,
     max_participants: 1000
   });
   const { toast } = useToast();
+  const { calculateTotalPrize } = usePaymentData();
+
+  // Calcular pool de prêmios automaticamente
+  const currentPrizePool = calculateTotalPrize();
 
   useEffect(() => {
     fetchTournaments();
@@ -72,7 +75,8 @@ export const WeeklyTournamentsManagement = () => {
         .insert([{
           ...newTournament,
           competition_type: 'tournament',
-          status: 'scheduled'
+          status: 'scheduled',
+          prize_pool: currentPrizePool
         }]);
 
       if (error) throw error;
@@ -87,7 +91,6 @@ export const WeeklyTournamentsManagement = () => {
         description: '',
         start_date: '',
         end_date: '',
-        prize_pool: 0,
         max_participants: 1000
       });
       setIsAddModalOpen(false);
@@ -112,9 +115,9 @@ export const WeeklyTournamentsManagement = () => {
           description: editingTournament.description,
           start_date: editingTournament.start_date,
           end_date: editingTournament.end_date,
-          prize_pool: editingTournament.prize_pool,
           max_participants: editingTournament.max_participants,
-          status: editingTournament.status
+          status: editingTournament.status,
+          prize_pool: currentPrizePool
         })
         .eq('id', editingTournament.id);
 
@@ -250,13 +253,18 @@ export const WeeklyTournamentsManagement = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Pool de Prêmios (R$)</Label>
-                    <Input 
-                      type="number"
-                      step="0.01"
-                      value={newTournament.prize_pool}
-                      onChange={(e) => setNewTournament({...newTournament, prize_pool: parseFloat(e.target.value)})}
-                    />
+                    <Label className="flex items-center gap-2">
+                      Pool de Prêmios (Automático)
+                      <Info className="h-4 w-4 text-blue-500" />
+                    </Label>
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <p className="text-lg font-semibold text-blue-700">
+                        R$ {currentPrizePool.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-blue-600">
+                        Baseado nas configurações de premiação
+                      </p>
+                    </div>
                   </div>
                   <div>
                     <Label>Máx. Participantes</Label>
@@ -332,9 +340,9 @@ export const WeeklyTournamentsManagement = () => {
                   <Crown className="h-4 w-4 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">Pool Total</p>
+                  <p className="text-sm text-purple-600 font-medium">Pool Atual</p>
                   <p className="text-xl font-bold text-purple-700">
-                    R$ {tournaments.reduce((sum, t) => sum + t.prize_pool, 0).toFixed(2)}
+                    R$ {currentPrizePool.toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -479,13 +487,18 @@ export const WeeklyTournamentsManagement = () => {
                   </div>
                 </div>
                 <div>
-                  <Label>Pool de Prêmios (R$)</Label>
-                  <Input 
-                    type="number"
-                    step="0.01"
-                    value={editingTournament.prize_pool}
-                    onChange={(e) => setEditingTournament({...editingTournament, prize_pool: parseFloat(e.target.value)})}
-                  />
+                  <Label className="flex items-center gap-2">
+                    Pool de Prêmios (Automático)
+                    <Info className="h-4 w-4 text-blue-500" />
+                  </Label>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-lg font-semibold text-blue-700">
+                      R$ {currentPrizePool.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-blue-600">
+                      Será atualizado automaticamente baseado nas configurações de premiação
+                    </p>
+                  </div>
                 </div>
                 <Button onClick={updateTournament} className="w-full">
                   Salvar Alterações
