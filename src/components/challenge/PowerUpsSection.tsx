@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lightbulb, Clock, Star, Zap } from 'lucide-react';
+import { Lightbulb, Clock, Zap } from 'lucide-react';
 
 const PowerUpsSection = () => {
   return (
@@ -15,7 +15,7 @@ const PowerUpsSection = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-3">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <div className="text-center p-2 bg-yellow-50 rounded-lg border border-yellow-200">
             <div className="bg-yellow-100 w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-1">
               <Lightbulb className="w-4 h-4 text-yellow-600" />
@@ -30,14 +30,6 @@ const PowerUpsSection = () => {
             </div>
             <h4 className="font-semibold text-blue-800 mb-0.5 text-sm">Tempo Extra</h4>
             <p className="text-xs text-blue-600">+30s com anúncio</p>
-          </div>
-          
-          <div className="text-center p-2 bg-green-50 rounded-lg border border-green-200">
-            <div className="bg-green-100 w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-1">
-              <Star className="w-4 h-4 text-green-600" />
-            </div>
-            <h4 className="font-semibold text-green-800 mb-0.5 text-sm">Palavra Bônus</h4>
-            <p className="text-xs text-green-600">Pontos dobrados</p>
           </div>
         </div>
       </CardContent>
