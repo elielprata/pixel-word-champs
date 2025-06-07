@@ -57,3 +57,66 @@ export const getPointsForWord = (word: string): number => {
   if (length === 7) return 50;
   return 50 + Math.max(0, length - 7) * 10;
 };
+
+// Função para validar se o tabuleiro contém todas as palavras
+export const validateBoardContainsWords = (board: string[][], words: string[]): boolean => {
+  const size = board.length;
+  const directions = [
+    { row: 0, col: 1 },   // horizontal
+    { row: 1, col: 0 },   // vertical
+    { row: 1, col: 1 },   // diagonal
+    { row: 0, col: -1 },  // horizontal reversa
+    { row: -1, col: 0 },  // vertical reversa
+    { row: -1, col: -1 }, // diagonal reversa
+    { row: 1, col: -1 },  // diagonal anti
+    { row: -1, col: 1 }   // diagonal anti reversa
+  ];
+
+  for (const word of words) {
+    let found = false;
+    
+    // Procurar a palavra em todas as posições e direções
+    for (let row = 0; row < size && !found; row++) {
+      for (let col = 0; col < size && !found; col++) {
+        for (const dir of directions) {
+          if (checkWordAtPosition(board, word, row, col, dir.row, dir.col, size)) {
+            found = true;
+            break;
+          }
+        }
+      }
+    }
+    
+    if (!found) {
+      console.error(`Palavra "${word}" não encontrada no tabuleiro!`);
+      return false;
+    }
+  }
+  
+  return true;
+};
+
+const checkWordAtPosition = (
+  board: string[][], 
+  word: string, 
+  startRow: number, 
+  startCol: number, 
+  deltaRow: number, 
+  deltaCol: number,
+  size: number
+): boolean => {
+  for (let i = 0; i < word.length; i++) {
+    const row = startRow + i * deltaRow;
+    const col = startCol + i * deltaCol;
+    
+    if (row < 0 || row >= size || col < 0 || col >= size) {
+      return false;
+    }
+    
+    if (board[row][col] !== word[i]) {
+      return false;
+    }
+  }
+  
+  return true;
+};
