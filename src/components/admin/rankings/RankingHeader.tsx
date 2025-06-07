@@ -5,6 +5,7 @@ import { Trophy, RefreshCw, Download, Users, TrendingUp, Calendar } from 'lucide
 
 interface RankingHeaderProps {
   totalPlayers: number;
+  activeCompetitions: number;
   isLoading: boolean;
   onRefresh: () => void;
   onExport: () => void;
@@ -13,13 +14,12 @@ interface RankingHeaderProps {
 
 export const RankingHeader = ({ 
   totalPlayers, 
+  activeCompetitions,
   isLoading, 
   onRefresh, 
   onExport, 
   canExport 
 }: RankingHeaderProps) => {
-  const activeCompetitions = 1; // Can be made dynamic later
-
   return (
     <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white relative overflow-hidden">
       <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
