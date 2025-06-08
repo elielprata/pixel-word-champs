@@ -11,7 +11,7 @@ export const UserStatsCards = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(6)].map((_, index) => (
-          <Card key={index} className="border-slate-200 shadow-lg animate-pulse">
+          <Card key={index} className="border-slate-200 shadow-sm animate-pulse">
             <CardContent className="p-6">
               <div className="h-20 bg-slate-200 rounded"></div>
             </CardContent>
@@ -83,16 +83,16 @@ export const UserStatsCards = () => {
       {cards.map((card, index) => {
         const Icon = card.icon;
         return (
-          <Card key={index} className="border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <Card key={index} className="border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-slate-600">{card.title}</p>
-                  <p className="text-3xl font-bold text-slate-900">{card.value}</p>
+                  <p className="text-2xl font-bold text-slate-900">{card.value}</p>
                   <p className="text-xs text-slate-500">{card.description}</p>
                 </div>
-                <div className={`bg-gradient-to-br ${getColorClasses(card.color)} p-4 rounded-xl`}>
-                  <Icon className="h-8 w-8" />
+                <div className={`bg-gradient-to-br ${getColorClasses(card.color)} p-3 rounded-xl`}>
+                  <Icon className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
