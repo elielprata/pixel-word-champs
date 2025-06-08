@@ -1,17 +1,17 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, Calendar, Users, DollarSign, Settings, Eye, Download, ArrowRight, RefreshCw } from 'lucide-react';
+import { Trophy, Calendar, Users, DollarSign, Settings, Eye, Download, ArrowRight } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { rankingExportService } from '@/services/rankingExportService';
-import { useRankings } from '@/hooks/useRankings';
 
 interface RankingInfoCardProps {
   type: 'daily' | 'weekly';
   title: string;
   description: string;
+  participants: number;
+  prizePool: number;
   status: 'active' | 'inactive';
   lastUpdate: string;
 }
@@ -20,44 +20,23 @@ export const RankingInfoCard = ({
   type, 
   title, 
   description, 
+  participants, 
+  prizePool, 
   status, 
   lastUpdate 
 }: RankingInfoCardProps) => {
   const { toast } = useToast();
-  const { totalDailyPlayers, totalWeeklyPlayers, refreshData } = useRankings();
   const [isExporting, setIsExporting] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
   const isDaily = type === 'daily';
   const iconColor = isDaily ? 'from-blue-500 to-blue-600' : 'from-purple-500 to-purple-600';
   const statusColor = status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-700 border-slate-200';
-  const participants = isDaily ? totalDailyPlayers : totalWeeklyPlayers;
-  const prizePool = isDaily ? 0 : Math.min(totalWeeklyPlayers * 10, 2500);
 
   const handleView = () => {
     toast({
       title: "Visualizar Ranking",
       description: `Abrindo detalhes do ranking ${isDaily ? 'diário' : 'semanal'}...`,
     });
-  };
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await refreshData();
-      toast({
-        title: "Dados atualizados",
-        description: "Rankings atualizados com dados do banco de dados.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao atualizar",
-        description: "Não foi possível atualizar os dados.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRefreshing(false);
-    }
+    // TODO: Implementar navegação para página de detalhes do ranking
   };
 
   const handleExport = async () => {
@@ -106,6 +85,7 @@ export const RankingInfoCard = ({
       title: "Configurações",
       description: `Abrindo configurações do ranking ${isDaily ? 'diário' : 'semanal'}...`,
     });
+    // TODO: Implementar modal ou página de configurações do ranking
   };
 
   return (
@@ -135,7 +115,6 @@ export const RankingInfoCard = ({
               <span className="text-sm font-medium text-slate-600">Participantes</span>
             </div>
             <p className="text-xl font-bold text-slate-900">{participants.toLocaleString('pt-BR')}</p>
-            <p className="text-xs text-slate-500">Dados reais</p>
           </div>
           
           <div className="bg-slate-50 p-3 rounded-lg">
@@ -143,25 +122,19 @@ export const RankingInfoCard = ({
               {isDaily ? (
                 <>
                   <ArrowRight className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm font-medium text-slate-600">Sistema</span>
+                  <span className="text-sm font-medium text-slate-600">Transfere Pontos</span>
                 </>
               ) : (
                 <>
                   <DollarSign className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm font-medium text-slate-600">Prêmio</span>
+                  <span className="text-sm font-medium text-slate-600">Prêmio Total</span>
                 </>
               )}
             </div>
             {isDaily ? (
-              <div>
-                <p className="text-lg font-bold text-blue-600">Diário</p>
-                <p className="text-xs text-slate-500">Sem premiação</p>
-              </div>
+              <p className="text-lg font-bold text-blue-600">Para Semanal</p>
             ) : (
-              <div>
-                <p className="text-xl font-bold text-slate-900">R$ {prizePool.toLocaleString('pt-BR')}</p>
-                <p className="text-xs text-slate-500">Calculado automaticamente</p>
-              </div>
+              <p className="text-xl font-bold text-slate-900">R$ {prizePool.toLocaleString('pt-BR')}</p>
             )}
           </div>
         </div>
@@ -173,7 +146,7 @@ export const RankingInfoCard = ({
               <Calendar className="h-4 w-4 text-blue-600 mt-0.5" />
               <div className="text-sm">
                 <p className="font-medium text-blue-800 mb-1">Sistema Diário</p>
-                <p className="text-blue-700">Rankings baseados nos dados reais de pontuação dos usuários, atualizados automaticamente.</p>
+                <p className="text-blue-700">Os pontos são zerados diariamente e transferidos automaticamente para o ranking semanal.</p>
               </div>
             </div>
           </div>
@@ -183,7 +156,7 @@ export const RankingInfoCard = ({
               <Trophy className="h-4 w-4 text-purple-600 mt-0.5" />
               <div className="text-sm">
                 <p className="font-medium text-purple-800 mb-1">Sistema Semanal</p>
-                <p className="text-purple-700">Dados sincronizados com o banco, premiação calculada automaticamente baseada na participação.</p>
+                <p className="text-purple-700">Acumula pontos durante a semana com premiação automática no final.</p>
               </div>
             </div>
           </div>
@@ -199,16 +172,6 @@ export const RankingInfoCard = ({
             <Button 
               variant="outline" 
               size="sm" 
-              className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Atualizando...' : 'Atualizar'}
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
               onClick={handleView}
             >
@@ -218,12 +181,21 @@ export const RankingInfoCard = ({
             <Button 
               variant="outline" 
               size="sm" 
-              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200"
+              className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
               onClick={handleExport}
               disabled={isExporting}
             >
               <Download className="h-4 w-4 mr-1" />
               {isExporting ? 'Exportando...' : 'Exportar'}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-slate-600 hover:text-slate-700 hover:bg-slate-50 border-slate-200"
+              onClick={handleConfig}
+            >
+              <Settings className="h-4 w-4 mr-1" />
+              Config
             </Button>
           </div>
         </div>
