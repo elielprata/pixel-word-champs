@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle } from 'lucide-react';
+import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle, BookOpen } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,12 +25,26 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     title: '',
     description: '',
     type: 'weekly' as 'daily' | 'weekly' | 'challenge',
+    category: '',
     prizePool: 0,
     maxParticipants: 1000,
     startDate: undefined as Date | undefined
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const categories = [
+    { value: 'geral', label: 'Geral', description: 'Palavras de todos os temas' },
+    { value: 'animais', label: 'Animais', description: 'Fauna e vida selvagem' },
+    { value: 'comida', label: 'Comida', description: 'Alimentos e culinária' },
+    { value: 'esportes', label: 'Esportes', description: 'Modalidades esportivas' },
+    { value: 'ciencia', label: 'Ciência', description: 'Tecnologia e descobertas' },
+    { value: 'historia', label: 'História', description: 'Eventos e personalidades' },
+    { value: 'geografia', label: 'Geografia', description: 'Lugares e países' },
+    { value: 'arte', label: 'Arte e Cultura', description: 'Música, cinema e literatura' },
+    { value: 'profissoes', label: 'Profissões', description: 'Carreiras e ocupações' },
+    { value: 'natureza', label: 'Natureza', description: 'Meio ambiente e plantas' }
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +64,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         title: '',
         description: '',
         type: 'weekly',
+        category: '',
         prizePool: 0,
         maxParticipants: 1000,
         startDate: undefined
@@ -100,6 +115,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
 
   const competitionInfo = getCompetitionInfo();
   const CompetitionIcon = competitionInfo.icon;
+  const selectedCategory = categories.find(cat => cat.value === formData.category);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -157,6 +173,40 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Categoria */}
+          <div className="space-y-2">
+            <Label htmlFor="category" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Categoria das Palavras
+            </Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-medium">{category.label}</span>
+                      <span className="text-xs text-slate-500">{category.description}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {/* Info sobre a categoria selecionada */}
+            {selectedCategory && (
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <BookOpen className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800">{selectedCategory.label}</span>
+                </div>
+                <p className="text-sm text-blue-700">{selectedCategory.description}</p>
+              </div>
+            )}
           </div>
 
           {/* Título */}
@@ -277,7 +327,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
             </Button>
             <Button
               type="submit"
-              disabled={!formData.title || isSubmitting}
+              disabled={!formData.title || !formData.category || isSubmitting}
               className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
             >
               {isSubmitting ? 'Criando...' : 'Criar Competição'}
