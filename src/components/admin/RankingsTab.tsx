@@ -32,7 +32,7 @@ export const RankingsTab = () => {
               onClick={() => setIsPrizeConfigOpen(true)}
             >
               <Settings className="h-4 w-4 mr-2" />
-              Configurações Gerais
+              Configuração de Prêmios
             </Button>
           </div>
           <RankingMetrics />
