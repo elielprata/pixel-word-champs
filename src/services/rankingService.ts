@@ -40,12 +40,19 @@ export const rankingService = {
 
   async getTotalParticipants(type: 'daily' | 'weekly'): Promise<number> {
     try {
-      const table = type === 'daily' ? 'daily_rankings' : 'weekly_rankings';
-      
-      let query = supabase.from(table).select('*', { count: 'exact', head: true });
-      
       if (type === 'daily') {
-        query = query.eq('date', new Date().toISOString().split('T')[0]);
+        const today = new Date().toISOString().split('T')[0];
+        const { count, error } = await supabase
+          .from('daily_rankings')
+          .select('*', { count: 'exact', head: true })
+          .eq('date', today);
+
+        if (error) {
+          console.error('❌ Erro ao contar participantes diários:', error);
+          throw error;
+        }
+        
+        return count || 0;
       } else {
         // Para semanal, buscar da semana atual
         const today = new Date();
@@ -54,17 +61,18 @@ export const rankingService = {
         const weekStart = new Date(today.setDate(diff));
         const weekStartStr = weekStart.toISOString().split('T')[0];
         
-        query = query.eq('week_start', weekStartStr);
-      }
+        const { count, error } = await supabase
+          .from('weekly_rankings')
+          .select('*', { count: 'exact', head: true })
+          .eq('week_start', weekStartStr);
 
-      const { count, error } = await query;
-
-      if (error) {
-        console.error(`❌ Erro ao contar participantes ${type}:`, error);
-        throw error;
+        if (error) {
+          console.error('❌ Erro ao contar participantes semanais:', error);
+          throw error;
+        }
+        
+        return count || 0;
       }
-      
-      return count || 0;
     } catch (error) {
       console.error(`❌ Erro ao obter total de participantes ${type}:`, error);
       return 0;
