@@ -53,14 +53,10 @@ export const RankingsTab = () => {
 
         {/* Main Content */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs defaultValue="daily" className="w-full">
             <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
               <div className="flex items-center justify-between">
-                <TabsList className="grid grid-cols-3 bg-white border border-slate-200">
-                  <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-                    <Trophy className="h-4 w-4" />
-                    Visão Geral
-                  </TabsTrigger>
+                <TabsList className="grid grid-cols-2 bg-white border border-slate-200">
                   <TabsTrigger value="daily" className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
                     <Calendar className="h-4 w-4" />
                     Ranking Diário
@@ -82,68 +78,6 @@ export const RankingsTab = () => {
             </div>
 
             <div className="p-6">
-              <TabsContent value="overview" className="space-y-6 mt-0">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-blue-600" />
-                      Resumo dos Rankings
-                    </h3>
-                    <p className="text-slate-600 text-sm">
-                      Acompanhe o desempenho e status de todos os rankings ativos
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <RankingInfoCard
-                    type="daily"
-                    title="Ranking Diário"
-                    description="Competição diária com renovação automática"
-                    status="active"
-                    lastUpdate="há 2 minutos"
-                  />
-                  
-                  <RankingInfoCard
-                    type="weekly"
-                    title="Ranking Semanal"
-                    description="Competição semanal com premiação maior"
-                    status="active"
-                    lastUpdate="há 5 minutos"
-                  />
-                </div>
-
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-lg font-semibold text-slate-900 mb-2">Sistema de Premiação Automática</h4>
-                      <p className="text-slate-600 text-sm mb-4">
-                        Os prêmios são distribuídos automaticamente baseados nas configurações definidas. 
-                        O sistema calcula as posições e valores de forma transparente.
-                      </p>
-                      <div className="flex gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                          <span className="text-slate-700">Pagamentos automatizados</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                          <span className="text-slate-700">Rankings em tempo real</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                          <span className="text-slate-700">Distribuição transparente</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-slate-900">R$ {totalPrizeDistributed.toFixed(2)}</div>
-                      <div className="text-sm text-slate-600">Total disponível esta semana</div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
               <TabsContent value="daily" className="space-y-6 mt-0">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
