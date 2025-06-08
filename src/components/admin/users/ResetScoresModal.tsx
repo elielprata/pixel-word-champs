@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, Loader2, Shield } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ResetScoresModalProps {
@@ -39,17 +39,14 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
       setPassword('');
       onClose();
     } catch (error: any) {
-      console.error('Erro no modal:', error);
       setError(error.message || 'Erro ao zerar pontuações');
     }
   };
 
   const handleClose = () => {
-    if (!isResetting) {
-      setPassword('');
-      setError('');
-      onClose();
-    }
+    setPassword('');
+    setError('');
+    onClose();
   };
 
   return (
@@ -70,19 +67,6 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
           </DialogDescription>
         </DialogHeader>
 
-        <Alert>
-          <Shield className="h-4 w-4" />
-          <AlertDescription>
-            <strong>O que será resetado:</strong>
-            <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-              <li>Pontuação total de todos os usuários</li>
-              <li>Número de jogos jogados</li>
-              <li>Melhores posições diárias e semanais</li>
-              <li>Rankings atuais</li>
-            </ul>
-          </AlertDescription>
-        </Alert>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="admin-password">Senha de Administrador</Label>
@@ -93,11 +77,7 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Digite a senha de admin"
               disabled={isResetting}
-              className={error ? 'border-red-500' : ''}
             />
-            <p className="text-xs text-slate-500">
-              Senha padrão: admin123
-            </p>
           </div>
 
           {error && (

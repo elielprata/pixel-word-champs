@@ -59,9 +59,7 @@ export const UserModalsManager = ({
             onClose={onCloseModals}
             userId={selectedUser.id}
             username={selectedUser.username}
-            onUserUpdated={() => {
-              // Callback vazio, a atualização é feita via invalidateQueries
-            }}
+            onUserUpdated={() => {}}
           />
         </>
       )}
