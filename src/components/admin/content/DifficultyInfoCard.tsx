@@ -21,7 +21,7 @@ export const DifficultyInfoCard = () => {
           </div>
           <div className="flex items-center gap-2">
             <Badge className="bg-orange-100 text-orange-800 border-orange-200">Difícil</Badge>
-            <span className="text-slate-600">5 letras</span>
+            <span className="text-slate-600">5-7 letras</span>
           </div>
           <div className="flex items-center gap-2">
             <Badge className="bg-red-100 text-red-800 border-red-200">Expert</Badge>

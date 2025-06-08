@@ -106,7 +106,7 @@ export const CategoryGenerationConfig = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">Difícil</Badge>
-                        <span className="text-xs">30% (5 letras)</span>
+                        <span className="text-xs">30% (5-7 letras)</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs">Médio</Badge>
