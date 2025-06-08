@@ -48,10 +48,10 @@ const AdminPanel = () => {
           </div>
 
           <Tabs defaultValue="dashboard" className="w-full">
-            <TabsList className="grid w-full grid-cols-8 lg:grid-cols-8">
+            <TabsList className="grid w-full grid-cols-9 lg:grid-cols-9">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
-              <TabsTrigger value="all-users">Todos Usuários</TabsTrigger>
+              <TabsTrigger value="all-users">Segurança</TabsTrigger>
               <TabsTrigger value="challenges">Desafios</TabsTrigger>
               <TabsTrigger value="rankings">Rankings</TabsTrigger>
               <TabsTrigger value="content">Conteúdo</TabsTrigger>
