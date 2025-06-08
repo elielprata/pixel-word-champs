@@ -76,16 +76,16 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
   }, [open]);
 
   const categories = [
-    { value: 'geral', label: 'Geral - Palavras diversas de todos os temas' },
-    { value: 'animais', label: 'Animais - Palavras relacionadas a fauna' },
-    { value: 'cores', label: 'Cores - Nomes de cores e tonalidades' },
-    { value: 'comidas', label: 'Comidas - Alimentos e bebidas' },
-    { value: 'profissoes', label: 'Profissões - Carreiras e ocupações' },
-    { value: 'esportes', label: 'Esportes - Modalidades esportivas' },
-    { value: 'paises', label: 'Países - Nações do mundo' },
-    { value: 'objetos', label: 'Objetos - Itens do cotidiano' },
-    { value: 'natureza', label: 'Natureza - Elementos naturais' },
-    { value: 'tecnologia', label: 'Tecnologia - Termos tecnológicos' }
+    { value: 'geral', label: 'Geral', description: 'Palavras diversas de todos os temas' },
+    { value: 'animais', label: 'Animais', description: 'Palavras relacionadas a fauna' },
+    { value: 'cores', label: 'Cores', description: 'Nomes de cores e tonalidades' },
+    { value: 'comidas', label: 'Comidas', description: 'Alimentos e bebidas' },
+    { value: 'profissoes', label: 'Profissões', description: 'Carreiras e ocupações' },
+    { value: 'esportes', label: 'Esportes', description: 'Modalidades esportivas' },
+    { value: 'paises', label: 'Países', description: 'Nações do mundo' },
+    { value: 'objetos', label: 'Objetos', description: 'Itens do cotidiano' },
+    { value: 'natureza', label: 'Natureza', description: 'Elementos naturais' },
+    { value: 'tecnologia', label: 'Tecnologia', description: 'Termos tecnológicos' }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -270,48 +270,49 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                 <SelectContent>
                   {categories.map((category) => (
                     <SelectItem key={category.value} value={category.value}>
-                      <span className="text-sm">{category.label}</span>
+                      <span className="text-sm font-medium">{category.label}</span>
+                      <span className="text-xs text-slate-500 block">{category.description}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Atribuir a Torneio Semanal (para todos os tipos de competição) */}
-            <div className="space-y-2">
-              <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm font-medium">
-                <Link className="h-3 w-3" />
-                Atribuir a Torneio Semanal
-              </Label>
-              <Select value={formData.weeklyTournamentId} onValueChange={(value) => setFormData(prev => ({ ...prev, weeklyTournamentId: value }))}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Selecione um torneio semanal (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">
-                    <span className="text-slate-500">Nenhum torneio selecionado</span>
-                  </SelectItem>
-                  {weeklyTournaments.map((tournament) => (
-                    <SelectItem key={tournament.id} value={tournament.id}>
-                      <div className="flex flex-col py-1">
-                        <span className="font-medium text-sm">{tournament.title}</span>
-                        <span className="text-xs text-slate-500 mt-0.5">
-                          {tournament.total_participants} participantes • R$ {tournament.prize_pool}
-                        </span>
-                      </div>
+            {/* Atribuir a Torneio Semanal (apenas para diárias e semanais) */}
+            {formData.type !== 'challenge' && (
+              <div className="space-y-2">
+                <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm font-medium">
+                  <Link className="h-3 w-3" />
+                  Atribuir a Torneio Semanal
+                </Label>
+                <Select value={formData.weeklyTournamentId} onValueChange={(value) => setFormData(prev => ({ ...prev, weeklyTournamentId: value }))}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Selecione um torneio semanal (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      <span className="text-slate-500">Nenhum torneio selecionado</span>
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                {formData.type === 'daily' 
-                  ? 'Os pontos desta competição diária contribuirão para o torneio semanal selecionado.'
-                  : formData.type === 'weekly'
-                  ? 'Esta competição semanal pode ser vinculada a um torneio maior.'
-                  : 'Este desafio especial pode contribuir para um torneio semanal.'
-                }
-              </p>
-            </div>
+                    {weeklyTournaments.map((tournament) => (
+                      <SelectItem key={tournament.id} value={tournament.id}>
+                        <div className="flex flex-col py-1">
+                          <span className="font-medium text-sm">{tournament.title}</span>
+                          <span className="text-xs text-slate-500 mt-0.5">
+                            {tournament.total_participants} participantes • R$ {tournament.prize_pool}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                  {formData.type === 'daily' 
+                    ? 'Os pontos desta competição diária contribuirão para o torneio semanal selecionado.'
+                    : 'Esta competição semanal pode ser vinculada a um torneio maior.'
+                  }
+                </p>
+              </div>
+            )}
 
             {/* Máximo de Participantes */}
             <div className="space-y-2">
