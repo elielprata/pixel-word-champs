@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle, Tag } from 'lucide-react';
+import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle, Tag, Link } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useCompetitions } from "@/hooks/useCompetitions";
 
 interface CreateCompetitionModalProps {
   open: boolean;
@@ -25,12 +27,17 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     description: '',
     type: 'weekly' as 'daily' | 'weekly' | 'challenge',
     category: 'geral' as string,
+    weeklyTournamentId: '' as string,
     prizePool: 0,
     maxParticipants: 1000,
     startDate: undefined as Date | undefined
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { competitions } = useCompetitions();
+
+  // Filtrar competições semanais ativas para seleção
+  const weeklyTournaments = competitions.filter(comp => comp.type === 'weekly' && comp.is_active);
 
   const categories = [
     { value: 'geral', label: 'Geral', description: 'Palavras diversas de todos os temas' },
@@ -64,6 +71,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         description: '',
         type: 'weekly',
         category: 'geral',
+        weeklyTournamentId: '',
         prizePool: 0,
         maxParticipants: 1000,
         startDate: undefined
@@ -125,12 +133,12 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Tipo de Competição */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="type" className="text-sm">Tipo de Competição</Label>
             <Select value={formData.type} onValueChange={(value: 'daily' | 'weekly' | 'challenge') => setFormData(prev => ({ ...prev, type: value }))}>
-              <SelectTrigger className="h-9">
+              <SelectTrigger className="h-8">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -158,7 +166,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
             {/* Info sobre o tipo selecionado */}
             <div className="bg-slate-50 p-2 rounded border">
               <div className="flex items-start gap-2">
-                <div className={`${competitionInfo.color} p-1.5 rounded`}>
+                <div className={`${competitionInfo.color} p-1 rounded`}>
                   <CompetitionIcon className="h-3 w-3 text-white" />
                 </div>
                 <div className="flex-1">
@@ -173,13 +181,13 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
 
           {/* Categoria (apenas para competições diárias) */}
           {formData.type === 'daily' && (
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="category" className="flex items-center gap-2 text-sm">
                 <Tag className="h-3 w-3" />
                 Categoria das Palavras
               </Label>
               <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-8">
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -193,27 +201,57 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {/* Atribuir a Torneio Semanal (apenas para competições diárias) */}
+          {formData.type === 'daily' && (
+            <div className="space-y-1">
+              <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm">
+                <Link className="h-3 w-3" />
+                Atribuir a Torneio Semanal
+              </Label>
+              <Select value={formData.weeklyTournamentId} onValueChange={(value) => setFormData(prev => ({ ...prev, weeklyTournamentId: value }))}>
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Selecione um torneio semanal (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">
+                    <span className="text-slate-500">Nenhum torneio selecionado</span>
+                  </SelectItem>
+                  {weeklyTournaments.map((tournament) => (
+                    <SelectItem key={tournament.id} value={tournament.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">{tournament.title}</span>
+                        <span className="text-xs text-slate-500">
+                          {tournament.total_participants} participantes • R$ {tournament.prize_pool}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-slate-600">
-                Esta categoria define o tema das palavras que aparecerão no jogo diário.
+                Os pontos desta competição diária contribuirão para o torneio semanal selecionado.
               </p>
             </div>
           )}
 
           {/* Título */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="title" className="text-sm">Título da Competição</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="Ex: Torneio de Palavras Semanal"
-              className="h-9"
+              className="h-8"
               required
             />
           </div>
 
           {/* Descrição */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="description" className="text-sm">Descrição</Label>
             <Textarea
               id="description"
@@ -226,14 +264,14 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
           </div>
 
           {/* Data de Início */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label className="text-sm">Data de Início</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal h-9",
+                    "w-full justify-start text-left font-normal h-8",
                     !formData.startDate && "text-muted-foreground"
                   )}
                 >
@@ -260,7 +298,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
 
           {/* Prêmio (apenas para semanal e challenge) */}
           {competitionInfo.prizeEnabled && (
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="prizePool" className="flex items-center gap-2 text-sm">
                 <DollarSign className="h-3 w-3" />
                 Valor Total dos Prêmios (R$)
@@ -273,7 +311,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                 value={formData.prizePool}
                 onChange={(e) => setFormData(prev => ({ ...prev, prizePool: parseFloat(e.target.value) || 0 }))}
                 placeholder="0.00"
-                className="h-9"
+                className="h-8"
               />
             </div>
           )}
@@ -286,14 +324,14 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                 <span className="text-xs font-medium">Informação Importante</span>
               </div>
               <p className="text-xs text-amber-700 mt-1">
-                Competições diárias não possuem premiação. Os pontos dos participantes são automaticamente 
-                transferidos para o ranking semanal ao final de cada dia.
+                Competições diárias não possuem premiação própria. Os pontos dos participantes são 
+                transferidos para o ranking semanal{formData.weeklyTournamentId ? ' selecionado' : ''} ao final de cada dia.
               </p>
             </div>
           )}
 
           {/* Máximo de Participantes */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="maxParticipants" className="flex items-center gap-2 text-sm">
               <Users className="h-3 w-3" />
               Máximo de Participantes
@@ -305,7 +343,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               value={formData.maxParticipants}
               onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: parseInt(e.target.value) || 1000 }))}
               placeholder="1000"
-              className="h-9"
+              className="h-8"
             />
           </div>
 
@@ -315,14 +353,14 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1 h-9"
+              className="flex-1 h-8"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={!formData.title || isSubmitting}
-              className="flex-1 h-9 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+              className="flex-1 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
             >
               {isSubmitting ? 'Criando...' : 'Criar Competição'}
             </Button>
