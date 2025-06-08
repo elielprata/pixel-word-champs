@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle } from 'lucide-react';
+import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle, Tag } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,12 +25,26 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     title: '',
     description: '',
     type: 'weekly' as 'daily' | 'weekly' | 'challenge',
+    category: 'geral' as string,
     prizePool: 0,
     maxParticipants: 1000,
     startDate: undefined as Date | undefined
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const categories = [
+    { value: 'geral', label: 'Geral', description: 'Palavras diversas de todos os temas' },
+    { value: 'animais', label: 'Animais', description: 'Palavras relacionadas a fauna' },
+    { value: 'cores', label: 'Cores', description: 'Nomes de cores e tonalidades' },
+    { value: 'comidas', label: 'Comidas', description: 'Alimentos e bebidas' },
+    { value: 'profissoes', label: 'Profissões', description: 'Carreiras e ocupações' },
+    { value: 'esportes', label: 'Esportes', description: 'Modalidades esportivas' },
+    { value: 'paises', label: 'Países', description: 'Nações do mundo' },
+    { value: 'objetos', label: 'Objetos', description: 'Itens do cotidiano' },
+    { value: 'natureza', label: 'Natureza', description: 'Elementos naturais' },
+    { value: 'tecnologia', label: 'Tecnologia', description: 'Termos tecnológicos' }
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +64,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         title: '',
         description: '',
         type: 'weekly',
+        category: 'geral',
         prizePool: 0,
         maxParticipants: 1000,
         startDate: undefined
@@ -158,6 +173,34 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               </div>
             </div>
           </div>
+
+          {/* Categoria (apenas para competições diárias) */}
+          {formData.type === 'daily' && (
+            <div className="space-y-2">
+              <Label htmlFor="category" className="flex items-center gap-2">
+                <Tag className="h-4 w-4" />
+                Categoria das Palavras
+              </Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{category.label}</span>
+                        <span className="text-xs text-slate-500">{category.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-600">
+                Esta categoria define o tema das palavras que aparecerão no jogo diário.
+              </p>
+            </div>
+          )}
 
           {/* Título */}
           <div className="space-y-2">
