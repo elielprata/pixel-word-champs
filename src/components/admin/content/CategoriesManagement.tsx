@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -153,23 +154,42 @@ export const CategoriesManagement = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-slate-700">Quantidade de palavras:</label>
-              <Input
-                type="number"
-                min="1"
-                max="1000"
-                value={wordsCount}
-                onChange={(e) => setWordsCount(Number(e.target.value))}
-                className="w-24"
-              />
-              <div className="text-xs text-slate-500">
-                Quantas palavras gerar por categoria (máx. 1000)
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Controles à esquerda */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium text-slate-700">Quantidade de palavras:</label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="1000"
+                  value={wordsCount}
+                  onChange={(e) => setWordsCount(Number(e.target.value))}
+                  className="w-24"
+                />
+                <div className="text-xs text-slate-500">
+                  Quantas palavras gerar por categoria (máx. 1000)
+                </div>
               </div>
+              
+              {categories.length > 0 && (
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleGenerateAllCategories}
+                    disabled={isGenerating}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    {isGenerating ? 'Gerando...' : `Gerar para Todas (${categories.length} categorias)`}
+                  </Button>
+                  <div className="text-xs text-slate-500">
+                    Irá gerar {wordsCount} palavras para cada categoria
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Regras de geração */}
+            {/* Regras de geração à direita */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <Info className="h-5 w-5 text-blue-600 mt-0.5" />
@@ -177,7 +197,7 @@ export const CategoriesManagement = () => {
                   <h4 className="text-sm font-medium text-blue-800 mb-2">Regras de Geração</h4>
                   <div className="text-sm text-blue-700 space-y-1">
                     <p>A IA distribui automaticamente as palavras por dificuldade:</p>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="grid grid-cols-1 gap-2 mt-2">
                       <div className="flex items-center gap-2">
                         <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">Expert</Badge>
                         <span className="text-xs">30% (8+ letras)</span>
@@ -199,22 +219,6 @@ export const CategoriesManagement = () => {
                 </div>
               </div>
             </div>
-            
-            {categories.length > 0 && (
-              <div className="flex gap-3 pt-2">
-                <Button
-                  onClick={handleGenerateAllCategories}
-                  disabled={isGenerating}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  <Zap className="h-4 w-4 mr-2" />
-                  {isGenerating ? 'Gerando...' : `Gerar para Todas (${categories.length} categorias)`}
-                </Button>
-                <div className="text-xs text-slate-500 flex items-center">
-                  Irá gerar {wordsCount} palavras para cada categoria
-                </div>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
