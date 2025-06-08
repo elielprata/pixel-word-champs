@@ -24,6 +24,8 @@ interface CompetitionHistoryItem {
   theme?: string;
   created_at: string;
   updated_at: string;
+  max_participants?: number;
+  total_participants?: number;
 }
 
 export const CompetitionHistory = () => {
@@ -75,7 +77,9 @@ export const CompetitionHistory = () => {
             end_date: comp.week_end || comp.updated_at,
             source: 'system' as const,
             created_at: comp.created_at,
-            updated_at: comp.updated_at
+            updated_at: comp.updated_at,
+            max_participants: 1000,
+            total_participants: comp.total_participants || 0
           }));
 
         // Converter competições customizadas para o formato correto
@@ -94,7 +98,9 @@ export const CompetitionHistory = () => {
             source: 'custom' as const,
             theme: comp.theme,
             created_at: comp.created_at,
-            updated_at: comp.updated_at
+            updated_at: comp.updated_at,
+            max_participants: comp.max_participants || 1000,
+            total_participants: 0
           }));
 
         // Mostrar TODAS as competições customizadas para debug (incluindo ativas)
@@ -111,7 +117,9 @@ export const CompetitionHistory = () => {
           source: 'custom' as const,
           theme: comp.theme,
           created_at: comp.created_at,
-          updated_at: comp.updated_at
+          updated_at: comp.updated_at,
+          max_participants: comp.max_participants || 1000,
+          total_participants: 0
         }));
 
         console.log('📋 Competições customizadas (TODAS para debug):', allCustomForDebug);
@@ -156,7 +164,9 @@ export const CompetitionHistory = () => {
               end_date: comp.week_end || comp.updated_at,
               source: 'system' as const,
               created_at: comp.created_at,
-              updated_at: comp.updated_at
+              updated_at: comp.updated_at,
+              max_participants: 1000,
+              total_participants: comp.total_participants || 0
             })),
             ...allCustomForDebug
           ];

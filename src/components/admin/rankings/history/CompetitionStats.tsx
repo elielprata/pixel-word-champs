@@ -11,9 +11,10 @@ interface CompetitionHistoryItem {
   end_date: string;
   status: string;
   prize_pool: number;
-  max_participants: number;
-  total_participants: number;
+  participants: number;
   created_at: string;
+  max_participants?: number;
+  total_participants?: number;
 }
 
 interface CompetitionStatsProps {
