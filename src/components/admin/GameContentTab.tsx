@@ -3,42 +3,39 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Settings, ArrowRight, Activity, Users, Crown, Award } from 'lucide-react';
+import { BookOpen, Settings, Activity, Users, Crown, Award } from 'lucide-react';
 import { WordsManagement } from './content/WordsManagement';
 import { GameSettings } from './content/GameSettings';
+import { useRealGameMetrics } from '@/hooks/useRealGameMetrics';
 
 export const GameContentTab = () => {
-  const quickStats = [
-    { label: 'Palavras Ativas', value: '2,847', icon: BookOpen, color: 'text-blue-600' },
-    { label: 'Configurações Ativas', value: '12', icon: Settings, color: 'text-slate-600' },
-    { label: 'Participantes Online', value: '1,234', icon: Users, color: 'text-purple-600' },
-  ];
+  const { metrics, isLoading } = useRealGameMetrics();
 
-  const featureCards = [
-    {
-      id: 'words',
-      title: 'Banco de Palavras',
-      description: 'Gerencie o vocabulário do jogo por categorias',
-      icon: BookOpen,
-      gradient: 'from-blue-600 to-cyan-600',
-      stats: '2,847 palavras ativas',
-      features: ['Categorização automática', 'Validação por IA', 'Filtros avançados']
+  const quickStats = [
+    { 
+      label: 'Palavras Ativas', 
+      value: isLoading ? '...' : metrics.activeWords.toLocaleString(), 
+      icon: BookOpen, 
+      color: 'text-blue-600' 
     },
-    {
-      id: 'settings',
-      title: 'Configurações do Jogo',
-      description: 'Ajuste regras, pontuação e mecânicas',
-      icon: Settings,
-      gradient: 'from-slate-600 to-slate-700',
-      stats: '12 configurações ativas',
-      features: ['Sistema de pontos', 'Níveis de dificuldade', 'Tempos de partida']
-    }
+    { 
+      label: 'Configurações Ativas', 
+      value: isLoading ? '...' : metrics.activeSettings.toString(), 
+      icon: Settings, 
+      color: 'text-slate-600' 
+    },
+    { 
+      label: 'Usuários Online', 
+      value: isLoading ? '...' : metrics.onlineUsers.toString(), 
+      icon: Users, 
+      color: 'text-purple-600' 
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section - Similar to RankingsTab */}
+        {/* Header Section */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-4">
