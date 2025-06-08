@@ -36,6 +36,41 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_word_generation: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          id: string
+          last_generation: string | null
+          level: number
+          words_generated: number | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_generation?: string | null
+          level: number
+          words_generated?: number | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_generation?: string | null
+          level?: number
+          words_generated?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_word_generation_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "word_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_progress: {
         Row: {
           challenge_id: number
@@ -772,6 +807,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      word_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       words_found: {
         Row: {
