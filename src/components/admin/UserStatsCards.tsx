@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2 } from 'lucide-react';
 import { useRealUserStats } from '@/hooks/useRealUserStats';
 
@@ -9,11 +9,11 @@ export const UserStatsCards = () => {
 
   if (stats.isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[...Array(6)].map((_, index) => (
-          <Card key={index} className="border-slate-200 shadow-lg animate-pulse">
+          <Card key={index} className="border-slate-200 animate-pulse">
             <CardContent className="p-6">
-              <div className="h-20 bg-slate-200 rounded"></div>
+              <div className="h-16 bg-slate-200 rounded"></div>
             </CardContent>
           </Card>
         ))}
@@ -68,31 +68,31 @@ export const UserStatsCards = () => {
 
   const getColorClasses = (color: string) => {
     const colors = {
-      blue: "from-blue-100 to-blue-200 text-blue-700",
-      green: "from-green-100 to-green-200 text-green-700",
-      purple: "from-purple-100 to-purple-200 text-purple-700",
-      orange: "from-orange-100 to-orange-200 text-orange-700",
-      cyan: "from-cyan-100 to-cyan-200 text-cyan-700",
-      pink: "from-pink-100 to-pink-200 text-pink-700"
+      blue: "from-blue-50 to-blue-100 text-blue-700 border-blue-200",
+      green: "from-green-50 to-green-100 text-green-700 border-green-200",
+      purple: "from-purple-50 to-purple-100 text-purple-700 border-purple-200",
+      orange: "from-orange-50 to-orange-100 text-orange-700 border-orange-200",
+      cyan: "from-cyan-50 to-cyan-100 text-cyan-700 border-cyan-200",
+      pink: "from-pink-50 to-pink-100 text-pink-700 border-pink-200"
     };
     return colors[color as keyof typeof colors] || colors.blue;
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {cards.map((card, index) => {
         const Icon = card.icon;
         return (
-          <Card key={index} className="border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <Card key={index} className="border-slate-200 hover:shadow-md transition-shadow duration-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="space-y-2">
+                <div className="space-y-2 flex-1">
                   <p className="text-sm font-medium text-slate-600">{card.title}</p>
-                  <p className="text-3xl font-bold text-slate-900">{card.value}</p>
+                  <p className="text-2xl font-bold text-slate-900">{card.value}</p>
                   <p className="text-xs text-slate-500">{card.description}</p>
                 </div>
-                <div className={`bg-gradient-to-br ${getColorClasses(card.color)} p-4 rounded-xl`}>
-                  <Icon className="h-8 w-8" />
+                <div className={`bg-gradient-to-br ${getColorClasses(card.color)} p-3 rounded-lg border`}>
+                  <Icon className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>

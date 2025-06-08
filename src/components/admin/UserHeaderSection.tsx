@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, TrendingUp } from 'lucide-react';
+import { Users, BarChart3 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
 export const UserHeaderSection = () => {
@@ -23,7 +23,7 @@ export const UserHeaderSection = () => {
           Sistema Ativo
         </Badge>
         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
-          <TrendingUp className="h-3 w-3 mr-1" />
+          <BarChart3 className="h-3 w-3 mr-1" />
           Monitoramento
         </Badge>
       </div>
