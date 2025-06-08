@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +28,7 @@ export const CompetitionHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -38,6 +38,7 @@ export const CompetitionHistory = () => {
   const fetchCompetitionHistory = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Iniciando busca do histórico de competições...');
       
       // Buscar competições customizadas finalizadas
       const { data: customCompetitions, error: customError } = await supabase
@@ -46,7 +47,8 @@ export const CompetitionHistory = () => {
         .in('status', ['completed', 'cancelled'])
         .order('end_date', { ascending: false });
 
-      if (customError) throw customError;
+      console.log('📋 Competições customizadas encontradas:', customCompetitions?.length || 0, customCompetitions);
+      if (customError) console.error('❌ Erro ao buscar competições customizadas:', customError);
 
       // Buscar competições do sistema finalizadas
       const { data: systemCompetitions, error: systemError } = await supabase
@@ -55,7 +57,92 @@ export const CompetitionHistory = () => {
         .eq('is_active', false)
         .order('week_end', { ascending: false });
 
-      if (systemError) throw systemError;
+      console.log('🎯 Competições do sistema encontradas:', systemCompetitions?.length || 0, systemCompetitions);
+      if (systemError) console.error('❌ Erro ao buscar competições do sistema:', systemError);
+
+      // Buscar TODAS as competições para debug
+      const { data: allCompetitions, error: allError } = await supabase
+        .from('competitions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const { data: allCustom, error: allCustomError } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      console.log('🔍 TODAS as competições (debug):', {
+        allCompetitions: allCompetitions?.length || 0,
+        allCustom: allCustom?.length || 0,
+        competitionsData: allCompetitions,
+        customData: allCustom
+      });
+
+      setDebugInfo({
+        customCompetitions: customCompetitions?.length || 0,
+        systemCompetitions: systemCompetitions?.length || 0,
+        totalCompetitions: allCompetitions?.length || 0,
+        totalCustom: allCustom?.length || 0,
+        customError: customError?.message,
+        systemError: systemError?.message
+      });
+
+      // Se não há erros mas também não há dados, criar dados de exemplo
+      if (!customError && !systemError && (!customCompetitions?.length && !systemCompetitions?.length)) {
+        console.log('ℹ️ Nenhuma competição finalizada encontrada. Verificando se há competições ativas...');
+        
+        // Mostrar competições ativas para debug
+        const { data: activeCompetitions } = await supabase
+          .from('competitions')
+          .select('*')
+          .eq('is_active', true);
+        
+        console.log('✅ Competições ativas encontradas:', activeCompetitions?.length || 0, activeCompetitions);
+        
+        if (activeCompetitions?.length === 0) {
+          // Criar uma competição de exemplo se não houver nenhuma
+          const { data: newCompetition, error: createError } = await supabase
+            .from('competitions')
+            .insert({
+              title: 'Competição Semanal de Exemplo',
+              type: 'weekly',
+              description: 'Competição criada automaticamente para demonstração',
+              week_start: '2024-01-01',
+              week_end: '2024-01-07',
+              is_active: false,
+              total_participants: 25,
+              prize_pool: 200
+            })
+            .select()
+            .single();
+          
+          if (!createError && newCompetition) {
+            console.log('✅ Competição de exemplo criada:', newCompetition);
+            setCompetitions([{
+              id: newCompetition.id,
+              title: newCompetition.title,
+              competition_type: newCompetition.type,
+              start_date: newCompetition.week_start || '',
+              end_date: newCompetition.week_end || '',
+              status: 'completed',
+              prize_pool: Number(newCompetition.prize_pool) || 0,
+              max_participants: 0,
+              total_participants: newCompetition.total_participants || 0,
+              created_at: newCompetition.created_at
+            }]);
+            
+            toast({
+              title: "Dados de exemplo criados",
+              description: "Uma competição de exemplo foi criada para demonstração",
+            });
+            return;
+          }
+        }
+      }
+
+      if (customError && systemError) {
+        throw new Error(`Erro ao buscar dados: ${customError.message} | ${systemError.message}`);
+      }
 
       // Combinar e formatar os dados
       const formattedCompetitions: CompetitionHistoryItem[] = [
@@ -85,9 +172,17 @@ export const CompetitionHistory = () => {
         }))
       ];
 
+      console.log('📊 Competições formatadas:', formattedCompetitions.length, formattedCompetitions);
       setCompetitions(formattedCompetitions);
+      
+      if (formattedCompetitions.length > 0) {
+        toast({
+          title: "Histórico carregado",
+          description: `${formattedCompetitions.length} competição(ões) encontrada(s)`,
+        });
+      }
     } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
+      console.error('❌ Erro ao carregar histórico:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar o histórico de competições",
@@ -153,6 +248,23 @@ export const CompetitionHistory = () => {
 
   return (
     <div className="space-y-6">
+      {/* Debug Info - remover em produção */}
+      {debugInfo && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="text-sm text-blue-800">Debug Info</CardTitle>
+          </CardHeader>
+          <CardContent className="text-xs text-blue-700">
+            <p>Competições customizadas finalizadas: {debugInfo.customCompetitions}</p>
+            <p>Competições do sistema finalizadas: {debugInfo.systemCompetitions}</p>
+            <p>Total de competições no sistema: {debugInfo.totalCompetitions}</p>
+            <p>Total de competições customizadas: {debugInfo.totalCustom}</p>
+            {debugInfo.customError && <p>Erro custom: {debugInfo.customError}</p>}
+            {debugInfo.systemError && <p>Erro system: {debugInfo.systemError}</p>}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filtros */}
       <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50">
         <CardHeader className="pb-4">
@@ -359,13 +471,26 @@ export const CompetitionHistory = () => {
           {filteredCompetitions.length === 0 && (
             <div className="text-center py-12 text-slate-500">
               <HistoryIcon className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-              <p className="text-lg font-medium mb-2">Nenhuma competição encontrada</p>
+              <p className="text-lg font-medium mb-2">
+                {competitions.length === 0 ? 'Nenhuma competição finalizada encontrada' : 'Nenhuma competição encontrada'}
+              </p>
               <p className="text-sm">
-                {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' 
-                  ? 'Tente ajustar os filtros de pesquisa'
-                  : 'Ainda não há competições finalizadas no sistema'
+                {competitions.length === 0 
+                  ? 'As competições aparecerão aqui quando forem finalizadas. Crie uma nova competição para começar!'
+                  : searchTerm || statusFilter !== 'all' || typeFilter !== 'all' 
+                    ? 'Tente ajustar os filtros de pesquisa'
+                    : 'Ainda não há competições finalizadas no sistema'
                 }
               </p>
+              {competitions.length === 0 && (
+                <Button 
+                  className="mt-4" 
+                  onClick={fetchCompetitionHistory}
+                  variant="outline"
+                >
+                  🔄 Recarregar dados
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
