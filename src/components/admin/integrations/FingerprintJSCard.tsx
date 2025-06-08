@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Fingerprint, TestTube, Save, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
-interface IntegrationConfig {
+interface Integration {
   id: string;
   name: string;
   enabled: boolean;
@@ -17,9 +17,9 @@ interface IntegrationConfig {
 }
 
 interface FingerprintJSCardProps {
-  integration: IntegrationConfig;
-  onUpdate: (integration: IntegrationConfig) => void;
-  onSave: (integration: IntegrationConfig) => void;
+  integration: Integration;
+  onUpdate: (integration: Integration) => void;
+  onSave: (integration: Integration) => void;
   onTest: (integrationId: string) => void;
   loading: boolean;
   testingConnection: string | null;
@@ -33,7 +33,7 @@ export const FingerprintJSCard = ({
   loading, 
   testingConnection 
 }: FingerprintJSCardProps) => {
-  const updateIntegration = (updates: Partial<IntegrationConfig>) => {
+  const updateIntegration = (updates: Partial<Integration>) => {
     onUpdate({ ...integration, ...updates });
   };
 
@@ -99,7 +99,7 @@ export const FingerprintJSCard = ({
                 min="0"
                 max="1"
                 step="0.1"
-                value={integration.config.confidenceThreshold}
+                value={integration.config.confidenceThreshold || 0.8}
                 onChange={(e) => updateConfig({ confidenceThreshold: parseFloat(e.target.value) })}
                 disabled={!integration.enabled}
               />
@@ -109,7 +109,7 @@ export const FingerprintJSCard = ({
               <Input
                 id="fingerprint-timeout"
                 type="number"
-                value={integration.config.timeout}
+                value={integration.config.timeout || 5000}
                 onChange={(e) => updateConfig({ timeout: parseInt(e.target.value) })}
                 disabled={!integration.enabled}
               />
@@ -121,7 +121,7 @@ export const FingerprintJSCard = ({
               <Label htmlFor="device-tracking">Rastreamento de Dispositivo</Label>
               <Switch
                 id="device-tracking"
-                checked={integration.config.enableDeviceTracking}
+                checked={integration.config.enableDeviceTracking || false}
                 onCheckedChange={(checked) => updateConfig({ enableDeviceTracking: checked })}
                 disabled={!integration.enabled}
               />
@@ -130,7 +130,7 @@ export const FingerprintJSCard = ({
               <Label htmlFor="location-detection">Detecção de Localização</Label>
               <Switch
                 id="location-detection"
-                checked={integration.config.enableLocationDetection}
+                checked={integration.config.enableLocationDetection || false}
                 onCheckedChange={(checked) => updateConfig({ enableLocationDetection: checked })}
                 disabled={!integration.enabled}
               />

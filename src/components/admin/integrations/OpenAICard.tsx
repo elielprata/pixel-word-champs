@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Brain, TestTube, Save, CheckCircle, AlertCircle } from 'lucide-react';
 
-interface IntegrationConfig {
+interface Integration {
   id: string;
   name: string;
   enabled: boolean;
@@ -17,9 +17,9 @@ interface IntegrationConfig {
 }
 
 interface OpenAICardProps {
-  integration: IntegrationConfig;
-  onUpdate: (integration: IntegrationConfig) => void;
-  onSave: (integration: IntegrationConfig) => void;
+  integration: Integration;
+  onUpdate: (integration: Integration) => void;
+  onSave: (integration: Integration) => void;
   onTest: (integrationId: string) => void;
   loading: boolean;
   testingConnection: string | null;
@@ -33,7 +33,7 @@ export const OpenAICard = ({
   loading, 
   testingConnection 
 }: OpenAICardProps) => {
-  const updateIntegration = (updates: Partial<IntegrationConfig>) => {
+  const updateIntegration = (updates: Partial<Integration>) => {
     onUpdate({ ...integration, ...updates });
   };
 
@@ -96,7 +96,7 @@ export const OpenAICard = ({
               <select
                 id="openai-model"
                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                value={integration.config.model}
+                value={integration.config.model || 'gpt-4o-mini'}
                 onChange={(e) => updateConfig({ model: e.target.value })}
                 disabled={!integration.enabled}
               >
@@ -109,7 +109,7 @@ export const OpenAICard = ({
               <Input
                 id="openai-max-tokens"
                 type="number"
-                value={integration.config.maxTokens}
+                value={integration.config.maxTokens || 150}
                 onChange={(e) => updateConfig({ maxTokens: parseInt(e.target.value) })}
                 disabled={!integration.enabled}
               />
@@ -124,7 +124,7 @@ export const OpenAICard = ({
               min="0"
               max="2"
               step="0.1"
-              value={integration.config.temperature}
+              value={integration.config.temperature || 0.7}
               onChange={(e) => updateConfig({ temperature: parseFloat(e.target.value) })}
               disabled={!integration.enabled}
             />
@@ -135,7 +135,7 @@ export const OpenAICard = ({
             <Textarea
               id="openai-system-prompt"
               placeholder="Defina o comportamento do assistente para geração de palavras..."
-              value={integration.config.systemPrompt}
+              value={integration.config.systemPrompt || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras.'}
               onChange={(e) => updateConfig({ systemPrompt: e.target.value })}
               disabled={!integration.enabled}
               rows={3}

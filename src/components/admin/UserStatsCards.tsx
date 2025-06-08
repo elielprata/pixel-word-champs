@@ -1,12 +1,13 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2, Activity } from 'lucide-react';
 import { useRealUserStats } from '@/hooks/useRealUserStats';
 
 export const UserStatsCards = () => {
-  const { stats, refetch } = useRealUserStats();
+  const { data: stats, isLoading, refetch } = useRealUserStats();
 
-  if (stats.isLoading) {
+  if (isLoading || !stats) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[...Array(6)].map((_, index) => (

@@ -10,6 +10,8 @@ interface Integration {
   status: 'active' | 'inactive';
   apiKey: string;
   settings: Record<string, any>;
+  enabled: boolean;
+  config: Record<string, any>;
 }
 
 export const useIntegrations = () => {
@@ -23,7 +25,14 @@ export const useIntegrations = () => {
     description: 'Identificação avançada de dispositivos',
     status: 'inactive',
     apiKey: '',
-    settings: {}
+    settings: {},
+    enabled: false,
+    config: {
+      confidenceThreshold: 0.8,
+      timeout: 5000,
+      enableDeviceTracking: true,
+      enableLocationDetection: false
+    }
   });
 
   const [openAI, setOpenAI] = useState<Integration>({
@@ -32,7 +41,14 @@ export const useIntegrations = () => {
     description: 'Inteligência artificial para moderação de conteúdo',
     status: 'inactive',
     apiKey: '',
-    settings: {}
+    settings: {},
+    enabled: false,
+    config: {
+      model: 'gpt-4o-mini',
+      maxTokens: 150,
+      temperature: 0.7,
+      systemPrompt: 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras.'
+    }
   });
 
   useEffect(() => {
@@ -57,7 +73,8 @@ export const useIntegrations = () => {
         setFingerprintJS(prev => ({
           ...prev,
           apiKey: fingerprintConfig.setting_value || '',
-          status: fingerprintConfig.setting_value ? 'active' : 'inactive'
+          status: fingerprintConfig.setting_value ? 'active' : 'inactive',
+          enabled: !!fingerprintConfig.setting_value
         }));
       }
 
@@ -67,7 +84,8 @@ export const useIntegrations = () => {
         setOpenAI(prev => ({
           ...prev,
           apiKey: openaiConfig.setting_value || '',
-          status: openaiConfig.setting_value ? 'active' : 'inactive'
+          status: openaiConfig.setting_value ? 'active' : 'inactive',
+          enabled: !!openaiConfig.setting_value
         }));
       }
 
@@ -120,13 +138,15 @@ export const useIntegrations = () => {
         setFingerprintJS(prev => ({
           ...prev,
           ...integration,
-          status: integration.apiKey ? 'active' : 'inactive'
+          status: integration.apiKey ? 'active' : 'inactive',
+          enabled: !!integration.apiKey
         }));
       } else if (integration.id === 'openai') {
         setOpenAI(prev => ({
           ...prev,
           ...integration,
-          status: integration.apiKey ? 'active' : 'inactive'
+          status: integration.apiKey ? 'active' : 'inactive',
+          enabled: !!integration.apiKey
         }));
       }
 
@@ -144,10 +164,13 @@ export const useIntegrations = () => {
     }
   };
 
-  const testConnection = async (integration: Integration) => {
-    setTestingConnection(integration.id);
+  const testConnection = async (integrationId: string) => {
+    setTestingConnection(integrationId);
     
     try {
+      // Buscar a integração correta
+      const integration = integrationId === 'fingerprintjs' ? fingerprintJS : openAI;
+      
       // Simulação de teste de conexão
       await new Promise(resolve => setTimeout(resolve, 2000));
       
@@ -163,6 +186,7 @@ export const useIntegrations = () => {
       }
       
     } catch (error: any) {
+      const integration = integrationId === 'fingerprintjs' ? fingerprintJS : openAI;
       toast({
         title: "Erro de conexão",
         description: `Falha ao conectar com ${integration.name}: ${error.message}`,

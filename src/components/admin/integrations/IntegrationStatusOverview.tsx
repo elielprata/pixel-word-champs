@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Fingerprint, Brain, CheckCircle, AlertCircle, Activity, Zap } from 'lucide-react';
 
-interface IntegrationConfig {
+interface Integration {
   id: string;
   name: string;
   enabled: boolean;
@@ -13,8 +13,8 @@ interface IntegrationConfig {
 }
 
 interface IntegrationStatusOverviewProps {
-  fingerprintJS: IntegrationConfig;
-  openAI: IntegrationConfig;
+  fingerprintJS: Integration;
+  openAI: Integration;
 }
 
 export const IntegrationStatusOverview = ({ fingerprintJS, openAI }: IntegrationStatusOverviewProps) => {

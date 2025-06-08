@@ -8,9 +8,9 @@ import { UserGrowthMetrics } from './UserGrowthMetrics';
 import { UserActivityMetrics } from './UserActivityMetrics';
 
 export const DashboardStats = () => {
-  const { stats, isLoading } = useRealUserStats();
+  const { data: stats, isLoading } = useRealUserStats();
 
-  if (isLoading) {
+  if (isLoading || !stats) {
     return (
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
