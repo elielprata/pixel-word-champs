@@ -160,13 +160,13 @@ export const CategoriesManagement = () => {
               <Input
                 type="number"
                 min="1"
-                max="20"
+                max="1000"
                 value={wordsCount}
                 onChange={(e) => setWordsCount(Number(e.target.value))}
                 className="w-24"
               />
               <div className="text-xs text-slate-500">
-                Quantas palavras gerar por categoria
+                Quantas palavras gerar por categoria (máx. 1000)
               </div>
             </div>
             
