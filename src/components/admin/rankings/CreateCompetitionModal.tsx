@@ -7,8 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Calendar, Users, DollarSign, AlertCircle } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface CreateCompetitionModalProps {
   open: boolean;
@@ -21,7 +26,8 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     description: '',
     type: 'weekly' as 'daily' | 'weekly' | 'challenge',
     prizePool: 0,
-    maxParticipants: 1000
+    maxParticipants: 1000,
+    startDate: undefined as Date | undefined
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -45,7 +51,8 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         description: '',
         type: 'weekly',
         prizePool: 0,
-        maxParticipants: 1000
+        maxParticipants: 1000,
+        startDate: undefined
       });
     } catch (error) {
       toast({
@@ -62,7 +69,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     switch (formData.type) {
       case 'daily':
         return {
-          icon: Calendar,
+          icon: CalendarIcon,
           color: 'bg-blue-500',
           info: 'Competições diárias não possuem premiação. Os pontos são transferidos para o ranking semanal.',
           prizeEnabled: false
@@ -115,7 +122,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               <SelectContent>
                 <SelectItem value="daily">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
+                    <CalendarIcon className="h-4 w-4" />
                     Competição Diária
                   </div>
                 </SelectItem>
@@ -174,6 +181,39 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               placeholder="Descreva as regras e objetivos da competição..."
               rows={3}
             />
+          </div>
+
+          {/* Data de Início */}
+          <div className="space-y-2">
+            <Label>Data de Início</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.startDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.startDate ? (
+                    format(formData.startDate, "PPP", { locale: ptBR })
+                  ) : (
+                    <span>Selecione a data de início</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.startDate}
+                  onSelect={(date) => setFormData(prev => ({ ...prev, startDate: date }))}
+                  disabled={(date) => date < new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Prêmio (apenas para semanal e challenge) */}
