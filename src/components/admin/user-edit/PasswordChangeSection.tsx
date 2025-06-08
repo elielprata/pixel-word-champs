@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Key, AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Eye, EyeOff, Key } from 'lucide-react';
 
 interface PasswordChangeSectionProps {
   onPasswordUpdate: (password: string) => Promise<void>;
@@ -24,14 +23,6 @@ export const PasswordChangeSection = ({ onPasswordUpdate, isChangingPassword }: 
     <div className="space-y-4">
       <h4 className="text-sm font-medium">Alterar senha</h4>
       
-      <Alert className="border-amber-200 bg-amber-50">
-        <AlertTriangle className="h-4 w-4 text-amber-600" />
-        <AlertDescription className="text-amber-800 text-xs">
-          <strong>Aviso:</strong> A alteração de senhas requer privilégios administrativos especiais. 
-          Esta ação será registrada para processamento manual no Supabase.
-        </AlertDescription>
-      </Alert>
-
       <div className="space-y-3">
         <div className="relative">
           <Input
@@ -57,7 +48,7 @@ export const PasswordChangeSection = ({ onPasswordUpdate, isChangingPassword }: 
           variant="outline"
         >
           <Key className="h-4 w-4 mr-2" />
-          {isChangingPassword ? 'Registrando...' : 'Registrar Mudança de Senha'}
+          {isChangingPassword ? 'Atualizando...' : 'Atualizar Senha'}
         </Button>
       </div>
     </div>

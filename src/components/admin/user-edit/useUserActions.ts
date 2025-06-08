@@ -88,47 +88,49 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
 
     try {
       setIsChangingPassword(true);
-      console.log('🔐 Tentando atualizar senha do usuário:', userId);
+      console.log('🔐 Atualizando senha do usuário via Edge Function:', userId);
 
-      // Como não temos acesso direto às funções admin, vamos usar uma abordagem alternativa
-      // Registrar a solicitação de mudança de senha como uma ação administrativa
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user) {
-        throw new Error('Usuário administrativo não autenticado');
+      // Get current session to send auth header
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Usuário não autenticado');
       }
 
-      // Registrar a ação de tentativa de mudança de senha
-      const { error: logError } = await supabase
-        .from('admin_actions')
-        .insert({
-          admin_id: currentUser.user.id,
-          target_user_id: userId,
-          action_type: 'password_change_request',
-          details: { 
-            username: username,
-            requested_at: new Date().toISOString(),
-            status: 'manual_required'
-          }
-        });
-
-      if (logError) {
-        console.warn('⚠️ Erro ao registrar log:', logError);
-      }
-
-      // Informar que a mudança de senha precisa ser feita manualmente
-      toast({
-        title: "Ação Registrada",
-        description: `Solicitação de mudança de senha registrada para ${username}. Esta ação requer configuração manual no Supabase.`,
-        variant: "default",
+      // Call the Edge Function
+      const { data, error } = await supabase.functions.invoke('admin-update-password', {
+        body: {
+          targetUserId: userId,
+          newPassword: newPassword,
+          username: username
+        }
       });
 
-      console.log('📝 Ação de mudança de senha registrada para processamento manual');
+      if (error) {
+        console.error('❌ Erro da Edge Function:', error);
+        throw error;
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erro desconhecido');
+      }
+
+      console.log('✅ Senha atualizada com sucesso:', data.message);
+
+      toast({
+        title: "Sucesso!",
+        description: `Senha atualizada para ${username}`,
+      });
+
+      // Aguardar um pouco antes de atualizar para garantir que a transação foi commitada
+      setTimeout(() => {
+        onUserUpdated();
+      }, 500);
 
     } catch (error: any) {
-      console.error('❌ Erro:', error);
+      console.error('❌ Erro ao atualizar senha:', error);
       toast({
         title: "Erro",
-        description: `Erro ao processar mudança de senha: ${error.message || 'Erro desconhecido'}`,
+        description: `Erro ao atualizar senha: ${error.message || 'Erro desconhecido'}`,
         variant: "destructive",
       });
     } finally {
