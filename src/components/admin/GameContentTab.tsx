@@ -14,13 +14,13 @@ export const GameContentTab = () => {
   const quickStats = [
     { 
       label: 'Palavras Ativas', 
-      value: isLoading ? '...' : metrics.activeWords.toLocaleString(), 
+      value: isLoading ? '...' : (metrics?.activeWords || 0).toLocaleString(), 
       icon: BookOpen, 
       color: 'text-blue-600' 
     },
     { 
       label: 'Categorias Ativas', 
-      value: isLoading ? '...' : metrics.activeCategories.toString(), 
+      value: isLoading ? '...' : (metrics?.activeCategories || 0).toString(), 
       icon: Folder, 
       color: 'text-green-600' 
     },
