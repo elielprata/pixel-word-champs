@@ -243,25 +243,27 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               <h3 className="text-sm font-medium text-slate-700">Configurações Específicas</h3>
             </div>
 
-            {/* Categoria (para todos os tipos de competição) */}
-            <div className="space-y-2">
-              <Label htmlFor="category" className="flex items-center gap-2 text-sm font-medium">
-                <Tag className="h-3 w-3" />
-                Categoria das Palavras
-              </Label>
-              <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Selecione a categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      <span className="text-sm font-medium">{category.label} - {category.description}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Categoria (apenas para competições diárias) */}
+            {formData.type === 'daily' && (
+              <div className="space-y-2">
+                <Label htmlFor="category" className="flex items-center gap-2 text-sm font-medium">
+                  <Tag className="h-3 w-3" />
+                  Categoria das Palavras
+                </Label>
+                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Selecione a categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        <span className="text-sm font-medium">{category.label} - {category.description}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Atribuir a Torneio Semanal (apenas para diárias) */}
             {formData.type === 'daily' && (
