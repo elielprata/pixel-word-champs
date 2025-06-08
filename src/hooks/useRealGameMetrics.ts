@@ -21,39 +21,22 @@ export const useRealGameMetrics = () => {
 
       console.log('📝 Palavras encontradas:', wordsData?.length, wordsData);
 
-      // Buscar apenas configurações de gameplay e scoring (excluindo prizes)
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('game_settings')
-        .select('id, setting_key, setting_value, category, description')
-        .in('category', ['scoring', 'gameplay']); // Removido 'prizes'
+      // Buscar total de categorias ativas
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('word_categories')
+        .select('id, name')
+        .eq('is_active', true);
 
-      if (settingsError) {
-        console.error('❌ Erro ao buscar configurações:', settingsError);
-        throw settingsError;
+      if (categoriesError) {
+        console.error('❌ Erro ao buscar categorias:', categoriesError);
+        throw categoriesError;
       }
 
-      console.log('⚙️ Configurações encontradas:', settingsData?.length, settingsData);
-
-      // Buscar usuários online (aproximação baseada em sessões recentes)
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from('game_sessions')
-        .select('user_id, started_at')
-        .gte('started_at', new Date(Date.now() - 30 * 60 * 1000).toISOString()) // últimos 30 minutos
-        .order('started_at', { ascending: false });
-
-      if (sessionsError) {
-        console.error('❌ Erro ao buscar sessões:', sessionsError);
-        throw sessionsError;
-      }
-
-      // Contar usuários únicos online
-      const uniqueOnlineUsers = new Set(sessionsData?.map(s => s.user_id)).size;
-      console.log('👥 Usuários online:', uniqueOnlineUsers, 'Sessões:', sessionsData?.length);
+      console.log('📋 Categorias encontradas:', categoriesData?.length, categoriesData);
 
       const result = {
         activeWords: wordsData?.length || 0,
-        activeSettings: settingsData?.length || 0,
-        onlineUsers: uniqueOnlineUsers
+        activeCategories: categoriesData?.length || 0
       };
 
       console.log('📊 Métricas finais:', result);
@@ -63,7 +46,7 @@ export const useRealGameMetrics = () => {
   });
 
   return {
-    metrics: metrics || { activeWords: 0, activeSettings: 0, onlineUsers: 0 },
+    metrics: metrics || { activeWords: 0, activeCategories: 0 },
     isLoading
   };
 };

@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Settings, Activity, Users, Crown, Award } from 'lucide-react';
+import { BookOpen, Settings, Activity, Crown, Award, Folder } from 'lucide-react';
 import { WordsManagement } from './content/WordsManagement';
 import { GameSettings } from './content/GameSettings';
 import { useRealGameMetrics } from '@/hooks/useRealGameMetrics';
@@ -19,16 +19,10 @@ export const GameContentTab = () => {
       color: 'text-blue-600' 
     },
     { 
-      label: 'Configurações Ativas', 
-      value: isLoading ? '...' : metrics.activeSettings.toString(), 
-      icon: Settings, 
-      color: 'text-slate-600' 
-    },
-    { 
-      label: 'Usuários Online', 
-      value: isLoading ? '...' : metrics.onlineUsers.toString(), 
-      icon: Users, 
-      color: 'text-purple-600' 
+      label: 'Categorias Ativas', 
+      value: isLoading ? '...' : metrics.activeCategories.toString(), 
+      icon: Folder, 
+      color: 'text-green-600' 
     },
   ];
 
@@ -74,7 +68,7 @@ export const GameContentTab = () => {
           </div>
           
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {quickStats.map((stat, index) => (
               <Card key={index} className="border-slate-200 shadow-sm">
                 <CardContent className="p-4">
