@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock, AlertCircle } from 'lucide-react';
@@ -57,20 +58,12 @@ export const RankingMetrics = () => {
       icon: TrendingUp,
       color: "from-cyan-500 to-cyan-600",
       trend: "Esta semana"
-    },
-    {
-      title: "Top 10 Premiados",
-      value: Math.min(weeklyParticipants, 10).toString(),
-      subtitle: "Posições premiadas",
-      icon: Award,
-      color: "from-rose-500 to-rose-600",
-      trend: "Semanal"
     }
   ];
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
           return (
