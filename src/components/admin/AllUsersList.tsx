@@ -39,7 +39,7 @@ export const AllUsersList = () => {
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
-    setCurrentPage(1); // Reset to first page when searching
+    setCurrentPage(1);
   };
 
   const handleViewUser = (user: AllUsersData) => {
@@ -63,7 +63,13 @@ export const AllUsersList = () => {
   };
 
   const handleResetScores = async (password: string) => {
-    await resetAllScores(password);
+    console.log('🔄 Iniciando reset de pontuações com senha...');
+    try {
+      await resetAllScores(password);
+      setShowResetModal(false);
+    } catch (error) {
+      console.error('❌ Erro no reset:', error);
+    }
   };
 
   const closeModals = () => {

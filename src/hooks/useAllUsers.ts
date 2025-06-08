@@ -13,7 +13,9 @@ export const useAllUsers = () => {
 
   const resetAllScoresMutation = useMutation({
     mutationFn: async (adminPassword: string) => {
-      // Verificar senha admin (simulação)
+      console.log('🔐 Iniciando reset de pontuações...');
+      
+      // Verificar senha admin
       if (adminPassword !== 'admin123') {
         throw new Error('Senha de administrador incorreta');
       }
@@ -23,7 +25,9 @@ export const useAllUsers = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Resetar pontuações
+      console.log('✅ Senha validada, resetando pontuações...');
+
+      // Resetar pontuações de todos os usuários
       const { error } = await supabase
         .from('profiles')
         .update({ 
@@ -32,21 +36,31 @@ export const useAllUsers = () => {
           best_daily_position: null,
           best_weekly_position: null
         })
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Evitar erro com IDs inválidos
+        .neq('id', '00000000-0000-0000-0000-000000000000');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao resetar pontuações:', error);
+        throw error;
+      }
+
+      console.log('✅ Pontuações resetadas com sucesso');
 
       // Registrar ação administrativa
-      await supabase
+      const { error: logError } = await supabase
         .from('admin_actions')
         .insert({
           admin_id: currentUser.user.id,
-          target_user_id: currentUser.user.id, // Auto-referência para ação global
+          target_user_id: currentUser.user.id,
           action_type: 'reset_all_scores',
           details: { timestamp: new Date().toISOString() }
         });
+
+      if (logError) {
+        console.warn('⚠️ Erro ao registrar log:', logError);
+      }
     },
     onSuccess: () => {
+      console.log('🎉 Reset concluído com sucesso');
       toast({
         title: "Sucesso!",
         description: "Todas as pontuações foram zeradas.",
@@ -55,6 +69,7 @@ export const useAllUsers = () => {
       queryClient.invalidateQueries({ queryKey: ['realUserStats'] });
     },
     onError: (error: any) => {
+      console.error('❌ Erro no reset:', error);
       toast({
         title: "Erro",
         description: error.message,

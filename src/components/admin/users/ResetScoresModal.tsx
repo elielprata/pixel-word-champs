@@ -34,11 +34,15 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
       return;
     }
 
+    console.log('📝 Enviando formulário de reset...');
+    
     try {
       await onConfirm(password);
+      console.log('✅ Reset realizado com sucesso');
       setPassword('');
       onClose();
     } catch (error: any) {
+      console.error('❌ Erro no reset modal:', error);
       setError(error.message || 'Erro ao zerar pontuações');
     }
   };
@@ -75,9 +79,12 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite a senha de admin"
+              placeholder="Digite: admin123"
               disabled={isResetting}
             />
+            <p className="text-xs text-slate-500">
+              A senha padrão é: <code className="bg-slate-100 px-1 rounded">admin123</code>
+            </p>
           </div>
 
           {error && (
