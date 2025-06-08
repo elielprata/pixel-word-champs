@@ -28,6 +28,10 @@ const AdminPanel = () => {
     navigate('/auth');
   };
 
+  const handleNavigateToIntegrations = () => {
+    setActiveTab('integrations');
+  };
+
   return (
     <AdminRoute>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -74,7 +78,7 @@ const AdminPanel = () => {
             </TabsContent>
 
             <TabsContent value="content">
-              <GameContentTab />
+              <GameContentTab onNavigateToIntegrations={handleNavigateToIntegrations} />
             </TabsContent>
 
             <TabsContent value="support">
