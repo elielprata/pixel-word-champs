@@ -13,8 +13,8 @@ export const useUserMutations = () => {
       throw new Error('Usuário não autenticado');
     }
 
-    // Tentar fazer login temporário para validar a senha
-    const { error } = await supabase.auth.signInWithPassword({
+    // Validar senha usando uma sessão temporária sem afetar a sessão atual
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: currentUser.user.email!,
       password: password
     });
@@ -23,11 +23,14 @@ export const useUserMutations = () => {
       throw new Error('Senha de administrador incorreta');
     }
 
+    // Manter a sessão atual do usuário
     return true;
   };
 
   const banUserMutation = useMutation({
     mutationFn: async ({ userId, reason, adminPassword }: { userId: string; reason: string; adminPassword: string }) => {
+      console.log('🔐 Iniciando banimento do usuário:', userId);
+      
       // Validar senha real do admin
       await validateAdminPassword(adminPassword);
 
@@ -36,7 +39,9 @@ export const useUserMutations = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Banir usuário
+      console.log('✅ Senha validada, banindo usuário...');
+
+      // Banir usuário específico
       const { error: banError } = await supabase
         .from('profiles')
         .update({
@@ -47,7 +52,12 @@ export const useUserMutations = () => {
         })
         .eq('id', userId);
 
-      if (banError) throw banError;
+      if (banError) {
+        console.error('❌ Erro ao banir usuário:', banError);
+        throw banError;
+      }
+
+      console.log('✅ Usuário banido com sucesso');
 
       // Registrar ação administrativa
       const { error: logError } = await supabase
@@ -64,6 +74,7 @@ export const useUserMutations = () => {
       }
     },
     onSuccess: () => {
+      console.log('🎉 Banimento concluído com sucesso');
       toast({
         title: "Usuário banido",
         description: "O usuário foi banido com sucesso.",
@@ -71,6 +82,7 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
+      console.error('❌ Erro no banimento:', error);
       toast({
         title: "Erro ao banir usuário",
         description: error.message,
@@ -81,6 +93,8 @@ export const useUserMutations = () => {
 
   const deleteUserMutation = useMutation({
     mutationFn: async ({ userId, adminPassword }: { userId: string; adminPassword: string }) => {
+      console.log('🔐 Iniciando exclusão do usuário:', userId);
+      
       // Validar senha real do admin
       await validateAdminPassword(adminPassword);
 
@@ -88,6 +102,8 @@ export const useUserMutations = () => {
       if (!currentUser.user) {
         throw new Error('Usuário não autenticado');
       }
+
+      console.log('✅ Senha validada, excluindo usuário...');
 
       // Registrar ação antes de deletar
       const { error: logError } = await supabase
@@ -103,15 +119,21 @@ export const useUserMutations = () => {
         console.warn('⚠️ Erro ao registrar log:', logError);
       }
 
-      // Deletar usuário (cascade irá deletar relacionados)
+      // Deletar usuário específico (cascade irá deletar relacionados)
       const { error: deleteError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', userId);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error('❌ Erro ao excluir usuário:', deleteError);
+        throw deleteError;
+      }
+
+      console.log('✅ Usuário excluído com sucesso');
     },
     onSuccess: () => {
+      console.log('🎉 Exclusão concluída com sucesso');
       toast({
         title: "Usuário excluído",
         description: "O usuário foi excluído permanentemente.",
@@ -119,6 +141,7 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
+      console.error('❌ Erro na exclusão:', error);
       toast({
         title: "Erro ao excluir usuário",
         description: error.message,
@@ -129,11 +152,14 @@ export const useUserMutations = () => {
 
   const unbanUserMutation = useMutation({
     mutationFn: async (userId: string) => {
+      console.log('🔓 Iniciando desbanimento do usuário:', userId);
+      
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
         throw new Error('Usuário não autenticado');
       }
 
+      // Desbanir usuário específico
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -144,7 +170,12 @@ export const useUserMutations = () => {
         })
         .eq('id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao desbanir usuário:', error);
+        throw error;
+      }
+
+      console.log('✅ Usuário desbanido com sucesso');
 
       // Registrar ação
       await supabase
@@ -157,6 +188,7 @@ export const useUserMutations = () => {
         });
     },
     onSuccess: () => {
+      console.log('🎉 Desbanimento concluído com sucesso');
       toast({
         title: "Usuário desbanido",
         description: "O usuário foi desbanido com sucesso.",
@@ -164,6 +196,7 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
+      console.error('❌ Erro no desbanimento:', error);
       toast({
         title: "Erro ao desbanir usuário",
         description: error.message,

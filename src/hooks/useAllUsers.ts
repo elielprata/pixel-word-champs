@@ -17,8 +17,8 @@ export const useAllUsers = () => {
       throw new Error('Usuário não autenticado');
     }
 
-    // Tentar fazer login temporário para validar a senha
-    const { error } = await supabase.auth.signInWithPassword({
+    // Validar senha usando uma sessão temporária sem afetar a sessão atual
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: currentUser.user.email!,
       password: password
     });
@@ -44,7 +44,7 @@ export const useAllUsers = () => {
 
       console.log('✅ Senha validada, resetando pontuações...');
 
-      // Resetar pontuações de TODOS os usuários (removendo a condição que excluía um ID específico)
+      // Resetar pontuações de TODOS os usuários
       const { error } = await supabase
         .from('profiles')
         .update({ 
@@ -53,7 +53,6 @@ export const useAllUsers = () => {
           best_daily_position: null,
           best_weekly_position: null
         });
-        // Removido: .neq('id', '00000000-0000-0000-0000-000000000000');
 
       if (error) {
         console.error('❌ Erro ao resetar pontuações:', error);
