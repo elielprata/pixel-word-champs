@@ -4,37 +4,13 @@ import AdminRoute from '@/components/auth/AdminRoute';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { UsersTab } from "@/components/admin/UsersTab";
-import { ChallengesTab } from "@/components/admin/ChallengesTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
-import { MetricsTab } from "@/components/admin/MetricsTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { AllUsersTab } from '@/components/admin/AllUsersTab';
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 
 const AdminPanel = () => {
-  // Mock data for challenges - you can replace with real data later
-  const mockChallenges = [
-    {
-      id: 1,
-      title: "Desafio Semanal #1",
-      status: "Ativo",
-      players: 245
-    },
-    {
-      id: 2,
-      title: "Torneio Especial",
-      status: "Agendado", 
-      players: 89
-    },
-    {
-      id: 3,
-      title: "Competição Mensal",
-      status: "Ativo",
-      players: 378
-    }
-  ];
-
   return (
     <AdminRoute>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -49,20 +25,18 @@ const AdminPanel = () => {
           </div>
 
           <Tabs defaultValue="dashboard" className="w-full">
-            <TabsList className="grid w-full grid-cols-9 lg:grid-cols-9">
+            <TabsList className="grid w-full grid-cols-7 lg:grid-cols-7">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
               <TabsTrigger value="all-users">Todos Usuários</TabsTrigger>
-              <TabsTrigger value="challenges">Desafios</TabsTrigger>
               <TabsTrigger value="rankings">Rankings</TabsTrigger>
               <TabsTrigger value="content">Conteúdo</TabsTrigger>
-              <TabsTrigger value="metrics">Métricas</TabsTrigger>
               <TabsTrigger value="support">Suporte</TabsTrigger>
               <TabsTrigger value="integrations">Integrações</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
-              <DashboardStats totalChallenges={5} />
+              <DashboardStats />
             </TabsContent>
 
             <TabsContent value="users">
@@ -73,20 +47,12 @@ const AdminPanel = () => {
               <AllUsersTab />
             </TabsContent>
 
-            <TabsContent value="challenges">
-              <ChallengesTab challenges={mockChallenges} />
-            </TabsContent>
-
             <TabsContent value="rankings">
               <RankingsTab />
             </TabsContent>
 
             <TabsContent value="content">
               <GameContentTab />
-            </TabsContent>
-
-            <TabsContent value="metrics">
-              <MetricsTab />
             </TabsContent>
 
             <TabsContent value="support">
