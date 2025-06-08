@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock } from 'lucide-react';
+import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock, AlertCircle } from 'lucide-react';
 import { useRankings } from '@/hooks/useRankings';
 
 export const RankingMetrics = () => {
