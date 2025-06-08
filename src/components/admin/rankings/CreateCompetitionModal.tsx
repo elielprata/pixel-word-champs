@@ -170,245 +170,276 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {/* Tipo de Competição */}
-          <div className="space-y-1">
-            <Label htmlFor="type" className="text-sm">Tipo de Competição</Label>
-            <Select value={formData.type} onValueChange={(value: 'daily' | 'weekly' | 'challenge') => setFormData(prev => ({ ...prev, type: value }))}>
-              <SelectTrigger className="h-8">
-                <SelectValue placeholder="Selecione o tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="h-3 w-3" />
-                    Competição Diária
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Seção: Configurações Básicas */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+              <h3 className="text-sm font-medium text-slate-700">Configurações Básicas</h3>
+            </div>
+
+            {/* Tipo de Competição */}
+            <div className="space-y-1">
+              <Label htmlFor="type" className="text-sm">Tipo de Competição</Label>
+              <Select value={formData.type} onValueChange={(value: 'daily' | 'weekly' | 'challenge') => setFormData(prev => ({ ...prev, type: value }))}>
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon className="h-3 w-3" />
+                      Competição Diária
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="weekly">
+                    <div className="flex items-center gap-2">
+                      <Trophy className="h-3 w-3" />
+                      Competição Semanal
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="challenge">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-3 w-3" />
+                      Desafio Especial
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Informações sobre o tipo selecionado */}
+              <div className="bg-slate-50 p-2 rounded border">
+                <div className="flex items-start gap-2">
+                  <div className={`${competitionInfo.color} p-1 rounded`}>
+                    <CompetitionIcon className="h-3 w-3 text-white" />
                   </div>
-                </SelectItem>
-                <SelectItem value="weekly">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="h-3 w-3" />
-                    Competição Semanal
+                  <div className="flex-1">
+                    <Badge variant="outline" className="text-xs mb-1">
+                      {formData.type === 'daily' ? 'Diária' : formData.type === 'weekly' ? 'Semanal' : 'Especial'}
+                    </Badge>
+                    <p className="text-xs text-slate-600">{competitionInfo.info}</p>
                   </div>
-                </SelectItem>
-                <SelectItem value="challenge">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-3 w-3" />
-                    Desafio Especial
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {/* Info sobre o tipo selecionado */}
-            <div className="bg-slate-50 p-2 rounded border">
-              <div className="flex items-start gap-2">
-                <div className={`${competitionInfo.color} p-1 rounded`}>
-                  <CompetitionIcon className="h-3 w-3 text-white" />
-                </div>
-                <div className="flex-1">
-                  <Badge variant="outline" className="text-xs mb-1">
-                    {formData.type === 'daily' ? 'Diária' : formData.type === 'weekly' ? 'Semanal' : 'Especial'}
-                  </Badge>
-                  <p className="text-xs text-slate-600">{competitionInfo.info}</p>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Categoria (apenas para competições diárias) */}
-          {formData.type === 'daily' && (
+            {/* Título */}
             <div className="space-y-1">
-              <Label htmlFor="category" className="flex items-center gap-2 text-sm">
-                <Tag className="h-3 w-3" />
-                Categoria das Palavras
-              </Label>
-              <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                <SelectTrigger className="h-8">
-                  <SelectValue placeholder="Selecione a categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm">{category.label}</span>
-                        <span className="text-xs text-slate-500">{category.description}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="title" className="text-sm">Título da Competição</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Ex: Torneio de Palavras Semanal"
+                className="h-8"
+                required
+              />
             </div>
-          )}
 
-          {/* Atribuir a Torneio Semanal (apenas para competições diárias) */}
-          {formData.type === 'daily' && (
+            {/* Descrição */}
             <div className="space-y-1">
-              <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm">
-                <Link className="h-3 w-3" />
-                Atribuir a Torneio Semanal
-              </Label>
-              <Select value={formData.weeklyTournamentId} onValueChange={(value) => setFormData(prev => ({ ...prev, weeklyTournamentId: value }))}>
-                <SelectTrigger className="h-8">
-                  <SelectValue placeholder="Selecione um torneio semanal (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">
-                    <span className="text-slate-500">Nenhum torneio selecionado</span>
-                  </SelectItem>
-                  {weeklyTournaments.map((tournament) => (
-                    <SelectItem key={tournament.id} value={tournament.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm">{tournament.title}</span>
-                        <span className="text-xs text-slate-500">
-                          {tournament.total_participants} participantes • R$ {tournament.prize_pool}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-slate-600">
-                Os pontos desta competição diária contribuirão para o torneio semanal selecionado.
-              </p>
+              <Label htmlFor="description" className="text-sm">Descrição</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Descreva as regras e objetivos da competição..."
+                rows={2}
+                className="text-sm"
+              />
             </div>
-          )}
-
-          {/* Título */}
-          <div className="space-y-1">
-            <Label htmlFor="title" className="text-sm">Título da Competição</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Ex: Torneio de Palavras Semanal"
-              className="h-8"
-              required
-            />
           </div>
 
-          {/* Descrição */}
-          <div className="space-y-1">
-            <Label htmlFor="description" className="text-sm">Descrição</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Descreva as regras e objetivos da competição..."
-              rows={2}
-              className="text-sm"
-            />
-          </div>
+          {/* Seção: Configurações Específicas */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+              <h3 className="text-sm font-medium text-slate-700">Configurações Específicas</h3>
+            </div>
 
-          {/* Data de Início */}
-          <div className="space-y-1">
-            <Label className="text-sm">Data de Início</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal h-8",
-                    !formData.startDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-3 w-3" />
-                  {formData.startDate ? (
-                    format(formData.startDate, "PPP", { locale: ptBR })
-                  ) : (
-                    <span className="text-sm">Selecione a data de início</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.startDate}
-                  onSelect={(date) => setFormData(prev => ({ ...prev, startDate: date }))}
-                  disabled={(date) => date < new Date()}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+            {/* Categoria (apenas para competições diárias) */}
+            {formData.type === 'daily' && (
+              <div className="space-y-1">
+                <Label htmlFor="category" className="flex items-center gap-2 text-sm">
+                  <Tag className="h-3 w-3" />
+                  Categoria das Palavras
+                </Label>
+                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Selecione a categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{category.label}</span>
+                          <span className="text-xs text-slate-500">{category.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-          {/* Data de Fim (apenas para competições semanais) */}
-          {formData.type === 'weekly' && (
+            {/* Atribuir a Torneio Semanal (apenas para competições diárias) */}
+            {formData.type === 'daily' && (
+              <div className="space-y-1">
+                <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm">
+                  <Link className="h-3 w-3" />
+                  Atribuir a Torneio Semanal
+                </Label>
+                <Select value={formData.weeklyTournamentId} onValueChange={(value) => setFormData(prev => ({ ...prev, weeklyTournamentId: value }))}>
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Selecione um torneio semanal (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      <span className="text-slate-500">Nenhum torneio selecionado</span>
+                    </SelectItem>
+                    {weeklyTournaments.map((tournament) => (
+                      <SelectItem key={tournament.id} value={tournament.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{tournament.title}</span>
+                          <span className="text-xs text-slate-500">
+                            {tournament.total_participants} participantes • R$ {tournament.prize_pool}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-600">
+                  Os pontos desta competição diária contribuirão para o torneio semanal selecionado.
+                </p>
+              </div>
+            )}
+
+            {/* Máximo de Participantes */}
             <div className="space-y-1">
-              <Label className="text-sm">Data de Fim</Label>
+              <Label htmlFor="maxParticipants" className="flex items-center gap-2 text-sm">
+                <Users className="h-3 w-3" />
+                Máximo de Participantes
+              </Label>
+              <Input
+                id="maxParticipants"
+                type="number"
+                min="1"
+                value={formData.maxParticipants}
+                onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: parseInt(e.target.value) || 1000 }))}
+                placeholder="1000"
+                className="h-8"
+              />
+            </div>
+          </div>
+
+          {/* Seção: Cronograma */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1 h-4 bg-green-500 rounded-full"></div>
+              <h3 className="text-sm font-medium text-slate-700">Cronograma</h3>
+            </div>
+
+            {/* Data de Início */}
+            <div className="space-y-1">
+              <Label className="text-sm">Data de Início</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal h-8",
-                      !formData.endDate && "text-muted-foreground"
+                      !formData.startDate && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-3 w-3" />
-                    {formData.endDate ? (
-                      format(formData.endDate, "PPP", { locale: ptBR })
+                    {formData.startDate ? (
+                      format(formData.startDate, "PPP", { locale: ptBR })
                     ) : (
-                      <span className="text-sm">Selecione a data de fim</span>
+                      <span className="text-sm">Selecione a data de início</span>
                     )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={formData.endDate}
-                    onSelect={(date) => setFormData(prev => ({ ...prev, endDate: date }))}
-                    disabled={(date) => {
-                      const today = new Date();
-                      const startDate = formData.startDate;
-                      return date < today || (startDate && date <= startDate);
-                    }}
+                    selected={formData.startDate}
+                    onSelect={(date) => setFormData(prev => ({ ...prev, startDate: date }))}
+                    disabled={(date) => date < new Date()}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
             </div>
-          )}
 
-          {/* Prêmio (apenas para semanal e challenge) - Valor calculado automaticamente */}
+            {/* Data de Fim (apenas para competições semanais) */}
+            {formData.type === 'weekly' && (
+              <div className="space-y-1">
+                <Label className="text-sm">Data de Fim</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal h-8",
+                        !formData.endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-3 w-3" />
+                      {formData.endDate ? (
+                        format(formData.endDate, "PPP", { locale: ptBR })
+                      ) : (
+                        <span className="text-sm">Selecione a data de fim</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.endDate}
+                      onSelect={(date) => setFormData(prev => ({ ...prev, endDate: date }))}
+                      disabled={(date) => {
+                        const today = new Date();
+                        const startDate = formData.startDate;
+                        return date < today || (startDate && date <= startDate);
+                      }}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+
+          {/* Seção: Premiação */}
           {competitionInfo.prizeEnabled && (
-            <div className="space-y-1">
-              <Label htmlFor="prizePool" className="flex items-center gap-2 text-sm">
-                <DollarSign className="h-3 w-3" />
-                Valor Total dos Prêmios (R$)
-              </Label>
-              <div className="bg-slate-50 p-2 rounded border">
-                <div className="text-lg font-bold text-green-600">
-                  R$ {totalPrizePool.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
+                <h3 className="text-sm font-medium text-slate-700">Premiação</h3>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="prizePool" className="flex items-center gap-2 text-sm">
+                  <DollarSign className="h-3 w-3" />
+                  Valor Total dos Prêmios (R$)
+                </Label>
+                <div className="bg-slate-50 p-3 rounded border">
+                  <div className="text-lg font-bold text-green-600">
+                    R$ {totalPrizePool.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Valor calculado automaticamente baseado nas configurações de prêmios ativas do sistema.
+                  </p>
                 </div>
-                <p className="text-xs text-slate-600">
-                  Valor calculado automaticamente baseado nas configurações de prêmios ativas do sistema.
-                </p>
               </div>
             </div>
           )}
 
-          {/* Máximo de Participantes */}
-          <div className="space-y-1">
-            <Label htmlFor="maxParticipants" className="flex items-center gap-2 text-sm">
-              <Users className="h-3 w-3" />
-              Máximo de Participantes
-            </Label>
-            <Input
-              id="maxParticipants"
-              type="number"
-              min="1"
-              value={formData.maxParticipants}
-              onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: parseInt(e.target.value) || 1000 }))}
-              placeholder="1000"
-              className="h-8"
-            />
-          </div>
-
-          {/* Botões */}
-          <div className="flex gap-2 pt-2">
+          {/* Botões de Ação */}
+          <div className="flex gap-2 pt-4 border-t border-slate-200">
             <Button
               type="button"
               variant="outline"
