@@ -102,11 +102,11 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 Iniciando criação da competição...');
+      console.log('🚀 Starting competition creation...', formData);
       
       const competitionData: CustomCompetitionData = {
-        title: formData.title,
-        description: formData.description,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
         type: formData.type,
         category: formData.category,
         weeklyTournamentId: formData.weeklyTournamentId !== 'none' ? formData.weeklyTournamentId : undefined,
@@ -116,25 +116,33 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         endDate: formData.endDate
       };
 
+      console.log('📋 Competition data prepared:', competitionData);
+
       const result = await customCompetitionService.createCompetition(competitionData);
       
-      if (result.success) {
+      console.log('📊 Service result:', result);
+      
+      if (result.success && result.data) {
+        console.log('✅ Competition created successfully!');
+        
         toast({
           title: "Sucesso!",
           description: `Competição "${formData.title}" criada com sucesso.`,
         });
         
-        // Recarregar dados
+        // Recarregar dados das competições
+        console.log('🔄 Reloading competitions...');
         await refetch();
         
         // Fechar modal e resetar form
         onOpenChange(false);
         resetForm();
       } else {
+        console.error('❌ Service returned error:', result.error);
         throw new Error(result.error || 'Erro ao criar competição');
       }
     } catch (error) {
-      console.error('❌ Erro ao criar competição:', error);
+      console.error('❌ Error in handleSubmit:', error);
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Não foi possível criar a competição.",
