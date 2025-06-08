@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
+import { Users } from 'lucide-react';
 import { useAllUsers, AllUsersData } from '@/hooks/useAllUsers';
 import { UserListHeader } from './users/UserListHeader';
 import { UserCard } from './users/UserCard';
@@ -56,7 +57,7 @@ export const AllUsersList = () => {
 
   if (isLoading) {
     return (
-      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+      <Card className="border-slate-200 shadow-lg">
         <UserListHeader
           userCount={0}
           searchTerm=""
@@ -65,12 +66,9 @@ export const AllUsersList = () => {
           isResettingScores={false}
         />
         <CardContent>
-          <div className="flex items-center justify-center py-12">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gradient-to-r from-blue-500 to-purple-500"></div>
-              <div className="absolute inset-0 animate-ping rounded-full h-8 w-8 border border-blue-300 opacity-30"></div>
-            </div>
-            <span className="ml-4 text-slate-600 font-medium">Carregando guerreiros...</span>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-600"></div>
+            <span className="ml-2 text-slate-600">Carregando usuários...</span>
           </div>
         </CardContent>
       </Card>
@@ -79,7 +77,7 @@ export const AllUsersList = () => {
 
   return (
     <>
-      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
+      <Card className="border-slate-200 shadow-lg">
         <UserListHeader
           userCount={filteredUsers.length}
           searchTerm={searchTerm}
@@ -89,7 +87,7 @@ export const AllUsersList = () => {
         />
         
         <CardContent className="p-6">
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
                 <UserCard

@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2, Crown, Zap, Target } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2 } from 'lucide-react';
 import { useRealUserStats } from '@/hooks/useRealUserStats';
 
 export const UserStatsCards = () => {
@@ -11,9 +11,9 @@ export const UserStatsCards = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(6)].map((_, index) => (
-          <Card key={index} className="border-0 shadow-lg animate-pulse bg-gradient-to-br from-slate-100 to-slate-200">
+          <Card key={index} className="border-slate-200 shadow-lg animate-pulse">
             <CardContent className="p-6">
-              <div className="h-24 bg-slate-300 rounded-xl"></div>
+              <div className="h-20 bg-slate-200 rounded"></div>
             </CardContent>
           </Card>
         ))}
@@ -23,92 +23,76 @@ export const UserStatsCards = () => {
 
   const cards = [
     {
-      title: "Guerreiros Totais",
+      title: "Total de Usuários",
       value: stats.totalUsers.toLocaleString('pt-BR'),
       icon: Users,
-      gradient: "from-blue-500 to-cyan-500",
-      bgGradient: "from-blue-50 to-cyan-50",
-      description: "Jogadores registrados",
-      iconBg: "bg-blue-500"
+      color: "blue",
+      description: "Usuários cadastrados"
     },
     {
-      title: "Ativos Hoje",
+      title: "Usuários Ativos",
       value: stats.activeUsers.toLocaleString('pt-BR'),
-      icon: Zap,
-      gradient: "from-green-500 to-emerald-500",
-      bgGradient: "from-green-50 to-emerald-50",
-      description: "Última batalha 24h",
-      iconBg: "bg-green-500"
+      icon: UserCheck,
+      color: "green",
+      description: "Últimas 24 horas"
     },
     {
-      title: "Novos Recrutas",
+      title: "Novos Hoje",
       value: stats.newUsersToday.toLocaleString('pt-BR'),
       icon: UserPlus,
-      gradient: "from-purple-500 to-violet-500",
-      bgGradient: "from-purple-50 to-violet-50",
-      description: "Registros hoje",
-      iconBg: "bg-purple-500"
+      color: "purple",
+      description: "Registros hoje"
     },
     {
-      title: "Guardiões",
+      title: "Administradores",
       value: stats.totalAdmins.toLocaleString('pt-BR'),
-      icon: Crown,
-      gradient: "from-orange-500 to-red-500",
-      bgGradient: "from-orange-50 to-red-50",
-      description: "Administradores",
-      iconBg: "bg-orange-500"
+      icon: Shield,
+      color: "orange",
+      description: "Usuários admin"
     },
     {
       title: "Pontuação Média",
       value: stats.averageScore.toLocaleString('pt-BR'),
-      icon: Target,
-      gradient: "from-cyan-500 to-blue-500",
-      bgGradient: "from-cyan-50 to-blue-50",
-      description: "Por guerreiro ativo",
-      iconBg: "bg-cyan-500"
+      icon: TrendingUp,
+      color: "cyan",
+      description: "Por usuário ativo"
     },
     {
-      title: "Batalhas Épicas",
+      title: "Jogos Totais",
       value: stats.totalGamesPlayed.toLocaleString('pt-BR'),
       icon: Gamepad2,
-      gradient: "from-pink-500 to-rose-500",
-      bgGradient: "from-pink-50 to-rose-50",
-      description: "Partidas jogadas",
-      iconBg: "bg-pink-500"
+      color: "pink",
+      description: "Partidas jogadas"
     }
   ];
+
+  const getColorClasses = (color: string) => {
+    const colors = {
+      blue: "from-blue-100 to-blue-200 text-blue-700",
+      green: "from-green-100 to-green-200 text-green-700",
+      purple: "from-purple-100 to-purple-200 text-purple-700",
+      orange: "from-orange-100 to-orange-200 text-orange-700",
+      cyan: "from-cyan-100 to-cyan-200 text-cyan-700",
+      pink: "from-pink-100 to-pink-200 text-pink-700"
+    };
+    return colors[color as keyof typeof colors] || colors.blue;
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {cards.map((card, index) => {
         const Icon = card.icon;
         return (
-          <Card 
-            key={index} 
-            className={`group border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br ${card.bgGradient} hover:scale-105 relative overflow-hidden`}
-          >
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-white/20 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-            <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-white/10 to-transparent rounded-full translate-y-8 -translate-x-8"></div>
-            
-            <CardContent className="p-6 relative">
-              <div className="flex items-start justify-between">
-                <div className="space-y-3 flex-1">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-xl ${card.iconBg} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-600">{card.title}</p>
-                      <p className="text-xs text-slate-500">{card.description}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="pl-12">
-                    <p className={`text-3xl font-bold bg-gradient-to-r ${card.gradient} bg-clip-text text-transparent`}>
-                      {card.value}
-                    </p>
-                  </div>
+          <Card key={index} className="border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-slate-600">{card.title}</p>
+                  <p className="text-3xl font-bold text-slate-900">{card.value}</p>
+                  <p className="text-xs text-slate-500">{card.description}</p>
+                </div>
+                <div className={`bg-gradient-to-br ${getColorClasses(card.color)} p-4 rounded-xl`}>
+                  <Icon className="h-8 w-8" />
                 </div>
               </div>
             </CardContent>
