@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +17,20 @@ export const useIntegrations = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
+
+  const defaultSystemPrompt = `Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.
+
+REGRAS IMPORTANTES:
+- Gere apenas palavras válidas em português
+- Distribua as palavras por dificuldade baseada no número de letras:
+  * Fácil: 3 letras (20%)
+  * Médio: 4 letras (20%) 
+  * Difícil: 5-7 letras (30%)
+  * Expert: 8+ letras (30%)
+- Retorne apenas as palavras em MAIÚSCULAS, uma por linha
+- Não inclua números, pontuação ou texto explicativo
+- Palavras devem ser relacionadas à categoria solicitada
+- Evite palavras muito técnicas ou obscuras`;
 
   const [fingerprintJS, setFingerprintJS] = useState<Integration>({
     id: 'fingerprintjs',
@@ -47,7 +60,7 @@ export const useIntegrations = () => {
       model: 'gpt-4o-mini',
       maxTokens: 150,
       temperature: 0.7,
-      systemPrompt: 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras.'
+      systemPrompt: defaultSystemPrompt
     }
   });
 

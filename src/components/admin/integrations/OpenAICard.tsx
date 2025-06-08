@@ -43,6 +43,20 @@ export const OpenAICard = ({
     });
   };
 
+  const defaultSystemPrompt = `Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.
+
+REGRAS IMPORTANTES:
+- Gere apenas palavras válidas em português
+- Distribua as palavras por dificuldade baseada no número de letras:
+  * Fácil: 3 letras (20%)
+  * Médio: 4 letras (20%) 
+  * Difícil: 5-7 letras (30%)
+  * Expert: 8+ letras (30%)
+- Retorne apenas as palavras em MAIÚSCULAS, uma por linha
+- Não inclua números, pontuação ou texto explicativo
+- Palavras devem ser relacionadas à categoria solicitada
+- Evite palavras muito técnicas ou obscuras`;
+
   return (
     <Card className="border-slate-200">
       <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
@@ -135,10 +149,10 @@ export const OpenAICard = ({
             <Textarea
               id="openai-system-prompt"
               placeholder="Defina o comportamento do assistente para geração de palavras..."
-              value={integration.config.systemPrompt || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras.'}
+              value={integration.config.systemPrompt || defaultSystemPrompt}
               onChange={(e) => updateConfig({ systemPrompt: e.target.value })}
               disabled={!integration.enabled}
-              rows={3}
+              rows={8}
             />
           </div>
         </div>
