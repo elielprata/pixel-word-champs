@@ -34,8 +34,8 @@ class CustomCompetitionService {
         description: data.description || '',
         competition_type: data.type === 'weekly' ? 'tournament' : 'challenge',
         theme: data.category || 'geral',
-        start_date: data.startDate?.toISOString() || null,
-        end_date: data.endDate?.toISOString() || null,
+        start_date: data.startDate?.toISOString() || new Date().toISOString(),
+        end_date: data.endDate?.toISOString() || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         prize_pool: data.prizePool || 0,
         max_participants: data.maxParticipants || 1000,
         status: 'active',
@@ -45,7 +45,8 @@ class CustomCompetitionService {
               category: data.category,
               weeklyTournamentId: data.weeklyTournamentId 
             }
-          : { category: data.category }
+          : { category: data.category },
+        entry_requirements: null
       };
 
       console.log('📤 Inserting data into database:', competitionData);
@@ -88,6 +89,39 @@ class CustomCompetitionService {
     } catch (error) {
       console.error('❌ Error in getCustomCompetitions:', error);
       return createErrorResponse(handleServiceError(error, 'GET_CUSTOM_COMPETITIONS'));
+    }
+  }
+
+  async updateCompetitionStatus(competitionId: string, status: string): Promise<ApiResponse<any>> {
+    try {
+      console.log('🔄 Updating competition status:', { competitionId, status });
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('❌ User not authenticated');
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', competitionId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error updating competition:', error);
+        throw error;
+      }
+
+      console.log('✅ Competition status updated:', data);
+      return createSuccessResponse(data);
+    } catch (error) {
+      console.error('❌ Error updating competition status:', error);
+      return createErrorResponse(handleServiceError(error, 'UPDATE_COMPETITION_STATUS'));
     }
   }
 }

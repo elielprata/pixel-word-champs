@@ -1,210 +1,180 @@
 
 import React, { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { DebugInfo } from './history/DebugInfo';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Users, Trophy, Filter } from 'lucide-react';
+import { useCompetitions } from '@/hooks/useCompetitions';
+import { competitionService } from '@/services/competitionService';
+import { customCompetitionService } from '@/services/customCompetitionService';
 import { CompetitionFilters } from './history/CompetitionFilters';
-import { CompetitionStats } from './history/CompetitionStats';
 import { CompetitionTable } from './history/CompetitionTable';
+import { CompetitionStats } from './history/CompetitionStats';
+import { DebugInfo } from './history/DebugInfo';
 
-interface CompetitionHistoryItem {
+interface CompetitionData {
   id: string;
   title: string;
-  competition_type: string;
-  start_date: string;
-  end_date: string;
+  type: string;
   status: string;
-  prize_pool: number;
-  max_participants: number;
-  total_participants: number;
-  created_at: string;
+  participants: number;
+  prizePool: number;
+  startDate: string;
+  endDate: string;
+  source: 'system' | 'custom';
 }
 
 export const CompetitionHistory = () => {
-  const [competitions, setCompetitions] = useState<CompetitionHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { customCompetitions, competitions, isLoading } = useCompetitions();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [allCompetitionsData, setAllCompetitionsData] = useState<CompetitionData[]>([]);
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const { toast } = useToast();
+
+  console.log('🔍 CompetitionHistory - Raw data:', {
+    customCompetitions,
+    competitions,
+    isLoading
+  });
 
   useEffect(() => {
-    fetchCompetitionHistory();
-  }, []);
+    const loadAllCompetitions = async () => {
+      try {
+        console.log('🔍 Loading all competitions for history...');
 
-  const fetchCompetitionHistory = async () => {
-    try {
-      setLoading(true);
-      console.log('🔍 Iniciando busca do histórico de competições...');
-      
-      // Buscar competições customizadas finalizadas
-      const { data: customCompetitions, error: customError } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .in('status', ['completed', 'cancelled'])
-        .order('end_date', { ascending: false });
+        // Buscar competições do sistema
+        const systemResponse = await competitionService.getActiveCompetitions();
+        console.log('🎯 System competitions response:', systemResponse);
 
-      console.log('📋 Competições customizadas encontradas:', customCompetitions?.length || 0, customCompetitions);
-      if (customError) console.error('❌ Erro ao buscar competições customizadas:', customError);
+        // Buscar competições customizadas
+        const customResponse = await customCompetitionService.getCustomCompetitions();
+        console.log('📋 Custom competitions response:', customResponse);
 
-      // Buscar competições do sistema finalizadas
-      const { data: systemCompetitions, error: systemError } = await supabase
-        .from('competitions')
-        .select('*')
-        .eq('is_active', false)
-        .order('week_end', { ascending: false });
+        const systemCompetitions = systemResponse.success ? systemResponse.data : [];
+        const customCompetitionsData = customResponse.success ? customResponse.data : [];
 
-      console.log('🎯 Competições do sistema encontradas:', systemCompetitions?.length || 0, systemCompetitions);
-      if (systemError) console.error('❌ Erro ao buscar competições do sistema:', systemError);
-
-      // Buscar TODAS as competições para debug
-      const { data: allCompetitions, error: allError } = await supabase
-        .from('competitions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      const { data: allCustom, error: allCustomError } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      console.log('🔍 TODAS as competições (debug):', {
-        allCompetitions: allCompetitions?.length || 0,
-        allCustom: allCustom?.length || 0,
-        competitionsData: allCompetitions,
-        customData: allCustom
-      });
-
-      setDebugInfo({
-        customCompetitions: customCompetitions?.length || 0,
-        systemCompetitions: systemCompetitions?.length || 0,
-        totalCompetitions: allCompetitions?.length || 0,
-        totalCustom: allCustom?.length || 0,
-        customError: customError?.message,
-        systemError: systemError?.message
-      });
-
-      // Se não há erros mas também não há dados, criar dados de exemplo
-      if (!customError && !systemError && (!customCompetitions?.length && !systemCompetitions?.length)) {
-        console.log('ℹ️ Nenhuma competição finalizada encontrada. Verificando se há competições ativas...');
-        
-        // Mostrar competições ativas para debug
-        const { data: activeCompetitions } = await supabase
-          .from('competitions')
-          .select('*')
-          .eq('is_active', true);
-        
-        console.log('✅ Competições ativas encontradas:', activeCompetitions?.length || 0, activeCompetitions);
-        
-        if (activeCompetitions?.length === 0) {
-          // Criar uma competição de exemplo se não houver nenhuma
-          const { data: newCompetition, error: createError } = await supabase
-            .from('competitions')
-            .insert({
-              title: 'Competição Semanal de Exemplo',
-              type: 'weekly',
-              description: 'Competição criada automaticamente para demonstração',
-              week_start: '2024-01-01',
-              week_end: '2024-01-07',
-              is_active: false,
-              total_participants: 25,
-              prize_pool: 200
-            })
-            .select()
-            .single();
-          
-          if (!createError && newCompetition) {
-            console.log('✅ Competição de exemplo criada:', newCompetition);
-            setCompetitions([{
-              id: newCompetition.id,
-              title: newCompetition.title,
-              competition_type: newCompetition.type,
-              start_date: newCompetition.week_start || '',
-              end_date: newCompetition.week_end || '',
-              status: 'completed',
-              prize_pool: Number(newCompetition.prize_pool) || 0,
-              max_participants: 0,
-              total_participants: newCompetition.total_participants || 0,
-              created_at: newCompetition.created_at
-            }]);
-            
-            toast({
-              title: "Dados de exemplo criados",
-              description: "Uma competição de exemplo foi criada para demonstração",
-            });
-            return;
-          }
-        }
-      }
-
-      if (customError && systemError) {
-        throw new Error(`Erro ao buscar dados: ${customError.message} | ${systemError.message}`);
-      }
-
-      // Combinar e formatar os dados
-      const formattedCompetitions: CompetitionHistoryItem[] = [
-        ...(customCompetitions || []).map(comp => ({
-          id: comp.id,
-          title: comp.title,
-          competition_type: comp.competition_type,
-          start_date: comp.start_date,
-          end_date: comp.end_date,
-          status: comp.status,
-          prize_pool: Number(comp.prize_pool) || 0,
-          max_participants: comp.max_participants || 0,
-          total_participants: 0, // TODO: calcular participantes reais
-          created_at: comp.created_at
-        })),
-        ...(systemCompetitions || []).map(comp => ({
-          id: comp.id,
-          title: comp.title,
-          competition_type: comp.type,
-          start_date: comp.week_start || '',
-          end_date: comp.week_end || '',
-          status: 'completed',
-          prize_pool: Number(comp.prize_pool) || 0,
-          max_participants: 0,
-          total_participants: comp.total_participants || 0,
-          created_at: comp.created_at
-        }))
-      ];
-
-      console.log('📊 Competições formatadas:', formattedCompetitions.length, formattedCompetitions);
-      setCompetitions(formattedCompetitions);
-      
-      if (formattedCompetitions.length > 0) {
-        toast({
-          title: "Histórico carregado",
-          description: `${formattedCompetitions.length} competição(ões) encontrada(s)`,
+        console.log('📊 Processing competitions:', {
+          system: systemCompetitions.length,
+          custom: customCompetitionsData.length
         });
-      }
-    } catch (error) {
-      console.error('❌ Erro ao carregar histórico:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar o histórico de competições",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const filteredCompetitions = competitions.filter(comp => {
-    const matchesSearch = comp.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || comp.status === statusFilter;
-    const matchesType = typeFilter === 'all' || comp.competition_type === typeFilter;
+        // Converter competições do sistema
+        const formattedSystemCompetitions: CompetitionData[] = systemCompetitions
+          .filter(comp => comp.is_active === false) // Mostrar apenas finalizadas
+          .map(comp => ({
+            id: comp.id,
+            title: comp.title,
+            type: comp.type === 'weekly' ? 'Semanal' : 'Diária',
+            status: 'completed',
+            participants: comp.total_participants || 0,
+            prizePool: Number(comp.prize_pool) || 0,
+            startDate: comp.week_start || comp.created_at,
+            endDate: comp.week_end || comp.updated_at,
+            source: 'system' as const
+          }));
+
+        // Converter competições customizadas
+        const formattedCustomCompetitions: CompetitionData[] = customCompetitionsData
+          .filter(comp => comp.status === 'completed' || comp.status === 'finished') // Mostrar apenas finalizadas
+          .map(comp => ({
+            id: comp.id,
+            title: comp.title,
+            type: comp.competition_type === 'tournament' ? 'Torneio' : 
+                  comp.competition_type === 'challenge' ? 'Desafio' : 'Competição',
+            status: comp.status === 'completed' || comp.status === 'finished' ? 'completed' : 'active',
+            participants: 0, // TODO: buscar participantes reais
+            prizePool: Number(comp.prize_pool) || 0,
+            startDate: comp.start_date || comp.created_at,
+            endDate: comp.end_date || comp.updated_at,
+            source: 'custom' as const
+          }));
+
+        // Mostrar TODAS as competições customizadas para debug (incluindo ativas)
+        const allCustomForDebug: CompetitionData[] = customCompetitionsData.map(comp => ({
+          id: comp.id,
+          title: comp.title,
+          type: comp.competition_type === 'tournament' ? 'Torneio' : 
+                comp.competition_type === 'challenge' ? 'Desafio' : 'Competição',
+          status: comp.status,
+          participants: 0,
+          prizePool: Number(comp.prize_pool) || 0,
+          startDate: comp.start_date || comp.created_at,
+          endDate: comp.end_date || comp.updated_at,
+          source: 'custom' as const
+        }));
+
+        console.log('📋 Competições customizadas (TODAS para debug):', allCustomForDebug);
+        console.log('📋 Competições customizadas finalizadas:', formattedCustomCompetitions);
+        console.log('🎯 Competições do sistema finalizadas:', formattedSystemCompetitions);
+
+        const allCompetitions = [...formattedSystemCompetitions, ...formattedCustomCompetitions];
+        console.log('📊 Total de competições finalizadas:', allCompetitions);
+
+        setAllCompetitionsData(allCompetitions);
+
+        // Definir informações de debug
+        setDebugInfo({
+          customCompetitions: formattedCustomCompetitions.length,
+          systemCompetitions: formattedSystemCompetitions.length,
+          totalCompetitions: systemCompetitions.length,
+          totalCustom: customCompetitionsData.length,
+          customError: customResponse.success ? undefined : customResponse.error,
+          systemError: systemResponse.success ? undefined : systemResponse.error
+        });
+
+        if (allCompetitions.length === 0) {
+          console.log('ℹ️ Nenhuma competição finalizada encontrada. Verificando se há competições ativas...');
+          
+          // Para debug, mostrar também as ativas
+          const activeSystemCompetitions = systemCompetitions.filter(comp => comp.is_active === true);
+          const activeCustomCompetitions = customCompetitionsData.filter(comp => comp.status === 'active');
+          
+          console.log('✅ Competições ativas encontradas:', activeSystemCompetitions.length, activeSystemCompetitions);
+          console.log('📊 Competições customizadas ativas:', activeCustomCompetitions.length, activeCustomCompetitions);
+
+          // Temporariamente mostrar as ativas também
+          const tempAllCompetitions = [
+            ...activeSystemCompetitions.map(comp => ({
+              id: comp.id,
+              title: comp.title,
+              type: comp.type === 'weekly' ? 'Semanal' : 'Diária',
+              status: 'active',
+              participants: comp.total_participants || 0,
+              prizePool: Number(comp.prize_pool) || 0,
+              startDate: comp.week_start || comp.created_at,
+              endDate: comp.week_end || comp.updated_at,
+              source: 'system' as const
+            })),
+            ...allCustomForDebug
+          ];
+
+          console.log('📊 Competições formatadas:', tempAllCompetitions.length, tempAllCompetitions);
+          setAllCompetitionsData(tempAllCompetitions);
+        }
+
+      } catch (error) {
+        console.error('❌ Error loading competitions history:', error);
+      }
+    };
+
+    loadAllCompetitions();
+  }, [customCompetitions, competitions]);
+
+  // Filtrar competições
+  const filteredCompetitions = allCompetitionsData.filter(competition => {
+    const matchesSearch = competition.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || competition.status === statusFilter;
+    const matchesType = typeFilter === 'all' || competition.type.toLowerCase().includes(typeFilter.toLowerCase());
     
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-b-2 border-orange-600 rounded-full mx-auto mb-4"></div>
-          <p className="text-slate-600">Carregando histórico...</p>
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="text-slate-600 mt-4">Carregando histórico de competições...</p>
         </div>
       </div>
     );
@@ -212,8 +182,10 @@ export const CompetitionHistory = () => {
 
   return (
     <div className="space-y-6">
+      {/* Debug Info */}
       <DebugInfo debugInfo={debugInfo} />
 
+      {/* Filtros */}
       <CompetitionFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -223,12 +195,31 @@ export const CompetitionHistory = () => {
         setTypeFilter={setTypeFilter}
       />
 
-      <CompetitionStats competitions={competitions} />
+      {/* Estatísticas */}
+      <CompetitionStats competitions={allCompetitionsData} />
 
-      <CompetitionTable 
-        competitions={filteredCompetitions}
-        onReload={fetchCompetitionHistory}
-      />
+      {/* Lista de Competições */}
+      {filteredCompetitions.length === 0 ? (
+        <Card className="border-slate-200">
+          <CardContent className="text-center py-12">
+            <Trophy className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+            <h3 className="text-lg font-medium text-slate-900 mb-2">
+              Nenhuma competição encontrada
+            </h3>
+            <p className="text-slate-600 mb-4">
+              {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
+                ? 'Não há competições que correspondem aos filtros selecionados.'
+                : 'Ainda não há competições finalizadas no sistema.'}
+            </p>
+            <div className="text-sm text-slate-500">
+              <p>Total de competições no sistema: {debugInfo?.totalCompetitions || 0}</p>
+              <p>Total de competições customizadas: {debugInfo?.totalCustom || 0}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <CompetitionTable competitions={filteredCompetitions} />
+      )}
     </div>
   );
 };
