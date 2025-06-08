@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2, Activity } from 'lucide-react';
@@ -9,7 +8,7 @@ export const UserStatsCards = () => {
 
   if (stats.isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[...Array(6)].map((_, index) => (
           <Card key={index} className="border-slate-200 shadow-sm animate-pulse">
             <CardContent className="p-4">
@@ -85,7 +84,7 @@ export const UserStatsCards = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {cards.map((card, index) => {
         const Icon = card.icon;
         return (
