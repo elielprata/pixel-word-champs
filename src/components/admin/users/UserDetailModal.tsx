@@ -3,7 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, Calendar, Gamepad2, Trophy, Ban } from 'lucide-react';
+import { User, Calendar, Gamepad2, Trophy, Ban, Target } from 'lucide-react';
 
 interface UserDetailModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ export const UserDetailModal = ({ isOpen, onClose, user }: UserDetailModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5 text-blue-600" />
@@ -60,11 +60,40 @@ export const UserDetailModal = ({ isOpen, onClose, user }: UserDetailModalProps)
 
           <Separator />
 
-          {/* Estatísticas de Jogo */}
+          {/* Pontuações e Estatísticas */}
+          <div className="space-y-3">
+            <h4 className="font-medium text-slate-700 flex items-center gap-2">
+              <Trophy className="h-4 w-4" />
+              Pontuações e Estatísticas
+            </h4>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-2 bg-slate-50 rounded border">
+                <div className="text-xs text-slate-500">Pontuação Total</div>
+                <div className="font-medium">{user.total_score.toLocaleString()}</div>
+              </div>
+              <div className="p-2 bg-slate-50 rounded border">
+                <div className="text-xs text-slate-500">Jogos Realizados</div>
+                <div className="font-medium">{user.games_played}</div>
+              </div>
+              <div className="p-2 bg-slate-50 rounded border">
+                <div className="text-xs text-slate-500">Melhor Posição Diária</div>
+                <div className="font-medium">{user.best_daily_position || 'N/A'}</div>
+              </div>
+              <div className="p-2 bg-slate-50 rounded border">
+                <div className="text-xs text-slate-500">Melhor Posição Semanal</div>
+                <div className="font-medium">{user.best_weekly_position || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Estatísticas de Jogo - Mantendo a seção original mas reorganizada */}
           <div className="space-y-3">
             <h4 className="font-medium text-slate-700 flex items-center gap-2">
               <Gamepad2 className="h-4 w-4" />
-              Estatísticas de Jogo
+              Resumo de Performance
             </h4>
             
             <div className="grid grid-cols-2 gap-4">
