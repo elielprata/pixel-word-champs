@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,14 +9,12 @@ import { useWordCategories } from '@/hooks/useWordCategories';
 import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAppNavigation } from '@/hooks/useAppNavigation';
 
 export const CategoriesManagement = () => {
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', description: '' });
   const [selectedLevel, setSelectedLevel] = useState(1);
-  const { navigateToSettings } = useAppNavigation();
 
   const { 
     categories, 
@@ -114,7 +113,7 @@ export const CategoriesManagement = () => {
                   variant="outline"
                   size="sm"
                   className="text-amber-700 border-amber-300 hover:bg-amber-100"
-                  onClick={navigateToSettings}
+                  onClick={() => window.open('/admin-panel?tab=integrations', '_blank')}
                 >
                   <Settings className="h-4 w-4 mr-1" />
                   Configurar
