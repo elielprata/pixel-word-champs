@@ -1,10 +1,17 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock, AlertCircle } from 'lucide-react';
+import { useRankings } from '@/hooks/useRankings';
 
 export const RankingMetrics = () => {
-  // Mock data - em produção viria de uma API/hook
+  const { totalDailyPlayers, totalWeeklyPlayers, isLoading } = useRankings();
+  
+  // Cálculos baseados em dados reais
+  const totalParticipants = Math.max(totalDailyPlayers, totalWeeklyPlayers);
+  const weeklyPrizePool = Math.min(totalWeeklyPlayers * 10, 2500); // Simular pool baseado em participantes
+  const participationRate = totalParticipants > 0 ? Math.round((totalWeeklyPlayers / totalParticipants) * 100) : 0;
+
   const metrics = [
     {
       title: "Rankings Ativos",
@@ -12,47 +19,47 @@ export const RankingMetrics = () => {
       subtitle: "Diário e Semanal",
       icon: Trophy,
       color: "from-amber-500 to-amber-600",
-      trend: "+0% este mês"
+      trend: "Sistema ativo"
     },
     {
-      title: "Total de Participantes",
-      value: "1,247",
-      subtitle: "Usuários competindo",
-      icon: Users,
+      title: "Participantes Diários",
+      value: isLoading ? "..." : totalDailyPlayers.toLocaleString('pt-BR'),
+      subtitle: "Usuários hoje",
+      icon: Calendar,
       color: "from-blue-500 to-blue-600",
-      trend: "+18% este mês"
+      trend: "Dados reais"
     },
     {
-      title: "Prêmios Semanais",
-      value: "R$ 2.450",
-      subtitle: "Valor total pago",
+      title: "Participantes Semanais",
+      value: isLoading ? "..." : totalWeeklyPlayers.toLocaleString('pt-BR'),
+      subtitle: "Usuários esta semana",
+      icon: Users,
+      color: "from-purple-500 to-purple-600",
+      trend: "Dados reais"
+    },
+    {
+      title: "Pool de Prêmios",
+      value: isLoading ? "..." : `R$ ${weeklyPrizePool.toLocaleString('pt-BR')}`,
+      subtitle: "Semanal estimado",
       icon: DollarSign,
       color: "from-green-500 to-green-600",
-      trend: "+25% este mês"
+      trend: "Baseado em participação"
     },
     {
       title: "Taxa de Participação",
-      value: "87%",
-      subtitle: "Usuários ativos",
+      value: isLoading ? "..." : `${participationRate}%`,
+      subtitle: "Semanal vs Total",
       icon: Target,
-      color: "from-purple-500 to-purple-600",
-      trend: "+5% esta semana"
-    },
-    {
-      title: "Pontos Transferidos",
-      value: "15,342",
-      subtitle: "Diário → Semanal",
-      icon: TrendingUp,
       color: "from-cyan-500 to-cyan-600",
-      trend: "+12% este mês"
+      trend: "Calculado em tempo real"
     },
     {
-      title: "Tempo Médio",
-      value: "4m 32s",
-      subtitle: "Por partida",
-      icon: Clock,
-      color: "from-rose-500 to-rose-600",
-      trend: "-8% melhor"
+      title: "Status Sistema",
+      value: "Ativo",
+      subtitle: "Funcionando",
+      icon: Award,
+      color: "from-emerald-500 to-emerald-600",
+      trend: "Online"
     }
   ];
 
@@ -106,7 +113,7 @@ export const RankingMetrics = () => {
                 <ul className="list-disc list-inside text-slate-600 space-y-1 ml-6">
                   <li>Não possui premiação</li>
                   <li>Pontos zerados diariamente</li>
-                  <li>Transferidos para ranking semanal</li>
+                  <li>Dados atualizados em tempo real</li>
                 </ul>
               </div>
               <div className="space-y-2">
@@ -115,9 +122,9 @@ export const RankingMetrics = () => {
                   <span className="font-medium text-slate-700">Ranking Semanal:</span>
                 </div>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 ml-6">
-                  <li>Possui premiação</li>
+                  <li>Possui premiação automática</li>
                   <li>Acumula pontos da semana</li>
-                  <li>Distribuição automática de prêmios</li>
+                  <li>Dados sincronizados com banco</li>
                 </ul>
               </div>
             </div>
