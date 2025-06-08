@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useCompetitions } from "@/hooks/useCompetitions";
+import { prizeService } from '@/services/prizeService';
 
 interface CreateCompetitionModalProps {
   open: boolean;
@@ -34,11 +35,45 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     endDate: undefined as Date | undefined
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [totalPrizePool, setTotalPrizePool] = useState(0);
   const { toast } = useToast();
   const { competitions } = useCompetitions();
 
   // Filtrar competições semanais ativas para seleção
   const weeklyTournaments = competitions.filter(comp => comp.type === 'weekly' && comp.is_active);
+
+  // Buscar configurações de prêmios ativas
+  useEffect(() => {
+    const fetchPrizeConfigurations = async () => {
+      try {
+        const configurations = await prizeService.getPrizeConfigurations();
+        const activeConfigurations = configurations.filter(config => config.active);
+        
+        let total = 0;
+        
+        // Calcular total de prêmios individuais
+        const individualPrizes = activeConfigurations.filter(config => config.type === 'individual');
+        individualPrizes.forEach(config => {
+          total += config.prize_amount;
+        });
+        
+        // Calcular total de prêmios em grupo
+        const groupPrizes = activeConfigurations.filter(config => config.type === 'group');
+        groupPrizes.forEach(config => {
+          total += config.prize_amount * config.total_winners;
+        });
+        
+        setTotalPrizePool(total);
+        setFormData(prev => ({ ...prev, prizePool: total }));
+      } catch (error) {
+        console.error('Error fetching prize configurations:', error);
+      }
+    };
+
+    if (open) {
+      fetchPrizeConfigurations();
+    }
+  }, [open]);
 
   const categories = [
     { value: 'geral', label: 'Geral', description: 'Palavras diversas de todos os temas' },
@@ -73,7 +108,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         type: 'weekly',
         category: 'geral',
         weeklyTournamentId: 'none',
-        prizePool: 0,
+        prizePool: totalPrizePool,
         maxParticipants: 1000,
         startDate: undefined,
         endDate: undefined
@@ -337,23 +372,21 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
             </div>
           )}
 
-          {/* Prêmio (apenas para semanal e challenge) */}
+          {/* Prêmio (apenas para semanal e challenge) - Valor calculado automaticamente */}
           {competitionInfo.prizeEnabled && (
             <div className="space-y-1">
               <Label htmlFor="prizePool" className="flex items-center gap-2 text-sm">
                 <DollarSign className="h-3 w-3" />
                 Valor Total dos Prêmios (R$)
               </Label>
-              <Input
-                id="prizePool"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.prizePool}
-                onChange={(e) => setFormData(prev => ({ ...prev, prizePool: parseFloat(e.target.value) || 0 }))}
-                placeholder="0.00"
-                className="h-8"
-              />
+              <div className="bg-slate-50 p-2 rounded border">
+                <div className="text-lg font-bold text-green-600">
+                  R$ {totalPrizePool.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <p className="text-xs text-slate-600">
+                  Valor calculado automaticamente baseado nas configurações de prêmios ativas do sistema.
+                </p>
+              </div>
             </div>
           )}
 
