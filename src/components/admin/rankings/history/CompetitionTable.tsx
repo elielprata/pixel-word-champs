@@ -6,21 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Trophy, Users, Calendar, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-interface CompetitionHistoryItem {
-  id: string;
-  title: string;
-  competition_type: string;
-  status: string;
-  participants: number;
-  prize_pool: number;
-  start_date: string;
-  end_date: string;
-  source: 'system' | 'custom';
-  theme?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { CompetitionHistoryItem } from './types';
 
 interface CompetitionTableProps {
   competitions: CompetitionHistoryItem[];
