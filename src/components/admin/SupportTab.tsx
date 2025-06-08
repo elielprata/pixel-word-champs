@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MessageSquare, AlertTriangle, CheckCircle, Clock, User, RefreshCw } from 'lucide-react';
+import { MessageSquare, AlertTriangle, CheckCircle, Clock, User, RefreshCw, Crown, Award, Filter, Search } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -107,20 +107,20 @@ export const SupportTab = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'resolved': return 'bg-green-100 text-green-700 border-green-200';
-      case 'closed': return 'bg-gray-100 text-gray-700 border-gray-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'in_progress': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'resolved': return 'bg-green-50 text-green-700 border-green-200';
+      case 'closed': return 'bg-gray-50 text-gray-700 border-gray-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'low': return 'bg-green-100 text-green-700 border-green-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'high': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'low': return 'bg-green-50 text-green-700 border-green-200';
+      case 'medium': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'high': return 'bg-red-50 text-red-700 border-red-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
@@ -173,299 +173,328 @@ export const SupportTab = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Principal */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="bg-white/20 p-3 rounded-xl">
-              <MessageSquare className="h-6 w-6" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header Section - Similar to RankingsTab */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-lg shadow-md">
+                <MessageSquare className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  Central de Suporte
+                </h1>
+                <p className="text-slate-600 mt-1 text-sm">
+                  Gerencie reports de usuários e solicitações de suporte da plataforma
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">Central de Suporte</h1>
-              <p className="text-indigo-100 text-sm">Gerencie reports de usuários e solicitações de suporte</p>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 px-3 py-1">
+                <Crown className="h-3 w-3 mr-1" />
+                Sistema Ativo
+              </Badge>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
+                <Award className="h-3 w-3 mr-1" />
+                Suporte 24/7
+              </Badge>
             </div>
           </div>
-          <Button
-            onClick={fetchReports}
-            variant="outline"
-            size="sm"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
         </div>
-      </div>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-yellow-100 p-2 rounded-lg">
-                <Clock className="h-4 w-4 text-yellow-600" />
+        {/* Estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="border-slate-200 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-yellow-100 p-3 rounded-lg">
+                  <Clock className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900">
+                    {reports.filter(r => r.status === 'pending').length}
+                  </p>
+                  <p className="text-slate-600 text-sm font-medium">Aguardando Resposta</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-yellow-600 font-medium">Pendentes</p>
-                <p className="text-2xl font-bold text-yellow-700">
-                  {reports.filter(r => r.status === 'pending').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <MessageSquare className="h-4 w-4 text-blue-600" />
+          <Card className="border-slate-200 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <MessageSquare className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900">
+                    {reports.filter(r => r.status === 'in_progress').length}
+                  </p>
+                  <p className="text-slate-600 text-sm font-medium">Em Atendimento</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-blue-600 font-medium">Em Progresso</p>
-                <p className="text-2xl font-bold text-blue-700">
-                  {reports.filter(r => r.status === 'in_progress').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-green-100 p-2 rounded-lg">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+          <Card className="border-slate-200 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-green-100 p-3 rounded-lg">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900">
+                    {reports.filter(r => r.status === 'resolved').length}
+                  </p>
+                  <p className="text-slate-600 text-sm font-medium">Resolvidos</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-green-600 font-medium">Resolvidos</p>
-                <p className="text-2xl font-bold text-green-700">
-                  {reports.filter(r => r.status === 'resolved').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="border-red-200 bg-gradient-to-br from-red-50 to-pink-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-red-100 p-2 rounded-lg">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
+          <Card className="border-slate-200 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-red-100 p-3 rounded-lg">
+                  <AlertTriangle className="h-6 w-6 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900">
+                    {reports.filter(r => r.priority === 'high').length}
+                  </p>
+                  <p className="text-slate-600 text-sm font-medium">Alta Prioridade</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-red-600 font-medium">Alta Prioridade</p>
-                <p className="text-2xl font-bold text-red-700">
-                  {reports.filter(r => r.priority === 'high').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Lista de Reports */}
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle className="text-lg text-slate-800">Reports de Usuários</CardTitle>
-              <p className="text-sm text-slate-600">
-                {filteredReports.length} de {reports.length} reports
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="in_progress">Em Progresso</SelectItem>
-                  <SelectItem value="resolved">Resolvido</SelectItem>
-                  <SelectItem value="closed">Fechado</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="Prioridade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="low">Baixa</SelectItem>
-                  <SelectItem value="medium">Média</SelectItem>
-                  <SelectItem value="high">Alta</SelectItem>
-                </SelectContent>
-              </Select>
+        {/* Lista de Reports */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Filter className="h-5 w-5 text-slate-600" />
+                <h2 className="text-lg font-semibold text-slate-900">Reports de Usuários</h2>
+                <Badge variant="outline" className="bg-white">
+                  {filteredReports.length} de {reports.length}
+                </Badge>
+              </div>
+              <div className="flex gap-3">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40 bg-white">
+                    <SelectValue placeholder="Filtrar por Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Status</SelectItem>
+                    <SelectItem value="pending">Pendente</SelectItem>
+                    <SelectItem value="in_progress">Em Progresso</SelectItem>
+                    <SelectItem value="resolved">Resolvido</SelectItem>
+                    <SelectItem value="closed">Fechado</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                  <SelectTrigger className="w-40 bg-white">
+                    <SelectValue placeholder="Filtrar por Prioridade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as Prioridades</SelectItem>
+                    <SelectItem value="low">Baixa</SelectItem>
+                    <SelectItem value="medium">Média</SelectItem>
+                    <SelectItem value="high">Alta</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={fetchReports}
+                  variant="outline"
+                  size="sm"
+                  disabled={loading}
+                  className="bg-white"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </Button>
+              </div>
             </div>
           </div>
-        </CardHeader>
 
-        <CardContent className="p-6">
-          {loading ? (
-            <div className="text-center py-8">
-              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-500">Carregando reports...</p>
-            </div>
-          ) : (
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="font-semibold">Tipo</TableHead>
-                    <TableHead className="font-semibold">Assunto</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
-                    <TableHead className="font-semibold">Prioridade</TableHead>
-                    <TableHead className="font-semibold">Data</TableHead>
-                    <TableHead className="font-semibold text-center">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredReports.map((report) => (
-                    <TableRow key={report.id} className="hover:bg-slate-50">
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getReportTypeIcon(report.report_type)}
-                          <span className="capitalize">{getReportTypeLabel(report.report_type)}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium max-w-xs truncate">
-                        {report.subject}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(report.status)}>
-                          {getStatusLabel(report.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getPriorityColor(report.priority)}>
-                          {getPriorityLabel(report.priority)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">{formatDate(report.created_at)}</TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedReport(report)}
-                        >
-                          Ver Detalhes
-                        </Button>
-                      </TableCell>
+          <div className="p-6">
+            {loading ? (
+              <div className="text-center py-12">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-slate-400" />
+                <p className="text-slate-500">Carregando reports...</p>
+              </div>
+            ) : (
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="font-semibold text-slate-700">Tipo</TableHead>
+                      <TableHead className="font-semibold text-slate-700">Assunto</TableHead>
+                      <TableHead className="font-semibold text-slate-700">Status</TableHead>
+                      <TableHead className="font-semibold text-slate-700">Prioridade</TableHead>
+                      <TableHead className="font-semibold text-slate-700">Data</TableHead>
+                      <TableHead className="font-semibold text-slate-700 text-center">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  </TableHeader>
+                  <TableBody>
+                    {filteredReports.map((report) => (
+                      <TableRow key={report.id} className="hover:bg-slate-50 transition-colors">
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getReportTypeIcon(report.report_type)}
+                            <span className="font-medium">{getReportTypeLabel(report.report_type)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium max-w-xs">
+                          <div className="truncate" title={report.subject}>
+                            {report.subject}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(report.status)}>
+                            {getStatusLabel(report.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getPriorityColor(report.priority)}>
+                            {getPriorityLabel(report.priority)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-slate-600 text-sm">
+                          {formatDate(report.created_at)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedReport(report)}
+                            className="hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                          >
+                            Ver Detalhes
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
 
-          {!loading && filteredReports.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>Nenhum report encontrado</p>
-              <p className="text-sm">Ajuste os filtros ou aguarde novos reports</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {!loading && filteredReports.length === 0 && (
+              <div className="text-center py-12">
+                <MessageSquare className="h-16 w-16 mx-auto mb-4 text-slate-300" />
+                <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhum report encontrado</h3>
+                <p className="text-slate-500">Ajuste os filtros ou aguarde novos reports dos usuários</p>
+              </div>
+            )}
+          </div>
+        </div>
 
-      {/* Modal de detalhes do report */}
-      {selectedReport && (
-        <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Detalhes do Report</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-semibold block mb-1">Tipo</label>
-                  <p className="capitalize">{getReportTypeLabel(selectedReport.report_type)}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-semibold block mb-1">Prioridade</label>
-                  <Badge className={getPriorityColor(selectedReport.priority)}>
-                    {getPriorityLabel(selectedReport.priority)}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-sm font-semibold block mb-1">Assunto</label>
-                <p>{selectedReport.subject}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm font-semibold block mb-1">Mensagem</label>
-                <div className="bg-gray-50 p-3 rounded-lg border">
-                  <p className="whitespace-pre-wrap">{selectedReport.message}</p>
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-sm font-semibold block mb-1">Data de Criação</label>
-                <p>{formatDate(selectedReport.created_at)}</p>
-              </div>
-
-              {selectedReport.resolution && (
-                <div>
-                  <label className="text-sm font-semibold block mb-1">Resolução</label>
-                  <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                    <p className="whitespace-pre-wrap">{selectedReport.resolution}</p>
+        {/* Modal de detalhes do report */}
+        {selectedReport && (
+          <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Detalhes do Report
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700 block mb-2">Tipo</label>
+                    <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+                      {getReportTypeIcon(selectedReport.report_type)}
+                      <span>{getReportTypeLabel(selectedReport.report_type)}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700 block mb-2">Prioridade</label>
+                    <Badge className={getPriorityColor(selectedReport.priority)}>
+                      {getPriorityLabel(selectedReport.priority)}
+                    </Badge>
                   </div>
                 </div>
-              )}
-
-              {selectedReport.status !== 'resolved' && selectedReport.status !== 'closed' && (
+                
                 <div>
-                  <label className="text-sm font-semibold block mb-1">Resolução</label>
-                  <Textarea
-                    value={resolution}
-                    onChange={(e) => setResolution(e.target.value)}
-                    placeholder="Descreva como o problema foi resolvido..."
-                    rows={3}
-                  />
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Assunto</label>
+                  <p className="p-3 bg-slate-50 rounded-lg border">{selectedReport.subject}</p>
                 </div>
-              )}
+                
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Mensagem</label>
+                  <div className="bg-slate-50 p-4 rounded-lg border">
+                    <p className="whitespace-pre-wrap text-slate-700">{selectedReport.message}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Data de Criação</label>
+                  <p className="text-slate-600">{formatDate(selectedReport.created_at)}</p>
+                </div>
 
-              <div className="flex gap-2 pt-4 border-t">
-                {selectedReport.status === 'pending' && (
-                  <Button 
-                    onClick={() => updateReportStatus(selectedReport.id, 'in_progress')}
-                    className="bg-blue-600 hover:bg-blue-700"
-                    disabled={updating}
-                  >
-                    Marcar como Em Progresso
-                  </Button>
+                {selectedReport.resolution && (
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700 block mb-2">Resolução</label>
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                      <p className="whitespace-pre-wrap text-green-800">{selectedReport.resolution}</p>
+                    </div>
+                  </div>
                 )}
-                
-                {(selectedReport.status === 'pending' || selectedReport.status === 'in_progress') && (
-                  <Button 
-                    onClick={() => updateReportStatus(selectedReport.id, 'resolved', resolution)}
-                    disabled={!resolution.trim() || updating}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    Marcar como Resolvido
-                  </Button>
+
+                {selectedReport.status !== 'resolved' && selectedReport.status !== 'closed' && (
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700 block mb-2">Resolução</label>
+                    <Textarea
+                      value={resolution}
+                      onChange={(e) => setResolution(e.target.value)}
+                      placeholder="Descreva como o problema foi resolvido..."
+                      rows={4}
+                      className="bg-white"
+                    />
+                  </div>
                 )}
-                
-                {selectedReport.status === 'resolved' && (
-                  <Button 
-                    onClick={() => updateReportStatus(selectedReport.id, 'closed')}
-                    variant="outline"
-                    disabled={updating}
-                  >
-                    Fechar Report
-                  </Button>
-                )}
+
+                <div className="flex gap-3 pt-4 border-t border-slate-200">
+                  {selectedReport.status === 'pending' && (
+                    <Button 
+                      onClick={() => updateReportStatus(selectedReport.id, 'in_progress')}
+                      className="bg-blue-600 hover:bg-blue-700"
+                      disabled={updating}
+                    >
+                      Iniciar Atendimento
+                    </Button>
+                  )}
+                  
+                  {(selectedReport.status === 'pending' || selectedReport.status === 'in_progress') && (
+                    <Button 
+                      onClick={() => updateReportStatus(selectedReport.id, 'resolved', resolution)}
+                      disabled={!resolution.trim() || updating}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Marcar como Resolvido
+                    </Button>
+                  )}
+                  
+                  {selectedReport.status === 'resolved' && (
+                    <Button 
+                      onClick={() => updateReportStatus(selectedReport.id, 'closed')}
+                      variant="outline"
+                      disabled={updating}
+                    >
+                      Fechar Report
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
     </div>
   );
 };
