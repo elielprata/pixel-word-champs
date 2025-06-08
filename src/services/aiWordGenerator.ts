@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 // Função para chamar a OpenAI API
-const callOpenAIAPI = async (categoryName: string, count: number, apiKey: string): Promise<string[]> => {
+const callOpenAIAPI = async (categoryName: string, count: number, apiKey: string, systemPrompt: string): Promise<string[]> => {
   const prompt = `Gere ${count} palavras em português relacionadas à categoria "${categoryName}". 
   
 Retorne apenas as palavras, uma por linha, em MAIÚSCULAS, sem numeração ou pontuação.
@@ -24,7 +24,7 @@ COELHO`;
     body: JSON.stringify({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.' },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
       ],
       max_tokens: 300,
@@ -49,52 +49,37 @@ COELHO`;
   return words;
 };
 
-// Simulação de geração de palavras (fallback quando não há API key)
-const generateMockWords = async (categoryName: string, count: number): Promise<string[]> => {
-  const mockWords: Record<string, string[]> = {
-    'animais': ['CAO', 'GATO', 'CAVALO', 'ELEFANTE', 'TARTARUGA', 'PEIXE', 'COELHO', 'PASSARO', 'RATO', 'TIGRE'],
-    'objetos': ['MESA', 'CADEIRA', 'TELEFONE', 'COMPUTADOR', 'TELEVISAO', 'LIVRO', 'CANETA', 'RELOGIO', 'ESPELHO', 'QUADRO'],
-    'cores': ['AZUL', 'VERDE', 'AMARELO', 'VERMELHO', 'LARANJA', 'ROSA', 'ROXO', 'PRETO', 'BRANCO', 'CINZA'],
-    'profissões': ['MEDICO', 'PROFESSOR', 'ENGENHEIRO', 'ADVOGADO', 'DENTISTA', 'CHEF', 'PINTOR', 'MUSICO', 'JORNALISTA', 'PILOTO'],
-    'alimentos': ['PANE', 'ARROZ', 'FEIJAO', 'MACARRAO', 'CHOCOLATE', 'PIZZA', 'SALADA', 'FRUTA', 'LEITE', 'QUEIJO'],
-    'esportes': ['FUTEBOL', 'BASQUETE', 'VOLEIBOL', 'NATACAO', 'ATLETISMO', 'TENIS', 'BOXE', 'CICLISMO', 'CORRIDA', 'GINASTICA'],
-    'países': ['BRASIL', 'ARGENTINA', 'PORTUGAL', 'ALEMANHA', 'AUSTRALIA', 'FRANCA', 'ITALIA', 'ESPANHA', 'JAPAO', 'CHINA'],
-    'cidades': ['PARIS', 'LONDRES', 'TOQUIO', 'NOVAIORQUE', 'BARCELONA', 'ROMA', 'MADRI', 'BERLIM', 'SIDNEY', 'LISBOA']
-  };
-
-  // Simular delay da API
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  const categoryWords = mockWords[categoryName] || ['PALAVRA', 'EXEMPLO', 'TESTE', 'MOCK', 'SIMULACAO'];
-  
-  // Embaralhar e retornar a quantidade solicitada
-  const shuffled = [...categoryWords].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
-};
-
 // Função principal para gerar palavras
 export const generateWordsForCategory = async (categoryName: string, count: number): Promise<string[]> => {
   try {
-    // Buscar a API key da OpenAI nas configurações
-    const { data: openaiConfig, error } = await supabase
+    // Buscar a API key e configurações da OpenAI
+    const { data: openaiSettings, error } = await supabase
       .from('game_settings')
-      .select('setting_value')
-      .eq('setting_key', 'openai_api_key')
-      .single();
+      .select('setting_key, setting_value')
+      .in('setting_key', ['openai_api_key', 'openai_system_prompt'])
+      .eq('category', 'integrations');
 
-    if (error || !openaiConfig?.setting_value) {
-      console.log('🤖 OpenAI API key não encontrada, usando dados mock');
-      return generateMockWords(categoryName, count);
+    if (error) {
+      console.error('❌ Erro ao buscar configurações:', error);
+      throw new Error('Configurações da OpenAI não encontradas');
     }
 
-    const apiKey = openaiConfig.setting_value;
+    const apiKeySetting = openaiSettings?.find(s => s.setting_key === 'openai_api_key');
+    const systemPromptSetting = openaiSettings?.find(s => s.setting_key === 'openai_system_prompt');
+
+    if (!apiKeySetting?.setting_value) {
+      throw new Error('API key da OpenAI não configurada');
+    }
+
+    const apiKey = apiKeySetting.setting_value;
+    const systemPrompt = systemPromptSetting?.setting_value || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.';
+    
     console.log('🤖 Usando OpenAI API para gerar palavras');
     
-    return await callOpenAIAPI(categoryName, count, apiKey);
+    return await callOpenAIAPI(categoryName, count, apiKey, systemPrompt);
     
   } catch (error) {
     console.error('❌ Erro ao gerar palavras com OpenAI:', error);
-    console.log('🔄 Fallback para dados mock');
-    return generateMockWords(categoryName, count);
+    throw error;
   }
 };

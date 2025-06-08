@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -76,7 +77,7 @@ REGRAS IMPORTANTES:
       const { data: settings, error } = await supabase
         .from('game_settings')
         .select('*')
-        .in('category', ['integrations']);
+        .eq('category', 'integrations');
 
       if (error) throw error;
 
@@ -93,17 +94,28 @@ REGRAS IMPORTANTES:
 
       // Processar configurações do OpenAI
       const openaiConfig = settings?.find(s => s.setting_key === 'openai_api_key');
-      if (openaiConfig) {
+      const systemPromptConfig = settings?.find(s => s.setting_key === 'openai_system_prompt');
+      
+      if (openaiConfig || systemPromptConfig) {
         setOpenAI(prev => ({
           ...prev,
-          apiKey: openaiConfig.setting_value || '',
-          status: openaiConfig.setting_value ? 'active' : 'inactive',
-          enabled: !!openaiConfig.setting_value
+          apiKey: openaiConfig?.setting_value || '',
+          status: openaiConfig?.setting_value ? 'active' : 'inactive',
+          enabled: !!openaiConfig?.setting_value,
+          config: {
+            ...prev.config,
+            systemPrompt: systemPromptConfig?.setting_value || defaultSystemPrompt
+          }
         }));
       }
 
     } catch (error) {
       console.error('Erro ao buscar integrações:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar integrações",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -111,39 +123,63 @@ REGRAS IMPORTANTES:
 
   const handleSaveIntegration = async (integration: Integration) => {
     try {
-      const settingKey = `${integration.id}_api_key`;
-      
-      // Verificar se a configuração já existe
-      const { data: existing } = await supabase
-        .from('game_settings')
-        .select('id')
-        .eq('setting_key', settingKey)
-        .single();
+      const settingsToSave = [];
 
-      if (existing) {
-        // Atualizar configuração existente
-        const { error } = await supabase
-          .from('game_settings')
-          .update({
-            setting_value: integration.apiKey,
-            updated_at: new Date().toISOString()
-          })
-          .eq('setting_key', settingKey);
+      if (integration.id === 'openai') {
+        // Salvar API Key
+        settingsToSave.push({
+          setting_key: 'openai_api_key',
+          setting_value: integration.apiKey,
+          setting_type: 'string',
+          description: 'API Key para OpenAI',
+          category: 'integrations'
+        });
 
-        if (error) throw error;
+        // Salvar System Prompt
+        settingsToSave.push({
+          setting_key: 'openai_system_prompt',
+          setting_value: integration.config.systemPrompt,
+          setting_type: 'text',
+          description: 'System Prompt para OpenAI',
+          category: 'integrations'
+        });
       } else {
-        // Criar nova configuração
-        const { error } = await supabase
-          .from('game_settings')
-          .insert({
-            setting_key: settingKey,
-            setting_value: integration.apiKey,
-            setting_type: 'string',
-            description: `API Key para ${integration.name}`,
-            category: 'integrations'
-          });
+        settingsToSave.push({
+          setting_key: `${integration.id}_api_key`,
+          setting_value: integration.apiKey,
+          setting_type: 'string',
+          description: `API Key para ${integration.name}`,
+          category: 'integrations'
+        });
+      }
 
-        if (error) throw error;
+      for (const setting of settingsToSave) {
+        // Verificar se a configuração já existe
+        const { data: existing } = await supabase
+          .from('game_settings')
+          .select('id')
+          .eq('setting_key', setting.setting_key)
+          .single();
+
+        if (existing) {
+          // Atualizar configuração existente
+          const { error } = await supabase
+            .from('game_settings')
+            .update({
+              setting_value: setting.setting_value,
+              updated_at: new Date().toISOString()
+            })
+            .eq('setting_key', setting.setting_key);
+
+          if (error) throw error;
+        } else {
+          // Criar nova configuração
+          const { error } = await supabase
+            .from('game_settings')
+            .insert(setting);
+
+          if (error) throw error;
+        }
       }
 
       // Atualizar estado local
@@ -181,21 +217,40 @@ REGRAS IMPORTANTES:
     setTestingConnection(integrationId);
     
     try {
-      // Buscar a integração correta
       const integration = integrationId === 'fingerprintjs' ? fingerprintJS : openAI;
       
-      // Simulação de teste de conexão
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const isValid = integration.apiKey.length > 10; // Validação básica
-      
-      if (isValid) {
+      if (integrationId === 'openai') {
+        // Teste real da OpenAI API
+        const response = await fetch('https://api.openai.com/v1/models', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${integration.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
         toast({
           title: "Conexão bem-sucedida",
           description: `${integration.name} está funcionando corretamente`,
         });
       } else {
-        throw new Error('API Key inválida');
+        // Simulação para FingerprintJS
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const isValid = integration.apiKey.length > 10;
+        
+        if (isValid) {
+          toast({
+            title: "Conexão bem-sucedida",
+            description: `${integration.name} está funcionando corretamente`,
+          });
+        } else {
+          throw new Error('API Key inválida');
+        }
       }
       
     } catch (error: any) {
