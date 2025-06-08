@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock, AlertCircle } from 'lucide-react';
@@ -22,50 +21,50 @@ export const RankingMetrics = () => {
     {
       title: "Rankings Ativos",
       value: "2",
-      subtitle: "Sistemas operacionais",
+      subtitle: "Diário e Semanal",
       icon: Trophy,
       color: "from-amber-500 to-amber-600",
-      trend: "Diário + Semanal"
+      trend: "Sistemas ativos"
     },
     {
-      title: "Total de Jogadores",
+      title: "Total de Participantes",
       value: totalPlayers.toLocaleString(),
-      subtitle: "Base de usuários",
+      subtitle: "Usuários competindo",
       icon: Users,
       color: "from-blue-500 to-blue-600",
-      trend: "Registrados"
+      trend: "Usuários ativos"
     },
     {
-      title: "Participantes Hoje",
+      title: "Prêmios Semanais",
+      value: `R$ ${prizePoolWeekly.toFixed(2)}`,
+      subtitle: "Valor total disponível",
+      icon: DollarSign,
+      color: "from-green-500 to-green-600",
+      trend: "Esta semana"
+    },
+    {
+      title: "Ranking Diário",
       value: dailyParticipants.toString(),
-      subtitle: "Ranking diário",
+      subtitle: "Participantes hoje",
       icon: Calendar,
       color: "from-purple-500 to-purple-600",
-      trend: "Ativo hoje"
+      trend: "Hoje"
     },
     {
-      title: "Participantes Semana",
+      title: "Ranking Semanal",
       value: weeklyParticipants.toString(),
-      subtitle: "Ranking semanal",
+      subtitle: "Participantes esta semana",
       icon: TrendingUp,
       color: "from-cyan-500 to-cyan-600",
       trend: "Esta semana"
     },
     {
-      title: "Premiação Semanal",
-      value: `R$ ${prizePoolWeekly.toFixed(2)}`,
-      subtitle: "Valor em circulação",
-      icon: DollarSign,
-      color: "from-green-500 to-green-600",
-      trend: "Disponível"
-    },
-    {
-      title: "Posições Premiadas",
-      value: "10",
-      subtitle: "Top 10 semanal",
+      title: "Top 10 Premiados",
+      value: Math.min(weeklyParticipants, 10).toString(),
+      subtitle: "Posições premiadas",
       icon: Award,
       color: "from-rose-500 to-rose-600",
-      trend: "Elegíveis"
+      trend: "Semanal"
     }
   ];
 
@@ -102,14 +101,14 @@ export const RankingMetrics = () => {
         })}
       </div>
       
-      {/* Informação sobre funcionamento do sistema */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+      {/* Informação sobre sistema de pontuação */}
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200">
         <div className="flex items-start gap-3">
-          <div className="bg-blue-500 p-2 rounded-lg">
+          <div className="bg-amber-500 p-2 rounded-lg">
             <AlertCircle className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1">
-            <h4 className="text-lg font-semibold text-slate-900 mb-2">Funcionamento do Sistema</h4>
+            <h4 className="text-lg font-semibold text-slate-900 mb-2">Sistema de Pontuação</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -117,9 +116,9 @@ export const RankingMetrics = () => {
                   <span className="font-medium text-slate-700">Ranking Diário:</span>
                 </div>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 ml-6">
-                  <li>Reset automático diário</li>
-                  <li>Sem premiação direta</li>
-                  <li>Pontos transferem para semanal</li>
+                  <li>Não possui premiação</li>
+                  <li>Pontos zerados diariamente</li>
+                  <li>Transferidos para ranking semanal</li>
                 </ul>
               </div>
               <div className="space-y-2">
@@ -128,9 +127,9 @@ export const RankingMetrics = () => {
                   <span className="font-medium text-slate-700">Ranking Semanal:</span>
                 </div>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 ml-6">
+                  <li>Possui premiação</li>
                   <li>Acumula pontos da semana</li>
-                  <li>Premiação top 10</li>
-                  <li>Distribuição automática</li>
+                  <li>Distribuição automática de prêmios</li>
                 </ul>
               </div>
             </div>
