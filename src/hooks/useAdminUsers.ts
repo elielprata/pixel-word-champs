@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,35 +56,39 @@ export const useAdminUsers = () => {
         throw profilesError;
       }
 
-      // Buscar dados adicionais dos usuários do auth
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) {
-        console.error('❌ Erro ao buscar dados do auth:', authError);
-        // Se não conseguir buscar do auth, usar apenas dados do profiles
-        const safeProfiles: ProfileData[] = profiles || [];
-        return safeProfiles.map((profile: ProfileData) => ({
-          id: profile.id,
-          email: 'Email não disponível',
-          username: profile.username || 'Username não disponível',
-          created_at: profile.created_at || new Date().toISOString(),
-          role: 'admin'
-        }));
-      }
+      // Buscar o usuário atual para comparação
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
 
-      // Combinar dados do auth com profiles
+      // Mapear dados com fallback inteligente para emails
       const safeProfiles: ProfileData[] = profiles || [];
       const combinedData: AdminUser[] = safeProfiles.map((profile: ProfileData) => {
-        const authUser = authUsers.users.find((u: any) => u.id === profile.id);
+        let email = 'Email não disponível';
+        
+        // Se for o usuário atual logado, usar o email real
+        if (currentUser && currentUser.id === profile.id) {
+          email = currentUser.email || 'Email não disponível';
+        }
+        // Fallback baseado no username
+        else if (profile.username) {
+          // Se o username já parece um email, usar como email
+          if (profile.username.includes('@')) {
+            email = profile.username;
+          } else {
+            // Criar um email baseado no username
+            email = `${profile.username}@sistema.local`;
+          }
+        }
+
         return {
           id: profile.id,
-          email: authUser?.email || 'Email não disponível',
+          email: email,
           username: profile.username || 'Username não disponível',
-          created_at: authUser?.created_at || profile.created_at || new Date().toISOString(),
+          created_at: profile.created_at || new Date().toISOString(),
           role: 'admin'
         };
       });
 
+      console.log('👥 Admins processados:', combinedData.map(u => ({ username: u.username, email: u.email })));
       return combinedData;
     },
   });
