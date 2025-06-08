@@ -48,14 +48,34 @@ export const useUsersQuery = () => {
         console.warn('⚠️ Erro ao buscar roles:', rolesError);
       }
 
+      // Buscar o usuário atual para comparação
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
       // Mapear dados
       const users: AllUsersData[] = profiles.map(profile => {
         const userRoles = roles?.filter(r => r.user_id === profile.id).map(r => r.role) || ['user'];
         
+        // Determinar email
+        let email = 'Email não disponível';
+        
+        // Se for o usuário atual logado, usar o email real
+        if (currentUser && currentUser.id === profile.id) {
+          email = currentUser.email || 'Email não disponível';
+        } else {
+          // Para outros usuários, usar fallback inteligente
+          if (profile.username) {
+            if (profile.username.includes('@')) {
+              email = profile.username;
+            } else {
+              email = `${profile.username}@sistema.local`;
+            }
+          }
+        }
+        
         return {
           id: profile.id,
           username: profile.username || 'Usuário',
-          email: `${profile.username}@sistema`, // Fallback já que não temos acesso ao auth.users
+          email: email,
           total_score: profile.total_score || 0,
           games_played: profile.games_played || 0,
           is_banned: profile.is_banned || false,
@@ -68,6 +88,8 @@ export const useUsersQuery = () => {
       });
 
       console.log('👥 Total de usuários encontrados:', users.length);
+      console.log('📧 Exemplo de emails processados:', users.slice(0, 2).map(u => ({ username: u.username, email: u.email })));
+      
       return users;
     },
     retry: 2,

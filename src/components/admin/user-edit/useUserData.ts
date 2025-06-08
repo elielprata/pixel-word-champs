@@ -21,7 +21,7 @@ export const useUserData = (userId: string, isOpen: boolean) => {
 
       console.log('📋 Roles encontrados:', rolesData);
 
-      // Buscar dados do perfil para pegar informações do usuário
+      // Buscar dados do perfil
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('username')
@@ -32,18 +32,35 @@ export const useUserData = (userId: string, isOpen: boolean) => {
         console.error('❌ Erro ao buscar perfil:', profileError);
       }
 
-      // Tentar buscar email do auth.users se possível, senão usar fallback
+      // Buscar email através do método correto do Supabase
       let email = 'Email não disponível';
       try {
-        const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
-        if (!authError && authData.user.email) {
-          email = authData.user.email;
+        // Tentar buscar através do auth se tivermos permissões
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        // Se o usuário logado for o mesmo que estamos editando, podemos usar seu email
+        if (user && user.id === userId) {
+          email = user.email || 'Email não disponível';
+        } else {
+          // Para outros usuários, vamos usar um fallback baseado no username
+          if (profileData?.username) {
+            // Verificar se o username já parece um email
+            if (profileData.username.includes('@')) {
+              email = profileData.username;
+            } else {
+              email = `${profileData.username}@sistema.local`;
+            }
+          }
         }
       } catch (error) {
-        console.log('⚠️ Não foi possível acessar dados do auth, usando fallback');
-        // Fallback: usar um email genérico baseado no username
+        console.log('⚠️ Não foi possível acessar dados do auth:', error);
+        // Fallback: usar email baseado no username
         if (profileData?.username) {
-          email = `${profileData.username}@sistema`;
+          if (profileData.username.includes('@')) {
+            email = profileData.username;
+          } else {
+            email = `${profileData.username}@sistema.local`;
+          }
         }
       }
 
