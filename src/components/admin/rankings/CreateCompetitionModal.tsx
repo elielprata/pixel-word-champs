@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle, Palette } from 'lucide-react';
+import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -26,8 +27,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     type: 'weekly' as 'daily' | 'weekly' | 'challenge',
     prizePool: 0,
     maxParticipants: 1000,
-    startDate: undefined as Date | undefined,
-    theme: 'default' as 'default' | 'tropical' | 'neon' | 'classic' | 'galaxy' | 'forest'
+    startDate: undefined as Date | undefined
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -52,8 +52,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         type: 'weekly',
         prizePool: 0,
         maxParticipants: 1000,
-        startDate: undefined,
-        theme: 'default'
+        startDate: undefined
       });
     } catch (error) {
       toast({
@@ -99,25 +98,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     }
   };
 
-  const getThemeInfo = () => {
-    switch (formData.theme) {
-      case 'tropical':
-        return { name: 'Tropical', color: 'bg-emerald-500', preview: 'from-emerald-400 to-teal-500' };
-      case 'neon':
-        return { name: 'Neon', color: 'bg-pink-500', preview: 'from-pink-400 to-violet-500' };
-      case 'classic':
-        return { name: 'Clássico', color: 'bg-amber-500', preview: 'from-amber-400 to-orange-500' };
-      case 'galaxy':
-        return { name: 'Galáxia', color: 'bg-indigo-500', preview: 'from-indigo-400 to-purple-600' };
-      case 'forest':
-        return { name: 'Floresta', color: 'bg-green-600', preview: 'from-green-400 to-emerald-600' };
-      default:
-        return { name: 'Padrão', color: 'bg-slate-500', preview: 'from-slate-400 to-slate-500' };
-    }
-  };
-
   const competitionInfo = getCompetitionInfo();
-  const themeInfo = getThemeInfo();
   const CompetitionIcon = competitionInfo.icon;
 
   return (
@@ -200,68 +181,6 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               placeholder="Descreva as regras e objetivos da competição..."
               rows={3}
             />
-          </div>
-
-          {/* Tema Visual */}
-          <div className="space-y-2">
-            <Label htmlFor="theme" className="flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              Tema Visual
-            </Label>
-            <Select value={formData.theme} onValueChange={(value: 'default' | 'tropical' | 'neon' | 'classic' | 'galaxy' | 'forest') => setFormData(prev => ({ ...prev, theme: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tema" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-slate-400 to-slate-500 rounded"></div>
-                    Padrão
-                  </div>
-                </SelectItem>
-                <SelectItem value="tropical">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-teal-500 rounded"></div>
-                    Tropical
-                  </div>
-                </SelectItem>
-                <SelectItem value="neon">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-pink-400 to-violet-500 rounded"></div>
-                    Neon
-                  </div>
-                </SelectItem>
-                <SelectItem value="classic">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-amber-400 to-orange-500 rounded"></div>
-                    Clássico
-                  </div>
-                </SelectItem>
-                <SelectItem value="galaxy">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-indigo-400 to-purple-600 rounded"></div>
-                    Galáxia
-                  </div>
-                </SelectItem>
-                <SelectItem value="forest">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-600 rounded"></div>
-                    Floresta
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {/* Preview do tema selecionado */}
-            <div className="bg-slate-50 p-3 rounded-lg border">
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 bg-gradient-to-r ${themeInfo.preview} rounded-lg shadow-sm`}></div>
-                <div>
-                  <p className="text-sm font-medium text-slate-700">Tema: {themeInfo.name}</p>
-                  <p className="text-xs text-slate-500">Este tema será aplicado à interface da competição</p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Data de Início */}
