@@ -1,9 +1,10 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Calendar, Users, DollarSign, Settings, Eye, Download, ArrowRight } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { rankingExportService } from '@/services/rankingExportService';
 
 interface RankingInfoCardProps {
   type: 'daily' | 'weekly';
@@ -24,9 +25,68 @@ export const RankingInfoCard = ({
   status, 
   lastUpdate 
 }: RankingInfoCardProps) => {
+  const { toast } = useToast();
+  const [isExporting, setIsExporting] = useState(false);
   const isDaily = type === 'daily';
   const iconColor = isDaily ? 'from-blue-500 to-blue-600' : 'from-purple-500 to-purple-600';
   const statusColor = status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-700 border-slate-200';
+
+  const handleView = () => {
+    toast({
+      title: "Visualizar Ranking",
+      description: `Abrindo detalhes do ranking ${isDaily ? 'diário' : 'semanal'}...`,
+    });
+    // TODO: Implementar navegação para página de detalhes do ranking
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      let data;
+      let filename;
+      
+      if (isDaily) {
+        data = await rankingExportService.exportDailyRankings();
+        filename = `ranking_diario_${new Date().toISOString().split('T')[0]}.csv`;
+      } else {
+        data = await rankingExportService.exportWeeklyRankings();
+        filename = `ranking_semanal_${new Date().toISOString().split('T')[0]}.csv`;
+      }
+
+      if (data.length === 0) {
+        toast({
+          title: "Nenhum dado encontrado",
+          description: "Não há dados de ranking para exportar.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      rankingExportService.exportToCSV(data, filename);
+      
+      toast({
+        title: "Exportação concluída",
+        description: `${data.length} registros exportados com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao exportar ranking:', error);
+      toast({
+        title: "Erro na exportação",
+        description: "Não foi possível exportar os dados do ranking.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleConfig = () => {
+    toast({
+      title: "Configurações",
+      description: `Abrindo configurações do ranking ${isDaily ? 'diário' : 'semanal'}...`,
+    });
+    // TODO: Implementar modal ou página de configurações do ranking
+  };
 
   return (
     <Card className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white">
@@ -109,15 +169,31 @@ export const RankingInfoCard = ({
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+              onClick={handleView}
+            >
               <Eye className="h-4 w-4 mr-1" />
               Ver
             </Button>
-            <Button variant="outline" size="sm" className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
               <Download className="h-4 w-4 mr-1" />
-              Exportar
+              {isExporting ? 'Exportando...' : 'Exportar'}
             </Button>
-            <Button variant="outline" size="sm" className="text-slate-600 hover:text-slate-700 hover:bg-slate-50 border-slate-200">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-slate-600 hover:text-slate-700 hover:bg-slate-50 border-slate-200"
+              onClick={handleConfig}
+            >
               <Settings className="h-4 w-4 mr-1" />
               Config
             </Button>
