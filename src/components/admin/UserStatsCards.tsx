@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2 } from 'lucide-react';
+import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2, Activity } from 'lucide-react';
 import { useRealUserStats } from '@/hooks/useRealUserStats';
 
 export const UserStatsCards = () => {
@@ -9,11 +9,11 @@ export const UserStatsCards = () => {
 
   if (stats.isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[...Array(6)].map((_, index) => (
           <Card key={index} className="border-slate-200 shadow-sm animate-pulse">
-            <CardContent className="p-6">
-              <div className="h-20 bg-slate-200 rounded"></div>
+            <CardContent className="p-4">
+              <div className="h-16 bg-slate-200 rounded"></div>
             </CardContent>
           </Card>
         ))}
@@ -27,27 +27,31 @@ export const UserStatsCards = () => {
       value: stats.totalUsers.toLocaleString('pt-BR'),
       icon: Users,
       color: "blue",
+      trend: "+12% este mês",
       description: "Usuários cadastrados"
     },
     {
       title: "Usuários Ativos",
       value: stats.activeUsers.toLocaleString('pt-BR'),
       icon: UserCheck,
-      color: "green",
-      description: "Últimas 24 horas"
+      color: "emerald",
+      trend: "Últimas 24h",
+      description: "Usuários conectados"
     },
     {
       title: "Novos Hoje",
       value: stats.newUsersToday.toLocaleString('pt-BR'),
       icon: UserPlus,
-      color: "purple",
-      description: "Registros hoje"
+      color: "violet",
+      trend: "Hoje",
+      description: "Novos registros"
     },
     {
       title: "Administradores",
       value: stats.totalAdmins.toLocaleString('pt-BR'),
       icon: Shield,
-      color: "orange",
+      color: "amber",
+      trend: "Ativos",
       description: "Usuários admin"
     },
     {
@@ -55,44 +59,55 @@ export const UserStatsCards = () => {
       value: stats.averageScore.toLocaleString('pt-BR'),
       icon: TrendingUp,
       color: "cyan",
-      description: "Por usuário ativo"
+      trend: "Por usuário",
+      description: "Pontos médios"
     },
     {
       title: "Jogos Totais",
       value: stats.totalGamesPlayed.toLocaleString('pt-BR'),
       icon: Gamepad2,
-      color: "pink",
-      description: "Partidas jogadas"
+      color: "rose",
+      trend: "Partidas",
+      description: "Jogos realizados"
     }
   ];
 
   const getColorClasses = (color: string) => {
     const colors = {
-      blue: "from-blue-100 to-blue-200 text-blue-700",
-      green: "from-green-100 to-green-200 text-green-700",
-      purple: "from-purple-100 to-purple-200 text-purple-700",
-      orange: "from-orange-100 to-orange-200 text-orange-700",
-      cyan: "from-cyan-100 to-cyan-200 text-cyan-700",
-      pink: "from-pink-100 to-pink-200 text-pink-700"
+      blue: "from-blue-500 to-blue-600 text-white",
+      emerald: "from-emerald-500 to-emerald-600 text-white",
+      violet: "from-violet-500 to-violet-600 text-white",
+      amber: "from-amber-500 to-amber-600 text-white",
+      cyan: "from-cyan-500 to-cyan-600 text-white",
+      rose: "from-rose-500 to-rose-600 text-white"
     };
     return colors[color as keyof typeof colors] || colors.blue;
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {cards.map((card, index) => {
         const Icon = card.icon;
         return (
-          <Card key={index} className="border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
-            <CardContent className="p-6">
+          <Card key={index} className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-slate-600">{card.title}</p>
-                  <p className="text-2xl font-bold text-slate-900">{card.value}</p>
-                  <p className="text-xs text-slate-500">{card.description}</p>
-                </div>
-                <div className={`bg-gradient-to-br ${getColorClasses(card.color)} p-3 rounded-xl`}>
-                  <Icon className="h-6 w-6" />
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-slate-600">{card.title}</p>
+                    <div className={`bg-gradient-to-r ${getColorClasses(card.color)} p-2 rounded-lg shadow-sm`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-2xl font-bold text-slate-900">{card.value}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-500">{card.description}</p>
+                      <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+                        {card.trend}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
