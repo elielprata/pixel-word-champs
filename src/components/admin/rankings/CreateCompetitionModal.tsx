@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -251,29 +250,29 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
           </div>
 
           {/* Seção: Configurações Específicas */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
               <h3 className="text-sm font-medium text-slate-700">Configurações Específicas</h3>
             </div>
 
             {/* Categoria (apenas para competições diárias) */}
             {formData.type === 'daily' && (
-              <div className="space-y-1">
-                <Label htmlFor="category" className="flex items-center gap-2 text-sm">
+              <div className="space-y-2">
+                <Label htmlFor="category" className="flex items-center gap-2 text-sm font-medium">
                   <Tag className="h-3 w-3" />
                   Categoria das Palavras
                 </Label>
                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger className="h-8">
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Selecione a categoria" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
                       <SelectItem key={category.value} value={category.value}>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col py-1">
                           <span className="font-medium text-sm">{category.label}</span>
-                          <span className="text-xs text-slate-500">{category.description}</span>
+                          <span className="text-xs text-slate-500 mt-0.5">{category.description}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -284,13 +283,13 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
 
             {/* Atribuir a Torneio Semanal (apenas para competições diárias) */}
             {formData.type === 'daily' && (
-              <div className="space-y-1">
-                <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm">
+              <div className="space-y-2">
+                <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm font-medium">
                   <Link className="h-3 w-3" />
                   Atribuir a Torneio Semanal
                 </Label>
                 <Select value={formData.weeklyTournamentId} onValueChange={(value) => setFormData(prev => ({ ...prev, weeklyTournamentId: value }))}>
-                  <SelectTrigger className="h-8">
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Selecione um torneio semanal (opcional)" />
                   </SelectTrigger>
                   <SelectContent>
@@ -299,9 +298,9 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                     </SelectItem>
                     {weeklyTournaments.map((tournament) => (
                       <SelectItem key={tournament.id} value={tournament.id}>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col py-1">
                           <span className="font-medium text-sm">{tournament.title}</span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-slate-500 mt-0.5">
                             {tournament.total_participants} participantes • R$ {tournament.prize_pool}
                           </span>
                         </div>
@@ -309,15 +308,15 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                   Os pontos desta competição diária contribuirão para o torneio semanal selecionado.
                 </p>
               </div>
             )}
 
             {/* Máximo de Participantes */}
-            <div className="space-y-1">
-              <Label htmlFor="maxParticipants" className="flex items-center gap-2 text-sm">
+            <div className="space-y-2">
+              <Label htmlFor="maxParticipants" className="flex items-center gap-2 text-sm font-medium">
                 <Users className="h-3 w-3" />
                 Máximo de Participantes
               </Label>
@@ -328,7 +327,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                 value={formData.maxParticipants}
                 onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: parseInt(e.target.value) || 1000 }))}
                 placeholder="1000"
-                className="h-8"
+                className="h-9"
               />
             </div>
           </div>
