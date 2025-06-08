@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Tag, Wand2, AlertCircle, Zap } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, Wand2, AlertCircle, Zap, Info } from 'lucide-react';
 import { useWordCategories } from '@/hooks/useWordCategories';
 import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
 import { useQuery } from '@tanstack/react-query';
@@ -167,6 +166,37 @@ export const CategoriesManagement = () => {
               />
               <div className="text-xs text-slate-500">
                 Quantas palavras gerar por categoria (máx. 1000)
+              </div>
+            </div>
+
+            {/* Regras de geração */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">Regras de Geração</h4>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p>A IA distribui automaticamente as palavras por dificuldade:</p>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">Expert</Badge>
+                        <span className="text-xs">30% (8+ letras)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">Difícil</Badge>
+                        <span className="text-xs">30% (5 letras)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs">Médio</Badge>
+                        <span className="text-xs">20% (4 letras)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">Fácil</Badge>
+                        <span className="text-xs">20% (3 letras)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             
