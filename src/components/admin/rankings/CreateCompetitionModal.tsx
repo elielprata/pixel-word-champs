@@ -73,6 +73,20 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     }
   }, [open]);
 
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      type: 'weekly',
+      category: 'geral',
+      weeklyTournamentId: 'none',
+      prizePool: totalPrizePool,
+      maxParticipants: 1000,
+      startDate: undefined,
+      endDate: undefined
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -106,8 +120,8 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
       
       if (result.success) {
         toast({
-          title: "Competição criada com sucesso!",
-          description: `${formData.title} foi criada e está ativa.`,
+          title: "Sucesso!",
+          description: `Competição "${formData.title}" criada com sucesso.`,
         });
         
         // Recarregar dados
@@ -115,17 +129,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         
         // Fechar modal e resetar form
         onOpenChange(false);
-        setFormData({
-          title: '',
-          description: '',
-          type: 'weekly',
-          category: 'geral',
-          weeklyTournamentId: 'none',
-          prizePool: totalPrizePool,
-          maxParticipants: 1000,
-          startDate: undefined,
-          endDate: undefined
-        });
+        resetForm();
       } else {
         throw new Error(result.error || 'Erro ao criar competição');
       }
@@ -139,6 +143,11 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCancel = () => {
+    onOpenChange(false);
+    resetForm();
   };
 
   const isPrizeEnabled = formData.type === 'weekly';
@@ -222,7 +231,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={handleCancel}
               className="flex-1 h-8"
               disabled={isSubmitting}
             >

@@ -29,7 +29,7 @@ class CustomCompetitionService {
       const competitionData = {
         title: data.title,
         description: data.description,
-        competition_type: data.type === 'weekly' ? 'tournament' : 'challenge',
+        competition_type: data.type === 'weekly' ? 'tournament' : data.type === 'daily' ? 'challenge' : 'tournament',
         theme: data.category || 'geral',
         start_date: data.startDate?.toISOString(),
         end_date: data.endDate?.toISOString(),
@@ -39,7 +39,7 @@ class CustomCompetitionService {
         created_by: user.id,
         rules: {
           category: data.category,
-          weeklyTournamentId: data.weeklyTournamentId
+          weeklyTournamentId: data.weeklyTournamentId !== 'none' ? data.weeklyTournamentId : undefined
         }
       };
 
