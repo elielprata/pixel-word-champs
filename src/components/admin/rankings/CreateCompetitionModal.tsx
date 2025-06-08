@@ -6,6 +6,7 @@ import { Trophy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useCompetitions } from "@/hooks/useCompetitions";
 import { prizeService } from '@/services/prizeService';
+import { customCompetitionService, CustomCompetitionData } from '@/services/customCompetitionService';
 import { CompetitionTypeSection } from './competition-form/CompetitionTypeSection';
 import { BasicInfoSection } from './competition-form/BasicInfoSection';
 import { CategorySection } from './competition-form/CategorySection';
@@ -34,7 +35,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrizePool, setTotalPrizePool] = useState(0);
   const { toast } = useToast();
-  const { competitions } = useCompetitions();
+  const { competitions, refetch } = useCompetitions();
 
   // Filtrar competições semanais ativas para seleção
   const weeklyTournaments = competitions.filter(comp => comp.type === 'weekly' && comp.is_active);
@@ -74,33 +75,65 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.title.trim()) {
+      toast({
+        title: "Erro",
+        description: "O título é obrigatório.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // TODO: Implementar criação da competição via API
-      console.log('Creating competition:', formData);
+      console.log('🚀 Iniciando criação da competição...');
       
-      toast({
-        title: "Competição criada com sucesso!",
-        description: `${formData.title} foi criada e está ativa.`,
-      });
+      const competitionData: CustomCompetitionData = {
+        title: formData.title,
+        description: formData.description,
+        type: formData.type,
+        category: formData.category,
+        weeklyTournamentId: formData.weeklyTournamentId !== 'none' ? formData.weeklyTournamentId : undefined,
+        prizePool: formData.prizePool,
+        maxParticipants: formData.maxParticipants,
+        startDate: formData.startDate,
+        endDate: formData.endDate
+      };
+
+      const result = await customCompetitionService.createCompetition(competitionData);
       
-      onOpenChange(false);
-      setFormData({
-        title: '',
-        description: '',
-        type: 'weekly',
-        category: 'geral',
-        weeklyTournamentId: 'none',
-        prizePool: totalPrizePool,
-        maxParticipants: 1000,
-        startDate: undefined,
-        endDate: undefined
-      });
+      if (result.success) {
+        toast({
+          title: "Competição criada com sucesso!",
+          description: `${formData.title} foi criada e está ativa.`,
+        });
+        
+        // Recarregar dados
+        await refetch();
+        
+        // Fechar modal e resetar form
+        onOpenChange(false);
+        setFormData({
+          title: '',
+          description: '',
+          type: 'weekly',
+          category: 'geral',
+          weeklyTournamentId: 'none',
+          prizePool: totalPrizePool,
+          maxParticipants: 1000,
+          startDate: undefined,
+          endDate: undefined
+        });
+      } else {
+        throw new Error(result.error || 'Erro ao criar competição');
+      }
     } catch (error) {
+      console.error('❌ Erro ao criar competição:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível criar a competição.",
+        description: error instanceof Error ? error.message : "Não foi possível criar a competição.",
         variant: "destructive"
       });
     } finally {
@@ -191,6 +224,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               variant="outline"
               onClick={() => onOpenChange(false)}
               className="flex-1 h-8"
+              disabled={isSubmitting}
             >
               Cancelar
             </Button>
