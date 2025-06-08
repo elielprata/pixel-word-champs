@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,10 +9,11 @@ import { useWordCategories } from '@/hooks/useWordCategories';
 import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const CategoriesManagement = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', description: '' });
@@ -82,7 +84,15 @@ export const CategoriesManagement = () => {
   };
 
   const handleConfigureOpenAI = () => {
-    navigate('/admin-panel', { state: { activeTab: 'integrations' } });
+    // Se já estamos no admin panel, usar replace para evitar problemas de navegação
+    if (location.pathname === '/admin-panel') {
+      navigate('/admin-panel', { 
+        state: { activeTab: 'integrations' }, 
+        replace: true 
+      });
+    } else {
+      navigate('/admin-panel', { state: { activeTab: 'integrations' } });
+    }
   };
 
   if (isLoading) {
