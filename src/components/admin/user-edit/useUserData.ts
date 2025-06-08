@@ -41,15 +41,9 @@ export const useUserData = (userId: string, isOpen: boolean) => {
         }
       } catch (error) {
         console.log('⚠️ Não foi possível acessar dados do auth, usando fallback');
-        // Fallback: buscar na tabela auth.users diretamente se permitido
-        const { data: userEmailData } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', userId)
-          .single();
-        
-        if (userEmailData) {
-          email = `${userEmailData.username}@sistema`;
+        // Fallback: usar um email genérico baseado no username
+        if (profileData?.username) {
+          email = `${profileData.username}@sistema`;
         }
       }
 

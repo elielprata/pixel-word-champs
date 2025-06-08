@@ -7,6 +7,7 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   const updateUserRole = async (newRole: 'admin' | 'user') => {
     try {
@@ -76,6 +77,77 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
     }
   };
 
+  const updateUserProfile = async (newUsername: string, newEmail: string) => {
+    if (!newUsername.trim()) {
+      toast({
+        title: "Erro",
+        description: "O nome de usuário não pode estar vazio",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsUpdatingProfile(true);
+      console.log('🔄 Atualizando perfil do usuário:', userId);
+
+      // Atualizar username na tabela profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ username: newUsername.trim() })
+        .eq('id', userId);
+
+      if (profileError) {
+        console.error('❌ Erro ao atualizar username:', profileError);
+        throw profileError;
+      }
+
+      console.log('✅ Username atualizado com sucesso');
+
+      // Tentar atualizar email via Edge Function se disponível
+      if (newEmail && newEmail !== 'Email não disponível') {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            const { data, error } = await supabase.functions.invoke('admin-update-email', {
+              body: {
+                targetUserId: userId,
+                newEmail: newEmail.trim()
+              }
+            });
+
+            if (error) {
+              console.warn('⚠️ Erro ao atualizar email:', error);
+            } else {
+              console.log('✅ Email atualizado com sucesso');
+            }
+          }
+        } catch (emailError) {
+          console.warn('⚠️ Não foi possível atualizar email:', emailError);
+        }
+      }
+
+      toast({
+        title: "Sucesso!",
+        description: `Perfil atualizado para ${newUsername}`,
+      });
+
+      setTimeout(() => {
+        onUserUpdated();
+      }, 500);
+
+    } catch (error: any) {
+      console.error('❌ Erro ao atualizar perfil:', error);
+      toast({
+        title: "Erro",
+        description: `Erro ao atualizar perfil: ${error.message || 'Erro desconhecido'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
   const updatePassword = async (newPassword: string) => {
     if (!newPassword || newPassword.length < 6) {
       toast({
@@ -140,8 +212,10 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
 
   return {
     updateUserRole,
+    updateUserProfile,
     updatePassword,
     isLoading,
     isChangingPassword,
+    isUpdatingProfile,
   };
 };

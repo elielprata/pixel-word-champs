@@ -2,7 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { UserInfoDisplay } from './user-edit/UserInfoDisplay';
+import { UserProfileSection } from './user-edit/UserProfileSection';
 import { UserRoleSection } from './user-edit/UserRoleSection';
 import { PasswordChangeSection } from './user-edit/PasswordChangeSection';
 import { useUserData } from './user-edit/useUserData';
@@ -18,7 +18,14 @@ interface EditUserModalProps {
 
 export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated }: EditUserModalProps) => {
   const { data: userData, isLoading: userLoading, refetch, error } = useUserData(userId, isOpen);
-  const { updateUserRole, updatePassword, isLoading, isChangingPassword } = useUserActions(
+  const { 
+    updateUserRole, 
+    updateUserProfile, 
+    updatePassword, 
+    isLoading, 
+    isChangingPassword, 
+    isUpdatingProfile 
+  } = useUserActions(
     userId, 
     username, 
     () => {
@@ -75,15 +82,17 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editando usuário: {username}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6 py-4">
-          <UserInfoDisplay 
-            username={userData?.username || username} 
-            email={userData?.email || 'Email não disponível'} 
+          <UserProfileSection 
+            currentUsername={userData?.username || username}
+            currentEmail={userData?.email || 'Email não disponível'}
+            isUpdating={isUpdatingProfile}
+            onProfileUpdate={updateUserProfile}
           />
 
           <UserRoleSection 
