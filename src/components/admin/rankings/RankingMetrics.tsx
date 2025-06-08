@@ -22,10 +22,10 @@ export const RankingMetrics = () => {
     {
       title: "Rankings Ativos",
       value: "2",
-      subtitle: "Diário e Semanal",
+      subtitle: "",
       icon: Trophy,
       color: "from-amber-500 to-amber-600",
-      trend: "Sistemas ativos"
+      trend: ""
     },
     {
       title: "Total de Participantes",
@@ -80,10 +80,14 @@ export const RankingMetrics = () => {
                     <div className="space-y-1">
                       <p className="text-2xl font-bold text-slate-900">{metric.value}</p>
                       <div className="flex items-center justify-between">
-                        <p className="text-xs text-slate-500">{metric.subtitle}</p>
-                        <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
-                          {metric.trend}
-                        </span>
+                        {metric.subtitle && (
+                          <p className="text-xs text-slate-500">{metric.subtitle}</p>
+                        )}
+                        {metric.trend && (
+                          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+                            {metric.trend}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
