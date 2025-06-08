@@ -7,7 +7,6 @@ import { UsersTab } from "@/components/admin/UsersTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { SupportTab } from "@/components/admin/SupportTab";
-import { AllUsersTab } from '@/components/admin/AllUsersTab';
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 
 const AdminPanel = () => {
@@ -25,10 +24,9 @@ const AdminPanel = () => {
           </div>
 
           <Tabs defaultValue="dashboard" className="w-full">
-            <TabsList className="grid w-full grid-cols-7 lg:grid-cols-7">
+            <TabsList className="grid w-full grid-cols-6 lg:grid-cols-6">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
-              <TabsTrigger value="all-users">Todos Usuários</TabsTrigger>
               <TabsTrigger value="rankings">Rankings</TabsTrigger>
               <TabsTrigger value="content">Conteúdo</TabsTrigger>
               <TabsTrigger value="support">Suporte</TabsTrigger>
@@ -41,10 +39,6 @@ const AdminPanel = () => {
 
             <TabsContent value="users">
               <UsersTab />
-            </TabsContent>
-
-            <TabsContent value="all-users">
-              <AllUsersTab />
             </TabsContent>
 
             <TabsContent value="rankings">
