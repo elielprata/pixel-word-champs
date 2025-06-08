@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Tag, Wand2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, Wand2, Settings, CheckCircle, AlertCircle } from 'lucide-react';
 import { useWordCategories } from '@/hooks/useWordCategories';
 import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export const CategoriesManagement = () => {
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
@@ -27,6 +28,20 @@ export const CategoriesManagement = () => {
   } = useWordCategories();
 
   const { generateWords, isGenerating } = useAIWordGeneration();
+
+  // Verificar se a API key da OpenAI está configurada
+  const { data: openaiConfigured } = useQuery({
+    queryKey: ['openaiConfig'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('game_settings')
+        .select('setting_value')
+        .eq('setting_key', 'openai_api_key')
+        .single();
+      
+      return !error && data?.setting_value && data.setting_value.length > 0;
+    },
+  });
 
   const handleCreate = () => {
     if (!newCategory.name.trim()) return;
@@ -75,6 +90,40 @@ export const CategoriesManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Status da integração OpenAI */}
+      <Card className={openaiConfigured ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            {openaiConfigured ? (
+              <>
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium text-green-800">OpenAI Configurada</p>
+                  <p className="text-xs text-green-600">As palavras serão geradas usando inteligência artificial</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-5 w-5 text-amber-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-800">OpenAI não configurada</p>
+                  <p className="text-xs text-amber-600">Configure a API key na aba "Integrações" para usar IA real</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-amber-700 border-amber-300 hover:bg-amber-100"
+                  onClick={() => window.open('/admin-panel?tab=integrations', '_blank')}
+                >
+                  <Settings className="h-4 w-4 mr-1" />
+                  Configurar
+                </Button>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Formulário para nova categoria */}
       <Card>
         <CardHeader>
