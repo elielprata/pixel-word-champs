@@ -19,33 +19,44 @@ export const IntegrationsTab = () => {
   } = useIntegrations();
 
   return (
-    <div className="space-y-6">
-      <IntegrationsHeader />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <IntegrationsHeader />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <FingerprintJSCard
-          integration={fingerprintJS}
-          onUpdate={setFingerprintJS}
-          onSave={handleSaveIntegration}
-          onTest={testConnection}
-          loading={loading}
-          testingConnection={testingConnection}
+        <IntegrationStatusOverview
+          fingerprintJS={fingerprintJS}
+          openAI={openAI}
         />
 
-        <OpenAICard
-          integration={openAI}
-          onUpdate={setOpenAI}
-          onSave={handleSaveIntegration}
-          onTest={testConnection}
-          loading={loading}
-          testingConnection={testingConnection}
-        />
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+            <h2 className="text-lg font-semibold text-slate-900">Configurações de Integrações</h2>
+            <p className="text-sm text-slate-600 mt-1">Configure e gerencie as integrações disponíveis na plataforma</p>
+          </div>
+          
+          <div className="p-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <FingerprintJSCard
+                integration={fingerprintJS}
+                onUpdate={setFingerprintJS}
+                onSave={handleSaveIntegration}
+                onTest={testConnection}
+                loading={loading}
+                testingConnection={testingConnection}
+              />
+
+              <OpenAICard
+                integration={openAI}
+                onUpdate={setOpenAI}
+                onSave={handleSaveIntegration}
+                onTest={testConnection}
+                loading={loading}
+                testingConnection={testingConnection}
+              />
+            </div>
+          </div>
+        </div>
       </div>
-
-      <IntegrationStatusOverview
-        fingerprintJS={fingerprintJS}
-        openAI={openAI}
-      />
     </div>
   );
 };
