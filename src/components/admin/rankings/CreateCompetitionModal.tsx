@@ -30,7 +30,8 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     weeklyTournamentId: 'none' as string,
     prizePool: 0,
     maxParticipants: 1000,
-    startDate: undefined as Date | undefined
+    startDate: undefined as Date | undefined,
+    endDate: undefined as Date | undefined
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -74,7 +75,8 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         weeklyTournamentId: 'none',
         prizePool: 0,
         maxParticipants: 1000,
-        startDate: undefined
+        startDate: undefined,
+        endDate: undefined
       });
     } catch (error) {
       toast({
@@ -295,6 +297,45 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               </PopoverContent>
             </Popover>
           </div>
+
+          {/* Data de Fim (apenas para competições semanais) */}
+          {formData.type === 'weekly' && (
+            <div className="space-y-1">
+              <Label className="text-sm">Data de Fim</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal h-8",
+                      !formData.endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-3 w-3" />
+                    {formData.endDate ? (
+                      format(formData.endDate, "PPP", { locale: ptBR })
+                    ) : (
+                      <span className="text-sm">Selecione a data de fim</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.endDate}
+                    onSelect={(date) => setFormData(prev => ({ ...prev, endDate: date }))}
+                    disabled={(date) => {
+                      const today = new Date();
+                      const startDate = formData.startDate;
+                      return date < today || (startDate && date <= startDate);
+                    }}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
 
           {/* Prêmio (apenas para semanal e challenge) */}
           {competitionInfo.prizeEnabled && (
