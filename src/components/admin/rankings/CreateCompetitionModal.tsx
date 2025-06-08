@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle, BookOpen } from 'lucide-react';
+import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle, Palette } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,26 +24,13 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     title: '',
     description: '',
     type: 'weekly' as 'daily' | 'weekly' | 'challenge',
-    category: '',
     prizePool: 0,
     maxParticipants: 1000,
-    startDate: undefined as Date | undefined
+    startDate: undefined as Date | undefined,
+    theme: 'default' as 'default' | 'tropical' | 'neon' | 'classic' | 'galaxy' | 'forest'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-
-  const categories = [
-    { value: 'geral', label: 'Geral', description: 'Palavras de todos os temas' },
-    { value: 'animais', label: 'Animais', description: 'Fauna e vida selvagem' },
-    { value: 'comida', label: 'Comida', description: 'Alimentos e culinária' },
-    { value: 'esportes', label: 'Esportes', description: 'Modalidades esportivas' },
-    { value: 'ciencia', label: 'Ciência', description: 'Tecnologia e descobertas' },
-    { value: 'historia', label: 'História', description: 'Eventos e personalidades' },
-    { value: 'geografia', label: 'Geografia', description: 'Lugares e países' },
-    { value: 'arte', label: 'Arte e Cultura', description: 'Música, cinema e literatura' },
-    { value: 'profissoes', label: 'Profissões', description: 'Carreiras e ocupações' },
-    { value: 'natureza', label: 'Natureza', description: 'Meio ambiente e plantas' }
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,10 +50,10 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         title: '',
         description: '',
         type: 'weekly',
-        category: '',
         prizePool: 0,
         maxParticipants: 1000,
-        startDate: undefined
+        startDate: undefined,
+        theme: 'default'
       });
     } catch (error) {
       toast({
@@ -113,9 +99,26 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     }
   };
 
+  const getThemeInfo = () => {
+    switch (formData.theme) {
+      case 'tropical':
+        return { name: 'Tropical', color: 'bg-emerald-500', preview: 'from-emerald-400 to-teal-500' };
+      case 'neon':
+        return { name: 'Neon', color: 'bg-pink-500', preview: 'from-pink-400 to-violet-500' };
+      case 'classic':
+        return { name: 'Clássico', color: 'bg-amber-500', preview: 'from-amber-400 to-orange-500' };
+      case 'galaxy':
+        return { name: 'Galáxia', color: 'bg-indigo-500', preview: 'from-indigo-400 to-purple-600' };
+      case 'forest':
+        return { name: 'Floresta', color: 'bg-green-600', preview: 'from-green-400 to-emerald-600' };
+      default:
+        return { name: 'Padrão', color: 'bg-slate-500', preview: 'from-slate-400 to-slate-500' };
+    }
+  };
+
   const competitionInfo = getCompetitionInfo();
+  const themeInfo = getThemeInfo();
   const CompetitionIcon = competitionInfo.icon;
-  const selectedCategory = categories.find(cat => cat.value === formData.category);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -175,40 +178,6 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
             </div>
           </div>
 
-          {/* Categoria */}
-          <div className="space-y-2">
-            <Label htmlFor="category" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              Categoria das Palavras
-            </Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    <div className="flex flex-col gap-1">
-                      <span className="font-medium">{category.label}</span>
-                      <span className="text-xs text-slate-500">{category.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            {/* Info sobre a categoria selecionada */}
-            {selectedCategory && (
-              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2 mb-1">
-                  <BookOpen className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-800">{selectedCategory.label}</span>
-                </div>
-                <p className="text-sm text-blue-700">{selectedCategory.description}</p>
-              </div>
-            )}
-          </div>
-
           {/* Título */}
           <div className="space-y-2">
             <Label htmlFor="title">Título da Competição</Label>
@@ -231,6 +200,68 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               placeholder="Descreva as regras e objetivos da competição..."
               rows={3}
             />
+          </div>
+
+          {/* Tema Visual */}
+          <div className="space-y-2">
+            <Label htmlFor="theme" className="flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Tema Visual
+            </Label>
+            <Select value={formData.theme} onValueChange={(value: 'default' | 'tropical' | 'neon' | 'classic' | 'galaxy' | 'forest') => setFormData(prev => ({ ...prev, theme: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tema" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-slate-400 to-slate-500 rounded"></div>
+                    Padrão
+                  </div>
+                </SelectItem>
+                <SelectItem value="tropical">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-teal-500 rounded"></div>
+                    Tropical
+                  </div>
+                </SelectItem>
+                <SelectItem value="neon">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-pink-400 to-violet-500 rounded"></div>
+                    Neon
+                  </div>
+                </SelectItem>
+                <SelectItem value="classic">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-amber-400 to-orange-500 rounded"></div>
+                    Clássico
+                  </div>
+                </SelectItem>
+                <SelectItem value="galaxy">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-indigo-400 to-purple-600 rounded"></div>
+                    Galáxia
+                  </div>
+                </SelectItem>
+                <SelectItem value="forest">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-600 rounded"></div>
+                    Floresta
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {/* Preview do tema selecionado */}
+            <div className="bg-slate-50 p-3 rounded-lg border">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 bg-gradient-to-r ${themeInfo.preview} rounded-lg shadow-sm`}></div>
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Tema: {themeInfo.name}</p>
+                  <p className="text-xs text-slate-500">Este tema será aplicado à interface da competição</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Data de Início */}
@@ -327,7 +358,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
             </Button>
             <Button
               type="submit"
-              disabled={!formData.title || !formData.category || isSubmitting}
+              disabled={!formData.title || isSubmitting}
               className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
             >
               {isSubmitting ? 'Criando...' : 'Criar Competição'}
