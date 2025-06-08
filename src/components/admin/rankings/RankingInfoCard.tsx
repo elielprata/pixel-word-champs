@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, Calendar, Users, DollarSign, Settings, Eye, Download } from 'lucide-react';
+import { Trophy, Calendar, Users, DollarSign, Settings, Eye, Download, ArrowRight } from 'lucide-react';
 
 interface RankingInfoCardProps {
   type: 'daily' | 'weekly';
@@ -59,12 +59,48 @@ export const RankingInfoCard = ({
           
           <div className="bg-slate-50 p-3 rounded-lg">
             <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-slate-600" />
-              <span className="text-sm font-medium text-slate-600">Prêmio Total</span>
+              {isDaily ? (
+                <>
+                  <ArrowRight className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm font-medium text-slate-600">Transfere Pontos</span>
+                </>
+              ) : (
+                <>
+                  <DollarSign className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm font-medium text-slate-600">Prêmio Total</span>
+                </>
+              )}
             </div>
-            <p className="text-xl font-bold text-slate-900">R$ {prizePool.toLocaleString('pt-BR')}</p>
+            {isDaily ? (
+              <p className="text-lg font-bold text-blue-600">Para Semanal</p>
+            ) : (
+              <p className="text-xl font-bold text-slate-900">R$ {prizePool.toLocaleString('pt-BR')}</p>
+            )}
           </div>
         </div>
+
+        {/* Informação específica do tipo */}
+        {isDaily ? (
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <div className="flex items-start gap-2">
+              <Calendar className="h-4 w-4 text-blue-600 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-blue-800 mb-1">Sistema Diário</p>
+                <p className="text-blue-700">Os pontos são zerados diariamente e transferidos automaticamente para o ranking semanal.</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+            <div className="flex items-start gap-2">
+              <Trophy className="h-4 w-4 text-purple-600 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-purple-800 mb-1">Sistema Semanal</p>
+                <p className="text-purple-700">Acumula pontos durante a semana com premiação automática no final.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between pt-2 border-t border-slate-100">
           <div className="flex items-center gap-2 text-sm text-slate-500">

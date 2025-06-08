@@ -9,9 +9,11 @@ import { RankingHeader } from './rankings/RankingHeader';
 import { RankingMetrics } from './rankings/RankingMetrics';
 import { RankingInfoCard } from './rankings/RankingInfoCard';
 import { PrizeConfigModal } from './rankings/PrizeConfigModal';
+import { CreateCompetitionModal } from './rankings/CreateCompetitionModal';
 
 export const RankingsTab = () => {
   const [isPrizeConfigOpen, setIsPrizeConfigOpen] = useState(false);
+  const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
@@ -58,7 +60,10 @@ export const RankingsTab = () => {
                   </TabsTrigger>
                 </TabsList>
                 
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700">
+                <Button 
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                  onClick={() => setIsCreateCompetitionOpen(true)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Competição
                 </Button>
@@ -173,10 +178,15 @@ export const RankingsTab = () => {
           </Tabs>
         </div>
 
-        {/* Modal de Configurações de Prêmios */}
+        {/* Modals */}
         <PrizeConfigModal 
           open={isPrizeConfigOpen}
           onOpenChange={setIsPrizeConfigOpen}
+        />
+        
+        <CreateCompetitionModal 
+          open={isCreateCompetitionOpen}
+          onOpenChange={setIsCreateCompetitionOpen}
         />
       </div>
     </div>
