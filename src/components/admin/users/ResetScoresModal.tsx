@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ResetScoresModalProps {
@@ -34,11 +34,14 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
       return;
     }
 
+    console.log('🔄 Iniciando reset de pontuações com senha:', password);
+
     try {
       await onConfirm(password);
       setPassword('');
       onClose();
     } catch (error: any) {
+      console.error('❌ Erro capturado no modal:', error);
       setError(error.message || 'Erro ao zerar pontuações');
     }
   };
@@ -67,6 +70,13 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
           </DialogDescription>
         </DialogHeader>
 
+        <Alert className="border-blue-200 bg-blue-50">
+          <Info className="h-4 w-4" />
+          <AlertDescription className="text-blue-800">
+            <strong>Senha padrão:</strong> admin123
+          </AlertDescription>
+        </Alert>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="admin-password">Senha de Administrador</Label>
@@ -77,7 +87,11 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Digite a senha de admin"
               disabled={isResetting}
+              autoComplete="off"
             />
+            <p className="text-xs text-slate-500">
+              Digite exatamente: admin123
+            </p>
           </div>
 
           {error && (
