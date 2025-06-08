@@ -20,29 +20,38 @@ export const useRankingData = () => {
     setError(null);
     
     try {
-      // Tentar atualizar rankings - se falhar, continuar sem impedir o carregamento
+      console.log('🔄 Carregando dados dos rankings...');
+      
+      // Tentar atualizar rankings primeiro
       try {
         await Promise.all([
           rankingService.updateDailyRanking(),
           rankingService.updateWeeklyRanking()
         ]);
-        console.log('Rankings updated successfully');
+        console.log('✅ Rankings atualizados com sucesso');
       } catch (updateError) {
-        console.warn('Error updating rankings, continuing with existing data:', updateError);
+        console.warn('⚠️ Erro ao atualizar rankings, continuando com dados existentes:', updateError);
       }
 
+      // Carregar dados dos rankings
       const [daily, weekly, historical] = await Promise.all([
         rankingApi.getDailyRanking(),
         rankingApi.getWeeklyRanking(),
         user?.id ? rankingApi.getHistoricalRanking(user.id) : Promise.resolve([])
       ]);
 
+      console.log('📊 Dados carregados:', {
+        daily: daily.length,
+        weekly: weekly.length,
+        historical: historical.length
+      });
+
       setDailyRanking(daily);
       setWeeklyRanking(weekly);
       setHistoricalCompetitions(historical);
     } catch (err) {
+      console.error('❌ Erro ao carregar dados dos rankings:', err);
       setError('Erro ao carregar rankings');
-      console.error('Error loading ranking data:', err);
     } finally {
       setIsLoading(false);
     }

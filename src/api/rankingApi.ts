@@ -5,6 +5,8 @@ import { RankingPlayer } from '@/types';
 export const rankingApi = {
   async getDailyRanking(): Promise<RankingPlayer[]> {
     try {
+      console.log('📊 Buscando ranking diário...');
+      
       const { data, error } = await supabase
         .from('daily_rankings')
         .select(`
@@ -16,29 +18,40 @@ export const rankingApi = {
             avatar_url
           )
         `)
+        .eq('date', new Date().toISOString().split('T')[0])
         .order('position', { ascending: true })
         .limit(100);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao buscar ranking diário:', error);
+        throw error;
+      }
 
-      return data?.map((ranking) => ({
+      const rankings = data?.map((ranking) => ({
         pos: ranking.position,
-        name: ranking.profiles.username,
+        name: ranking.profiles.username || 'Usuário',
         score: ranking.score,
         avatar_url: ranking.profiles.avatar_url || undefined,
         user_id: ranking.user_id
       })) || [];
+
+      console.log('✅ Ranking diário carregado:', rankings.length, 'jogadores');
+      return rankings;
     } catch (error) {
-      console.error('Error fetching daily ranking:', error);
+      console.error('❌ Erro ao buscar ranking diário:', error);
       return [];
     }
   },
 
   async getWeeklyRanking(): Promise<RankingPlayer[]> {
     try {
-      // Buscar ranking da semana atual
-      const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // Segunda-feira
+      console.log('📊 Buscando ranking semanal...');
+      
+      // Calcular início da semana atual (segunda-feira)
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekStart = new Date(today.setDate(diff));
       const weekStartStr = weekStart.toISOString().split('T')[0];
 
       const { data, error } = await supabase
@@ -56,23 +69,31 @@ export const rankingApi = {
         .order('position', { ascending: true })
         .limit(100);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao buscar ranking semanal:', error);
+        throw error;
+      }
 
-      return data?.map((ranking) => ({
+      const rankings = data?.map((ranking) => ({
         pos: ranking.position,
-        name: ranking.profiles.username,
+        name: ranking.profiles.username || 'Usuário',
         score: ranking.score,
         avatar_url: ranking.profiles.avatar_url || undefined,
         user_id: ranking.user_id
       })) || [];
+
+      console.log('✅ Ranking semanal carregado:', rankings.length, 'jogadores');
+      return rankings;
     } catch (error) {
-      console.error('Error fetching weekly ranking:', error);
+      console.error('❌ Erro ao buscar ranking semanal:', error);
       return [];
     }
   },
 
   async getHistoricalRanking(userId: string): Promise<any[]> {
     try {
+      console.log('📊 Buscando histórico de rankings para usuário:', userId);
+      
       const { data, error } = await supabase
         .from('weekly_rankings')
         .select(`
@@ -88,9 +109,12 @@ export const rankingApi = {
         .order('week_start', { ascending: false })
         .limit(20);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao buscar histórico:', error);
+        throw error;
+      }
 
-      return data?.map((ranking) => {
+      const historical = data?.map((ranking) => {
         const weekStart = new Date(ranking.week_start);
         const weekEnd = new Date(ranking.week_end);
         
@@ -102,13 +126,16 @@ export const rankingApi = {
           week: `Semana ${formatDate(weekStart)}-${formatDate(weekEnd)}`,
           position: ranking.position,
           score: ranking.score,
-          totalParticipants: 100, // Placeholder - poderia ser calculado
+          totalParticipants: 100,
           prize: ranking.prize || 0,
           paymentStatus: ranking.payment_status
         };
       }) || [];
+
+      console.log('✅ Histórico carregado:', historical.length, 'entradas');
+      return historical;
     } catch (error) {
-      console.error('Error fetching historical ranking:', error);
+      console.error('❌ Erro ao buscar histórico:', error);
       return [];
     }
   },
@@ -122,11 +149,14 @@ export const rankingApi = {
         .eq('date', new Date().toISOString().split('T')[0])
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao buscar posição do usuário:', error);
+        return null;
+      }
 
       return data?.position || null;
     } catch (error) {
-      console.error('Error fetching user position:', error);
+      console.error('❌ Erro ao buscar posição do usuário:', error);
       return null;
     }
   }
