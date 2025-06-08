@@ -75,16 +75,16 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
   }, [open]);
 
   const categories = [
-    { value: 'geral', label: 'Geral', description: 'Palavras diversas de todos os temas' },
-    { value: 'animais', label: 'Animais', description: 'Palavras relacionadas a fauna' },
-    { value: 'cores', label: 'Cores', description: 'Nomes de cores e tonalidades' },
-    { value: 'comidas', label: 'Comidas', description: 'Alimentos e bebidas' },
-    { value: 'profissoes', label: 'Profissões', description: 'Carreiras e ocupações' },
-    { value: 'esportes', label: 'Esportes', description: 'Modalidades esportivas' },
-    { value: 'paises', label: 'Países', description: 'Nações do mundo' },
-    { value: 'objetos', label: 'Objetos', description: 'Itens do cotidiano' },
-    { value: 'natureza', label: 'Natureza', description: 'Elementos naturais' },
-    { value: 'tecnologia', label: 'Tecnologia', description: 'Termos tecnológicos' }
+    { value: 'geral', label: 'Geral - Palavras diversas de todos os temas' },
+    { value: 'animais', label: 'Animais - Palavras relacionadas a fauna' },
+    { value: 'cores', label: 'Cores - Nomes de cores e tonalidades' },
+    { value: 'comidas', label: 'Comidas - Alimentos e bebidas' },
+    { value: 'profissoes', label: 'Profissões - Carreiras e ocupações' },
+    { value: 'esportes', label: 'Esportes - Modalidades esportivas' },
+    { value: 'paises', label: 'Países - Nações do mundo' },
+    { value: 'objetos', label: 'Objetos - Itens do cotidiano' },
+    { value: 'natureza', label: 'Natureza - Elementos naturais' },
+    { value: 'tecnologia', label: 'Tecnologia - Termos tecnológicos' }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -270,10 +270,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                   <SelectContent>
                     {categories.map((category) => (
                       <SelectItem key={category.value} value={category.value}>
-                        <div className="flex flex-col py-1">
-                          <span className="font-medium text-sm">{category.label}</span>
-                          <span className="text-xs text-slate-500 mt-0.5">{category.description}</span>
-                        </div>
+                        <span className="text-sm">{category.label}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
