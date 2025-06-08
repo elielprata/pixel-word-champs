@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdminRoute from '@/components/auth/AdminRoute';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,16 @@ import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  useEffect(() => {
+    // Check if there's a specific tab to activate from navigation state
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
   const handleLogout = async () => {
     await logout();
@@ -45,7 +54,7 @@ const AdminPanel = () => {
             </Button>
           </div>
 
-          <Tabs defaultValue="dashboard" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-6 lg:grid-cols-6">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
