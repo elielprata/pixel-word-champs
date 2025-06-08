@@ -21,10 +21,11 @@ export const useRealGameMetrics = () => {
 
       console.log('📝 Palavras encontradas:', wordsData?.length, wordsData);
 
-      // Buscar total de configurações ativas
+      // Buscar apenas configurações de gameplay e scoring (excluindo prizes)
       const { data: settingsData, error: settingsError } = await supabase
         .from('game_settings')
-        .select('id, setting_key, setting_value, category, description');
+        .select('id, setting_key, setting_value, category, description')
+        .in('category', ['scoring', 'gameplay']); // Removido 'prizes'
 
       if (settingsError) {
         console.error('❌ Erro ao buscar configurações:', settingsError);

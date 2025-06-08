@@ -13,6 +13,7 @@ export const ActiveSettingsDetails = () => {
       const { data, error } = await supabase
         .from('game_settings')
         .select('*')
+        .in('category', ['scoring', 'gameplay']) // Removido 'prizes'
         .order('category')
         .order('setting_key');
 

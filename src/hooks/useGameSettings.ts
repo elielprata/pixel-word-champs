@@ -23,7 +23,7 @@ export const useGameSettings = () => {
       const { data, error } = await supabase
         .from('game_settings')
         .select('*')
-        .in('category', ['scoring', 'gameplay'])
+        .in('category', ['scoring', 'gameplay']) // Removido 'prizes'
         .order('category', { ascending: true })
         .order('setting_key', { ascending: true });
 
