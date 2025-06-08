@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,8 +8,10 @@ import { useWordCategories } from '@/hooks/useWordCategories';
 import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 export const CategoriesManagement = () => {
+  const navigate = useNavigate();
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', description: '' });
@@ -80,6 +81,10 @@ export const CategoriesManagement = () => {
     });
   };
 
+  const handleConfigureOpenAI = () => {
+    navigate('/admin-panel', { state: { activeTab: 'integrations' } });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -113,7 +118,7 @@ export const CategoriesManagement = () => {
                   variant="outline"
                   size="sm"
                   className="text-amber-700 border-amber-300 hover:bg-amber-100"
-                  onClick={() => window.open('/admin-panel?tab=integrations', '_blank')}
+                  onClick={handleConfigureOpenAI}
                 >
                   <Settings className="h-4 w-4 mr-1" />
                   Configurar
