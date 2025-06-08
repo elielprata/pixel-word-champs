@@ -14,6 +14,11 @@ interface PrizeConfigModalProps {
 export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) => {
   const paymentData = usePaymentData();
 
+  const handleExportPix = (prizeLevel: string) => {
+    console.log('Exporting PIX for:', prizeLevel);
+    // TODO: Implement PIX export functionality
+  };
+
   if (paymentData.isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,25 +52,27 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
 
           {/* Individual Prizes */}
           <IndividualPrizesSection 
-            prizes={paymentData.individualPrizes}
+            individualPrizes={paymentData.individualPrizes}
             editingRow={paymentData.editingRow}
-            editValue={paymentData.editIndividualValue}
-            onEdit={paymentData.handleEditIndividual}
-            onSave={paymentData.handleSaveIndividual}
+            editIndividualValue={paymentData.editIndividualValue}
+            setEditIndividualValue={paymentData.setEditIndividualValue}
+            onEditIndividual={paymentData.handleEditIndividual}
+            onSaveIndividual={paymentData.handleSaveIndividual}
             onCancel={paymentData.handleCancel}
-            onValueChange={paymentData.setEditIndividualValue}
+            onExportPix={handleExportPix}
           />
 
           {/* Group Prizes */}
           <GroupPrizesSection 
-            groups={paymentData.groupPrizes}
+            groupPrizes={paymentData.groupPrizes}
             editingGroup={paymentData.editingGroup}
             editGroupPrize={paymentData.editGroupPrize}
+            setEditGroupPrize={paymentData.setEditGroupPrize}
             onEditGroup={paymentData.handleEditGroup}
             onSaveGroup={paymentData.handleSaveGroup}
             onToggleGroup={paymentData.handleToggleGroup}
             onCancel={paymentData.handleCancel}
-            onGroupPrizeChange={paymentData.setEditGroupPrize}
+            onExportPix={handleExportPix}
           />
         </div>
       </DialogContent>
