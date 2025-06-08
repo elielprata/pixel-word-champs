@@ -9,10 +9,8 @@ import { useWordCategories } from '@/hooks/useWordCategories';
 import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 export const CategoriesManagement = () => {
-  const navigate = useNavigate();
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', description: '' });
@@ -82,13 +80,6 @@ export const CategoriesManagement = () => {
     });
   };
 
-  const handleConfigureOpenAI = () => {
-    // Navegar para o painel administrativo na aba de integrações
-    navigate('/admin-panel', { 
-      state: { activeTab: 'integrations' }
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -122,7 +113,7 @@ export const CategoriesManagement = () => {
                   variant="outline"
                   size="sm"
                   className="text-amber-700 border-amber-300 hover:bg-amber-100"
-                  onClick={handleConfigureOpenAI}
+                  onClick={() => window.open('/admin-panel?tab=integrations', '_blank')}
                 >
                   <Settings className="h-4 w-4 mr-1" />
                   Configurar
@@ -197,6 +188,7 @@ export const CategoriesManagement = () => {
         </CardContent>
       </Card>
 
+      {/* Lista de categorias */}
       <div className="grid gap-4">
         <h3 className="text-lg font-semibold text-slate-900">Categorias Existentes</h3>
         
@@ -292,6 +284,7 @@ export const CategoriesManagement = () => {
         )}
       </div>
 
+      {/* Informações sobre dificuldade */}
       <Card className="bg-amber-50 border-amber-200">
         <CardHeader>
           <CardTitle className="text-amber-800 text-sm">Sistema de Dificuldade Automática</CardTitle>
