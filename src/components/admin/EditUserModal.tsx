@@ -2,11 +2,14 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { UserInfoDisplay } from './user-edit/UserInfoDisplay';
+import { Separator } from "@/components/ui/separator";
+import { UserBasicInfoSection } from './user-edit/UserBasicInfoSection';
 import { UserRoleSection } from './user-edit/UserRoleSection';
+import { UserScoresSection } from './user-edit/UserScoresSection';
+import { UserStatusSection } from './user-edit/UserStatusSection';
 import { PasswordChangeSection } from './user-edit/PasswordChangeSection';
-import { useUserData } from './user-edit/useUserData';
-import { useUserActions } from './user-edit/useUserActions';
+import { useExtendedUserData } from './user-edit/useExtendedUserData';
+import { useExtendedUserActions } from './user-edit/useExtendedUserActions';
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -17,8 +20,15 @@ interface EditUserModalProps {
 }
 
 export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated }: EditUserModalProps) => {
-  const { data: userData, isLoading: userLoading, refetch, error } = useUserData(userId, isOpen);
-  const { updateUserRole, updatePassword, isLoading, isChangingPassword } = useUserActions(
+  const { data: userData, isLoading: userLoading, refetch, error } = useExtendedUserData(userId, isOpen);
+  const { 
+    updateUserProfile, 
+    updateUserRole, 
+    updatePassword, 
+    toggleBanStatus,
+    isLoading, 
+    isChangingPassword 
+  } = useExtendedUserActions(
     userId, 
     username, 
     () => {
@@ -43,7 +53,7 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
   if (userLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editando usuário: {username}</DialogTitle>
           </DialogHeader>
@@ -58,7 +68,7 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
   if (error) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editando usuário: {username}</DialogTitle>
           </DialogHeader>
@@ -75,16 +85,20 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editando usuário: {username}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6 py-4">
-          <UserInfoDisplay 
+          <UserBasicInfoSection 
             username={userData?.username || username} 
-            email={userData?.email || 'Email não disponível'} 
+            email={userData?.email || 'Email não disponível'}
+            onUpdate={updateUserProfile}
+            isLoading={isLoading}
           />
+
+          <Separator />
 
           <UserRoleSection 
             currentRole={currentRole}
@@ -92,12 +106,35 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
             onRoleChange={updateUserRole}
           />
 
+          <Separator />
+
+          <UserScoresSection 
+            totalScore={userData?.total_score || 0}
+            gamesPlayed={userData?.games_played || 0}
+            bestDailyPosition={userData?.best_daily_position}
+            bestWeeklyPosition={userData?.best_weekly_position}
+            onUpdate={updateUserProfile}
+            isLoading={isLoading}
+          />
+
+          <Separator />
+
+          <UserStatusSection 
+            isBanned={userData?.is_banned || false}
+            banReason={userData?.ban_reason}
+            bannedAt={userData?.banned_at}
+            onToggleBan={toggleBanStatus}
+            isLoading={isLoading}
+          />
+
+          <Separator />
+
           <PasswordChangeSection 
             onPasswordUpdate={updatePassword}
             isChangingPassword={isChangingPassword}
           />
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 pt-4 border-t">
             <Button variant="outline" onClick={onClose}>
               Fechar
             </Button>
