@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -256,60 +257,61 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               <h3 className="text-sm font-medium text-slate-700">Configurações Específicas</h3>
             </div>
 
-            {/* Categoria (apenas para competições diárias) */}
-            {formData.type === 'daily' && (
-              <div className="space-y-2">
-                <Label htmlFor="category" className="flex items-center gap-2 text-sm font-medium">
-                  <Tag className="h-3 w-3" />
-                  Categoria das Palavras
-                </Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Selecione a categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.value} value={category.value}>
-                        <span className="text-sm">{category.label}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Atribuir a Torneio Semanal (apenas para competições diárias) */}
-            {formData.type === 'daily' && (
-              <div className="space-y-2">
-                <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm font-medium">
-                  <Link className="h-3 w-3" />
-                  Atribuir a Torneio Semanal
-                </Label>
-                <Select value={formData.weeklyTournamentId} onValueChange={(value) => setFormData(prev => ({ ...prev, weeklyTournamentId: value }))}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Selecione um torneio semanal (opcional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">
-                      <span className="text-slate-500">Nenhum torneio selecionado</span>
+            {/* Categoria (para todos os tipos de competição) */}
+            <div className="space-y-2">
+              <Label htmlFor="category" className="flex items-center gap-2 text-sm font-medium">
+                <Tag className="h-3 w-3" />
+                Categoria das Palavras
+              </Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      <span className="text-sm">{category.label}</span>
                     </SelectItem>
-                    {weeklyTournaments.map((tournament) => (
-                      <SelectItem key={tournament.id} value={tournament.id}>
-                        <div className="flex flex-col py-1">
-                          <span className="font-medium text-sm">{tournament.title}</span>
-                          <span className="text-xs text-slate-500 mt-0.5">
-                            {tournament.total_participants} participantes • R$ {tournament.prize_pool}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Os pontos desta competição diária contribuirão para o torneio semanal selecionado.
-                </p>
-              </div>
-            )}
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Atribuir a Torneio Semanal (para todos os tipos de competição) */}
+            <div className="space-y-2">
+              <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm font-medium">
+                <Link className="h-3 w-3" />
+                Atribuir a Torneio Semanal
+              </Label>
+              <Select value={formData.weeklyTournamentId} onValueChange={(value) => setFormData(prev => ({ ...prev, weeklyTournamentId: value }))}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Selecione um torneio semanal (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    <span className="text-slate-500">Nenhum torneio selecionado</span>
+                  </SelectItem>
+                  {weeklyTournaments.map((tournament) => (
+                    <SelectItem key={tournament.id} value={tournament.id}>
+                      <div className="flex flex-col py-1">
+                        <span className="font-medium text-sm">{tournament.title}</span>
+                        <span className="text-xs text-slate-500 mt-0.5">
+                          {tournament.total_participants} participantes • R$ {tournament.prize_pool}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                {formData.type === 'daily' 
+                  ? 'Os pontos desta competição diária contribuirão para o torneio semanal selecionado.'
+                  : formData.type === 'weekly'
+                  ? 'Esta competição semanal pode ser vinculada a um torneio maior.'
+                  : 'Este desafio especial pode contribuir para um torneio semanal.'
+                }
+              </p>
+            </div>
 
             {/* Máximo de Participantes */}
             <div className="space-y-2">
@@ -369,8 +371,8 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               </Popover>
             </div>
 
-            {/* Data de Fim (apenas para competições semanais) */}
-            {formData.type === 'weekly' && (
+            {/* Data de Fim (para competições semanais e desafios) */}
+            {(formData.type === 'weekly' || formData.type === 'challenge') && (
               <div className="space-y-1">
                 <Label className="text-sm">Data de Fim</Label>
                 <Popover>
