@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Tag, Wand2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, Wand2, CheckCircle, AlertCircle, Zap } from 'lucide-react';
 import { useWordCategories } from '@/hooks/useWordCategories';
 import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
 import { useQuery } from '@tanstack/react-query';
@@ -14,7 +14,7 @@ export const CategoriesManagement = () => {
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', description: '' });
-  const [selectedLevel, setSelectedLevel] = useState(1);
+  const [wordsCount, setWordsCount] = useState(5);
 
   const { 
     categories, 
@@ -76,7 +76,17 @@ export const CategoriesManagement = () => {
     generateWords({
       categoryId,
       categoryName,
-      level: selectedLevel
+      count: wordsCount
+    });
+  };
+
+  const handleGenerateAllCategories = () => {
+    categories.forEach(category => {
+      generateWords({
+        categoryId: category.id,
+        categoryName: category.name,
+        count: wordsCount
+      });
     });
   };
 
@@ -143,7 +153,7 @@ export const CategoriesManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Controle de nível para geração */}
+      {/* Configuração de geração */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -152,19 +162,37 @@ export const CategoriesManagement = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-slate-700">Nível para geração:</label>
-            <Input
-              type="number"
-              min="1"
-              max="50"
-              value={selectedLevel}
-              onChange={(e) => setSelectedLevel(Number(e.target.value))}
-              className="w-24"
-            />
-            <div className="text-xs text-slate-500">
-              Nível define a complexidade das palavras geradas
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-slate-700">Quantidade de palavras:</label>
+              <Input
+                type="number"
+                min="1"
+                max="20"
+                value={wordsCount}
+                onChange={(e) => setWordsCount(Number(e.target.value))}
+                className="w-24"
+              />
+              <div className="text-xs text-slate-500">
+                Quantas palavras gerar por categoria
+              </div>
             </div>
+            
+            {categories.length > 0 && (
+              <div className="flex gap-3 pt-2">
+                <Button
+                  onClick={handleGenerateAllCategories}
+                  disabled={isGenerating}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  {isGenerating ? 'Gerando...' : `Gerar para Todas (${categories.length} categorias)`}
+                </Button>
+                <div className="text-xs text-slate-500 flex items-center">
+                  Irá gerar {wordsCount} palavras para cada categoria
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -237,7 +265,7 @@ export const CategoriesManagement = () => {
                           className="bg-purple-600 hover:bg-purple-700"
                         >
                           <Wand2 className="h-4 w-4 mr-1" />
-                          {isGenerating ? 'Gerando...' : 'Gerar Palavras'}
+                          {isGenerating ? 'Gerando...' : `Gerar ${wordsCount}`}
                         </Button>
                         <Button
                           onClick={() => handleEdit(category)}

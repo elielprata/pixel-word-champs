@@ -13,15 +13,12 @@ const getDifficultyFromLength = (length: number): string => {
 };
 
 // Função para chamar a OpenAI API
-const callOpenAIAPI = async (categoryName: string, level: number, apiKey: string): Promise<string[]> => {
-  const prompt = `Gere 5 palavras em português relacionadas à categoria "${categoryName}" adequadas para o nível ${level} de dificuldade. 
+const callOpenAIAPI = async (categoryName: string, count: number, apiKey: string): Promise<string[]> => {
+  const prompt = `Gere ${count} palavras em português relacionadas à categoria "${categoryName}". 
   
-Critérios de dificuldade:
-- Nível 1-5: palavras de 3-4 letras (fácil/médio)
-- Nível 6-10: palavras de 4-5 letras (médio/difícil)  
-- Nível 11+: palavras de 5-8+ letras (difícil/expert)
-
 Retorne apenas as palavras, uma por linha, em MAIÚSCULAS, sem numeração ou pontuação.
+As palavras devem ser variadas em tamanho (3-8 letras) para diferentes níveis de dificuldade.
+
 Exemplo:
 GATO
 CACHORRO
@@ -41,7 +38,7 @@ COELHO`;
         { role: 'system', content: 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.' },
         { role: 'user', content: prompt }
       ],
-      max_tokens: 150,
+      max_tokens: 300,
       temperature: 0.7,
     }),
   });
@@ -58,42 +55,36 @@ COELHO`;
     .split('\n')
     .map((word: string) => word.trim().toUpperCase())
     .filter((word: string) => word && word.length >= 3 && /^[A-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]+$/.test(word))
-    .slice(0, 5); // Garantir máximo de 5 palavras
+    .slice(0, count); // Garantir a quantidade solicitada
 
   return words;
 };
 
 // Simulação de geração de palavras (fallback quando não há API key)
-const generateMockWords = async (categoryName: string, level: number): Promise<string[]> => {
+const generateMockWords = async (categoryName: string, count: number): Promise<string[]> => {
   const mockWords: Record<string, string[]> = {
-    'animais': ['CAO', 'GATO', 'CAVALO', 'ELEFANTE', 'TARTARUGA'],
-    'objetos': ['MESA', 'CADEIRA', 'TELEFONE', 'COMPUTADOR', 'TELEVISAO'],
-    'cores': ['AZUL', 'VERDE', 'AMARELO', 'VERMELHO', 'LARANJA'],
-    'profissões': ['MEDICO', 'PROFESSOR', 'ENGENHEIRO', 'ADVOGADO', 'DENTISTA'],
-    'alimentos': ['PANE', 'ARROZ', 'FEIJAO', 'MACARRAO', 'CHOCOLATE'],
-    'esportes': ['FUTEBOL', 'BASQUETE', 'VOLEIBOL', 'NATACAO', 'ATLETISMO'],
-    'países': ['BRASIL', 'ARGENTINA', 'PORTUGAL', 'ALEMANHA', 'AUSTRALIA'],
-    'cidades': ['PARIS', 'LONDRES', 'TOQUIO', 'NOVAIORQUE', 'BARCELONA']
+    'animais': ['CAO', 'GATO', 'CAVALO', 'ELEFANTE', 'TARTARUGA', 'PEIXE', 'COELHO', 'PASSARO', 'RATO', 'TIGRE'],
+    'objetos': ['MESA', 'CADEIRA', 'TELEFONE', 'COMPUTADOR', 'TELEVISAO', 'LIVRO', 'CANETA', 'RELOGIO', 'ESPELHO', 'QUADRO'],
+    'cores': ['AZUL', 'VERDE', 'AMARELO', 'VERMELHO', 'LARANJA', 'ROSA', 'ROXO', 'PRETO', 'BRANCO', 'CINZA'],
+    'profissões': ['MEDICO', 'PROFESSOR', 'ENGENHEIRO', 'ADVOGADO', 'DENTISTA', 'CHEF', 'PINTOR', 'MUSICO', 'JORNALISTA', 'PILOTO'],
+    'alimentos': ['PANE', 'ARROZ', 'FEIJAO', 'MACARRAO', 'CHOCOLATE', 'PIZZA', 'SALADA', 'FRUTA', 'LEITE', 'QUEIJO'],
+    'esportes': ['FUTEBOL', 'BASQUETE', 'VOLEIBOL', 'NATACAO', 'ATLETISMO', 'TENIS', 'BOXE', 'CICLISMO', 'CORRIDA', 'GINASTICA'],
+    'países': ['BRASIL', 'ARGENTINA', 'PORTUGAL', 'ALEMANHA', 'AUSTRALIA', 'FRANCA', 'ITALIA', 'ESPANHA', 'JAPAO', 'CHINA'],
+    'cidades': ['PARIS', 'LONDRES', 'TOQUIO', 'NOVAIORQUE', 'BARCELONA', 'ROMA', 'MADRI', 'BERLIM', 'SIDNEY', 'LISBOA']
   };
 
   // Simular delay da API
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
-  const categoryWords = mockWords[categoryName] || ['PALAVRA', 'EXEMPLO', 'TESTE'];
+  const categoryWords = mockWords[categoryName] || ['PALAVRA', 'EXEMPLO', 'TESTE', 'MOCK', 'SIMULACAO'];
   
-  // Filtrar palavras por nível (baseado no comprimento)
-  const filteredWords = categoryWords.filter(word => {
-    const difficulty = getDifficultyFromLength(word.length);
-    if (level <= 5) return difficulty === 'easy' || difficulty === 'medium';
-    if (level <= 10) return difficulty === 'medium' || difficulty === 'hard';
-    return true; // níveis altos podem ter qualquer dificuldade
-  });
-
-  return filteredWords.slice(0, 5); // Retornar até 5 palavras
+  // Embaralhar e retornar a quantidade solicitada
+  const shuffled = [...categoryWords].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
 };
 
 // Função principal para gerar palavras
-const generateWordsForCategory = async (categoryName: string, level: number): Promise<string[]> => {
+const generateWordsForCategory = async (categoryName: string, count: number): Promise<string[]> => {
   try {
     // Buscar a API key da OpenAI nas configurações
     const { data: openaiConfig, error } = await supabase
@@ -104,18 +95,18 @@ const generateWordsForCategory = async (categoryName: string, level: number): Pr
 
     if (error || !openaiConfig?.setting_value) {
       console.log('🤖 OpenAI API key não encontrada, usando dados mock');
-      return generateMockWords(categoryName, level);
+      return generateMockWords(categoryName, count);
     }
 
     const apiKey = openaiConfig.setting_value;
     console.log('🤖 Usando OpenAI API para gerar palavras');
     
-    return await callOpenAIAPI(categoryName, level, apiKey);
+    return await callOpenAIAPI(categoryName, count, apiKey);
     
   } catch (error) {
     console.error('❌ Erro ao gerar palavras com OpenAI:', error);
     console.log('🔄 Fallback para dados mock');
-    return generateMockWords(categoryName, level);
+    return generateMockWords(categoryName, count);
   }
 };
 
@@ -124,22 +115,22 @@ export const useAIWordGeneration = () => {
   const queryClient = useQueryClient();
 
   const generateWords = useMutation({
-    mutationFn: async ({ categoryId, categoryName, level }: { 
+    mutationFn: async ({ categoryId, categoryName, count }: { 
       categoryId: string; 
       categoryName: string; 
-      level: number;
+      count: number;
     }) => {
-      console.log('🤖 Gerando palavras por IA para categoria:', categoryName, 'nível:', level);
+      console.log('🤖 Gerando palavras por IA para categoria:', categoryName, 'quantidade:', count);
 
       // Gerar palavras usando IA (OpenAI ou mock)
-      const generatedWords = await generateWordsForCategory(categoryName, level);
+      const generatedWords = await generateWordsForCategory(categoryName, count);
       
       console.log('📝 Palavras geradas:', generatedWords);
 
       // Salvar palavras no banco
       const wordsToInsert = generatedWords.map(word => ({
         word: word.toUpperCase(),
-        level,
+        level: 1, // Nível padrão, será determinado pela dificuldade automática
         category: categoryName,
         difficulty: getDifficultyFromLength(word.length),
         is_active: true
@@ -160,7 +151,7 @@ export const useAIWordGeneration = () => {
         .from('ai_word_generation')
         .insert({
           category_id: categoryId,
-          level,
+          level: 1,
           words_generated: generatedWords.length,
           last_generation: new Date().toISOString()
         });
