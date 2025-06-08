@@ -18,6 +18,14 @@ export const IntegrationsTab = () => {
     testConnection
   } = useIntegrations();
 
+  const handleFingerprintUpdate = (integration: any) => {
+    setFingerprintJS(integration);
+  };
+
+  const handleOpenAIUpdate = (integration: any) => {
+    setOpenAI(integration);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -38,7 +46,7 @@ export const IntegrationsTab = () => {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <FingerprintJSCard
                 integration={fingerprintJS}
-                onUpdate={setFingerprintJS}
+                onUpdate={handleFingerprintUpdate}
                 onSave={handleSaveIntegration}
                 onTest={testConnection}
                 loading={loading}
@@ -47,7 +55,7 @@ export const IntegrationsTab = () => {
 
               <OpenAICard
                 integration={openAI}
-                onUpdate={setOpenAI}
+                onUpdate={handleOpenAIUpdate}
                 onSave={handleSaveIntegration}
                 onTest={testConnection}
                 loading={loading}
