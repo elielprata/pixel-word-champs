@@ -91,21 +91,34 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
       setIsUpdatingProfile(true);
       console.log('🔄 Atualizando perfil do usuário:', userId);
 
-      // Atualizar username na tabela profiles
+      // Preparar dados para atualização
+      const updateData: any = { 
+        username: newUsername.trim()
+      };
+
+      // Se o email foi fornecido e é válido, incluir na atualização do perfil
+      if (newEmail && newEmail !== 'Email não disponível' && newEmail.trim()) {
+        // Verificar se é um email válido ou nosso fallback
+        if (newEmail.includes('@') && !newEmail.endsWith('@sistema.local')) {
+          updateData.email = newEmail.trim();
+        }
+      }
+
+      // Atualizar dados na tabela profiles
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ username: newUsername.trim() })
+        .update(updateData)
         .eq('id', userId);
 
       if (profileError) {
-        console.error('❌ Erro ao atualizar username:', profileError);
+        console.error('❌ Erro ao atualizar perfil:', profileError);
         throw profileError;
       }
 
-      console.log('✅ Username atualizado com sucesso');
+      console.log('✅ Perfil atualizado com sucesso');
 
-      // Tentar atualizar email via Edge Function se disponível
-      if (newEmail && newEmail !== 'Email não disponível') {
+      // Tentar atualizar email via Edge Function se disponível e for um email real
+      if (newEmail && newEmail !== 'Email não disponível' && newEmail.includes('@') && !newEmail.endsWith('@sistema.local')) {
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (session) {
@@ -117,13 +130,13 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
             });
 
             if (error) {
-              console.warn('⚠️ Erro ao atualizar email:', error);
+              console.warn('⚠️ Erro ao atualizar email no auth:', error);
             } else {
-              console.log('✅ Email atualizado com sucesso');
+              console.log('✅ Email atualizado no auth com sucesso');
             }
           }
         } catch (emailError) {
-          console.warn('⚠️ Não foi possível atualizar email:', emailError);
+          console.warn('⚠️ Não foi possível atualizar email no auth:', emailError);
         }
       }
 
