@@ -1,10 +1,22 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock, AlertCircle } from 'lucide-react';
+import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock } from 'lucide-react';
+import { useRankings } from '@/hooks/useRankings';
 
 export const RankingMetrics = () => {
-  // Mock data - em produção viria de uma API/hook
+  const { totalPlayers, dailyRanking, weeklyRanking } = useRankings();
+
+  // Calcular métricas reais baseadas nos dados
+  const dailyParticipants = dailyRanking.length;
+  const weeklyParticipants = weeklyRanking.length;
+  const prizePoolWeekly = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
+    if (index === 0) return total + 100;
+    if (index === 1) return total + 50;
+    if (index === 2) return total + 25;
+    if (index <= 9) return total + 10;
+    return total;
+  }, 0);
+
   const metrics = [
     {
       title: "Rankings Ativos",
@@ -12,47 +24,47 @@ export const RankingMetrics = () => {
       subtitle: "Diário e Semanal",
       icon: Trophy,
       color: "from-amber-500 to-amber-600",
-      trend: "+0% este mês"
+      trend: "Sistemas ativos"
     },
     {
       title: "Total de Participantes",
-      value: "1,247",
+      value: totalPlayers.toLocaleString(),
       subtitle: "Usuários competindo",
       icon: Users,
       color: "from-blue-500 to-blue-600",
-      trend: "+18% este mês"
+      trend: "Usuários ativos"
     },
     {
       title: "Prêmios Semanais",
-      value: "R$ 2.450",
-      subtitle: "Valor total pago",
+      value: `R$ ${prizePoolWeekly.toFixed(2)}`,
+      subtitle: "Valor total disponível",
       icon: DollarSign,
       color: "from-green-500 to-green-600",
-      trend: "+25% este mês"
+      trend: "Esta semana"
     },
     {
-      title: "Taxa de Participação",
-      value: "87%",
-      subtitle: "Usuários ativos",
-      icon: Target,
+      title: "Ranking Diário",
+      value: dailyParticipants.toString(),
+      subtitle: "Participantes hoje",
+      icon: Calendar,
       color: "from-purple-500 to-purple-600",
-      trend: "+5% esta semana"
+      trend: "Hoje"
     },
     {
-      title: "Pontos Transferidos",
-      value: "15,342",
-      subtitle: "Diário → Semanal",
+      title: "Ranking Semanal",
+      value: weeklyParticipants.toString(),
+      subtitle: "Participantes esta semana",
       icon: TrendingUp,
       color: "from-cyan-500 to-cyan-600",
-      trend: "+12% este mês"
+      trend: "Esta semana"
     },
     {
-      title: "Tempo Médio",
-      value: "4m 32s",
-      subtitle: "Por partida",
-      icon: Clock,
+      title: "Top 10 Premiados",
+      value: Math.min(weeklyParticipants, 10).toString(),
+      subtitle: "Posições premiadas",
+      icon: Award,
       color: "from-rose-500 to-rose-600",
-      trend: "-8% melhor"
+      trend: "Semanal"
     }
   ];
 

@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Calendar, Users, DollarSign, Settings, Eye, Download, ArrowRight } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { rankingExportService } from '@/services/rankingExportService';
+import { useRankings } from '@/hooks/useRankings';
 
 interface RankingInfoCardProps {
   type: 'daily' | 'weekly';
   title: string;
   description: string;
-  participants: number;
-  prizePool: number;
   status: 'active' | 'inactive';
   lastUpdate: string;
 }
@@ -20,23 +19,32 @@ export const RankingInfoCard = ({
   type, 
   title, 
   description, 
-  participants, 
-  prizePool, 
   status, 
   lastUpdate 
 }: RankingInfoCardProps) => {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
+  const { dailyRanking, weeklyRanking } = useRankings();
+  
   const isDaily = type === 'daily';
   const iconColor = isDaily ? 'from-blue-500 to-blue-600' : 'from-purple-500 to-purple-600';
   const statusColor = status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-700 border-slate-200';
+  
+  // Usar dados reais dos rankings
+  const participants = isDaily ? dailyRanking.length : weeklyRanking.length;
+  const prizePool = isDaily ? 0 : weeklyRanking.slice(0, 10).reduce((total, _, index) => {
+    if (index === 0) return total + 100;
+    if (index === 1) return total + 50;
+    if (index === 2) return total + 25;
+    if (index <= 9) return total + 10;
+    return total;
+  }, 0);
 
   const handleView = () => {
     toast({
       title: "Visualizar Ranking",
       description: `Abrindo detalhes do ranking ${isDaily ? 'diário' : 'semanal'}...`,
     });
-    // TODO: Implementar navegação para página de detalhes do ranking
   };
 
   const handleExport = async () => {
@@ -85,7 +93,6 @@ export const RankingInfoCard = ({
       title: "Configurações",
       description: `Abrindo configurações do ranking ${isDaily ? 'diário' : 'semanal'}...`,
     });
-    // TODO: Implementar modal ou página de configurações do ranking
   };
 
   return (
@@ -139,7 +146,7 @@ export const RankingInfoCard = ({
           </div>
         </div>
 
-        {/* Informação específica do tipo */}
+        {/* Informação específica do tipo - mantendo layout existente */}
         {isDaily ? (
           <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
             <div className="flex items-start gap-2">

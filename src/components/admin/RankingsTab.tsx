@@ -10,10 +10,21 @@ import { RankingMetrics } from './rankings/RankingMetrics';
 import { RankingInfoCard } from './rankings/RankingInfoCard';
 import { PrizeConfigModal } from './rankings/PrizeConfigModal';
 import { CreateCompetitionModal } from './rankings/CreateCompetitionModal';
+import { useRankings } from '@/hooks/useRankings';
 
 export const RankingsTab = () => {
   const [isPrizeConfigOpen, setIsPrizeConfigOpen] = useState(false);
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
+  const { weeklyRanking } = useRankings();
+
+  // Calcular prêmio total real baseado nos participantes semanais
+  const totalPrizeDistributed = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
+    if (index === 0) return total + 100;
+    if (index === 1) return total + 50;
+    if (index === 2) return total + 25;
+    if (index <= 9) return total + 10;
+    return total;
+  }, 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
@@ -89,8 +100,6 @@ export const RankingsTab = () => {
                     type="daily"
                     title="Ranking Diário"
                     description="Competição diária com renovação automática"
-                    participants={1247}
-                    prizePool={150}
                     status="active"
                     lastUpdate="há 2 minutos"
                   />
@@ -99,8 +108,6 @@ export const RankingsTab = () => {
                     type="weekly"
                     title="Ranking Semanal"
                     description="Competição semanal com premiação maior"
-                    participants={2856}
-                    prizePool={500}
                     status="active"
                     lastUpdate="há 5 minutos"
                   />
@@ -130,8 +137,8 @@ export const RankingsTab = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-slate-900">R$ 2.450</div>
-                      <div className="text-sm text-slate-600">Total distribuído este mês</div>
+                      <div className="text-2xl font-bold text-slate-900">R$ {totalPrizeDistributed.toFixed(2)}</div>
+                      <div className="text-sm text-slate-600">Total disponível esta semana</div>
                     </div>
                   </div>
                 </div>

@@ -37,20 +37,14 @@ export const useRankings = () => {
 
       if (error) throw error;
 
-      const rankings = (data || []).map((item) => {
-        // Calcular trend baseado na diferença de posição (simulado)
-        const trendValue = Math.floor(Math.random() * 10) + 1;
-        const trendDirection = Math.random() > 0.5 ? '+' : '-';
-        
-        return {
-          pos: item.position,
-          name: item.profiles?.username || 'Usuário',
-          score: item.score,
-          avatar: item.profiles?.username?.substring(0, 2).toUpperCase() || 'U',
-          trend: `${trendDirection}${trendValue}`,
-          user_id: item.user_id
-        };
-      });
+      const rankings = (data || []).map((item) => ({
+        pos: item.position,
+        name: item.profiles?.username || 'Usuário',
+        score: item.score,
+        avatar: item.profiles?.username?.substring(0, 2).toUpperCase() || 'U',
+        trend: '', // Sem trend calculado
+        user_id: item.user_id
+      }));
 
       console.log('📊 Ranking diário carregado:', rankings.length, 'jogadores');
       setDailyRanking(rankings);
@@ -69,8 +63,10 @@ export const useRankings = () => {
       console.log('📊 Buscando ranking semanal...');
       
       const today = new Date();
-      const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
-      const weekEnd = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekStart = new Date(today.setDate(diff));
+      const weekStartStr = weekStart.toISOString().split('T')[0];
 
       const { data, error } = await supabase
         .from('weekly_rankings')
@@ -80,26 +76,20 @@ export const useRankings = () => {
           user_id,
           profiles!inner(username, avatar_url)
         `)
-        .gte('week_start', weekStart.toISOString().split('T')[0])
-        .lte('week_end', weekEnd.toISOString().split('T')[0])
+        .eq('week_start', weekStartStr)
         .order('position', { ascending: true })
         .limit(10);
 
       if (error) throw error;
 
-      const rankings = (data || []).map((item) => {
-        // Calcular trend semanal baseado em pontuação
-        const trendValue = Math.floor(Math.random() * 50) + 10;
-        
-        return {
-          pos: item.position,
-          name: item.profiles?.username || 'Usuário',
-          score: item.score,
-          avatar: item.profiles?.username?.substring(0, 2).toUpperCase() || 'U',
-          trend: `+${trendValue}`,
-          user_id: item.user_id
-        };
-      });
+      const rankings = (data || []).map((item) => ({
+        pos: item.position,
+        name: item.profiles?.username || 'Usuário',
+        score: item.score,
+        avatar: item.profiles?.username?.substring(0, 2).toUpperCase() || 'U',
+        trend: '', // Sem trend calculado
+        user_id: item.user_id
+      }));
 
       console.log('📊 Ranking semanal carregado:', rankings.length, 'jogadores');
       setWeeklyRanking(rankings);
