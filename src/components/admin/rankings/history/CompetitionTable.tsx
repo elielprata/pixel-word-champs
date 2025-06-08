@@ -2,130 +2,162 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Users, Calendar, DollarSign } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { CompetitionHistoryItem } from './types';
+import { Eye, Download, History as HistoryIcon } from 'lucide-react';
+
+interface CompetitionHistoryItem {
+  id: string;
+  title: string;
+  competition_type: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  prize_pool: number;
+  max_participants: number;
+  total_participants: number;
+  created_at: string;
+}
 
 interface CompetitionTableProps {
   competitions: CompetitionHistoryItem[];
+  onReload: () => void;
 }
 
-export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions }) => {
-  const getStatusBadge = (status: string) => {
+export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions, onReload }) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">Finalizada</Badge>;
-      case 'active':
-        return <Badge variant="outline" className="text-blue-700 border-blue-200 bg-blue-50">Ativa</Badge>;
-      case 'cancelled':
-        return <Badge variant="outline" className="text-red-700 border-red-200 bg-red-50">Cancelada</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+      case 'completed': return 'bg-green-100 text-green-700 border-green-200';
+      case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
-  const getTypeBadge = (type: string) => {
-    const colors = {
-      'Semanal': 'bg-purple-100 text-purple-800 border-purple-200',
-      'Diária': 'bg-blue-100 text-blue-800 border-blue-200',
-      'Torneio': 'bg-amber-100 text-amber-800 border-amber-200',
-      'Desafio': 'bg-green-100 text-green-800 border-green-200',
-    };
-    
-    return (
-      <Badge variant="outline" className={colors[type as keyof typeof colors] || 'bg-slate-100 text-slate-800'}>
-        {type}
-      </Badge>
-    );
-  };
-
-  const getSourceBadge = (source: 'system' | 'custom') => {
-    return source === 'system' ? (
-      <Badge variant="outline" className="text-slate-700 border-slate-200 bg-slate-50">Sistema</Badge>
-    ) : (
-      <Badge variant="outline" className="text-orange-700 border-orange-200 bg-orange-50">Customizada</Badge>
-    );
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'weekly': return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'tournament': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'challenge': return 'bg-blue-100 text-blue-700 border-blue-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
   };
 
   const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return format(date, 'dd/MM/yyyy', { locale: ptBR });
-    } catch {
-      return 'Data inválida';
-    }
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const getWeekFromDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
+    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
   };
 
   return (
-    <Card className="border-orange-200 bg-white">
-      <CardHeader>
-        <CardTitle className="text-lg text-orange-800 flex items-center gap-2">
-          <Trophy className="h-5 w-5" />
-          Histórico de Competições ({competitions.length})
-        </CardTitle>
+    <Card className="border-slate-200">
+      <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
+            <HistoryIcon className="h-5 w-5 text-orange-600" />
+            Histórico de Competições ({competitions.length})
+          </CardTitle>
+          <Button variant="outline" className="text-orange-600 hover:text-orange-700 border-orange-200">
+            <Download className="h-4 w-4 mr-2" />
+            Exportar
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Competição</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Origem</TableHead>
-                <TableHead className="text-center">Participantes</TableHead>
-                <TableHead className="text-center">Prêmio Total</TableHead>
-                <TableHead>Período</TableHead>
+              <TableRow className="bg-slate-50">
+                <TableHead className="font-semibold">Competição</TableHead>
+                <TableHead className="font-semibold">Tipo</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
+                <TableHead className="font-semibold">Período</TableHead>
+                <TableHead className="font-semibold">Participantes</TableHead>
+                <TableHead className="font-semibold">Prêmio</TableHead>
+                <TableHead className="font-semibold text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {competitions.map((competition) => (
-                <TableRow key={competition.id} className="hover:bg-orange-50">
+                <TableRow key={competition.id} className="hover:bg-slate-50">
                   <TableCell>
-                    <div className="font-medium text-slate-900">{competition.title}</div>
-                    <div className="text-sm text-slate-500">ID: {competition.id.slice(0, 8)}...</div>
+                    <div>
+                      <p className="font-medium text-slate-900">{competition.title}</p>
+                      {competition.competition_type === 'weekly' && (
+                        <p className="text-xs text-slate-500">
+                          Semana {getWeekFromDate(competition.start_date)} de {new Date(competition.start_date).getFullYear()}
+                        </p>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    {getTypeBadge(competition.competition_type)}
+                    <Badge className={getTypeColor(competition.competition_type)}>
+                      {competition.competition_type === 'weekly' ? 'Semanal' :
+                       competition.competition_type === 'tournament' ? 'Torneio' :
+                       competition.competition_type === 'challenge' ? 'Desafio' : competition.competition_type}
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    {getStatusBadge(competition.status)}
+                    <Badge className={getStatusColor(competition.status)}>
+                      {competition.status === 'completed' ? 'Finalizada' : 
+                       competition.status === 'cancelled' ? 'Cancelada' : competition.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    <div>
+                      <p>{formatDate(competition.start_date)} -</p>
+                      <p>{formatDate(competition.end_date)}</p>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    {getSourceBadge(competition.source)}
+                    <div className="text-center">
+                      <p className="font-semibold">{competition.total_participants}</p>
+                      {competition.max_participants > 0 && (
+                        <p className="text-xs text-slate-500">/ {competition.max_participants}</p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-semibold text-green-600">
+                    R$ {competition.prize_pool.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Users className="h-4 w-4 text-slate-400" />
-                      <span className="font-medium">{competition.participants}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <DollarSign className="h-4 w-4 text-green-600" />
-                      <span className="font-medium text-green-700">
-                        R$ {competition.prize_pool.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      <div>
-                        <div>{formatDate(competition.start_date)}</div>
-                        {competition.end_date && competition.end_date !== competition.start_date && (
-                          <div className="text-slate-500">até {formatDate(competition.end_date)}</div>
-                        )}
-                      </div>
-                    </div>
+                    <Button size="sm" variant="outline" className="text-orange-600 hover:text-orange-700">
+                      <Eye className="h-3 w-3 mr-1" />
+                      Ver
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
+
+        {competitions.length === 0 && (
+          <div className="text-center py-12 text-slate-500">
+            <HistoryIcon className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+            <p className="text-lg font-medium mb-2">Nenhuma competição finalizada encontrada</p>
+            <p className="text-sm">
+              As competições aparecerão aqui quando forem finalizadas. Crie uma nova competição para começar!
+            </p>
+            <Button 
+              className="mt-4" 
+              onClick={onReload}
+              variant="outline"
+            >
+              🔄 Recarregar dados
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

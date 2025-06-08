@@ -17,8 +17,6 @@ export const useCompetitions = () => {
     setError(null);
 
     try {
-      console.log('🔄 Fetching all competitions...');
-      
       const [
         competitionsResponse, 
         customCompetitionsResponse,
@@ -31,39 +29,25 @@ export const useCompetitions = () => {
         competitionService.getWeeklyCompetition()
       ]);
 
-      console.log('📊 Competition responses:', {
-        competitions: competitionsResponse,
-        custom: customCompetitionsResponse,
-        daily: dailyResponse,
-        weekly: weeklyResponse
-      });
-
       if (competitionsResponse.success) {
         setCompetitions(competitionsResponse.data);
-        console.log('✅ System competitions set:', competitionsResponse.data.length);
       } else {
-        console.error('❌ Error loading system competitions:', competitionsResponse.error);
         setError(competitionsResponse.error || 'Erro ao carregar competições');
       }
 
       if (customCompetitionsResponse.success) {
         setCustomCompetitions(customCompetitionsResponse.data);
-        console.log('✅ Custom competitions set:', customCompetitionsResponse.data.length);
-      } else {
-        console.error('❌ Error loading custom competitions:', customCompetitionsResponse.error);
       }
 
       if (dailyResponse.success) {
         setDailyCompetition(dailyResponse.data);
-        console.log('✅ Daily competition set');
       }
 
       if (weeklyResponse.success) {
         setWeeklyCompetition(weeklyResponse.data);
-        console.log('✅ Weekly competition set');
       }
     } catch (err) {
-      console.error('❌ Error loading competitions data:', err);
+      console.error('❌ Erro ao carregar dados das competições:', err);
       setError('Erro ao carregar dados das competições');
     } finally {
       setIsLoading(false);

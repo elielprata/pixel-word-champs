@@ -2,7 +2,19 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Calendar, Users } from 'lucide-react';
-import { CompetitionHistoryItem } from './types';
+
+interface CompetitionHistoryItem {
+  id: string;
+  title: string;
+  competition_type: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  prize_pool: number;
+  max_participants: number;
+  total_participants: number;
+  created_at: string;
+}
 
 interface CompetitionStatsProps {
   competitions: CompetitionHistoryItem[];

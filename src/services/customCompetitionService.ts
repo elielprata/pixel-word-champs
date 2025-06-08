@@ -18,38 +18,32 @@ export interface CustomCompetitionData {
 class CustomCompetitionService {
   async createCompetition(data: CustomCompetitionData): Promise<ApiResponse<any>> {
     try {
-      console.log('📝 Creating competition with data:', data);
+      console.log('📝 Criando competição:', data);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.error('❌ User not authenticated');
         throw new Error('Usuário não autenticado');
       }
 
-      console.log('✅ User authenticated:', user.id);
-
-      // Preparar dados para inserção
+      // Preparar dados para inserção conforme a estrutura da tabela
       const competitionData = {
         title: data.title,
-        description: data.description || '',
+        description: data.description,
         competition_type: data.type === 'weekly' ? 'tournament' : 'challenge',
         theme: data.category || 'geral',
-        start_date: data.startDate?.toISOString() || new Date().toISOString(),
-        end_date: data.endDate?.toISOString() || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        prize_pool: data.prizePool || 0,
-        max_participants: data.maxParticipants || 1000,
+        start_date: data.startDate?.toISOString(),
+        end_date: data.endDate?.toISOString(),
+        prize_pool: data.prizePool,
+        max_participants: data.maxParticipants,
         status: 'active',
         created_by: user.id,
-        rules: data.weeklyTournamentId && data.weeklyTournamentId !== 'none' 
-          ? { 
-              category: data.category,
-              weeklyTournamentId: data.weeklyTournamentId 
-            }
-          : { category: data.category },
-        entry_requirements: null
+        rules: {
+          category: data.category,
+          weeklyTournamentId: data.weeklyTournamentId
+        }
       };
 
-      console.log('📤 Inserting data into database:', competitionData);
+      console.log('📤 Dados para inserção:', competitionData);
 
       const { data: result, error } = await supabase
         .from('custom_competitions')
@@ -58,70 +52,34 @@ class CustomCompetitionService {
         .single();
 
       if (error) {
-        console.error('❌ Database insert error:', error);
+        console.error('❌ Erro na inserção:', error);
         throw error;
       }
 
-      console.log('✅ Competition created successfully:', result);
+      console.log('✅ Competição criada com sucesso:', result);
       return createSuccessResponse(result);
     } catch (error) {
-      console.error('❌ Service error:', error);
+      console.error('❌ Erro ao criar competição:', error);
       return createErrorResponse(handleServiceError(error, 'CREATE_COMPETITION'));
     }
   }
 
   async getCustomCompetitions(): Promise<ApiResponse<any[]>> {
     try {
-      console.log('📊 Fetching custom competitions...');
+      console.log('📊 Buscando competições customizadas...');
 
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('❌ Error fetching competitions:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Custom competitions loaded:', data?.length || 0, data);
+      console.log('✅ Competições carregadas:', data?.length || 0);
       return createSuccessResponse(data || []);
     } catch (error) {
-      console.error('❌ Error in getCustomCompetitions:', error);
+      console.error('❌ Erro ao buscar competições:', error);
       return createErrorResponse(handleServiceError(error, 'GET_CUSTOM_COMPETITIONS'));
-    }
-  }
-
-  async updateCompetitionStatus(competitionId: string, status: string): Promise<ApiResponse<any>> {
-    try {
-      console.log('🔄 Updating competition status:', { competitionId, status });
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('❌ User not authenticated');
-        throw new Error('Usuário não autenticado');
-      }
-
-      const { data, error } = await supabase
-        .from('custom_competitions')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', competitionId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ Error updating competition:', error);
-        throw error;
-      }
-
-      console.log('✅ Competition status updated:', data);
-      return createSuccessResponse(data);
-    } catch (error) {
-      console.error('❌ Error updating competition status:', error);
-      return createErrorResponse(handleServiceError(error, 'UPDATE_COMPETITION_STATUS'));
     }
   }
 }

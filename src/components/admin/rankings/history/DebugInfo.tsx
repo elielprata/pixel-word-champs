@@ -1,10 +1,16 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DebugInfo as DebugInfoType } from './types';
 
 interface DebugInfoProps {
-  debugInfo: DebugInfoType | null;
+  debugInfo: {
+    customCompetitions: number;
+    systemCompetitions: number;
+    totalCompetitions: number;
+    totalCustom: number;
+    customError?: string;
+    systemError?: string;
+  } | null;
 }
 
 export const DebugInfo: React.FC<DebugInfoProps> = ({ debugInfo }) => {

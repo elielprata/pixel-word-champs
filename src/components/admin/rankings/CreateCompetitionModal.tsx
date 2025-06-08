@@ -73,20 +73,6 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     }
   }, [open]);
 
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      type: 'weekly',
-      category: 'geral',
-      weeklyTournamentId: 'none',
-      prizePool: totalPrizePool,
-      maxParticipants: 1000,
-      startDate: undefined,
-      endDate: undefined
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -102,11 +88,11 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 Starting competition creation...', formData);
+      console.log('🚀 Iniciando criação da competição...');
       
       const competitionData: CustomCompetitionData = {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
+        title: formData.title,
+        description: formData.description,
         type: formData.type,
         category: formData.category,
         weeklyTournamentId: formData.weeklyTournamentId !== 'none' ? formData.weeklyTournamentId : undefined,
@@ -116,33 +102,35 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         endDate: formData.endDate
       };
 
-      console.log('📋 Competition data prepared:', competitionData);
-
       const result = await customCompetitionService.createCompetition(competitionData);
       
-      console.log('📊 Service result:', result);
-      
-      if (result.success && result.data) {
-        console.log('✅ Competition created successfully!');
-        
+      if (result.success) {
         toast({
-          title: "Sucesso!",
-          description: `Competição "${formData.title}" criada com sucesso.`,
+          title: "Competição criada com sucesso!",
+          description: `${formData.title} foi criada e está ativa.`,
         });
         
-        // Recarregar dados das competições
-        console.log('🔄 Reloading competitions...');
+        // Recarregar dados
         await refetch();
         
         // Fechar modal e resetar form
         onOpenChange(false);
-        resetForm();
+        setFormData({
+          title: '',
+          description: '',
+          type: 'weekly',
+          category: 'geral',
+          weeklyTournamentId: 'none',
+          prizePool: totalPrizePool,
+          maxParticipants: 1000,
+          startDate: undefined,
+          endDate: undefined
+        });
       } else {
-        console.error('❌ Service returned error:', result.error);
         throw new Error(result.error || 'Erro ao criar competição');
       }
     } catch (error) {
-      console.error('❌ Error in handleSubmit:', error);
+      console.error('❌ Erro ao criar competição:', error);
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Não foi possível criar a competição.",
@@ -151,11 +139,6 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleCancel = () => {
-    onOpenChange(false);
-    resetForm();
   };
 
   const isPrizeEnabled = formData.type === 'weekly';
@@ -239,7 +222,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
             <Button
               type="button"
               variant="outline"
-              onClick={handleCancel}
+              onClick={() => onOpenChange(false)}
               className="flex-1 h-8"
               disabled={isSubmitting}
             >
