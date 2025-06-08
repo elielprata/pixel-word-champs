@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Calendar, Users, TrendingUp, Activity, Settings, Plus } from 'lucide-react';
+import { Trophy, Calendar, Users, TrendingUp, Activity, Settings, Plus, History } from 'lucide-react';
 import { RankingHeader } from './rankings/RankingHeader';
 import { RankingMetrics } from './rankings/RankingMetrics';
 import { RankingInfoCard } from './rankings/RankingInfoCard';
 import { PrizeConfigModal } from './rankings/PrizeConfigModal';
 import { CreateCompetitionModal } from './rankings/CreateCompetitionModal';
+import { CompetitionHistory } from './rankings/CompetitionHistory';
 import { useRankings } from '@/hooks/useRankings';
 
 export const RankingsTab = () => {
@@ -56,7 +57,7 @@ export const RankingsTab = () => {
           <Tabs defaultValue="daily" className="w-full">
             <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
               <div className="flex items-center justify-between">
-                <TabsList className="grid grid-cols-2 bg-white border border-slate-200">
+                <TabsList className="grid grid-cols-3 bg-white border border-slate-200">
                   <TabsTrigger value="daily" className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
                     <Calendar className="h-4 w-4" />
                     Ranking Diário
@@ -64,6 +65,10 @@ export const RankingsTab = () => {
                   <TabsTrigger value="weekly" className="flex items-center gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">
                     <Users className="h-4 w-4" />
                     Ranking Semanal
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="flex items-center gap-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700">
+                    <History className="h-4 w-4" />
+                    Histórico
                   </TabsTrigger>
                 </TabsList>
                 
@@ -114,6 +119,21 @@ export const RankingsTab = () => {
                   <Users className="h-12 w-12 mx-auto mb-4 text-slate-300" />
                   <p>Configurações e detalhes do ranking semanal serão exibidos aqui</p>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="history" className="space-y-6 mt-0">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                      <History className="h-5 w-5 text-orange-600" />
+                      Histórico de Competições
+                    </h3>
+                    <p className="text-slate-600 text-sm">
+                      Visualize todas as competições semanais que já foram finalizadas
+                    </p>
+                  </div>
+                </div>
+                <CompetitionHistory />
               </TabsContent>
             </div>
           </Tabs>
