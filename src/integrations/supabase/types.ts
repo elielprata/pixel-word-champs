@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_actions: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_user_id: string
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_user_id: string
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       challenge_progress: {
         Row: {
           challenge_id: number
@@ -585,11 +612,15 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          ban_reason: string | null
+          banned_at: string | null
+          banned_by: string | null
           best_daily_position: number | null
           best_weekly_position: number | null
           created_at: string | null
           games_played: number | null
           id: string
+          is_banned: boolean | null
           pix_holder_name: string | null
           pix_key: string | null
           total_score: number | null
@@ -598,11 +629,15 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_at?: string | null
+          banned_by?: string | null
           best_daily_position?: number | null
           best_weekly_position?: number | null
           created_at?: string | null
           games_played?: number | null
           id: string
+          is_banned?: boolean | null
           pix_holder_name?: string | null
           pix_key?: string | null
           total_score?: number | null
@@ -611,11 +646,15 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_at?: string | null
+          banned_by?: string | null
           best_daily_position?: number | null
           best_weekly_position?: number | null
           created_at?: string | null
           games_played?: number | null
           id?: string
+          is_banned?: boolean | null
           pix_holder_name?: string | null
           pix_key?: string | null
           total_score?: number | null
