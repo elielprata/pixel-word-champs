@@ -10,6 +10,7 @@ import { GameContentTab } from "@/components/admin/GameContentTab";
 import { MetricsTab } from "@/components/admin/MetricsTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { AllUsersTab } from '@/components/admin/AllUsersTab';
+import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 
 const AdminPanel = () => {
   // Mock data for challenges - you can replace with real data later
@@ -48,7 +49,7 @@ const AdminPanel = () => {
           </div>
 
           <Tabs defaultValue="dashboard" className="w-full">
-            <TabsList className="grid w-full grid-cols-8 lg:grid-cols-8">
+            <TabsList className="grid w-full grid-cols-9 lg:grid-cols-9">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
               <TabsTrigger value="all-users">Todos Usuários</TabsTrigger>
@@ -57,6 +58,7 @@ const AdminPanel = () => {
               <TabsTrigger value="content">Conteúdo</TabsTrigger>
               <TabsTrigger value="metrics">Métricas</TabsTrigger>
               <TabsTrigger value="support">Suporte</TabsTrigger>
+              <TabsTrigger value="integrations">Integrações</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -89,6 +91,10 @@ const AdminPanel = () => {
 
             <TabsContent value="support">
               <SupportTab />
+            </TabsContent>
+
+            <TabsContent value="integrations">
+              <IntegrationsTab />
             </TabsContent>
           </Tabs>
         </div>
