@@ -5,7 +5,6 @@ import HomeScreen from '@/components/HomeScreen';
 import RankingScreen from '@/components/RankingScreen';
 import InviteScreen from '@/components/InviteScreen';
 import ProfileScreen from '@/components/ProfileScreen';
-import ChallengeScreen from '@/components/ChallengeScreen';
 import FullRankingScreen from '@/components/FullRankingScreen';
 import ChallengeRankingScreen from '@/components/ChallengeRankingScreen';
 import SettingsScreen from '@/components/SettingsScreen';
@@ -33,22 +32,12 @@ const Index = () => {
 
   const {
     activeTab,
-    activeChallenge,
     showFullRanking,
     challengeRankingId,
     showSettings,
     showHelp,
     showAchievements
   } = navigationState;
-
-  if (activeChallenge) {
-    return (
-      <ChallengeScreen 
-        challengeId={activeChallenge} 
-        onBack={handleBackToHome}
-      />
-    );
-  }
 
   if (showFullRanking) {
     return (

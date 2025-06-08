@@ -7,7 +7,6 @@ import { Trophy, Calendar, History, Loader2, ChevronDown } from 'lucide-react';
 import RankingCard from './ui/RankingCard';
 import PodiumCard from './ui/PodiumCard';
 import UserPositionCard from './ui/UserPositionCard';
-import HistoricalCompetitionCard from './ui/HistoricalCompetitionCard';
 import { useRankingData } from '@/hooks/useRankingData';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -187,24 +186,11 @@ const RankingScreen = () => {
               <p className="text-sm text-gray-600">Seus resultados e prêmios conquistados</p>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
-                  <span className="ml-2 text-gray-600">Carregando histórico...</span>
-                </div>
-              ) : historicalCompetitions.length > 0 ? (
-                <div className="space-y-4">
-                  {historicalCompetitions.map((competition, index) => (
-                    <HistoricalCompetitionCard key={index} competition={competition} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-600">
-                  <History className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                  <p className="font-medium">Nenhuma competição finalizada</p>
-                  <p className="text-sm">Participe para ver seu histórico aqui!</p>
-                </div>
-              )}
+              <div className="text-center py-8 text-gray-600">
+                <History className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                <p className="font-medium">Histórico temporariamente indisponível</p>
+                <p className="text-sm">Esta funcionalidade está em desenvolvimento.</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

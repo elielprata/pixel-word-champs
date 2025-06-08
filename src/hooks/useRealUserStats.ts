@@ -9,6 +9,8 @@ interface RealUserStats {
   totalAdmins: number;
   averageScore: number;
   totalGamesPlayed: number;
+  totalSessions: number;
+  sessionsToday: number;
   retentionD1: number;
   retentionD3: number;
   retentionD7: number;
@@ -23,6 +25,8 @@ export const useRealUserStats = () => {
     totalAdmins: 0,
     averageScore: 0,
     totalGamesPlayed: 0,
+    totalSessions: 0,
+    sessionsToday: 0,
     retentionD1: 0,
     retentionD3: 0,
     retentionD7: 0,
@@ -131,6 +135,20 @@ export const useRealUserStats = () => {
 
       const totalGamesPlayed = profilesData?.reduce((sum, p) => sum + (p.games_played || 0), 0) || 0;
 
+      // Total de sessões e sessões hoje
+      const { count: totalSessions, error: sessionsError } = await supabase
+        .from('game_sessions')
+        .select('*', { count: 'exact', head: true });
+
+      if (sessionsError) throw sessionsError;
+
+      const { count: sessionsToday, error: sessionsTodayError } = await supabase
+        .from('game_sessions')
+        .select('*', { count: 'exact', head: true })
+        .gte('started_at', today.toISOString());
+
+      if (sessionsTodayError) throw sessionsTodayError;
+
       // Calcular retenções D1, D3 e D7
       const [retentionD1, retentionD3, retentionD7] = await Promise.all([
         calculateRetention(1),
@@ -145,6 +163,8 @@ export const useRealUserStats = () => {
         totalAdmins: totalAdmins || 0,
         averageScore,
         totalGamesPlayed,
+        totalSessions: totalSessions || 0,
+        sessionsToday: sessionsToday || 0,
         retentionD1: Math.round(retentionD1),
         retentionD3: Math.round(retentionD3),
         retentionD7: Math.round(retentionD7),
@@ -161,5 +181,5 @@ export const useRealUserStats = () => {
     }
   };
 
-  return { stats, refetch: loadRealStats };
+  return { stats, isLoading: stats.isLoading, refetch: loadRealStats };
 };
