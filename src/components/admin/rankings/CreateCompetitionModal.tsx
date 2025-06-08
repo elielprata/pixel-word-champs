@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Trophy, Calendar as CalendarIcon, Users, DollarSign, AlertCircle, Tag, Link } from 'lucide-react';
+import { Trophy, Calendar as CalendarIcon, Users, DollarSign, Tag, Link } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -387,20 +387,6 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                   Valor calculado automaticamente baseado nas configurações de prêmios ativas do sistema.
                 </p>
               </div>
-            </div>
-          )}
-
-          {/* Alerta para competição diária */}
-          {formData.type === 'daily' && (
-            <div className="bg-amber-50 border border-amber-200 p-2 rounded">
-              <div className="flex items-center gap-2 text-amber-800">
-                <AlertCircle className="h-3 w-3" />
-                <span className="text-xs font-medium">Informação Importante</span>
-              </div>
-              <p className="text-xs text-amber-700 mt-1">
-                Competições diárias não possuem premiação própria. Os pontos dos participantes são 
-                transferidos para o ranking semanal{formData.weeklyTournamentId !== 'none' ? ' selecionado' : ''} ao final de cada dia.
-              </p>
             </div>
           )}
 
