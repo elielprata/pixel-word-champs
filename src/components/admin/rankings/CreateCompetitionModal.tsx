@@ -27,7 +27,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
     description: '',
     type: 'weekly' as 'daily' | 'weekly' | 'challenge',
     category: 'geral' as string,
-    weeklyTournamentId: '' as string,
+    weeklyTournamentId: 'none' as string,
     prizePool: 0,
     maxParticipants: 1000,
     startDate: undefined as Date | undefined
@@ -71,7 +71,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
         description: '',
         type: 'weekly',
         category: 'geral',
-        weeklyTournamentId: '',
+        weeklyTournamentId: 'none',
         prizePool: 0,
         maxParticipants: 1000,
         startDate: undefined
@@ -216,7 +216,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
                   <SelectValue placeholder="Selecione um torneio semanal (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">
+                  <SelectItem value="none">
                     <span className="text-slate-500">Nenhum torneio selecionado</span>
                   </SelectItem>
                   {weeklyTournaments.map((tournament) => (
@@ -325,7 +325,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
               </div>
               <p className="text-xs text-amber-700 mt-1">
                 Competições diárias não possuem premiação própria. Os pontos dos participantes são 
-                transferidos para o ranking semanal{formData.weeklyTournamentId ? ' selecionado' : ''} ao final de cada dia.
+                transferidos para o ranking semanal{formData.weeklyTournamentId !== 'none' ? ' selecionado' : ''} ao final de cada dia.
               </p>
             </div>
           )}
