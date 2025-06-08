@@ -1,20 +1,16 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Settings, Target, Trophy, ArrowRight, Activity, Users, Calendar } from 'lucide-react';
+import { BookOpen, Settings, ArrowRight, Activity, Users } from 'lucide-react';
 import { WordsManagement } from './content/WordsManagement';
 import { GameSettings } from './content/GameSettings';
-import { DailyCompetitionsManagement } from './content/DailyCompetitionsManagement';
-import { WeeklyTournamentsManagement } from './content/WeeklyTournamentsManagement';
 
 export const GameContentTab = () => {
   const quickStats = [
     { label: 'Palavras Ativas', value: '2,847', icon: BookOpen, color: 'text-blue-600' },
-    { label: 'Competições Hoje', value: '5', icon: Target, color: 'text-green-600' },
-    { label: 'Torneios Ativos', value: '2', icon: Trophy, color: 'text-amber-600' },
+    { label: 'Configurações Ativas', value: '12', icon: Settings, color: 'text-slate-600' },
     { label: 'Participantes Online', value: '1,234', icon: Users, color: 'text-purple-600' },
   ];
 
@@ -36,24 +32,6 @@ export const GameContentTab = () => {
       gradient: 'from-slate-600 to-slate-700',
       stats: '12 configurações ativas',
       features: ['Sistema de pontos', 'Níveis de dificuldade', 'Tempos de partida']
-    },
-    {
-      id: 'daily-competitions',
-      title: 'Competições Diárias',
-      description: 'Configure desafios e eventos especiais',
-      icon: Target,
-      gradient: 'from-green-600 to-emerald-600',
-      stats: '5 competições hoje',
-      features: ['Temas personalizados', 'Recompensas especiais', 'Rankings exclusivos']
-    },
-    {
-      id: 'weekly-tournaments',
-      title: 'Torneios Semanais',
-      description: 'Organize competições com premiação',
-      icon: Trophy,
-      gradient: 'from-amber-600 to-orange-600',
-      stats: '2 torneios ativos',
-      features: ['Premiação automática', 'Múltiplas categorias', 'Sistema de eliminação']
     }
   ];
 
@@ -69,7 +47,7 @@ export const GameContentTab = () => {
             <div className="space-y-2">
               <h1 className="text-3xl font-bold">Gestão de Conteúdo</h1>
               <p className="text-white/80 text-lg max-w-2xl">
-                Central de controle para palavras, competições e configurações do jogo
+                Central de controle para palavras e configurações do jogo
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -81,7 +59,7 @@ export const GameContentTab = () => {
           </div>
           
           {/* Quick Stats */}
-          <div className="grid grid-cols-4 gap-4 mt-8">
+          <div className="grid grid-cols-3 gap-4 mt-8">
             {quickStats.map((stat, index) => (
               <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <div className="flex items-center gap-3">
@@ -103,7 +81,7 @@ export const GameContentTab = () => {
         {/* Navigation renovada */}
         <div className="bg-white rounded-xl border border-slate-200 p-2 shadow-sm">
           <TabsList className="bg-transparent p-0 h-auto w-full">
-            <div className="grid grid-cols-4 w-full gap-2">
+            <div className="grid grid-cols-2 w-full gap-2">
               {featureCards.map((card) => (
                 <TabsTrigger 
                   key={card.id}
@@ -111,7 +89,7 @@ export const GameContentTab = () => {
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg p-4 rounded-lg transition-all duration-200 h-auto flex flex-col items-center gap-2 hover:bg-slate-50"
                 >
                   <card.icon className="h-5 w-5" />
-                  <span className="font-medium text-sm">{card.title.split(' ')[0]}</span>
+                  <span className="font-medium text-sm">{card.title}</span>
                 </TabsTrigger>
               ))}
             </div>
@@ -187,36 +165,6 @@ export const GameContentTab = () => {
               </div>
             </div>
             <GameSettings />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="daily-competitions" className="space-y-6">
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-2 rounded-lg">
-                <Target className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Competições Diárias</h2>
-                <p className="text-slate-600 text-sm">Configure desafios e eventos especiais</p>
-              </div>
-            </div>
-            <DailyCompetitionsManagement />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="weekly-tournaments" className="space-y-6">
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-gradient-to-r from-amber-600 to-orange-600 p-2 rounded-lg">
-                <Trophy className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Torneios Semanais</h2>
-                <p className="text-slate-600 text-sm">Organize competições com premiação</p>
-              </div>
-            </div>
-            <WeeklyTournamentsManagement />
           </div>
         </TabsContent>
       </Tabs>
