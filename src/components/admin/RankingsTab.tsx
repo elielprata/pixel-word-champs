@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,11 @@ import { Trophy, Calendar, Users, TrendingUp, Activity, Settings, Plus } from 'l
 import { RankingHeader } from './rankings/RankingHeader';
 import { RankingMetrics } from './rankings/RankingMetrics';
 import { RankingInfoCard } from './rankings/RankingInfoCard';
+import { PrizeConfigModal } from './rankings/PrizeConfigModal';
 
 export const RankingsTab = () => {
+  const [isPrizeConfigOpen, setIsPrizeConfigOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -23,7 +26,11 @@ export const RankingsTab = () => {
               <Activity className="h-5 w-5 text-slate-600" />
               <h2 className="text-lg font-semibold text-slate-900">Métricas dos Rankings</h2>
             </div>
-            <Button variant="outline" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200">
+            <Button 
+              variant="outline" 
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+              onClick={() => setIsPrizeConfigOpen(true)}
+            >
               <Settings className="h-4 w-4 mr-2" />
               Configurações Gerais
             </Button>
@@ -165,6 +172,12 @@ export const RankingsTab = () => {
             </div>
           </Tabs>
         </div>
+
+        {/* Modal de Configurações de Prêmios */}
+        <PrizeConfigModal 
+          open={isPrizeConfigOpen}
+          onOpenChange={setIsPrizeConfigOpen}
+        />
       </div>
     </div>
   );
