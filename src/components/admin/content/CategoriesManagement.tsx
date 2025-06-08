@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Tag, Wand2, CheckCircle, AlertCircle, Zap } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, Wand2, AlertCircle, Zap } from 'lucide-react';
 import { useWordCategories } from '@/hooks/useWordCategories';
 import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
 import { useQuery } from '@tanstack/react-query';
@@ -70,14 +70,6 @@ export const CategoriesManagement = () => {
     
     setEditingId(null);
     setEditForm({ name: '', description: '' });
-  };
-
-  const handleGenerateWords = (categoryId: string, categoryName: string) => {
-    generateWords({
-      categoryId,
-      categoryName,
-      count: wordsCount
-    });
   };
 
   const handleGenerateAllCategories = () => {
@@ -258,15 +250,6 @@ export const CategoriesManagement = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button
-                          onClick={() => handleGenerateWords(category.id, category.name)}
-                          disabled={isGenerating}
-                          size="sm"
-                          className="bg-purple-600 hover:bg-purple-700"
-                        >
-                          <Wand2 className="h-4 w-4 mr-1" />
-                          {isGenerating ? 'Gerando...' : `Gerar ${wordsCount}`}
-                        </Button>
                         <Button
                           onClick={() => handleEdit(category)}
                           variant="outline"
