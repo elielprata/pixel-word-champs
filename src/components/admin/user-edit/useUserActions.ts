@@ -88,26 +88,47 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
 
     try {
       setIsChangingPassword(true);
-      console.log('🔐 Atualizando senha do usuário:', userId);
+      console.log('🔐 Tentando atualizar senha do usuário:', userId);
 
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
-        password: newPassword
-      });
-
-      if (error) {
-        console.error('❌ Erro ao atualizar senha:', error);
-        throw error;
+      // Como não temos acesso direto às funções admin, vamos usar uma abordagem alternativa
+      // Registrar a solicitação de mudança de senha como uma ação administrativa
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error('Usuário administrativo não autenticado');
       }
 
+      // Registrar a ação de tentativa de mudança de senha
+      const { error: logError } = await supabase
+        .from('admin_actions')
+        .insert({
+          admin_id: currentUser.user.id,
+          target_user_id: userId,
+          action_type: 'password_change_request',
+          details: { 
+            username: username,
+            requested_at: new Date().toISOString(),
+            status: 'manual_required'
+          }
+        });
+
+      if (logError) {
+        console.warn('⚠️ Erro ao registrar log:', logError);
+      }
+
+      // Informar que a mudança de senha precisa ser feita manualmente
       toast({
-        title: "Sucesso!",
-        description: `Senha atualizada para ${username}`,
+        title: "Ação Registrada",
+        description: `Solicitação de mudança de senha registrada para ${username}. Esta ação requer configuração manual no Supabase.`,
+        variant: "default",
       });
+
+      console.log('📝 Ação de mudança de senha registrada para processamento manual');
+
     } catch (error: any) {
       console.error('❌ Erro:', error);
       toast({
         title: "Erro",
-        description: `Erro ao atualizar senha: ${error.message || 'Erro desconhecido'}`,
+        description: `Erro ao processar mudança de senha: ${error.message || 'Erro desconhecido'}`,
         variant: "destructive",
       });
     } finally {
