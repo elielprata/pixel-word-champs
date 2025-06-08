@@ -16,65 +16,61 @@ interface UserCardProps {
 export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser }: UserCardProps) => {
   return (
     <div
-      className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
-        user.is_banned 
-          ? 'border-red-200 bg-red-50' 
-          : 'border-slate-200 bg-white hover:bg-slate-50'
+      className={`flex items-center justify-between p-3 border-b border-slate-100 transition-colors hover:bg-slate-50 ${
+        user.is_banned ? 'bg-red-50' : 'bg-white'
       }`}
     >
       <div className="flex-1">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-2 rounded-full">
-            <Users className="h-4 w-4 text-blue-600" />
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-1.5 rounded-full">
+            <Users className="h-3 w-3 text-blue-600" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className={`font-semibold ${user.is_banned ? 'text-red-700' : 'text-slate-800'}`}>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`font-medium text-sm ${user.is_banned ? 'text-red-700' : 'text-slate-800'}`}>
                 {user.username}
               </span>
               {user.roles.includes('admin') && (
-                <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
+                <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs px-1.5 py-0.5">
                   Admin
                 </Badge>
               )}
               {user.is_banned && (
-                <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">
+                <Badge className="bg-red-100 text-red-800 border-red-200 text-xs px-1.5 py-0.5">
                   Banido
                 </Badge>
               )}
             </div>
-            <div className="text-sm text-slate-600 mt-1">
+            <div className="text-xs text-slate-600">
               {user.email} • {user.games_played} jogos • {user.total_score} pontos
             </div>
-            <div className="text-xs text-slate-500 mt-1">
-              Cadastrado em: {new Date(user.created_at).toLocaleDateString('pt-BR')}
+            <div className="text-xs text-slate-500">
+              Cadastrado: {new Date(user.created_at).toLocaleDateString('pt-BR')}
+              {user.is_banned && user.ban_reason && (
+                <span className="text-red-600 ml-2">• Motivo: {user.ban_reason}</span>
+              )}
             </div>
-            {user.is_banned && user.ban_reason && (
-              <div className="text-xs text-red-600 mt-1">
-                Motivo: {user.ban_reason}
-              </div>
-            )}
           </div>
         </div>
       </div>
       
-      <div className="flex gap-2">
+      <div className="flex gap-1">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onViewUser(user)}
-          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 h-7 w-7 p-0"
         >
-          <Eye className="h-4 w-4" />
+          <Eye className="h-3 w-3" />
         </Button>
         
         <Button
           variant="outline"
           size="sm"
           onClick={() => onEditUser(user)}
-          className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+          className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 h-7 w-7 p-0"
         >
-          <Edit className="h-4 w-4" />
+          <Edit className="h-3 w-3" />
         </Button>
         
         {user.is_banned ? (
@@ -82,18 +78,18 @@ export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser
             variant="outline"
             size="sm"
             onClick={() => onBanUser(user)}
-            className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+            className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 h-7 w-7 p-0"
           >
-            <UserCheck className="h-4 w-4" />
+            <UserCheck className="h-3 w-3" />
           </Button>
         ) : (
           <Button
             variant="outline"
             size="sm"
             onClick={() => onBanUser(user)}
-            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200"
+            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 h-7 w-7 p-0"
           >
-            <Ban className="h-4 w-4" />
+            <Ban className="h-3 w-3" />
           </Button>
         )}
         
@@ -101,9 +97,9 @@ export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser
           variant="outline"
           size="sm"
           onClick={() => onDeleteUser(user)}
-          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 h-7 w-7 p-0"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3 w-3" />
         </Button>
       </div>
     </div>
