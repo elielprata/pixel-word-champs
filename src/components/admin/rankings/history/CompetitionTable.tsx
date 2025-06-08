@@ -7,20 +7,23 @@ import { Trophy, Users, Calendar, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-interface CompetitionData {
+interface CompetitionHistoryItem {
   id: string;
   title: string;
-  type: string;
+  competition_type: string;
   status: string;
   participants: number;
-  prizePool: number;
-  startDate: string;
-  endDate: string;
+  prize_pool: number;
+  start_date: string;
+  end_date: string;
   source: 'system' | 'custom';
+  theme?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface CompetitionTableProps {
-  competitions: CompetitionData[];
+  competitions: CompetitionHistoryItem[];
 }
 
 export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions }) => {
@@ -99,7 +102,7 @@ export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions
                     <div className="text-sm text-slate-500">ID: {competition.id.slice(0, 8)}...</div>
                   </TableCell>
                   <TableCell>
-                    {getTypeBadge(competition.type)}
+                    {getTypeBadge(competition.competition_type)}
                   </TableCell>
                   <TableCell>
                     {getStatusBadge(competition.status)}
@@ -117,7 +120,7 @@ export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions
                     <div className="flex items-center justify-center gap-1">
                       <DollarSign className="h-4 w-4 text-green-600" />
                       <span className="font-medium text-green-700">
-                        R$ {competition.prizePool.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {competition.prize_pool.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   </TableCell>
@@ -125,9 +128,9 @@ export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions
                     <div className="flex items-center gap-1 text-sm">
                       <Calendar className="h-4 w-4 text-slate-400" />
                       <div>
-                        <div>{formatDate(competition.startDate)}</div>
-                        {competition.endDate && competition.endDate !== competition.startDate && (
-                          <div className="text-slate-500">até {formatDate(competition.endDate)}</div>
+                        <div>{formatDate(competition.start_date)}</div>
+                        {competition.end_date && competition.end_date !== competition.start_date && (
+                          <div className="text-slate-500">até {formatDate(competition.end_date)}</div>
                         )}
                       </div>
                     </div>

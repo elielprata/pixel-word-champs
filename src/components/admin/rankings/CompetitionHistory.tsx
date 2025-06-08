@@ -11,16 +11,19 @@ import { CompetitionTable } from './history/CompetitionTable';
 import { CompetitionStats } from './history/CompetitionStats';
 import { DebugInfo } from './history/DebugInfo';
 
-interface CompetitionData {
+interface CompetitionHistoryItem {
   id: string;
   title: string;
-  type: string;
+  competition_type: string;
   status: string;
   participants: number;
-  prizePool: number;
-  startDate: string;
-  endDate: string;
+  prize_pool: number;
+  start_date: string;
+  end_date: string;
   source: 'system' | 'custom';
+  theme?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const CompetitionHistory = () => {
@@ -28,7 +31,7 @@ export const CompetitionHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [allCompetitionsData, setAllCompetitionsData] = useState<CompetitionData[]>([]);
+  const [allCompetitionsData, setAllCompetitionsData] = useState<CompetitionHistoryItem[]>([]);
   const [debugInfo, setDebugInfo] = useState<any>(null);
 
   console.log('🔍 CompetitionHistory - Raw data:', {
@@ -58,49 +61,57 @@ export const CompetitionHistory = () => {
           custom: customCompetitionsData.length
         });
 
-        // Converter competições do sistema
-        const formattedSystemCompetitions: CompetitionData[] = systemCompetitions
+        // Converter competições do sistema para o formato correto
+        const formattedSystemCompetitions: CompetitionHistoryItem[] = systemCompetitions
           .filter(comp => comp.is_active === false) // Mostrar apenas finalizadas
           .map(comp => ({
             id: comp.id,
             title: comp.title,
-            type: comp.type === 'weekly' ? 'Semanal' : 'Diária',
+            competition_type: comp.type === 'weekly' ? 'Semanal' : 'Diária',
             status: 'completed',
             participants: comp.total_participants || 0,
-            prizePool: Number(comp.prize_pool) || 0,
-            startDate: comp.week_start || comp.created_at,
-            endDate: comp.week_end || comp.updated_at,
-            source: 'system' as const
+            prize_pool: Number(comp.prize_pool) || 0,
+            start_date: comp.week_start || comp.created_at,
+            end_date: comp.week_end || comp.updated_at,
+            source: 'system' as const,
+            created_at: comp.created_at,
+            updated_at: comp.updated_at
           }));
 
-        // Converter competições customizadas
-        const formattedCustomCompetitions: CompetitionData[] = customCompetitionsData
+        // Converter competições customizadas para o formato correto
+        const formattedCustomCompetitions: CompetitionHistoryItem[] = customCompetitionsData
           .filter(comp => comp.status === 'completed' || comp.status === 'finished') // Mostrar apenas finalizadas
           .map(comp => ({
             id: comp.id,
             title: comp.title,
-            type: comp.competition_type === 'tournament' ? 'Torneio' : 
-                  comp.competition_type === 'challenge' ? 'Desafio' : 'Competição',
+            competition_type: comp.competition_type === 'tournament' ? 'Torneio' : 
+                            comp.competition_type === 'challenge' ? 'Desafio' : 'Competição',
             status: comp.status === 'completed' || comp.status === 'finished' ? 'completed' : 'active',
             participants: 0, // TODO: buscar participantes reais
-            prizePool: Number(comp.prize_pool) || 0,
-            startDate: comp.start_date || comp.created_at,
-            endDate: comp.end_date || comp.updated_at,
-            source: 'custom' as const
+            prize_pool: Number(comp.prize_pool) || 0,
+            start_date: comp.start_date || comp.created_at,
+            end_date: comp.end_date || comp.updated_at,
+            source: 'custom' as const,
+            theme: comp.theme,
+            created_at: comp.created_at,
+            updated_at: comp.updated_at
           }));
 
         // Mostrar TODAS as competições customizadas para debug (incluindo ativas)
-        const allCustomForDebug: CompetitionData[] = customCompetitionsData.map(comp => ({
+        const allCustomForDebug: CompetitionHistoryItem[] = customCompetitionsData.map(comp => ({
           id: comp.id,
           title: comp.title,
-          type: comp.competition_type === 'tournament' ? 'Torneio' : 
-                comp.competition_type === 'challenge' ? 'Desafio' : 'Competição',
+          competition_type: comp.competition_type === 'tournament' ? 'Torneio' : 
+                          comp.competition_type === 'challenge' ? 'Desafio' : 'Competição',
           status: comp.status,
           participants: 0,
-          prizePool: Number(comp.prize_pool) || 0,
-          startDate: comp.start_date || comp.created_at,
-          endDate: comp.end_date || comp.updated_at,
-          source: 'custom' as const
+          prize_pool: Number(comp.prize_pool) || 0,
+          start_date: comp.start_date || comp.created_at,
+          end_date: comp.end_date || comp.updated_at,
+          source: 'custom' as const,
+          theme: comp.theme,
+          created_at: comp.created_at,
+          updated_at: comp.updated_at
         }));
 
         console.log('📋 Competições customizadas (TODAS para debug):', allCustomForDebug);
@@ -137,13 +148,15 @@ export const CompetitionHistory = () => {
             ...activeSystemCompetitions.map(comp => ({
               id: comp.id,
               title: comp.title,
-              type: comp.type === 'weekly' ? 'Semanal' : 'Diária',
+              competition_type: comp.type === 'weekly' ? 'Semanal' : 'Diária',
               status: 'active',
               participants: comp.total_participants || 0,
-              prizePool: Number(comp.prize_pool) || 0,
-              startDate: comp.week_start || comp.created_at,
-              endDate: comp.week_end || comp.updated_at,
-              source: 'system' as const
+              prize_pool: Number(comp.prize_pool) || 0,
+              start_date: comp.week_start || comp.created_at,
+              end_date: comp.week_end || comp.updated_at,
+              source: 'system' as const,
+              created_at: comp.created_at,
+              updated_at: comp.updated_at
             })),
             ...allCustomForDebug
           ];
@@ -164,7 +177,7 @@ export const CompetitionHistory = () => {
   const filteredCompetitions = allCompetitionsData.filter(competition => {
     const matchesSearch = competition.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || competition.status === statusFilter;
-    const matchesType = typeFilter === 'all' || competition.type.toLowerCase().includes(typeFilter.toLowerCase());
+    const matchesType = typeFilter === 'all' || competition.competition_type.toLowerCase().includes(typeFilter.toLowerCase());
     
     return matchesSearch && matchesStatus && matchesType;
   });
