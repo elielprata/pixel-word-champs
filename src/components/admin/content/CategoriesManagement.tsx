@@ -1,21 +1,15 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Tag, Wand2, AlertCircle, Zap, Info } from 'lucide-react';
+import React from 'react';
 import { useWordCategories } from '@/hooks/useWordCategories';
 import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { CategoryForm } from './CategoryForm';
+import { CategoryGenerationConfig } from './CategoryGenerationConfig';
+import { CategoryList } from './CategoryList';
+import { DifficultyInfoCard } from './DifficultyInfoCard';
 
 export const CategoriesManagement = () => {
-  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', description: '' });
-  const [wordsCount, setWordsCount] = useState(5);
-
   const { 
     categories, 
     isLoading, 
@@ -43,41 +37,20 @@ export const CategoriesManagement = () => {
     },
   });
 
-  const handleCreate = () => {
-    if (!newCategory.name.trim()) return;
-    
-    createCategory({
-      name: newCategory.name.trim(),
-      description: newCategory.description.trim()
-    });
-    
-    setNewCategory({ name: '', description: '' });
+  const handleCreateCategory = (categoryData: { name: string; description: string }) => {
+    createCategory(categoryData);
   };
 
-  const handleEdit = (category: any) => {
-    setEditingId(category.id);
-    setEditForm({ name: category.name, description: category.description || '' });
+  const handleUpdateCategory = (data: { id: string; name: string; description: string }) => {
+    updateCategory(data);
   };
 
-  const handleUpdate = () => {
-    if (!editingId || !editForm.name.trim()) return;
-    
-    updateCategory({
-      id: editingId,
-      name: editForm.name.trim(),
-      description: editForm.description.trim()
-    });
-    
-    setEditingId(null);
-    setEditForm({ name: '', description: '' });
-  };
-
-  const handleGenerateAllCategories = () => {
+  const handleGenerateAllCategories = (count: number) => {
     categories.forEach(category => {
       generateWords({
         categoryId: category.id,
         categoryName: category.name,
-        count: wordsCount
+        count
       });
     });
   };
@@ -92,250 +65,27 @@ export const CategoriesManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Status da integração OpenAI - só mostra se não configurado */}
-      {!openaiConfigured && (
-        <Card className="bg-amber-50 border-amber-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-amber-600" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-amber-800">OpenAI não configurada</p>
-                <p className="text-xs text-amber-600">Configure a API key na aba "Integrações" para usar IA real</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <CategoryForm 
+        onCreateCategory={handleCreateCategory}
+        isCreating={isCreating}
+      />
 
-      {/* Formulário para nova categoria */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Nova Categoria
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-slate-700">Nome</label>
-              <Input
-                placeholder="Ex: animais, objetos..."
-                value={newCategory.name}
-                onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">Descrição (opcional)</label>
-              <Input
-                placeholder="Descrição da categoria"
-                value={newCategory.description}
-                onChange={(e) => setNewCategory(prev => ({ ...prev, description: e.target.value }))}
-              />
-            </div>
-          </div>
-          <Button 
-            onClick={handleCreate}
-            disabled={!newCategory.name.trim() || isCreating}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {isCreating ? 'Criando...' : 'Criar Categoria'}
-          </Button>
-        </CardContent>
-      </Card>
+      <CategoryGenerationConfig
+        categories={categories}
+        isGenerating={isGenerating}
+        openaiConfigured={openaiConfigured || false}
+        onGenerateAllCategories={handleGenerateAllCategories}
+      />
 
-      {/* Configuração de geração */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wand2 className="h-5 w-5" />
-            Configuração de Geração IA
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Controles à esquerda */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-slate-700">Quantidade de palavras:</label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="1000"
-                  value={wordsCount}
-                  onChange={(e) => setWordsCount(Number(e.target.value))}
-                  className="w-24"
-                />
-                <div className="text-xs text-slate-500">
-                  Quantas palavras gerar por categoria (máx. 1000)
-                </div>
-              </div>
-              
-              {categories.length > 0 && (
-                <div className="space-y-3">
-                  <Button
-                    onClick={handleGenerateAllCategories}
-                    disabled={isGenerating}
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    <Zap className="h-4 w-4 mr-2" />
-                    {isGenerating ? 'Gerando...' : `Gerar para Todas (${categories.length} categorias)`}
-                  </Button>
-                  <div className="text-xs text-slate-500">
-                    Irá gerar {wordsCount} palavras para cada categoria
-                  </div>
-                </div>
-              )}
-            </div>
+      <CategoryList
+        categories={categories}
+        isUpdating={isUpdating}
+        isDeleting={isDeleting}
+        onUpdateCategory={handleUpdateCategory}
+        onDeleteCategory={deleteCategory}
+      />
 
-            {/* Regras de geração à direita */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-medium text-blue-800 mb-2">Regras de Geração</h4>
-                  <div className="text-sm text-blue-700 space-y-1">
-                    <p>A IA distribui automaticamente as palavras por dificuldade:</p>
-                    <div className="grid grid-cols-1 gap-2 mt-2">
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">Expert</Badge>
-                        <span className="text-xs">30% (8+ letras)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">Difícil</Badge>
-                        <span className="text-xs">30% (5 letras)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs">Médio</Badge>
-                        <span className="text-xs">20% (4 letras)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">Fácil</Badge>
-                        <span className="text-xs">20% (3 letras)</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Lista de categorias */}
-      <div className="grid gap-4">
-        <h3 className="text-lg font-semibold text-slate-900">Categorias Existentes</h3>
-        
-        {categories.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-8">
-              <Tag className="h-12 w-12 text-slate-400 mx-auto mb-2" />
-              <p className="text-slate-500">Nenhuma categoria encontrada</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-3">
-            {categories.map((category) => (
-              <Card key={category.id} className="border-slate-200">
-                <CardContent className="p-4">
-                  {editingId === category.id ? (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <Input
-                          value={editForm.name}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="Nome da categoria"
-                        />
-                        <Input
-                          value={editForm.description}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
-                          placeholder="Descrição"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={handleUpdate}
-                          disabled={isUpdating}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          Salvar
-                        </Button>
-                        <Button 
-                          onClick={() => setEditingId(null)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Cancelar
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                            {category.name}
-                          </Badge>
-                          {category.description && (
-                            <span className="text-sm text-slate-600">{category.description}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          onClick={() => handleEdit(category)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => deleteCategory(category.id)}
-                          variant="outline"
-                          size="sm"
-                          disabled={isDeleting}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Informações sobre dificuldade */}
-      <Card className="bg-amber-50 border-amber-200">
-        <CardHeader>
-          <CardTitle className="text-amber-800 text-sm">Sistema de Dificuldade Automática</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-green-100 text-green-800 border-green-200">Fácil</Badge>
-              <span className="text-slate-600">3 letras</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Médio</Badge>
-              <span className="text-slate-600">4 letras</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-orange-100 text-orange-800 border-orange-200">Difícil</Badge>
-              <span className="text-slate-600">5 letras</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-red-100 text-red-800 border-red-200">Expert</Badge>
-              <span className="text-slate-600">8+ letras</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <DifficultyInfoCard />
     </div>
   );
 };
