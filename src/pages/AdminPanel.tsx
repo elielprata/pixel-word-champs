@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import AdminRoute from '@/components/auth/AdminRoute';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
@@ -14,9 +15,11 @@ import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
-  const handleBackToApp = () => {
-    navigate('/');
+  const handleLogout = async () => {
+    await logout();
+    navigate('/auth');
   };
 
   return (
@@ -33,12 +36,12 @@ const AdminPanel = () => {
               </p>
             </div>
             <Button 
-              onClick={handleBackToApp}
+              onClick={handleLogout}
               variant="outline"
-              className="flex items-center gap-2 hover:bg-purple-50 border-purple-200 text-purple-700"
+              className="flex items-center gap-2 hover:bg-red-50 border-red-200 text-red-700"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar ao App
+              <LogOut className="h-4 w-4" />
+              Logout
             </Button>
           </div>
 
