@@ -44,7 +44,7 @@ export const useAllUsers = () => {
 
       console.log('✅ Senha validada, resetando pontuações...');
 
-      // Resetar pontuações de TODOS os usuários com WHERE clause adequada
+      // Resetar pontuações de TODOS os usuários
       const { error } = await supabase
         .from('profiles')
         .update({ 
@@ -53,7 +53,7 @@ export const useAllUsers = () => {
           best_daily_position: null,
           best_weekly_position: null
         })
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // WHERE clause para todos os IDs válidos
+        .not('id', 'is', null); // WHERE clause que inclui todos os registros com ID não nulo
 
       if (error) {
         console.error('❌ Erro ao resetar pontuações:', error);
