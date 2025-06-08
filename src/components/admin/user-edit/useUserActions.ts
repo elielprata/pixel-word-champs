@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -91,18 +90,10 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
       setIsUpdatingProfile(true);
       console.log('🔄 Atualizando perfil do usuário:', userId);
 
-      // Preparar dados para atualização
+      // Preparar dados para atualização - apenas username por enquanto
       const updateData: any = { 
         username: newUsername.trim()
       };
-
-      // Se o email foi fornecido e é válido, incluir na atualização do perfil
-      if (newEmail && newEmail !== 'Email não disponível' && newEmail.trim()) {
-        // Verificar se é um email válido ou nosso fallback
-        if (newEmail.includes('@') && !newEmail.endsWith('@sistema.local')) {
-          updateData.email = newEmail.trim();
-        }
-      }
 
       // Atualizar dados na tabela profiles
       const { error: profileError } = await supabase

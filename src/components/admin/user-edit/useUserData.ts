@@ -21,10 +21,10 @@ export const useUserData = (userId: string, isOpen: boolean) => {
 
       console.log('📋 Roles encontrados:', rolesData);
 
-      // Buscar dados do perfil incluindo email
+      // Buscar dados do perfil
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('username, email')
+        .select('username')
         .eq('id', userId)
         .single();
 
@@ -36,23 +36,18 @@ export const useUserData = (userId: string, isOpen: boolean) => {
       let finalEmail = 'Email não disponível';
       
       try {
-        // Primeiro, tentar usar o email salvo na tabela profiles
-        if (profileData?.email && profileData.email !== 'Email não disponível') {
-          finalEmail = profileData.email;
+        // Tentar buscar através do auth se for o usuário atual
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (user && user.id === userId && user.email) {
+          finalEmail = user.email;
         } else {
-          // Fallback: tentar buscar através do auth se for o usuário atual
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-          
-          if (user && user.id === userId && user.email) {
-            finalEmail = user.email;
-          } else {
-            // Último fallback: usar username como base
-            if (profileData?.username) {
-              if (profileData.username.includes('@')) {
-                finalEmail = profileData.username;
-              } else {
-                finalEmail = `${profileData.username}@sistema.local`;
-              }
+          // Fallback: usar username como base
+          if (profileData?.username) {
+            if (profileData.username.includes('@')) {
+              finalEmail = profileData.username;
+            } else {
+              finalEmail = `${profileData.username}@sistema.local`;
             }
           }
         }

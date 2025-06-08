@@ -22,7 +22,7 @@ export const useUsersQuery = () => {
     queryFn: async (): Promise<AllUsersData[]> => {
       console.log('🔍 Buscando todos os usuários...');
       
-      // Buscar profiles com dados básicos incluindo email
+      // Buscar profiles com dados básicos
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -58,15 +58,11 @@ export const useUsersQuery = () => {
         // Determinar email
         let email = 'Email não disponível';
         
-        // Prioridade 1: Email salvo na tabela profiles
-        if (profile.email && profile.email !== 'Email não disponível') {
-          email = profile.email;
-        }
-        // Prioridade 2: Se for o usuário atual logado, usar o email real
-        else if (currentUser && currentUser.id === profile.id) {
+        // Se for o usuário atual logado, usar o email real
+        if (currentUser && currentUser.id === profile.id) {
           email = currentUser.email || 'Email não disponível';
         }
-        // Prioridade 3: Fallback inteligente baseado no username
+        // Fallback inteligente baseado no username
         else {
           if (profile.username) {
             if (profile.username.includes('@')) {
