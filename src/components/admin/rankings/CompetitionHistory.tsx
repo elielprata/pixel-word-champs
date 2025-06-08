@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Trophy, Users, Eye, Search, Filter, Download } from 'lucide-react';
+import { Calendar, Trophy, Users, Eye, Search, Filter, Download, History as HistoryIcon } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -278,7 +278,7 @@ export const CompetitionHistory = () => {
         <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
-              <History className="h-5 w-5 text-orange-600" />
+              <HistoryIcon className="h-5 w-5 text-orange-600" />
               Histórico de Competições ({filteredCompetitions.length})
             </CardTitle>
             <Button variant="outline" className="text-orange-600 hover:text-orange-700 border-orange-200">
@@ -358,7 +358,7 @@ export const CompetitionHistory = () => {
 
           {filteredCompetitions.length === 0 && (
             <div className="text-center py-12 text-slate-500">
-              <History className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+              <HistoryIcon className="h-12 w-12 mx-auto mb-4 text-slate-300" />
               <p className="text-lg font-medium mb-2">Nenhuma competição encontrada</p>
               <p className="text-sm">
                 {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' 
