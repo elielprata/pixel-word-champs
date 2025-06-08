@@ -3,27 +3,21 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 
-const validateAdminPassword = (password: string) => {
-  if (password !== 'admin123') {
-    throw new Error('Senha de administrador incorreta');
-  }
-};
-
 export const useUserMutations = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const banUserMutation = useMutation({
     mutationFn: async ({ userId, reason, adminPassword }: { userId: string; reason: string; adminPassword: string }) => {
-      console.log('🔐 Validando senha para banir usuário...');
-      validateAdminPassword(adminPassword);
+      // Verificar senha do admin (simulação - em produção seria mais seguro)
+      if (adminPassword !== 'admin123') {
+        throw new Error('Senha de administrador incorreta');
+      }
 
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
         throw new Error('Usuário não autenticado');
       }
-
-      console.log('✅ Senha validada, banindo usuário...');
 
       // Banir usuário
       const { error: banError } = await supabase
@@ -36,10 +30,7 @@ export const useUserMutations = () => {
         })
         .eq('id', userId);
 
-      if (banError) {
-        console.error('❌ Erro ao banir usuário:', banError);
-        throw banError;
-      }
+      if (banError) throw banError;
 
       // Registrar ação administrativa
       const { error: logError } = await supabase
@@ -54,8 +45,6 @@ export const useUserMutations = () => {
       if (logError) {
         console.warn('⚠️ Erro ao registrar log:', logError);
       }
-
-      console.log('✅ Usuário banido com sucesso');
     },
     onSuccess: () => {
       toast({
@@ -65,7 +54,6 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
-      console.error('❌ Erro ao banir usuário:', error);
       toast({
         title: "Erro ao banir usuário",
         description: error.message,
@@ -76,15 +64,15 @@ export const useUserMutations = () => {
 
   const deleteUserMutation = useMutation({
     mutationFn: async ({ userId, adminPassword }: { userId: string; adminPassword: string }) => {
-      console.log('🔐 Validando senha para deletar usuário...');
-      validateAdminPassword(adminPassword);
+      // Verificar senha do admin (simulação)
+      if (adminPassword !== 'admin123') {
+        throw new Error('Senha de administrador incorreta');
+      }
 
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
         throw new Error('Usuário não autenticado');
       }
-
-      console.log('✅ Senha validada, deletando usuário...');
 
       // Registrar ação antes de deletar
       const { error: logError } = await supabase
@@ -106,12 +94,7 @@ export const useUserMutations = () => {
         .delete()
         .eq('id', userId);
 
-      if (deleteError) {
-        console.error('❌ Erro ao deletar usuário:', deleteError);
-        throw deleteError;
-      }
-
-      console.log('✅ Usuário deletado com sucesso');
+      if (deleteError) throw deleteError;
     },
     onSuccess: () => {
       toast({
@@ -121,7 +104,6 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
-      console.error('❌ Erro ao excluir usuário:', error);
       toast({
         title: "Erro ao excluir usuário",
         description: error.message,
@@ -131,16 +113,11 @@ export const useUserMutations = () => {
   });
 
   const unbanUserMutation = useMutation({
-    mutationFn: async ({ userId, adminPassword }: { userId: string; adminPassword: string }) => {
-      console.log('🔐 Validando senha para desbanir usuário...');
-      validateAdminPassword(adminPassword);
-
+    mutationFn: async (userId: string) => {
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
         throw new Error('Usuário não autenticado');
       }
-
-      console.log('✅ Senha validada, desbanindo usuário...');
 
       const { error } = await supabase
         .from('profiles')
@@ -152,10 +129,7 @@ export const useUserMutations = () => {
         })
         .eq('id', userId);
 
-      if (error) {
-        console.error('❌ Erro ao desbanir usuário:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       // Registrar ação
       await supabase
@@ -166,8 +140,6 @@ export const useUserMutations = () => {
           action_type: 'unban_user',
           details: {}
         });
-
-      console.log('✅ Usuário desbanido com sucesso');
     },
     onSuccess: () => {
       toast({
@@ -177,7 +149,6 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
-      console.error('❌ Erro ao desbanir usuário:', error);
       toast({
         title: "Erro ao desbanir usuário",
         description: error.message,

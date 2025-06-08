@@ -25,24 +25,22 @@ export const BanUserModal = ({ isOpen, onClose, user }: BanUserModalProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!adminPassword) {
-      alert('Digite a senha de administrador');
-      return;
-    }
-
     if (user.is_banned) {
       // Desbanir usuário
-      console.log('🔄 Iniciando processo de desbanimento...');
-      unbanUser({ userId: user.id, adminPassword });
+      unbanUser(user.id);
       onClose();
     } else {
       // Banir usuário
+      if (!adminPassword) {
+        alert('Digite a senha de administrador');
+        return;
+      }
+      
       if (!banReason.trim()) {
         alert('Digite o motivo do banimento');
         return;
       }
       
-      console.log('🔄 Iniciando processo de banimento...');
       banUser({
         userId: user.id,
         reason: banReason.trim(),
@@ -109,20 +107,22 @@ export const BanUserModal = ({ isOpen, onClose, user }: BanUserModalProps) => {
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="adminPassword">Senha de administrador *</Label>
-            <Input
-              id="adminPassword"
-              type="password"
-              placeholder="Digite: admin123"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              required
-            />
-            <p className="text-xs text-slate-500">
-              A senha padrão é: <code className="bg-slate-100 px-1 rounded">admin123</code>
-            </p>
-          </div>
+          {!user.is_banned && (
+            <div className="space-y-2">
+              <Label htmlFor="adminPassword">Senha de administrador *</Label>
+              <Input
+                id="adminPassword"
+                type="password"
+                placeholder="Digite sua senha de administrador"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                required
+              />
+              <p className="text-xs text-slate-500">
+                A senha padrão é: admin123
+              </p>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={handleClose}>
