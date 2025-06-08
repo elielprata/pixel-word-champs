@@ -1,24 +1,25 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Ban, Trash2, UserCheck, Search, Users } from 'lucide-react';
+import { Eye, Edit, Ban, Trash2, UserCheck, Search, Users, RotateCcw } from 'lucide-react';
 import { useAllUsers } from '@/hooks/useAllUsers';
 import { UserDetailModal } from './users/UserDetailModal';
 import { BanUserModal } from './users/BanUserModal';
 import { DeleteUserModal } from './users/DeleteUserModal';
 import { EditUserModal } from './EditUserModal';
+import { ResetScoresModal } from './users/ResetScoresModal';
 
 export const AllUsersList = () => {
-  const { usersList, isLoading } = useAllUsers();
+  const { usersList, isLoading, resetAllScores, isResettingScores } = useAllUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showBanModal, setShowBanModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const filteredUsers = usersList.filter(user =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -43,6 +44,10 @@ export const AllUsersList = () => {
   const handleDeleteUser = (user: any) => {
     setSelectedUser(user);
     setShowDeleteModal(true);
+  };
+
+  const handleResetScores = async (password: string) => {
+    await resetAllScores(password);
   };
 
   const closeModals = () => {
@@ -84,6 +89,17 @@ export const AllUsersList = () => {
                 {filteredUsers.length} usuários
               </Badge>
             </CardTitle>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowResetModal(true)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+              disabled={isResettingScores}
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Zerar Pontuação Geral
+            </Button>
           </div>
           
           <div className="flex items-center gap-2 mt-4">
@@ -246,6 +262,13 @@ export const AllUsersList = () => {
           />
         </>
       )}
+
+      <ResetScoresModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onConfirm={handleResetScores}
+        isResetting={isResettingScores}
+      />
     </>
   );
 };
