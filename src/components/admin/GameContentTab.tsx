@@ -3,9 +3,10 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Settings, Activity, Users, Crown, Award } from 'lucide-react';
+import { BookOpen, Settings, Activity, Users, Crown, Award, Info } from 'lucide-react';
 import { WordsManagement } from './content/WordsManagement';
 import { GameSettings } from './content/GameSettings';
+import { ActiveSettingsDetails } from './content/ActiveSettingsDetails';
 import { useRealGameMetrics } from '@/hooks/useRealGameMetrics';
 
 export const GameContentTab = () => {
@@ -98,7 +99,7 @@ export const GameContentTab = () => {
           <Tabs defaultValue="words" className="w-full">
             <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
               <div className="flex items-center justify-between">
-                <TabsList className="grid grid-cols-2 bg-white border border-slate-200">
+                <TabsList className="grid grid-cols-3 bg-white border border-slate-200">
                   <TabsTrigger value="words" className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
                     <BookOpen className="h-4 w-4" />
                     Banco de Palavras
@@ -106,6 +107,10 @@ export const GameContentTab = () => {
                   <TabsTrigger value="settings" className="flex items-center gap-2 data-[state=active]:bg-slate-50 data-[state=active]:text-slate-700">
                     <Settings className="h-4 w-4" />
                     Configurações
+                  </TabsTrigger>
+                  <TabsTrigger value="details" className="flex items-center gap-2 data-[state=active]:bg-green-50 data-[state=active]:text-green-700">
+                    <Info className="h-4 w-4" />
+                    Detalhes
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -140,6 +145,21 @@ export const GameContentTab = () => {
                   </div>
                 </div>
                 <GameSettings />
+              </TabsContent>
+
+              <TabsContent value="details" className="space-y-6 mt-0">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                      <Info className="h-5 w-5 text-green-600" />
+                      Detalhes do Sistema
+                    </h3>
+                    <p className="text-slate-600 text-sm">
+                      Visualizar dados detalhados das configurações ativas
+                    </p>
+                  </div>
+                </div>
+                <ActiveSettingsDetails />
               </TabsContent>
             </div>
           </Tabs>
