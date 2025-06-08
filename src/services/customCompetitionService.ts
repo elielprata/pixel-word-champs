@@ -25,18 +25,18 @@ class CustomCompetitionService {
         throw new Error('Usuário não autenticado');
       }
 
-      // Preparar dados para inserção
+      // Preparar dados para inserção conforme a estrutura da tabela
       const competitionData = {
         title: data.title,
         description: data.description,
         competition_type: data.type === 'weekly' ? 'tournament' : 'challenge',
+        theme: data.category || 'geral',
         start_date: data.startDate?.toISOString(),
         end_date: data.endDate?.toISOString(),
         prize_pool: data.prizePool,
         max_participants: data.maxParticipants,
         status: 'active',
         created_by: user.id,
-        theme: data.category || 'geral',
         rules: {
           category: data.category,
           weeklyTournamentId: data.weeklyTournamentId
