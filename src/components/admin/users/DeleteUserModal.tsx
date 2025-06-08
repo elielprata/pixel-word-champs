@@ -17,14 +17,15 @@ interface DeleteUserModalProps {
 export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps) => {
   const [adminPassword, setAdminPassword] = useState('');
   const [confirmUsername, setConfirmUsername] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { deleteUser, isDeletingUser } = useAllUsers();
 
   if (!user) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!adminPassword) {
+    if (!adminPassword.trim()) {
       alert('Digite sua senha de administrador');
       return;
     }
@@ -33,19 +34,36 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
       alert('Confirmação do nome de usuário incorreta');
       return;
     }
-    
-    deleteUser({
-      userId: user.id,
-      adminPassword
-    });
-    onClose();
+
+    try {
+      setIsSubmitting(true);
+      console.log('🗑️ Iniciando exclusão do usuário:', user.username);
+      
+      await deleteUser({
+        userId: user.id,
+        adminPassword: adminPassword.trim()
+      });
+      
+      // Reset form e fechar modal
+      setAdminPassword('');
+      setConfirmUsername('');
+      onClose();
+      
+    } catch (error) {
+      console.error('❌ Erro na exclusão:', error);
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
-    setAdminPassword('');
-    setConfirmUsername('');
-    onClose();
+    if (!isSubmitting && !isDeletingUser) {
+      setAdminPassword('');
+      setConfirmUsername('');
+      onClose();
+    }
   };
+
+  const isLoading = isDeletingUser || isSubmitting;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -81,6 +99,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
               value={confirmUsername}
               onChange={(e) => setConfirmUsername(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -93,6 +112,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
               required
+              disabled={isLoading}
             />
             <p className="text-xs text-slate-500">
               Digite sua senha atual para confirmar esta ação
@@ -100,15 +120,20 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose}
+              disabled={isLoading}
+            >
               Cancelar
             </Button>
             <Button
               type="submit"
               variant="destructive"
-              disabled={isDeletingUser || confirmUsername !== user.username}
+              disabled={isLoading || confirmUsername !== user.username || !adminPassword.trim()}
             >
-              {isDeletingUser ? (
+              {isLoading ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   Excluindo...

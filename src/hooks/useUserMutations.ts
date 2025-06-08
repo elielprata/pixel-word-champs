@@ -13,17 +13,20 @@ export const useUserMutations = () => {
       throw new Error('Usuário não autenticado');
     }
 
-    // Validar senha usando uma sessão temporária sem afetar a sessão atual
-    const { data, error } = await supabase.auth.signInWithPassword({
+    console.log('🔐 Validando senha do admin:', currentUser.user.email);
+
+    // Validar senha usando signInWithPassword
+    const { error } = await supabase.auth.signInWithPassword({
       email: currentUser.user.email!,
       password: password
     });
 
     if (error) {
+      console.error('❌ Erro na validação da senha:', error);
       throw new Error('Senha de administrador incorreta');
     }
 
-    // Manter a sessão atual do usuário
+    console.log('✅ Senha validada com sucesso');
     return true;
   };
 
@@ -95,7 +98,7 @@ export const useUserMutations = () => {
     mutationFn: async ({ userId, adminPassword }: { userId: string; adminPassword: string }) => {
       console.log('🔐 Iniciando exclusão do usuário:', userId);
       
-      // Validar senha real do admin
+      // Validar senha real do admin primeiro
       await validateAdminPassword(adminPassword);
 
       const { data: currentUser } = await supabase.auth.getUser();
@@ -105,21 +108,60 @@ export const useUserMutations = () => {
 
       console.log('✅ Senha validada, excluindo usuário...');
 
-      // Registrar ação antes de deletar
-      const { error: logError } = await supabase
-        .from('admin_actions')
-        .insert({
-          admin_id: currentUser.user.id,
-          target_user_id: userId,
-          action_type: 'delete_user',
-          details: {}
-        });
-
-      if (logError) {
-        console.warn('⚠️ Erro ao registrar log:', logError);
+      // Verificar se não é o próprio admin tentando se deletar
+      if (currentUser.user.id === userId) {
+        throw new Error('Você não pode excluir sua própria conta');
       }
 
-      // Deletar usuário específico (cascade irá deletar relacionados)
+      // Registrar ação antes de deletar
+      try {
+        const { error: logError } = await supabase
+          .from('admin_actions')
+          .insert({
+            admin_id: currentUser.user.id,
+            target_user_id: userId,
+            action_type: 'delete_user',
+            details: { timestamp: new Date().toISOString() }
+          });
+
+        if (logError) {
+          console.warn('⚠️ Erro ao registrar log:', logError);
+        }
+      } catch (logError) {
+        console.warn('⚠️ Erro ao registrar ação:', logError);
+      }
+
+      // Deletar dados relacionados primeiro (se necessário)
+      try {
+        // Deletar sessões de jogo
+        await supabase
+          .from('game_sessions')
+          .delete()
+          .eq('user_id', userId);
+
+        // Deletar rankings
+        await supabase
+          .from('daily_rankings')
+          .delete()
+          .eq('user_id', userId);
+
+        await supabase
+          .from('weekly_rankings')
+          .delete()
+          .eq('user_id', userId);
+
+        // Deletar roles
+        await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', userId);
+
+        console.log('✅ Dados relacionados removidos');
+      } catch (cleanupError) {
+        console.warn('⚠️ Erro na limpeza de dados relacionados:', cleanupError);
+      }
+
+      // Deletar perfil do usuário (isso também vai deletar o usuário do auth via trigger/cascade)
       const { error: deleteError } = await supabase
         .from('profiles')
         .delete()
@@ -127,7 +169,7 @@ export const useUserMutations = () => {
 
       if (deleteError) {
         console.error('❌ Erro ao excluir usuário:', deleteError);
-        throw deleteError;
+        throw new Error(`Erro ao excluir usuário: ${deleteError.message}`);
       }
 
       console.log('✅ Usuário excluído com sucesso');
@@ -136,7 +178,7 @@ export const useUserMutations = () => {
       console.log('🎉 Exclusão concluída com sucesso');
       toast({
         title: "Usuário excluído",
-        description: "O usuário foi excluído permanentemente.",
+        description: "O usuário foi excluído permanentemente do sistema.",
       });
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
@@ -144,7 +186,7 @@ export const useUserMutations = () => {
       console.error('❌ Erro na exclusão:', error);
       toast({
         title: "Erro ao excluir usuário",
-        description: error.message,
+        description: error.message || 'Erro desconhecido',
         variant: "destructive",
       });
     },
