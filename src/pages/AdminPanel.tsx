@@ -1,3 +1,4 @@
+
 import React from 'react';
 import AdminRoute from '@/components/auth/AdminRoute';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +12,28 @@ import { SupportTab } from "@/components/admin/SupportTab";
 import { AllUsersTab } from '@/components/admin/AllUsersTab';
 
 const AdminPanel = () => {
+  // Mock data for challenges - you can replace with real data later
+  const mockChallenges = [
+    {
+      id: 1,
+      title: "Desafio Semanal #1",
+      status: "Ativo",
+      players: 245
+    },
+    {
+      id: 2,
+      title: "Torneio Especial",
+      status: "Agendado", 
+      players: 89
+    },
+    {
+      id: 3,
+      title: "Competição Mensal",
+      status: "Ativo",
+      players: 378
+    }
+  ];
+
   return (
     <AdminRoute>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -49,7 +72,7 @@ const AdminPanel = () => {
             </TabsContent>
 
             <TabsContent value="challenges">
-              <ChallengesTab />
+              <ChallengesTab challenges={mockChallenges} />
             </TabsContent>
 
             <TabsContent value="rankings">

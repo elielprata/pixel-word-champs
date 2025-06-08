@@ -3,7 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, Calendar, GameController2, Trophy, Ban } from 'lucide-react';
+import { User, Calendar, Gamepad2, Trophy, Ban } from 'lucide-react';
 
 interface UserDetailModalProps {
   isOpen: boolean;
@@ -63,7 +63,7 @@ export const UserDetailModal = ({ isOpen, onClose, user }: UserDetailModalProps)
           {/* Estatísticas de Jogo */}
           <div className="space-y-3">
             <h4 className="font-medium text-slate-700 flex items-center gap-2">
-              <GameController2 className="h-4 w-4" />
+              <Gamepad2 className="h-4 w-4" />
               Estatísticas de Jogo
             </h4>
             
@@ -78,7 +78,7 @@ export const UserDetailModal = ({ isOpen, onClose, user }: UserDetailModalProps)
               
               <div className="bg-green-50 p-3 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
-                  <GameController2 className="h-4 w-4 text-green-600" />
+                  <Gamepad2 className="h-4 w-4 text-green-600" />
                   <span className="text-sm font-medium text-green-800">Jogos</span>
                 </div>
                 <p className="text-lg font-bold text-green-900">{user.games_played}</p>
