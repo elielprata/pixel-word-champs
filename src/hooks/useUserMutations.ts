@@ -7,12 +7,29 @@ export const useUserMutations = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const validateAdminPassword = async (password: string) => {
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser.user) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    // Tentar fazer login temporário para validar a senha
+    const { error } = await supabase.auth.signInWithPassword({
+      email: currentUser.user.email!,
+      password: password
+    });
+
+    if (error) {
+      throw new Error('Senha de administrador incorreta');
+    }
+
+    return true;
+  };
+
   const banUserMutation = useMutation({
     mutationFn: async ({ userId, reason, adminPassword }: { userId: string; reason: string; adminPassword: string }) => {
-      // Verificar senha do admin (simulação - em produção seria mais seguro)
-      if (adminPassword !== 'admin123') {
-        throw new Error('Senha de administrador incorreta');
-      }
+      // Validar senha real do admin
+      await validateAdminPassword(adminPassword);
 
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
@@ -64,10 +81,8 @@ export const useUserMutations = () => {
 
   const deleteUserMutation = useMutation({
     mutationFn: async ({ userId, adminPassword }: { userId: string; adminPassword: string }) => {
-      // Verificar senha do admin (simulação)
-      if (adminPassword !== 'admin123') {
-        throw new Error('Senha de administrador incorreta');
-      }
+      // Validar senha real do admin
+      await validateAdminPassword(adminPassword);
 
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {

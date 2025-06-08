@@ -11,14 +11,31 @@ export const useAllUsers = () => {
   const { data: usersList = [], isLoading, refetch } = useUsersQuery();
   const { banUser, deleteUser, unbanUser, isBanningUser, isDeletingUser, isUnbanningUser } = useUserMutations();
 
+  const validateAdminPassword = async (password: string) => {
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser.user) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    // Tentar fazer login temporário para validar a senha
+    const { error } = await supabase.auth.signInWithPassword({
+      email: currentUser.user.email!,
+      password: password
+    });
+
+    if (error) {
+      throw new Error('Senha de administrador incorreta');
+    }
+
+    return true;
+  };
+
   const resetAllScoresMutation = useMutation({
     mutationFn: async (adminPassword: string) => {
       console.log('🔐 Iniciando reset de pontuações...');
       
-      // Verificar senha admin
-      if (adminPassword !== 'admin123') {
-        throw new Error('Senha de administrador incorreta');
-      }
+      // Validar senha real do admin
+      await validateAdminPassword(adminPassword);
 
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {

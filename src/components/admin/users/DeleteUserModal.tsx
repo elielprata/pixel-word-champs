@@ -25,7 +25,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
     e.preventDefault();
     
     if (!adminPassword) {
-      alert('Digite a senha de administrador');
+      alert('Digite sua senha de administrador');
       return;
     }
     
@@ -85,7 +85,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="adminPassword">Senha de administrador *</Label>
+            <Label htmlFor="adminPassword">Sua senha de administrador *</Label>
             <Input
               id="adminPassword"
               type="password"
@@ -95,7 +95,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
               required
             />
             <p className="text-xs text-slate-500">
-              A senha padrão é: admin123
+              Digite sua senha atual para confirmar esta ação
             </p>
           </div>
 

@@ -73,17 +73,17 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="admin-password">Senha de Administrador</Label>
+            <Label htmlFor="admin-password">Sua Senha de Administrador</Label>
             <Input
               id="admin-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite: admin123"
+              placeholder="Digite sua senha atual"
               disabled={isResetting}
             />
             <p className="text-xs text-slate-500">
-              A senha padrão é: <code className="bg-slate-100 px-1 rounded">admin123</code>
+              Digite sua senha atual para confirmar esta ação crítica
             </p>
           </div>
 

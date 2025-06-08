@@ -32,7 +32,7 @@ export const BanUserModal = ({ isOpen, onClose, user }: BanUserModalProps) => {
     } else {
       // Banir usuário
       if (!adminPassword) {
-        alert('Digite a senha de administrador');
+        alert('Digite sua senha de administrador');
         return;
       }
       
@@ -109,7 +109,7 @@ export const BanUserModal = ({ isOpen, onClose, user }: BanUserModalProps) => {
 
           {!user.is_banned && (
             <div className="space-y-2">
-              <Label htmlFor="adminPassword">Senha de administrador *</Label>
+              <Label htmlFor="adminPassword">Sua senha de administrador *</Label>
               <Input
                 id="adminPassword"
                 type="password"
@@ -119,7 +119,7 @@ export const BanUserModal = ({ isOpen, onClose, user }: BanUserModalProps) => {
                 required
               />
               <p className="text-xs text-slate-500">
-                A senha padrão é: admin123
+                Digite sua senha atual para confirmar esta ação
               </p>
             </div>
           )}
