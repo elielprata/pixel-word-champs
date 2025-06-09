@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, Zap, Info, AlertCircle, Sparkles } from 'lucide-react';
+import { Wand2, Zap, Info, AlertCircle } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -30,8 +30,6 @@ export const CategoryGenerationConfig = ({
   const handleGenerateAll = () => {
     onGenerateAllCategories(wordsCount);
   };
-
-  const estimatedTokens = categories.length > 0 ? Math.ceil(wordsCount * categories.length * 0.5) + 200 : 0;
 
   return (
     <>
@@ -83,21 +81,11 @@ export const CategoryGenerationConfig = ({
                     disabled={isGenerating}
                     className="bg-purple-600 hover:bg-purple-700"
                   >
-                    <Sparkles className="h-4 w-4 mr-2" />
+                    <Zap className="h-4 w-4 mr-2" />
                     {isGenerating ? 'Gerando...' : `Gerar para Todas (${categories.length} categorias)`}
                   </Button>
-                  
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Zap className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">Geração Otimizada</span>
-                    </div>
-                    <div className="text-xs text-green-700 space-y-1">
-                      <p>• <strong>1 única requisição</strong> para todas as categorias</p>
-                      <p>• Total: <strong>{wordsCount * categories.length} palavras</strong></p>
-                      <p>• Economia: <strong>~{categories.length - 1} requisições</strong></p>
-                      <p>• Tokens estimados: <strong>~{estimatedTokens}</strong> (vs {estimatedTokens * categories.length} individual)</p>
-                    </div>
+                  <div className="text-xs text-slate-500">
+                    Irá gerar {wordsCount} palavras para cada categoria
                   </div>
                 </div>
               )}

@@ -1,48 +1,33 @@
 
 import React from 'react';
-import { useWordCategories } from '@/hooks/useWordCategories';
-import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
-import { useIntegrations } from '@/hooks/useIntegrations';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tag, List } from 'lucide-react';
 import { CategoriesManagement } from './CategoriesManagement';
-import { CategoryGenerationConfig } from './CategoryGenerationConfig';
 import { WordsListTable } from './WordsListTable';
 
 export const WordsManagement = () => {
-  const { categories } = useWordCategories();
-  const { generateWordsForAllCategories, isGeneratingAll } = useAIWordGeneration();
-  const { integrations } = useIntegrations();
-  
-  const openaiConfigured = integrations?.openai_api_key && integrations.openai_api_key.length > 10;
-
-  const handleGenerateAllCategories = (count: number) => {
-    if (categories.length === 0) {
-      console.log('⚠️ Nenhuma categoria disponível para geração');
-      return;
-    }
-
-    console.log('🚀 Iniciando geração para todas as categorias:', {
-      totalCategories: categories.length,
-      wordsPerCategory: count
-    });
-
-    generateWordsForAllCategories({
-      categories: categories.map(cat => ({ id: cat.id, name: cat.name })),
-      count
-    });
-  };
-
   return (
     <div className="space-y-6">
-      <CategoriesManagement />
-      
-      <CategoryGenerationConfig
-        categories={categories}
-        isGenerating={isGeneratingAll}
-        openaiConfigured={openaiConfigured}
-        onGenerateAllCategories={handleGenerateAllCategories}
-      />
-      
-      <WordsListTable />
+      <Tabs defaultValue="categories" className="w-full">
+        <TabsList className="grid grid-cols-2 bg-slate-100">
+          <TabsTrigger value="categories" className="flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Categorias & IA
+          </TabsTrigger>
+          <TabsTrigger value="words" className="flex items-center gap-2">
+            <List className="h-4 w-4" />
+            Lista de Palavras
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="categories" className="mt-6">
+          <CategoriesManagement />
+        </TabsContent>
+
+        <TabsContent value="words" className="mt-6">
+          <WordsListTable />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
