@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminRoute from '@/components/auth/AdminRoute';
@@ -6,30 +5,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useCompetitionIntegration } from '@/hooks/useCompetitionIntegration';
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
-
 const AdminPanel = () => {
-  console.log('🔧 AdminPanel component rendering...');
-  
   const navigate = useNavigate();
-  const { logout } = useAuth();
-  
-  // Ativar integração completa de competições
-  useCompetitionIntegration();
-
+  const {
+    logout
+  } = useAuth();
   const handleLogout = async () => {
     await logout();
     navigate('/auth');
   };
-
-  return (
-    <AdminRoute>
+  return <AdminRoute>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8 flex justify-between items-center">
@@ -83,8 +74,6 @@ const AdminPanel = () => {
           </Tabs>
         </div>
       </div>
-    </AdminRoute>
-  );
+    </AdminRoute>;
 };
-
 export default AdminPanel;

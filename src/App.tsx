@@ -1,46 +1,70 @@
 
-import { Suspense, lazy } from "react";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import AuthProvider from "@/components/auth/AuthProvider";
-import Index from "./pages/Index";
-import AdminPanel from "./pages/AdminPanel";
-import WeeklyCompetitionRanking from "./pages/WeeklyCompetitionRanking";
-import DailyCompetitionRanking from "./pages/DailyCompetitionRanking";
-import NotFound from "./pages/NotFound";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
+import Index from './pages/Index';
+import AdminPanel from './pages/AdminPanel';
+import DailyCompetitionRanking from './pages/DailyCompetitionRanking';
+import WeeklyCompetitionRanking from './pages/WeeklyCompetitionRanking';
+import NotFound from './pages/NotFound';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import AuthScreen from '@/components/auth/AuthScreen';
+import AuthProvider from '@/components/auth/AuthProvider';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-const App = () => {
-  console.log('🎯 App component rendering...');
-  
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
           <AuthProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/admin" element={<AdminPanel />} />
-              <Route path="/admin/weekly-competition/:competitionId/ranking" element={<WeeklyCompetitionRanking />} />
-              <Route path="/admin/daily-competition/:competitionId/ranking" element={<DailyCompetitionRanking />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/404" element={<NotFound />} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
-            </Routes>
+            <div className="App">
+              <Routes>
+                <Route path="/auth" element={<AuthScreen />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/competition/:competitionId/ranking" element={
+                  <ProtectedRoute>
+                    <DailyCompetitionRanking />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/weekly-competition/:competitionId/ranking" element={
+                  <ProtectedRoute>
+                    <WeeklyCompetitionRanking />
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+            </div>
           </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
-};
+}
 
 export default App;
