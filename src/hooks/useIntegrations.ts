@@ -19,20 +19,6 @@ export const useIntegrations = () => {
   const [loading, setLoading] = useState(true);
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
 
-  const defaultSystemPrompt = `Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.
-
-REGRAS IMPORTANTES:
-- Gere apenas palavras válidas em português
-- Distribua as palavras por dificuldade baseada no número de letras:
-  * Fácil: 3 letras (20%)
-  * Médio: 4 letras (20%) 
-  * Difícil: 5-7 letras (30%)
-  * Expert: 8+ letras (30%)
-- Retorne apenas as palavras em MAIÚSCULAS, uma por linha
-- Não inclua números, pontuação ou texto explicativo
-- Palavras devem ser relacionadas à categoria solicitada
-- Evite palavras muito técnicas ou obscuras`;
-
   const [fingerprintJS, setFingerprintJS] = useState<Integration>({
     id: 'fingerprintjs',
     name: 'FingerprintJS',
@@ -46,22 +32,6 @@ REGRAS IMPORTANTES:
       timeout: 5000,
       enableDeviceTracking: true,
       enableLocationDetection: false
-    }
-  });
-
-  const [openAI, setOpenAI] = useState<Integration>({
-    id: 'openai',
-    name: 'OpenAI',
-    description: 'Inteligência artificial para moderação de conteúdo',
-    status: 'inactive',
-    apiKey: '',
-    settings: {},
-    enabled: false,
-    config: {
-      model: 'gpt-4o-mini',
-      maxTokens: 150,
-      temperature: 0.7,
-      systemPrompt: defaultSystemPrompt
     }
   });
 
@@ -105,38 +75,6 @@ REGRAS IMPORTANTES:
         console.log('🔑 FingerprintJS configurado:', { hasKey, isEnabled });
       }
 
-      // Processar configurações do OpenAI
-      const openaiConfig = settings?.find(s => s.setting_key === 'openai_api_key');
-      const openaiEnabledConfig = settings?.find(s => s.setting_key === 'openai_enabled');
-      const systemPromptConfig = settings?.find(s => s.setting_key === 'openai_system_prompt');
-      const modelConfig = settings?.find(s => s.setting_key === 'openai_model');
-      const maxTokensConfig = settings?.find(s => s.setting_key === 'openai_max_tokens');
-      const temperatureConfig = settings?.find(s => s.setting_key === 'openai_temperature');
-      
-      const hasOpenAIKey = openaiConfig?.setting_value && openaiConfig.setting_value.trim().length > 0;
-      const isOpenAIEnabled = openaiEnabledConfig?.setting_value === 'true';
-      
-      setOpenAI(prev => ({
-        ...prev,
-        apiKey: openaiConfig?.setting_value || '',
-        status: (hasOpenAIKey && isOpenAIEnabled) ? 'active' : 'inactive',
-        enabled: isOpenAIEnabled,
-        config: {
-          ...prev.config,
-          systemPrompt: systemPromptConfig?.setting_value || defaultSystemPrompt,
-          model: modelConfig?.setting_value || 'gpt-4o-mini',
-          maxTokens: maxTokensConfig?.setting_value ? parseInt(maxTokensConfig.setting_value) : 150,
-          temperature: temperatureConfig?.setting_value ? parseFloat(temperatureConfig.setting_value) : 0.7
-        }
-      }));
-      
-      console.log('🤖 OpenAI configurado:', {
-        hasKey: hasOpenAIKey,
-        keyLength: openaiConfig?.setting_value?.length || 0,
-        model: modelConfig?.setting_value || 'gpt-4o-mini',
-        isEnabled: isOpenAIEnabled
-      });
-
     } catch (error) {
       console.error('❌ Erro ao buscar integrações:', error);
       toast({
@@ -157,72 +95,22 @@ REGRAS IMPORTANTES:
         enabled: integration.enabled
       });
       
-      const settingsToSave = [];
-
-      if (integration.id === 'openai') {
-        // Salvar todas as configurações do OpenAI, incluindo o estado enabled
-        settingsToSave.push(
-          {
-            setting_key: 'openai_enabled',
-            setting_value: integration.enabled.toString(),
-            setting_type: 'boolean',
-            description: 'OpenAI habilitado/desabilitado',
-            category: 'integrations'
-          },
-          {
-            setting_key: 'openai_api_key',
-            setting_value: integration.apiKey.trim(),
-            setting_type: 'string',
-            description: 'API Key para OpenAI',
-            category: 'integrations'
-          },
-          {
-            setting_key: 'openai_system_prompt',
-            setting_value: integration.config.systemPrompt,
-            setting_type: 'text',
-            description: 'System Prompt para OpenAI',
-            category: 'integrations'
-          },
-          {
-            setting_key: 'openai_model',
-            setting_value: integration.config.model,
-            setting_type: 'string',
-            description: 'Modelo OpenAI',
-            category: 'integrations'
-          },
-          {
-            setting_key: 'openai_max_tokens',
-            setting_value: integration.config.maxTokens.toString(),
-            setting_type: 'number',
-            description: 'Máximo de tokens OpenAI',
-            category: 'integrations'
-          },
-          {
-            setting_key: 'openai_temperature',
-            setting_value: integration.config.temperature.toString(),
-            setting_type: 'number',
-            description: 'Temperature OpenAI',
-            category: 'integrations'
-          }
-        );
-      } else {
-        settingsToSave.push(
-          {
-            setting_key: `${integration.id}_enabled`,
-            setting_value: integration.enabled.toString(),
-            setting_type: 'boolean',
-            description: `${integration.name} habilitado/desabilitado`,
-            category: 'integrations'
-          },
-          {
-            setting_key: `${integration.id}_api_key`,
-            setting_value: integration.apiKey,
-            setting_type: 'string',
-            description: `API Key para ${integration.name}`,
-            category: 'integrations'
-          }
-        );
-      }
+      const settingsToSave = [
+        {
+          setting_key: `${integration.id}_enabled`,
+          setting_value: integration.enabled.toString(),
+          setting_type: 'boolean',
+          description: `${integration.name} habilitado/desabilitado`,
+          category: 'integrations'
+        },
+        {
+          setting_key: `${integration.id}_api_key`,
+          setting_value: integration.apiKey,
+          setting_type: 'string',
+          description: `API Key para ${integration.name}`,
+          category: 'integrations'
+        }
+      ];
 
       for (const setting of settingsToSave) {
         console.log('🔧 Salvando configuração:', setting.setting_key, 'valor:', setting.setting_value);
@@ -264,20 +152,11 @@ REGRAS IMPORTANTES:
       }
 
       // Atualizar estado local
-      if (integration.id === 'fingerprintjs') {
-        setFingerprintJS(prev => ({
-          ...prev,
-          ...integration,
-          status: (integration.apiKey && integration.enabled) ? 'active' : 'inactive'
-        }));
-      } else if (integration.id === 'openai') {
-        const hasValidKey = integration.apiKey && integration.apiKey.trim().length > 0;
-        setOpenAI(prev => ({
-          ...prev,
-          ...integration,
-          status: (hasValidKey && integration.enabled) ? 'active' : 'inactive'
-        }));
-      }
+      setFingerprintJS(prev => ({
+        ...prev,
+        ...integration,
+        status: (integration.apiKey && integration.enabled) ? 'active' : 'inactive'
+      }));
 
       toast({
         title: "Sucesso",
@@ -301,7 +180,7 @@ REGRAS IMPORTANTES:
     setTestingConnection(integrationId);
     
     try {
-      const integration = integrationId === 'fingerprintjs' ? fingerprintJS : openAI;
+      const integration = fingerprintJS;
       
       console.log('🧪 Testando conexão para:', integrationId, {
         hasKey: !!integration.apiKey,
@@ -313,50 +192,22 @@ REGRAS IMPORTANTES:
         throw new Error('Integração está desabilitada');
       }
       
-      if (integrationId === 'openai') {
-        if (!integration.apiKey || integration.apiKey.trim().length === 0) {
-          throw new Error('API Key da OpenAI não configurada');
-        }
-
-        // Teste real da OpenAI API
-        const response = await fetch('https://api.openai.com/v1/models', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${integration.apiKey.trim()}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        console.log('📡 Resposta da OpenAI:', response.status, response.statusText);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('❌ Erro da OpenAI API:', errorText);
-          throw new Error(`API error: ${response.status} - ${response.statusText}`);
-        }
-
+      // Simulação para FingerprintJS
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const isValid = integration.apiKey.length > 10;
+      
+      if (isValid) {
         toast({
           title: "Conexão bem-sucedida",
           description: `${integration.name} está funcionando corretamente`,
         });
       } else {
-        // Simulação para FingerprintJS
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const isValid = integration.apiKey.length > 10;
-        
-        if (isValid) {
-          toast({
-            title: "Conexão bem-sucedida",
-            description: `${integration.name} está funcionando corretamente`,
-          });
-        } else {
-          throw new Error('API Key inválida');
-        }
+        throw new Error('API Key inválida');
       }
       
     } catch (error: any) {
-      const integration = integrationId === 'fingerprintjs' ? fingerprintJS : openAI;
+      const integration = fingerprintJS;
       console.error('❌ Erro no teste de conexão:', error);
       toast({
         title: "Erro de conexão",
@@ -371,8 +222,6 @@ REGRAS IMPORTANTES:
   return {
     fingerprintJS,
     setFingerprintJS,
-    openAI,
-    setOpenAI,
     loading,
     testingConnection,
     handleSaveIntegration,

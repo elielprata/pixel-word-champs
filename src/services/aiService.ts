@@ -15,22 +15,15 @@ export interface AIGeneratedData {
 }
 
 class AIService {
-  private apiKey: string | null = null;
   private config: {
-    model: string;
     maxTokens: number;
     temperature: number;
     systemPrompt: string;
   } = {
-    model: 'gpt-4o-mini',
     maxTokens: 1000,
     temperature: 0.7,
     systemPrompt: 'Você é um assistente especializado em jogos de palavras.'
   };
-
-  setApiKey(key: string) {
-    this.apiKey = key;
-  }
 
   setConfig(config: Partial<typeof this.config>) {
     this.config = { ...this.config, ...config };

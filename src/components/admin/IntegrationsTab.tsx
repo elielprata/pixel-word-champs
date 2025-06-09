@@ -2,7 +2,6 @@
 import React from 'react';
 import { IntegrationsHeader } from './integrations/IntegrationsHeader';
 import { FingerprintJSCard } from './integrations/FingerprintJSCard';
-import { OpenAICard } from './integrations/OpenAICard';
 import { IntegrationStatusOverview } from './integrations/IntegrationStatusOverview';
 import { useIntegrations } from '@/hooks/useIntegrations';
 
@@ -10,8 +9,6 @@ export const IntegrationsTab = () => {
   const {
     fingerprintJS,
     setFingerprintJS,
-    openAI,
-    setOpenAI,
     loading,
     testingConnection,
     handleSaveIntegration,
@@ -22,10 +19,6 @@ export const IntegrationsTab = () => {
     setFingerprintJS(integration);
   };
 
-  const handleOpenAIUpdate = (integration: any) => {
-    setOpenAI(integration);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -33,7 +26,6 @@ export const IntegrationsTab = () => {
 
         <IntegrationStatusOverview
           fingerprintJS={fingerprintJS}
-          openAI={openAI}
         />
 
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -43,19 +35,10 @@ export const IntegrationsTab = () => {
           </div>
           
           <div className="p-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <FingerprintJSCard
                 integration={fingerprintJS}
                 onUpdate={handleFingerprintUpdate}
-                onSave={handleSaveIntegration}
-                onTest={testConnection}
-                loading={loading}
-                testingConnection={testingConnection}
-              />
-
-              <OpenAICard
-                integration={openAI}
-                onUpdate={handleOpenAIUpdate}
                 onSave={handleSaveIntegration}
                 onTest={testConnection}
                 loading={loading}
