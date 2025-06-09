@@ -22,7 +22,7 @@ interface Competition {
 }
 
 interface HomeScreenProps {
-  onStartChallenge: (challengeId: number) => void;
+  onStartChallenge: (challengeId: string) => void;
   onViewFullRanking: () => void;
   onViewChallengeRanking: (challengeId: number) => void;
 }

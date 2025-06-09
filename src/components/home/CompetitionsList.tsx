@@ -20,7 +20,7 @@ interface Competition {
 
 interface CompetitionsListProps {
   competitions: Competition[];
-  onStartChallenge: (challengeId: number) => void;
+  onStartChallenge: (challengeId: string) => void;
   onRefresh: () => void;
 }
 
