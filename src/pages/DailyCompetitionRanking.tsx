@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Trophy, Users, Calendar, Medal, Crown } from 'lucide-react';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { customCompetitionService } from '@/services/customCompetitionService';
-import { PlayerAvatar } from '@/components/ui/PlayerAvatar';
+import PlayerAvatar from '@/components/ui/PlayerAvatar';
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
@@ -250,8 +250,9 @@ export default function DailyCompetitionRanking() {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <PlayerAvatar
-                              username={participant.profiles?.username || 'Usuário'}
-                              avatarUrl={participant.profiles?.avatar_url}
+                              src={participant.profiles?.avatar_url}
+                              alt={participant.profiles?.username || 'Usuário'}
+                              fallback={participant.profiles?.username?.charAt(0) || 'U'}
                               size="sm"
                             />
                             <span className="font-medium">

@@ -92,15 +92,17 @@ export const WeeklyTournamentsManagement = () => {
       const endDateWithTime = new Date(newTournament.end_date);
       endDateWithTime.setHours(23, 59, 59, 999);
 
-      const result = await customCompetitionService.createCompetition({
+      const competitionData = {
         title: newTournament.title,
         description: newTournament.description,
-        type: 'weekly',
-        prizePool: currentPrizePool,
-        maxParticipants: newTournament.max_participants,
-        startDate: startDateWithTime,
-        endDate: endDateWithTime
-      });
+        competition_type: 'tournament',
+        start_date: startDateWithTime.toISOString(),
+        end_date: endDateWithTime.toISOString(),
+        prize_pool: currentPrizePool,
+        max_participants: newTournament.max_participants
+      };
+
+      const result = await customCompetitionService.createCompetition(competitionData);
 
       if (result.success) {
         toast({
@@ -149,14 +151,16 @@ export const WeeklyTournamentsManagement = () => {
       const endDateWithTime = new Date(editingTournament.end_date);
       endDateWithTime.setHours(23, 59, 59, 999);
 
-      const result = await customCompetitionService.updateCompetition(editingTournament.id, {
+      const updateData = {
         title: editingTournament.title,
         description: editingTournament.description,
-        type: 'weekly',
-        maxParticipants: editingTournament.max_participants,
-        startDate: startDateWithTime,
-        endDate: endDateWithTime
-      });
+        competition_type: 'tournament',
+        max_participants: editingTournament.max_participants,
+        start_date: startDateWithTime.toISOString(),
+        end_date: endDateWithTime.toISOString()
+      };
+
+      const result = await customCompetitionService.updateCompetition(editingTournament.id, updateData);
 
       if (result.success) {
         // Também atualizar status e prize_pool diretamente no Supabase

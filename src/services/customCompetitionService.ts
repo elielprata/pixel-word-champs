@@ -16,8 +16,21 @@ interface CompetitionFormData {
   status?: string;
 }
 
+// Exportar a interface para uso em outros componentes
+export interface CustomCompetitionData {
+  title: string;
+  description: string;
+  type: 'daily' | 'weekly';
+  category?: string;
+  weeklyTournamentId?: string;
+  prizePool: number;
+  maxParticipants: number;
+  startDate?: Date;
+  endDate?: Date;
+}
+
 class CustomCompetitionService {
-  async createCompetition(data: CompetitionFormData): Promise<ApiResponse<any>> {
+  async createCompetition(data: CompetitionFormData | CustomCompetitionData): Promise<ApiResponse<any>> {
     try {
       console.log('🎯 Criando nova competição customizada:', data);
       
@@ -26,11 +39,31 @@ class CustomCompetitionService {
         throw new Error('Usuário não autenticado');
       }
 
-      const competitionData = {
-        ...data,
-        created_by: user.user.id,
-        status: data.status || 'draft'
-      };
+      // Normalizar dados baseado no tipo de entrada
+      let competitionData: any;
+      
+      if ('type' in data) {
+        // É CustomCompetitionData
+        competitionData = {
+          title: data.title,
+          description: data.description,
+          competition_type: data.type === 'daily' ? 'challenge' : 'tournament',
+          start_date: data.startDate?.toISOString() || new Date().toISOString(),
+          end_date: data.endDate?.toISOString() || new Date().toISOString(),
+          max_participants: data.maxParticipants,
+          prize_pool: data.prizePool,
+          theme: data.category,
+          created_by: user.user.id,
+          status: 'active'
+        };
+      } else {
+        // É CompetitionFormData
+        competitionData = {
+          ...data,
+          created_by: user.user.id,
+          status: data.status || 'draft'
+        };
+      }
 
       const { data: competition, error } = await supabase
         .from('custom_competitions')

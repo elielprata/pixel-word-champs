@@ -76,14 +76,16 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
       const endDateWithTime = new Date(formData.endDate);
       endDateWithTime.setHours(23, 59, 59, 999);
 
-      const response = await customCompetitionService.updateCompetition(competition.id, {
+      const updateData = {
         title: formData.title,
         description: formData.description,
-        startDate: startDateWithTime,
-        endDate: endDateWithTime,
-        maxParticipants: formData.maxParticipants,
-        type: 'weekly'
-      });
+        start_date: startDateWithTime.toISOString(),
+        end_date: endDateWithTime.toISOString(),
+        max_participants: formData.maxParticipants,
+        competition_type: 'tournament'
+      };
+
+      const response = await customCompetitionService.updateCompetition(competition.id, updateData);
 
       if (response.success) {
         toast({
