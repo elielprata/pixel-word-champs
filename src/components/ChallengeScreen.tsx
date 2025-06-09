@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Trophy, Star } from 'lucide-react';
@@ -5,7 +6,6 @@ import GameBoard from './GameBoard';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
-import { useToast } from '@/hooks/use-toast';
 
 interface ChallengeScreenProps {
   challengeId: string;
@@ -13,7 +13,6 @@ interface ChallengeScreenProps {
 }
 
 const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
-  const { toast } = useToast();
   const [currentLevel, setCurrentLevel] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
   const [gameSession, setGameSession] = useState<any>(null);
@@ -38,11 +37,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
       }
     } catch (error) {
       console.error('Erro ao carregar sessão:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar o jogo.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -65,19 +59,10 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   const handleWordFound = async (word: string, points: number) => {
     console.log(`Palavra encontrada: ${word}, mas pontos só serão contabilizados ao completar o nível`);
-    
-    toast({
-      title: "Palavra encontrada!",
-      description: `${word} - Pontos serão contabilizados ao completar o nível`,
-    });
   };
 
   const handleTimeUp = () => {
-    toast({
-      title: "Tempo esgotado!",
-      description: "Nível finalizado",
-      variant: "destructive",
-    });
+    console.log('Tempo esgotado!');
   };
 
   const handleLevelComplete = (levelScore: number) => {
@@ -85,11 +70,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     setTotalScore(newTotalScore);
     
     console.log(`Nível ${currentLevel} completado! Adicionando ${levelScore} pontos ao ranking. Total: ${newTotalScore}`);
-    
-    toast({
-      title: "Nível concluído!",
-      description: `${levelScore} pontos adicionados ao ranking!`,
-    });
   };
 
   const handleAdvanceLevel = () => {
@@ -101,16 +81,10 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
         resetTimer();
       }, 100);
       
-      toast({
-        title: "Próximo nível!",
-        description: `Avançando para o nível ${currentLevel + 1}`,
-      });
+      console.log(`Avançando para o nível ${currentLevel + 1}`);
     } else {
       setGameCompleted(true);
-      toast({
-        title: "🎉 Parabéns!",
-        description: "Você completou todos os 20 níveis!",
-      });
+      console.log('Você completou todos os 20 níveis!');
     }
   };
 
@@ -123,20 +97,13 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const handleRevive = () => {
     const success = extendTime();
     if (success) {
-      toast({
-        title: "Revive ativado!",
-        description: "Tempo estendido com sucesso",
-      });
+      console.log('Revive ativado! Tempo estendido com sucesso');
     }
   };
 
   const handleCompleteGame = async () => {
     console.log('🏆 Finalizando jogo após completar todos os níveis');
     await markParticipationAsCompleted();
-    toast({
-      title: "Jogo finalizado!",
-      description: `Pontuação final: ${totalScore} pontos`,
-    });
     onBack();
   };
 
