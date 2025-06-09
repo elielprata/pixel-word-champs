@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -15,22 +14,29 @@ interface DailyCompetitionParticipation {
 class DailyCompetitionService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
     try {
-      console.log('🔍 Buscando competições diárias ativas...');
+      console.log('🔍 Buscando competições diárias ativas no banco...');
       
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
+      const now = new Date();
+      const nowISO = now.toISOString();
+      
+      console.log('📅 Data atual (ISO):', nowISO);
       
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
         .eq('competition_type', 'challenge')
         .eq('status', 'active')
-        .gte('end_date', `${todayStr}T00:00:00`)
-        .lte('start_date', `${todayStr}T23:59:59`);
+        .lte('start_date', nowISO)
+        .gte('end_date', nowISO);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro na consulta Supabase:', error);
+        throw error;
+      }
 
-      console.log('✅ Competições diárias ativas encontradas:', data?.length || 0);
+      console.log('📊 Dados retornados do banco:', data);
+      console.log('✅ Número de competições encontradas:', data?.length || 0);
+      
       return createSuccessResponse(data || []);
     } catch (error) {
       console.error('❌ Erro ao buscar competições diárias ativas:', error);

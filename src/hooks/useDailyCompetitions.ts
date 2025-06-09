@@ -10,13 +10,16 @@ export const useDailyCompetitions = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchActiveCompetitions = async () => {
+    console.log('🎯 Iniciando busca por competições diárias ativas...');
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await dailyCompetitionService.getActiveDailyCompetitions();
+      console.log('📊 Resposta do serviço:', response);
       
       if (response.success) {
+        console.log('✅ Competições encontradas:', response.data);
         setActiveCompetitions(response.data);
         
         // Carregar rankings para cada competição ativa
@@ -29,6 +32,7 @@ export const useDailyCompetitions = () => {
         }
         setCompetitionRankings(rankings);
       } else {
+        console.error('❌ Erro na resposta:', response.error);
         setError(response.error || 'Erro ao carregar competições diárias');
       }
     } catch (err) {

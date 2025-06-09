@@ -16,8 +16,18 @@ const HomeScreen = ({ onViewFullRanking, onStartChallenge }: HomeScreenProps) =>
   const { activeCompetitions, isLoading, error, refetch } = useDailyCompetitions();
 
   useEffect(() => {
+    console.log('🏠 HomeScreen montado, buscando competições...');
     refetch();
   }, []);
+
+  useEffect(() => {
+    console.log('🔄 Estado das competições atualizou:', {
+      isLoading,
+      error,
+      competitionsCount: activeCompetitions.length,
+      competitions: activeCompetitions
+    });
+  }, [isLoading, error, activeCompetitions]);
 
   const formatTimeRemaining = (endDate: string) => {
     const now = new Date();
