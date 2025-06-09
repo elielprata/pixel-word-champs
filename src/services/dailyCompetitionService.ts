@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -20,55 +19,94 @@ class DailyCompetitionService {
       const now = new Date();
       const nowISO = now.toISOString();
       
-      console.log('📅 Data atual (ISO):', nowISO);
-      console.log('📅 Data atual (local):', now.toLocaleString('pt-BR'));
-      
-      // Buscar competições do tipo 'challenge' ou 'daily' que estão ativas
-      console.log('🔍 Busca simplificada: competições challenge/daily ativas...');
+      console.log('📅 Data atual para comparação:', nowISO);
+
+      // Buscar competições do tipo 'challenge' que estão ativas
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
-        .in('competition_type', ['challenge', 'daily'])
+        .eq('competition_type', 'challenge')
         .eq('status', 'active');
 
+      console.log('📊 Resposta bruta do banco:', { data, error });
+
       if (error) {
-        console.error('❌ Erro na consulta:', error);
+        console.error('❌ Erro na consulta SQL:', error);
         throw error;
       }
 
-      console.log('📊 Competições encontradas:', data?.length || 0);
+      if (!data) {
+        console.log('⚠️ Nenhum dado retornado do banco');
+        return createSuccessResponse([]);
+      }
+
+      console.log(`📊 Total de competições challenge ativas encontradas: ${data.length}`);
       
-      // Filtrar por data no JavaScript para ter mais controle
-      const activeCompetitions = data?.filter(comp => {
-        const startDate = new Date(comp.start_date);
-        const endDate = new Date(comp.end_date);
-        const now = new Date();
-        
-        const isActive = startDate <= now && endDate >= now;
-        
-        console.log(`🔍 Verificando competição ${comp.title}:`, {
-          id: comp.id,
-          start: startDate.toISOString(),
-          end: endDate.toISOString(),
-          now: now.toISOString(),
-          startCheck: startDate <= now,
-          endCheck: endDate >= now,
-          isActive
-        });
-        
-        return isActive;
-      }) || [];
-      
-      console.log('✅ Competições ativas após filtro de data:', activeCompetitions.length);
-      activeCompetitions.forEach((comp, index) => {
-        console.log(`📋 Competição ativa ${index + 1}:`, {
+      // Log detalhado de cada competição
+      data.forEach((comp, index) => {
+        console.log(`📋 Competição ${index + 1}:`, {
           id: comp.id,
           title: comp.title,
           type: comp.competition_type,
+          status: comp.status,
           start_date: comp.start_date,
           end_date: comp.end_date
         });
       });
+
+      // Filtrar competições que estão dentro do período ativo
+      const activeCompetitions = data.filter(comp => {
+        const startDate = new Date(comp.start_date);
+        const endDate = new Date(comp.end_date);
+        const now = new Date();
+        
+        const isWithinPeriod = startDate <= now && endDate >= now;
+        
+        console.log(`🔍 Verificando competição "${comp.title}":`, {
+          id: comp.id,
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+          now: now.toISOString(),
+          startOk: startDate <= now,
+          endOk: endDate >= now,
+          isActive: isWithinPeriod
+        });
+        
+        return isWithinPeriod;
+      });
+      
+      console.log('✅ Competições ativas após filtro de data:', activeCompetitions.length);
+      
+      if (activeCompetitions.length > 0) {
+        activeCompetitions.forEach((comp, index) => {
+          console.log(`🎯 Competição ativa ${index + 1}:`, {
+            id: comp.id,
+            title: comp.title,
+            description: comp.description,
+            theme: comp.theme,
+            start_date: comp.start_date,
+            end_date: comp.end_date,
+            max_participants: comp.max_participants
+          });
+        });
+      } else {
+        console.log('📅 Nenhuma competição ativa encontrada no período atual');
+        
+        // Log adicional para debug: mostrar todas as competições e suas datas
+        if (data.length > 0) {
+          console.log('🔍 Debug - Todas as competições challenge encontradas:');
+          data.forEach(comp => {
+            const startDate = new Date(comp.start_date);
+            const endDate = new Date(comp.end_date);
+            const now = new Date();
+            
+            console.log(`- ${comp.title}: ${startDate.toISOString()} até ${endDate.toISOString()}`);
+            console.log(`  Atual: ${now.toISOString()}`);
+            console.log(`  Começou? ${startDate <= now}`);
+            console.log(`  Terminou? ${endDate < now}`);
+          });
+        }
+      }
       
       return createSuccessResponse(activeCompetitions);
     } catch (error) {
