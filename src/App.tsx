@@ -46,11 +46,6 @@ function App() {
                     <AdminPanel />
                   </ProtectedRoute>
                 } />
-                <Route path="/admin/competition/:competitionId/ranking" element={
-                  <ProtectedRoute>
-                    <DailyCompetitionRanking />
-                  </ProtectedRoute>
-                } />
                 <Route path="/admin/daily-competition/:competitionId/ranking" element={
                   <ProtectedRoute>
                     <DailyCompetitionRanking />
