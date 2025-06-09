@@ -1,147 +1,57 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { CompetitionStatusService } from './competitionStatusService';
 
-export interface CustomCompetitionData {
+interface CompetitionFormData {
   title: string;
   description: string;
-  type: 'daily' | 'weekly';
-  category?: string;
-  weeklyTournamentId?: string;
-  prizePool: number;
-  maxParticipants: number;
-  startDate?: Date;
-  endDate?: Date;
+  competition_type: string;
+  start_date: string;
+  end_date: string;
+  max_participants: number;
+  prize_pool: number;
+  theme?: string;
+  rules?: any;
+  status?: string;
 }
 
 class CustomCompetitionService {
-  async createCompetition(data: CustomCompetitionData): Promise<ApiResponse<any>> {
+  async createCompetition(data: CompetitionFormData): Promise<ApiResponse<any>> {
     try {
-      console.log('📝 Criando competição:', data);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      console.log('🎯 Criando nova competição customizada:', data);
+      
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
         throw new Error('Usuário não autenticado');
       }
 
-      // Para competições diárias, definir automaticamente as datas se não fornecidas
-      let startDate = data.startDate;
-      let endDate = data.endDate;
-
-      if (data.type === 'daily') {
-        if (!startDate) {
-          // Definir início como hoje às 00:00:00
-          startDate = new Date();
-          startDate.setHours(0, 0, 0, 0);
-        }
-        if (!endDate) {
-          // Definir fim como o mesmo dia às 23:59:59
-          endDate = new Date(startDate);
-          endDate.setHours(23, 59, 59, 999);
-        }
-      }
-
-      // Validar datas sobrepostas para competições semanais
-      if (data.type === 'weekly' && startDate && endDate) {
-        const hasOverlap = await this.checkDateOverlap(startDate, endDate);
-        if (hasOverlap) {
-          throw new Error('Já existe uma competição semanal com as mesmas datas de início e fim');
-        }
-      }
-
-      // Calcular status correto baseado nas datas e horário de Brasília
-      let initialStatus = 'draft';
-      if (data.type === 'weekly' && startDate && endDate) {
-        initialStatus = CompetitionStatusService.calculateCorrectStatus(
-          startDate.toISOString(),
-          endDate.toISOString()
-        );
-      } else if (data.type === 'daily') {
-        // Para competições diárias, sempre ativas quando criadas
-        initialStatus = 'active';
-      }
-
-      // Preparar dados para inserção conforme a estrutura da tabela
       const competitionData = {
-        title: data.title,
-        description: data.description,
-        competition_type: data.type === 'weekly' ? 'tournament' : 'challenge',
-        theme: data.category || 'geral',
-        start_date: startDate?.toISOString(),
-        end_date: endDate?.toISOString(),
-        prize_pool: data.prizePool,
-        max_participants: data.maxParticipants,
-        status: initialStatus,
-        created_by: user.id,
-        rules: {
-          category: data.category,
-          weeklyTournamentId: data.weeklyTournamentId
-        }
+        ...data,
+        created_by: user.user.id,
+        status: data.status || 'draft'
       };
 
-      console.log('📤 Dados para inserção:', competitionData);
-
-      const { data: result, error } = await supabase
+      const { data: competition, error } = await supabase
         .from('custom_competitions')
         .insert(competitionData)
         .select()
         .single();
 
-      if (error) {
-        console.error('❌ Erro na inserção:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Competição criada com sucesso:', result);
-      console.log('📅 Status inicial aplicado:', initialStatus);
-      
-      return createSuccessResponse(result);
+      console.log('✅ Competição criada com sucesso:', competition.id);
+      return createSuccessResponse(competition);
     } catch (error) {
       console.error('❌ Erro ao criar competição:', error);
       return createErrorResponse(handleServiceError(error, 'CREATE_COMPETITION'));
     }
   }
 
-  private async checkDateOverlap(startDate: Date, endDate: Date): Promise<boolean> {
-    try {
-      const { data, error } = await supabase
-        .from('custom_competitions')
-        .select('id, start_date, end_date')
-        .eq('competition_type', 'tournament')
-        .neq('status', 'cancelled');
-
-      if (error) {
-        console.error('❌ Erro ao verificar sobreposição de datas:', error);
-        return false;
-      }
-
-      // Verificar se há sobreposição com alguma competição existente
-      const hasOverlap = data?.some(competition => {
-        const existingStart = new Date(competition.start_date);
-        const existingEnd = new Date(competition.end_date);
-        
-        // Verificar se as datas são exatamente iguais
-        return (
-          startDate.getTime() === existingStart.getTime() && 
-          endDate.getTime() === existingEnd.getTime()
-        );
-      });
-
-      return hasOverlap || false;
-    } catch (error) {
-      console.error('❌ Erro na verificação de datas:', error);
-      return false;
-    }
-  }
-
   async getCustomCompetitions(): Promise<ApiResponse<any[]>> {
     try {
-      console.log('📊 Buscando competições customizadas...');
-
-      // Atualizar status antes de buscar
-      await CompetitionStatusService.updateAllCompetitionsStatus();
-
+      console.log('📋 Buscando competições customizadas...');
+      
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
@@ -153,137 +63,90 @@ class CustomCompetitionService {
       return createSuccessResponse(data || []);
     } catch (error) {
       console.error('❌ Erro ao buscar competições:', error);
-      return createErrorResponse(handleServiceError(error, 'GET_CUSTOM_COMPETITIONS'));
+      return createErrorResponse(handleServiceError(error, 'GET_COMPETITIONS'));
     }
   }
 
-  async updateCompetition(id: string, data: Partial<CustomCompetitionData>): Promise<ApiResponse<any>> {
+  async getCompetitionById(competitionId: string): Promise<ApiResponse<any>> {
     try {
-      console.log('📝 Atualizando competição:', id, data);
-
-      // Validar datas sobrepostas para competições semanais (excluindo a própria competição)
-      if (data.type === 'weekly' && data.startDate && data.endDate) {
-        const hasOverlap = await this.checkDateOverlapForUpdate(id, data.startDate, data.endDate);
-        if (hasOverlap) {
-          throw new Error('Já existe uma competição semanal com as mesmas datas de início e fim');
-        }
-      }
-
-      const updateData = {
-        title: data.title,
-        description: data.description,
-        start_date: data.startDate?.toISOString(),
-        end_date: data.endDate?.toISOString(),
-        max_participants: data.maxParticipants
-      };
-
-      const { data: result, error } = await supabase
+      console.log('🔍 Buscando competição por ID:', competitionId);
+      
+      const { data, error } = await supabase
         .from('custom_competitions')
-        .update(updateData)
-        .eq('id', id)
+        .select('*')
+        .eq('id', competitionId)
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Competição encontrada:', data.title);
+      return createSuccessResponse(data);
+    } catch (error) {
+      console.error('❌ Erro ao buscar competição:', error);
+      return createErrorResponse(handleServiceError(error, 'GET_COMPETITION_BY_ID'));
+    }
+  }
+
+  async updateCompetition(competitionId: string, data: Partial<CompetitionFormData>): Promise<ApiResponse<any>> {
+    try {
+      console.log('🔧 Atualizando competição:', competitionId, data);
+      
+      const { data: competition, error } = await supabase
+        .from('custom_competitions')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', competitionId)
         .select()
         .single();
 
-      if (error) {
-        console.error('❌ Erro na atualização:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      // Atualizar status da competição após edição
-      await CompetitionStatusService.updateSingleCompetitionStatus(id);
-
-      console.log('✅ Competição atualizada com sucesso:', result);
-      return createSuccessResponse(result);
+      console.log('✅ Competição atualizada com sucesso');
+      return createSuccessResponse(competition);
     } catch (error) {
       console.error('❌ Erro ao atualizar competição:', error);
       return createErrorResponse(handleServiceError(error, 'UPDATE_COMPETITION'));
     }
   }
 
-  private async checkDateOverlapForUpdate(competitionId: string, startDate: Date, endDate: Date): Promise<boolean> {
+  async deleteCompetition(competitionId: string): Promise<ApiResponse<boolean>> {
     try {
-      const { data, error } = await supabase
-        .from('custom_competitions')
-        .select('id, start_date, end_date')
-        .eq('competition_type', 'tournament')
-        .neq('status', 'cancelled')
-        .neq('id', competitionId); // Excluir a própria competição da verificação
-
-      if (error) {
-        console.error('❌ Erro ao verificar sobreposição de datas:', error);
-        return false;
-      }
-
-      // Verificar se há sobreposição com alguma competição existente
-      const hasOverlap = data?.some(competition => {
-        const existingStart = new Date(competition.start_date);
-        const existingEnd = new Date(competition.end_date);
-        
-        // Verificar se as datas são exatamente iguais
-        return (
-          startDate.getTime() === existingStart.getTime() && 
-          endDate.getTime() === existingEnd.getTime()
-        );
-      });
-
-      return hasOverlap || false;
-    } catch (error) {
-      console.error('❌ Erro na verificação de datas:', error);
-      return false;
-    }
-  }
-
-  async deleteCompetition(id: string): Promise<ApiResponse<any>> {
-    try {
-      console.log('🗑️ Iniciando exclusão da competição:', id);
-
-      // Verificar se o usuário está autenticado
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('❌ Usuário não autenticado');
-        throw new Error('Usuário não autenticado');
-      }
-
-      console.log('👤 Usuário autenticado:', user.id);
-
-      // Verificar se a competição existe antes de tentar excluir
-      const { data: existingCompetition, error: checkError } = await supabase
-        .from('custom_competitions')
-        .select('id, title')
-        .eq('id', id)
-        .single();
-
-      if (checkError) {
-        console.error('❌ Erro ao verificar competição:', checkError);
-        if (checkError.code === 'PGRST116') {
-          throw new Error('Competição não encontrada');
-        }
-        throw checkError;
-      }
-
-      if (!existingCompetition) {
-        console.error('❌ Competição não encontrada');
-        throw new Error('Competição não encontrada');
-      }
-
-      console.log('✅ Competição encontrada:', existingCompetition.title);
-
-      // Executar a exclusão
-      const { error: deleteError } = await supabase
+      console.log('🗑️ Excluindo competição:', competitionId);
+      
+      const { error } = await supabase
         .from('custom_competitions')
         .delete()
-        .eq('id', id);
+        .eq('id', competitionId);
 
-      if (deleteError) {
-        console.error('❌ Erro na exclusão da competição:', deleteError);
-        throw deleteError;
-      }
+      if (error) throw error;
 
-      console.log('✅ Competição excluída com sucesso:', id);
-      return createSuccessResponse({ id, message: 'Competição excluída com sucesso' });
+      console.log('✅ Competição excluída com sucesso');
+      return createSuccessResponse(true);
     } catch (error) {
       console.error('❌ Erro ao excluir competição:', error);
       return createErrorResponse(handleServiceError(error, 'DELETE_COMPETITION'));
+    }
+  }
+
+  async getActiveCompetitions(): Promise<ApiResponse<any[]>> {
+    try {
+      console.log('🎯 Buscando competições ativas...');
+      
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('status', 'active')
+        .order('start_date', { ascending: true });
+
+      if (error) throw error;
+
+      console.log('✅ Competições ativas encontradas:', data?.length || 0);
+      return createSuccessResponse(data || []);
+    } catch (error) {
+      console.error('❌ Erro ao buscar competições ativas:', error);
+      return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_COMPETITIONS'));
     }
   }
 }

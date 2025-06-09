@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,7 +8,6 @@ import { Calendar, Users, Trophy, Edit, Trash2, Clock, Eye } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { EditCompetitionModal } from './EditCompetitionModal';
-import { DailyCompetitionRankingModal } from './DailyCompetitionRankingModal';
 
 interface DailyCompetition {
   id: string;
@@ -34,11 +35,10 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
   onRefresh
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCompetition, setEditingCompetition] = useState<DailyCompetition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [viewingRankingId, setViewingRankingId] = useState<string | null>(null);
-  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
 
   // Filtrar apenas competições diárias (tipo 'challenge')
   const dailyCompetitions = competitions.filter(comp => comp.status !== 'cancelled');
@@ -92,9 +92,8 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
   };
 
   const handleViewRanking = (competitionId: string) => {
-    console.log('👀 Visualizando ranking da competição:', competitionId);
-    setViewingRankingId(competitionId);
-    setIsRankingModalOpen(true);
+    console.log('👀 Navegando para ranking da competição:', competitionId);
+    navigate(`/admin/daily-competition/${competitionId}/ranking`);
   };
 
   const handleDelete = async (competition: DailyCompetition) => {
@@ -278,13 +277,6 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
         onOpenChange={setIsEditModalOpen}
         competition={editingCompetition}
         onCompetitionUpdated={handleCompetitionUpdated}
-      />
-
-      {/* Modal de Ranking */}
-      <DailyCompetitionRankingModal
-        open={isRankingModalOpen}
-        onOpenChange={setIsRankingModalOpen}
-        competitionId={viewingRankingId}
       />
     </div>
   );

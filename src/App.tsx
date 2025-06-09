@@ -10,6 +10,7 @@ import { useAuth } from "./hooks/useAuth";
 import AuthScreen from "./components/auth/AuthScreen";
 import Index from "./pages/Index";
 import AdminPanel from "./pages/AdminPanel";
+import DailyCompetitionRanking from "./pages/DailyCompetitionRanking";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,18 @@ const AppContent = () => {
           isAuthenticated ? (
             <AdminRoute>
               <AdminPanel />
+            </AdminRoute>
+          ) : (
+            <Navigate to="/auth" replace />
+          )
+        } 
+      />
+      <Route 
+        path="/admin/daily-competition/:competitionId/ranking" 
+        element={
+          isAuthenticated ? (
+            <AdminRoute>
+              <DailyCompetitionRanking />
             </AdminRoute>
           ) : (
             <Navigate to="/auth" replace />
