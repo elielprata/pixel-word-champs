@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Trophy, Calendar, Users, Crown, Info } from 'lucide-react';
+import { Plus, Edit, Trash2, Trophy, Calendar, Users, Crown, Info, AlertCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaymentData } from "@/hooks/usePaymentData";
+import { customCompetitionService } from "@/services/customCompetitionService";
 
 interface WeeklyTournament {
   id: string;
@@ -75,35 +76,47 @@ export const WeeklyTournamentsManagement = () => {
 
   const addTournament = async () => {
     try {
-      const { error } = await supabase
-        .from('custom_competitions')
-        .insert([{
-          ...newTournament,
-          competition_type: 'tournament',
-          status: 'scheduled',
-          prize_pool: currentPrizePool
-        }]);
+      if (!newTournament.start_date || !newTournament.end_date) {
+        toast({
+          title: "Erro",
+          description: "As datas de início e fim são obrigatórias",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso",
-        description: "Torneio semanal criado com sucesso"
+      const result = await customCompetitionService.createCompetition({
+        title: newTournament.title,
+        description: newTournament.description,
+        type: 'weekly',
+        prizePool: currentPrizePool,
+        maxParticipants: newTournament.max_participants,
+        startDate: new Date(newTournament.start_date),
+        endDate: new Date(newTournament.end_date)
       });
 
-      setNewTournament({
-        title: '',
-        description: '',
-        start_date: '',
-        end_date: '',
-        max_participants: 1000
-      });
-      setIsAddModalOpen(false);
-      fetchTournaments();
-    } catch (error) {
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: "Torneio semanal criado com sucesso"
+        });
+
+        setNewTournament({
+          title: '',
+          description: '',
+          start_date: '',
+          end_date: '',
+          max_participants: 1000
+        });
+        setIsAddModalOpen(false);
+        fetchTournaments();
+      } else {
+        throw new Error(result.error || 'Erro ao criar torneio');
+      }
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Não foi possível criar o torneio semanal",
+        description: error.message || "Não foi possível criar o torneio semanal",
         variant: "destructive"
       });
     }
@@ -113,32 +126,50 @@ export const WeeklyTournamentsManagement = () => {
     if (!editingTournament) return;
 
     try {
-      const { error } = await supabase
-        .from('custom_competitions')
-        .update({
-          title: editingTournament.title,
-          description: editingTournament.description,
-          start_date: editingTournament.start_date,
-          end_date: editingTournament.end_date,
-          max_participants: editingTournament.max_participants,
-          status: editingTournament.status,
-          prize_pool: currentPrizePool
-        })
-        .eq('id', editingTournament.id);
+      if (!editingTournament.start_date || !editingTournament.end_date) {
+        toast({
+          title: "Erro",
+          description: "As datas de início e fim são obrigatórias",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso",
-        description: "Torneio semanal atualizado com sucesso"
+      const result = await customCompetitionService.updateCompetition(editingTournament.id, {
+        title: editingTournament.title,
+        description: editingTournament.description,
+        type: 'weekly',
+        maxParticipants: editingTournament.max_participants,
+        startDate: new Date(editingTournament.start_date),
+        endDate: new Date(editingTournament.end_date)
       });
 
-      setEditingTournament(null);
-      fetchTournaments();
-    } catch (error) {
+      if (result.success) {
+        // Também atualizar status e prize_pool diretamente no Supabase
+        const { error } = await supabase
+          .from('custom_competitions')
+          .update({
+            status: editingTournament.status,
+            prize_pool: currentPrizePool
+          })
+          .eq('id', editingTournament.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Torneio semanal atualizado com sucesso"
+        });
+
+        setEditingTournament(null);
+        fetchTournaments();
+      } else {
+        throw new Error(result.error || 'Erro ao atualizar torneio');
+      }
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o torneio semanal",
+        description: error.message || "Não foi possível atualizar o torneio semanal",
         variant: "destructive"
       });
     }
@@ -221,6 +252,14 @@ export const WeeklyTournamentsManagement = () => {
                 <DialogTitle>Criar Novo Torneio Semanal</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-blue-700">
+                    <p className="font-medium">Regra Importante:</p>
+                    <p>Não é possível criar torneios com as mesmas datas de início e fim de um torneio existente.</p>
+                  </div>
+                </div>
+                
                 <div>
                   <Label>Título</Label>
                   <Input 
@@ -430,6 +469,14 @@ export const WeeklyTournamentsManagement = () => {
                 <DialogTitle>Editar Torneio Semanal</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-blue-700">
+                    <p className="font-medium">Regra Importante:</p>
+                    <p>Não é possível alterar para datas que já existem em outro torneio.</p>
+                  </div>
+                </div>
+                
                 <div>
                   <Label>Título</Label>
                   <Input 
