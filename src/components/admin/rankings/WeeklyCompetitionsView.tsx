@@ -39,8 +39,13 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const [editingCompetition, setEditingCompetition] = useState<WeeklyCompetition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Filtrar a competição ativa da lista de todas as competições para evitar duplicação
-  const otherCompetitions = competitions.filter(comp => 
+  // Filtrar competições ativas (excluir finalizadas e canceladas)
+  const activeCompetitions = competitions.filter(comp => 
+    comp.status !== 'completed' && comp.status !== 'cancelled'
+  );
+
+  // Filtrar a competição ativa da lista de outras competições para evitar duplicação
+  const otherActiveCompetitions = activeCompetitions.filter(comp => 
     !activeCompetition || comp.id !== activeCompetition.id
   );
 
@@ -63,7 +68,6 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
       year: 'numeric'
     });
     
-    // Aplicar horários padrão baseado no tipo de data
     const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
     
     return `${dateFormatted}, ${timeFormatted}`;
@@ -158,12 +162,15 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
     );
   }
 
-  if (competitions.length === 0) {
+  if (activeCompetitions.length === 0) {
     return (
       <div className="text-center py-12 text-slate-500">
         <Trophy className="h-12 w-12 mx-auto mb-4 text-slate-300" />
         <p className="font-medium mb-2">Nenhuma competição semanal ativa</p>
-        <p className="text-sm">As competições semanais aparecerão aqui quando criadas.</p>
+        <p className="text-sm">As competições semanais ativas aparecerão aqui quando criadas.</p>
+        <p className="text-xs text-slate-400 mt-2">
+          Competições finalizadas podem ser vistas na aba "Histórico"
+        </p>
       </div>
     );
   }
@@ -176,11 +183,14 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         <div className="text-sm text-blue-700">
           <p className="font-medium">Horário de Referência: Brasília (UTC-3)</p>
           <p>Início automático: 00:00:00 | Fim automático: 23:59:59 | Status atualizados automaticamente</p>
+          <p className="text-xs mt-1 text-purple-600">
+            📋 Competições finalizadas são exibidas apenas na aba "Histórico"
+          </p>
         </div>
       </div>
 
       {/* Competição Ativa em Destaque */}
-      {activeCompetition && (
+      {activeCompetition && activeCompetition.status !== 'completed' && (
         <Card className="border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -272,16 +282,16 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         </Card>
       )}
 
-      {/* Lista de Outras Competições (excluindo a ativa) */}
-      {otherCompetitions.length > 0 && (
+      {/* Lista de Outras Competições Ativas (excluindo a ativa e finalizadas) */}
+      {otherActiveCompetitions.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Trophy className="h-5 w-5 text-purple-600" />
-            Todas as Competições Semanais
+            Outras Competições Semanais Ativas
           </h3>
           
           <div className="grid gap-4">
-            {otherCompetitions.map((competition) => (
+            {otherActiveCompetitions.map((competition) => (
               <Card key={competition.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">

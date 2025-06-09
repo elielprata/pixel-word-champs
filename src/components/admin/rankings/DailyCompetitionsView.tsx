@@ -39,8 +39,10 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
   const [editingCompetition, setEditingCompetition] = useState<DailyCompetition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Filtrar apenas competições diárias (tipo 'challenge')
-  const dailyCompetitions = competitions.filter(comp => comp.status !== 'cancelled');
+  // Filtrar apenas competições diárias ativas (excluir finalizadas e canceladas)
+  const activeCompetitions = competitions.filter(comp => 
+    comp.status !== 'completed' && comp.status !== 'cancelled'
+  );
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -155,12 +157,15 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
     );
   }
 
-  if (dailyCompetitions.length === 0) {
+  if (activeCompetitions.length === 0) {
     return (
       <div className="text-center py-12 text-slate-500">
         <Calendar className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-        <p className="font-medium mb-2">Nenhuma competição diária cadastrada</p>
+        <p className="font-medium mb-2">Nenhuma competição diária ativa</p>
         <p className="text-sm">Use o botão "Criar Competição" para adicionar uma nova competição diária.</p>
+        <p className="text-xs text-slate-400 mt-2">
+          Competições finalizadas podem ser vistas na aba "Histórico"
+        </p>
       </div>
     );
   }
@@ -176,18 +181,21 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
           <p className="text-xs mt-1 text-blue-600">
             ⚠️ Competições diárias não possuem premiação (apenas semanais têm prêmios)
           </p>
+          <p className="text-xs mt-1 text-purple-600">
+            📋 Competições finalizadas são exibidas apenas na aba "Histórico"
+          </p>
         </div>
       </div>
 
-      {/* Lista de Competições Diárias */}
+      {/* Lista de Competições Diárias Ativas */}
       <div>
         <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <Calendar className="h-5 w-5 text-blue-600" />
-          Competições Diárias ({dailyCompetitions.length})
+          Competições Diárias Ativas ({activeCompetitions.length})
         </h3>
         
         <div className="grid gap-4">
-          {dailyCompetitions.map((competition) => (
+          {activeCompetitions.map((competition) => (
             <Card key={competition.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
