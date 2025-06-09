@@ -7,9 +7,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useAuth } from '@/hooks/useAuth';
 import { LoginForm as LoginFormType } from '@/types';
 import { Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const LoginForm = () => {
   const { login, isLoading, error } = useAuth();
+  const navigate = useNavigate();
   
   const form = useForm<LoginFormType>({
     defaultValues: {
@@ -20,9 +22,14 @@ const LoginForm = () => {
 
   const onSubmit = async (data: LoginFormType) => {
     try {
+      console.log('🔐 Tentando fazer login com:', data.email);
       await login(data);
+      
+      // Redirecionar para home após login bem-sucedido
+      console.log('✅ Login realizado, redirecionando para home');
+      navigate('/');
     } catch (err) {
-      console.error('Erro no login:', err);
+      console.error('❌ Erro no login:', err);
     }
   };
 
@@ -46,6 +53,7 @@ const LoginForm = () => {
                 <Input 
                   placeholder="seu@email.com" 
                   type="email"
+                  autoComplete="email"
                   {...field}
                 />
               </FormControl>
@@ -71,6 +79,7 @@ const LoginForm = () => {
                 <Input 
                   placeholder="••••••••" 
                   type="password"
+                  autoComplete="current-password"
                   {...field}
                 />
               </FormControl>

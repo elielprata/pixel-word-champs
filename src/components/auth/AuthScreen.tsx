@@ -1,16 +1,39 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import SocialLogin from './SocialLogin';
 import { Gamepad2, Trophy, Users } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const AuthScreen = () => {
   const [activeTab, setActiveTab] = useState('login');
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirecionar usuários já autenticados
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      console.log('👤 Usuário já autenticado, redirecionando para home');
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  // Mostrar loading enquanto verifica autenticação
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-b-2 border-white rounded-full mx-auto mb-4"></div>
+          <p className="text-white">Verificando autenticação...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4">
@@ -91,11 +114,11 @@ const AuthScreen = () => {
         <div className="text-center mt-6">
           <p className="text-purple-200 text-sm">
             Ao continuar, você concorda com nossos{' '}
-            <Link to="/terms" className="underline hover:text-white">
+            <Link to="/terms-of-service" className="underline hover:text-white">
               Termos de Uso
             </Link>
             {' '}e{' '}
-            <Link to="/privacy" className="underline hover:text-white">
+            <Link to="/privacy-policy" className="underline hover:text-white">
               Política de Privacidade
             </Link>
           </p>
