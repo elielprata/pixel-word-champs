@@ -54,6 +54,38 @@ class DailyCompetitionService {
         });
       });
 
+      // Ajustar competições diárias que não terminam às 23:59:59
+      for (const comp of data) {
+        const endDate = new Date(comp.end_date);
+        const startDate = new Date(comp.start_date);
+        
+        // Verificar se a competição não termina às 23:59:59
+        if (endDate.getUTCHours() !== 23 || endDate.getUTCMinutes() !== 59 || endDate.getUTCSeconds() !== 59) {
+          console.log(`🔧 Ajustando horário de fim da competição "${comp.title}" para 23:59:59`);
+          
+          // Criar nova data de fim às 23:59:59 do mesmo dia
+          const correctedEndDate = new Date(startDate);
+          correctedEndDate.setUTCHours(23, 59, 59, 999);
+          
+          // Atualizar no banco
+          const { error: updateError } = await supabase
+            .from('custom_competitions')
+            .update({ 
+              end_date: correctedEndDate.toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', comp.id);
+          
+          if (updateError) {
+            console.error('❌ Erro ao atualizar competição:', updateError);
+          } else {
+            console.log('✅ Competição atualizada com sucesso');
+            // Atualizar o objeto local
+            comp.end_date = correctedEndDate.toISOString();
+          }
+        }
+      }
+
       // Filtrar competições que estão dentro do período ativo
       // Usar diretamente as datas UTC do banco para comparação
       const activeCompetitions = data.filter(comp => {
