@@ -141,9 +141,9 @@ export const WordsListTable = () => {
   }
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
+    <div className="space-y-6 h-[calc(100vh-200px)] flex flex-col">
       {/* Header com estatísticas */}
-      <Card>
+      <Card className="flex-shrink-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -180,7 +180,7 @@ export const WordsListTable = () => {
       </Card>
 
       {/* Filtros e Busca */}
-      <Card>
+      <Card className="flex-shrink-0">
         <CardContent className="p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Campo de busca */}
@@ -214,9 +214,9 @@ export const WordsListTable = () => {
         </CardContent>
       </Card>
 
-      {/* Tabela de palavras - Container com altura fixa */}
-      <Card className="flex-1 flex flex-col min-h-0">
-        <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+      {/* Tabela de palavras - Container com altura máxima específica */}
+      <Card className="flex-1 flex flex-col min-h-0 max-h-[600px]">
+        <CardContent className="p-0 flex-1 flex flex-col min-h-0 max-h-[600px]">
           {filteredWords.length === 0 ? (
             <div className="text-center py-12">
               <div className="flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mx-auto mb-4">
@@ -234,8 +234,8 @@ export const WordsListTable = () => {
             </div>
           ) : (
             <>
-              {/* Container da tabela com altura fixa e scroll controlado */}
-              <div className="flex-1 overflow-hidden">
+              {/* Container da tabela com altura máxima e scroll controlado */}
+              <div className="flex-1 min-h-0 max-h-[400px]">
                 <div className="h-full overflow-y-auto border border-slate-200 rounded-lg">
                   <Table>
                     <TableHeader className="sticky top-0 z-10 bg-slate-50">
@@ -295,7 +295,7 @@ export const WordsListTable = () => {
 
               {/* Paginação fixa na parte inferior */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-white">
+                <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-white">
                   <div className="text-sm text-slate-600">
                     Mostrando {startIndex + 1} a {endIndex} de {filteredWords.length} palavras
                   </div>
