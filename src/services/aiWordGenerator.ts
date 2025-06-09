@@ -88,17 +88,22 @@ Retorne a resposta EXATAMENTE no formato JSON abaixo, sem texto adicional:
   "${categories[1]?.name || 'categoria2'}": ["PALAVRA1", "PALAVRA2", "PALAVRA3"]
 }
 
-REGRAS IMPORTANTES:
+REGRAS OBRIGATÓRIAS:
 - Todas as palavras devem estar em MAIÚSCULAS
+- SEM ACENTOS - apenas letras A-Z (remover todos os acentos: Á, À, Â, Ã, É, È, Ê, Í, Ï, Ó, Ô, Õ, Ö, Ú, Ç, Ñ)
 - Palavras variadas em tamanho (3-8 letras) para diferentes níveis de dificuldade
-- Sem acentos, apenas letras A-Z
 - Exatamente ${countPerCategory} palavras por categoria
-- Formato JSON válido`;
+- PALAVRAS ÚNICAS - não repetir palavras entre categorias ou dentro da mesma categoria
+- Formato JSON válido
+- Palavras válidas em português sem acentos`;
 
   const requestBody = {
     model: config.model || 'gpt-4o-mini',
     messages: [
-      { role: 'system', content: config.systemPrompt },
+      { 
+        role: 'system', 
+        content: 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português. NUNCA use acentos nas palavras - converta todas para letras simples (A-Z). Garanta que todas as palavras sejam únicas e não repetidas.' 
+      },
       { role: 'user', content: prompt }
     ],
     max_tokens: config.maxTokens || 1000,
@@ -148,7 +153,7 @@ REGRAS IMPORTANTES:
       const categoryWords = jsonData[category.name] || [];
       const validWords = categoryWords
         .map((word: string) => word.trim().toUpperCase())
-        .filter((word: string) => word && word.length >= 3 && /^[A-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]+$/.test(word))
+        .filter((word: string) => word && word.length >= 3 && /^[A-Z]+$/.test(word))
         .slice(0, countPerCategory);
       
       processedData[category.name] = validWords;
@@ -170,7 +175,7 @@ REGRAS IMPORTANTES:
       const words = content
         .split(/[\n\r\s,]+/)
         .map((word: string) => word.trim().toUpperCase())
-        .filter((word: string) => word && word.length >= 3 && /^[A-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]+$/.test(word))
+        .filter((word: string) => word && word.length >= 3 && /^[A-Z]+$/.test(word))
         .slice(0, countPerCategory);
       
       fallbackData[category.name] = words;
