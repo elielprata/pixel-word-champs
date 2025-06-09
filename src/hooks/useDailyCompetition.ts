@@ -1,27 +1,25 @@
 
 import { useState, useEffect } from 'react';
-import { competitionService } from '@/services/competitionService';
 import { Competition } from '@/types';
+import { useCompetitionQueries } from './useCompetitionQueries';
 
 export const useDailyCompetition = () => {
-  const [dailyCompetition, setDailyCompetition] = useState<Competition | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    dailyCompetition,
+    isLoading,
+    error,
+    setIsLoading,
+    setError,
+    fetchDailyCompetition
+  } = useCompetitionQueries();
 
-  const fetchDailyCompetition = async () => {
+  const loadCompetition = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await competitionService.getDailyCompetition();
-      
-      if (response.success) {
-        setDailyCompetition(response.data);
-      } else {
-        setError(response.error || 'Erro ao carregar competição diária');
-      }
+      await fetchDailyCompetition();
     } catch (err) {
-      console.error('❌ Erro ao carregar competição diária:', err);
       setError('Erro ao carregar competição diária');
     } finally {
       setIsLoading(false);
@@ -29,13 +27,13 @@ export const useDailyCompetition = () => {
   };
 
   useEffect(() => {
-    fetchDailyCompetition();
+    loadCompetition();
   }, []);
 
   return {
     dailyCompetition,
     isLoading,
     error,
-    refetch: fetchDailyCompetition
+    refetch: loadCompetition
   };
 };

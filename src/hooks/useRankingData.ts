@@ -1,40 +1,59 @@
 
 import { RankingPlayer } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
-import { useDailyRanking } from './useDailyRanking';
-import { useWeeklyRanking } from './useWeeklyRanking';
-import { useHistoricalRanking } from './useHistoricalRanking';
+import { useRankingQueries } from './useRankingQueries';
+import { useRankingPagination } from './useRankingPagination';
+import { useEffect } from 'react';
 
 export const useRankingData = () => {
   const { user } = useAuth();
-  
   const {
     dailyRanking,
-    isLoading: isLoadingDaily,
-    error: errorDaily,
-    canLoadMoreDaily,
-    loadMoreDaily,
-    refetch: refetchDaily
-  } = useDailyRanking();
-
-  const {
     weeklyRanking,
-    isLoading: isLoadingWeekly,
-    error: errorWeekly,
-    canLoadMoreWeekly,
-    loadMoreWeekly,
-    refetch: refetchWeekly
-  } = useWeeklyRanking();
+    historicalCompetitions,
+    isLoading,
+    error,
+    setIsLoading,
+    setError,
+    loadDailyRanking,
+    loadWeeklyRanking,
+    loadHistoricalRanking
+  } = useRankingQueries();
 
   const {
-    historicalCompetitions,
-    isLoading: isLoadingHistorical,
-    error: errorHistorical,
-    refetch: refetchHistorical
-  } = useHistoricalRanking();
+    dailyLimit,
+    weeklyLimit,
+    loadMoreDaily,
+    loadMoreWeekly,
+    canLoadMoreDaily,
+    canLoadMoreWeekly
+  } = useRankingPagination();
 
-  const isLoading = isLoadingDaily || isLoadingWeekly || isLoadingHistorical;
-  const error = errorDaily || errorWeekly || errorHistorical;
+  const loadAllRankings = async () => {
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      await Promise.all([
+        loadDailyRanking(),
+        loadWeeklyRanking(),
+        loadHistoricalRanking(user.id)
+      ]);
+    } catch (err) {
+      setError('Erro ao carregar rankings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAllRankings();
+  }, [user?.id]);
 
   const getUserPosition = (ranking: RankingPlayer[]) => {
     if (!user) return null;
@@ -43,21 +62,17 @@ export const useRankingData = () => {
   };
 
   const refetch = async () => {
-    await Promise.all([
-      refetchDaily(),
-      refetchWeekly(),
-      refetchHistorical()
-    ]);
+    await loadAllRankings();
   };
 
   return {
-    dailyRanking,
-    weeklyRanking,
+    dailyRanking: dailyRanking.slice(0, dailyLimit),
+    weeklyRanking: weeklyRanking.slice(0, weeklyLimit),
     historicalCompetitions,
     isLoading,
     error,
-    canLoadMoreDaily,
-    canLoadMoreWeekly,
+    canLoadMoreDaily: canLoadMoreDaily(dailyRanking.length),
+    canLoadMoreWeekly: canLoadMoreWeekly(weeklyRanking.length),
     loadMoreDaily,
     loadMoreWeekly,
     getUserPosition,

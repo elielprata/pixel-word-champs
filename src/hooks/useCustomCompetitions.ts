@@ -1,26 +1,24 @@
 
 import { useState, useEffect } from 'react';
-import { customCompetitionService } from '@/services/customCompetitionService';
+import { useCompetitionQueries } from './useCompetitionQueries';
 
 export const useCustomCompetitions = () => {
-  const [customCompetitions, setCustomCompetitions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    customCompetitions,
+    isLoading,
+    error,
+    setIsLoading,
+    setError,
+    fetchCustomCompetitions
+  } = useCompetitionQueries();
 
-  const fetchCustomCompetitions = async () => {
+  const loadCompetitions = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await customCompetitionService.getCustomCompetitions();
-      
-      if (response.success) {
-        setCustomCompetitions(response.data);
-      } else {
-        setError(response.error || 'Erro ao carregar competições customizadas');
-      }
+      await fetchCustomCompetitions();
     } catch (err) {
-      console.error('❌ Erro ao carregar competições customizadas:', err);
       setError('Erro ao carregar competições customizadas');
     } finally {
       setIsLoading(false);
@@ -28,13 +26,13 @@ export const useCustomCompetitions = () => {
   };
 
   useEffect(() => {
-    fetchCustomCompetitions();
+    loadCompetitions();
   }, []);
 
   return {
     customCompetitions,
     isLoading,
     error,
-    refetch: fetchCustomCompetitions
+    refetch: loadCompetitions
   };
 };

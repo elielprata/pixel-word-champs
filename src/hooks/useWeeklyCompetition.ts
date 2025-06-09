@@ -1,27 +1,25 @@
 
 import { useState, useEffect } from 'react';
-import { competitionService } from '@/services/competitionService';
 import { Competition } from '@/types';
+import { useCompetitionQueries } from './useCompetitionQueries';
 
 export const useWeeklyCompetition = () => {
-  const [weeklyCompetition, setWeeklyCompetition] = useState<Competition | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    weeklyCompetition,
+    isLoading,
+    error,
+    setIsLoading,
+    setError,
+    fetchWeeklyCompetition
+  } = useCompetitionQueries();
 
-  const fetchWeeklyCompetition = async () => {
+  const loadCompetition = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await competitionService.getWeeklyCompetition();
-      
-      if (response.success) {
-        setWeeklyCompetition(response.data);
-      } else {
-        setError(response.error || 'Erro ao carregar competição semanal');
-      }
+      await fetchWeeklyCompetition();
     } catch (err) {
-      console.error('❌ Erro ao carregar competição semanal:', err);
       setError('Erro ao carregar competição semanal');
     } finally {
       setIsLoading(false);
@@ -29,13 +27,13 @@ export const useWeeklyCompetition = () => {
   };
 
   useEffect(() => {
-    fetchWeeklyCompetition();
+    loadCompetition();
   }, []);
 
   return {
     weeklyCompetition,
     isLoading,
     error,
-    refetch: fetchWeeklyCompetition
+    refetch: loadCompetition
   };
 };
