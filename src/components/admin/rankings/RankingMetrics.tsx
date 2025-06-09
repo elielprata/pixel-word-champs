@@ -1,27 +1,21 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock, AlertCircle } from 'lucide-react';
 import { useRankings } from '@/hooks/useRankings';
-import { usePaymentData } from '@/hooks/usePaymentData';
 
 export const RankingMetrics = () => {
   const { totalPlayers, dailyRanking, weeklyRanking } = useRankings();
-  const { calculateTotalPrize, isLoading: isPrizeLoading } = usePaymentData();
 
-  // Calcular métricas reais baseadas nos dados do banco
+  // Calcular métricas reais baseadas nos dados
   const dailyParticipants = dailyRanking.length;
   const weeklyParticipants = weeklyRanking.length;
-  
-  // Usar dados reais de configuração de prêmios do banco
-  const totalPrizePool = isPrizeLoading ? 0 : calculateTotalPrize();
-
-  console.log('📊 Métricas calculadas do banco:', {
-    totalPlayers,
-    dailyParticipants,
-    weeklyParticipants,
-    totalPrizePool
-  });
+  const prizePoolWeekly = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
+    if (index === 0) return total + 100;
+    if (index === 1) return total + 50;
+    if (index === 2) return total + 25;
+    if (index <= 9) return total + 10;
+    return total;
+  }, 0);
 
   const metrics = [
     {
@@ -30,31 +24,31 @@ export const RankingMetrics = () => {
       subtitle: "Usuários competindo",
       icon: Users,
       color: "from-blue-500 to-blue-600",
-      trend: "Usuários ativos no banco"
+      trend: "Usuários ativos"
     },
     {
-      title: "Prêmios Configurados",
-      value: `R$ ${totalPrizePool.toFixed(2)}`,
-      subtitle: "Valor total configurado",
+      title: "Prêmios Semanais",
+      value: `R$ ${prizePoolWeekly.toFixed(2)}`,
+      subtitle: "Valor total disponível",
       icon: DollarSign,
       color: "from-green-500 to-green-600",
-      trend: "Configuração atual do banco"
+      trend: "Esta semana"
     },
     {
-      title: "Ranking Diário",
+      title: "Competições Diárias",
       value: dailyParticipants.toString(),
-      subtitle: "Participantes no ranking",
+      subtitle: "Participantes hoje",
       icon: Calendar,
       color: "from-purple-500 to-purple-600",
-      trend: "Dados do banco hoje"
+      trend: "Hoje"
     },
     {
-      title: "Ranking Semanal",
+      title: "Competição Semanal",
       value: weeklyParticipants.toString(),
       subtitle: "Participantes esta semana",
       icon: TrendingUp,
       color: "from-cyan-500 to-cyan-600",
-      trend: "Dados do banco desta semana"
+      trend: "Esta semana"
     }
   ];
 
@@ -102,28 +96,28 @@ export const RankingMetrics = () => {
             <AlertCircle className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1">
-            <h4 className="text-lg font-semibold text-slate-900 mb-2">Sistema de Pontuação - Dados Reais do Banco</h4>
+            <h4 className="text-lg font-semibold text-slate-900 mb-2">Sistema de Pontuação</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium text-slate-700">Rankings Diários:</span>
+                  <span className="font-medium text-slate-700">Competições Diárias:</span>
                 </div>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 ml-6">
-                  <li>Dados carregados da tabela daily_rankings</li>
-                  <li>Atualizados automaticamente</li>
-                  <li>Baseados em game_sessions reais</li>
+                  <li>Não possui premiação</li>
+                  <li>Pontos zerados diariamente</li>
+                  <li>Transferidos para ranking semanal</li>
                 </ul>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-purple-600" />
-                  <span className="font-medium text-slate-700">Rankings Semanais:</span>
+                  <span className="font-medium text-slate-700">Competição Semanal:</span>
                 </div>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 ml-6">
-                  <li>Dados da tabela weekly_rankings</li>
-                  <li>Configurações da prize_configurations</li>
-                  <li>Pagamentos via payment_history</li>
+                  <li>Possui premiação</li>
+                  <li>Acumula pontos da semana</li>
+                  <li>Distribuição automática de prêmios</li>
                 </ul>
               </div>
             </div>
