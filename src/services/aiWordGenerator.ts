@@ -1,5 +1,70 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Função para chamar a OpenAI API para uma única categoria
+const callOpenAIAPI = async (categoryName: string, count: number, apiKey: string, config: any): Promise<string[]> => {
+  console.log('🤖 Chamando OpenAI API para categoria:', categoryName, 'quantidade:', count);
+
+  const prompt = `Gere ${count} palavras em português para a categoria "${categoryName}".
+
+Retorne apenas as palavras, uma por linha, sem numeração ou formatação adicional.
+
+REGRAS IMPORTANTES:
+- Todas as palavras devem estar em MAIÚSCULAS
+- Palavras variadas em tamanho (3-8 letras) para diferentes níveis de dificuldade
+- Sem acentos, apenas letras A-Z
+- Exatamente ${count} palavras
+- Uma palavra por linha`;
+
+  const requestBody = {
+    model: config.model || 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: config.systemPrompt },
+      { role: 'user', content: prompt }
+    ],
+    max_tokens: config.maxTokens || 300,
+    temperature: config.temperature || 0.7,
+  };
+
+  console.log('📤 Enviando requisição para OpenAI:', {
+    model: requestBody.model,
+    category: categoryName,
+    count: count
+  });
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  console.log('📥 Resposta da OpenAI:', response.status, response.statusText);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ Erro da OpenAI API:', errorText);
+    throw new Error(`OpenAI API error: ${response.status} - ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  console.log('📊 Dados recebidos da OpenAI para', categoryName);
+  
+  const content = data.choices[0].message.content;
+  
+  // Processar as palavras retornadas
+  const words = content
+    .split('\n')
+    .map((word: string) => word.trim().toUpperCase())
+    .filter((word: string) => word && word.length >= 3 && /^[A-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]+$/.test(word))
+    .slice(0, count);
+  
+  console.log(`✅ Categoria ${categoryName}: ${words.length} palavras processadas`);
+  
+  return words;
+};
+
 // Função para chamar a OpenAI API com múltiplas categorias
 const callOpenAIAPIBatch = async (categories: Array<{id: string, name: string}>, countPerCategory: number, apiKey: string, config: any): Promise<Record<string, string[]>> => {
   console.log('🤖 Chamando OpenAI API em lote com configurações:', {
