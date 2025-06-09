@@ -16,9 +16,14 @@ const HomeScreen = ({ onViewFullRanking, onStartChallenge }: HomeScreenProps) =>
   const { activeCompetitions, isLoading, error, refetch } = useDailyCompetitions();
 
   useEffect(() => {
-    console.log('🏠 HomeScreen montado, buscando competições...');
-    refetch();
-  }, []);
+    console.log('🏠 HomeScreen montado, forçando busca de competições...');
+    // Forçar uma nova busca sempre que o componente montar
+    const fetchData = async () => {
+      console.log('🔄 Executando refetch das competições...');
+      await refetch();
+    };
+    fetchData();
+  }, [refetch]);
 
   useEffect(() => {
     console.log('🔄 Estado das competições atualizou:', {
@@ -74,7 +79,10 @@ const HomeScreen = ({ onViewFullRanking, onStartChallenge }: HomeScreenProps) =>
               <Trophy className="w-12 h-12 mx-auto mb-3 text-red-400" />
               <p className="text-red-600 font-medium mb-2">Erro ao carregar desafios</p>
               <p className="text-sm text-red-500 mb-4">{error}</p>
-              <Button onClick={refetch} variant="outline" size="sm">
+              <Button onClick={() => {
+                console.log('🔄 Botão "Tentar novamente" clicado');
+                refetch();
+              }} variant="outline" size="sm">
                 🔄 Tentar novamente
               </Button>
             </div>
@@ -87,7 +95,10 @@ const HomeScreen = ({ onViewFullRanking, onStartChallenge }: HomeScreenProps) =>
               <p className="text-sm text-gray-500 mb-4">
                 Aguarde novos desafios diários serem criados pelo administrador.
               </p>
-              <Button onClick={refetch} variant="outline" size="sm">
+              <Button onClick={() => {
+                console.log('🔄 Botão "Verificar novamente" clicado');
+                refetch();
+              }} variant="outline" size="sm">
                 🔄 Verificar novamente
               </Button>
             </div>
