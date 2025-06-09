@@ -1,15 +1,21 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Settings, Activity, Crown, Award, Folder } from 'lucide-react';
+import { BookOpen, Settings, Activity, Crown, Award, Folder, RefreshCw } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import { WordsManagement } from './content/WordsManagement';
 import { GameSettings } from './content/GameSettings';
 import { useRealGameMetrics } from '@/hooks/useRealGameMetrics';
 
 export const GameContentTab = () => {
-  const { metrics, isLoading } = useRealGameMetrics();
+  const { metrics, isLoading, refetch } = useRealGameMetrics();
+
+  // Forçar atualização das métricas ao carregar o componente
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const quickStats = [
     { 
@@ -25,6 +31,10 @@ export const GameContentTab = () => {
       color: 'text-green-600' 
     },
   ];
+
+  const handleRefreshMetrics = () => {
+    refetch();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
@@ -65,6 +75,16 @@ export const GameContentTab = () => {
               <Activity className="h-5 w-5 text-slate-600" />
               <h2 className="text-lg font-semibold text-slate-900">Métricas do Sistema</h2>
             </div>
+            <Button 
+              onClick={handleRefreshMetrics}
+              variant="outline" 
+              size="sm"
+              disabled={isLoading}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
           </div>
           
           {/* Quick Stats Grid */}
