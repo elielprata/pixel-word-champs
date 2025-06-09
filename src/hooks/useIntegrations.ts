@@ -73,13 +73,20 @@ REGRAS IMPORTANTES:
     try {
       setLoading(true);
       
+      console.log('🔄 Buscando configurações das integrações...');
+      
       // Buscar configurações das integrações
       const { data: settings, error } = await supabase
         .from('game_settings')
         .select('*')
         .eq('category', 'integrations');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao buscar configurações:', error);
+        throw error;
+      }
+
+      console.log('📋 Configurações encontradas:', settings);
 
       // Processar configurações do FingerprintJS
       const fingerprintConfig = settings?.find(s => s.setting_key === 'fingerprintjs_api_key');
@@ -90,6 +97,7 @@ REGRAS IMPORTANTES:
           status: fingerprintConfig.setting_value ? 'active' : 'inactive',
           enabled: !!fingerprintConfig.setting_value
         }));
+        console.log('🔑 FingerprintJS configurado:', !!fingerprintConfig.setting_value);
       }
 
       // Processar configurações do OpenAI
@@ -99,24 +107,30 @@ REGRAS IMPORTANTES:
       const maxTokensConfig = settings?.find(s => s.setting_key === 'openai_max_tokens');
       const temperatureConfig = settings?.find(s => s.setting_key === 'openai_temperature');
       
-      if (openaiConfig || systemPromptConfig || modelConfig || maxTokensConfig || temperatureConfig) {
-        setOpenAI(prev => ({
-          ...prev,
-          apiKey: openaiConfig?.setting_value || '',
-          status: openaiConfig?.setting_value ? 'active' : 'inactive',
-          enabled: !!openaiConfig?.setting_value,
-          config: {
-            ...prev.config,
-            systemPrompt: systemPromptConfig?.setting_value || defaultSystemPrompt,
-            model: modelConfig?.setting_value || 'gpt-4o-mini',
-            maxTokens: maxTokensConfig?.setting_value ? parseInt(maxTokensConfig.setting_value) : 150,
-            temperature: temperatureConfig?.setting_value ? parseFloat(temperatureConfig.setting_value) : 0.7
-          }
-        }));
-      }
+      const hasOpenAIKey = openaiConfig?.setting_value && openaiConfig.setting_value.trim().length > 0;
+      
+      setOpenAI(prev => ({
+        ...prev,
+        apiKey: openaiConfig?.setting_value || '',
+        status: hasOpenAIKey ? 'active' : 'inactive',
+        enabled: hasOpenAIKey,
+        config: {
+          ...prev.config,
+          systemPrompt: systemPromptConfig?.setting_value || defaultSystemPrompt,
+          model: modelConfig?.setting_value || 'gpt-4o-mini',
+          maxTokens: maxTokensConfig?.setting_value ? parseInt(maxTokensConfig.setting_value) : 150,
+          temperature: temperatureConfig?.setting_value ? parseFloat(temperatureConfig.setting_value) : 0.7
+        }
+      }));
+      
+      console.log('🤖 OpenAI configurado:', {
+        hasKey: hasOpenAIKey,
+        keyLength: openaiConfig?.setting_value?.length || 0,
+        model: modelConfig?.setting_value || 'gpt-4o-mini'
+      });
 
     } catch (error) {
-      console.error('Erro ao buscar integrações:', error);
+      console.error('❌ Erro ao buscar integrações:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar integrações",
@@ -129,16 +143,30 @@ REGRAS IMPORTANTES:
 
   const handleSaveIntegration = async (integration: Integration) => {
     try {
-      console.log('💾 Salvando integração:', integration.id, integration);
+      console.log('💾 Salvando integração:', integration.id, {
+        hasKey: !!integration.apiKey,
+        keyLength: integration.apiKey?.length || 0,
+        enabled: integration.enabled
+      });
       
       const settingsToSave = [];
 
       if (integration.id === 'openai') {
+        // Validar API Key antes de salvar
+        if (!integration.apiKey || integration.apiKey.trim().length === 0) {
+          toast({
+            title: "Erro",
+            description: "API Key da OpenAI é obrigatória",
+            variant: "destructive",
+          });
+          return;
+        }
+
         // Salvar todas as configurações do OpenAI
         settingsToSave.push(
           {
             setting_key: 'openai_api_key',
-            setting_value: integration.apiKey,
+            setting_value: integration.apiKey.trim(),
             setting_type: 'string',
             description: 'API Key para OpenAI',
             category: 'integrations'
@@ -183,7 +211,7 @@ REGRAS IMPORTANTES:
       }
 
       for (const setting of settingsToSave) {
-        console.log('🔧 Salvando configuração:', setting.setting_key, setting.setting_value);
+        console.log('🔧 Salvando configuração:', setting.setting_key, 'valor presente:', !!setting.setting_value);
         
         // Verificar se a configuração já existe
         const { data: existing } = await supabase
@@ -203,7 +231,7 @@ REGRAS IMPORTANTES:
             .eq('setting_key', setting.setting_key);
 
           if (error) {
-            console.error(`Erro ao atualizar ${setting.setting_key}:`, error);
+            console.error(`❌ Erro ao atualizar ${setting.setting_key}:`, error);
             throw error;
           }
           console.log(`✅ Atualizado ${setting.setting_key}`);
@@ -214,7 +242,7 @@ REGRAS IMPORTANTES:
             .insert(setting);
 
           if (error) {
-            console.error(`Erro ao criar ${setting.setting_key}:`, error);
+            console.error(`❌ Erro ao criar ${setting.setting_key}:`, error);
             throw error;
           }
           console.log(`✅ Criado ${setting.setting_key}`);
@@ -230,11 +258,12 @@ REGRAS IMPORTANTES:
           enabled: !!integration.apiKey
         }));
       } else if (integration.id === 'openai') {
+        const hasValidKey = integration.apiKey && integration.apiKey.trim().length > 0;
         setOpenAI(prev => ({
           ...prev,
           ...integration,
-          status: integration.apiKey ? 'active' : 'inactive',
-          enabled: !!integration.apiKey
+          status: hasValidKey ? 'active' : 'inactive',
+          enabled: hasValidKey
         }));
       }
 
@@ -242,6 +271,9 @@ REGRAS IMPORTANTES:
         title: "Sucesso",
         description: `${integration.name} configurado com sucesso`,
       });
+
+      // Recarregar configurações para garantir consistência
+      await fetchIntegrations();
 
     } catch (error: any) {
       console.error('❌ Erro ao salvar configuração:', error);
@@ -259,18 +291,31 @@ REGRAS IMPORTANTES:
     try {
       const integration = integrationId === 'fingerprintjs' ? fingerprintJS : openAI;
       
+      console.log('🧪 Testando conexão para:', integrationId, {
+        hasKey: !!integration.apiKey,
+        keyLength: integration.apiKey?.length || 0
+      });
+      
       if (integrationId === 'openai') {
+        if (!integration.apiKey || integration.apiKey.trim().length === 0) {
+          throw new Error('API Key da OpenAI não configurada');
+        }
+
         // Teste real da OpenAI API
         const response = await fetch('https://api.openai.com/v1/models', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${integration.apiKey}`,
+            'Authorization': `Bearer ${integration.apiKey.trim()}`,
             'Content-Type': 'application/json',
           },
         });
 
+        console.log('📡 Resposta da OpenAI:', response.status, response.statusText);
+
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+          const errorText = await response.text();
+          console.error('❌ Erro da OpenAI API:', errorText);
+          throw new Error(`API error: ${response.status} - ${response.statusText}`);
         }
 
         toast({
@@ -295,6 +340,7 @@ REGRAS IMPORTANTES:
       
     } catch (error: any) {
       const integration = integrationId === 'fingerprintjs' ? fingerprintJS : openAI;
+      console.error('❌ Erro no teste de conexão:', error);
       toast({
         title: "Erro de conexão",
         description: `Falha ao conectar com ${integration.name}: ${error.message}`,

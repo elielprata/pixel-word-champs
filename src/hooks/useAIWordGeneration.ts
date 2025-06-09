@@ -14,26 +14,58 @@ export const useAIWordGeneration = () => {
       categoryName: string; 
       count: number;
     }) => {
-      console.log('🤖 Gerando palavras por IA para categoria:', categoryName, 'quantidade:', count);
+      console.log('🤖 Iniciando geração de palavras por IA:', {
+        categoryId,
+        categoryName,
+        count
+      });
 
-      // Gerar palavras usando IA (OpenAI ou mock)
-      const generatedWords = await generateWordsForCategory(categoryName, count);
-      
-      // Salvar palavras no banco
-      return await saveWordsToDatabase(generatedWords, categoryId, categoryName);
+      try {
+        // Gerar palavras usando IA (OpenAI)
+        const generatedWords = await generateWordsForCategory(categoryName, count);
+        
+        if (!generatedWords || generatedWords.length === 0) {
+          throw new Error('Nenhuma palavra foi gerada pela IA');
+        }
+        
+        console.log('✅ Palavras geradas pela IA:', generatedWords.length);
+        
+        // Salvar palavras no banco
+        const result = await saveWordsToDatabase(generatedWords, categoryId, categoryName);
+        
+        console.log('💾 Palavras salvas no banco:', result.count);
+        
+        return result;
+      } catch (error) {
+        console.error('❌ Erro na geração de palavras:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
+      console.log('🎉 Geração de palavras concluída com sucesso:', data.count);
       toast({
         title: "Sucesso!",
         description: `${data.count} palavras geradas e salvas com sucesso`,
       });
       queryClient.invalidateQueries({ queryKey: ['levelWords'] });
+      queryClient.invalidateQueries({ queryKey: ['wordCategories'] });
     },
     onError: (error: any) => {
       console.error('❌ Erro na geração:', error);
+      
+      let errorMessage = "Erro ao gerar palavras";
+      
+      if (error.message.includes('API key')) {
+        errorMessage = "API key da OpenAI não configurada. Verifique na aba Integrações.";
+      } else if (error.message.includes('API error')) {
+        errorMessage = "Erro na API da OpenAI. Verifique se a chave está correta.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Erro",
-        description: "Erro ao gerar palavras. Verifique se a API key da OpenAI está configurada.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
