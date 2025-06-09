@@ -67,34 +67,43 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   };
 
   const handleEdit = (competition: WeeklyCompetition) => {
+    console.log('🔧 Editando competição:', competition.id);
     setEditingCompetition(competition);
     setIsEditModalOpen(true);
   };
 
   const handleDelete = async (competition: WeeklyCompetition) => {
-    if (!confirm(`Tem certeza que deseja excluir a competição "${competition.title}"?`)) {
+    console.log('🗑️ Tentando excluir competição:', competition.id);
+    
+    const confirmDelete = window.confirm(`Tem certeza que deseja excluir a competição "${competition.title}"?`);
+    if (!confirmDelete) {
+      console.log('❌ Exclusão cancelada pelo usuário');
       return;
     }
 
     setDeletingId(competition.id);
     
     try {
+      console.log('📤 Chamando serviço de exclusão...');
       const response = await customCompetitionService.deleteCompetition(competition.id);
       
       if (response.success) {
+        console.log('✅ Competição excluída com sucesso');
         toast({
           title: "Competição excluída",
           description: `A competição "${competition.title}" foi excluída com sucesso.`,
         });
         
         if (onRefresh) {
+          console.log('🔄 Atualizando lista de competições...');
           onRefresh();
         }
       } else {
+        console.error('❌ Erro no serviço:', response.error);
         throw new Error(response.error || 'Erro ao excluir competição');
       }
     } catch (error) {
-      console.error('Erro ao excluir competição:', error);
+      console.error('❌ Erro ao excluir competição:', error);
       toast({
         title: "Erro ao excluir",
         description: error instanceof Error ? error.message : "Não foi possível excluir a competição. Tente novamente.",
@@ -106,6 +115,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   };
 
   const handleCompetitionUpdated = () => {
+    console.log('🔄 Competição atualizada, recarregando lista...');
     if (onRefresh) {
       onRefresh();
     }
@@ -269,6 +279,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                       size="sm"
                       onClick={() => handleEdit(competition)}
                       className="h-8 w-8 p-0 hover:bg-blue-50"
+                      title="Editar competição"
                     >
                       <Edit className="h-3 w-3" />
                     </Button>
@@ -278,6 +289,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                       onClick={() => handleDelete(competition)}
                       disabled={deletingId === competition.id}
                       className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                      title="Excluir competição"
                     >
                       {deletingId === competition.id ? (
                         <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -197,25 +198,52 @@ class CustomCompetitionService {
 
   async deleteCompetition(id: string): Promise<ApiResponse<any>> {
     try {
-      console.log('🗑️ Excluindo competição:', id);
+      console.log('🗑️ Iniciando exclusão da competição:', id);
 
+      // Verificar se o usuário está autenticado
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        console.error('❌ Usuário não autenticado');
         throw new Error('Usuário não autenticado');
       }
 
-      const { error } = await supabase
+      console.log('👤 Usuário autenticado:', user.id);
+
+      // Verificar se a competição existe antes de tentar excluir
+      const { data: existingCompetition, error: checkError } = await supabase
+        .from('custom_competitions')
+        .select('id, title')
+        .eq('id', id)
+        .single();
+
+      if (checkError) {
+        console.error('❌ Erro ao verificar competição:', checkError);
+        if (checkError.code === 'PGRST116') {
+          throw new Error('Competição não encontrada');
+        }
+        throw checkError;
+      }
+
+      if (!existingCompetition) {
+        console.error('❌ Competição não encontrada');
+        throw new Error('Competição não encontrada');
+      }
+
+      console.log('✅ Competição encontrada:', existingCompetition.title);
+
+      // Executar a exclusão
+      const { error: deleteError } = await supabase
         .from('custom_competitions')
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error('❌ Erro na exclusão:', error);
-        throw error;
+      if (deleteError) {
+        console.error('❌ Erro na exclusão da competição:', deleteError);
+        throw deleteError;
       }
 
-      console.log('✅ Competição excluída com sucesso');
-      return createSuccessResponse({ id });
+      console.log('✅ Competição excluída com sucesso:', id);
+      return createSuccessResponse({ id, message: 'Competição excluída com sucesso' });
     } catch (error) {
       console.error('❌ Erro ao excluir competição:', error);
       return createErrorResponse(handleServiceError(error, 'DELETE_COMPETITION'));
