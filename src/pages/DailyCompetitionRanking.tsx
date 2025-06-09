@@ -9,6 +9,7 @@ import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { customCompetitionService } from '@/services/customCompetitionService';
 import PlayerAvatar from '@/components/ui/PlayerAvatar';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 import {
   Table,
   TableBody,
@@ -47,6 +48,8 @@ interface CompetitionInfo {
   status: string;
   theme?: string;
   max_participants: number;
+  total_participants: number;
+  competition_type: string;
 }
 
 const ITEMS_PER_PAGE = 25;
@@ -63,32 +66,66 @@ export default function DailyCompetitionRanking() {
 
   useEffect(() => {
     if (competitionId) {
-      loadData();
+      loadCompetitionData();
     }
   }, [competitionId]);
 
-  const loadData = async () => {
+  const loadCompetitionData = async () => {
     if (!competitionId) return;
 
     setIsLoading(true);
     try {
+      console.log('🔄 Carregando dados da competição diária:', competitionId);
+
       // Carregar informações da competição
-      const competitionResponse = await customCompetitionService.getCompetitionById(competitionId);
-      if (competitionResponse.success) {
-        setCompetition(competitionResponse.data);
+      const { data: competitionData, error: competitionError } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('id', competitionId)
+        .single();
+
+      if (competitionError) {
+        console.error('❌ Erro ao carregar competição:', competitionError);
+        throw competitionError;
       }
 
-      // Carregar ranking
+      console.log('✅ Competição carregada:', competitionData);
+
+      // Contar total de participantes
+      const { count: totalParticipants } = await supabase
+        .from('competition_participations')
+        .select('*', { count: 'exact', head: true })
+        .eq('competition_id', competitionId);
+
+      const competitionInfo: CompetitionInfo = {
+        id: competitionData.id,
+        title: competitionData.title,
+        description: competitionData.description || '',
+        start_date: competitionData.start_date,
+        end_date: competitionData.end_date,
+        status: competitionData.status,
+        theme: competitionData.theme,
+        max_participants: competitionData.max_participants || 0,
+        total_participants: totalParticipants || 0,
+        competition_type: competitionData.competition_type
+      };
+
+      setCompetition(competitionInfo);
+
+      // Carregar ranking usando o serviço
       const rankingResponse = await dailyCompetitionService.getDailyCompetitionRanking(competitionId);
       if (rankingResponse.success) {
         setRanking(rankingResponse.data);
+        console.log('📊 Ranking carregado:', rankingResponse.data.length, 'participantes');
       } else {
+        console.error('❌ Erro ao carregar ranking:', rankingResponse.error);
         toast({
           title: "Erro ao carregar ranking",
           description: rankingResponse.error,
           variant: "destructive",
         });
       }
+
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);
       toast({
@@ -101,6 +138,35 @@ export default function DailyCompetitionRanking() {
     }
   };
 
+  // Monitorar mudanças em tempo real
+  useEffect(() => {
+    if (!competitionId) return;
+
+    console.log('🔄 Configurando monitoramento em tempo real para competição:', competitionId);
+
+    const channel = supabase
+      .channel(`daily-competition-${competitionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'competition_participations',
+          filter: `competition_id=eq.${competitionId}`
+        },
+        (payload) => {
+          console.log('📡 Mudança detectada nas participações:', payload);
+          loadCompetitionData(); // Recarregar dados quando houver mudanças
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔌 Desconectando canal de tempo real');
+      supabase.removeChannel(channel);
+    };
+  }, [competitionId]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR', {
@@ -109,6 +175,20 @@ export default function DailyCompetitionRanking() {
       month: '2-digit',
       year: 'numeric'
     });
+  };
+
+  const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
+    const date = new Date(dateString);
+    const dateFormatted = date.toLocaleDateString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
+    
+    return `${dateFormatted}, ${timeFormatted}`;
   };
 
   const getPositionIcon = (position: number) => {
@@ -178,7 +258,11 @@ export default function DailyCompetitionRanking() {
                   <p className="text-slate-600 mt-1">{competition.description}</p>
                 </div>
                 <div className="text-right">
-                  <Badge className="mb-2">
+                  <Badge className={
+                    competition.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' :
+                    competition.status === 'completed' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                    'bg-blue-100 text-blue-700 border-blue-200'
+                  }>
                     {competition.status === 'active' ? 'Ativo' : 
                      competition.status === 'completed' ? 'Finalizado' : 'Agendado'}
                   </Badge>
@@ -193,15 +277,15 @@ export default function DailyCompetitionRanking() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t">
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Calendar className="h-4 w-4" />
-                  <span>Início: {formatDate(competition.start_date)}</span>
+                  <span>Início: {formatDateTime(competition.start_date, false)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Calendar className="h-4 w-4" />
-                  <span>Fim: {formatDate(competition.end_date)}</span>
+                  <span>Fim: {formatDateTime(competition.end_date, true)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Users className="h-4 w-4" />
-                  <span>Participantes: {ranking.length}/{competition.max_participants}</span>
+                  <span>Participantes: {competition.total_participants}/{competition.max_participants}</span>
                 </div>
               </div>
             </CardHeader>
@@ -213,7 +297,7 @@ export default function DailyCompetitionRanking() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-orange-500" />
-              Ranking da Competição ({ranking.length} participantes)
+              Ranking da Competição Diária ({ranking.length} participantes)
             </CardTitle>
           </CardHeader>
           <CardContent>
