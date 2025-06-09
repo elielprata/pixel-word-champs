@@ -1,186 +1,129 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Users, Crown, TrendingUp, Calendar, Award } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock, AlertCircle } from 'lucide-react';
+import { useRankings } from '@/hooks/useRankings';
 
 export const RankingMetrics = () => {
-  const [metrics, setMetrics] = useState({
-    totalUsers: 0,
-    activeCompetitions: 0,
-    totalPrizePool: 0,
-    weeklyWinners: 0,
-    completedCompetitions: 0,
-    totalParticipations: 0
-  });
-  const [loading, setLoading] = useState(true);
+  const { totalPlayers, dailyRanking, weeklyRanking } = useRankings();
 
-  useEffect(() => {
-    fetchMetrics();
-  }, []);
+  // Calcular métricas reais baseadas nos dados
+  const dailyParticipants = dailyRanking.length;
+  const weeklyParticipants = weeklyRanking.length;
+  const prizePoolWeekly = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
+    if (index === 0) return total + 100;
+    if (index === 1) return total + 50;
+    if (index === 2) return total + 25;
+    if (index <= 9) return total + 10;
+    return total;
+  }, 0);
 
-  const fetchMetrics = async () => {
-    try {
-      setLoading(true);
-      console.log('📊 Carregando métricas reais do banco...');
-
-      // Total de usuários
-      const { count: totalUsers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-
-      // Competições ativas
-      const { count: activeCompetitions } = await supabase
-        .from('custom_competitions')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
-
-      // Total de prêmios distribuídos
-      const { data: prizeData } = await supabase
-        .from('payment_history')
-        .select('prize_amount')
-        .eq('payment_status', 'paid');
-
-      const totalPrizePool = prizeData?.reduce((sum, payment) => sum + Number(payment.prize_amount), 0) || 0;
-
-      // Vencedores da semana atual
-      const today = new Date();
-      const weekStart = new Date(today.setDate(today.getDate() - today.getDay() + 1));
-      const weekStartStr = weekStart.toISOString().split('T')[0];
-
-      const { count: weeklyWinners } = await supabase
-        .from('weekly_rankings')
-        .select('*', { count: 'exact', head: true })
-        .eq('week_start', weekStartStr)
-        .lte('position', 10);
-
-      // Competições completadas
-      const { count: completedCompetitions } = await supabase
-        .from('custom_competitions')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'completed');
-
-      // Total de participações
-      const { count: totalParticipations } = await supabase
-        .from('competition_participations')
-        .select('*', { count: 'exact', head: true });
-
-      setMetrics({
-        totalUsers: totalUsers || 0,
-        activeCompetitions: activeCompetitions || 0,
-        totalPrizePool,
-        weeklyWinners: weeklyWinners || 0,
-        completedCompetitions: completedCompetitions || 0,
-        totalParticipations: totalParticipations || 0
-      });
-
-      console.log('✅ Métricas carregadas:', metrics);
-    } catch (error) {
-      console.error('❌ Erro ao carregar métricas:', error);
-    } finally {
-      setLoading(false);
+  const metrics = [
+    {
+      title: "Total de Participantes",
+      value: totalPlayers.toLocaleString(),
+      subtitle: "Usuários competindo",
+      icon: Users,
+      color: "from-blue-500 to-blue-600",
+      trend: "Usuários ativos"
+    },
+    {
+      title: "Prêmios Semanais",
+      value: `R$ ${prizePoolWeekly.toFixed(2)}`,
+      subtitle: "Valor total disponível",
+      icon: DollarSign,
+      color: "from-green-500 to-green-600",
+      trend: "Esta semana"
+    },
+    {
+      title: "Competições Diárias",
+      value: dailyParticipants.toString(),
+      subtitle: "Participantes hoje",
+      icon: Calendar,
+      color: "from-purple-500 to-purple-600",
+      trend: "Hoje"
+    },
+    {
+      title: "Competição Semanal",
+      value: weeklyParticipants.toString(),
+      subtitle: "Participantes esta semana",
+      icon: TrendingUp,
+      color: "from-cyan-500 to-cyan-600",
+      trend: "Esta semana"
     }
-  };
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-4">
-              <div className="h-16 bg-gray-200 rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+  ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <Users className="h-4 w-4 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-blue-600 font-medium">Usuários</p>
-              <p className="text-2xl font-bold text-blue-700">{metrics.totalUsers}</p>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {metrics.map((metric, index) => {
+          const Icon = metric.icon;
+          return (
+            <Card key={index} className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-600">{metric.title}</p>
+                      <div className={`bg-gradient-to-r ${metric.color} p-2 rounded-lg shadow-sm`}>
+                        <Icon className="h-4 w-4 text-white" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-2xl font-bold text-slate-900">{metric.value}</p>
+                      <div className="flex items-center justify-between">
+                        {metric.subtitle && (
+                          <p className="text-xs text-slate-500">{metric.subtitle}</p>
+                        )}
+                        {metric.trend && (
+                          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+                            {metric.trend}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+      
+      {/* Informação sobre sistema de pontuação */}
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200">
+        <div className="flex items-start gap-3">
+          <div className="bg-amber-500 p-2 rounded-lg">
+            <AlertCircle className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-lg font-semibold text-slate-900 mb-2">Sistema de Pontuação</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium text-slate-700">Competições Diárias:</span>
+                </div>
+                <ul className="list-disc list-inside text-slate-600 space-y-1 ml-6">
+                  <li>Não possui premiação</li>
+                  <li>Pontos zerados diariamente</li>
+                  <li>Transferidos para ranking semanal</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-purple-600" />
+                  <span className="font-medium text-slate-700">Competição Semanal:</span>
+                </div>
+                <ul className="list-disc list-inside text-slate-600 space-y-1 ml-6">
+                  <li>Possui premiação</li>
+                  <li>Acumula pontos da semana</li>
+                  <li>Distribuição automática de prêmios</li>
+                </ul>
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-green-100 p-2 rounded-lg">
-              <Trophy className="h-4 w-4 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-green-600 font-medium">Ativas</p>
-              <p className="text-2xl font-bold text-green-700">{metrics.activeCompetitions}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-yellow-100 p-2 rounded-lg">
-              <Award className="h-4 w-4 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm text-yellow-600 font-medium">Prêmios</p>
-              <p className="text-xl font-bold text-yellow-700">R$ {metrics.totalPrizePool.toFixed(2)}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-100 p-2 rounded-lg">
-              <Crown className="h-4 w-4 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-purple-600 font-medium">Vencedores</p>
-              <p className="text-2xl font-bold text-purple-700">{metrics.weeklyWinners}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-red-50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-orange-100 p-2 rounded-lg">
-              <Calendar className="h-4 w-4 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-sm text-orange-600 font-medium">Finalizadas</p>
-              <p className="text-2xl font-bold text-orange-700">{metrics.completedCompetitions}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-cyan-50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-teal-100 p-2 rounded-lg">
-              <TrendingUp className="h-4 w-4 text-teal-600" />
-            </div>
-            <div>
-              <p className="text-sm text-teal-600 font-medium">Participações</p>
-              <p className="text-2xl font-bold text-teal-700">{metrics.totalParticipations}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
