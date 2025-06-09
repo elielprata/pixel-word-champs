@@ -10,7 +10,7 @@ const HomeHeader = () => {
         <Trophy className="w-8 h-8 text-white" />
       </div>
       <h1 className="text-3xl font-bold text-gray-800 mb-2">{APP_CONFIG.NAME}</h1>
-      <p className="text-gray-600">Desafie-se nas batalhas diárias</p>
+      <p className="text-gray-600">Desafie-se nas competições diárias</p>
     </div>
   );
 };

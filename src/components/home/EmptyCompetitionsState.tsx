@@ -11,9 +11,9 @@ const EmptyCompetitionsState = ({ onRefresh }: EmptyCompetitionsStateProps) => {
   return (
     <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-200">
       <Trophy className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-      <p className="text-gray-600 font-medium mb-2">Nenhuma batalha disponível agora</p>
+      <p className="text-gray-600 font-medium mb-2">Nenhuma competição disponível agora</p>
       <p className="text-sm text-gray-500 mb-4">
-        As batalhas diárias são criadas automaticamente. Aguarde ou verifique novamente em instantes.
+        As competições diárias são criadas automaticamente. Aguarde ou verifique novamente em instantes.
       </p>
       <Button onClick={onRefresh} variant="outline" size="sm">
         <RefreshCw className="w-4 h-4 mr-2" />
