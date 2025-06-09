@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,11 +27,6 @@ export const RankingsTab = () => {
     if (index <= 9) return total + 10;
     return total;
   }, 0);
-
-  const handleCompetitionCreated = () => {
-    console.log('🔄 Competição criada, atualizando dados...');
-    refreshData();
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
@@ -155,7 +151,6 @@ export const RankingsTab = () => {
         <CreateCompetitionModal 
           open={isCreateCompetitionOpen}
           onOpenChange={setIsCreateCompetitionOpen}
-          onCompetitionCreated={handleCompetitionCreated}
         />
       </div>
     </div>
