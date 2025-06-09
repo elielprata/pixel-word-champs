@@ -9,68 +9,109 @@ export const saveWordsToDatabase = async (
 ) => {
   console.log('📝 Palavras geradas:', words);
 
-  // Verificar quais palavras já existem no banco para evitar duplicatas
+  if (!words || words.length === 0) {
+    console.log('ℹ️ Nenhuma palavra para salvar');
+    return { words: [], count: 0 };
+  }
+
+  // Normalizar palavras (maiúsculas e sem espaços)
+  const normalizedWords = words
+    .map(word => word.trim().toUpperCase())
+    .filter(word => word.length >= 3 && /^[A-Z]+$/.test(word));
+
+  console.log('📊 Palavras normalizadas:', normalizedWords);
+
+  if (normalizedWords.length === 0) {
+    console.log('⚠️ Nenhuma palavra válida após normalização');
+    return { words: [], count: 0 };
+  }
+
+  // Verificar quais palavras já existem no banco (considerando apenas a palavra, independente do level)
   const { data: existingWords, error: checkError } = await supabase
     .from('level_words')
-    .select('word, level')
-    .in('word', words.map(w => w.toUpperCase()))
+    .select('word')
+    .in('word', normalizedWords)
     .eq('is_active', true);
 
   if (checkError) {
     console.error('❌ Erro ao verificar palavras existentes:', checkError);
+    throw checkError;
   }
 
-  // Criar um Set das palavras existentes para verificação rápida
+  // Criar um Set das palavras que já existem
   const existingWordsSet = new Set(
-    existingWords?.map(item => `${item.word}_${item.level}`) || []
+    existingWords?.map(item => item.word) || []
   );
 
-  // Filtrar palavras que não existem ainda
-  const newWords = words.filter(word => {
-    const wordKey = `${word.toUpperCase()}_1`; // level 1 é o padrão
-    return !existingWordsSet.has(wordKey);
-  });
+  // Filtrar apenas palavras que realmente não existem
+  const newWords = normalizedWords.filter(word => !existingWordsSet.has(word));
 
-  console.log(`📊 Total de palavras: ${words.length}, Novas: ${newWords.length}, Já existem: ${words.length - newWords.length}`);
+  // Remover duplicatas dentro do próprio array de palavras novas
+  const uniqueNewWords = [...new Set(newWords)];
 
-  if (newWords.length === 0) {
+  console.log(`📊 Total original: ${words.length}, Normalizadas: ${normalizedWords.length}, Novas únicas: ${uniqueNewWords.length}, Já existem: ${normalizedWords.length - uniqueNewWords.length}`);
+
+  if (uniqueNewWords.length === 0) {
     console.log('ℹ️ Todas as palavras já existem no banco');
     return { words: [], count: 0 };
   }
 
-  // Salvar apenas palavras novas no banco organizadas por dificuldade
-  const wordsToInsert = newWords.map(word => ({
-    word: word.toUpperCase(),
+  // Preparar palavras para inserção
+  const wordsToInsert = uniqueNewWords.map(word => ({
+    word: word,
     category: categoryName,
     difficulty: getDifficultyFromLength(word.length),
-    level: 1, // Campo obrigatório no banco, mas não usado para organização
+    level: 1, // Campo obrigatório no banco
     is_active: true
   }));
 
-  const { data: insertedWords, error: insertError } = await supabase
-    .from('level_words')
-    .insert(wordsToInsert)
-    .select();
+  console.log('💾 Inserindo palavras:', wordsToInsert.length);
 
-  if (insertError) {
-    console.error('❌ Erro ao salvar palavras:', insertError);
-    throw insertError;
+  // Inserir palavras uma por vez para evitar conflitos de constraint
+  const insertedWords = [];
+  let successCount = 0;
+
+  for (const wordData of wordsToInsert) {
+    try {
+      const { data, error } = await supabase
+        .from('level_words')
+        .insert([wordData])
+        .select()
+        .single();
+
+      if (error) {
+        // Se for erro de duplicata, apenas avisar e continuar
+        if (error.code === '23505') {
+          console.log(`⚠️ Palavra já existe (ignorando): ${wordData.word}`);
+        } else {
+          console.error(`❌ Erro ao inserir palavra ${wordData.word}:`, error);
+        }
+      } else {
+        insertedWords.push(data);
+        successCount++;
+        console.log(`✅ Palavra inserida: ${wordData.word}`);
+      }
+    } catch (err) {
+      console.error(`❌ Erro inesperado ao inserir palavra ${wordData.word}:`, err);
+    }
   }
 
   // Registrar a geração na tabela de controle
-  const { error: logError } = await supabase
-    .from('ai_word_generation')
-    .insert({
-      category_id: categoryId,
-      level: 1, // Manter por compatibilidade com o banco
-      words_generated: newWords.length,
-      last_generation: new Date().toISOString()
-    });
+  if (successCount > 0) {
+    const { error: logError } = await supabase
+      .from('ai_word_generation')
+      .insert({
+        category_id: categoryId,
+        level: 1,
+        words_generated: successCount,
+        last_generation: new Date().toISOString()
+      });
 
-  if (logError) {
-    console.error('❌ Erro ao registrar geração:', logError);
+    if (logError) {
+      console.error('❌ Erro ao registrar geração:', logError);
+    }
   }
 
-  console.log('✅ Palavras salvas com sucesso:', insertedWords?.length);
-  return { words: insertedWords, count: newWords.length };
+  console.log(`✅ Palavras salvas com sucesso: ${successCount} de ${uniqueNewWords.length} tentativas`);
+  return { words: insertedWords, count: successCount };
 };
