@@ -64,13 +64,13 @@ export const CategoryGenerationConfig = ({
                 <Input
                   type="number"
                   min="1"
-                  max="50"
+                  max="1000"
                   value={wordsCount}
                   onChange={(e) => setWordsCount(Number(e.target.value))}
                   className="w-24"
                 />
                 <div className="text-xs text-slate-500">
-                  Por categoria (máx. 50)
+                  Por categoria (máx. 1000)
                 </div>
               </div>
               
