@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Trophy, Users, Calendar, Medal, Crown } from 'lucide-react';
-import { customCompetitionService } from '@/services/customCompetitionService';
 import PlayerAvatar from '@/components/ui/PlayerAvatar';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -111,42 +109,54 @@ export default function WeeklyCompetitionRanking() {
 
       setCompetition(competitionInfo);
 
-      // Carregar ranking real da competição
-      const { data: rankingData, error: rankingError } = await supabase
+      // Carregar participações da competição
+      const { data: participationsData, error: participationsError } = await supabase
         .from('competition_participations')
-        .select(`
-          user_id,
-          user_score,
-          user_position,
-          created_at,
-          profiles!inner (
-            username,
-            avatar_url
-          )
-        `)
+        .select('user_id, user_score, user_position, created_at')
         .eq('competition_id', competitionId)
         .not('user_position', 'is', null)
         .order('user_position', { ascending: true });
 
-      if (rankingError) {
-        console.error('❌ Erro ao carregar ranking:', rankingError);
-        throw rankingError;
+      if (participationsError) {
+        console.error('❌ Erro ao carregar participações:', participationsError);
+        throw participationsError;
       }
 
-      console.log('📊 Ranking carregado:', rankingData?.length || 0, 'participantes');
+      // Buscar dados dos perfis separadamente
+      const userIds = (participationsData || []).map(p => p.user_id);
+      
+      if (userIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds);
 
-      const rankingParticipants: RankingParticipant[] = (rankingData || []).map(item => ({
-        user_position: item.user_position || 0,
-        user_score: item.user_score || 0,
-        user_id: item.user_id || '',
-        created_at: item.created_at || '',
-        profiles: item.profiles ? {
-          username: item.profiles.username || 'Usuário',
-          avatar_url: item.profiles.avatar_url
-        } : null
-      }));
+        if (profilesError) {
+          console.error('❌ Erro ao carregar perfis:', profilesError);
+          throw profilesError;
+        }
 
-      setRanking(rankingParticipants);
+        // Combinar dados de participação com perfis
+        const rankingParticipants: RankingParticipant[] = (participationsData || []).map(participation => {
+          const profile = profilesData?.find(p => p.id === participation.user_id);
+          
+          return {
+            user_position: participation.user_position || 0,
+            user_score: participation.user_score || 0,
+            user_id: participation.user_id || '',
+            created_at: participation.created_at || '',
+            profiles: profile ? {
+              username: profile.username || 'Usuário',
+              avatar_url: profile.avatar_url
+            } : null
+          };
+        });
+
+        setRanking(rankingParticipants);
+        console.log('📊 Ranking carregado:', rankingParticipants.length, 'participantes');
+      } else {
+        setRanking([]);
+      }
 
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);

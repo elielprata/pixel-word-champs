@@ -25,38 +25,50 @@ class WeeklyCompetitionRankingService {
     try {
       console.log('📊 Buscando ranking da competição:', competitionId);
 
-      const { data, error } = await supabase
+      // Buscar participações primeiro
+      const { data: participations, error: participationsError } = await supabase
         .from('competition_participations')
-        .select(`
-          user_id,
-          user_score,
-          user_position,
-          created_at,
-          profiles!inner (
-            username,
-            avatar_url,
-            total_score,
-            games_played
-          )
-        `)
+        .select('user_id, user_score, user_position, created_at')
         .eq('competition_id', competitionId)
         .order('user_position', { ascending: true });
 
-      if (error) {
-        console.error('❌ Erro ao buscar ranking:', error);
-        throw error;
+      if (participationsError) {
+        console.error('❌ Erro ao buscar participações:', participationsError);
+        throw participationsError;
       }
 
-      const ranking: RankingParticipant[] = (data || []).map(item => ({
-        user_position: item.user_position || 0,
-        user_score: item.user_score || 0,
-        user_id: item.user_id || '',
-        created_at: item.created_at || '',
-        profiles: item.profiles ? {
-          username: item.profiles.username || 'Usuário',
-          avatar_url: item.profiles.avatar_url
-        } : null
-      }));
+      if (!participations || participations.length === 0) {
+        console.log('ℹ️ Nenhuma participação encontrada');
+        return createSuccessResponse([]);
+      }
+
+      // Buscar perfis separadamente
+      const userIds = participations.map(p => p.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('❌ Erro ao buscar perfis:', profilesError);
+        throw profilesError;
+      }
+
+      // Combinar dados
+      const ranking: RankingParticipant[] = participations.map(participation => {
+        const profile = profiles?.find(p => p.id === participation.user_id);
+        
+        return {
+          user_position: participation.user_position || 0,
+          user_score: participation.user_score || 0,
+          user_id: participation.user_id || '',
+          created_at: participation.created_at || '',
+          profiles: profile ? {
+            username: profile.username || 'Usuário',
+            avatar_url: profile.avatar_url
+          } : null
+        };
+      });
 
       console.log('✅ Ranking carregado:', ranking.length, 'participantes');
       return createSuccessResponse(ranking);
@@ -149,29 +161,54 @@ class WeeklyCompetitionRankingService {
     try {
       console.log('🏆 Buscando top participantes:', competitionId);
 
-      const { data, error } = await supabase
+      // Buscar participações primeiro
+      const { data: participations, error: participationsError } = await supabase
         .from('competition_participations')
-        .select(`
-          user_id,
-          user_score,
-          user_position,
-          profiles!inner (
-            username,
-            avatar_url
-          )
-        `)
+        .select('user_id, user_score, user_position')
         .eq('competition_id', competitionId)
         .not('user_position', 'is', null)
         .order('user_position', { ascending: true })
         .limit(limit);
 
-      if (error) {
-        console.error('❌ Erro ao buscar top participantes:', error);
-        throw error;
+      if (participationsError) {
+        console.error('❌ Erro ao buscar participações:', participationsError);
+        throw participationsError;
       }
 
-      console.log('✅ Top participantes carregados:', data?.length || 0);
-      return createSuccessResponse(data || []);
+      if (!participations || participations.length === 0) {
+        console.log('ℹ️ Nenhuma participação encontrada no top');
+        return createSuccessResponse([]);
+      }
+
+      // Buscar perfis separadamente
+      const userIds = participations.map(p => p.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('❌ Erro ao buscar perfis:', profilesError);
+        throw profilesError;
+      }
+
+      // Combinar dados
+      const topParticipants = participations.map(participation => {
+        const profile = profiles?.find(p => p.id === participation.user_id);
+        
+        return {
+          user_id: participation.user_id,
+          user_score: participation.user_score,
+          user_position: participation.user_position,
+          profiles: profile ? {
+            username: profile.username,
+            avatar_url: profile.avatar_url
+          } : null
+        };
+      });
+
+      console.log('✅ Top participantes carregados:', topParticipants.length);
+      return createSuccessResponse(topParticipants);
 
     } catch (error) {
       console.error('❌ Erro ao buscar top participantes:', error);
