@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Trophy, TrendingUp, Star, Activity, Crown } from 'lucide-react';
-import { Badge } from "@/components/ui/badge";
+import { Users, Trophy, TrendingUp, Star, Activity } from 'lucide-react';
 import { useRealUserStats } from '@/hooks/useRealUserStats';
 import { UserGrowthMetrics } from './UserGrowthMetrics';
 import { UserActivityMetrics } from './UserActivityMetrics';
@@ -97,16 +96,6 @@ export const DashboardStats = () => {
                 Visão geral completa da plataforma em tempo real
               </p>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 px-3 py-1">
-              <Crown className="h-3 w-3 mr-1" />
-              Sistema Ativo
-            </Badge>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
-              <Activity className="h-3 w-3 mr-1" />
-              Tempo Real
-            </Badge>
           </div>
         </div>
       </div>
