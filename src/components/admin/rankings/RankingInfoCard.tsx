@@ -1,6 +1,6 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Calendar, Users, DollarSign, Settings, Eye, Download, ArrowRight } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
@@ -19,7 +19,6 @@ export const RankingInfoCard = ({
   type, 
   title, 
   description, 
-  status, 
   lastUpdate 
 }: RankingInfoCardProps) => {
   const { toast } = useToast();
@@ -28,7 +27,6 @@ export const RankingInfoCard = ({
   
   const isDaily = type === 'daily';
   const iconColor = isDaily ? 'from-blue-500 to-blue-600' : 'from-purple-500 to-purple-600';
-  const statusColor = status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-700 border-slate-200';
   
   // Usar dados reais dos rankings
   const participants = isDaily ? dailyRanking.length : weeklyRanking.length;
@@ -108,9 +106,6 @@ export const RankingInfoCard = ({
               <p className="text-sm text-slate-600 mt-1">{description}</p>
             </div>
           </div>
-          <Badge className={statusColor}>
-            {status === 'active' ? 'Ativo' : 'Inativo'}
-          </Badge>
         </div>
       </CardHeader>
       
