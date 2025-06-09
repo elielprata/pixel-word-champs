@@ -1,5 +1,31 @@
-
 import { supabase } from '@/integrations/supabase/client';
+
+// Função para remover acentos de uma palavra
+const removeAccents = (word: string): string => {
+  return word
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacríticos
+    .replace(/[ÁÀÂÃÄ]/g, 'A')
+    .replace(/[ÉÈÊË]/g, 'E')
+    .replace(/[ÍÌÎÏ]/g, 'I')
+    .replace(/[ÓÒÔÕÖ]/g, 'O')
+    .replace(/[ÚÙÛÜ]/g, 'U')
+    .replace(/[Ç]/g, 'C')
+    .replace(/[Ñ]/g, 'N')
+    .replace(/[áàâãä]/g, 'a')
+    .replace(/[éèêë]/g, 'e')
+    .replace(/[íìîï]/g, 'i')
+    .replace(/[óòôõö]/g, 'o')
+    .replace(/[úùûü]/g, 'u')
+    .replace(/[ç]/g, 'c')
+    .replace(/[ñ]/g, 'n');
+};
+
+// Função para validar se uma palavra está no formato correto (sem acentos)
+const isValidWord = (word: string): boolean => {
+  const trimmed = word.trim().toUpperCase();
+  return trimmed.length >= 3 && /^[A-Z]+$/.test(trimmed);
+};
 
 // Função para chamar a OpenAI API para uma única categoria
 const callOpenAIAPI = async (categoryName: string, count: number, apiKey: string, config: any): Promise<string[]> => {
@@ -7,19 +33,27 @@ const callOpenAIAPI = async (categoryName: string, count: number, apiKey: string
 
   const prompt = `Gere ${count} palavras em português para a categoria "${categoryName}".
 
-Retorne apenas as palavras, uma por linha, sem numeração ou formatação adicional.
-
-REGRAS IMPORTANTES:
-- Todas as palavras devem estar em MAIÚSCULAS
-- Palavras variadas em tamanho (3-8 letras) para diferentes níveis de dificuldade
-- Sem acentos, apenas letras A-Z
+REGRAS OBRIGATÓRIAS:
+- TODAS as palavras devem estar em MAIÚSCULAS
+- NENHUMA palavra pode ter acentos (á, à, â, ã, é, è, ê, í, ì, î, ó, ò, ô, õ, ú, ù, û, ç, ñ)
+- Apenas letras de A a Z (sem acentos, cedilhas ou til)
+- Palavras de 3-8 letras para diferentes níveis de dificuldade
 - Exatamente ${count} palavras
-- Uma palavra por linha`;
+- Uma palavra por linha
+- Sem numeração ou formatação adicional
+
+Exemplos de palavras CORRETAS: CASA, ARVORE, PEIXE, LIVRO
+Exemplos de palavras INCORRETAS: ÁRVORE, CORAÇÃO, PÁSSARO (têm acentos)
+
+Retorne apenas as palavras, uma por linha:`;
 
   const requestBody = {
     model: config.model || 'gpt-4o-mini',
     messages: [
-      { role: 'system', content: config.systemPrompt },
+      { 
+        role: 'system', 
+        content: 'Você é um assistente que gera palavras para jogos de caça-palavras. NUNCA use acentos nas palavras. Todas as palavras devem usar apenas letras A-Z sem acentos, cedilhas ou til.' 
+      },
       { role: 'user', content: prompt }
     ],
     max_tokens: config.maxTokens || 300,
@@ -54,14 +88,18 @@ REGRAS IMPORTANTES:
   
   const content = data.choices[0].message.content;
   
-  // Processar as palavras retornadas
+  // Processar as palavras retornadas com remoção rigorosa de acentos
   const words = content
     .split('\n')
-    .map((word: string) => word.trim().toUpperCase())
-    .filter((word: string) => word && word.length >= 3 && /^[A-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]+$/.test(word))
+    .map((word: string) => {
+      const cleaned = removeAccents(word.trim()).toUpperCase();
+      return cleaned;
+    })
+    .filter((word: string) => isValidWord(word))
     .slice(0, count);
   
-  console.log(`✅ Categoria ${categoryName}: ${words.length} palavras processadas`);
+  console.log(`✅ Categoria ${categoryName}: ${words.length} palavras processadas (sem acentos)`);
+  console.log('🔍 Palavras geradas:', words);
   
   return words;
 };
@@ -82,33 +120,36 @@ const callOpenAIAPIBatch = async (categories: Array<{id: string, name: string}>,
   
   const prompt = `Gere EXATAMENTE ${countPerCategory} palavras em português para CADA UMA das seguintes categorias: ${categoriesList}
 
-Retorne a resposta EXATAMENTE no formato JSON abaixo, sem texto adicional:
+REGRAS OBRIGATÓRIAS:
+- EXATAMENTE ${countPerCategory} palavras para CADA categoria
+- TODAS as palavras devem estar em MAIÚSCULAS
+- NENHUMA palavra pode ter acentos (á, à, â, ã, é, è, ê, í, ì, î, ó, ò, ô, õ, ú, ù, û, ç, ñ)
+- Apenas letras de A a Z (sem acentos, cedilhas ou til)
+- Palavras de 3-8 letras para diferentes níveis de dificuldade
+- PALAVRAS ÚNICAS - não repetir palavras entre categorias ou dentro da mesma categoria
+- Formato JSON válido
+
+Exemplos de palavras CORRETAS: CASA, ARVORE, PEIXE, LIVRO, CACHORRO
+Exemplos de palavras INCORRETAS: ÁRVORE, CORAÇÃO, PÁSSARO (têm acentos)
+
+Retorne EXATAMENTE no formato JSON abaixo, sem texto adicional:
 
 {
 ${categories.map(cat => `  "${cat.name}": ["PALAVRA1", "PALAVRA2", "PALAVRA3"${countPerCategory > 3 ? ', ...]' : ']'}`).join(',\n')}
 }
 
-REGRAS OBRIGATÓRIAS:
-- EXATAMENTE ${countPerCategory} palavras para CADA categoria
-- Todas as palavras devem estar em MAIÚSCULAS
-- SEM ACENTOS - apenas letras A-Z (remover todos os acentos: Á, À, Â, Ã, É, È, Ê, Í, Ï, Ó, Ô, Õ, Ö, Ú, Ç, Ñ)
-- Palavras variadas em tamanho (3-8 letras) para diferentes níveis de dificuldade
-- PALAVRAS ÚNICAS - não repetir palavras entre categorias ou dentro da mesma categoria
-- Formato JSON válido
-- Palavras válidas em português sem acentos
-
-Total esperado: ${categories.length} categorias × ${countPerCategory} palavras = ${categories.length * countPerCategory} palavras`;
+Total esperado: ${categories.length} categorias × ${countPerCategory} palavras = ${categories.length * countPerCategory} palavras SEM ACENTOS`;
 
   const requestBody = {
     model: config.model || 'gpt-4o-mini',
     messages: [
       { 
         role: 'system', 
-        content: config.systemPrompt || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português. NUNCA use acentos nas palavras - converta todas para letras simples (A-Z). Garanta que todas as palavras sejam únicas e não repetidas. SEMPRE gere o número EXATO de palavras solicitado para cada categoria.' 
+        content: 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português. NUNCA use acentos nas palavras - converta todas para letras simples (A-Z). Garanta que todas as palavras sejam únicas e não repetidas. SEMPRE gere o número EXATO de palavras solicitado para cada categoria. NUNCA use: á, à, â, ã, é, è, ê, í, ì, î, ó, ò, ô, õ, ú, ù, û, ç, ñ ou qualquer outro acento.' 
       },
       { role: 'user', content: prompt }
     ],
-    max_tokens: config.maxTokens || 2000,
+    max_tokens: config.maxTokens || 2500,
     temperature: config.temperature || 0.7,
   };
 
@@ -151,7 +192,7 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
     const jsonData = JSON.parse(content);
     console.log('✅ JSON parseado com sucesso:', jsonData);
     
-    // Processar e validar cada categoria
+    // Processar e validar cada categoria com remoção rigorosa de acentos
     const processedData: Record<string, string[]> = {};
     let totalWordsProcessed = 0;
     
@@ -161,24 +202,18 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
       
       const validWords = categoryWords
         .map((word: string) => {
-          // Remover acentos e normalizar
-          const normalized = word.trim().toUpperCase()
-            .replace(/[ÁÀÂÃÄ]/g, 'A')
-            .replace(/[ÉÈÊË]/g, 'E')
-            .replace(/[ÍÌÎÏ]/g, 'I')
-            .replace(/[ÓÒÔÕÖ]/g, 'O')
-            .replace(/[ÚÙÛÜ]/g, 'U')
-            .replace(/[Ç]/g, 'C')
-            .replace(/[Ñ]/g, 'N');
-          return normalized;
+          // Remover acentos de forma mais rigorosa
+          const cleaned = removeAccents(word.trim()).toUpperCase();
+          return cleaned;
         })
-        .filter((word: string) => word && word.length >= 3 && /^[A-Z]+$/.test(word))
+        .filter((word: string) => isValidWord(word))
         .slice(0, countPerCategory);
       
       processedData[category.name] = validWords;
       totalWordsProcessed += validWords.length;
       
-      console.log(`✅ Categoria ${category.name}: ${validWords.length}/${countPerCategory} palavras válidas processadas`);
+      console.log(`✅ Categoria ${category.name}: ${validWords.length}/${countPerCategory} palavras válidas processadas (sem acentos)`);
+      console.log('🔍 Palavras da categoria:', validWords);
       
       // Aviso se não conseguiu o número exato
       if (validWords.length < countPerCategory) {
@@ -186,7 +221,7 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
       }
     }
     
-    console.log(`📊 RESUMO FINAL: ${totalWordsProcessed}/${categories.length * countPerCategory} palavras processadas`);
+    console.log(`📊 RESUMO FINAL: ${totalWordsProcessed}/${categories.length * countPerCategory} palavras processadas (sem acentos)`);
     return processedData;
     
   } catch (parseError) {
@@ -207,8 +242,8 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
         // Extrair palavras do match
         words = match[1]
           .split(/[,\n\r"'\[\]]+/)
-          .map((word: string) => word.trim().toUpperCase())
-          .filter((word: string) => word && word.length >= 3 && /^[A-Z]+$/.test(word))
+          .map((word: string) => removeAccents(word.trim()).toUpperCase())
+          .filter((word: string) => isValidWord(word))
           .slice(0, countPerCategory);
       }
       
@@ -216,15 +251,16 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
       if (words.length < countPerCategory) {
         const allWords = content
           .split(/[\n\r\s,]+/)
-          .map((word: string) => word.trim().toUpperCase())
-          .filter((word: string) => word && word.length >= 3 && /^[A-Z]+$/.test(word))
+          .map((word: string) => removeAccents(word.trim()).toUpperCase())
+          .filter((word: string) => isValidWord(word))
           .slice(words.length, countPerCategory);
         
         words = [...words, ...allWords].slice(0, countPerCategory);
       }
       
       fallbackData[category.name] = words;
-      console.log(`🔄 Fallback para ${category.name}: ${words.length} palavras extraídas`);
+      console.log(`🔄 Fallback para ${category.name}: ${words.length} palavras extraídas (sem acentos)`);
+      console.log('🔍 Palavras extraídas:', words);
     }
     
     return fallbackData;
@@ -325,7 +361,7 @@ export const generateWordsForCategories = async (categories: Array<{id: string, 
 
     const config = {
       model: modelSetting?.setting_value || 'gpt-4o-mini',
-      maxTokens: maxTokensSetting?.setting_value ? parseInt(maxTokensSetting.setting_value) : 2000,
+      maxTokens: maxTokensSetting?.setting_value ? parseInt(maxTokensSetting.setting_value) : 2500,
       temperature: temperatureSetting?.setting_value ? parseFloat(temperatureSetting.setting_value) : 0.7,
       systemPrompt: systemPromptSetting?.setting_value || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.'
     };
