@@ -9,8 +9,37 @@ export const saveWordsToDatabase = async (
 ) => {
   console.log('📝 Palavras geradas:', words);
 
-  // Salvar palavras no banco organizadas por dificuldade
-  const wordsToInsert = words.map(word => ({
+  // Verificar quais palavras já existem no banco para evitar duplicatas
+  const { data: existingWords, error: checkError } = await supabase
+    .from('level_words')
+    .select('word, level')
+    .in('word', words.map(w => w.toUpperCase()))
+    .eq('is_active', true);
+
+  if (checkError) {
+    console.error('❌ Erro ao verificar palavras existentes:', checkError);
+  }
+
+  // Criar um Set das palavras existentes para verificação rápida
+  const existingWordsSet = new Set(
+    existingWords?.map(item => `${item.word}_${item.level}`) || []
+  );
+
+  // Filtrar palavras que não existem ainda
+  const newWords = words.filter(word => {
+    const wordKey = `${word.toUpperCase()}_1`; // level 1 é o padrão
+    return !existingWordsSet.has(wordKey);
+  });
+
+  console.log(`📊 Total de palavras: ${words.length}, Novas: ${newWords.length}, Já existem: ${words.length - newWords.length}`);
+
+  if (newWords.length === 0) {
+    console.log('ℹ️ Todas as palavras já existem no banco');
+    return { words: [], count: 0 };
+  }
+
+  // Salvar apenas palavras novas no banco organizadas por dificuldade
+  const wordsToInsert = newWords.map(word => ({
     word: word.toUpperCase(),
     category: categoryName,
     difficulty: getDifficultyFromLength(word.length),
@@ -34,7 +63,7 @@ export const saveWordsToDatabase = async (
     .insert({
       category_id: categoryId,
       level: 1, // Manter por compatibilidade com o banco
-      words_generated: words.length,
+      words_generated: newWords.length,
       last_generation: new Date().toISOString()
     });
 
@@ -43,5 +72,5 @@ export const saveWordsToDatabase = async (
   }
 
   console.log('✅ Palavras salvas com sucesso:', insertedWords?.length);
-  return { words: insertedWords, count: words.length };
+  return { words: insertedWords, count: newWords.length };
 };
