@@ -46,17 +46,13 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleWordFound = async (word: string, points: number) => {
-    try {
-      const newTotalScore = totalScore + points;
-      setTotalScore(newTotalScore);
-      
-      toast({
-        title: "Palavra encontrada!",
-        description: `${word} - ${points} pontos`,
-      });
-    } catch (error) {
-      console.error('Erro ao salvar palavra:', error);
-    }
+    // Não contabiliza pontos até o nível ser completado
+    console.log(`Palavra encontrada: ${word}, mas pontos só serão contabilizados ao completar o nível`);
+    
+    toast({
+      title: "Palavra encontrada!",
+      description: `${word} - Pontos serão contabilizados ao completar o nível`,
+    });
   };
 
   const handleTimeUp = () => {
@@ -68,9 +64,15 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleLevelComplete = (levelScore: number) => {
+    // Agora sim contabiliza os pontos no ranking
+    const newTotalScore = totalScore + levelScore;
+    setTotalScore(newTotalScore);
+    
+    console.log(`Nível ${currentLevel} completado! Adicionando ${levelScore} pontos ao ranking. Total: ${newTotalScore}`);
+    
     toast({
       title: "Nível concluído!",
-      description: `Pontuação do nível: ${levelScore}`,
+      description: `${levelScore} pontos adicionados ao ranking!`,
     });
   };
 

@@ -52,6 +52,7 @@ const GameBoard = ({
     hintsUsed,
     showGameOver,
     showLevelComplete,
+    isLevelCompleted,
     setHintsUsed,
     setShowGameOver,
     setHintHighlightedCells,
@@ -59,7 +60,11 @@ const GameBoard = ({
     isCellPermanentlyMarked,
     isCellHintHighlighted,
     closeGameOver
-  } = useGameLogic(level, timeLeft, levelWords, onWordFound, onLevelComplete);
+  } = useGameLogic(level, timeLeft, levelWords, onWordFound, (levelScore) => {
+    // Só contabiliza pontos quando o nível é completado
+    console.log(`Nível ${level} completado! Contabilizando ${levelScore} pontos no ranking.`);
+    onLevelComplete(levelScore);
+  });
 
   const { useHint, handleRevive, handleGoHome } = useGameInteractions(
     foundWords,
@@ -122,6 +127,9 @@ const GameBoard = ({
     );
   };
 
+  // Calcular pontuação que será exibida (só conta se nível completado)
+  const displayScore = isLevelCompleted ? foundWords.reduce((sum, fw) => sum + fw.points, 0) : 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
       <div className="max-w-md mx-auto space-y-6">
@@ -136,7 +144,7 @@ const GameBoard = ({
           <GameStats 
             timeLeft={timeLeft}
             hintsUsed={hintsUsed}
-            totalScore={foundWords.reduce((sum, fw) => sum + fw.points, 0)}
+            totalScore={displayScore}
             onUseHint={useHint}
           />
         </div>

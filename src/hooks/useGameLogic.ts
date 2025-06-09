@@ -22,6 +22,7 @@ export const useGameLogic = (
   const [showGameOver, setShowGameOver] = useState(false);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
   const [hintHighlightedCells, setHintHighlightedCells] = useState<Position[]>([]);
+  const [isLevelCompleted, setIsLevelCompleted] = useState(false);
   
   const { getPointsForWord } = useGamePointsConfig();
 
@@ -34,6 +35,7 @@ export const useGameLogic = (
     setShowLevelComplete(false);
     setShowGameOver(false);
     setHintHighlightedCells([]);
+    setIsLevelCompleted(false);
   }, [level]);
 
   // Detecta quando o tempo acaba
@@ -45,13 +47,14 @@ export const useGameLogic = (
 
   // Verifica se completou o nível
   useEffect(() => {
-    if (foundWords.length === 5 && !showLevelComplete) {
+    if (foundWords.length === 5 && !showLevelComplete && !isLevelCompleted) {
       const levelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
       console.log(`Level ${level} completed with score ${levelScore}`);
       setShowLevelComplete(true);
+      setIsLevelCompleted(true);
       onLevelComplete(levelScore);
     }
-  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete, level]);
+  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete, level, isLevelCompleted]);
 
   const addFoundWord = (word: string, positions: Position[]) => {
     const points = getPointsForWord(word);
@@ -61,7 +64,10 @@ export const useGameLogic = (
     
     setFoundWords(prev => [...prev, newFoundWord]);
     setPermanentlyMarkedCells(prev => [...prev, ...positions]);
-    onWordFound(word, points);
+    
+    // Só contabiliza pontos se o nível for completado
+    // Por agora, chamamos onWordFound para feedback visual, mas a pontuação final só conta quando completar
+    onWordFound(word, 0); // Não adiciona pontos até completar o nível
   };
 
   const isCellPermanentlyMarked = (row: number, col: number) => {
@@ -84,6 +90,7 @@ export const useGameLogic = (
     showGameOver,
     showLevelComplete,
     hintHighlightedCells,
+    isLevelCompleted,
     setHintsUsed,
     setShowGameOver,
     setShowLevelComplete,
