@@ -48,19 +48,11 @@ export const ScheduleSection = ({
   };
 
   // Para competições diárias, permitir seleção a partir de hoje
-  // Para competições semanais, permitir seleção a partir de amanhã
+  // Para competições semanais, também permitir a partir de hoje
   const getMinDate = () => {
     const today = new Date();
-    if (type === 'daily') {
-      // Para competições diárias, permitir a data atual
-      today.setHours(0, 0, 0, 0);
-      return today;
-    } else {
-      // Para competições semanais, permitir a partir de amanhã
-      today.setDate(today.getDate() + 1);
-      today.setHours(0, 0, 0, 0);
-      return today;
-    }
+    today.setHours(0, 0, 0, 0);
+    return today;
   };
 
   return (
