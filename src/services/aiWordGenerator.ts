@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Função para remover acentos de uma palavra
@@ -119,39 +118,44 @@ const callOpenAIAPIBatch = async (categories: Array<{id: string, name: string}>,
 
   const categoriesList = categories.map(cat => cat.name).join(', ');
   
-  const prompt = `Gere EXATAMENTE ${countPerCategory} palavras em português para CADA UMA das seguintes categorias: ${categoriesList}
+  // PROMPT MELHORADO COM MAIS RIGIDEZ
+  const prompt = `Gere EXATAMENTE ${countPerCategory} palavras DIFERENTES em português para CADA UMA das seguintes categorias: ${categoriesList}
 
 REGRAS OBRIGATÓRIAS:
-- EXATAMENTE ${countPerCategory} palavras para CADA categoria
+- EXATAMENTE ${countPerCategory} palavras DIFERENTES para CADA categoria
 - TODAS as palavras devem estar em MAIÚSCULAS
 - NENHUMA palavra pode ter acentos (á, à, â, ã, é, è, ê, í, ì, î, ó, ò, ô, õ, ú, ù, û, ç, ñ)
 - Apenas letras de A a Z (sem acentos, cedilhas ou til)
 - Palavras de 3-8 letras para diferentes níveis de dificuldade
-- PALAVRAS ÚNICAS - não repetir palavras entre categorias ou dentro da mesma categoria
-- Formato JSON válido
+- PALAVRAS ÚNICAS - NUNCA repetir a mesma palavra em categorias diferentes
+- NUNCA repetir palavras dentro da mesma categoria
+- Formato JSON válido e limpo
 
-Exemplos de palavras CORRETAS: CASA, ARVORE, PEIXE, LIVRO, CACHORRO
+Exemplos de palavras CORRETAS: CASA, ARVORE, PEIXE, LIVRO, CACHORRO, MESA, CADEIRA
 Exemplos de palavras INCORRETAS: ÁRVORE, CORAÇÃO, PÁSSARO (têm acentos)
 
-Retorne EXATAMENTE no formato JSON abaixo, sem texto adicional:
+Retorne EXATAMENTE no formato JSON abaixo, SEM texto adicional antes ou depois:
 
 {
-${categories.map(cat => `  "${cat.name}": ["PALAVRA1", "PALAVRA2", "PALAVRA3"${countPerCategory > 3 ? ', ...]' : ']'}`).join(',\n')}
+${categories.map(cat => `  "${cat.name}": ["PALAVRA1", "PALAVRA2", "PALAVRA3"${countPerCategory > 3 ? ', "PALAVRA4", "PALAVRA5"' : ''}]`).join(',\n')}
 }
 
-Total esperado: ${categories.length} categorias × ${countPerCategory} palavras = ${categories.length * countPerCategory} palavras SEM ACENTOS`;
+IMPORTANTE: 
+- Total esperado: ${categories.length} categorias × ${countPerCategory} palavras = ${categories.length * countPerCategory} palavras ÚNICAS
+- Todas as ${categories.length * countPerCategory} palavras devem ser DIFERENTES entre si
+- SEM ACENTOS em nenhuma palavra`;
 
   const requestBody = {
     model: config.model || 'gpt-4o-mini',
     messages: [
       { 
         role: 'system', 
-        content: config.systemPrompt || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.'
+        content: 'Você é um especialista em gerar palavras para jogos de caça-palavras. Retorne APENAS o JSON solicitado, sem texto adicional.'
       },
       { role: 'user', content: prompt }
     ],
     max_tokens: config.maxTokens || 2500,
-    temperature: config.temperature || 0.7,
+    temperature: config.temperature || 0.3, // Temperatura mais baixa para mais consistência
   };
 
   console.log('📤 Enviando requisição em lote para OpenAI:', {
@@ -161,6 +165,7 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
     maxTokens: requestBody.max_tokens,
     temperature: requestBody.temperature
   });
+  console.log('📝 Prompt enviado:', prompt);
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -182,39 +187,73 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
   const data = await response.json();
   console.log('📊 Dados recebidos da OpenAI:', {
     choices: data.choices?.length || 0,
-    hasContent: !!data.choices?.[0]?.message?.content
+    hasContent: !!data.choices?.[0]?.message?.content,
+    contentLength: data.choices?.[0]?.message?.content?.length || 0
   });
   
   const content = data.choices[0].message.content;
-  console.log('📄 Conteúdo completo recebido:', content);
+  console.log('📄 Conteúdo COMPLETO recebido da OpenAI:', content);
   
   try {
+    // Limpar o conteúdo antes de tentar parsear
+    const cleanContent = content.trim().replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    console.log('🧹 Conteúdo limpo para parse:', cleanContent);
+    
     // Tentar parsear como JSON
-    const jsonData = JSON.parse(content);
+    const jsonData = JSON.parse(cleanContent);
     console.log('✅ JSON parseado com sucesso:', jsonData);
+    
+    // Verificar se todas as categorias estão presentes
+    const missingCategories = categories.filter(cat => !jsonData[cat.name]);
+    if (missingCategories.length > 0) {
+      console.warn('⚠️ Categorias ausentes na resposta:', missingCategories.map(c => c.name));
+    }
     
     // Processar e validar cada categoria com remoção rigorosa de acentos
     const processedData: Record<string, string[]> = {};
     let totalWordsProcessed = 0;
+    const allGeneratedWords = new Set<string>(); // Para detectar duplicatas globais
     
     for (const category of categories) {
       const categoryWords = jsonData[category.name] || [];
-      console.log(`🔍 Categoria ${category.name}: recebeu ${categoryWords.length} palavras`, categoryWords);
+      console.log(`🔍 Categoria ${category.name}: recebeu ${categoryWords.length}/${countPerCategory} palavras`, categoryWords);
       
-      const validWords = categoryWords
-        .map((word: string) => {
-          // Remover acentos de forma mais rigorosa
-          const cleaned = removeAccents(word.trim()).toUpperCase();
-          return cleaned;
-        })
-        .filter((word: string) => isValidWord(word))
-        .slice(0, countPerCategory);
+      const validWords: string[] = [];
+      
+      for (const word of categoryWords) {
+        if (typeof word !== 'string') {
+          console.warn(`⚠️ Palavra inválida (não é string) na categoria ${category.name}:`, word);
+          continue;
+        }
+        
+        // Remover acentos de forma mais rigorosa
+        const cleaned = removeAccents(word.trim()).toUpperCase();
+        
+        // Validar palavra
+        if (!isValidWord(cleaned)) {
+          console.warn(`⚠️ Palavra inválida na categoria ${category.name}: "${word}" -> "${cleaned}"`);
+          continue;
+        }
+        
+        // Verificar duplicata global
+        if (allGeneratedWords.has(cleaned)) {
+          console.warn(`⚠️ DUPLICATA GLOBAL detectada: "${cleaned}" já foi gerada em outra categoria`);
+          continue;
+        }
+        
+        validWords.push(cleaned);
+        allGeneratedWords.add(cleaned);
+        
+        if (validWords.length >= countPerCategory) {
+          break;
+        }
+      }
       
       processedData[category.name] = validWords;
       totalWordsProcessed += validWords.length;
       
       console.log(`✅ Categoria ${category.name}: ${validWords.length}/${countPerCategory} palavras válidas processadas (sem acentos)`);
-      console.log('🔍 Palavras da categoria:', validWords);
+      console.log('🔍 Palavras finais da categoria:', validWords);
       
       // Aviso se não conseguiu o número exato
       if (validWords.length < countPerCategory) {
@@ -223,6 +262,9 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
     }
     
     console.log(`📊 RESUMO FINAL: ${totalWordsProcessed}/${categories.length * countPerCategory} palavras processadas (sem acentos)`);
+    console.log('🔍 Todas as palavras geradas:', Array.from(allGeneratedWords));
+    console.log('📈 Total de palavras únicas globais:', allGeneratedWords.size);
+    
     return processedData;
     
   } catch (parseError) {
