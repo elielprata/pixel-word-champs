@@ -51,6 +51,11 @@ function App() {
                     <DailyCompetitionRanking />
                   </ProtectedRoute>
                 } />
+                <Route path="/admin/daily-competition/:competitionId/ranking" element={
+                  <ProtectedRoute>
+                    <DailyCompetitionRanking />
+                  </ProtectedRoute>
+                } />
                 <Route path="/admin/weekly-competition/:competitionId/ranking" element={
                   <ProtectedRoute>
                     <WeeklyCompetitionRanking />
