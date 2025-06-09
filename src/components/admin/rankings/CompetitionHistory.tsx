@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { DebugInfo } from './history/DebugInfo';
 import { CompetitionFilters } from './history/CompetitionFilters';
 import { CompetitionStats } from './history/CompetitionStats';
 import { CompetitionTable } from './history/CompetitionTable';
@@ -26,7 +25,6 @@ export const CompetitionHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [debugInfo, setDebugInfo] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,33 +55,6 @@ export const CompetitionHistory = () => {
 
       console.log('🎯 Competições do sistema encontradas:', systemCompetitions?.length || 0, systemCompetitions);
       if (systemError) console.error('❌ Erro ao buscar competições do sistema:', systemError);
-
-      // Buscar TODAS as competições para debug
-      const { data: allCompetitions, error: allError } = await supabase
-        .from('competitions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      const { data: allCustom, error: allCustomError } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      console.log('🔍 TODAS as competições (debug):', {
-        allCompetitions: allCompetitions?.length || 0,
-        allCustom: allCustom?.length || 0,
-        competitionsData: allCompetitions,
-        customData: allCustom
-      });
-
-      setDebugInfo({
-        customCompetitions: customCompetitions?.length || 0,
-        systemCompetitions: systemCompetitions?.length || 0,
-        totalCompetitions: allCompetitions?.length || 0,
-        totalCustom: allCustom?.length || 0,
-        customError: customError?.message,
-        systemError: systemError?.message
-      });
 
       // Se não há erros mas também não há dados, criar dados de exemplo
       if (!customError && !systemError && (!customCompetitions?.length && !systemCompetitions?.length)) {
@@ -212,8 +183,6 @@ export const CompetitionHistory = () => {
 
   return (
     <div className="space-y-6">
-      <DebugInfo debugInfo={debugInfo} />
-
       <CompetitionFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
