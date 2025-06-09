@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -119,15 +118,12 @@ export const usePaymentData = () => {
     }
   };
 
-  const handleEditGroup = (groupId: string) => {
-    const group = groupPrizes.find(g => g.id === groupId);
-    if (group) {
-      setEditingGroup(groupId);
-      setEditGroupPrize({ ...group });
-    }
+  const handleEditGroup = (group: GroupPrize) => {
+    setEditingGroup(group.id);
+    setEditGroupPrize({ ...group });
   };
 
-  const handleSaveGroup = async (groupId: string) => {
+  const handleSaveGroup = async () => {
     if (!editGroupPrize) return;
 
     try {
@@ -139,13 +135,13 @@ export const usePaymentData = () => {
           prize_amount: editGroupPrize.prizePerWinner,
           updated_at: new Date().toISOString()
         })
-        .eq('id', groupId);
+        .eq('id', editGroupPrize.id);
 
       if (error) throw error;
 
       setGroupPrizes(prev =>
         prev.map(group =>
-          group.id === groupId ? editGroupPrize : group
+          group.id === editGroupPrize.id ? editGroupPrize : group
         )
       );
 
