@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Função para chamar a OpenAI API para uma única categoria
@@ -79,40 +80,42 @@ const callOpenAIAPIBatch = async (categories: Array<{id: string, name: string}>,
 
   const categoriesList = categories.map(cat => cat.name).join(', ');
   
-  const prompt = `Gere ${countPerCategory} palavras em português para cada uma das seguintes categorias: ${categoriesList}
+  const prompt = `Gere EXATAMENTE ${countPerCategory} palavras em português para CADA UMA das seguintes categorias: ${categoriesList}
 
 Retorne a resposta EXATAMENTE no formato JSON abaixo, sem texto adicional:
 
 {
-  "${categories[0]?.name || 'categoria1'}": ["PALAVRA1", "PALAVRA2", "PALAVRA3"],
-  "${categories[1]?.name || 'categoria2'}": ["PALAVRA1", "PALAVRA2", "PALAVRA3"]
+${categories.map(cat => `  "${cat.name}": ["PALAVRA1", "PALAVRA2", "PALAVRA3"${countPerCategory > 3 ? ', ...]' : ']'}`).join(',\n')}
 }
 
 REGRAS OBRIGATÓRIAS:
+- EXATAMENTE ${countPerCategory} palavras para CADA categoria
 - Todas as palavras devem estar em MAIÚSCULAS
 - SEM ACENTOS - apenas letras A-Z (remover todos os acentos: Á, À, Â, Ã, É, È, Ê, Í, Ï, Ó, Ô, Õ, Ö, Ú, Ç, Ñ)
 - Palavras variadas em tamanho (3-8 letras) para diferentes níveis de dificuldade
-- Exatamente ${countPerCategory} palavras por categoria
 - PALAVRAS ÚNICAS - não repetir palavras entre categorias ou dentro da mesma categoria
 - Formato JSON válido
-- Palavras válidas em português sem acentos`;
+- Palavras válidas em português sem acentos
+
+Total esperado: ${categories.length} categorias × ${countPerCategory} palavras = ${categories.length * countPerCategory} palavras`;
 
   const requestBody = {
     model: config.model || 'gpt-4o-mini',
     messages: [
       { 
         role: 'system', 
-        content: config.systemPrompt || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português. NUNCA use acentos nas palavras - converta todas para letras simples (A-Z). Garanta que todas as palavras sejam únicas e não repetidas.' 
+        content: config.systemPrompt || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português. NUNCA use acentos nas palavras - converta todas para letras simples (A-Z). Garanta que todas as palavras sejam únicas e não repetidas. SEMPRE gere o número EXATO de palavras solicitado para cada categoria.' 
       },
       { role: 'user', content: prompt }
     ],
-    max_tokens: config.maxTokens || 1000,
+    max_tokens: config.maxTokens || 2000,
     temperature: config.temperature || 0.7,
   };
 
   console.log('📤 Enviando requisição em lote para OpenAI:', {
     model: requestBody.model,
     categoriesCount: categories.length,
+    expectedWords: categories.length * countPerCategory,
     maxTokens: requestBody.max_tokens,
     temperature: requestBody.temperature
   });
@@ -141,44 +144,87 @@ REGRAS OBRIGATÓRIAS:
   });
   
   const content = data.choices[0].message.content;
+  console.log('📄 Conteúdo completo recebido:', content);
   
   try {
     // Tentar parsear como JSON
     const jsonData = JSON.parse(content);
+    console.log('✅ JSON parseado com sucesso:', jsonData);
     
     // Processar e validar cada categoria
     const processedData: Record<string, string[]> = {};
+    let totalWordsProcessed = 0;
     
     for (const category of categories) {
       const categoryWords = jsonData[category.name] || [];
+      console.log(`🔍 Categoria ${category.name}: recebeu ${categoryWords.length} palavras`, categoryWords);
+      
       const validWords = categoryWords
-        .map((word: string) => word.trim().toUpperCase())
+        .map((word: string) => {
+          // Remover acentos e normalizar
+          const normalized = word.trim().toUpperCase()
+            .replace(/[ÁÀÂÃÄ]/g, 'A')
+            .replace(/[ÉÈÊË]/g, 'E')
+            .replace(/[ÍÌÎÏ]/g, 'I')
+            .replace(/[ÓÒÔÕÖ]/g, 'O')
+            .replace(/[ÚÙÛÜ]/g, 'U')
+            .replace(/[Ç]/g, 'C')
+            .replace(/[Ñ]/g, 'N');
+          return normalized;
+        })
         .filter((word: string) => word && word.length >= 3 && /^[A-Z]+$/.test(word))
         .slice(0, countPerCategory);
       
       processedData[category.name] = validWords;
+      totalWordsProcessed += validWords.length;
       
-      console.log(`✅ Categoria ${category.name}: ${validWords.length} palavras válidas`);
+      console.log(`✅ Categoria ${category.name}: ${validWords.length}/${countPerCategory} palavras válidas processadas`);
+      
+      // Aviso se não conseguiu o número exato
+      if (validWords.length < countPerCategory) {
+        console.warn(`⚠️ Categoria ${category.name}: esperado ${countPerCategory}, processado ${validWords.length}`);
+      }
     }
     
+    console.log(`📊 RESUMO FINAL: ${totalWordsProcessed}/${categories.length * countPerCategory} palavras processadas`);
     return processedData;
     
   } catch (parseError) {
     console.error('❌ Erro ao parsear JSON da OpenAI:', parseError);
-    console.log('📄 Conteúdo recebido:', content);
+    console.log('📄 Conteúdo recebido que falhou no parse:', content);
     
-    // Fallback: tentar extrair palavras do texto livre
+    // Fallback mais inteligente: tentar extrair palavras do texto livre
+    console.log('🔄 Tentando fallback de extração de palavras...');
     const fallbackData: Record<string, string[]> = {};
     
+    // Tentar encontrar padrões de categoria no texto
     for (const category of categories) {
-      // Tentar encontrar palavras relacionadas à categoria no texto
-      const words = content
-        .split(/[\n\r\s,]+/)
-        .map((word: string) => word.trim().toUpperCase())
-        .filter((word: string) => word && word.length >= 3 && /^[A-Z]+$/.test(word))
-        .slice(0, countPerCategory);
+      const categoryPattern = new RegExp(`"?${category.name}"?\\s*[:\\[]([^\\]\\}]+)`, 'i');
+      const match = content.match(categoryPattern);
+      
+      let words: string[] = [];
+      if (match) {
+        // Extrair palavras do match
+        words = match[1]
+          .split(/[,\n\r"'\[\]]+/)
+          .map((word: string) => word.trim().toUpperCase())
+          .filter((word: string) => word && word.length >= 3 && /^[A-Z]+$/.test(word))
+          .slice(0, countPerCategory);
+      }
+      
+      // Se não encontrou palavras suficientes, tentar extrair do texto geral
+      if (words.length < countPerCategory) {
+        const allWords = content
+          .split(/[\n\r\s,]+/)
+          .map((word: string) => word.trim().toUpperCase())
+          .filter((word: string) => word && word.length >= 3 && /^[A-Z]+$/.test(word))
+          .slice(words.length, countPerCategory);
+        
+        words = [...words, ...allWords].slice(0, countPerCategory);
+      }
       
       fallbackData[category.name] = words;
+      console.log(`🔄 Fallback para ${category.name}: ${words.length} palavras extraídas`);
     }
     
     return fallbackData;
@@ -279,7 +325,7 @@ export const generateWordsForCategories = async (categories: Array<{id: string, 
 
     const config = {
       model: modelSetting?.setting_value || 'gpt-4o-mini',
-      maxTokens: maxTokensSetting?.setting_value ? parseInt(maxTokensSetting.setting_value) : 1000,
+      maxTokens: maxTokensSetting?.setting_value ? parseInt(maxTokensSetting.setting_value) : 2000,
       temperature: temperatureSetting?.setting_value ? parseFloat(temperatureSetting.setting_value) : 0.7,
       systemPrompt: systemPromptSetting?.setting_value || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.'
     };
@@ -292,7 +338,8 @@ export const generateWordsForCategories = async (categories: Array<{id: string, 
       model: config.model,
       maxTokens: config.maxTokens,
       temperature: config.temperature,
-      systemPromptLength: config.systemPrompt.length
+      systemPromptLength: config.systemPrompt.length,
+      expectedTotalWords: categories.length * countPerCategory
     });
     
     return await callOpenAIAPIBatch(categories, countPerCategory, apiKey, config);
