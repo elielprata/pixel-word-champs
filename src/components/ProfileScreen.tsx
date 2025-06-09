@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, Trophy, Calendar, Settings, HelpCircle, LogOut, Award, ChevronRight, Star, Zap, Target, Crown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import AvatarUpload from '@/components/ui/AvatarUpload';
 
 interface ProfileScreenProps {
@@ -15,6 +15,7 @@ interface ProfileScreenProps {
 
 const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAchievements }: ProfileScreenProps) => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url);
 
   const getPlayerLevel = () => {
@@ -103,9 +104,12 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
 
   const handleLogout = async () => {
     try {
+      console.log('🚪 Iniciando logout...');
       await logout();
+      console.log('✅ Logout realizado com sucesso, redirecionando para auth');
+      navigate('/auth');
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('❌ Erro ao fazer logout:', error);
     }
   };
 
