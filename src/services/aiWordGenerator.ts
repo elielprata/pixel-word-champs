@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Função para remover acentos de uma palavra
@@ -52,7 +53,7 @@ Retorne apenas as palavras, uma por linha:`;
     messages: [
       { 
         role: 'system', 
-        content: 'Você é um assistente que gera palavras para jogos de caça-palavras. NUNCA use acentos nas palavras. Todas as palavras devem usar apenas letras A-Z sem acentos, cedilhas ou til.' 
+        content: config.systemPrompt || 'Você são um assistente especializado em gerar palavras para jogos de caça-palavras em português.'
       },
       { role: 'user', content: prompt }
     ],
@@ -145,7 +146,7 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
     messages: [
       { 
         role: 'system', 
-        content: 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português. NUNCA use acentos nas palavras - converta todas para letras simples (A-Z). Garanta que todas as palavras sejam únicas e não repetidas. SEMPRE gere o número EXATO de palavras solicitado para cada categoria. NUNCA use: á, à, â, ã, é, è, ê, í, ì, î, ó, ò, ô, õ, ú, ù, û, ç, ñ ou qualquer outro acento.' 
+        content: config.systemPrompt || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.'
       },
       { role: 'user', content: prompt }
     ],
