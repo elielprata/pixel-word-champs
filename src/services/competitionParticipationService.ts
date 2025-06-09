@@ -37,6 +37,7 @@ class CompetitionParticipationService {
         .select('id, is_completed')
         .eq('user_id', userId)
         .eq('competition_id', competitionId)
+        .eq('is_completed', true) // Só considera como participação se foi completada
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
