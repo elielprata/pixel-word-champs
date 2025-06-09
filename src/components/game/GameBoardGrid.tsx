@@ -41,8 +41,8 @@ const GameBoardGrid = ({
       className="grid mx-auto"
       style={{ 
         gridTemplateColumns: `repeat(${size}, 1fr)`,
-        gap: size > 7 ? '3px' : '6px',
-        maxWidth: size > 7 ? '360px' : '340px',
+        gap: size > 8 ? '2px' : '3px', // Espaçamento menor entre as células
+        maxWidth: size > 8 ? '380px' : '360px',
         width: '100%',
         touchAction: 'none'
       }}
