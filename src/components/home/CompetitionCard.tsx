@@ -51,28 +51,34 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   return (
-    <Card className="border border-slate-200 bg-gradient-to-br from-white to-slate-50/50 hover:shadow-md transition-all duration-200 hover:scale-[1.02] group">
-      <CardContent className="p-3">
-        <div className="space-y-3">
-          {/* Header */}
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="font-bold text-slate-800 text-sm leading-tight mb-1">
-                {competition.title}
-              </h3>
-              
-              {competition.theme && (
-                <Badge className="bg-gradient-to-r from-violet-500 to-purple-600 text-white border-0 text-xs px-2 py-0.5">
-                  {competition.theme}
-                </Badge>
-              )}
-            </div>
+    <Card className="group relative overflow-hidden bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-200/60 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:border-amber-300">
+      {/* Decorative grid pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full" style={{
+          backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(217, 119, 6, 0.1) 15px, rgba(217, 119, 6, 0.1) 16px),
+                           repeating-linear-gradient(0deg, transparent, transparent 15px, rgba(217, 119, 6, 0.1) 15px, rgba(217, 119, 6, 0.1) 16px)`
+        }}></div>
+      </div>
+      
+      <CardContent className="relative p-4">
+        <div className="space-y-4">
+          {/* Header com tema */}
+          <div className="space-y-2">
+            <h3 className="font-bold text-slate-800 text-lg leading-tight">
+              {competition.title}
+            </h3>
+            
+            {competition.theme && (
+              <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-sm px-3 py-1 shadow-md">
+                📝 {competition.theme}
+              </Badge>
+            )}
           </div>
 
-          {/* Time Display */}
-          <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+          {/* Tempo com design de tabuleiro */}
+          <div className="flex items-center justify-center gap-2 bg-slate-50 rounded-lg p-2 text-center">
             <Clock className={`w-4 h-4 ${getTimeColor(competition.end_date)}`} />
-            <div>
+            <div className="text-center">
               <span className="text-xs text-slate-600 block">Tempo restante</span>
               <span className={`text-sm font-bold ${getTimeColor(competition.end_date)}`}>
                 {formatTimeRemaining(competition.end_date)}
@@ -80,15 +86,19 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             </div>
           </div>
 
-          {/* Action Button */}
+          {/* Botão de ação */}
           <Button 
             onClick={() => onStartChallenge(parseInt(competition.id))}
-            className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold text-sm py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-sm py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 border-amber-700/20"
           >
-            PARTICIPAR AGORA
+            🎯 PARTICIPAR AGORA
           </Button>
         </div>
       </CardContent>
+      
+      {/* Corner decoration */}
+      <div className="absolute top-2 right-2 w-3 h-3 bg-amber-400 rounded-full opacity-60"></div>
+      <div className="absolute bottom-2 left-2 w-2 h-2 bg-orange-400 rounded-full opacity-60"></div>
     </Card>
   );
 };
