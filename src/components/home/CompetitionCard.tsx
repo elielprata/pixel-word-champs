@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, Clock, Zap, Star, Trophy } from 'lucide-react';
+import { Users, Clock, Calendar, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -33,65 +33,80 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return `${hours}h ${minutes}m restantes`;
     }
-    return `${minutes}m`;
+    return `${minutes}m restantes`;
   };
 
-  const timeRemaining = formatTimeRemaining(competition.end_date);
-  const isUrgent = timeRemaining.includes('m') && !timeRemaining.includes('h');
+  const formatStartTime = (startDate: string) => {
+    const start = new Date(startDate);
+    return start.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
-    <Card className="bg-white/90 backdrop-blur-sm border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group">
-      <CardContent className="p-5">
+    <Card className="bg-white shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+      <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
-                <Trophy className="w-4 h-4 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-700 transition-colors">
-                {competition.title}
-              </h3>
-            </div>
-            
+            <h3 className="text-lg font-bold text-gray-900 mb-1">
+              {competition.title}
+            </h3>
+            {competition.description && (
+              <p className="text-sm text-gray-600 mb-3">
+                {competition.description}
+              </p>
+            )}
             {competition.theme && (
-              <div className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 text-sm font-medium rounded-full mb-3">
-                <Star className="w-3 h-3 mr-1" />
-                {competition.theme}
+              <div className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full mb-3">
+                🎯 {competition.theme}
               </div>
             )}
           </div>
-          
-          <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-            isUrgent 
-              ? 'bg-gradient-to-r from-red-100 to-orange-100 text-red-700 animate-pulse' 
-              : 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700'
-          }`}>
-            <Clock className="w-3 h-3 inline mr-1" />
-            {timeRemaining}
+          <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
+            ⚔️ Batalha Ativa
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-blue-500" />
-            <span className="text-sm font-medium">
-              {competition.max_participants || '∞'} vagas
+            <span className="text-sm text-gray-600">
+              {competition.max_participants || 'Ilimitado'} vagas
             </span>
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
-            <Zap className="w-4 h-4 text-yellow-500" />
-            <span className="text-sm font-medium">Pontos XP</span>
+          <div className="flex items-center gap-2">
+            <Star className="w-4 h-4 text-yellow-500" />
+            <span className="text-sm text-gray-600">
+              Pontos para Guerra
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-orange-500" />
+            <span className="text-sm text-orange-600 font-medium">
+              {formatTimeRemaining(competition.end_date)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-gray-500" />
+            <span className="text-xs text-gray-500">
+              Iniciou: {formatStartTime(competition.start_date)}
+            </span>
           </div>
         </div>
 
         <Button 
           onClick={() => onStartChallenge(parseInt(competition.id))}
-          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 rounded-xl transition-all duration-200 hover:shadow-lg group-hover:scale-105"
+          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
         >
-          <Zap className="w-4 h-4 mr-2" />
-          Entrar na Batalha
+          ⚔️ Entrar na Batalha
         </Button>
       </CardContent>
     </Card>
