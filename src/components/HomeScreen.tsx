@@ -4,7 +4,9 @@ import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { useAuth } from '@/hooks/useAuth';
 import { TIMING_CONFIG } from '@/constants/app';
 import HomeHeader from './home/HomeHeader';
+import UserStatsCard from './home/UserStatsCard';
 import CompetitionsList from './home/CompetitionsList';
+import QuickActionsCard from './home/QuickActionsCard';
 import LoadingState from './home/LoadingState';
 import ErrorState from './home/ErrorState';
 
@@ -26,7 +28,7 @@ interface HomeScreenProps {
   onViewChallengeRanking: (challengeId: number) => void;
 }
 
-const HomeScreen = ({ onStartChallenge }: HomeScreenProps) => {
+const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) => {
   const { user } = useAuth();
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,8 +73,10 @@ const HomeScreen = ({ onStartChallenge }: HomeScreenProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
-      <div className="p-6 pb-24 max-w-lg mx-auto">
+      <div className="p-4 pb-24 max-w-lg mx-auto space-y-6">
         <HomeHeader />
+        
+        <UserStatsCard />
 
         {error && (
           <ErrorState error={error} onRetry={loadCompetitions} />
@@ -83,6 +87,8 @@ const HomeScreen = ({ onStartChallenge }: HomeScreenProps) => {
           onStartChallenge={onStartChallenge}
           onRefresh={loadCompetitions}
         />
+
+        <QuickActionsCard onViewFullRanking={onViewFullRanking} />
       </div>
     </div>
   );
