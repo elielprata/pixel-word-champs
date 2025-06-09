@@ -95,8 +95,11 @@ REGRAS IMPORTANTES:
       // Processar configurações do OpenAI
       const openaiConfig = settings?.find(s => s.setting_key === 'openai_api_key');
       const systemPromptConfig = settings?.find(s => s.setting_key === 'openai_system_prompt');
+      const modelConfig = settings?.find(s => s.setting_key === 'openai_model');
+      const maxTokensConfig = settings?.find(s => s.setting_key === 'openai_max_tokens');
+      const temperatureConfig = settings?.find(s => s.setting_key === 'openai_temperature');
       
-      if (openaiConfig || systemPromptConfig) {
+      if (openaiConfig || systemPromptConfig || modelConfig || maxTokensConfig || temperatureConfig) {
         setOpenAI(prev => ({
           ...prev,
           apiKey: openaiConfig?.setting_value || '',
@@ -104,7 +107,10 @@ REGRAS IMPORTANTES:
           enabled: !!openaiConfig?.setting_value,
           config: {
             ...prev.config,
-            systemPrompt: systemPromptConfig?.setting_value || defaultSystemPrompt
+            systemPrompt: systemPromptConfig?.setting_value || defaultSystemPrompt,
+            model: modelConfig?.setting_value || 'gpt-4o-mini',
+            maxTokens: maxTokensConfig?.setting_value ? parseInt(maxTokensConfig.setting_value) : 150,
+            temperature: temperatureConfig?.setting_value ? parseFloat(temperatureConfig.setting_value) : 0.7
           }
         }));
       }
@@ -123,26 +129,49 @@ REGRAS IMPORTANTES:
 
   const handleSaveIntegration = async (integration: Integration) => {
     try {
+      console.log('💾 Salvando integração:', integration.id, integration);
+      
       const settingsToSave = [];
 
       if (integration.id === 'openai') {
-        // Salvar API Key
-        settingsToSave.push({
-          setting_key: 'openai_api_key',
-          setting_value: integration.apiKey,
-          setting_type: 'string',
-          description: 'API Key para OpenAI',
-          category: 'integrations'
-        });
-
-        // Salvar System Prompt
-        settingsToSave.push({
-          setting_key: 'openai_system_prompt',
-          setting_value: integration.config.systemPrompt,
-          setting_type: 'text',
-          description: 'System Prompt para OpenAI',
-          category: 'integrations'
-        });
+        // Salvar todas as configurações do OpenAI
+        settingsToSave.push(
+          {
+            setting_key: 'openai_api_key',
+            setting_value: integration.apiKey,
+            setting_type: 'string',
+            description: 'API Key para OpenAI',
+            category: 'integrations'
+          },
+          {
+            setting_key: 'openai_system_prompt',
+            setting_value: integration.config.systemPrompt,
+            setting_type: 'text',
+            description: 'System Prompt para OpenAI',
+            category: 'integrations'
+          },
+          {
+            setting_key: 'openai_model',
+            setting_value: integration.config.model,
+            setting_type: 'string',
+            description: 'Modelo OpenAI',
+            category: 'integrations'
+          },
+          {
+            setting_key: 'openai_max_tokens',
+            setting_value: integration.config.maxTokens.toString(),
+            setting_type: 'number',
+            description: 'Máximo de tokens OpenAI',
+            category: 'integrations'
+          },
+          {
+            setting_key: 'openai_temperature',
+            setting_value: integration.config.temperature.toString(),
+            setting_type: 'number',
+            description: 'Temperature OpenAI',
+            category: 'integrations'
+          }
+        );
       } else {
         settingsToSave.push({
           setting_key: `${integration.id}_api_key`,
@@ -154,6 +183,8 @@ REGRAS IMPORTANTES:
       }
 
       for (const setting of settingsToSave) {
+        console.log('🔧 Salvando configuração:', setting.setting_key, setting.setting_value);
+        
         // Verificar se a configuração já existe
         const { data: existing } = await supabase
           .from('game_settings')
@@ -171,14 +202,22 @@ REGRAS IMPORTANTES:
             })
             .eq('setting_key', setting.setting_key);
 
-          if (error) throw error;
+          if (error) {
+            console.error(`Erro ao atualizar ${setting.setting_key}:`, error);
+            throw error;
+          }
+          console.log(`✅ Atualizado ${setting.setting_key}`);
         } else {
           // Criar nova configuração
           const { error } = await supabase
             .from('game_settings')
             .insert(setting);
 
-          if (error) throw error;
+          if (error) {
+            console.error(`Erro ao criar ${setting.setting_key}:`, error);
+            throw error;
+          }
+          console.log(`✅ Criado ${setting.setting_key}`);
         }
       }
 
@@ -205,6 +244,7 @@ REGRAS IMPORTANTES:
       });
 
     } catch (error: any) {
+      console.error('❌ Erro ao salvar configuração:', error);
       toast({
         title: "Erro",
         description: `Erro ao salvar configuração: ${error.message}`,
