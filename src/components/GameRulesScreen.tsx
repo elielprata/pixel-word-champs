@@ -1,26 +1,20 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Clock, Trophy, Target, Zap, Star, Award, Timer } from 'lucide-react';
-
 interface GameRulesScreenProps {
   onBack: () => void;
   onStartGame: () => void;
 }
-
-const GameRulesScreen = ({ onBack, onStartGame }: GameRulesScreenProps) => {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 p-4">
+const GameRulesScreen = ({
+  onBack,
+  onStartGame
+}: GameRulesScreenProps) => {
+  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 p-4">
       <div className="max-w-lg mx-auto">
         {/* Header minimalista */}
         <div className="flex items-center justify-between mb-8 pt-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onBack}
-            className="rounded-full h-10 w-10 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white"
-          >
+          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full h-10 w-10 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-xl font-bold text-slate-800">Como Jogar</h1>
@@ -72,7 +66,7 @@ const GameRulesScreen = ({ onBack, onStartGame }: GameRulesScreenProps) => {
                   <Clock className="w-5 h-5 text-orange-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-800 mb-1">3 Minutos por Nível</h3>
+                  <h3 className="font-semibold text-slate-800 mb-1">1 Minutos por Nível</h3>
                   <p className="text-sm text-slate-600">
                     Seja rápido! Use o tempo com sabedoria para avançar.
                   </p>
@@ -139,10 +133,7 @@ const GameRulesScreen = ({ onBack, onStartGame }: GameRulesScreenProps) => {
         </div>
 
         {/* Botão de ação principal */}
-        <Button 
-          onClick={onStartGame}
-          className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold text-base py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0"
-        >
+        <Button onClick={onStartGame} className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold text-base py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0">
           <div className="flex items-center justify-center gap-2">
             <Timer className="w-5 h-5" />
             COMEÇAR AGORA
@@ -153,8 +144,6 @@ const GameRulesScreen = ({ onBack, onStartGame }: GameRulesScreenProps) => {
           Boa sorte no desafio! 🎯
         </p>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default GameRulesScreen;
