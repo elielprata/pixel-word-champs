@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -89,21 +88,10 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
       return;
     }
 
-    // Para competições diárias, validar se as datas foram definidas
-    if (formData.type === 'daily' && !formData.startDate) {
-      toast({
-        title: "Erro",
-        description: "Para competições diárias, é obrigatório definir a data de início.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 Iniciando criação da competição diária/semanal...');
-      console.log('📋 Dados do formulário:', formData);
+      console.log('🚀 Iniciando criação da competição...');
       
       const competitionData: CustomCompetitionData = {
         title: formData.title,
@@ -117,26 +105,20 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
         endDate: formData.endDate
       };
 
-      console.log('📤 Dados para criação:', competitionData);
-
       const result = await customCompetitionService.createCompetition(competitionData);
       
       if (result.success) {
-        console.log('✅ Competição criada com sucesso:', result.data);
-        
         toast({
           title: "Competição criada com sucesso!",
-          description: `${formData.title} foi criada e está ${formData.type === 'daily' ? 'ativa' : 'programada'}.`,
+          description: `${formData.title} foi criada e está ativa.`,
         });
         
         // Chamar callback para atualizar as competições na tela principal
         if (onCompetitionCreated) {
-          console.log('🔄 Chamando callback de atualização...');
           onCompetitionCreated();
         }
         
         // Recarregar dados do hook
-        console.log('🔄 Recarregando dados do hook...');
         await refetch();
         
         // Fechar modal e resetar form
@@ -152,8 +134,6 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
           startDate: undefined,
           endDate: undefined
         });
-        
-        console.log('✅ Modal fechado e formulário resetado');
       } else {
         throw new Error(result.error || 'Erro ao criar competição');
       }
