@@ -108,6 +108,11 @@ const HomeScreen = ({ onViewFullRanking, onStartChallenge }: HomeScreenProps) =>
                           {competition.description}
                         </p>
                       )}
+                      {competition.theme && (
+                        <div className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full mb-3">
+                          Tema: {competition.theme}
+                        </div>
+                      )}
                     </div>
                     <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
                       Ativo
@@ -118,7 +123,7 @@ const HomeScreen = ({ onViewFullRanking, onStartChallenge }: HomeScreenProps) =>
                     <div className="flex items-center gap-2">
                       <Trophy className="w-4 h-4 text-yellow-500" />
                       <span className="text-sm text-gray-600">
-                        R$ {competition.prize_pool.toFixed(2)}
+                        {competition.prize_pool ? `R$ ${competition.prize_pool.toFixed(2)}` : 'Sem prêmio'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
