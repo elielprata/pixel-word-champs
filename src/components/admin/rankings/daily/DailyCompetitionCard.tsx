@@ -21,7 +21,6 @@ interface DailyCompetition {
 
 interface DailyCompetitionCardProps {
   competition: DailyCompetition;
-  onViewRanking: (competitionId: string) => void;
   onEdit: (competition: DailyCompetition) => void;
   onDelete: (competition: DailyCompetition) => void;
   isDeleting: boolean;
@@ -29,7 +28,6 @@ interface DailyCompetitionCardProps {
 
 export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
   competition,
-  onViewRanking,
   onEdit,
   onDelete,
   isDeleting
@@ -110,7 +108,6 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
           
           <CompetitionActions
             competitionId={competition.id}
-            onViewRanking={onViewRanking}
             onEdit={() => onEdit(competition)}
             onDelete={() => onDelete(competition)}
             isDeleting={isDeleting}

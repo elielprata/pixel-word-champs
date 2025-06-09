@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Calendar } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
@@ -35,7 +34,6 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
   onRefresh
 }) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCompetition, setEditingCompetition] = useState<DailyCompetition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -49,11 +47,6 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
     console.log('🔧 Editando competição diária:', competition.id);
     setEditingCompetition(competition);
     setIsEditModalOpen(true);
-  };
-
-  const handleViewRanking = (competitionId: string) => {
-    console.log('👀 Navegando para ranking da competição:', competitionId);
-    navigate(`/admin/daily-competition/${competitionId}/ranking`);
   };
 
   const handleDelete = async (competition: DailyCompetition) => {
@@ -136,7 +129,6 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
             <DailyCompetitionCard
               key={competition.id}
               competition={competition}
-              onViewRanking={handleViewRanking}
               onEdit={handleEdit}
               onDelete={handleDelete}
               isDeleting={deletingId === competition.id}
