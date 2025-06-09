@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, Calendar, Users, Crown, Clock, Edit, Trash2, MapPin } from 'lucide-react';
+import { Trophy, Calendar, Users, Crown, Clock, Edit, Trash2, MapPin, Eye } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { EditCompetitionModal } from './EditCompetitionModal';
+import { useNavigate } from 'react-router-dom';
 
 interface WeeklyCompetition {
   id: string;
@@ -34,6 +35,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   onRefresh
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCompetition, setEditingCompetition] = useState<WeeklyCompetition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -84,6 +86,11 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
       case 'completed': return 'Finalizado';
       default: return 'Rascunho';
     }
+  };
+
+  const handleViewRanking = (competition: WeeklyCompetition) => {
+    console.log('👁️ Navegando para ranking da competição semanal:', competition.id);
+    navigate(`/admin/weekly-competition/${competition.id}/ranking`);
   };
 
   const handleEdit = (competition: WeeklyCompetition) => {
@@ -187,6 +194,15 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   {getStatusText(activeCompetition.status)}
                 </Badge>
                 <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewRanking(activeCompetition)}
+                    className="h-8 w-8 p-0 hover:bg-green-50"
+                    title="Ver ranking"
+                  >
+                    <Eye className="h-3 w-3" />
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -304,6 +320,15 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                     </div>
                     
                     <div className="flex gap-2 ml-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewRanking(competition)}
+                        className="h-8 w-8 p-0 hover:bg-green-50"
+                        title="Ver ranking"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
