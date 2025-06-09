@@ -179,21 +179,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
             <ArrowLeft className="w-6 h-6" />
           </Button>
           
-          <div className="text-center bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg">
-            <h1 className="text-xl font-bold text-indigo-800">
-              Nível {currentLevel} de {maxLevels}
-            </h1>
-            <div className="flex items-center justify-center gap-4 mt-1">
-              <p className="text-sm text-gray-600 font-medium">Pontuação: {totalScore}</p>
-              <div className="w-24 bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${(currentLevel / maxLevels) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-          
           <div className="w-10"></div>
         </div>
 
