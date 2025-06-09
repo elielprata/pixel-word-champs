@@ -1,62 +1,49 @@
 
-import { useState, useEffect } from 'react';
-import { competitionService } from '@/services/competitionService';
-import { customCompetitionService } from '@/services/customCompetitionService';
-import { Competition } from '@/types';
+import { useActiveCompetitions } from './useActiveCompetitions';
+import { useCustomCompetitions } from './useCustomCompetitions';
+import { useDailyCompetition } from './useDailyCompetition';
+import { useWeeklyCompetition } from './useWeeklyCompetition';
 
 export const useCompetitions = () => {
-  const [competitions, setCompetitions] = useState<Competition[]>([]);
-  const [customCompetitions, setCustomCompetitions] = useState<any[]>([]);
-  const [dailyCompetition, setDailyCompetition] = useState<Competition | null>(null);
-  const [weeklyCompetition, setWeeklyCompetition] = useState<Competition | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    competitions,
+    isLoading: isLoadingActive,
+    error: errorActive,
+    refetch: refetchActive
+  } = useActiveCompetitions();
 
-  const fetchCompetitions = async () => {
-    setIsLoading(true);
-    setError(null);
+  const {
+    customCompetitions,
+    isLoading: isLoadingCustom,
+    error: errorCustom,
+    refetch: refetchCustom
+  } = useCustomCompetitions();
 
-    try {
-      const [
-        competitionsResponse, 
-        customCompetitionsResponse,
-        dailyResponse, 
-        weeklyResponse
-      ] = await Promise.all([
-        competitionService.getActiveCompetitions(),
-        customCompetitionService.getCustomCompetitions(),
-        competitionService.getDailyCompetition(),
-        competitionService.getWeeklyCompetition()
-      ]);
+  const {
+    dailyCompetition,
+    isLoading: isLoadingDaily,
+    error: errorDaily,
+    refetch: refetchDaily
+  } = useDailyCompetition();
 
-      if (competitionsResponse.success) {
-        setCompetitions(competitionsResponse.data);
-      } else {
-        setError(competitionsResponse.error || 'Erro ao carregar competições');
-      }
+  const {
+    weeklyCompetition,
+    isLoading: isLoadingWeekly,
+    error: errorWeekly,
+    refetch: refetchWeekly
+  } = useWeeklyCompetition();
 
-      if (customCompetitionsResponse.success) {
-        setCustomCompetitions(customCompetitionsResponse.data);
-      }
+  const isLoading = isLoadingActive || isLoadingCustom || isLoadingDaily || isLoadingWeekly;
+  const error = errorActive || errorCustom || errorDaily || errorWeekly;
 
-      if (dailyResponse.success) {
-        setDailyCompetition(dailyResponse.data);
-      }
-
-      if (weeklyResponse.success) {
-        setWeeklyCompetition(weeklyResponse.data);
-      }
-    } catch (err) {
-      console.error('❌ Erro ao carregar dados das competições:', err);
-      setError('Erro ao carregar dados das competições');
-    } finally {
-      setIsLoading(false);
-    }
+  const refetch = async () => {
+    await Promise.all([
+      refetchActive(),
+      refetchCustom(), 
+      refetchDaily(),
+      refetchWeekly()
+    ]);
   };
-
-  useEffect(() => {
-    fetchCompetitions();
-  }, []);
 
   return {
     competitions,
@@ -65,6 +52,6 @@ export const useCompetitions = () => {
     weeklyCompetition,
     isLoading,
     error,
-    refetch: fetchCompetitions
+    refetch
   };
 };
