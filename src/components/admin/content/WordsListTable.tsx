@@ -140,9 +140,9 @@ export const WordsListTable = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full max-h-[calc(100vh-200px)] space-y-6">
       {/* Header com estatísticas */}
-      <Card>
+      <Card className="flex-shrink-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -179,7 +179,7 @@ export const WordsListTable = () => {
       </Card>
 
       {/* Filtros e Busca */}
-      <Card>
+      <Card className="flex-shrink-0">
         <CardContent className="p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Campo de busca */}
@@ -213,179 +213,182 @@ export const WordsListTable = () => {
         </CardContent>
       </Card>
 
-      {/* Tabela de palavras */}
-      <Card>
-        <CardContent className="p-0">
-          {filteredWords.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mx-auto mb-4">
-                <Search className="h-8 w-8 text-slate-400" />
+      {/* Tabela de palavras - Container principal com altura controlada */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <Card className="flex-1 flex flex-col">
+          <CardContent className="p-0 flex-1 flex flex-col">
+            {filteredWords.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mx-auto mb-4">
+                  <Search className="h-8 w-8 text-slate-400" />
+                </div>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">
+                  {searchTerm || selectedCategory !== 'all' ? 'Nenhuma palavra encontrada' : 'Nenhuma palavra disponível'}
+                </h3>
+                <p className="text-sm text-slate-600 max-w-sm mx-auto">
+                  {searchTerm || selectedCategory !== 'all' 
+                    ? 'Tente ajustar os filtros de busca para encontrar palavras'
+                    : 'Use o sistema de categorias e geração IA para adicionar palavras ao banco de dados'
+                  }
+                </p>
               </div>
-              <h3 className="text-lg font-medium text-slate-900 mb-2">
-                {searchTerm || selectedCategory !== 'all' ? 'Nenhuma palavra encontrada' : 'Nenhuma palavra disponível'}
-              </h3>
-              <p className="text-sm text-slate-600 max-w-sm mx-auto">
-                {searchTerm || selectedCategory !== 'all' 
-                  ? 'Tente ajustar os filtros de busca para encontrar palavras'
-                  : 'Use o sistema de categorias e geração IA para adicionar palavras ao banco de dados'
-                }
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-hidden rounded-lg border border-slate-200">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50">
-                      <TableHead className="font-semibold text-slate-800 w-[200px]">Palavra</TableHead>
-                      <TableHead className="font-semibold text-slate-800 w-[200px]">Categoria</TableHead>
-                      <TableHead className="font-semibold text-slate-800 w-[120px]">Dificuldade</TableHead>
-                      <TableHead className="font-semibold text-slate-800">Data de Criação</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedWords.map((word, index) => (
-                      <TableRow 
-                        key={word.id} 
-                        className={`border-slate-200 hover:bg-slate-50 transition-colors ${
-                          index % 2 === 0 ? 'bg-white' : 'bg-slate-25'
-                        }`}
-                      >
-                        <TableCell className="py-4">
-                          <span className="font-semibold text-slate-900 uppercase tracking-wide text-base">
-                            {word.word}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <FolderOpen className="h-4 w-4 text-slate-500" />
-                            <span className="text-sm text-slate-700 capitalize whitespace-nowrap">
-                              {word.category || 'Sem categoria'}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <Badge 
-                            variant="outline" 
-                            className={`${getDifficultyColor(word.difficulty)} font-medium text-xs`}
-                          >
-                            {getDifficultyLabel(word.difficulty)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <span className="text-sm text-slate-600">
-                            {new Date(word.created_at).toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </span>
-                        </TableCell>
+            ) : (
+              <div className="flex flex-col h-full">
+                {/* Tabela com scroll interno controlado */}
+                <div className="flex-1 overflow-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-white z-10">
+                      <TableRow className="bg-slate-50 border-b-2 border-slate-200">
+                        <TableHead className="font-semibold text-slate-800 w-[200px]">Palavra</TableHead>
+                        <TableHead className="font-semibold text-slate-800 w-[200px]">Categoria</TableHead>
+                        <TableHead className="font-semibold text-slate-800 w-[120px]">Dificuldade</TableHead>
+                        <TableHead className="font-semibold text-slate-800">Data de Criação</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Paginação corrigida */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200">
-                  <div className="text-sm text-slate-600">
-                    Mostrando {startIndex + 1} a {endIndex} de {filteredWords.length} palavras
-                  </div>
-                  
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious 
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (currentPage > 1) setCurrentPage(currentPage - 1);
-                          }}
-                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        />
-                      </PaginationItem>
-                      
-                      {/* Primeira página com elipse */}
-                      {currentPage > 3 && totalPages > 5 && (
-                        <>
-                          <PaginationItem>
-                            <PaginationLink
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setCurrentPage(1);
-                              }}
-                              className="cursor-pointer"
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedWords.map((word, index) => (
+                        <TableRow 
+                          key={word.id} 
+                          className={`border-slate-200 hover:bg-slate-50 transition-colors ${
+                            index % 2 === 0 ? 'bg-white' : 'bg-slate-25'
+                          }`}
+                        >
+                          <TableCell className="py-4">
+                            <span className="font-semibold text-slate-900 uppercase tracking-wide text-base">
+                              {word.word}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <div className="flex items-center gap-2">
+                              <FolderOpen className="h-4 w-4 text-slate-500" />
+                              <span className="text-sm text-slate-700 capitalize whitespace-nowrap">
+                                {word.category || 'Sem categoria'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <Badge 
+                              variant="outline" 
+                              className={`${getDifficultyColor(word.difficulty)} font-medium text-xs`}
                             >
-                              1
-                            </PaginationLink>
-                          </PaginationItem>
-                          <PaginationItem>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        </>
-                      )}
-                      
-                      {/* Páginas numeradas */}
-                      {getPageNumbers().map((page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
+                              {getDifficultyLabel(word.difficulty)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <span className="text-sm text-slate-600">
+                              {new Date(word.created_at).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Paginação fixa na parte inferior */}
+                {totalPages > 1 && (
+                  <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-white">
+                    <div className="text-sm text-slate-600">
+                      Mostrando {startIndex + 1} a {endIndex} de {filteredWords.length} palavras
+                    </div>
+                    
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
                             href="#"
                             onClick={(e) => {
                               e.preventDefault();
-                              setCurrentPage(page);
+                              if (currentPage > 1) setCurrentPage(currentPage - 1);
                             }}
-                            isActive={currentPage === page}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
+                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
                         </PaginationItem>
-                      ))}
-                      
-                      {/* Última página com elipse */}
-                      {currentPage < totalPages - 2 && totalPages > 5 && (
-                        <>
-                          <PaginationItem>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                          <PaginationItem>
+                        
+                        {/* Primeira página com elipse */}
+                        {currentPage > 3 && totalPages > 5 && (
+                          <>
+                            <PaginationItem>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setCurrentPage(1);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                1
+                              </PaginationLink>
+                            </PaginationItem>
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          </>
+                        )}
+                        
+                        {/* Páginas numeradas */}
+                        {getPageNumbers().map((page) => (
+                          <PaginationItem key={page}>
                             <PaginationLink
                               href="#"
                               onClick={(e) => {
                                 e.preventDefault();
-                                setCurrentPage(totalPages);
+                                setCurrentPage(page);
                               }}
+                              isActive={currentPage === page}
                               className="cursor-pointer"
                             >
-                              {totalPages}
+                              {page}
                             </PaginationLink>
                           </PaginationItem>
-                        </>
-                      )}
-                      
-                      <PaginationItem>
-                        <PaginationNext 
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-                          }}
-                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+                        ))}
+                        
+                        {/* Última página com elipse */}
+                        {currentPage < totalPages - 2 && totalPages > 5 && (
+                          <>
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                            <PaginationItem>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setCurrentPage(totalPages);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                {totalPages}
+                              </PaginationLink>
+                            </PaginationItem>
+                          </>
+                        )}
+                        
+                        <PaginationItem>
+                          <PaginationNext 
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                            }}
+                            className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <DeleteAllWordsModal
         isOpen={showDeleteAllModal}
