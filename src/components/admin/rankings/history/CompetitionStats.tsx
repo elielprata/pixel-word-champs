@@ -22,7 +22,7 @@ interface CompetitionStatsProps {
 
 export const CompetitionStats: React.FC<CompetitionStatsProps> = ({ competitions }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-red-50">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
@@ -47,22 +47,6 @@ export const CompetitionStats: React.FC<CompetitionStatsProps> = ({ competitions
               <p className="text-sm text-green-600 font-medium">Finalizadas</p>
               <p className="text-2xl font-bold text-green-700">
                 {competitions.filter(c => c.status === 'completed').length}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-red-200 bg-gradient-to-br from-red-50 to-pink-50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-red-100 p-2 rounded-lg">
-              <Users className="h-4 w-4 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-red-600 font-medium">Canceladas</p>
-              <p className="text-2xl font-bold text-red-700">
-                {competitions.filter(c => c.status === 'cancelled').length}
               </p>
             </div>
           </div>
