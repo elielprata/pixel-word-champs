@@ -5,6 +5,7 @@ import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 export const useDailyCompetitions = () => {
   const [activeCompetitions, setActiveCompetitions] = useState<any[]>([]);
   const [competitionRankings, setCompetitionRankings] = useState<Record<string, any[]>>({});
+  const [userParticipations, setUserParticipations] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +39,20 @@ export const useDailyCompetitions = () => {
     }
   };
 
+  const checkUserParticipation = async (userId: string, competitionId: string): Promise<boolean> => {
+    try {
+      const hasParticipated = await dailyCompetitionService.checkUserParticipation(userId, competitionId);
+      setUserParticipations(prev => ({
+        ...prev,
+        [`${userId}-${competitionId}`]: hasParticipated
+      }));
+      return hasParticipated;
+    } catch (error) {
+      console.error('❌ Erro ao verificar participação:', error);
+      return false;
+    }
+  };
+
   const refreshRanking = async (competitionId: string) => {
     try {
       const response = await dailyCompetitionService.getDailyCompetitionRanking(competitionId);
@@ -59,9 +74,11 @@ export const useDailyCompetitions = () => {
   return {
     activeCompetitions,
     competitionRankings,
+    userParticipations,
     isLoading,
     error,
     refetch: fetchActiveCompetitions,
-    refreshRanking
+    refreshRanking,
+    checkUserParticipation
   };
 };

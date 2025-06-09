@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Target, Calendar, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Target, Calendar, Users, Clock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useDailyCompetitionFinalization } from "@/hooks/useDailyCompetitionFinalization";
 
 interface DailyCompetition {
   id: string;
@@ -25,6 +26,9 @@ interface DailyCompetition {
 }
 
 export const DailyCompetitionsManagement = () => {
+  // Usar o hook de finalização automática
+  useDailyCompetitionFinalization();
+
   const [competitions, setCompetitions] = useState<DailyCompetition[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -221,8 +225,12 @@ export const DailyCompetitionsManagement = () => {
               Competições Diárias
             </CardTitle>
             <p className="text-sm text-slate-600">
-              Gerencie competições diárias com temas específicos (sem premiação)
+              Gerencie competições diárias com temas específicos. Usuários só podem participar uma vez de cada competição.
             </p>
+            <div className="mt-2 flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+              <Clock className="h-3 w-3" />
+              Pontos são automaticamente transferidos para a competição semanal quando finalizada
+            </div>
           </div>
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>

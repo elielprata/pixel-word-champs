@@ -38,6 +38,27 @@ class DailyCompetitionService {
     }
   }
 
+  async checkUserParticipation(userId: string, competitionId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('competition_participations')
+        .select('id')
+        .eq('competition_id', competitionId)
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ Erro ao verificar participação:', error);
+        return false;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error('❌ Erro ao verificar participação:', error);
+      return false;
+    }
+  }
+
   async joinCompetitionAutomatically(sessionId: string): Promise<void> {
     try {
       console.log('🎯 Verificando participação automática em competições diárias...');
@@ -67,7 +88,14 @@ class DailyCompetitionService {
         return;
       }
 
-      const activeCompetition = activeCompetitionsResponse.data[0]; // Primeira competição ativa
+      const activeCompetition = activeCompetitionsResponse.data[0];
+
+      // Verificar se o usuário já participou desta competição
+      const hasParticipated = await this.checkUserParticipation(session.user_id, activeCompetition.id);
+      if (hasParticipated) {
+        console.log('⚠️ Usuário já participou desta competição diária');
+        return;
+      }
 
       // Atualizar a sessão com a competição
       const { error: updateError } = await supabase
@@ -80,38 +108,23 @@ class DailyCompetitionService {
         return;
       }
 
-      // Verificar se o usuário já participa da competição
-      const { data: existingParticipation, error: checkError } = await supabase
+      // Criar participação
+      const { error: participationError } = await supabase
         .from('competition_participations')
-        .select('id')
-        .eq('competition_id', activeCompetition.id)
-        .eq('user_id', session.user_id)
-        .single();
+        .insert({
+          competition_id: activeCompetition.id,
+          user_id: session.user_id,
+          user_score: 0,
+          user_position: null,
+          payment_status: 'not_eligible'
+        });
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('❌ Erro ao verificar participação:', checkError);
+      if (participationError) {
+        console.error('❌ Erro ao criar participação:', participationError);
         return;
       }
 
-      // Se não participa ainda, criar participação
-      if (!existingParticipation) {
-        const { error: participationError } = await supabase
-          .from('competition_participations')
-          .insert({
-            competition_id: activeCompetition.id,
-            user_id: session.user_id,
-            user_score: 0,
-            user_position: null,
-            payment_status: 'not_eligible' // Competições diárias não têm premiação
-          });
-
-        if (participationError) {
-          console.error('❌ Erro ao criar participação:', participationError);
-          return;
-        }
-
-        console.log('✅ Usuário inscrito automaticamente na competição diária');
-      }
+      console.log('✅ Usuário inscrito automaticamente na competição diária');
 
     } catch (error) {
       console.error('❌ Erro na participação automática:', error);
@@ -187,6 +200,107 @@ class DailyCompetitionService {
       console.log('✅ Rankings da competição diária atualizados');
     } catch (error) {
       console.error('❌ Erro ao atualizar rankings:', error);
+    }
+  }
+
+  async finalizeDailyCompetition(competitionId: string): Promise<void> {
+    try {
+      console.log('🏁 Finalizando competição diária e transferindo pontos...');
+
+      // Buscar a competição diária
+      const { data: competition, error: compError } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('id', competitionId)
+        .single();
+
+      if (compError || !competition) {
+        console.error('❌ Competição não encontrada:', compError);
+        return;
+      }
+
+      // Buscar competição semanal ativa
+      const { data: weeklyCompetition, error: weeklyError } = await supabase
+        .from('custom_competitions')
+        .select('id')
+        .eq('competition_type', 'tournament')
+        .eq('status', 'active')
+        .single();
+
+      if (weeklyError || !weeklyCompetition) {
+        console.log('⚠️ Nenhuma competição semanal ativa encontrada para transferir pontos');
+      }
+
+      // Buscar todas as participações da competição diária
+      const { data: participations, error: partError } = await supabase
+        .from('competition_participations')
+        .select('user_id, user_score')
+        .eq('competition_id', competitionId)
+        .gt('user_score', 0);
+
+      if (partError) {
+        console.error('❌ Erro ao buscar participações:', partError);
+        return;
+      }
+
+      // Transferir pontos para a competição semanal se existir
+      if (weeklyCompetition && participations && participations.length > 0) {
+        for (const participation of participations) {
+          // Verificar se o usuário já participa da competição semanal
+          const { data: existingWeeklyParticipation, error: checkError } = await supabase
+            .from('competition_participations')
+            .select('id, user_score')
+            .eq('competition_id', weeklyCompetition.id)
+            .eq('user_id', participation.user_id)
+            .single();
+
+          if (checkError && checkError.code !== 'PGRST116') {
+            console.error('❌ Erro ao verificar participação semanal:', checkError);
+            continue;
+          }
+
+          if (existingWeeklyParticipation) {
+            // Somar pontos à participação existente
+            const newScore = existingWeeklyParticipation.user_score + participation.user_score;
+            await supabase
+              .from('competition_participations')
+              .update({ user_score: newScore })
+              .eq('id', existingWeeklyParticipation.id);
+          } else {
+            // Criar nova participação na competição semanal
+            await supabase
+              .from('competition_participations')
+              .insert({
+                competition_id: weeklyCompetition.id,
+                user_id: participation.user_id,
+                user_score: participation.user_score,
+                user_position: null,
+                payment_status: 'pending'
+              });
+          }
+
+          console.log(`✅ Pontos transferidos para usuário ${participation.user_id}: ${participation.user_score} pontos`);
+        }
+
+        // Atualizar rankings da competição semanal
+        await this.updateCompetitionRankings(weeklyCompetition.id);
+      }
+
+      // Zerar pontos da competição diária
+      await supabase
+        .from('competition_participations')
+        .update({ user_score: 0 })
+        .eq('competition_id', competitionId);
+
+      // Marcar competição como finalizada
+      await supabase
+        .from('custom_competitions')
+        .update({ status: 'completed' })
+        .eq('id', competitionId);
+
+      console.log('✅ Competição diária finalizada e pontos transferidos');
+    } catch (error) {
+      console.error('❌ Erro ao finalizar competição diária:', error);
     }
   }
 
