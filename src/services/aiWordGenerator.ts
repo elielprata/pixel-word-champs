@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Função para remover acentos de uma palavra
@@ -32,14 +31,14 @@ const isValidWord = (word: string): boolean => {
 const callOpenAIAPI = async (categoryName: string, count: number, apiKey: string, config: any): Promise<string[]> => {
   console.log('🤖 Chamando OpenAI API para categoria:', categoryName, 'quantidade:', count);
 
-  const prompt = `Gere ${count} palavras em português para a categoria "${categoryName}".
+  const prompt = `Gere EXATAMENTE ${count} palavras em português para a categoria "${categoryName}".
 
 REGRAS OBRIGATÓRIAS:
+- EXATAMENTE ${count} palavras
 - TODAS as palavras devem estar em MAIÚSCULAS
 - NENHUMA palavra pode ter acentos (á, à, â, ã, é, è, ê, í, ì, î, ó, ò, ô, õ, ú, ù, û, ç, ñ)
 - Apenas letras de A a Z (sem acentos, cedilhas ou til)
 - Palavras de 3-8 letras para diferentes níveis de dificuldade
-- Exatamente ${count} palavras
 - Uma palavra por linha
 - Sem numeração ou formatação adicional
 
@@ -107,14 +106,10 @@ Retorne apenas as palavras, uma por linha:`;
 
 // Função para chamar a OpenAI API com múltiplas categorias
 const callOpenAIAPIBatch = async (categories: Array<{id: string, name: string}>, countPerCategory: number, apiKey: string, config: any): Promise<Record<string, string[]>> => {
-  console.log('🤖 Chamando OpenAI API em lote com configurações:', {
+  console.log('🤖 Chamando OpenAI API em lote para gerar palavras:', {
     categoriesCount: categories.length,
     countPerCategory,
-    hasKey: !!apiKey,
-    keyLength: apiKey?.length || 0,
-    model: config.model,
-    maxTokens: config.maxTokens,
-    temperature: config.temperature
+    expectedTotal: categories.length * countPerCategory
   });
 
   const categoriesList = categories.map(cat => cat.name).join(', ');
@@ -122,24 +117,21 @@ const callOpenAIAPIBatch = async (categories: Array<{id: string, name: string}>,
   const prompt = `Gere EXATAMENTE ${countPerCategory} palavras em português para CADA UMA das seguintes categorias: ${categoriesList}
 
 REGRAS OBRIGATÓRIAS:
-- EXATAMENTE ${countPerCategory} palavras para CADA categoria
+- EXATAMENTE ${countPerCategory} palavras para CADA categoria (total: ${categories.length * countPerCategory} palavras)
 - TODAS as palavras devem estar em MAIÚSCULAS
 - NENHUMA palavra pode ter acentos (á, à, â, ã, é, è, ê, í, ì, î, ó, ò, ô, õ, ú, ù, û, ç, ñ)
 - Apenas letras de A a Z (sem acentos, cedilhas ou til)
-- Palavras de 3-8 letras para diferentes níveis de dificuldade
-- PALAVRAS ÚNICAS - não repetir palavras entre categorias ou dentro da mesma categoria
-- Formato JSON válido
+- Palavras de 3-8 letras
+- PALAVRAS ÚNICAS - não repetir palavras entre categorias
+- Formato JSON válido obrigatório
 
-Exemplos de palavras CORRETAS: CASA, ARVORE, PEIXE, LIVRO, CACHORRO
-Exemplos de palavras INCORRETAS: ÁRVORE, CORAÇÃO, PÁSSARO (têm acentos)
-
-Retorne EXATAMENTE no formato JSON abaixo, sem texto adicional:
+Retorne EXATAMENTE no formato JSON:
 
 {
-${categories.map(cat => `  "${cat.name}": ["PALAVRA1", "PALAVRA2", "PALAVRA3"${countPerCategory > 3 ? ', ...]' : ']'}`).join(',\n')}
+${categories.map(cat => `  "${cat.name}": ["PALAVRA1", "PALAVRA2", "PALAVRA3", "PALAVRA4", "PALAVRA5"]`).join(',\n')}
 }
 
-Total esperado: ${categories.length} categorias × ${countPerCategory} palavras = ${categories.length * countPerCategory} palavras SEM ACENTOS`;
+IMPORTANTE: Retorne APENAS o JSON, sem texto adicional antes ou depois.`;
 
   const requestBody = {
     model: config.model || 'gpt-4o-mini',
@@ -154,13 +146,7 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
     temperature: config.temperature || 0.7,
   };
 
-  console.log('📤 Enviando requisição em lote para OpenAI:', {
-    model: requestBody.model,
-    categoriesCount: categories.length,
-    expectedWords: categories.length * countPerCategory,
-    maxTokens: requestBody.max_tokens,
-    temperature: requestBody.temperature
-  });
+  console.log('📤 Enviando requisição em lote para OpenAI');
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -171,8 +157,6 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
     body: JSON.stringify(requestBody),
   });
 
-  console.log('📥 Resposta da OpenAI:', response.status, response.statusText);
-
   if (!response.ok) {
     const errorText = await response.text();
     console.error('❌ Erro da OpenAI API:', errorText);
@@ -180,88 +164,87 @@ Total esperado: ${categories.length} categorias × ${countPerCategory} palavras 
   }
 
   const data = await response.json();
-  console.log('📊 Dados recebidos da OpenAI:', {
-    choices: data.choices?.length || 0,
-    hasContent: !!data.choices?.[0]?.message?.content
-  });
-  
   const content = data.choices[0].message.content;
-  console.log('📄 Conteúdo completo recebido:', content);
+  
+  console.log('📄 Conteúdo recebido da OpenAI:', content);
   
   try {
-    // Tentar parsear como JSON
-    const jsonData = JSON.parse(content);
-    console.log('✅ JSON parseado com sucesso:', jsonData);
+    // Tentar extrair JSON do conteúdo
+    let jsonContent = content.trim();
     
-    // Processar e validar cada categoria com remoção rigorosa de acentos
+    // Remover possível texto antes do JSON
+    const jsonStart = jsonContent.indexOf('{');
+    const jsonEnd = jsonContent.lastIndexOf('}');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      jsonContent = jsonContent.substring(jsonStart, jsonEnd + 1);
+    }
+    
+    const jsonData = JSON.parse(jsonContent);
+    console.log('✅ JSON parseado com sucesso');
+    
+    // Processar cada categoria
     const processedData: Record<string, string[]> = {};
-    let totalWordsProcessed = 0;
+    let totalProcessed = 0;
     
     for (const category of categories) {
       const categoryWords = jsonData[category.name] || [];
-      console.log(`🔍 Categoria ${category.name}: recebeu ${categoryWords.length} palavras`, categoryWords);
+      console.log(`🔍 Categoria ${category.name}: recebeu ${categoryWords.length} palavras`);
       
       const validWords = categoryWords
-        .map((word: string) => {
-          // Remover acentos de forma mais rigorosa
-          const cleaned = removeAccents(word.trim()).toUpperCase();
-          return cleaned;
-        })
+        .map((word: string) => removeAccents(word.trim()).toUpperCase())
         .filter((word: string) => isValidWord(word))
         .slice(0, countPerCategory);
       
-      processedData[category.name] = validWords;
-      totalWordsProcessed += validWords.length;
-      
-      console.log(`✅ Categoria ${category.name}: ${validWords.length}/${countPerCategory} palavras válidas processadas (sem acentos)`);
-      console.log('🔍 Palavras da categoria:', validWords);
-      
-      // Aviso se não conseguiu o número exato
+      // Se não temos palavras suficientes, tentar completar com geração individual
       if (validWords.length < countPerCategory) {
-        console.warn(`⚠️ Categoria ${category.name}: esperado ${countPerCategory}, processado ${validWords.length}`);
+        console.log(`⚠️ Categoria ${category.name}: apenas ${validWords.length}/${countPerCategory} palavras válidas. Tentando completar...`);
+        
+        try {
+          const additionalWords = await callOpenAIAPI(
+            category.name, 
+            countPerCategory - validWords.length, 
+            apiKey, 
+            config
+          );
+          
+          // Adicionar palavras que não duplicam
+          const existingWordsSet = new Set(validWords);
+          const newWords = additionalWords.filter(word => !existingWordsSet.has(word));
+          validWords.push(...newWords.slice(0, countPerCategory - validWords.length));
+          
+          console.log(`🔄 Categoria ${category.name}: completada com ${validWords.length} palavras`);
+        } catch (error) {
+          console.error(`❌ Erro ao completar categoria ${category.name}:`, error);
+        }
       }
+      
+      processedData[category.name] = validWords;
+      totalProcessed += validWords.length;
+      
+      console.log(`✅ Categoria ${category.name}: ${validWords.length}/${countPerCategory} palavras processadas`);
     }
     
-    console.log(`📊 RESUMO FINAL: ${totalWordsProcessed}/${categories.length * countPerCategory} palavras processadas (sem acentos)`);
+    console.log(`📊 TOTAL PROCESSADO: ${totalProcessed}/${categories.length * countPerCategory} palavras`);
     return processedData;
     
   } catch (parseError) {
-    console.error('❌ Erro ao parsear JSON da OpenAI:', parseError);
-    console.log('📄 Conteúdo recebido que falhou no parse:', content);
+    console.error('❌ Erro ao parsear JSON:', parseError);
+    console.log('📄 Conteúdo que falhou:', content);
     
-    // Fallback mais inteligente: tentar extrair palavras do texto livre
-    console.log('🔄 Tentando fallback de extração de palavras...');
+    // Fallback: gerar cada categoria individualmente
+    console.log('🔄 Executando fallback: geração individual por categoria');
     const fallbackData: Record<string, string[]> = {};
     
-    // Tentar encontrar padrões de categoria no texto
     for (const category of categories) {
-      const categoryPattern = new RegExp(`"?${category.name}"?\\s*[:\\[]([^\\]\\}]+)`, 'i');
-      const match = content.match(categoryPattern);
-      
-      let words: string[] = [];
-      if (match) {
-        // Extrair palavras do match
-        words = match[1]
-          .split(/[,\n\r"'\[\]]+/)
-          .map((word: string) => removeAccents(word.trim()).toUpperCase())
-          .filter((word: string) => isValidWord(word))
-          .slice(0, countPerCategory);
+      try {
+        const words = await callOpenAIAPI(category.name, countPerCategory, apiKey, config);
+        fallbackData[category.name] = words;
+        console.log(`🔄 Fallback ${category.name}: ${words.length} palavras geradas`);
+      } catch (error) {
+        console.error(`❌ Erro no fallback para ${category.name}:`, error);
+        fallbackData[category.name] = [];
       }
-      
-      // Se não encontrou palavras suficientes, tentar extrair do texto geral
-      if (words.length < countPerCategory) {
-        const allWords = content
-          .split(/[\n\r\s,]+/)
-          .map((word: string) => removeAccents(word.trim()).toUpperCase())
-          .filter((word: string) => isValidWord(word))
-          .slice(words.length, countPerCategory);
-        
-        words = [...words, ...allWords].slice(0, countPerCategory);
-      }
-      
-      fallbackData[category.name] = words;
-      console.log(`🔄 Fallback para ${category.name}: ${words.length} palavras extraídas (sem acentos)`);
-      console.log('🔍 Palavras extraídas:', words);
     }
     
     return fallbackData;
