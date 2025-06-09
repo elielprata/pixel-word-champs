@@ -20,41 +20,58 @@ export const useGameInteractions = (
   onTimeUp: () => void
 ) => {
   const useHint = () => {
-    if (hintsUsed >= 1) return;
+    console.log('🔍 Tentando usar dica...');
+    console.log('📊 Status atual:', { hintsUsed, foundWords: foundWords.length, levelWords: levelWords.length });
+    
+    if (hintsUsed >= 1) {
+      console.log('❌ Limite de dicas atingido');
+      return;
+    }
     
     const remainingWords = levelWords.filter(word => !foundWords.some(fw => fw.word === word));
-    if (remainingWords.length > 0) {
-      setHintsUsed(prev => prev + 1);
+    console.log('📝 Palavras restantes:', remainingWords);
+    
+    if (remainingWords.length === 0) {
+      console.log('🎉 Todas as palavras já foram encontradas!');
+      return;
+    }
+    
+    const hintWord = remainingWords[0];
+    console.log(`💡 Mostrando dica para: "${hintWord}"`);
+    
+    setHintsUsed(prev => prev + 1);
+    
+    // Encontrar a palavra no tabuleiro e destacar suas posições
+    const wordPlacement = boardData.placedWords.find(pw => pw.word === hintWord);
+    
+    if (wordPlacement && wordPlacement.positions) {
+      console.log(`✨ Destacando posições da palavra "${hintWord}":`, wordPlacement.positions);
+      setHintHighlightedCells(wordPlacement.positions);
       
-      // Encontrar a primeira palavra não encontrada e destacar suas posições
-      const hintWord = remainingWords[0];
-      const wordPlacement = boardData.placedWords.find(pw => pw.word === hintWord);
-      
-      if (wordPlacement) {
-        setHintHighlightedCells(wordPlacement.positions);
-        
-        // Remover o destaque após 3 segundos
-        setTimeout(() => {
-          setHintHighlightedCells([]);
-        }, 3000);
-      }
-      
-      console.log(`Dica: Procure por "${hintWord}"`);
+      // Remover o destaque após 4 segundos
+      setTimeout(() => {
+        console.log('🔄 Removendo destaque da dica');
+        setHintHighlightedCells([]);
+      }, 4000);
+    } else {
+      console.warn(`⚠️ Não foi possível encontrar a colocação da palavra "${hintWord}" no tabuleiro`);
+      console.log('🔍 Palavras disponíveis no tabuleiro:', boardData.placedWords.map(pw => pw.word));
     }
   };
 
   const handleRevive = () => {
     if (!canRevive) return;
     
-    // Simular assistir anúncio (em produção seria integrado com sistema de anúncios)
+    console.log('💗 Revive ativado!');
     setCanRevive(false);
     setShowGameOver(false);
     
     // Adicionar 30 segundos (isso seria feito no componente pai)
-    console.log('Revive ativado! +30 segundos');
+    console.log('⏰ Revive ativado! +30 segundos');
   };
 
   const handleGoHome = () => {
+    console.log('🏠 Voltando ao menu principal');
     onTimeUp();
   };
 

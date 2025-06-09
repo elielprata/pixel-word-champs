@@ -14,15 +14,21 @@ export const useBoard = (level: number) => {
   const [levelWords, setLevelWords] = useState<string[]>([]);
 
   const generateBoard = useCallback((size: number, words: string[]): BoardData => {
+    console.log(`🎮 Gerando tabuleiro para nível ${level} com ${words.length} palavras`);
+    
     if (words.length === 0) {
-      // Gerar um tabuleiro vazio se não houver palavras
+      console.log('📝 Nenhuma palavra disponível, gerando tabuleiro vazio');
       return {
         board: Array(size).fill(null).map(() => Array(size).fill('')),
         placedWords: []
       };
     }
-    return BoardGenerator.generateSmartBoard(size, words);
-  }, []);
+    
+    const result = BoardGenerator.generateSmartBoard(size, words);
+    console.log(`✅ Tabuleiro gerado: ${result.placedWords.length}/${words.length} palavras colocadas`);
+    
+    return result;
+  }, [level]);
 
   // Buscar palavras do banco de dados
   useEffect(() => {
@@ -38,16 +44,31 @@ export const useBoard = (level: number) => {
 
         if (error) {
           console.error('❌ Erro ao buscar palavras:', error);
-          setLevelWords([]);
+          // Usar palavras padrão se houver erro
+          const defaultWords = ['CASA', 'SOL', 'GATO', 'LUZ', 'MAR'];
+          console.log('🔄 Usando palavras padrão:', defaultWords);
+          setLevelWords(defaultWords);
           return;
         }
 
         const wordList = words?.map(w => w.word.toUpperCase()) || [];
+        
+        // Se não há palavras no banco, usar palavras padrão
+        if (wordList.length === 0) {
+          const defaultWords = ['CASA', 'SOL', 'GATO', 'LUZ', 'MAR'];
+          console.log('🔄 Nenhuma palavra no banco, usando palavras padrão:', defaultWords);
+          setLevelWords(defaultWords);
+          return;
+        }
+        
         console.log('✅ Palavras carregadas:', wordList);
         setLevelWords(wordList);
       } catch (error) {
         console.error('❌ Erro ao carregar palavras:', error);
-        setLevelWords([]);
+        // Usar palavras padrão em caso de erro
+        const defaultWords = ['CASA', 'SOL', 'GATO', 'LUZ', 'MAR'];
+        console.log('🔄 Erro na busca, usando palavras padrão:', defaultWords);
+        setLevelWords(defaultWords);
       }
     };
 
@@ -56,8 +77,11 @@ export const useBoard = (level: number) => {
 
   // Regenerate board when level or words change
   useEffect(() => {
-    const size = getBoardSize(level);
-    setBoardData(generateBoard(size, levelWords));
+    if (levelWords.length > 0) {
+      const size = getBoardSize(level);
+      console.log(`🔄 Regenerando tabuleiro ${size}x${size} para nível ${level}`);
+      setBoardData(generateBoard(size, levelWords));
+    }
   }, [level, levelWords, generateBoard]);
 
   const size = getBoardSize(level);
