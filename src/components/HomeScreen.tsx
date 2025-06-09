@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { TIMING_CONFIG } from '@/constants/app';
 import HomeHeader from './home/HomeHeader';
 import UserStatsCard from './home/UserStatsCard';
-import QuickActionsCard from './home/QuickActionsCard';
 import CompetitionsList from './home/CompetitionsList';
 import LoadingState from './home/LoadingState';
 import ErrorState from './home/ErrorState';
@@ -76,8 +75,6 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
       <HomeHeader />
       
       <UserStatsCard />
-
-      <QuickActionsCard onViewFullRanking={onViewFullRanking} />
 
       {error && (
         <ErrorState error={error} onRetry={loadCompetitions} />
