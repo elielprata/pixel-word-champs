@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Trophy, Star } from 'lucide-react';
@@ -168,8 +169,8 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-2">
+        <div className="flex items-center justify-between mb-2">
           <Button 
             variant="ghost" 
             size="icon" 
