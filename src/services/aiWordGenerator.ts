@@ -102,7 +102,7 @@ REGRAS OBRIGATÓRIAS:
     messages: [
       { 
         role: 'system', 
-        content: 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português. NUNCA use acentos nas palavras - converta todas para letras simples (A-Z). Garanta que todas as palavras sejam únicas e não repetidas.' 
+        content: config.systemPrompt || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português. NUNCA use acentos nas palavras - converta todas para letras simples (A-Z). Garanta que todas as palavras sejam únicas e não repetidas.' 
       },
       { role: 'user', content: prompt }
     ],
