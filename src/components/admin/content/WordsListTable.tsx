@@ -1,10 +1,11 @@
+
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import { RefreshCw, Search, FolderOpen, Hash, Filter, Trash2 } from 'lucide-react';
 import { useActiveWords } from '@/hooks/useActiveWords';
 import { DeleteAllWordsModal } from './DeleteAllWordsModal';
@@ -55,15 +56,49 @@ export const WordsListTable = () => {
     return uniqueCategories.sort();
   }, [words]);
 
-  // Calcular paginação
+  // Calcular paginação corrigida
   const totalPages = Math.ceil(filteredWords.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedWords = filteredWords.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredWords.length);
+  const paginatedWords = filteredWords.slice(startIndex, endIndex);
 
   // Reset página quando filtros mudam
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory]);
+
+  // Função para gerar números de páginas para exibir
+  const getPageNumbers = () => {
+    const maxVisiblePages = 5;
+    const pages = [];
+    
+    if (totalPages <= maxVisiblePages) {
+      // Se temos 5 páginas ou menos, mostrar todas
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Lógica para mostrar páginas com elipse
+      if (currentPage <= 3) {
+        // Início: 1, 2, 3, 4, 5
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i);
+        }
+      } else if (currentPage >= totalPages - 2) {
+        // Fim: totalPages-4, totalPages-3, totalPages-2, totalPages-1, totalPages
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // Meio: currentPage-2, currentPage-1, currentPage, currentPage+1, currentPage+2
+        for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+          pages.push(i);
+        }
+      }
+    }
+    
+    return pages;
+  };
 
   const handleDeleteAll = (password: string) => {
     deleteAllWords(password);
@@ -255,11 +290,11 @@ export const WordsListTable = () => {
                 </Table>
               </div>
 
-              {/* Paginação */}
+              {/* Paginação corrigida */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200">
                   <div className="text-sm text-slate-600">
-                    Mostrando {startIndex + 1} a {Math.min(startIndex + ITEMS_PER_PAGE, filteredWords.length)} de {filteredWords.length} palavras
+                    Mostrando {startIndex + 1} a {endIndex} de {filteredWords.length} palavras
                   </div>
                   
                   <Pagination>
@@ -275,7 +310,29 @@ export const WordsListTable = () => {
                         />
                       </PaginationItem>
                       
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      {/* Primeira página com elipse */}
+                      {currentPage > 3 && totalPages > 5 && (
+                        <>
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(1);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              1
+                            </PaginationLink>
+                          </PaginationItem>
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        </>
+                      )}
+                      
+                      {/* Páginas numeradas */}
+                      {getPageNumbers().map((page) => (
                         <PaginationItem key={page}>
                           <PaginationLink
                             href="#"
@@ -290,6 +347,27 @@ export const WordsListTable = () => {
                           </PaginationLink>
                         </PaginationItem>
                       ))}
+                      
+                      {/* Última página com elipse */}
+                      {currentPage < totalPages - 2 && totalPages > 5 && (
+                        <>
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(totalPages);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        </>
+                      )}
                       
                       <PaginationItem>
                         <PaginationNext 
