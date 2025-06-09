@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, Zap, Info, AlertCircle } from 'lucide-react';
+import { Wand2, Zap, Info, AlertCircle, Sparkles } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -51,8 +51,8 @@ export const CategoryGenerationConfig = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Wand2 className="h-5 w-5" />
-            Configuração de Geração IA
+            <Sparkles className="h-5 w-5" />
+            Geração Inteligente em Lote
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -64,13 +64,13 @@ export const CategoryGenerationConfig = ({
                 <Input
                   type="number"
                   min="1"
-                  max="1000"
+                  max="50"
                   value={wordsCount}
                   onChange={(e) => setWordsCount(Number(e.target.value))}
                   className="w-24"
                 />
                 <div className="text-xs text-slate-500">
-                  Quantas palavras gerar por categoria (máx. 1000)
+                  Por categoria (máx. 50)
                 </div>
               </div>
               
@@ -82,10 +82,15 @@ export const CategoryGenerationConfig = ({
                     className="bg-purple-600 hover:bg-purple-700"
                   >
                     <Zap className="h-4 w-4 mr-2" />
-                    {isGenerating ? 'Gerando...' : `Gerar para Todas (${categories.length} categorias)`}
+                    {isGenerating ? 'Gerando em lote...' : `Gerar Tudo de Uma Vez (${categories.length} categorias)`}
                   </Button>
-                  <div className="text-xs text-slate-500">
-                    Irá gerar {wordsCount} palavras para cada categoria
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="text-xs text-blue-700 space-y-1">
+                      <p className="font-medium">💡 Geração Otimizada:</p>
+                      <p>• Uma única chamada da API para todas as categorias</p>
+                      <p>• Muito mais rápido e econômico</p>
+                      <p>• Total: {wordsCount} × {categories.length} = {wordsCount * categories.length} palavras</p>
+                    </div>
                   </div>
                 </div>
               )}
