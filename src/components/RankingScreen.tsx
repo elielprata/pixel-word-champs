@@ -1,200 +1,361 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Trophy, Calendar, History, Loader2, ChevronDown } from 'lucide-react';
-import RankingCard from './ui/RankingCard';
-import PodiumCard from './ui/PodiumCard';
-import UserPositionCard from './ui/UserPositionCard';
-import { useRankingData } from '@/hooks/useRankingData';
+import React, { useState, useEffect } from 'react';
+import { Trophy, Calendar, Clock, Users, Star, TrendingUp } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+interface RankingPlayer {
+  position: number;
+  user_id: string;
+  username: string;
+  avatar_url?: string;
+  score: number;
+  prize?: number;
+}
+
+interface WeeklyCompetition {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  prize_pool: number;
+  max_participants: number;
+}
+
 const RankingScreen = () => {
-  const [activeTab, setActiveTab] = useState('daily');
   const { user } = useAuth();
-  const {
-    dailyRanking,
-    weeklyRanking,
-    historicalCompetitions,
-    isLoading,
-    error,
-    canLoadMoreDaily,
-    canLoadMoreWeekly,
-    loadMoreDaily,
-    loadMoreWeekly,
-    getUserPosition,
-    refetch
-  } = useRankingData();
+  const [dailyRanking, setDailyRanking] = useState<RankingPlayer[]>([]);
+  const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
+  const [weeklyCompetition, setWeeklyCompetition] = useState<WeeklyCompetition | null>(null);
+  const [userDailyPosition, setUserDailyPosition] = useState<number | null>(null);
+  const [userWeeklyPosition, setUserWeeklyPosition] = useState<number | null>(null);
+  const [totalDailyPlayers, setTotalDailyPlayers] = useState(0);
+  const [totalWeeklyPlayers, setTotalWeeklyPlayers] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const isCurrentUser = (userId: string) => user?.id === userId;
+  const loadRankingData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      console.log('📊 Carregando dados dos rankings...');
+      
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Calcular início da semana (segunda-feira)
+      const todayDate = new Date();
+      const dayOfWeek = todayDate.getDay();
+      const diff = todayDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekStart = new Date(todayDate.setDate(diff));
+      const weekStartStr = weekStart.toISOString().split('T')[0];
 
-  const renderRankingList = (ranking: any[], showLoadMore: boolean, onLoadMore: () => void) => {
-    if (isLoading) {
+      // Buscar ranking diário
+      const { data: dailyData, error: dailyError } = await supabase
+        .from('daily_rankings')
+        .select(`
+          position,
+          user_id,
+          score,
+          profiles!inner(username, avatar_url)
+        `)
+        .eq('date', today)
+        .order('position', { ascending: true })
+        .limit(50);
+
+      if (dailyError) {
+        console.error('❌ Erro ao buscar ranking diário:', dailyError);
+        throw dailyError;
+      }
+
+      // Buscar ranking semanal
+      const { data: weeklyData, error: weeklyError } = await supabase
+        .from('weekly_rankings')
+        .select(`
+          position,
+          user_id,
+          score,
+          prize,
+          profiles!inner(username, avatar_url)
+        `)
+        .eq('week_start', weekStartStr)
+        .order('position', { ascending: true })
+        .limit(50);
+
+      if (weeklyError) {
+        console.error('❌ Erro ao buscar ranking semanal:', weeklyError);
+        throw weeklyError;
+      }
+
+      // Buscar competição semanal ativa
+      const { data: competition, error: competitionError } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('competition_type', 'tournament')
+        .eq('status', 'active')
+        .single();
+
+      if (competitionError && competitionError.code !== 'PGRST116') {
+        console.error('❌ Erro ao buscar competição semanal:', competitionError);
+      }
+
+      // Contar total de jogadores
+      const { count: dailyCount } = await supabase
+        .from('daily_rankings')
+        .select('*', { count: 'exact', head: true })
+        .eq('date', today);
+
+      const { count: weeklyCount } = await supabase
+        .from('weekly_rankings')
+        .select('*', { count: 'exact', head: true })
+        .eq('week_start', weekStartStr);
+
+      // Processar dados
+      const dailyPlayers: RankingPlayer[] = (dailyData || []).map(item => ({
+        position: item.position,
+        user_id: item.user_id,
+        username: item.profiles?.username || 'Usuário',
+        avatar_url: item.profiles?.avatar_url,
+        score: item.score
+      }));
+
+      const weeklyPlayers: RankingPlayer[] = (weeklyData || []).map(item => ({
+        position: item.position,
+        user_id: item.user_id,
+        username: item.profiles?.username || 'Usuário',
+        avatar_url: item.profiles?.avatar_url,
+        score: item.score,
+        prize: item.prize || 0
+      }));
+
+      setDailyRanking(dailyPlayers);
+      setWeeklyRanking(weeklyPlayers);
+      setWeeklyCompetition(competition);
+      setTotalDailyPlayers(dailyCount || 0);
+      setTotalWeeklyPlayers(weeklyCount || 0);
+
+      // Encontrar posição do usuário atual
+      if (user?.id) {
+        const userDaily = dailyPlayers.find(p => p.user_id === user.id);
+        const userWeekly = weeklyPlayers.find(p => p.user_id === user.id);
+        
+        setUserDailyPosition(userDaily?.position || null);
+        setUserWeeklyPosition(userWeekly?.position || null);
+      }
+
+      console.log('✅ Rankings carregados:', {
+        daily: dailyPlayers.length,
+        weekly: weeklyPlayers.length,
+        competition: !!competition
+      });
+
+    } catch (err) {
+      console.error('❌ Erro ao carregar rankings:', err);
+      setError('Erro ao carregar rankings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRankingData();
+  }, [user?.id]);
+
+  const renderRankingList = (players: RankingPlayer[], userPosition: number | null, totalPlayers: number, showPrize = false) => {
+    if (players.length === 0) {
       return (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
-          <span className="ml-2 text-gray-600">Carregando ranking...</span>
+        <div className="text-center py-8 text-gray-500">
+          <Trophy className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+          <p>Nenhum jogador no ranking ainda</p>
         </div>
       );
     }
-
-    if (error) {
-      return (
-        <div className="text-center py-8">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={refetch} variant="outline" size="sm">
-            Tentar Novamente
-          </Button>
-        </div>
-      );
-    }
-
-    if (ranking.length === 0) {
-      return (
-        <div className="text-center py-8 text-gray-600">
-          <Trophy className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-          <p className="font-medium">Nenhum jogador encontrado</p>
-          <p className="text-sm">Seja o primeiro a participar!</p>
-        </div>
-      );
-    }
-
-    const remainingPlayers = ranking.slice(3);
 
     return (
-      <div className="space-y-4">
-        <PodiumCard players={ranking} isCurrentUser={isCurrentUser} />
-        
-        {remainingPlayers.length > 0 && (
-          <>
-            <div className="text-center py-2">
-              <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                Classificação Geral
-              </h4>
+      <div className="space-y-3">
+        {/* User's position (if not in top 50) */}
+        {userPosition && userPosition > 50 && user && (
+          <div className="p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-purple-600 text-white rounded-full text-sm font-bold">
+                {userPosition}
+              </div>
+              <div className="flex-1">
+                <span className="font-medium text-purple-900">Você</span>
+                <div className="text-sm text-purple-700">
+                  Sua posição atual
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-purple-600">
+                  {players.find(p => p.user_id === user.id)?.score || 0}
+                </div>
+                <div className="text-xs text-purple-500">pts</div>
+              </div>
             </div>
-            <div className="space-y-2">
-              {remainingPlayers.map((player) => (
-                <RankingCard 
-                  key={player.pos} 
-                  player={player}
-                  isCurrentUser={isCurrentUser(player.user_id)}
-                />
-              ))}
-            </div>
-          </>
-        )}
-
-        {showLoadMore && (
-          <div className="text-center pt-4">
-            <Button 
-              onClick={onLoadMore}
-              variant="outline" 
-              className="w-full bg-white hover:bg-gray-50 border-2 border-dashed border-gray-300 hover:border-purple-300 text-gray-600 hover:text-purple-600 transition-all duration-200"
-            >
-              <ChevronDown className="w-4 h-4 mr-2" />
-              Ver Mais 20 Posições
-            </Button>
           </div>
         )}
+
+        {/* Top players */}
+        {players.map((player) => {
+          const isCurrentUser = user?.id === player.user_id;
+          const isTopThree = player.position <= 3;
+          
+          return (
+            <div 
+              key={player.user_id} 
+              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                isCurrentUser 
+                  ? 'bg-purple-50 border-2 border-purple-200' 
+                  : 'bg-gray-50 hover:bg-gray-100'
+              }`}
+            >
+              <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold text-white shadow-sm ${
+                player.position === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : 
+                player.position === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500' : 
+                player.position === 3 ? 'bg-gradient-to-br from-orange-400 to-orange-600' :
+                isCurrentUser ? 'bg-purple-600' : 'bg-gray-400'
+              }`}>
+                {player.position}
+              </div>
+              
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className={`font-medium ${isCurrentUser ? 'text-purple-900' : 'text-gray-900'}`}>
+                    {isCurrentUser ? 'Você' : player.username}
+                  </span>
+                  {isTopThree && (
+                    <Badge variant="outline" className="text-xs">
+                      Top {player.position}
+                    </Badge>
+                  )}
+                </div>
+                {showPrize && player.prize && player.prize > 0 && (
+                  <div className="text-sm text-green-600 font-medium">
+                    Prêmio: R$ {player.prize.toFixed(2)}
+                  </div>
+                )}
+              </div>
+              
+              <div className="text-right">
+                <div className={`font-bold ${isCurrentUser ? 'text-purple-600' : 'text-gray-700'}`}>
+                  {player.score.toLocaleString()}
+                </div>
+                <div className="text-xs text-gray-500">pts</div>
+              </div>
+            </div>
+          );
+        })}
+        
+        {/* Total players info */}
+        <div className="text-center pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-500">
+            Total de {totalPlayers} jogadores{userPosition && ` • Você está em #${userPosition}`}
+          </p>
+        </div>
       </div>
     );
   };
 
-  const userDailyPosition = getUserPosition(dailyRanking);
-  const userWeeklyPosition = getUserPosition(weeklyRanking);
-  const userDailyScore = dailyRanking.find(p => p.user_id === user?.id)?.score || 0;
-  const userWeeklyScore = weeklyRanking.find(p => p.user_id === user?.id)?.score || 0;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando rankings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen">
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl mb-4 animate-bounce-in">
-          <Trophy className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
+      <div className="p-6 pb-24 max-w-lg mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl mb-4 shadow-lg">
+            <Trophy className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Rankings</h1>
+          <p className="text-gray-600">Veja como você está se saindo</p>
         </div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Rankings</h1>
-        <p className="text-gray-600">Compete e conquiste seu lugar no topo</p>
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-red-200 mb-6">
+            <Trophy className="w-12 h-12 mx-auto mb-3 text-red-400" />
+            <p className="text-red-600 font-medium mb-2">Erro ao carregar rankings</p>
+            <p className="text-sm text-red-500 mb-4">{error}</p>
+            <Button onClick={loadRankingData} variant="outline" size="sm">
+              🔄 Tentar novamente
+            </Button>
+          </div>
+        )}
+
+        {/* Rankings Tabs */}
+        <Tabs defaultValue="daily" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="daily" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Diário
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" />
+              Semanal
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="daily">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-blue-600" />
+                  Ranking Diário
+                </CardTitle>
+                <p className="text-sm text-gray-600">
+                  Classificação baseada na pontuação de hoje
+                </p>
+              </CardHeader>
+              <CardContent>
+                {renderRankingList(dailyRanking, userDailyPosition, totalDailyPlayers)}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="weekly">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="w-5 h-5 text-purple-600" />
+                  Ranking Semanal
+                </CardTitle>
+                <p className="text-sm text-gray-600">
+                  Classificação da semana atual com prêmios
+                </p>
+                {weeklyCompetition && (
+                  <div className="mt-2 p-3 bg-purple-50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Trophy className="w-4 h-4 text-purple-600" />
+                      <span className="font-medium text-purple-900">{weeklyCompetition.title}</span>
+                    </div>
+                    <div className="text-sm text-purple-700">
+                      Prêmio total: R$ {weeklyCompetition.prize_pool.toFixed(2)}
+                    </div>
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent>
+                {renderRankingList(weeklyRanking, userWeeklyPosition, totalWeeklyPlayers, true)}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 bg-white border border-gray-200 shadow-sm">
-          <TabsTrigger value="daily" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
-            <Calendar className="w-4 h-4 mr-2" />
-            Diárias
-          </TabsTrigger>
-          <TabsTrigger value="weekly" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
-            <Trophy className="w-4 h-4 mr-2" />
-            Semanal
-          </TabsTrigger>
-          <TabsTrigger value="historical" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
-            <History className="w-4 h-4 mr-2" />
-            Histórico
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="daily" className="space-y-4">
-          <UserPositionCard 
-            position={userDailyPosition}
-            score={userDailyScore}
-            userName={user?.username || ''}
-            type="daily"
-          />
-          
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <Calendar className="w-5 h-5 text-purple-500" />
-                Competições Diárias
-              </CardTitle>
-              <p className="text-sm text-gray-600">Competição resetada diariamente</p>
-            </CardHeader>
-            <CardContent>
-              {renderRankingList(dailyRanking, canLoadMoreDaily, loadMoreDaily)}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="weekly" className="space-y-4">
-          <UserPositionCard 
-            position={userWeeklyPosition}
-            score={userWeeklyScore}
-            userName={user?.username || ''}
-            type="weekly"
-          />
-          
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <Trophy className="w-5 h-5 text-purple-500" />
-                Competição Semanal
-              </CardTitle>
-              <p className="text-sm text-gray-600">Competição com premiação semanal</p>
-            </CardHeader>
-            <CardContent>
-              {renderRankingList(weeklyRanking, canLoadMoreWeekly, loadMoreWeekly)}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="historical" className="space-y-4">
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <History className="w-5 h-5 text-purple-500" />
-                Histórico de Competições
-              </CardTitle>
-              <p className="text-sm text-gray-600">Seus resultados e prêmios conquistados</p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-600">
-                <History className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                <p className="font-medium">Histórico temporariamente indisponível</p>
-                <p className="text-sm">Esta funcionalidade está em desenvolvimento.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
