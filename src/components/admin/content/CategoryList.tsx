@@ -15,7 +15,7 @@ interface CategoryListProps {
   isUpdating: boolean;
   isDeleting: boolean;
   onUpdateCategory: (data: { id: string; name: string; description: string }) => void;
-  onDeleteCategory: (id: string) => void;
+  onDeleteCategory: (id: string, password: string) => void;
 }
 
 export const CategoryList = ({ 
