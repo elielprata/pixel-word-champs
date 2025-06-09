@@ -42,7 +42,7 @@ export const CompetitionHistory = () => {
       const { data: customCompetitions, error: customError } = await supabase
         .from('custom_competitions')
         .select('*')
-        .in('status', ['completed', 'cancelled'])
+        .eq('status', 'completed')
         .order('end_date', { ascending: false });
 
       console.log('📋 Competições customizadas encontradas:', customCompetitions?.length || 0, customCompetitions);

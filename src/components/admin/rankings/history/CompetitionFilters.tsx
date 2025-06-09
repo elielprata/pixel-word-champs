@@ -54,7 +54,6 @@ export const CompetitionFilters: React.FC<CompetitionFiltersProps> = ({
               <SelectContent>
                 <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="completed">Finalizada</SelectItem>
-                <SelectItem value="cancelled">Cancelada</SelectItem>
               </SelectContent>
             </Select>
           </div>
