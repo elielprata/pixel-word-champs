@@ -21,7 +21,7 @@ export const CategoriesManagement = () => {
     isDeleting
   } = useWordCategories();
 
-  const { generateWords, isGenerating } = useAIWordGeneration();
+  const { generateWords, isGenerating, generateWordsForAllCategories, isGeneratingBatch } = useAIWordGeneration();
 
   // Verificar se a API key da OpenAI está configurada
   const { data: openaiConfigured } = useQuery({
@@ -46,12 +46,10 @@ export const CategoriesManagement = () => {
   };
 
   const handleGenerateAllCategories = (count: number) => {
-    categories.forEach(category => {
-      generateWords({
-        categoryId: category.id,
-        categoryName: category.name,
-        count
-      });
+    // Usar a função de geração em lote real
+    generateWordsForAllCategories({
+      categories: categories.map(cat => ({ id: cat.id, name: cat.name })),
+      count
     });
   };
 
@@ -72,7 +70,7 @@ export const CategoriesManagement = () => {
 
       <CategoryGenerationConfig
         categories={categories}
-        isGenerating={isGenerating}
+        isGenerating={isGeneratingBatch}
         openaiConfigured={openaiConfigured || false}
         onGenerateAllCategories={handleGenerateAllCategories}
       />
