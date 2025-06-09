@@ -31,3 +31,17 @@ export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): bo
   
   return isActive;
 };
+
+export const isBrasiliaDateInFuture = (date: Date): boolean => {
+  const brasiliaNow = getBrasiliaTime();
+  const brasiliaDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+  
+  console.log('🔍 Verificando se data é futura:');
+  console.log('  📅 Data:', brasiliaDate.toISOString());
+  console.log('  🕐 Agora:', brasiliaNow.toISOString());
+  
+  const isFuture = brasiliaDate > brasiliaNow;
+  console.log('  ➡️ É futura:', isFuture);
+  
+  return isFuture;
+};
