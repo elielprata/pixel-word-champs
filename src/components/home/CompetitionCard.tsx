@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, Search, Grid3X3, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -62,8 +62,14 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
       
       <CardContent className="relative p-4">
         <div className="space-y-4">
-          {/* Header com tema */}
+          {/* Header com tema e ícones temáticos */}
           <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Search className="w-4 h-4 text-amber-600" />
+              <Grid3X3 className="w-4 h-4 text-orange-600" />
+              <Target className="w-4 h-4 text-amber-700" />
+            </div>
+            
             <h3 className="font-bold text-slate-800 text-lg leading-tight">
               {competition.title}
             </h3>
