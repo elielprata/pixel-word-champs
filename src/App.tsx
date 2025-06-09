@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import Index from './pages/Index';
 import AdminPanel from './pages/AdminPanel';
@@ -26,20 +27,18 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Router>
-            <div className="App">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/admin" element={<AdminPanel />} />
-                <Route path="/admin/competition/:competitionId/ranking" element={<DailyCompetitionRanking />} />
-                <Route path="/admin/weekly-competition/:competitionId/ranking" element={<WeeklyCompetitionRanking />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-            </div>
-          </Router>
+          <div className="App">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/admin/competition/:competitionId/ranking" element={<DailyCompetitionRanking />} />
+              <Route path="/admin/weekly-competition/:competitionId/ranking" element={<WeeklyCompetitionRanking />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+          </div>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
