@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock, AlertCircle } from 'lucide-react';
@@ -36,7 +35,7 @@ export const RankingMetrics = () => {
       trend: "Esta semana"
     },
     {
-      title: "Ranking Diário",
+      title: "Competições Diárias",
       value: dailyParticipants.toString(),
       subtitle: "Participantes hoje",
       icon: Calendar,
@@ -44,7 +43,7 @@ export const RankingMetrics = () => {
       trend: "Hoje"
     },
     {
-      title: "Ranking Semanal",
+      title: "Competição Semanal",
       value: weeklyParticipants.toString(),
       subtitle: "Participantes esta semana",
       icon: TrendingUp,
@@ -102,7 +101,7 @@ export const RankingMetrics = () => {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium text-slate-700">Ranking Diário:</span>
+                  <span className="font-medium text-slate-700">Competições Diárias:</span>
                 </div>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 ml-6">
                   <li>Não possui premiação</li>
@@ -113,7 +112,7 @@ export const RankingMetrics = () => {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-purple-600" />
-                  <span className="font-medium text-slate-700">Ranking Semanal:</span>
+                  <span className="font-medium text-slate-700">Competição Semanal:</span>
                 </div>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 ml-6">
                   <li>Possui premiação</li>
