@@ -1,10 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { Trophy, Calendar, Users, Clock, Target, Star, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { useAuth } from '@/hooks/useAuth';
+import { APP_CONFIG, TIMING_CONFIG } from '@/constants/app';
 
 interface Competition {
   id: string;
@@ -58,8 +58,8 @@ const HomeScreen = ({ onStartChallenge }: HomeScreenProps) => {
   useEffect(() => {
     loadCompetitions();
     
-    // Atualizar a cada 30 segundos para mostrar novas competições
-    const interval = setInterval(loadCompetitions, 30000);
+    // Usar constante em vez de número mágico
+    const interval = setInterval(loadCompetitions, TIMING_CONFIG.COMPETITION_REFRESH_INTERVAL);
     
     return () => clearInterval(interval);
   }, []);
@@ -109,8 +109,8 @@ const HomeScreen = ({ onStartChallenge }: HomeScreenProps) => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl mb-4 shadow-lg">
             <Trophy className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Letra Arena</h1>
-          <p className="text-gray-600">Desafie sua mente, conquiste palavras</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{APP_CONFIG.NAME}</h1>
+          <p className="text-gray-600">{APP_CONFIG.DESCRIPTION}</p>
         </div>
 
         {/* Error State */}

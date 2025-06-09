@@ -16,22 +16,6 @@ export const getBrasiliaTime = (): Date => {
   return brasiliaTime;
 };
 
-export const formatToBrasiliaString = (date: Date): string => {
-  return date.toLocaleString("pt-BR", {timeZone: "America/Sao_Paulo"});
-};
-
-export const isBrasiliaDateInPast = (date: Date): boolean => {
-  const brasiliaDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-  const brasiliaNow = getBrasiliaTime();
-  return brasiliaDate < brasiliaNow;
-};
-
-export const isBrasiliaDateInFuture = (date: Date): boolean => {
-  const brasiliaDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-  const brasiliaNow = getBrasiliaTime();
-  return brasiliaDate > brasiliaNow;
-};
-
 export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): boolean => {
   const brasiliaStart = new Date(startDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
   const brasiliaEnd = new Date(endDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
