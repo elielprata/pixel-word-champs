@@ -18,9 +18,10 @@ import { PrizeSection } from './competition-form/PrizeSection';
 interface CreateCompetitionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCompetitionCreated?: () => void;
 }
 
-export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetitionModalProps) => {
+export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreated }: CreateCompetitionModalProps) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -110,7 +111,12 @@ export const CreateCompetitionModal = ({ open, onOpenChange }: CreateCompetition
           description: `${formData.title} foi criada e está ativa.`,
         });
         
-        // Recarregar dados
+        // Chamar callback para atualizar as competições na tela principal
+        if (onCompetitionCreated) {
+          onCompetitionCreated();
+        }
+        
+        // Recarregar dados do hook
         await refetch();
         
         // Fechar modal e resetar form

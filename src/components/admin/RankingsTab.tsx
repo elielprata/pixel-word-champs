@@ -28,6 +28,11 @@ export const RankingsTab = () => {
     return total;
   }, 0);
 
+  const handleCompetitionCreated = () => {
+    console.log('🔄 Nova competição criada, atualizando dados...');
+    refreshData();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -151,6 +156,7 @@ export const RankingsTab = () => {
         <CreateCompetitionModal 
           open={isCreateCompetitionOpen}
           onOpenChange={setIsCreateCompetitionOpen}
+          onCompetitionCreated={handleCompetitionCreated}
         />
       </div>
     </div>

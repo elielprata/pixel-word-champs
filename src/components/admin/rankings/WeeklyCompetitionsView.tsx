@@ -38,6 +38,11 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const [editingCompetition, setEditingCompetition] = useState<WeeklyCompetition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+  // Filtrar a competição ativa da lista de todas as competições para evitar duplicação
+  const otherCompetitions = competitions.filter(comp => 
+    !activeCompetition || comp.id !== activeCompetition.id
+  );
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -228,82 +233,84 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         </Card>
       )}
 
-      {/* Lista de Todas as Competições */}
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-purple-600" />
-          Todas as Competições Semanais
-        </h3>
-        
-        <div className="grid gap-4">
-          {competitions.map((competition) => (
-            <Card key={competition.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="font-semibold text-slate-800">{competition.title}</h4>
-                      <Badge className={getStatusColor(competition.status)}>
-                        {getStatusText(competition.status)}
-                      </Badge>
+      {/* Lista de Outras Competições (excluindo a ativa) */}
+      {otherCompetitions.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-purple-600" />
+            Todas as Competições Semanais
+          </h3>
+          
+          <div className="grid gap-4">
+            {otherCompetitions.map((competition) => (
+              <Card key={competition.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h4 className="font-semibold text-slate-800">{competition.title}</h4>
+                        <Badge className={getStatusColor(competition.status)}>
+                          {getStatusText(competition.status)}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-sm text-slate-600 mb-3">{competition.description}</p>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-slate-500" />
+                          <span>{formatDate(competition.start_date)}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-slate-500" />
+                          <span>{formatDate(competition.end_date)}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1">
+                          <Trophy className="h-3 w-3 text-yellow-600" />
+                          <span className="font-semibold">R$ {competition.prize_pool.toFixed(2)}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3 text-slate-500" />
+                          <span>{competition.total_participants}/{competition.max_participants}</span>
+                        </div>
+                      </div>
                     </div>
                     
-                    <p className="text-sm text-slate-600 mb-3">{competition.description}</p>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3 text-slate-500" />
-                        <span>{formatDate(competition.start_date)}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-slate-500" />
-                        <span>{formatDate(competition.end_date)}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-1">
-                        <Trophy className="h-3 w-3 text-yellow-600" />
-                        <span className="font-semibold">R$ {competition.prize_pool.toFixed(2)}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3 text-slate-500" />
-                        <span>{competition.total_participants}/{competition.max_participants}</span>
-                      </div>
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(competition)}
+                        className="h-8 w-8 p-0 hover:bg-blue-50"
+                        title="Editar competição"
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(competition)}
+                        disabled={deletingId === competition.id}
+                        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                        title="Excluir competição"
+                      >
+                        {deletingId === competition.id ? (
+                          <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div className="flex gap-2 ml-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(competition)}
-                      className="h-8 w-8 p-0 hover:bg-blue-50"
-                      title="Editar competição"
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(competition)}
-                      disabled={deletingId === competition.id}
-                      className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                      title="Excluir competição"
-                    >
-                      {deletingId === competition.id ? (
-                        <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
-                      ) : (
-                        <Trash2 className="h-3 w-3" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Modal de Edição */}
       <EditCompetitionModal
