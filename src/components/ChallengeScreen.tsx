@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Trophy, Star } from 'lucide-react';
@@ -170,35 +168,30 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-      <div className="px-2 pt-1">
-        <div className="flex items-center justify-between mb-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onBack}
-            className="rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
-          
-          <div className="w-10"></div>
-        </div>
-
-        <GameBoard
-          level={currentLevel}
-          timeLeft={timeRemaining}
-          onWordFound={handleWordFound}
-          onTimeUp={handleTimeUp}
-          onLevelComplete={handleLevelComplete}
-          onAdvanceLevel={handleAdvanceLevel}
-          onStopGame={handleStopGame}
-          canRevive={true}
-          onRevive={handleRevive}
-        />
+      <div className="absolute top-0 left-0 z-10 p-2">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onBack}
+          className="rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </Button>
       </div>
+
+      <GameBoard
+        level={currentLevel}
+        timeLeft={timeRemaining}
+        onWordFound={handleWordFound}
+        onTimeUp={handleTimeUp}
+        onLevelComplete={handleLevelComplete}
+        onAdvanceLevel={handleAdvanceLevel}
+        onStopGame={handleStopGame}
+        canRevive={true}
+        onRevive={handleRevive}
+      />
     </div>
   );
 };
 
 export default ChallengeScreen;
-
