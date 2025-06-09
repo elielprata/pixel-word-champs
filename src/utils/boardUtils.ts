@@ -1,4 +1,3 @@
-
 export interface Position {
   row: number;
   col: number;
@@ -22,21 +21,9 @@ export const getBoardSize = (level: number): number => {
 };
 
 export const getLevelWords = (level: number): string[] => {
-  const wordSets = {
-    1: ['CASA', 'GATO', 'SOL', 'MAR', 'PAZ'],
-    2: ['VIDA', 'AMOR', 'FLOR', 'AZUL', 'FELIZ'],
-    3: ['SONHO', 'TERRA', 'VENTO', 'CHUVA', 'FLORES'],
-    4: ['ESTRELA', 'MONTANHA', 'OCEANO', 'JARDIM', 'LIBERDADE'],
-    5: ['FAMILIA', 'AMIZADE', 'CORAGEM', 'ESPERANCA', 'ALEGRIA'],
-    6: ['NATUREZA', 'HARMONIA', 'BELEZA', 'CRIACAO', 'AVENTURA'],
-    7: ['DESCOBERTA', 'CONHECIMENTO', 'SABEDORIA', 'PACIENCIA', 'GRATIDAO'],
-    8: ['INSPIRACAO', 'TRANSFORMACAO', 'PERSEVERANCA', 'DETERMINACAO', 'SUPERACAO'],
-    9: ['ORIGINALIDADE', 'CRIATIVIDADE', 'INOVACAO', 'EXCELENCIA', 'REALIZACAO'],
-    10: ['EXTRAORDINARIO', 'MAGNIFICENCIA', 'TRANSCENDENCIA', 'REVOLUCIONARIO', 'INCOMPARAVEL']
-  };
-  
-  const defaultWords = ['PALAVRA', 'TESTE', 'JOGO', 'NIVEL', 'DESAFIO'];
-  return wordSets[level as keyof typeof wordSets] || defaultWords;
+  // Como as palavras não são organizadas por nível, retornamos um array genérico
+  // que será preenchido com palavras do banco de dados baseadas na dificuldade
+  return [];
 };
 
 export const getCellSize = (boardSize: number): number => {

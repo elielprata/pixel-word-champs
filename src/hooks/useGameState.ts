@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -25,13 +24,12 @@ export const useGameState = (level: number, board: string[][]) => {
     const generateGameData = async () => {
       setIsLoading(true);
       try {
-        console.log('🔍 Buscando palavras reais para nível:', level);
+        console.log('🔍 Buscando palavras ativas para o jogo...');
         
-        // Buscar palavras do banco de dados para o nível atual
+        // Buscar palavras do banco de dados (todas as ativas, sem filtro por nível)
         const { data: words, error } = await supabase
           .from('level_words')
           .select('word, difficulty, category')
-          .eq('level', level)
           .eq('is_active', true)
           .limit(15); // Limitar para um jogo balanceado
 
@@ -43,7 +41,7 @@ export const useGameState = (level: number, board: string[][]) => {
         }
 
         if (!words || words.length === 0) {
-          console.log('⚠️ Nenhuma palavra encontrada para o nível:', level);
+          console.log('⚠️ Nenhuma palavra ativa encontrada');
           setValidWords([]);
           setGameData(null);
           return;
