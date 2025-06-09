@@ -49,10 +49,23 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
       timeZone: 'America/Sao_Paulo',
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric'
     });
+  };
+
+  const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
+    const date = new Date(dateString);
+    const dateFormatted = date.toLocaleDateString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    // Aplicar horários padrão baseado no tipo de data
+    const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
+    
+    return `${dateFormatted}, ${timeFormatted}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -156,7 +169,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
         <div className="text-sm text-blue-700">
           <p className="font-medium">Horário de Referência: Brasília (UTC-3)</p>
-          <p>Os status das competições são atualizados automaticamente baseados no horário oficial do Brasil.</p>
+          <p>Início automático: 00:00:00 | Fim automático: 23:59:59 | Status atualizados automaticamente</p>
         </div>
       </div>
 
@@ -210,16 +223,16 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-green-600" />
                   <div>
-                    <p className="font-medium">Início (Brasília)</p>
-                    <p className="text-green-700">{formatDate(activeCompetition.start_date)}</p>
+                    <p className="font-medium">Início</p>
+                    <p className="text-green-700">{formatDateTime(activeCompetition.start_date, false)}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2 text-sm">
                   <Clock className="h-4 w-4 text-green-600" />
                   <div>
-                    <p className="font-medium">Fim (Brasília)</p>
-                    <p className="text-green-700">{formatDate(activeCompetition.end_date)}</p>
+                    <p className="font-medium">Fim</p>
+                    <p className="text-green-700">{formatDateTime(activeCompetition.end_date, true)}</p>
                   </div>
                 </div>
                 
@@ -270,12 +283,12 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3 text-slate-500" />
-                          <span>{formatDate(competition.start_date)}</span>
+                          <span>{formatDateTime(competition.start_date, false)}</span>
                         </div>
                         
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3 text-slate-500" />
-                          <span>{formatDate(competition.end_date)}</span>
+                          <span>{formatDateTime(competition.end_date, true)}</span>
                         </div>
                         
                         <div className="flex items-center gap-1">
