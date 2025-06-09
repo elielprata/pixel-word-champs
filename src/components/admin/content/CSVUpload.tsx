@@ -16,7 +16,7 @@ export const CSVUpload = () => {
   const [uploadMode, setUploadMode] = useState<'single' | 'multiple'>('single');
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
-  const { categories, createCategory } = useWordCategories();
+  const { categories } = useWordCategories();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -52,6 +52,8 @@ export const CSVUpload = () => {
   const parseCSVMultipleCategories = (text: string): { [category: string]: string[] } => {
     const lines = text.split('\n');
     const categorizedWords: { [category: string]: string[] } = {};
+    const existingCategoryNames = new Set(['geral', ...categories.map(cat => cat.name.toLowerCase())]);
+    const skippedWords: string[] = [];
     
     for (const line of lines) {
       const trimmedLine = line.trim();
@@ -62,32 +64,31 @@ export const CSVUpload = () => {
           const category = parts[1].trim().toLowerCase();
           
           if (word && word.length >= 3 && category) {
-            if (!categorizedWords[category]) {
-              categorizedWords[category] = [];
+            // Verificar se a categoria existe
+            if (existingCategoryNames.has(category)) {
+              if (!categorizedWords[category]) {
+                categorizedWords[category] = [];
+              }
+              categorizedWords[category].push(word);
+            } else {
+              skippedWords.push(`${word} (categoria "${category}" não existe)`);
             }
-            categorizedWords[category].push(word);
           }
         }
       }
     }
     
-    return categorizedWords;
-  };
-
-  const ensureCategoryExists = async (categoryName: string) => {
-    const existingCategory = categories.find(cat => cat.name === categoryName);
-    if (!existingCategory) {
-      console.log(`Criando nova categoria: ${categoryName}`);
-      await new Promise<void>((resolve, reject) => {
-        createCategory(
-          { name: categoryName, description: `Categoria criada automaticamente via upload` },
-          {
-            onSuccess: () => resolve(),
-            onError: (error) => reject(error)
-          }
-        );
+    // Mostrar aviso sobre palavras ignoradas
+    if (skippedWords.length > 0) {
+      toast({
+        title: "Palavras ignoradas",
+        description: `${skippedWords.length} palavras foram ignoradas por pertencerem a categorias inexistentes`,
+        variant: "destructive",
       });
+      console.log('Palavras ignoradas:', skippedWords);
     }
+    
+    return categorizedWords;
   };
 
   const handleUploadSingle = async () => {
@@ -163,7 +164,7 @@ export const CSVUpload = () => {
       if (Object.keys(categorizedWords).length === 0) {
         toast({
           title: "Erro",
-          description: "Nenhuma palavra válida encontrada no arquivo. Verifique o formato.",
+          description: "Nenhuma palavra válida encontrada para categorias existentes. Verifique se as categorias no arquivo existem no sistema.",
           variant: "destructive",
         });
         return;
@@ -175,12 +176,16 @@ export const CSVUpload = () => {
       // Processar cada categoria
       for (const [categoryName, words] of Object.entries(categorizedWords)) {
         try {
-          // Garantir que a categoria existe
-          await ensureCategoryExists(categoryName);
+          // Encontrar o ID da categoria existente
+          const categoryInDb = categories.find(cat => cat.name === categoryName) || 
+                              (categoryName === 'geral' ? { id: '', name: 'geral' } : null);
           
-          // Encontrar o ID da categoria (pode ter sido criada agora)
-          const categoryInDb = categories.find(cat => cat.name === categoryName);
-          const categoryId = categoryInDb?.id || '';
+          if (!categoryInDb) {
+            console.log(`Categoria "${categoryName}" não encontrada - pulando`);
+            continue;
+          }
+
+          const categoryId = categoryInDb.id || '';
 
           // Salvar palavras na categoria
           const result = await saveWordsToDatabase(words, categoryId, categoryName);
@@ -195,7 +200,7 @@ export const CSVUpload = () => {
 
       toast({
         title: "Sucesso!",
-        description: `${totalImported} palavras foram importadas em ${categoriesProcessed} categorias`,
+        description: `${totalImported} palavras foram importadas em ${categoriesProcessed} categorias existentes`,
       });
 
       // Limpar formulário
@@ -251,7 +256,7 @@ export const CSVUpload = () => {
                   <SelectItem value="multiple">
                     <div className="flex items-center gap-2">
                       <Layers className="h-4 w-4" />
-                      Múltiplas categorias - Palavras organizadas por categoria
+                      Múltiplas categorias - Palavras organizadas por categoria existente
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -325,7 +330,8 @@ export const CSVUpload = () => {
                       <p>• Formato: PALAVRA,CATEGORIA</p>
                       <p>• Uma palavra e categoria por linha</p>
                       <p>• Palavras com pelo menos 3 letras</p>
-                      <p>• Categorias são criadas automaticamente se não existirem</p>
+                      <p><strong>• Apenas categorias que já existem no sistema</strong></p>
+                      <p>• Palavras de categorias inexistentes serão ignoradas</p>
                     </>
                   )}
                 </div>
@@ -342,7 +348,7 @@ export const CSVUpload = () => {
                       </>
                     ) : (
                       <>
-                        CASA,casa<br/>
+                        CASA,geral<br/>
                         CARRO,veiculos<br/>
                         GATO,animais<br/>
                         CACHORRO,animais<br/>
@@ -351,6 +357,22 @@ export const CSVUpload = () => {
                     )}
                   </div>
                 </div>
+
+                {uploadMode === 'multiple' && (
+                  <div className="mt-3">
+                    <h5 className="text-sm font-medium text-blue-800 mb-1">Categorias Disponíveis:</h5>
+                    <div className="bg-white border border-blue-200 rounded p-2 text-xs">
+                      <div className="flex flex-wrap gap-1">
+                        <span className="bg-blue-100 px-2 py-1 rounded text-blue-800">geral</span>
+                        {categories.map((category) => (
+                          <span key={category.id} className="bg-blue-100 px-2 py-1 rounded text-blue-800">
+                            {category.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-3 flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
