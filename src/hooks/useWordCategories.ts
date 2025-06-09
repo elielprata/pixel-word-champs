@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,10 +39,24 @@ export const useWordCategories = () => {
 
   const createCategory = useMutation({
     mutationFn: async ({ name, description }: { name: string; description?: string }) => {
+      const normalizedName = name.toLowerCase().trim();
+      
+      // Verificar se já existe uma categoria com esse nome
+      const { data: existingCategory } = await supabase
+        .from('word_categories')
+        .select('id, name')
+        .eq('name', normalizedName)
+        .eq('is_active', true)
+        .single();
+
+      if (existingCategory) {
+        throw new Error(`Já existe uma categoria com o nome "${name}"`);
+      }
+
       const { data, error } = await supabase
         .from('word_categories')
         .insert({
-          name: name.toLowerCase(),
+          name: normalizedName,
           description: description || null
         })
         .select()
@@ -60,12 +73,21 @@ export const useWordCategories = () => {
       queryClient.invalidateQueries({ queryKey: ['wordCategories'] });
     },
     onError: (error: any) => {
+      console.error('❌ Erro ao criar categoria:', error);
+      
+      let errorMessage = "Erro ao criar categoria";
+      
+      if (error.message && error.message.includes('Já existe uma categoria')) {
+        errorMessage = error.message;
+      } else if (error.code === '23505') {
+        errorMessage = "Já existe uma categoria com este nome";
+      }
+      
       toast({
         title: "Erro",
-        description: "Erro ao criar categoria",
+        description: errorMessage,
         variant: "destructive",
       });
-      console.error('❌ Erro ao criar categoria:', error);
     },
   });
 
