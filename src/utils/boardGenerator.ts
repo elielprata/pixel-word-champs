@@ -4,100 +4,121 @@ import { type Position } from '@/utils/boardUtils';
 
 export class BoardGenerator {
   static generateSmartBoard(size: number, words: string[]): WordPlacementResult {
-    // Se não há palavras, retorna tabuleiro vazio
-    if (words.length === 0) {
-      return {
-        board: Array(size).fill(null).map(() => Array(size).fill('')),
-        placedWords: []
-      };
-    }
-
-    console.log(`🎯 Gerando tabuleiro ${size}x${size} para palavras:`, words);
+    let attempts = 0;
+    const maxBoardAttempts = 5;
     
-    // Filtrar palavras que cabem no tabuleiro
-    const validWords = words.filter(word => word.length <= size);
-    console.log(`📝 Palavras válidas (que cabem no tabuleiro):`, validWords);
-    
-    if (validWords.length === 0) {
-      console.warn('⚠️ Nenhuma palavra cabe no tabuleiro atual');
-      return {
-        board: Array(size).fill(null).map(() => Array(size).fill('')),
-        placedWords: []
-      };
-    }
-
-    let bestResult: WordPlacementResult = { board: [], placedWords: [] };
-    let maxWordsPlaced = 0;
-    
-    // Tentar várias vezes para encontrar a melhor colocação
-    for (let attempt = 1; attempt <= 10; attempt++) {
-      const result = this.generateSingleBoard(size, validWords);
+    while (attempts < maxBoardAttempts) {
+      attempts++;
+      console.log(`Tentativa ${attempts} de gerar o tabuleiro`);
       
-      if (result.placedWords.length > maxWordsPlaced) {
-        maxWordsPlaced = result.placedWords.length;
-        bestResult = result;
-      }
+      const result = this.generateSingleBoard(size, words);
       
-      // Se conseguiu colocar todas as palavras, pare
-      if (result.placedWords.length === validWords.length) {
-        console.log(`✅ Sucesso na tentativa ${attempt}! Todas as ${validWords.length} palavras colocadas.`);
-        break;
+      if (result.placedWords.length === words.length) {
+        console.log(`✅ Tabuleiro gerado com sucesso! Todas as ${words.length} palavras foram colocadas.`);
+        this.fillEmptySpaces(result.board, size);
+        return result;
+      } else {
+        console.warn(`⚠️ Tentativa ${attempts} falhou. Colocadas: ${result.placedWords.length}/${words.length} palavras`);
       }
     }
     
-    console.log(`🎯 Melhor resultado: ${bestResult.placedWords.length}/${validWords.length} palavras colocadas`);
-    this.fillEmptySpaces(bestResult.board, size);
-    return bestResult;
+    console.log('🔄 Usando método de força bruta para garantir todas as palavras...');
+    return this.generateBruteForceBoard(size, words);
   }
 
   private static generateSingleBoard(size: number, words: string[]): WordPlacementResult {
     const wordPlacer = new WordPlacer(size);
     const directions: Array<'horizontal' | 'vertical' | 'diagonal'> = ['horizontal', 'vertical', 'diagonal'];
     
-    // Ordenar palavras por tamanho (menores primeiro para melhor aproveitamento)
-    const sortedWords = [...words].sort((a, b) => a.length - b.length);
+    // Sort words by length (largest first for better space utilization)
+    const sortedWords = [...words].sort((a, b) => b.length - a.length);
     
     for (const word of sortedWords) {
       let placed = false;
-      const maxAttempts = 100;
+      let attempts = 0;
+      const maxAttempts = 300;
       
-      // Embaralhar direções para variedade
-      const shuffledDirections = [...directions].sort(() => Math.random() - 0.5);
-      
-      for (let attempt = 0; attempt < maxAttempts && !placed; attempt++) {
+      while (!placed && attempts < maxAttempts) {
+        attempts++;
+        
+        // Shuffle directions
+        const shuffledDirections = [...directions].sort(() => Math.random() - 0.5);
+        
         for (const direction of shuffledDirections) {
           const { maxRow, maxCol } = this.getDirectionLimits(direction, size, word.length);
           
           if (maxRow <= 0 || maxCol <= 0) continue;
           
-          const startRow = Math.floor(Math.random() * maxRow);
-          const startCol = Math.floor(Math.random() * maxCol);
-          
-          if (wordPlacer.canPlaceWord(word, startRow, startCol, direction)) {
-            wordPlacer.placeWord(word, startRow, startCol, direction);
-            placed = true;
-            console.log(`✅ "${word}" colocada em ${direction} (${startRow},${startCol})`);
-            break;
+          // Try multiple positions
+          for (let posAttempt = 0; posAttempt < 50; posAttempt++) {
+            const startRow = Math.floor(Math.random() * maxRow);
+            const startCol = Math.floor(Math.random() * maxCol);
+            
+            if (wordPlacer.canPlaceWord(word, startRow, startCol, direction)) {
+              wordPlacer.placeWord(word, startRow, startCol, direction);
+              placed = true;
+              break;
+            }
           }
+          
+          if (placed) break;
         }
       }
       
       if (!placed) {
-        console.warn(`⚠️ Não foi possível colocar "${word}" - tentando próxima palavra`);
+        console.warn(`Não foi possível colocar a palavra: ${word}`);
+        break;
       }
     }
     
     return wordPlacer.getResult();
   }
 
+  private static generateBruteForceBoard(size: number, words: string[]): WordPlacementResult {
+    const wordPlacer = new WordPlacer(size);
+    const directions: Array<'horizontal' | 'vertical' | 'diagonal'> = ['horizontal', 'vertical', 'diagonal'];
+    
+    for (const word of words) {
+      let placed = false;
+      
+      for (const direction of directions) {
+        if (placed) break;
+        
+        const { maxRow, maxCol } = this.getDirectionLimits(direction, size, word.length);
+        
+        if (maxRow <= 0 || maxCol <= 0) continue;
+        
+        for (let row = 0; row < maxRow && !placed; row++) {
+          for (let col = 0; col < maxCol && !placed; col++) {
+            if (wordPlacer.canPlaceWord(word, row, col, direction)) {
+              wordPlacer.placeWord(word, row, col, direction);
+              placed = true;
+              console.log(`✅ Palavra "${word}" colocada com força bruta em ${direction}`);
+            }
+          }
+        }
+      }
+      
+      if (!placed) {
+        console.error(`❌ ERRO CRÍTICO: Não foi possível colocar a palavra "${word}" mesmo com força bruta!`);
+      }
+    }
+    
+    const result = wordPlacer.getResult();
+    this.fillEmptySpaces(result.board, size);
+    
+    console.log(`🎯 Resultado final: ${result.placedWords.length}/${words.length} palavras colocadas`);
+    return result;
+  }
+
   private static getDirectionLimits(direction: 'horizontal' | 'vertical' | 'diagonal', size: number, wordLength: number) {
     switch (direction) {
       case 'horizontal':
-        return { maxRow: size, maxCol: Math.max(1, size - wordLength + 1) };
+        return { maxRow: size, maxCol: size - wordLength + 1 };
       case 'vertical':
-        return { maxRow: Math.max(1, size - wordLength + 1), maxCol: size };
+        return { maxRow: size - wordLength + 1, maxCol: size };
       case 'diagonal':
-        return { maxRow: Math.max(1, size - wordLength + 1), maxCol: Math.max(1, size - wordLength + 1) };
+        return { maxRow: size - wordLength + 1, maxCol: size - wordLength + 1 };
       default:
         return { maxRow: 0, maxCol: 0 };
     }
