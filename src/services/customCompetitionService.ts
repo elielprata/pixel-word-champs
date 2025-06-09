@@ -25,9 +25,26 @@ class CustomCompetitionService {
         throw new Error('Usuário não autenticado');
       }
 
+      // Para competições diárias, definir automaticamente as datas se não fornecidas
+      let startDate = data.startDate;
+      let endDate = data.endDate;
+
+      if (data.type === 'daily') {
+        if (!startDate) {
+          // Definir início como hoje às 00:00:00
+          startDate = new Date();
+          startDate.setHours(0, 0, 0, 0);
+        }
+        if (!endDate) {
+          // Definir fim como o mesmo dia às 23:59:59
+          endDate = new Date(startDate);
+          endDate.setHours(23, 59, 59, 999);
+        }
+      }
+
       // Validar datas sobrepostas para competições semanais
-      if (data.type === 'weekly' && data.startDate && data.endDate) {
-        const hasOverlap = await this.checkDateOverlap(data.startDate, data.endDate);
+      if (data.type === 'weekly' && startDate && endDate) {
+        const hasOverlap = await this.checkDateOverlap(startDate, endDate);
         if (hasOverlap) {
           throw new Error('Já existe uma competição semanal com as mesmas datas de início e fim');
         }
@@ -35,11 +52,14 @@ class CustomCompetitionService {
 
       // Calcular status correto baseado nas datas e horário de Brasília
       let initialStatus = 'draft';
-      if (data.type === 'weekly' && data.startDate && data.endDate) {
+      if (data.type === 'weekly' && startDate && endDate) {
         initialStatus = CompetitionStatusService.calculateCorrectStatus(
-          data.startDate.toISOString(),
-          data.endDate.toISOString()
+          startDate.toISOString(),
+          endDate.toISOString()
         );
+      } else if (data.type === 'daily') {
+        // Para competições diárias, sempre ativas quando criadas
+        initialStatus = 'active';
       }
 
       // Preparar dados para inserção conforme a estrutura da tabela
@@ -48,8 +68,8 @@ class CustomCompetitionService {
         description: data.description,
         competition_type: data.type === 'weekly' ? 'tournament' : 'challenge',
         theme: data.category || 'geral',
-        start_date: data.startDate?.toISOString(),
-        end_date: data.endDate?.toISOString(),
+        start_date: startDate?.toISOString(),
+        end_date: endDate?.toISOString(),
         prize_pool: data.prizePool,
         max_participants: data.maxParticipants,
         status: initialStatus,
