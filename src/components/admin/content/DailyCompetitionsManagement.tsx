@@ -1,17 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Target, Calendar, Users, Clock } from 'lucide-react';
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Plus, Target, Clock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyCompetitionFinalization } from "@/hooks/useDailyCompetitionFinalization";
+import { DailyCompetitionForm } from './daily/DailyCompetitionForm';
+import { DailyCompetitionStats } from './daily/DailyCompetitionStats';
+import { DailyCompetitionTable } from './daily/DailyCompetitionTable';
 
 interface DailyCompetition {
   id: string;
@@ -42,23 +40,6 @@ export const DailyCompetitionsManagement = () => {
     max_participants: 500
   });
   const { toast } = useToast();
-
-  const themes = [
-    'Animais',
-    'Profissões',
-    'Esportes',
-    'Comidas',
-    'Países',
-    'Cores',
-    'Natureza',
-    'Tecnologia',
-    'Música',
-    'Cinema',
-    'Literatura',
-    'História',
-    'Ciência',
-    'Geografia'
-  ];
 
   useEffect(() => {
     fetchCompetitions();
@@ -92,11 +73,19 @@ export const DailyCompetitionsManagement = () => {
     const adjustedStartDate = ensureStartOfDay(value);
     const adjustedEndDate = ensureEndOfDay(value);
     
-    setNewCompetition({
-      ...newCompetition, 
-      start_date: adjustedStartDate,
-      end_date: adjustedEndDate
-    });
+    if (editingCompetition) {
+      setEditingCompetition({
+        ...editingCompetition, 
+        start_date: adjustedStartDate,
+        end_date: adjustedEndDate
+      });
+    } else {
+      setNewCompetition({
+        ...newCompetition, 
+        start_date: adjustedStartDate,
+        end_date: adjustedEndDate
+      });
+    }
   };
 
   const fetchCompetitions = async () => {
@@ -247,25 +236,8 @@ export const DailyCompetitionsManagement = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'draft': return 'bg-gray-100 text-gray-700 border-gray-200';
-      case 'active': return 'bg-green-100 text-green-700 border-green-200';
-      case 'scheduled': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'completed': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const handleEdit = (competition: DailyCompetition) => {
+    setEditingCompetition(competition);
   };
 
   return (
@@ -296,281 +268,44 @@ export const DailyCompetitionsManagement = () => {
                 Nova Competição Diária
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Criar Nova Competição Diária</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                <div>
-                  <Label>Título</Label>
-                  <Input 
-                    value={newCompetition.title}
-                    onChange={(e) => setNewCompetition({...newCompetition, title: e.target.value})}
-                    placeholder="Ex: Desafio Diário - Animais"
-                  />
-                </div>
-                <div>
-                  <Label>Tema</Label>
-                  <Select 
-                    value={newCompetition.theme} 
-                    onValueChange={(value) => setNewCompetition({...newCompetition, theme: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um tema" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {themes.map(theme => (
-                        <SelectItem key={theme} value={theme}>{theme}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Descrição</Label>
-                  <Textarea 
-                    value={newCompetition.description}
-                    onChange={(e) => setNewCompetition({...newCompetition, description: e.target.value})}
-                    placeholder="Descreva o desafio diário..."
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label>Data do Desafio</Label>
-                  <Input 
-                    type="date"
-                    value={newCompetition.start_date.split('T')[0]}
-                    onChange={(e) => handleStartDateChange(e.target.value)}
-                  />
-                  <p className="text-xs text-green-600 mt-1 font-medium">
-                    ✅ Competição será ativa das 00:00:00 às 23:59:59 desta data (PADRÃO)
-                  </p>
-                </div>
-                <div>
-                  <Label>Máx. Participantes</Label>
-                  <Input 
-                    type="number"
-                    value={newCompetition.max_participants}
-                    onChange={(e) => setNewCompetition({...newCompetition, max_participants: parseInt(e.target.value)})}
-                  />
-                </div>
-                <Button onClick={addCompetition} className="w-full">
-                  Criar Competição Diária
-                </Button>
-              </div>
-            </DialogContent>
           </Dialog>
         </div>
       </CardHeader>
 
       <CardContent className="p-6">
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <Target className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">Total</p>
-                  <p className="text-2xl font-bold text-blue-700">{competitions.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-green-100 p-2 rounded-lg">
-                  <Calendar className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Ativas</p>
-                  <p className="text-2xl font-bold text-green-700">
-                    {competitions.filter(c => c.status === 'active').length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-amber-100 p-2 rounded-lg">
-                  <Users className="h-4 w-4 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-amber-600 font-medium">Agendadas</p>
-                  <p className="text-2xl font-bold text-amber-700">
-                    {competitions.filter(c => c.status === 'scheduled').length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <DailyCompetitionStats competitions={competitions} />
 
         {/* Tabela de competições */}
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead className="font-semibold">Título</TableHead>
-                <TableHead className="font-semibold">Tema</TableHead>
-                <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="font-semibold">Início</TableHead>
-                <TableHead className="font-semibold">Fim</TableHead>
-                <TableHead className="font-semibold">Máx. Participantes</TableHead>
-                <TableHead className="font-semibold text-center">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {competitions.map((competition) => (
-                <TableRow key={competition.id} className="hover:bg-slate-50">
-                  <TableCell className="font-medium">{competition.title}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                      {competition.theme}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(competition.status)}>
-                      {competition.status === 'draft' ? 'Rascunho' :
-                       competition.status === 'active' ? 'Ativo' :
-                       competition.status === 'scheduled' ? 'Agendado' :
-                       competition.status === 'completed' ? 'Finalizado' : competition.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">{formatDate(competition.start_date)}</TableCell>
-                  <TableCell className="text-sm">{formatDate(competition.end_date)}</TableCell>
-                  <TableCell className="font-semibold">{competition.max_participants}</TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex gap-2 justify-center">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingCompetition(competition)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => deleteCompetition(competition.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DailyCompetitionTable
+          competitions={competitions}
+          loading={loading}
+          onEdit={handleEdit}
+          onDelete={deleteCompetition}
+        />
 
-        {competitions.length === 0 && !loading && (
-          <div className="text-center py-8 text-gray-500">
-            <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>Nenhuma competição diária criada ainda</p>
-            <p className="text-sm">Crie sua primeira competição diária com tema</p>
-          </div>
-        )}
+        {/* Modals */}
+        <DailyCompetitionForm
+          isOpen={isAddModalOpen}
+          onOpenChange={setIsAddModalOpen}
+          competition={null}
+          newCompetition={newCompetition}
+          onNewCompetitionChange={setNewCompetition}
+          onSubmit={addCompetition}
+          isEditing={false}
+          handleStartDateChange={handleStartDateChange}
+        />
 
-        {/* Modal de edição */}
-        {editingCompetition && (
-          <Dialog open={!!editingCompetition} onOpenChange={() => setEditingCompetition(null)}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Editar Competição Diária</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                <div>
-                  <Label>Título</Label>
-                  <Input 
-                    value={editingCompetition.title}
-                    onChange={(e) => setEditingCompetition({...editingCompetition, title: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>Tema</Label>
-                  <Select 
-                    value={editingCompetition.theme} 
-                    onValueChange={(value) => setEditingCompetition({...editingCompetition, theme: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {themes.map(theme => (
-                        <SelectItem key={theme} value={theme}>{theme}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Descrição</Label>
-                  <Textarea 
-                    value={editingCompetition.description}
-                    onChange={(e) => setEditingCompetition({...editingCompetition, description: e.target.value})}
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Status</Label>
-                    <Select 
-                      value={editingCompetition.status} 
-                      onValueChange={(value) => setEditingCompetition({...editingCompetition, status: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="draft">Rascunho</SelectItem>
-                        <SelectItem value="scheduled">Agendado</SelectItem>
-                        <SelectItem value="active">Ativo</SelectItem>
-                        <SelectItem value="completed">Finalizado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Máx. Participantes</Label>
-                    <Input 
-                      type="number"
-                      value={editingCompetition.max_participants}
-                      onChange={(e) => setEditingCompetition({...editingCompetition, max_participants: parseInt(e.target.value)})}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label>Data da Competição</Label>
-                  <Input 
-                    type="date"
-                    value={editingCompetition.start_date.split('T')[0]}
-                    onChange={(e) => {
-                      const newStartDate = ensureStartOfDay(e.target.value);
-                      const newEndDate = ensureEndOfDay(e.target.value);
-                      setEditingCompetition({
-                        ...editingCompetition, 
-                        start_date: newStartDate,
-                        end_date: newEndDate
-                      });
-                    }}
-                  />
-                  <p className="text-xs text-green-600 mt-1 font-medium">
-                    ✅ Será automaticamente configurada das 00:00:00 às 23:59:59
-                  </p>
-                </div>
-                <Button onClick={updateCompetition} className="w-full">
-                  Salvar Alterações
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+        <DailyCompetitionForm
+          isOpen={!!editingCompetition}
+          onOpenChange={() => setEditingCompetition(null)}
+          competition={editingCompetition}
+          newCompetition={newCompetition}
+          onNewCompetitionChange={setEditingCompetition}
+          onSubmit={updateCompetition}
+          isEditing={true}
+          handleStartDateChange={handleStartDateChange}
+        />
       </CardContent>
     </Card>
   );
