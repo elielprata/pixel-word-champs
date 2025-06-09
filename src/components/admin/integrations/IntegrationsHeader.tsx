@@ -27,7 +27,7 @@ export const IntegrationsHeader = () => {
           </Badge>
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
             <Zap className="h-3 w-3 mr-1" />
-            2 Integrações
+            1 Integração
           </Badge>
           <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 px-3 py-1">
             <Shield className="h-3 w-3 mr-1" />
