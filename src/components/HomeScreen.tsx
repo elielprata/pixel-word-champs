@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,9 +24,10 @@ interface HomeScreenProps {
   onStartChallenge: (challengeId: number) => void;
   onViewFullRanking: () => void;
   onViewChallengeRanking: (challengeId: number) => void;
+  onViewCompetitionRanking?: (competitionId: string) => void;
 }
 
-const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) => {
+const HomeScreen = ({ onStartChallenge, onViewFullRanking, onViewCompetitionRanking }: HomeScreenProps) => {
   const { user } = useAuth();
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,6 +58,12 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
     }
   };
 
+  const handleViewCompetitionRanking = (competitionId: string) => {
+    if (onViewCompetitionRanking) {
+      onViewCompetitionRanking(competitionId);
+    }
+  };
+
   useEffect(() => {
     loadCompetitions();
     
@@ -84,6 +90,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
         competitions={competitions}
         onStartChallenge={onStartChallenge}
         onRefresh={loadCompetitions}
+        onViewRanking={handleViewCompetitionRanking}
       />
     </div>
   );

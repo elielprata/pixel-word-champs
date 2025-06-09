@@ -22,9 +22,10 @@ interface CompetitionsListProps {
   competitions: Competition[];
   onStartChallenge: (challengeId: number) => void;
   onRefresh: () => void;
+  onViewRanking?: (competitionId: string) => void;
 }
 
-const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: CompetitionsListProps) => {
+const CompetitionsList = ({ competitions, onStartChallenge, onRefresh, onViewRanking }: CompetitionsListProps) => {
   return (
     <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-sm">
       <CardHeader className="pb-4">
@@ -49,6 +50,7 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
                 key={competition.id}
                 competition={competition}
                 onStartChallenge={onStartChallenge}
+                onViewRanking={onViewRanking}
               />
             ))}
           </div>

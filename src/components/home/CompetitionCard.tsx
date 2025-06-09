@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Users, Clock, Calendar, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,9 +18,10 @@ interface Competition {
 interface CompetitionCardProps {
   competition: Competition;
   onStartChallenge: (challengeId: number) => void;
+  onViewRanking?: (competitionId: string) => void;
 }
 
-const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps) => {
+const CompetitionCard = ({ competition, onStartChallenge, onViewRanking }: CompetitionCardProps) => {
   const formatTimeRemaining = (endDate: string) => {
     const now = new Date();
     const end = new Date(endDate);
@@ -48,6 +48,12 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
     });
   };
 
+  const handleViewRanking = () => {
+    if (onViewRanking) {
+      onViewRanking(competition.id);
+    }
+  };
+
   return (
     <Card className="bg-gradient-to-r from-gray-50 to-white border border-gray-200 hover:shadow-md transition-shadow">
       <CardContent className="p-3">
@@ -72,12 +78,16 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
               {competition.max_participants || 'Ilimitado'} vagas
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <button
+            onClick={handleViewRanking}
+            className="flex items-center gap-2 hover:bg-yellow-50 p-1 rounded transition-colors cursor-pointer"
+            title="Ver ranking desta competição"
+          >
             <Trophy className="w-3 h-3 text-yellow-500" />
-            <span className="text-xs text-gray-600">
+            <span className="text-xs text-gray-600 hover:text-yellow-700">
               Ranking
             </span>
-          </div>
+          </button>
         </div>
 
         <div className="bg-gray-50 rounded-lg p-2 mb-3">
