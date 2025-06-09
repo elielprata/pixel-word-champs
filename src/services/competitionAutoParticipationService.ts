@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { competitionParticipationService } from './competitionParticipationService';
 
@@ -69,7 +68,8 @@ export class CompetitionAutoParticipationService {
         return;
       }
 
-      await competitionParticipationService.updateParticipationScore(session.competition_id, session.user_id, totalScore);
+      // Corrigir chamada - remover o primeiro parâmetro competition_id
+      await competitionParticipationService.updateParticipationScore(sessionId, totalScore);
       console.log('✅ Pontuação atualizada na competição diária');
       
       await competitionParticipationService.updateCompetitionRankings(session.competition_id);

@@ -1,4 +1,3 @@
-
 // Corrigir tipagem inconsistente da interface User
 export interface User {
   id: string;
@@ -106,6 +105,7 @@ export interface GameConfig {
   level: number;
   boardSize?: number;
   timeLimit?: number;
+  competitionId?: string; // Adicionar competitionId como propriedade opcional
 }
 
 // Estados assíncronos
