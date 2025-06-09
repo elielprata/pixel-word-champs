@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,16 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { RefreshCw, Search, FolderOpen, Hash, Filter } from 'lucide-react';
+import { RefreshCw, Search, FolderOpen, Hash, Filter, Trash2 } from 'lucide-react';
 import { useActiveWords } from '@/hooks/useActiveWords';
+import { DeleteAllWordsModal } from './DeleteAllWordsModal';
 
 const ITEMS_PER_PAGE = 10;
 
 export const WordsListTable = () => {
-  const { words, isLoading, refetch } = useActiveWords();
+  const { words, isLoading, refetch, deleteAllWords, isDeletingAll } = useActiveWords();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
 
   // Filtrar palavras baseado na busca e categoria
   const filteredWords = useMemo(() => {
@@ -63,6 +64,11 @@ export const WordsListTable = () => {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory]);
+
+  const handleDeleteAll = (password: string) => {
+    deleteAllWords(password);
+    setShowDeleteAllModal(false);
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -116,10 +122,24 @@ export const WordsListTable = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={() => refetch()} variant="outline" size="sm" className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Atualizar
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => refetch()} variant="outline" size="sm" className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Atualizar
+              </Button>
+              {words.length > 0 && (
+                <Button 
+                  onClick={() => setShowDeleteAllModal(true)} 
+                  variant="destructive" 
+                  size="sm" 
+                  className="flex items-center gap-2"
+                  disabled={isDeletingAll}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Excluir Todas
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
       </Card>
@@ -289,6 +309,14 @@ export const WordsListTable = () => {
           )}
         </CardContent>
       </Card>
+
+      <DeleteAllWordsModal
+        isOpen={showDeleteAllModal}
+        onClose={() => setShowDeleteAllModal(false)}
+        onConfirm={handleDeleteAll}
+        isDeleting={isDeletingAll}
+        totalWords={words.length}
+      />
     </div>
   );
 };
