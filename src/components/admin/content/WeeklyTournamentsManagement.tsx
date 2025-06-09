@@ -85,14 +85,21 @@ export const WeeklyTournamentsManagement = () => {
         return;
       }
 
+      // Aplicar horários padrão: início 00:00:00, fim 23:59:59
+      const startDateWithTime = new Date(newTournament.start_date);
+      startDateWithTime.setHours(0, 0, 0, 0);
+      
+      const endDateWithTime = new Date(newTournament.end_date);
+      endDateWithTime.setHours(23, 59, 59, 999);
+
       const result = await customCompetitionService.createCompetition({
         title: newTournament.title,
         description: newTournament.description,
         type: 'weekly',
         prizePool: currentPrizePool,
         maxParticipants: newTournament.max_participants,
-        startDate: new Date(newTournament.start_date),
-        endDate: new Date(newTournament.end_date)
+        startDate: startDateWithTime,
+        endDate: endDateWithTime
       });
 
       if (result.success) {
@@ -135,13 +142,20 @@ export const WeeklyTournamentsManagement = () => {
         return;
       }
 
+      // Aplicar horários padrão: início 00:00:00, fim 23:59:59
+      const startDateWithTime = new Date(editingTournament.start_date);
+      startDateWithTime.setHours(0, 0, 0, 0);
+      
+      const endDateWithTime = new Date(editingTournament.end_date);
+      endDateWithTime.setHours(23, 59, 59, 999);
+
       const result = await customCompetitionService.updateCompetition(editingTournament.id, {
         title: editingTournament.title,
         description: editingTournament.description,
         type: 'weekly',
         maxParticipants: editingTournament.max_participants,
-        startDate: new Date(editingTournament.start_date),
-        endDate: new Date(editingTournament.end_date)
+        startDate: startDateWithTime,
+        endDate: endDateWithTime
       });
 
       if (result.success) {
@@ -257,6 +271,7 @@ export const WeeklyTournamentsManagement = () => {
                   <div className="text-sm text-blue-700">
                     <p className="font-medium">Regra Importante:</p>
                     <p>Não é possível criar torneios com as mesmas datas de início e fim de um torneio existente.</p>
+                    <p className="mt-1 text-xs">Horários automáticos: Início 00:00:00 | Fim 23:59:59 (Brasília)</p>
                   </div>
                 </div>
                 
@@ -279,22 +294,25 @@ export const WeeklyTournamentsManagement = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Data/Hora Início (Segunda-feira)</Label>
+                    <Label>Data Início</Label>
                     <Input 
-                      type="datetime-local"
+                      type="date"
                       value={newTournament.start_date}
                       onChange={(e) => setNewTournament({...newTournament, start_date: e.target.value})}
                     />
+                    <p className="text-xs text-slate-500 mt-1">Horário: 00:00:00 (Brasília)</p>
                   </div>
                   <div>
-                    <Label>Data/Hora Fim (Domingo)</Label>
+                    <Label>Data Fim</Label>
                     <Input 
-                      type="datetime-local"
+                      type="date"
                       value={newTournament.end_date}
                       onChange={(e) => setNewTournament({...newTournament, end_date: e.target.value})}
                     />
+                    <p className="text-xs text-slate-500 mt-1">Horário: 23:59:59 (Brasília)</p>
                   </div>
                 </div>
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="flex items-center gap-2">
@@ -474,6 +492,7 @@ export const WeeklyTournamentsManagement = () => {
                   <div className="text-sm text-blue-700">
                     <p className="font-medium">Regra Importante:</p>
                     <p>Não é possível alterar para datas que já existem em outro torneio.</p>
+                    <p className="mt-1 text-xs">Horários automáticos: Início 00:00:00 | Fim 23:59:59 (Brasília)</p>
                   </div>
                 </div>
                 
@@ -522,22 +541,25 @@ export const WeeklyTournamentsManagement = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Data/Hora Início</Label>
+                    <Label>Data Início</Label>
                     <Input 
-                      type="datetime-local"
+                      type="date"
                       value={editingTournament.start_date}
                       onChange={(e) => setEditingTournament({...editingTournament, start_date: e.target.value})}
                     />
+                    <p className="text-xs text-slate-500 mt-1">Horário: 00:00:00 (Brasília)</p>
                   </div>
                   <div>
-                    <Label>Data/Hora Fim</Label>
+                    <Label>Data Fim</Label>
                     <Input 
-                      type="datetime-local"
+                      type="date"
                       value={editingTournament.end_date}
                       onChange={(e) => setEditingTournament({...editingTournament, end_date: e.target.value})}
                     />
+                    <p className="text-xs text-slate-500 mt-1">Horário: 23:59:59 (Brasília)</p>
                   </div>
                 </div>
+                
                 <div>
                   <Label className="flex items-center gap-2">
                     Pool de Prêmios (Automático)

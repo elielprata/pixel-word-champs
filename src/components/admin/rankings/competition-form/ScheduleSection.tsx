@@ -24,6 +24,29 @@ export const ScheduleSection = ({
   onStartDateChange, 
   onEndDateChange 
 }: ScheduleSectionProps) => {
+  
+  const handleStartDateSelect = (date: Date | undefined) => {
+    if (date) {
+      // Definir horário padrão de início: 00:00:00
+      const dateWithTime = new Date(date);
+      dateWithTime.setHours(0, 0, 0, 0);
+      onStartDateChange(dateWithTime);
+    } else {
+      onStartDateChange(undefined);
+    }
+  };
+
+  const handleEndDateSelect = (date: Date | undefined) => {
+    if (date) {
+      // Definir horário padrão de fim: 23:59:59
+      const dateWithTime = new Date(date);
+      dateWithTime.setHours(23, 59, 59, 999);
+      onEndDateChange(dateWithTime);
+    } else {
+      onEndDateChange(undefined);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-2">
@@ -45,7 +68,10 @@ export const ScheduleSection = ({
             >
               <CalendarIcon className="mr-2 h-3 w-3" />
               {startDate ? (
-                format(startDate, "PPP", { locale: ptBR })
+                <div>
+                  <div>{format(startDate, "PPP", { locale: ptBR })}</div>
+                  <div className="text-xs text-slate-500">00:00:00 (Horário de Brasília)</div>
+                </div>
               ) : (
                 <span className="text-sm">Selecione a data de início</span>
               )}
@@ -55,7 +81,7 @@ export const ScheduleSection = ({
             <Calendar
               mode="single"
               selected={startDate}
-              onSelect={onStartDateChange}
+              onSelect={handleStartDateSelect}
               disabled={(date) => date < new Date()}
               initialFocus
               className={cn("p-3 pointer-events-auto")}
@@ -79,7 +105,10 @@ export const ScheduleSection = ({
               >
                 <CalendarIcon className="mr-2 h-3 w-3" />
                 {endDate ? (
-                  format(endDate, "PPP", { locale: ptBR })
+                  <div>
+                    <div>{format(endDate, "PPP", { locale: ptBR })}</div>
+                    <div className="text-xs text-slate-500">23:59:59 (Horário de Brasília)</div>
+                  </div>
                 ) : (
                   <span className="text-sm">Selecione a data de fim</span>
                 )}
@@ -89,7 +118,7 @@ export const ScheduleSection = ({
               <Calendar
                 mode="single"
                 selected={endDate}
-                onSelect={onEndDateChange}
+                onSelect={handleEndDateSelect}
                 disabled={(date) => {
                   const today = new Date();
                   return date < today || (startDate && date <= startDate);

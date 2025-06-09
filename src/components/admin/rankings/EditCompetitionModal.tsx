@@ -48,11 +48,15 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
       const startDate = new Date(competition.start_date);
       const endDate = new Date(competition.end_date);
       
+      // Manter apenas a data, aplicar horários padrão
+      const startDateFormatted = startDate.toISOString().split('T')[0];
+      const endDateFormatted = endDate.toISOString().split('T')[0];
+      
       setFormData({
         title: competition.title,
         description: competition.description,
-        startDate: startDate.toISOString().slice(0, 16),
-        endDate: endDate.toISOString().slice(0, 16),
+        startDate: startDateFormatted,
+        endDate: endDateFormatted,
         maxParticipants: competition.max_participants
       });
     }
@@ -65,11 +69,18 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     setIsLoading(true);
 
     try {
+      // Aplicar horários padrão: início 00:00:00, fim 23:59:59
+      const startDateWithTime = new Date(formData.startDate);
+      startDateWithTime.setHours(0, 0, 0, 0);
+      
+      const endDateWithTime = new Date(formData.endDate);
+      endDateWithTime.setHours(23, 59, 59, 999);
+
       const response = await customCompetitionService.updateCompetition(competition.id, {
         title: formData.title,
         description: formData.description,
-        startDate: new Date(formData.startDate),
-        endDate: new Date(formData.endDate),
+        startDate: startDateWithTime,
+        endDate: endDateWithTime,
         maxParticipants: formData.maxParticipants,
         type: 'weekly'
       });
@@ -132,22 +143,24 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
               <Label htmlFor="startDate">Data de Início</Label>
               <Input
                 id="startDate"
-                type="datetime-local"
+                type="date"
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                 required
               />
+              <p className="text-xs text-slate-500 mt-1">Horário: 00:00:00 (Brasília)</p>
             </div>
 
             <div>
               <Label htmlFor="endDate">Data de Fim</Label>
               <Input
                 id="endDate"
-                type="datetime-local"
+                type="date"
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                 required
               />
+              <p className="text-xs text-slate-500 mt-1">Horário: 23:59:59 (Brasília)</p>
             </div>
           </div>
 
