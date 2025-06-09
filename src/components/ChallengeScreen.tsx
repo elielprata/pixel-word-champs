@@ -19,6 +19,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const [gameSession, setGameSession] = useState<any>(null);
   const [isGameStarted, setIsGameStarted] = useState(true);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [hasMarkedParticipation, setHasMarkedParticipation] = useState(false);
   
   const maxLevels = 20; // Máximo de 20 níveis
   const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(isGameStarted);
@@ -45,8 +46,24 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     }
   };
 
+  const markParticipationAsCompleted = async () => {
+    if (hasMarkedParticipation) {
+      console.log('Participação já foi marcada como concluída');
+      return;
+    }
+
+    try {
+      console.log('🏁 Marcando participação como concluída...');
+      await competitionParticipationService.markUserAsParticipated(challengeId);
+      await gameService.completeGameSession(challengeId);
+      setHasMarkedParticipation(true);
+      console.log('✅ Participação marcada como concluída');
+    } catch (error) {
+      console.error('❌ Erro ao marcar participação:', error);
+    }
+  };
+
   const handleWordFound = async (word: string, points: number) => {
-    // Não contabiliza pontos até o nível ser completado
     console.log(`Palavra encontrada: ${word}, mas pontos só serão contabilizados ao completar o nível`);
     
     toast({
@@ -64,7 +81,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleLevelComplete = (levelScore: number) => {
-    // Agora sim contabiliza os pontos no ranking
     const newTotalScore = totalScore + levelScore;
     setTotalScore(newTotalScore);
     
@@ -82,7 +98,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
       setIsGameStarted(false);
       setTimeout(() => {
         setIsGameStarted(true);
-        resetTimer(); // Reset timer para o novo nível
+        resetTimer();
       }, 100);
       
       toast({
@@ -99,15 +115,9 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleStopGame = async () => {
-    try {
-      // Marcar a sessão como completada (participação realizada)
-      await competitionParticipationService.markUserAsParticipated(challengeId);
-      await gameService.completeGameSession(challengeId);
-      onBack();
-    } catch (error) {
-      console.error('Erro ao finalizar jogo:', error);
-      onBack();
-    }
+    console.log('🛑 Usuário escolheu parar o jogo');
+    await markParticipationAsCompleted();
+    onBack();
   };
 
   const handleRevive = () => {
@@ -121,19 +131,13 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleCompleteGame = async () => {
-    try {
-      // Marcar a sessão como completada (participação realizada)
-      await competitionParticipationService.markUserAsParticipated(challengeId);
-      await gameService.completeGameSession(challengeId);
-      toast({
-        title: "Jogo finalizado!",
-        description: `Pontuação final: ${totalScore} pontos`,
-      });
-      onBack();
-    } catch (error) {
-      console.error('Erro ao finalizar jogo:', error);
-      onBack();
-    }
+    console.log('🏆 Finalizando jogo após completar todos os níveis');
+    await markParticipationAsCompleted();
+    toast({
+      title: "Jogo finalizado!",
+      description: `Pontuação final: ${totalScore} pontos`,
+    });
+    onBack();
   };
 
   if (gameCompleted) {
