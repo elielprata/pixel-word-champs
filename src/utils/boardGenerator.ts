@@ -5,11 +5,11 @@ import { type Position } from '@/utils/boardUtils';
 export class BoardGenerator {
   static generateSmartBoard(size: number, words: string[]): WordPlacementResult {
     let attempts = 0;
-    const maxBoardAttempts = 5;
+    const maxBoardAttempts = 8; // Aumentar tentativas para tabuleiros maiores
     
     while (attempts < maxBoardAttempts) {
       attempts++;
-      console.log(`Tentativa ${attempts} de gerar o tabuleiro`);
+      console.log(`Tentativa ${attempts} de gerar o tabuleiro ${size}x${size}`);
       
       const result = this.generateSingleBoard(size, words);
       
@@ -30,18 +30,19 @@ export class BoardGenerator {
     const wordPlacer = new WordPlacer(size);
     const directions: Array<'horizontal' | 'vertical' | 'diagonal'> = ['horizontal', 'vertical', 'diagonal'];
     
-    // Sort words by length (largest first for better space utilization)
+    // Ordenar palavras por tamanho (maiores primeiro para melhor utilização do espaço)
     const sortedWords = [...words].sort((a, b) => b.length - a.length);
     
     for (const word of sortedWords) {
       let placed = false;
       let attempts = 0;
-      const maxAttempts = 300;
+      // Aumentar tentativas proporcionalmente ao tamanho do tabuleiro
+      const maxAttempts = Math.min(500, size * size * 10);
       
       while (!placed && attempts < maxAttempts) {
         attempts++;
         
-        // Shuffle directions
+        // Embaralhar direções para variedade
         const shuffledDirections = [...directions].sort(() => Math.random() - 0.5);
         
         for (const direction of shuffledDirections) {
@@ -49,14 +50,16 @@ export class BoardGenerator {
           
           if (maxRow <= 0 || maxCol <= 0) continue;
           
-          // Try multiple positions
-          for (let posAttempt = 0; posAttempt < 50; posAttempt++) {
+          // Tentar múltiplas posições com distribuição mais inteligente
+          const positionAttempts = Math.min(100, maxRow * maxCol);
+          for (let posAttempt = 0; posAttempt < positionAttempts; posAttempt++) {
             const startRow = Math.floor(Math.random() * maxRow);
             const startCol = Math.floor(Math.random() * maxCol);
             
             if (wordPlacer.canPlaceWord(word, startRow, startCol, direction)) {
               wordPlacer.placeWord(word, startRow, startCol, direction);
               placed = true;
+              console.log(`✅ Palavra "${word}" (${word.length} letras) colocada em ${direction}`);
               break;
             }
           }
@@ -66,7 +69,7 @@ export class BoardGenerator {
       }
       
       if (!placed) {
-        console.warn(`Não foi possível colocar a palavra: ${word}`);
+        console.warn(`❌ Não foi possível colocar a palavra: ${word} (${word.length} letras)`);
         break;
       }
     }
@@ -78,7 +81,10 @@ export class BoardGenerator {
     const wordPlacer = new WordPlacer(size);
     const directions: Array<'horizontal' | 'vertical' | 'diagonal'> = ['horizontal', 'vertical', 'diagonal'];
     
-    for (const word of words) {
+    // Ordenar por tamanho para colocar palavras maiores primeiro
+    const sortedWords = [...words].sort((a, b) => b.length - a.length);
+    
+    for (const word of sortedWords) {
       let placed = false;
       
       for (const direction of directions) {
@@ -93,32 +99,59 @@ export class BoardGenerator {
             if (wordPlacer.canPlaceWord(word, row, col, direction)) {
               wordPlacer.placeWord(word, row, col, direction);
               placed = true;
-              console.log(`✅ Palavra "${word}" colocada com força bruta em ${direction}`);
+              console.log(`✅ Palavra "${word}" (${word.length} letras) colocada com força bruta em ${direction}`);
             }
           }
         }
       }
       
       if (!placed) {
-        console.error(`❌ ERRO CRÍTICO: Não foi possível colocar a palavra "${word}" mesmo com força bruta!`);
+        console.error(`❌ ERRO CRÍTICO: Não foi possível colocar a palavra "${word}" (${word.length} letras) mesmo com força bruta!`);
+        // Em caso de falha, tentar colocar uma versão truncada da palavra
+        if (word.length > 3) {
+          const truncatedWord = word.substring(0, Math.min(word.length - 1, size - 1));
+          console.log(`🔄 Tentando versão truncada: "${truncatedWord}"`);
+          
+          for (const direction of directions) {
+            const { maxRow, maxCol } = this.getDirectionLimits(direction, size, truncatedWord.length);
+            
+            if (maxRow <= 0 || maxCol <= 0) continue;
+            
+            for (let row = 0; row < maxRow; row++) {
+              for (let col = 0; col < maxCol; col++) {
+                if (wordPlacer.canPlaceWord(truncatedWord, row, col, direction)) {
+                  wordPlacer.placeWord(truncatedWord, row, col, direction);
+                  console.log(`✅ Versão truncada "${truncatedWord}" colocada!`);
+                  placed = true;
+                  break;
+                }
+              }
+              if (placed) break;
+            }
+            if (placed) break;
+          }
+        }
       }
     }
     
     const result = wordPlacer.getResult();
     this.fillEmptySpaces(result.board, size);
     
-    console.log(`🎯 Resultado final: ${result.placedWords.length}/${words.length} palavras colocadas`);
+    console.log(`🎯 Resultado final: ${result.placedWords.length}/${words.length} palavras colocadas no tabuleiro ${size}x${size}`);
     return result;
   }
 
   private static getDirectionLimits(direction: 'horizontal' | 'vertical' | 'diagonal', size: number, wordLength: number) {
     switch (direction) {
       case 'horizontal':
-        return { maxRow: size, maxCol: size - wordLength + 1 };
+        return { maxRow: size, maxCol: Math.max(1, size - wordLength + 1) };
       case 'vertical':
-        return { maxRow: size - wordLength + 1, maxCol: size };
+        return { maxRow: Math.max(1, size - wordLength + 1), maxCol: size };
       case 'diagonal':
-        return { maxRow: size - wordLength + 1, maxCol: size - wordLength + 1 };
+        return { 
+          maxRow: Math.max(1, size - wordLength + 1), 
+          maxCol: Math.max(1, size - wordLength + 1) 
+        };
       default:
         return { maxRow: 0, maxCol: 0 };
     }
