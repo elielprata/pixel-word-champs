@@ -1,4 +1,3 @@
-
 import React from 'react';
 import BottomNavigation from '@/components/BottomNavigation';
 import HomeScreen from '@/components/HomeScreen';
@@ -11,6 +10,7 @@ import ChallengeScreen from '@/components/ChallengeScreen';
 import SettingsScreen from '@/components/SettingsScreen';
 import HelpSupportScreen from '@/components/HelpSupportScreen';
 import AchievementsScreen from '@/components/AchievementsScreen';
+import GameRulesScreen from '@/components/GameRulesScreen';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
 
 const Index = () => {
@@ -18,6 +18,8 @@ const Index = () => {
     navigationState,
     setActiveTab,
     handleStartChallenge,
+    handleStartGameFromRules,
+    handleBackFromRules,
     handleBackToHome,
     handleViewFullRanking,
     handleBackFromFullRanking,
@@ -38,7 +40,8 @@ const Index = () => {
     challengeRankingId,
     showSettings,
     showHelp,
-    showAchievements
+    showAchievements,
+    showGameRules
   } = navigationState;
 
   // Se há um desafio ativo, mostrar a tela do jogo
@@ -47,6 +50,15 @@ const Index = () => {
       <ChallengeScreen 
         challengeId={activeChallenge}
         onBack={handleBackToHome}
+      />
+    );
+  }
+
+  if (showGameRules) {
+    return (
+      <GameRulesScreen 
+        onBack={handleBackFromRules}
+        onStartGame={handleStartGameFromRules}
       />
     );
   }

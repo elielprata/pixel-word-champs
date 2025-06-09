@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 
 export interface NavigationState {
@@ -9,6 +8,8 @@ export interface NavigationState {
   showSettings: boolean;
   showHelp: boolean;
   showAchievements: boolean;
+  showGameRules: boolean;
+  pendingChallengeId: number | null;
 }
 
 export const useAppNavigation = () => {
@@ -20,6 +21,8 @@ export const useAppNavigation = () => {
     showSettings: false,
     showHelp: false,
     showAchievements: false,
+    showGameRules: false,
+    pendingChallengeId: null,
   });
 
   const setActiveTab = (tab: string) => {
@@ -29,8 +32,26 @@ export const useAppNavigation = () => {
   const handleStartChallenge = (challengeId: number) => {
     setNavigationState(prev => ({ 
       ...prev, 
-      activeChallenge: challengeId,
+      showGameRules: true,
+      pendingChallengeId: challengeId,
       activeTab: 'home'
+    }));
+  };
+
+  const handleStartGameFromRules = () => {
+    setNavigationState(prev => ({
+      ...prev,
+      showGameRules: false,
+      activeChallenge: prev.pendingChallengeId,
+      pendingChallengeId: null
+    }));
+  };
+
+  const handleBackFromRules = () => {
+    setNavigationState(prev => ({
+      ...prev,
+      showGameRules: false,
+      pendingChallengeId: null
     }));
   };
 
@@ -86,6 +107,8 @@ export const useAppNavigation = () => {
     navigationState,
     setActiveTab,
     handleStartChallenge,
+    handleStartGameFromRules,
+    handleBackFromRules,
     handleBackToHome,
     handleViewFullRanking,
     handleBackFromFullRanking,
