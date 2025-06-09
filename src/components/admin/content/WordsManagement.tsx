@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tag, list } from 'lucide-react';
+import { Tag, List } from 'lucide-react';
 import { CategoriesManagement } from './CategoriesManagement';
 import { WordsListView } from './WordsListView';
 
@@ -15,7 +15,7 @@ export const WordsManagement = () => {
             Categorias & IA
           </TabsTrigger>
           <TabsTrigger value="words" className="flex items-center gap-2">
-            <list className="h-4 w-4" />
+            <List className="h-4 w-4" />
             Lista de Palavras
           </TabsTrigger>
         </TabsList>
