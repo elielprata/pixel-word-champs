@@ -1,24 +1,12 @@
 
 import { ApiResponse } from '@/types';
-import { createSuccessResponse } from '@/utils/apiHelpers';
-import { competitionParticipationService } from './competitionParticipationService';
-import { competitionFinalizationService } from './competitionFinalizationService';
-import { competitionTimeService } from './competitionTimeService';
-import { competitionAutoParticipationService } from './competitionAutoParticipationService';
-import { competitionQueryService } from './competitionQueryService';
+import { dailyCompetitionCoreService } from './dailyCompetition/dailyCompetitionCore';
+import { dailyCompetitionParticipationService } from './dailyCompetition/dailyCompetitionParticipation';
+import { dailyCompetitionFinalizationService } from './dailyCompetition/dailyCompetitionFinalization';
 
 class DailyCompetitionService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
-    const response = await competitionQueryService.getActiveDailyCompetitions();
-    
-    if (!response.success || !response.data) {
-      return response;
-    }
-
-    await competitionTimeService.adjustCompetitionTimes(response.data);
-    const activeCompetitions = competitionTimeService.filterActiveCompetitions(response.data);
-    
-    return createSuccessResponse(activeCompetitions);
+    return dailyCompetitionCoreService.getActiveDailyCompetitions();
   }
 
   async joinCompetitionAutomatically(sessionId: string): Promise<void> {
@@ -28,32 +16,30 @@ class DailyCompetitionService {
       return;
     }
 
-    await competitionAutoParticipationService.joinCompetitionAutomatically(
+    await dailyCompetitionParticipationService.joinCompetitionAutomatically(
       sessionId, 
       activeCompetitionsResponse.data
     );
   }
 
   async updateParticipationScore(sessionId: string, totalScore: number): Promise<void> {
-    return competitionAutoParticipationService.updateParticipationScore(sessionId, totalScore);
+    return dailyCompetitionParticipationService.updateParticipationScore(sessionId, totalScore);
   }
 
   async getDailyCompetitionRanking(competitionId: string): Promise<ApiResponse<any[]>> {
-    return competitionQueryService.getDailyCompetitionRanking(competitionId);
+    return dailyCompetitionCoreService.getDailyCompetitionRanking(competitionId);
   }
 
-  // Delegação para o serviço de finalização
   async finalizeDailyCompetition(competitionId: string): Promise<void> {
-    return competitionFinalizationService.finalizeDailyCompetition(competitionId);
+    return dailyCompetitionFinalizationService.finalizeDailyCompetition(competitionId);
   }
 
-  // Delegação para o serviço de participação
   async checkUserParticipation(userId: string, competitionId: string): Promise<boolean> {
-    return competitionParticipationService.checkUserParticipation(userId, competitionId);
+    return dailyCompetitionParticipationService.checkUserParticipation(userId, competitionId);
   }
 
   async updateCompetitionRankings(competitionId: string): Promise<void> {
-    return competitionParticipationService.updateCompetitionRankings(competitionId);
+    return dailyCompetitionParticipationService.updateCompetitionRankings(competitionId);
   }
 }
 
