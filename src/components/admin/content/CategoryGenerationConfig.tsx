@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, Zap, Info, AlertCircle, Sparkles } from 'lucide-react';
+import { Wand2, Zap, Info, AlertCircle, Sparkles, Database, CheckCircle } from 'lucide-react';
+import { useActiveWords } from '@/hooks/useActiveWords';
 
 interface Category {
   id: string;
@@ -26,13 +27,81 @@ export const CategoryGenerationConfig = ({
   onGenerateAllCategories 
 }: CategoryGenerationConfigProps) => {
   const [wordsCount, setWordsCount] = useState(5);
+  const { words, isLoading: isLoadingWords } = useActiveWords();
 
   const handleGenerateAll = () => {
     onGenerateAllCategories(wordsCount);
   };
 
+  // Agrupar palavras por categoria para mostrar estatísticas
+  const wordsByCategory = words.reduce((acc, word) => {
+    const category = word.category || 'Sem categoria';
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalWords = words.length;
+
   return (
     <>
+      {/* Status das palavras ativas no banco */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <Database className="h-5 w-5" />
+            Status do Banco de Palavras
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoadingWords ? (
+            <div className="flex items-center gap-2 text-blue-700">
+              <div className="animate-spin h-4 w-4 border-b-2 border-blue-600 rounded-full"></div>
+              <span>Verificando banco de palavras...</span>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-blue-700 font-medium">Total de palavras ativas:</span>
+                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 text-lg px-3 py-1">
+                  {totalWords.toLocaleString()}
+                </Badge>
+              </div>
+              
+              {totalWords > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-blue-800">Palavras por categoria:</h4>
+                  <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                    {Object.entries(wordsByCategory)
+                      .sort(([,a], [,b]) => b - a)
+                      .map(([category, count]) => (
+                        <div key={category} className="flex justify-between items-center text-xs bg-blue-100 rounded px-2 py-1">
+                          <span className="text-blue-800 truncate">{category}</span>
+                          <Badge variant="secondary" className="text-xs">{count}</Badge>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+              )}
+              
+              {totalWords === 0 && (
+                <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm">Nenhuma palavra ativa encontrada no banco. É recomendado gerar palavras antes de usar o sistema.</span>
+                </div>
+              )}
+              
+              {totalWords > 0 && (
+                <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg p-3">
+                  <CheckCircle className="h-4 w-4" />
+                  <span className="text-sm">Banco de palavras configurado e pronto para uso!</span>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Status da integração OpenAI - só mostra se não configurado */}
       {!openaiConfigured && (
         <Card className="bg-amber-50 border-amber-200">
@@ -90,6 +159,7 @@ export const CategoryGenerationConfig = ({
                       <p>• Uma única chamada da API para todas as categorias</p>
                       <p>• Muito mais rápido e econômico</p>
                       <p>• Total: {wordsCount} × {categories.length} = {wordsCount * categories.length} palavras</p>
+                      {totalWords > 0 && <p>• Palavras duplicadas serão automaticamente ignoradas</p>}
                     </div>
                   </div>
                 </div>
