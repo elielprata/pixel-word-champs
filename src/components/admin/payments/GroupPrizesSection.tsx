@@ -6,23 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Users, Edit, Save, X, Download } from 'lucide-react';
-
-interface GroupPrize {
-  id: string;
-  name: string;
-  range: string;
-  totalWinners: number;
-  prizePerWinner: number;
-  active: boolean;
-}
+import { GroupPrize } from '@/types/payment';
 
 interface GroupPrizesSectionProps {
   groupPrizes: GroupPrize[];
   editingGroup: string | null;
-  editGroupPrize: string;
-  setEditGroupPrize: (value: string) => void;
-  onEditGroup: (groupId: string) => void;
-  onSaveGroup: (groupId: string) => void;
+  editGroupPrize: GroupPrize | null;
+  setEditGroupPrize: (value: GroupPrize | null) => void;
+  onEditGroup: (group: GroupPrize) => void;
+  onSaveGroup: () => void;
   onToggleGroup: (groupId: string) => void;
   onCancel: () => void;
   onExportPix: (prizeLevel: string) => void;
@@ -88,16 +80,19 @@ export const GroupPrizesSection = ({
                   <div className="flex items-center gap-4">
                     <div className="text-center">
                       <p className="text-xs text-slate-500">Prêmio Individual</p>
-                      {editingGroup === group.id ? (
+                      {editingGroup === group.id && editGroupPrize ? (
                         <div className="flex items-center gap-1">
                           <span className="text-xs">R$</span>
                           <Input
-                            type="text"
-                            value={editGroupPrize}
-                            onChange={(e) => setEditGroupPrize(e.target.value)}
+                            type="number"
+                            value={editGroupPrize.prizePerWinner}
+                            onChange={(e) => setEditGroupPrize({
+                              ...editGroupPrize,
+                              prizePerWinner: Number(e.target.value) || 0
+                            })}
                             className="w-20 h-7 text-xs"
                             disabled={!group.active}
-                            placeholder="0,00"
+                            placeholder="0"
                           />
                         </div>
                       ) : (
@@ -118,7 +113,7 @@ export const GroupPrizesSection = ({
                       <>
                         <Button 
                           size="sm" 
-                          onClick={() => onSaveGroup(group.id)}
+                          onClick={onSaveGroup}
                           className="h-8 w-8 p-0"
                           disabled={!group.active}
                         >
@@ -138,7 +133,7 @@ export const GroupPrizesSection = ({
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => onEditGroup(group.id)}
+                          onClick={() => onEditGroup(group)}
                           className="h-8 w-8 p-0"
                           disabled={!group.active}
                         >
