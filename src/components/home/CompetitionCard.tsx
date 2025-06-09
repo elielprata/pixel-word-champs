@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, Clock, Calendar, Zap, Target, Flame } from 'lucide-react';
+import { Clock, Calendar, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -67,25 +67,6 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
       {/* Sparkle Effect Background */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
-      {/* Status Badge */}
-      <div className="absolute top-2 right-2 z-10">
-        <Badge 
-          variant="outline" 
-          className={`border-2 font-bold text-xs ${
-            timeStatus === 'urgent' 
-              ? 'border-red-400 bg-red-50 text-red-700 animate-pulse' 
-              : timeStatus === 'warning'
-              ? 'border-orange-400 bg-orange-50 text-orange-700'
-              : 'border-green-400 bg-green-50 text-green-700'
-          }`}
-        >
-          {timeStatus === 'urgent' && <Flame className="w-3 h-3 mr-1" />}
-          {timeStatus === 'warning' && <Zap className="w-3 h-3 mr-1" />}
-          {timeStatus === 'normal' && <Target className="w-3 h-3 mr-1" />}
-          ATIVO
-        </Badge>
-      </div>
-
       <CardContent className="p-4 relative z-10">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
@@ -99,31 +80,6 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
               </Badge>
             )}
           </div>
-        </div>
-
-        {/* Game Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
-            <Users className="w-4 h-4 text-blue-600" />
-            <div>
-              <span className="text-xs text-blue-600 font-medium block">Jogadores</span>
-              <span className="text-sm font-bold text-blue-800">
-                {competition.max_participants || '∞'}
-              </span>
-            </div>
-          </div>
-
-          {competition.prize_pool && (
-            <div className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg border border-yellow-200">
-              <div className="text-yellow-600">💰</div>
-              <div>
-                <span className="text-xs text-yellow-600 font-medium block">Prêmio</span>
-                <span className="text-sm font-bold text-yellow-800">
-                  R$ {competition.prize_pool}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Time Info */}
