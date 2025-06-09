@@ -33,7 +33,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
 
   useEffect(() => {
     checkParticipation();
-  }, [user]);
+  }, [user, competition.id]);
 
   const checkParticipation = async () => {
     if (!user) {
@@ -42,7 +42,8 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
     }
 
     try {
-      const response = await competitionParticipationService.hasUserParticipated(user.id);
+      // Verificar se o usuário já participou desta competição específica
+      const response = await competitionParticipationService.hasUserParticipatedInCompetition(user.id, competition.id);
       if (response.success) {
         setHasParticipated(response.hasParticipated);
       }
@@ -84,7 +85,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
     if (hasParticipated) {
       toast({
         title: "Participação já realizada",
-        description: "Você já participou desta competição hoje.",
+        description: "Você já participou desta competição.",
         variant: "destructive",
       });
       return;
@@ -95,7 +96,8 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
       
       const response = await gameService.createGameSession({
         level: 1,
-        boardSize: 10
+        boardSize: 10,
+        competitionId: competition.id
       });
 
       if (response.success) {
@@ -105,7 +107,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
           description: "Carregando as regras do jogo!",
         });
         
-        // Marcar usuário como participante
+        // Marcar usuário como participante desta competição
         setHasParticipated(true);
         
         // Usar o ID completo da sessão (UUID)
