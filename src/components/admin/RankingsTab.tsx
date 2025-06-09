@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,11 +12,16 @@ import { CreateCompetitionModal } from './rankings/CreateCompetitionModal';
 import { CompetitionHistory } from './rankings/CompetitionHistory';
 import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
 import { useRankings } from '@/hooks/useRankings';
-
 export const RankingsTab = () => {
   const [isPrizeConfigOpen, setIsPrizeConfigOpen] = useState(false);
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
-  const { weeklyRanking, weeklyCompetitions, activeWeeklyCompetition, isLoading, refreshData } = useRankings();
+  const {
+    weeklyRanking,
+    weeklyCompetitions,
+    activeWeeklyCompetition,
+    isLoading,
+    refreshData
+  } = useRankings();
 
   // Calcular prêmio total real baseado nos participantes semanais
   const totalPrizeDistributed = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
@@ -27,14 +31,11 @@ export const RankingsTab = () => {
     if (index <= 9) return total + 10;
     return total;
   }, 0);
-
   const handleCompetitionCreated = () => {
     console.log('🔄 Nova competição criada, atualizando dados...');
     refreshData();
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+  return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
         <RankingHeader />
@@ -44,13 +45,9 @@ export const RankingsTab = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-slate-600" />
-              <h2 className="text-lg font-semibold text-slate-900">Métricas dos Rankings</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Métricas das Competições</h2>
             </div>
-            <Button 
-              variant="outline" 
-              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
-              onClick={() => setIsPrizeConfigOpen(true)}
-            >
+            <Button variant="outline" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200" onClick={() => setIsPrizeConfigOpen(true)}>
               <Settings className="h-4 w-4 mr-2" />
               Configuração de Prêmios
             </Button>
@@ -78,10 +75,7 @@ export const RankingsTab = () => {
                   </TabsTrigger>
                 </TabsList>
                 
-                <Button 
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-                  onClick={() => setIsCreateCompetitionOpen(true)}
-                >
+                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700" onClick={() => setIsCreateCompetitionOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Competição
                 </Button>
@@ -121,12 +115,7 @@ export const RankingsTab = () => {
                   </div>
                 </div>
                 
-                <WeeklyCompetitionsView 
-                  competitions={weeklyCompetitions}
-                  activeCompetition={activeWeeklyCompetition}
-                  isLoading={isLoading}
-                  onRefresh={refreshData}
-                />
+                <WeeklyCompetitionsView competitions={weeklyCompetitions} activeCompetition={activeWeeklyCompetition} isLoading={isLoading} onRefresh={refreshData} />
               </TabsContent>
 
               <TabsContent value="history" className="space-y-6 mt-0">
@@ -148,17 +137,9 @@ export const RankingsTab = () => {
         </div>
 
         {/* Modals */}
-        <PrizeConfigModal 
-          open={isPrizeConfigOpen}
-          onOpenChange={setIsPrizeConfigOpen}
-        />
+        <PrizeConfigModal open={isPrizeConfigOpen} onOpenChange={setIsPrizeConfigOpen} />
         
-        <CreateCompetitionModal 
-          open={isCreateCompetitionOpen}
-          onOpenChange={setIsCreateCompetitionOpen}
-          onCompetitionCreated={handleCompetitionCreated}
-        />
+        <CreateCompetitionModal open={isCreateCompetitionOpen} onOpenChange={setIsCreateCompetitionOpen} onCompetitionCreated={handleCompetitionCreated} />
       </div>
-    </div>
-  );
+    </div>;
 };
