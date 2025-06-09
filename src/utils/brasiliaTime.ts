@@ -4,11 +4,20 @@
  */
 
 export const getBrasiliaTime = (): Date => {
-  return new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+  // Criar uma nova data e ajustar para UTC-3 (Brasília)
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const brasiliaOffset = -3; // UTC-3
+  const brasiliaTime = new Date(utc + (brasiliaOffset * 3600000));
+  
+  console.log('🕐 Horário UTC:', now.toISOString());
+  console.log('🇧🇷 Horário Brasília calculado:', brasiliaTime.toISOString());
+  
+  return brasiliaTime;
 };
 
 export const formatToBrasiliaString = (date: Date): string => {
-  return date.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"});
+  return date.toLocaleString("pt-BR", {timeZone: "America/Sao_Paulo"});
 };
 
 export const isBrasiliaDateInPast = (date: Date): boolean => {
@@ -28,5 +37,13 @@ export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): bo
   const brasiliaEnd = new Date(endDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
   const brasiliaNow = getBrasiliaTime();
   
-  return brasiliaNow >= brasiliaStart && brasiliaNow <= brasiliaEnd;
+  console.log('🔍 Verificando período ativo:');
+  console.log('  📅 Início:', brasiliaStart.toISOString());
+  console.log('  📅 Fim:', brasiliaEnd.toISOString());
+  console.log('  🕐 Agora:', brasiliaNow.toISOString());
+  
+  const isActive = brasiliaNow >= brasiliaStart && brasiliaNow <= brasiliaEnd;
+  console.log('  ✅ Ativo:', isActive);
+  
+  return isActive;
 };

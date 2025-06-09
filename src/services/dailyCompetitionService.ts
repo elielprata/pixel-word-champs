@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { getBrasiliaTime, isDateInCurrentBrasiliaRange } from '@/utils/brasiliaTime';
+import { getBrasiliaTime } from '@/utils/brasiliaTime';
 
 interface DailyCompetitionParticipation {
   id: string;
@@ -54,27 +54,24 @@ class DailyCompetitionService {
         });
       });
 
-      // Filtrar competições que estão dentro do período ativo usando horário de Brasília
+      // Filtrar competições que estão dentro do período ativo
+      // Usar diretamente as datas UTC do banco para comparação
       const activeCompetitions = data.filter(comp => {
         const startDate = new Date(comp.start_date);
         const endDate = new Date(comp.end_date);
+        const now = new Date(); // Usar UTC diretamente
         
-        // Converter horário de Brasília para UTC para comparação
-        const brasiliaTimeUTC = brasiliaTime.getTime();
-        const startTimeUTC = startDate.getTime();
-        const endTimeUTC = endDate.getTime();
-        
-        const isActive = brasiliaTimeUTC >= startTimeUTC && brasiliaTimeUTC <= endTimeUTC;
+        const isActive = now >= startDate && now <= endDate;
         
         console.log(`🔍 Verificando competição "${comp.title}":`, {
           id: comp.id,
           start: startDate.toISOString(),
           end: endDate.toISOString(),
-          brasiliaTime: brasiliaTime.toISOString(),
+          now: now.toISOString(),
           isActive: isActive,
-          startTimeUTC,
-          endTimeUTC,
-          brasiliaTimeUTC
+          startTime: startDate.getTime(),
+          endTime: endDate.getTime(),
+          currentTime: now.getTime()
         });
         
         return isActive;
@@ -103,12 +100,14 @@ class DailyCompetitionService {
           data.forEach(comp => {
             const startDate = new Date(comp.start_date);
             const endDate = new Date(comp.end_date);
+            const now = new Date();
             
             console.log(`- ${comp.title}:`);
             console.log(`  Início: ${startDate.toISOString()}`);
             console.log(`  Fim: ${endDate.toISOString()}`);
-            console.log(`  Brasília atual: ${brasiliaTime.toISOString()}`);
-            console.log(`  Timestamps - Start: ${startDate.getTime()}, End: ${endDate.getTime()}, Current: ${brasiliaTime.getTime()}`);
+            console.log(`  Agora: ${now.toISOString()}`);
+            console.log(`  Timestamps - Start: ${startDate.getTime()}, End: ${endDate.getTime()}, Current: ${now.getTime()}`);
+            console.log(`  Começou: ${now >= startDate}, Não terminou: ${now <= endDate}`);
           });
         }
       }
