@@ -9,6 +9,7 @@ import WeeklyCompetitionRanking from './pages/WeeklyCompetitionRanking';
 import NotFound from './pages/NotFound';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import AuthScreen from '@/components/auth/AuthScreen';
 import AuthProvider from '@/components/auth/AuthProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -30,6 +31,7 @@ function App() {
           <div className="App">
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<AuthScreen />} />
               <Route path="/admin" element={<AdminPanel />} />
               <Route path="/admin/competition/:competitionId/ranking" element={<DailyCompetitionRanking />} />
               <Route path="/admin/weekly-competition/:competitionId/ranking" element={<WeeklyCompetitionRanking />} />
