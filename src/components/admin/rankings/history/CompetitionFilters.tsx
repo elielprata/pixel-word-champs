@@ -67,7 +67,6 @@ export const CompetitionFilters: React.FC<CompetitionFiltersProps> = ({
               <SelectContent>
                 <SelectItem value="all">Todos os tipos</SelectItem>
                 <SelectItem value="weekly">Semanal</SelectItem>
-                <SelectItem value="tournament">Torneio</SelectItem>
                 <SelectItem value="challenge">Desafio</SelectItem>
               </SelectContent>
             </Select>
