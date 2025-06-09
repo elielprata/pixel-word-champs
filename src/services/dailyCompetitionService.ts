@@ -1,6 +1,8 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { getBrasiliaTime, isDateInCurrentBrasiliaRange } from '@/utils/brasiliaTime';
 
 interface DailyCompetitionParticipation {
   id: string;
@@ -16,10 +18,11 @@ class DailyCompetitionService {
     try {
       console.log('🔍 Buscando competições diárias ativas no banco...');
       
-      const now = new Date();
-      const nowISO = now.toISOString();
+      const brasiliaTime = getBrasiliaTime();
+      const today = brasiliaTime.toISOString().split('T')[0]; // YYYY-MM-DD
       
-      console.log('📅 Data atual para comparação:', nowISO);
+      console.log('📅 Data atual de Brasília:', brasiliaTime.toISOString());
+      console.log('📅 Data de hoje (formato):', today);
 
       // Buscar competições do tipo 'challenge' que estão ativas
       const { data, error } = await supabase
@@ -54,25 +57,22 @@ class DailyCompetitionService {
         });
       });
 
-      // Filtrar competições que estão dentro do período ativo
+      // Filtrar competições que estão dentro do período ativo (usando horário de Brasília)
       const activeCompetitions = data.filter(comp => {
         const startDate = new Date(comp.start_date);
         const endDate = new Date(comp.end_date);
-        const now = new Date();
         
-        const isWithinPeriod = startDate <= now && endDate >= now;
+        const isActive = isDateInCurrentBrasiliaRange(startDate, endDate);
         
         console.log(`🔍 Verificando competição "${comp.title}":`, {
           id: comp.id,
           start: startDate.toISOString(),
           end: endDate.toISOString(),
-          now: now.toISOString(),
-          startOk: startDate <= now,
-          endOk: endDate >= now,
-          isActive: isWithinPeriod
+          brasiliaTime: brasiliaTime.toISOString(),
+          isActive: isActive
         });
         
-        return isWithinPeriod;
+        return isActive;
       });
       
       console.log('✅ Competições ativas após filtro de data:', activeCompetitions.length);
@@ -98,12 +98,12 @@ class DailyCompetitionService {
           data.forEach(comp => {
             const startDate = new Date(comp.start_date);
             const endDate = new Date(comp.end_date);
-            const now = new Date();
             
-            console.log(`- ${comp.title}: ${startDate.toISOString()} até ${endDate.toISOString()}`);
-            console.log(`  Atual: ${now.toISOString()}`);
-            console.log(`  Começou? ${startDate <= now}`);
-            console.log(`  Terminou? ${endDate < now}`);
+            console.log(`- ${comp.title}:`);
+            console.log(`  Início: ${startDate.toISOString()}`);
+            console.log(`  Fim: ${endDate.toISOString()}`);
+            console.log(`  Brasília atual: ${brasiliaTime.toISOString()}`);
+            console.log(`  Está ativo: ${isDateInCurrentBrasiliaRange(startDate, endDate)}`);
           });
         }
       }

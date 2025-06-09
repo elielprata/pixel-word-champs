@@ -64,12 +64,47 @@ export const DailyCompetitionsManagement = () => {
     fetchCompetitions();
   }, []);
 
+  // Função para calcular o final do dia baseado na data de início
+  const calculateEndOfDay = (startDate: string): string => {
+    if (!startDate) return '';
+    
+    const date = new Date(startDate);
+    // Definir como final do dia (23:59:59.999)
+    date.setHours(23, 59, 59, 999);
+    
+    // Retornar no formato datetime-local
+    return date.toISOString().slice(0, 19);
+  };
+
+  // Função para definir o início do dia
+  const setStartOfDay = (dateString: string): string => {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    // Definir como início do dia (00:00:00.000)
+    date.setHours(0, 0, 0, 0);
+    
+    // Retornar no formato datetime-local
+    return date.toISOString().slice(0, 19);
+  };
+
+  const handleStartDateChange = (value: string) => {
+    const adjustedStartDate = setStartOfDay(value);
+    const adjustedEndDate = calculateEndOfDay(value);
+    
+    setNewCompetition({
+      ...newCompetition, 
+      start_date: adjustedStartDate,
+      end_date: adjustedEndDate
+    });
+  };
+
   const fetchCompetitions = async () => {
     try {
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('competition_type', 'daily')
+        .eq('competition_type', 'challenge')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -101,19 +136,24 @@ export const DailyCompetitionsManagement = () => {
 
   const addCompetition = async () => {
     try {
+      // Garantir que as datas estão corretas antes de salvar
+      const adjustedCompetition = {
+        ...newCompetition,
+        start_date: setStartOfDay(newCompetition.start_date),
+        end_date: calculateEndOfDay(newCompetition.start_date), // Usar start_date para calcular o final do mesmo dia
+        competition_type: 'challenge',
+        status: 'active' // Ativar automaticamente
+      };
+
       const { error } = await supabase
         .from('custom_competitions')
-        .insert([{
-          ...newCompetition,
-          competition_type: 'daily',
-          status: 'scheduled'
-        }]);
+        .insert([adjustedCompetition]);
 
       if (error) throw error;
 
       toast({
         title: "Sucesso",
-        description: "Competição diária criada com sucesso"
+        description: "Competição diária criada com sucesso (ativa do início ao fim do dia)"
       });
 
       setNewCompetition({
@@ -225,7 +265,7 @@ export const DailyCompetitionsManagement = () => {
               Competições Diárias
             </CardTitle>
             <p className="text-sm text-slate-600">
-              Gerencie competições diárias com temas específicos. Usuários só podem participar uma vez de cada competição.
+              Gerencie competições diárias com temas específicos. Duração: 00:00:00 às 23:59:59 do mesmo dia.
             </p>
             <div className="mt-2 flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
               <Clock className="h-3 w-3" />
@@ -277,23 +317,16 @@ export const DailyCompetitionsManagement = () => {
                     rows={3}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Data/Hora Início</Label>
-                    <Input 
-                      type="datetime-local"
-                      value={newCompetition.start_date}
-                      onChange={(e) => setNewCompetition({...newCompetition, start_date: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label>Data/Hora Fim</Label>
-                    <Input 
-                      type="datetime-local"
-                      value={newCompetition.end_date}
-                      onChange={(e) => setNewCompetition({...newCompetition, end_date: e.target.value})}
-                    />
-                  </div>
+                <div>
+                  <Label>Data do Desafio</Label>
+                  <Input 
+                    type="date"
+                    value={newCompetition.start_date.split('T')[0]}
+                    onChange={(e) => handleStartDateChange(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Competição será ativa das 00:00:00 às 23:59:59 desta data
+                  </p>
                 </div>
                 <div>
                   <Label>Máx. Participantes</Label>
