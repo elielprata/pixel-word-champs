@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -36,10 +35,13 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrizePool, setTotalPrizePool] = useState(0);
   const { toast } = useToast();
-  const { competitions, refetch } = useCompetitions();
+  const { customCompetitions, refetch } = useCompetitions();
 
-  // Filtrar competições semanais ativas para seleção
-  const weeklyTournaments = competitions.filter(comp => comp.type === 'weekly' && comp.is_active);
+  // Filtrar competições customizadas semanais ativas para seleção
+  const weeklyTournaments = customCompetitions.filter(comp => 
+    comp.competition_type === 'tournament' && 
+    (comp.status === 'active' || comp.status === 'scheduled')
+  );
 
   // Buscar configurações de prêmios ativas
   useEffect(() => {
