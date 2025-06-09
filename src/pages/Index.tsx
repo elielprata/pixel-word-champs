@@ -7,6 +7,7 @@ import InviteScreen from '@/components/InviteScreen';
 import ProfileScreen from '@/components/ProfileScreen';
 import FullRankingScreen from '@/components/FullRankingScreen';
 import ChallengeRankingScreen from '@/components/ChallengeRankingScreen';
+import ChallengeScreen from '@/components/ChallengeScreen';
 import SettingsScreen from '@/components/SettingsScreen';
 import HelpSupportScreen from '@/components/HelpSupportScreen';
 import AchievementsScreen from '@/components/AchievementsScreen';
@@ -32,12 +33,23 @@ const Index = () => {
 
   const {
     activeTab,
+    activeChallenge,
     showFullRanking,
     challengeRankingId,
     showSettings,
     showHelp,
     showAchievements
   } = navigationState;
+
+  // Se há um desafio ativo, mostrar a tela do jogo
+  if (activeChallenge) {
+    return (
+      <ChallengeScreen 
+        challengeId={activeChallenge}
+        onBack={handleBackToHome}
+      />
+    );
+  }
 
   if (showFullRanking) {
     return (

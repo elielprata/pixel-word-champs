@@ -4,6 +4,8 @@ import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { gameService } from '@/services/gameService';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Competition {
   id: string;
@@ -23,6 +25,8 @@ interface CompetitionCardProps {
 }
 
 const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps) => {
+  const { toast } = useToast();
+
   const formatTimeRemaining = (endDate: string) => {
     const now = new Date();
     const end = new Date(endDate);
@@ -48,6 +52,43 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
     if (hours <= 1) return 'text-red-600';
     if (hours <= 6) return 'text-orange-600';
     return 'text-emerald-600';
+  };
+
+  const handleStartGame = async () => {
+    try {
+      console.log('🎮 Iniciando nova sessão de jogo...');
+      
+      const response = await gameService.createGameSession({
+        level: 1,
+        boardSize: 10
+      });
+
+      if (response.success) {
+        console.log('✅ Sessão criada com sucesso:', response.data.id);
+        toast({
+          title: "Jogo iniciado!",
+          description: "Boa sorte na competição!",
+        });
+        
+        // Usar o ID da sessão como challenge ID
+        const sessionId = parseInt(response.data.id);
+        onStartChallenge(sessionId);
+      } else {
+        console.error('❌ Erro ao criar sessão:', response.error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível iniciar o jogo. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('❌ Erro ao iniciar jogo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -88,7 +129,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
 
           {/* Botão de ação */}
           <Button 
-            onClick={() => onStartChallenge(parseInt(competition.id))}
+            onClick={handleStartGame}
             className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-sm py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 border-amber-700/20"
           >
             🎯 PARTICIPAR AGORA
