@@ -1,9 +1,18 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tag, List } from 'lucide-react';
 import { CategoriesManagement } from './CategoriesManagement';
-import { WordsListTable } from './WordsListTable';
+
+// Manter o componente de lista de palavras existente para o futuro
+const WordsList = () => {
+  return (
+    <div className="text-center py-8 text-slate-500">
+      <List className="h-12 w-12 mx-auto mb-2 opacity-50" />
+      <p>Lista de palavras será implementada em breve</p>
+      <p className="text-sm mt-1">Por enquanto, use o sistema de categorias e geração IA</p>
+    </div>
+  );
+};
 
 export const WordsManagement = () => {
   return (
@@ -25,7 +34,7 @@ export const WordsManagement = () => {
         </TabsContent>
 
         <TabsContent value="words" className="mt-6">
-          <WordsListTable />
+          <WordsList />
         </TabsContent>
       </Tabs>
     </div>

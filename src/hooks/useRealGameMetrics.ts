@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useRealGameMetrics = () => {
-  const { data: metrics, isLoading, refetch } = useQuery({
+  const { data: metrics, isLoading } = useQuery({
     queryKey: ['gameMetrics'],
     queryFn: async () => {
       console.log('🔍 Buscando métricas do sistema...');
@@ -42,14 +42,11 @@ export const useRealGameMetrics = () => {
       console.log('📊 Métricas finais:', result);
       return result;
     },
-    refetchInterval: 5000, // Reduzir para 5 segundos para atualização mais rápida
-    staleTime: 0, // Considerar dados como stale imediatamente
-    gcTime: 0, // Não manter cache (renomeado de cacheTime para gcTime na v5)
+    refetchInterval: 30000, // Atualizar a cada 30 segundos
   });
 
   return {
     metrics: metrics || { activeWords: 0, activeCategories: 0 },
-    isLoading,
-    refetch
+    isLoading
   };
 };
