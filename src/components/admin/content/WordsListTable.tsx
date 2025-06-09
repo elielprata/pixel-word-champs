@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -141,9 +140,9 @@ export const WordsListTable = () => {
   }
 
   return (
-    <div className="space-y-6 h-[calc(100vh-200px)] flex flex-col">
+    <div className="space-y-6">
       {/* Header com estatísticas */}
-      <Card className="flex-shrink-0">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -180,7 +179,7 @@ export const WordsListTable = () => {
       </Card>
 
       {/* Filtros e Busca */}
-      <Card className="flex-shrink-0">
+      <Card>
         <CardContent className="p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Campo de busca */}
@@ -214,9 +213,9 @@ export const WordsListTable = () => {
         </CardContent>
       </Card>
 
-      {/* Tabela de palavras - Container com altura máxima específica */}
-      <Card className="flex-1 flex flex-col min-h-0 max-h-[600px]">
-        <CardContent className="p-0 flex-1 flex flex-col min-h-0 max-h-[600px]">
+      {/* Tabela de palavras */}
+      <Card>
+        <CardContent className="p-0">
           {filteredWords.length === 0 ? (
             <div className="text-center py-12">
               <div className="flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mx-auto mb-4">
@@ -234,68 +233,65 @@ export const WordsListTable = () => {
             </div>
           ) : (
             <>
-              {/* Container da tabela com altura máxima e scroll controlado */}
-              <div className="flex-1 min-h-0 max-h-[400px]">
-                <div className="h-full overflow-y-auto border border-slate-200 rounded-lg">
-                  <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-slate-50">
-                      <TableRow>
-                        <TableHead className="font-semibold text-slate-800 w-[200px]">Palavra</TableHead>
-                        <TableHead className="font-semibold text-slate-800 w-[200px]">Categoria</TableHead>
-                        <TableHead className="font-semibold text-slate-800 w-[120px]">Dificuldade</TableHead>
-                        <TableHead className="font-semibold text-slate-800">Data de Criação</TableHead>
+              <div className="overflow-hidden rounded-lg border border-slate-200">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="font-semibold text-slate-800 w-[200px]">Palavra</TableHead>
+                      <TableHead className="font-semibold text-slate-800 w-[200px]">Categoria</TableHead>
+                      <TableHead className="font-semibold text-slate-800 w-[120px]">Dificuldade</TableHead>
+                      <TableHead className="font-semibold text-slate-800">Data de Criação</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedWords.map((word, index) => (
+                      <TableRow 
+                        key={word.id} 
+                        className={`border-slate-200 hover:bg-slate-50 transition-colors ${
+                          index % 2 === 0 ? 'bg-white' : 'bg-slate-25'
+                        }`}
+                      >
+                        <TableCell className="py-4">
+                          <span className="font-semibold text-slate-900 uppercase tracking-wide text-base">
+                            {word.word}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-2">
+                            <FolderOpen className="h-4 w-4 text-slate-500" />
+                            <span className="text-sm text-slate-700 capitalize whitespace-nowrap">
+                              {word.category || 'Sem categoria'}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <Badge 
+                            variant="outline" 
+                            className={`${getDifficultyColor(word.difficulty)} font-medium text-xs`}
+                          >
+                            {getDifficultyLabel(word.difficulty)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <span className="text-sm text-slate-600">
+                            {new Date(word.created_at).toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedWords.map((word, index) => (
-                        <TableRow 
-                          key={word.id} 
-                          className={`border-slate-200 hover:bg-slate-50 transition-colors ${
-                            index % 2 === 0 ? 'bg-white' : 'bg-slate-25'
-                          }`}
-                        >
-                          <TableCell className="py-4">
-                            <span className="font-semibold text-slate-900 uppercase tracking-wide text-base">
-                              {word.word}
-                            </span>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className="flex items-center gap-2">
-                              <FolderOpen className="h-4 w-4 text-slate-500" />
-                              <span className="text-sm text-slate-700 capitalize whitespace-nowrap">
-                                {word.category || 'Sem categoria'}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <Badge 
-                              variant="outline" 
-                              className={`${getDifficultyColor(word.difficulty)} font-medium text-xs`}
-                            >
-                              {getDifficultyLabel(word.difficulty)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <span className="text-sm text-slate-600">
-                              {new Date(word.created_at).toLocaleDateString('pt-BR', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
 
-              {/* Paginação fixa na parte inferior */}
+              {/* Paginação corrigida */}
               {totalPages > 1 && (
-                <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-white">
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200">
                   <div className="text-sm text-slate-600">
                     Mostrando {startIndex + 1} a {endIndex} de {filteredWords.length} palavras
                   </div>
