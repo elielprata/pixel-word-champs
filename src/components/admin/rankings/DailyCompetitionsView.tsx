@@ -17,6 +17,7 @@ interface DailyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
+  total_participants: number;
   theme: string;
   rules: any;
 }
