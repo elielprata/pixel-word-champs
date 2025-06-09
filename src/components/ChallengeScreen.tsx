@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import GameBoard from './GameBoard';
 import { useGameTimer } from '@/hooks/useGameTimer';
-import { useGameState } from '@/hooks/useGameState';
 import { gameService } from '@/services/gameService';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChallengeScreenProps {
   challengeId: number;
@@ -18,9 +17,9 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
   const [gameSession, setGameSession] = useState<any>(null);
+  const [isGameStarted, setIsGameStarted] = useState(true);
   
-  const { timeLeft, resetTimer, pauseTimer, resumeTimer } = useGameTimer(180); // 3 minutos por nível
-  const { gameState, setGameState } = useGameState();
+  const { timeRemaining, extendTime } = useGameTimer(180, isGameStarted); // 3 minutos por nível
 
   useEffect(() => {
     loadGameSession();
@@ -75,7 +74,9 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   const handleAdvanceLevel = () => {
     setCurrentLevel(prev => prev + 1);
-    resetTimer();
+    // Reset the game started state to restart timer
+    setIsGameStarted(false);
+    setTimeout(() => setIsGameStarted(true), 100);
   };
 
   const handleStopGame = async () => {
@@ -85,6 +86,16 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     } catch (error) {
       console.error('Erro ao finalizar jogo:', error);
       onBack();
+    }
+  };
+
+  const handleRevive = () => {
+    const success = extendTime();
+    if (success) {
+      toast({
+        title: "Revive ativado!",
+        description: "Tempo estendido com sucesso",
+      });
     }
   };
 
@@ -115,12 +126,14 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
         <GameBoard
           level={currentLevel}
-          timeLeft={timeLeft}
+          timeLeft={timeRemaining}
           onWordFound={handleWordFound}
           onTimeUp={handleTimeUp}
           onLevelComplete={handleLevelComplete}
           onAdvanceLevel={handleAdvanceLevel}
           onStopGame={handleStopGame}
+          canRevive={true}
+          onRevive={handleRevive}
         />
       </div>
     </div>
