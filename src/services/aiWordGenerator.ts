@@ -53,6 +53,146 @@ const getExistingWordsForCategory = async (categoryName: string): Promise<string
   }
 };
 
+// Função para chamar a OpenAI API para uma categoria individual
+const callOpenAIAPI = async (categoryName: string, count: number, apiKey: string, config: any): Promise<string[]> => {
+  console.log('🤖 Iniciando chamada OpenAI individual com configurações:', {
+    category: categoryName,
+    count,
+    hasKey: !!apiKey,
+    keyLength: apiKey?.length || 0,
+    model: config.model,
+    maxTokens: config.maxTokens,
+    temperature: config.temperature
+  });
+
+  // Buscar palavras existentes para esta categoria
+  const existingWords = await getExistingWordsForCategory(categoryName);
+  
+  // PROMPT MELHORADO com contexto das palavras existentes
+  const existingWordsContext = existingWords.length > 0 
+    ? `JÁ EXISTEM ${existingWords.length} palavras (exemplos: ${existingWords.slice(0, 10).join(', ')})`
+    : 'categoria vazia';
+
+  const prompt = `Gere EXATAMENTE ${count} palavras DIFERENTES e CRIATIVAS em português para a categoria: ${categoryName}
+
+PALAVRAS JÁ EXISTENTES NO BANCO (EVITE ESTAS):
+${categoryName}: ${existingWordsContext}
+
+REGRAS OBRIGATÓRIAS:
+- EXATAMENTE ${count} palavras DIFERENTES
+- TODAS as palavras devem estar em MAIÚSCULAS
+- NENHUMA palavra pode ter acentos (á, à, â, ã, é, è, ê, í, ì, î, ó, ò, ô, õ, ú, ù, û, ç, ñ)
+- Apenas letras de A a Z (sem acentos, cedilhas ou til)
+- Palavras de 3-8 letras para diferentes níveis de dificuldade
+- NUNCA repetir palavras dentro da categoria
+- EVITE palavras muito óbvias ou que já existem (veja lista acima)
+- Seja CRIATIVO e use palavras menos comuns mas conhecidas
+
+ESTRATÉGIA DE CRIATIVIDADE:
+- Use sinônimos e variações menos óbvias
+- Explore subcategorias dentro do tema
+- Prefira palavras que jogadores não esperariam
+- Evite as palavras mais comuns da categoria
+
+DISTRIBUIÇÃO DE DIFICULDADE:
+- 20% palavras de 3-4 letras (fácil)
+- 30% palavras de 5 letras (médio) 
+- 30% palavras de 6-7 letras (difícil)
+- 20% palavras de 8+ letras (expert)
+
+Exemplos de palavras CORRETAS: ZEBRA, VIOLINO, BADMINTON, ARQUITETO, TELESCOPIO
+Exemplos de palavras INCORRETAS: ÁRVORE, CORAÇÃO, PÁSSARO (têm acentos)
+
+Retorne APENAS as palavras, uma por linha, sem numeração ou texto adicional:
+
+PALAVRA1
+PALAVRA2
+PALAVRA3`;
+
+  const requestBody = {
+    model: config.model || 'gpt-4o-mini',
+    messages: [
+      { 
+        role: 'system', 
+        content: 'Você é um especialista em gerar palavras únicas e criativas para jogos de caça-palavras. Retorne APENAS as palavras solicitadas, uma por linha, sem texto adicional. Seja criativo e evite palavras óbvias.'
+      },
+      { role: 'user', content: prompt }
+    ],
+    max_tokens: config.maxTokens || 300,
+    temperature: config.temperature || 0.8,
+  };
+
+  console.log('📤 Enviando requisição individual para OpenAI:', {
+    model: requestBody.model,
+    category: categoryName,
+    expectedWords: count,
+    maxTokens: requestBody.max_tokens,
+    temperature: requestBody.temperature,
+    existingWordsCount: existingWords.length
+  });
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  console.log('📥 Resposta da OpenAI:', response.status, response.statusText);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ Erro da OpenAI API:', errorText);
+    throw new Error(`OpenAI API error: ${response.status} - ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  console.log('📊 Dados recebidos da OpenAI:', {
+    choices: data.choices?.length || 0,
+    hasContent: !!data.choices?.[0]?.message?.content,
+    contentLength: data.choices?.[0]?.message?.content?.length || 0
+  });
+  
+  const content = data.choices[0].message.content;
+  console.log('📄 Conteúdo COMPLETO recebido da OpenAI:', content);
+  
+  try {
+    // Processar as palavras linha por linha
+    const words = content
+      .split('\n')
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0)
+      .map((word: string) => removeAccents(word).toUpperCase())
+      .filter((word: string) => isValidWord(word))
+      .slice(0, count);
+
+    console.log('✅ Palavras processadas:', {
+      categoria: categoryName,
+      esperadas: count,
+      processadas: words.length,
+      palavras: words
+    });
+
+    return words;
+    
+  } catch (parseError) {
+    console.error('❌ Erro ao processar palavras da OpenAI:', parseError);
+    console.log('📄 Conteúdo recebido que falhou no parse:', content);
+    
+    // Fallback: extrair palavras válidas do texto
+    const fallbackWords = content
+      .split(/[\n\r\s,]+/)
+      .map((word: string) => removeAccents(word.trim()).toUpperCase())
+      .filter((word: string) => isValidWord(word))
+      .slice(0, count);
+    
+    console.log('🔄 Fallback para categoria:', categoryName, 'palavras extraídas:', fallbackWords.length);
+    return fallbackWords;
+  }
+};
+
 // Função para chamar a OpenAI API com múltiplas categorias e contexto melhorado
 const callOpenAIAPIBatch = async (categories: Array<{id: string, name: string}>, countPerCategory: number, apiKey: string, config: any): Promise<Record<string, string[]>> => {
   console.log('🤖 Iniciando chamada OpenAI em lote com configurações:', {
