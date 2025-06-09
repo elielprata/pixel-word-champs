@@ -30,12 +30,11 @@ export const useBoard = (level: number) => {
   const [levelWords, setLevelWords] = useState<string[]>([]);
 
   const generateBoard = useCallback((size: number, words: string[]): BoardData => {
+    // Sempre gerar um tabuleiro, mesmo se não houver palavras
     if (words.length === 0) {
-      // Gerar um tabuleiro vazio se não houver palavras
-      return {
-        board: Array(size).fill(null).map(() => Array(size).fill('')),
-        placedWords: []
-      };
+      console.log('⚠️ Gerando tabuleiro com palavras padrão...');
+      const defaultWords = getDefaultWordsForSize(size);
+      return BoardGenerator.generateSmartBoard(size, defaultWords);
     }
     return BoardGenerator.generateSmartBoard(size, words);
   }, []);
@@ -57,17 +56,18 @@ export const useBoard = (level: number) => {
           .eq('is_active', true)
           .gte('char_length(word)', minWordLength)
           .lte('char_length(word)', maxWordLength)
-          .limit(10); // Buscar mais palavras para ter opções
+          .limit(10);
 
         if (error) {
           console.error('❌ Erro ao buscar palavras:', error);
-          setLevelWords([]);
+          const defaultWords = getDefaultWordsForSize(size);
+          setLevelWords(defaultWords);
           return;
         }
 
         let wordList = words?.map(w => w.word.toUpperCase()) || [];
         
-        // Se não houver palavras suficientes no banco, usar palavras padrão proporcionais
+        // Se não houver palavras suficientes no banco, usar palavras padrão
         if (wordList.length < 5) {
           console.log('⚠️ Poucas palavras no banco, usando palavras padrão...');
           const defaultWords = getDefaultWordsForSize(size);
@@ -92,8 +92,13 @@ export const useBoard = (level: number) => {
 
   // Regenerate board when level or words change
   useEffect(() => {
-    const size = getBoardSize(level);
-    setBoardData(generateBoard(size, levelWords));
+    if (levelWords.length > 0) {
+      const size = getBoardSize(level);
+      console.log('🎯 Gerando tabuleiro com palavras:', levelWords);
+      const newBoardData = generateBoard(size, levelWords);
+      console.log('🎲 Tabuleiro gerado:', newBoardData);
+      setBoardData(newBoardData);
+    }
   }, [level, levelWords, generateBoard]);
 
   const size = getBoardSize(level);
