@@ -75,12 +75,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             </h3>
             
             {competition.theme && (
-              <div className="flex items-center justify-between">
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-sm px-3 py-1 shadow-md">
-                  📝 {competition.theme}
-                </Badge>
-                <Search className="w-5 h-5 text-amber-600" />
-              </div>
+              <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-sm px-3 py-1 shadow-md">
+                📝 {competition.theme}
+              </Badge>
             )}
           </div>
 
