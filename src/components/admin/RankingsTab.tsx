@@ -66,11 +66,11 @@ export const RankingsTab = () => {
                 <TabsList className="grid grid-cols-3 bg-white border border-slate-200">
                   <TabsTrigger value="daily" className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
                     <Calendar className="h-4 w-4" />
-                    Ranking Diário
+                    Competições Diárias
                   </TabsTrigger>
                   <TabsTrigger value="weekly" className="flex items-center gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">
                     <Users className="h-4 w-4" />
-                    Ranking Semanal
+                    Competição Semanal
                   </TabsTrigger>
                   <TabsTrigger value="history" className="flex items-center gap-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700">
                     <History className="h-4 w-4" />
@@ -94,17 +94,17 @@ export const RankingsTab = () => {
                   <div className="space-y-1">
                     <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
                       <Calendar className="h-5 w-5 text-blue-600" />
-                      Ranking Diário
+                      Competições Diárias
                     </h3>
                     <p className="text-slate-600 text-sm">
-                      Gerencie o ranking diário e suas configurações de premiação
+                      Gerencie as competições diárias e suas configurações de premiação
                     </p>
                   </div>
                 </div>
                 {/* Conteúdo específico do ranking diário */}
                 <div className="text-center py-12 text-slate-500">
                   <Calendar className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-                  <p>Configurações e detalhes do ranking diário serão exibidos aqui</p>
+                  <p>Configurações e detalhes das competições diárias serão exibidos aqui</p>
                 </div>
               </TabsContent>
 
@@ -113,7 +113,7 @@ export const RankingsTab = () => {
                   <div className="space-y-1">
                     <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
                       <Users className="h-5 w-5 text-purple-600" />
-                      Ranking Semanal
+                      Competição Semanal
                     </h3>
                     <p className="text-slate-600 text-sm">
                       Competições semanais ativas e suas configurações

@@ -34,7 +34,7 @@ const UserPositionCard = ({ position, score, userName, type }: UserPositionCardP
             {getPositionIcon()}
             <div>
               <p className="font-semibold text-sm opacity-90">
-                {type === 'daily' ? 'Ranking Diário' : 'Ranking Semanal'}
+                {type === 'daily' ? 'Competições Diárias' : 'Competição Semanal'}
               </p>
               <p className="font-bold text-lg">Sua Posição: #{position}</p>
             </div>

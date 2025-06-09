@@ -16,14 +16,14 @@ export const RankingTabs = ({ activeTab }: RankingTabsProps) => {
           className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
         >
           <BarChart3 className="h-4 w-4 mr-2" />
-          Ranking Diário
+          Competições Diárias
         </TabsTrigger>
         <TabsTrigger 
           value="weekly"
           className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
         >
           <Trophy className="h-4 w-4 mr-2" />
-          Ranking Semanal
+          Competição Semanal
         </TabsTrigger>
       </TabsList>
       

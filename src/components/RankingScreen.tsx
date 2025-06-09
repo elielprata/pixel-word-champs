@@ -120,7 +120,7 @@ const RankingScreen = () => {
         <TabsList className="grid w-full grid-cols-3 bg-white border border-gray-200 shadow-sm">
           <TabsTrigger value="daily" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
             <Calendar className="w-4 h-4 mr-2" />
-            Diário
+            Diárias
           </TabsTrigger>
           <TabsTrigger value="weekly" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
             <Trophy className="w-4 h-4 mr-2" />
@@ -144,7 +144,7 @@ const RankingScreen = () => {
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
                 <Calendar className="w-5 h-5 text-purple-500" />
-                Ranking Diário
+                Competições Diárias
               </CardTitle>
               <p className="text-sm text-gray-600">Competição resetada diariamente</p>
             </CardHeader>
@@ -166,7 +166,7 @@ const RankingScreen = () => {
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
                 <Trophy className="w-5 h-5 text-purple-500" />
-                Ranking Semanal
+                Competição Semanal
               </CardTitle>
               <p className="text-sm text-gray-600">Competição com premiação semanal</p>
             </CardHeader>
