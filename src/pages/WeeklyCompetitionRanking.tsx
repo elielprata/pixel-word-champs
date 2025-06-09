@@ -8,6 +8,7 @@ import { ArrowLeft, Trophy, Users, Calendar, Medal, Crown } from 'lucide-react';
 import { customCompetitionService } from '@/services/customCompetitionService';
 import PlayerAvatar from '@/components/ui/PlayerAvatar';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 import {
   Table,
   TableBody,
@@ -47,6 +48,7 @@ interface CompetitionInfo {
   theme?: string;
   max_participants: number;
   prize_pool: number;
+  total_participants: number;
 }
 
 const ITEMS_PER_PAGE = 25;
@@ -63,26 +65,89 @@ export default function WeeklyCompetitionRanking() {
 
   useEffect(() => {
     if (competitionId) {
-      loadData();
+      loadCompetitionData();
     }
   }, [competitionId]);
 
-  const loadData = async () => {
+  const loadCompetitionData = async () => {
     if (!competitionId) return;
 
     setIsLoading(true);
     try {
+      console.log('🔄 Carregando dados da competição:', competitionId);
+
       // Carregar informações da competição
-      const competitionResponse = await customCompetitionService.getCompetitionById(competitionId);
-      if (competitionResponse.success) {
-        setCompetition(competitionResponse.data);
+      const { data: competitionData, error: competitionError } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('id', competitionId)
+        .single();
+
+      if (competitionError) {
+        console.error('❌ Erro ao carregar competição:', competitionError);
+        throw competitionError;
       }
 
-      // Carregar ranking da competição semanal
-      // Para competições semanais, vamos usar o ranking semanal geral por enquanto
-      // TODO: Implementar ranking específico da competição semanal quando disponível
-      const mockRanking: RankingParticipant[] = []; // Placeholder
-      setRanking(mockRanking);
+      console.log('✅ Competição carregada:', competitionData);
+
+      // Contar total de participantes
+      const { count: totalParticipants } = await supabase
+        .from('competition_participations')
+        .select('*', { count: 'exact', head: true })
+        .eq('competition_id', competitionId);
+
+      const competitionInfo: CompetitionInfo = {
+        id: competitionData.id,
+        title: competitionData.title,
+        description: competitionData.description || '',
+        start_date: competitionData.start_date,
+        end_date: competitionData.end_date,
+        status: competitionData.status,
+        theme: competitionData.theme,
+        max_participants: competitionData.max_participants || 0,
+        prize_pool: Number(competitionData.prize_pool) || 0,
+        total_participants: totalParticipants || 0
+      };
+
+      setCompetition(competitionInfo);
+
+      // Carregar ranking real da competição
+      const { data: rankingData, error: rankingError } = await supabase
+        .from('competition_participations')
+        .select(`
+          user_id,
+          user_score,
+          user_position,
+          created_at,
+          profiles!inner (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('competition_id', competitionId)
+        .not('user_position', 'is', null)
+        .order('user_position', { ascending: true });
+
+      if (rankingError) {
+        console.error('❌ Erro ao carregar ranking:', rankingError);
+        throw rankingError;
+      }
+
+      console.log('📊 Ranking carregado:', rankingData?.length || 0, 'participantes');
+
+      const rankingParticipants: RankingParticipant[] = (rankingData || []).map(item => ({
+        user_position: item.user_position || 0,
+        user_score: item.user_score || 0,
+        user_id: item.user_id || '',
+        created_at: item.created_at || '',
+        profiles: item.profiles ? {
+          username: item.profiles.username || 'Usuário',
+          avatar_url: item.profiles.avatar_url
+        } : null
+      }));
+
+      setRanking(rankingParticipants);
+
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);
       toast({
@@ -95,6 +160,35 @@ export default function WeeklyCompetitionRanking() {
     }
   };
 
+  // Monitorar mudanças em tempo real
+  useEffect(() => {
+    if (!competitionId) return;
+
+    console.log('🔄 Configurando monitoramento em tempo real para competição:', competitionId);
+
+    const channel = supabase
+      .channel(`competition-${competitionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'competition_participations',
+          filter: `competition_id=eq.${competitionId}`
+        },
+        (payload) => {
+          console.log('📡 Mudança detectada nas participações:', payload);
+          loadCompetitionData(); // Recarregar dados quando houver mudanças
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔌 Desconectando canal de tempo real');
+      supabase.removeChannel(channel);
+    };
+  }, [competitionId]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR', {
@@ -103,6 +197,20 @@ export default function WeeklyCompetitionRanking() {
       month: '2-digit',
       year: 'numeric'
     });
+  };
+
+  const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
+    const date = new Date(dateString);
+    const dateFormatted = date.toLocaleDateString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
+    
+    return `${dateFormatted}, ${timeFormatted}`;
   };
 
   const getPositionIcon = (position: number) => {
@@ -120,6 +228,19 @@ export default function WeeklyCompetitionRanking() {
       case 2: return 'bg-gray-100 text-gray-700 border-gray-200';
       case 3: return 'bg-amber-100 text-amber-700 border-amber-200';
       default: return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
+  const getPrizeAmount = (position: number) => {
+    if (!competition) return 0;
+    
+    const prizePool = competition.prize_pool;
+    
+    switch (position) {
+      case 1: return prizePool * 0.50; // 50% para o 1º lugar
+      case 2: return prizePool * 0.30; // 30% para o 2º lugar
+      case 3: return prizePool * 0.20; // 20% para o 3º lugar
+      default: return 0;
     }
   };
 
@@ -172,7 +293,11 @@ export default function WeeklyCompetitionRanking() {
                   <p className="text-slate-600 mt-1">{competition.description}</p>
                 </div>
                 <div className="text-right">
-                  <Badge className="mb-2">
+                  <Badge className={
+                    competition.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' :
+                    competition.status === 'completed' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                    'bg-blue-100 text-blue-700 border-blue-200'
+                  }>
                     {competition.status === 'active' ? 'Ativo' : 
                      competition.status === 'completed' ? 'Finalizado' : 'Agendado'}
                   </Badge>
@@ -187,15 +312,15 @@ export default function WeeklyCompetitionRanking() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 pt-4 border-t">
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Calendar className="h-4 w-4" />
-                  <span>Início: {formatDate(competition.start_date)}</span>
+                  <span>Início: {formatDateTime(competition.start_date, false)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Calendar className="h-4 w-4" />
-                  <span>Fim: {formatDate(competition.end_date)}</span>
+                  <span>Fim: {formatDateTime(competition.end_date, true)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Users className="h-4 w-4" />
-                  <span>Participantes: {ranking.length}/{competition.max_participants}</span>
+                  <span>Participantes: {competition.total_participants}/{competition.max_participants}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Trophy className="h-4 w-4" />
@@ -229,6 +354,7 @@ export default function WeeklyCompetitionRanking() {
                       <TableHead className="w-16">Posição</TableHead>
                       <TableHead>Jogador</TableHead>
                       <TableHead className="text-right w-24">Pontuação</TableHead>
+                      <TableHead className="text-right w-32">Prêmio</TableHead>
                       <TableHead className="text-right w-32">Participação</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -260,6 +386,15 @@ export default function WeeklyCompetitionRanking() {
                         </TableCell>
                         <TableCell className="text-right font-mono font-semibold">
                           {participant.user_score.toLocaleString()} pts
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {getPrizeAmount(participant.user_position) > 0 ? (
+                            <span className="font-semibold text-green-600">
+                              R$ {getPrizeAmount(participant.user_position).toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right text-sm text-slate-500">
                           {new Date(participant.created_at).toLocaleDateString('pt-BR')}
