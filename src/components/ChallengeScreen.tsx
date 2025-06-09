@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Trophy, Star } from 'lucide-react';
 import GameBoard from './GameBoard';
-import { useGameTimer } from '@/hooks/useGameTimer';
+import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { gameService } from '@/services/gameService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,7 +21,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const [gameCompleted, setGameCompleted] = useState(false);
   
   const maxLevels = 20; // Máximo de 20 níveis
-  const { timeRemaining, extendTime } = useGameTimer(180, isGameStarted); // 3 minutos por nível
+  const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(isGameStarted);
 
   useEffect(() => {
     loadGameSession();
@@ -77,7 +78,10 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     if (currentLevel < maxLevels) {
       setCurrentLevel(prev => prev + 1);
       setIsGameStarted(false);
-      setTimeout(() => setIsGameStarted(true), 100);
+      setTimeout(() => {
+        setIsGameStarted(true);
+        resetTimer(); // Reset timer para o novo nível
+      }, 100);
       
       toast({
         title: "Próximo nível!",

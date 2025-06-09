@@ -50,12 +50,13 @@ export const useBoard = (level: number) => {
         console.log(`🔍 Buscando palavras para nível ${level} (tabuleiro ${size}x${size})`);
         console.log(`📏 Tamanho das palavras: ${minWordLength} a ${maxWordLength} letras`);
         
+        // Usar LENGTH() ao invés de char_length() que não existe
         const { data: words, error } = await supabase
           .from('level_words')
           .select('word')
           .eq('is_active', true)
-          .gte('char_length(word)', minWordLength)
-          .lte('char_length(word)', maxWordLength)
+          .gte('LENGTH(word)', minWordLength)
+          .lte('LENGTH(word)', maxWordLength)
           .limit(10);
 
         if (error) {

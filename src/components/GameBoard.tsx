@@ -35,6 +35,7 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
+  // Usar palavras do banco de dados através do useBoard
   const { boardData, size, levelWords } = useBoard(level);
   const { 
     selectedCells, 
@@ -129,7 +130,7 @@ const GameBoard = ({
           <GameProgressBar 
             level={level}
             foundWords={foundWords.length}
-            totalWords={5}
+            totalWords={levelWords.length}
           />
           
           <GameStats 
