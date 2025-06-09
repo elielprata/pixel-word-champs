@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, Calendar, Users, Crown, Clock, Edit, Trash2, MapPin, Eye } from 'lucide-react';
+import { Trophy, Calendar, Users, Crown, Clock, Edit, Trash2, MapPin } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { EditCompetitionModal } from './EditCompetitionModal';
@@ -201,7 +200,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                     className="h-8 w-8 p-0 hover:bg-green-50"
                     title="Ver ranking"
                   >
-                    <Eye className="h-3 w-3" />
+                    <Trophy className="h-3 w-3" />
                   </Button>
                   <Button
                     variant="outline"
@@ -327,7 +326,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                         className="h-8 w-8 p-0 hover:bg-green-50"
                         title="Ver ranking"
                       >
-                        <Eye className="h-3 w-3" />
+                        <Trophy className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="outline"

@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users, Trophy, Edit, Trash2, Clock, Eye } from 'lucide-react';
+import { Calendar, Users, Trophy, Edit, Trash2, Clock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { EditCompetitionModal } from './EditCompetitionModal';
@@ -238,7 +237,7 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
                       className="h-8 w-8 p-0 hover:bg-green-50"
                       title="Ver ranking"
                     >
-                      <Eye className="h-3 w-3" />
+                      <Trophy className="h-3 w-3" />
                     </Button>
                     <Button
                       variant="outline"
