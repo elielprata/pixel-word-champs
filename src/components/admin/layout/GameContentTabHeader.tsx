@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { Badge } from "@/components/ui/badge";
-import { BookOpen, Crown } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 export const GameContentTabHeader = () => {
   return (
@@ -19,12 +18,6 @@ export const GameContentTabHeader = () => {
               Central de controle para palavras e configurações do jogo
             </p>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 px-3 py-1">
-            <Crown className="h-3 w-3 mr-1" />
-            Sistema Ativo
-          </Badge>
         </div>
       </div>
     </div>
