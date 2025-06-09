@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, Clock, Calendar, Star } from 'lucide-react';
+import { Users, Clock, Calendar, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -73,9 +73,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Star className="w-3 h-3 text-yellow-500" />
+            <Trophy className="w-3 h-3 text-yellow-500" />
             <span className="text-xs text-gray-600">
-              Pontos
+              Ranking
             </span>
           </div>
         </div>
