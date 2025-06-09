@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MessageSquare, AlertTriangle, CheckCircle, Clock, User, RefreshCw, Crown, Award, Filter, Search } from 'lucide-react';
+import { MessageSquare, AlertTriangle, CheckCircle, Clock, User, RefreshCw, Filter, Search } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -190,16 +189,6 @@ export const SupportTab = () => {
                   Gerencie reports de usuários e solicitações de suporte da plataforma
                 </p>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 px-3 py-1">
-                <Crown className="h-3 w-3 mr-1" />
-                Sistema Ativo
-              </Badge>
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
-                <Award className="h-3 w-3 mr-1" />
-                Suporte 24/7
-              </Badge>
             </div>
           </div>
         </div>
