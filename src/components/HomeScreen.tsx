@@ -84,9 +84,12 @@ const HomeScreen = ({ onViewFullRanking, onStartChallenge }: HomeScreenProps) =>
             <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-200">
               <Trophy className="w-12 h-12 mx-auto mb-3 text-gray-400" />
               <p className="text-gray-600 font-medium mb-2">Nenhum desafio ativo hoje</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 mb-4">
                 Aguarde novos desafios diários serem criados pelo administrador.
               </p>
+              <Button onClick={refetch} variant="outline" size="sm">
+                🔄 Verificar novamente
+              </Button>
             </div>
           )}
 
@@ -94,7 +97,7 @@ const HomeScreen = ({ onViewFullRanking, onStartChallenge }: HomeScreenProps) =>
             <div className="space-y-4">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-purple-600" />
-                Desafios Diários Ativos
+                Desafios Diários Ativos ({activeCompetitions.length})
               </h2>
               {activeCompetitions.map((competition) => (
                 <div key={competition.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">

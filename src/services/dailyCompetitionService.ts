@@ -21,10 +21,11 @@ class DailyCompetitionService {
       
       console.log('📅 Data atual (ISO):', nowISO);
       
+      // Buscar por competições diárias ou desafios ativos
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('competition_type', 'challenge')
+        .or('competition_type.eq.challenge,competition_type.eq.daily')
         .eq('status', 'active')
         .lte('start_date', nowISO)
         .gte('end_date', nowISO);
@@ -36,6 +37,20 @@ class DailyCompetitionService {
 
       console.log('📊 Dados retornados do banco:', data);
       console.log('✅ Número de competições encontradas:', data?.length || 0);
+      
+      // Se não encontrou nada, vamos tentar uma busca mais ampla para debug
+      if (!data || data.length === 0) {
+        console.log('🔍 Tentando busca mais ampla para debug...');
+        const { data: allCompetitions, error: debugError } = await supabase
+          .from('custom_competitions')
+          .select('*')
+          .eq('status', 'active');
+        
+        console.log('📊 Todas as competições ativas encontradas:', allCompetitions);
+        if (debugError) {
+          console.error('❌ Erro na busca de debug:', debugError);
+        }
+      }
       
       return createSuccessResponse(data || []);
     } catch (error) {
