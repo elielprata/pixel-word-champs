@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trophy } from 'lucide-react';
+import { ArrowLeft, Trophy, Star } from 'lucide-react';
 import GameBoard from './GameBoard';
 import { useGameTimer } from '@/hooks/useGameTimer';
 import { gameService } from '@/services/gameService';
@@ -77,7 +76,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const handleAdvanceLevel = () => {
     if (currentLevel < maxLevels) {
       setCurrentLevel(prev => prev + 1);
-      // Reset the game started state to restart timer
       setIsGameStarted(false);
       setTimeout(() => setIsGameStarted(true), 100);
       
@@ -86,7 +84,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
         description: `Avançando para o nível ${currentLevel + 1}`,
       });
     } else {
-      // Jogo completado - todos os 20 níveis foram concluídos
       setGameCompleted(true);
       toast({
         title: "🎉 Parabéns!",
@@ -131,21 +128,25 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   if (gameCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-green-50 p-4 flex items-center justify-center">
-        <div className="text-center bg-white rounded-2xl p-8 shadow-2xl max-w-md mx-auto">
-          <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-4" />
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-4 flex items-center justify-center">
+        <div className="text-center bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl max-w-md mx-auto border border-white/30">
+          <div className="relative mb-6">
+            <Trophy className="w-20 h-20 text-yellow-500 mx-auto" />
+            <Star className="w-6 h-6 text-yellow-400 absolute top-0 right-1/4 animate-pulse" />
+            <Star className="w-4 h-4 text-yellow-400 absolute bottom-2 left-1/4 animate-pulse" />
+          </div>
           <h1 className="text-3xl font-bold text-emerald-800 mb-2">🎉 Parabéns!</h1>
           <p className="text-lg text-gray-700 mb-4">
             Você completou todos os <strong>20 níveis</strong>!
           </p>
-          <div className="bg-emerald-50 rounded-lg p-4 mb-6">
-            <p className="text-2xl font-bold text-emerald-800">
+          <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl p-4 mb-6 text-white">
+            <p className="text-2xl font-bold">
               Pontuação Final: {totalScore}
             </p>
           </div>
           <Button 
             onClick={handleCompleteGame}
-            className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold py-3"
+            className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold py-3 rounded-2xl shadow-lg"
           >
             Finalizar Jogo
           </Button>
@@ -156,37 +157,44 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   if (!gameSession) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando jogo...</p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+        <div className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">Carregando jogo...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
       <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" size="icon" onClick={onBack}>
+        <div className="flex items-center justify-between mb-6">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onBack}
+            className="rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white"
+          >
             <ArrowLeft className="w-6 h-6" />
           </Button>
-          <div className="text-center">
-            <h1 className="text-xl font-bold text-purple-800">
+          
+          <div className="text-center bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg">
+            <h1 className="text-xl font-bold text-indigo-800">
               Nível {currentLevel} de {maxLevels}
             </h1>
             <div className="flex items-center justify-center gap-4 mt-1">
-              <p className="text-sm text-gray-600">Pontuação: {totalScore}</p>
+              <p className="text-sm text-gray-600 font-medium">Pontuação: {totalScore}</p>
               <div className="w-24 bg-gray-200 rounded-full h-2">
                 <div 
-                  className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${(currentLevel / maxLevels) * 100}%` }}
                 ></div>
               </div>
             </div>
           </div>
-          <div className="w-10"></div> {/* Spacer */}
+          
+          <div className="w-10"></div>
         </div>
 
         <GameBoard

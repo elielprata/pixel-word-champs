@@ -68,7 +68,7 @@ const GameBoard = ({
     setHintsUsed,
     setHintHighlightedCells,
     canRevive,
-    () => {}, // setCanRevive não é mais necessário aqui
+    () => {}, 
     setShowGameOver,
     onTimeUp
   );
@@ -79,7 +79,6 @@ const GameBoard = ({
     if (finalSelection.length >= 3) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
-      // Verificar se é uma palavra válida e se a direção é permitida
       if (levelWords.includes(word) && 
           !foundWords.some(fw => fw.word === word) && 
           isValidWordDirection(finalSelection)) {
@@ -96,57 +95,90 @@ const GameBoard = ({
     if (onRevive) {
       console.log('Iniciando processo de revive...');
       onRevive();
-      // Fechar o modal do Game Over após ativar o revive
       closeGameOver();
     }
   };
 
+  // Função para obter a cor específica de uma palavra encontrada
+  const getWordColor = (wordIndex: number) => {
+    const colors = [
+      'from-emerald-400 to-green-500',
+      'from-blue-400 to-indigo-500', 
+      'from-purple-400 to-violet-500',
+      'from-pink-400 to-rose-500',
+      'from-orange-400 to-amber-500',
+      'from-cyan-400 to-teal-500',
+      'from-red-400 to-pink-500',
+      'from-lime-400 to-green-500'
+    ];
+    return colors[wordIndex % colors.length];
+  };
+
+  // Função para verificar se uma célula pertence a uma palavra específica
+  const getCellWordIndex = (row: number, col: number) => {
+    return foundWords.findIndex(fw => 
+      fw.positions.some(pos => pos.row === row && pos.col === col)
+    );
+  };
+
   return (
-    <div className="flex flex-col items-center p-4 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
-      <div className="w-full max-w-md mb-6">
-        <GameProgressBar 
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+      <div className="max-w-md mx-auto space-y-6">
+        {/* Header com progresso */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
+          <GameProgressBar 
+            level={level}
+            foundWords={foundWords.length}
+            totalWords={5}
+          />
+          
+          <GameStats 
+            timeLeft={timeLeft}
+            hintsUsed={hintsUsed}
+            totalScore={foundWords.reduce((sum, fw) => sum + fw.points, 0)}
+            onUseHint={useHint}
+          />
+        </div>
+
+        {/* Tabuleiro principal */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-white/30">
+          <GameBoardGrid
+            boardData={boardData}
+            size={size}
+            selectedCells={selectedCells}
+            isSelecting={isSelecting}
+            isCellSelected={isCellSelected}
+            isCellPermanentlyMarked={isCellPermanentlyMarked}
+            isCellHintHighlighted={isCellHintHighlighted}
+            handleCellStart={handleCellStart}
+            handleCellMove={handleCellMoveWithValidation}
+            handleCellEndWithValidation={handleCellEndWithValidation}
+            getWordColor={getWordColor}
+            getCellWordIndex={getCellWordIndex}
+          />
+        </div>
+
+        {/* Lista de palavras */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20">
+          <WordsList 
+            levelWords={levelWords}
+            foundWords={foundWords}
+            getWordColor={getWordColor}
+          />
+        </div>
+
+        <GameModals
+          showGameOver={showGameOver}
+          showLevelComplete={showLevelComplete}
+          foundWords={foundWords}
           level={level}
-          foundWords={foundWords.length}
-          totalWords={5}
-        />
-        
-        <GameStats 
-          timeLeft={timeLeft}
-          hintsUsed={hintsUsed}
-          totalScore={foundWords.reduce((sum, fw) => sum + fw.points, 0)}
-          onUseHint={useHint}
+          canRevive={canRevive}
+          onRevive={handleReviveClick}
+          onGoHome={handleGoHome}
+          onAdvanceLevel={onAdvanceLevel}
+          onStopGame={onStopGame}
         />
       </div>
-
-      <GameBoardGrid
-        boardData={boardData}
-        size={size}
-        selectedCells={selectedCells}
-        isSelecting={isSelecting}
-        isCellSelected={isCellSelected}
-        isCellPermanentlyMarked={isCellPermanentlyMarked}
-        isCellHintHighlighted={isCellHintHighlighted}
-        handleCellStart={handleCellStart}
-        handleCellMove={handleCellMoveWithValidation}
-        handleCellEndWithValidation={handleCellEndWithValidation}
-      />
-
-      <WordsList 
-        levelWords={levelWords}
-        foundWords={foundWords}
-      />
-
-      <GameModals
-        showGameOver={showGameOver}
-        showLevelComplete={showLevelComplete}
-        foundWords={foundWords}
-        level={level}
-        canRevive={canRevive}
-        onRevive={handleReviveClick}
-        onGoHome={handleGoHome}
-        onAdvanceLevel={onAdvanceLevel}
-        onStopGame={onStopGame}
-      />
     </div>
   );
 };

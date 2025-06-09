@@ -14,6 +14,8 @@ interface GameBoardGridProps {
   handleCellStart: (row: number, col: number) => void;
   handleCellMove: (row: number, col: number) => void;
   handleCellEndWithValidation: () => void;
+  getWordColor: (wordIndex: number) => string;
+  getCellWordIndex: (row: number, col: number) => number;
 }
 
 const GameBoardGrid = ({
@@ -26,7 +28,9 @@ const GameBoardGrid = ({
   isCellHintHighlighted,
   handleCellStart,
   handleCellMove,
-  handleCellEndWithValidation
+  handleCellEndWithValidation,
+  getWordColor,
+  getCellWordIndex
 }: GameBoardGridProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const cellSize = getCellSize(size);
@@ -34,13 +38,13 @@ const GameBoardGrid = ({
   return (
     <div 
       ref={boardRef}
-      className="grid p-4 bg-white rounded-2xl shadow-lg mb-6"
+      className="grid mx-auto"
       style={{ 
         gridTemplateColumns: `repeat(${size}, 1fr)`,
-        gap: size > 7 ? '2px' : '4px',
-        maxWidth: size > 7 ? '350px' : '320px',
+        gap: size > 7 ? '3px' : '6px',
+        maxWidth: size > 7 ? '360px' : '340px',
         width: '100%',
-        touchAction: 'none' // Previne zoom e outros gestos
+        touchAction: 'none'
       }}
       onTouchEnd={(e) => {
         e.preventDefault();
@@ -65,6 +69,10 @@ const GameBoardGrid = ({
             onCellStart={handleCellStart}
             onCellMove={(row, col) => handleCellMove(row, col)}
             isSelecting={isSelecting}
+            wordColorClass={isCellPermanentlyMarked(rowIndex, colIndex) 
+              ? getWordColor(getCellWordIndex(rowIndex, colIndex))
+              : undefined
+            }
           />
         ))
       )}
