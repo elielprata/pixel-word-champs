@@ -5,17 +5,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useCompetitionIntegration } from '@/hooks/useCompetitionIntegration';
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
+
 const AdminPanel = () => {
   const navigate = useNavigate();
   const {
     logout
   } = useAuth();
+  
+  // Ativar integração completa de competições
+  useCompetitionIntegration();
+
   const handleLogout = async () => {
     await logout();
     navigate('/auth');
