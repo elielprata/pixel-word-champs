@@ -40,7 +40,6 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     description: '',
     startDate: '',
     endDate: '',
-    prizePool: 0,
     maxParticipants: 0
   });
 
@@ -54,7 +53,6 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
         description: competition.description,
         startDate: startDate.toISOString().slice(0, 16),
         endDate: endDate.toISOString().slice(0, 16),
-        prizePool: competition.prize_pool,
         maxParticipants: competition.max_participants
       });
     }
@@ -72,7 +70,6 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
         description: formData.description,
         startDate: new Date(formData.startDate),
         endDate: new Date(formData.endDate),
-        prizePool: formData.prizePool,
         maxParticipants: formData.maxParticipants,
         type: 'weekly'
       });
@@ -154,29 +151,15 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="prizePool">Prêmio Total (R$)</Label>
-              <Input
-                id="prizePool"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.prizePool}
-                onChange={(e) => setFormData({ ...formData, prizePool: parseFloat(e.target.value) || 0 })}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="maxParticipants">Máximo de Participantes</Label>
-              <Input
-                id="maxParticipants"
-                type="number"
-                min="1"
-                value={formData.maxParticipants}
-                onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) || 0 })}
-              />
-            </div>
+          <div>
+            <Label htmlFor="maxParticipants">Máximo de Participantes</Label>
+            <Input
+              id="maxParticipants"
+              type="number"
+              min="1"
+              value={formData.maxParticipants}
+              onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) || 0 })}
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
