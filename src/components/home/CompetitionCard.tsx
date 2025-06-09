@@ -21,7 +21,7 @@ interface Competition {
 
 interface CompetitionCardProps {
   competition: Competition;
-  onStartChallenge: (challengeId: number) => void;
+  onStartChallenge: (challengeId: string) => void;
 }
 
 const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps) => {
@@ -66,13 +66,12 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
       if (response.success) {
         console.log('✅ Sessão criada com sucesso:', response.data.id);
         toast({
-          title: "Jogo iniciado!",
-          description: "Boa sorte na competição!",
+          title: "Preparando jogo...",
+          description: "Carregando as regras do jogo!",
         });
         
-        // Usar o ID da sessão como challenge ID
-        const sessionId = parseInt(response.data.id);
-        onStartChallenge(sessionId);
+        // Usar o ID completo da sessão (UUID)
+        onStartChallenge(response.data.id);
       } else {
         console.error('❌ Erro ao criar sessão:', response.error);
         toast({

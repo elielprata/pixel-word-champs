@@ -1,15 +1,16 @@
+
 import { useState } from 'react';
 
 export interface NavigationState {
   activeTab: string;
-  activeChallenge: number | null;
+  activeChallenge: string | null;
   showFullRanking: boolean;
   challengeRankingId: number | null;
   showSettings: boolean;
   showHelp: boolean;
   showAchievements: boolean;
   showGameRules: boolean;
-  pendingChallengeId: number | null;
+  pendingChallengeId: string | null;
 }
 
 export const useAppNavigation = () => {
@@ -29,7 +30,7 @@ export const useAppNavigation = () => {
     setNavigationState(prev => ({ ...prev, activeTab: tab }));
   };
 
-  const handleStartChallenge = (challengeId: number) => {
+  const handleStartChallenge = (challengeId: string) => {
     setNavigationState(prev => ({ 
       ...prev, 
       showGameRules: true,

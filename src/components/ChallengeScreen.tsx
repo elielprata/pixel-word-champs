@@ -8,7 +8,7 @@ import { gameService } from '@/services/gameService';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChallengeScreenProps {
-  challengeId: number;
+  challengeId: string;
   onBack: () => void;
 }
 
@@ -29,7 +29,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   const loadGameSession = async () => {
     try {
-      const response = await gameService.getGameSession(challengeId.toString());
+      const response = await gameService.getGameSession(challengeId);
       if (response.success) {
         setGameSession(response.data);
         setCurrentLevel(response.data.level || 1);
@@ -97,7 +97,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   const handleStopGame = async () => {
     try {
-      await gameService.completeGameSession(challengeId.toString());
+      await gameService.completeGameSession(challengeId);
       onBack();
     } catch (error) {
       console.error('Erro ao finalizar jogo:', error);
@@ -117,7 +117,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   const handleCompleteGame = async () => {
     try {
-      await gameService.completeGameSession(challengeId.toString());
+      await gameService.completeGameSession(challengeId);
       toast({
         title: "Jogo finalizado!",
         description: `Pontuação final: ${totalScore} pontos`,
