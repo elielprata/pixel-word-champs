@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Calendar, Users, Crown, Clock } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Trophy, Calendar, Users, Crown, Clock, Edit, Trash2 } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { customCompetitionService } from '@/services/customCompetitionService';
 
 interface WeeklyCompetition {
   id: string;
@@ -20,13 +23,18 @@ interface WeeklyCompetitionsViewProps {
   competitions: WeeklyCompetition[];
   activeCompetition: WeeklyCompetition | null;
   isLoading: boolean;
+  onRefresh?: () => void;
 }
 
 export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   competitions,
   activeCompetition,
-  isLoading
+  isLoading,
+  onRefresh
 }) => {
+  const { toast } = useToast();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -52,6 +60,45 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
       case 'scheduled': return 'Agendado';
       case 'completed': return 'Finalizado';
       default: return 'Rascunho';
+    }
+  };
+
+  const handleEdit = (competition: WeeklyCompetition) => {
+    // TODO: Implementar modal de edição
+    toast({
+      title: "Editar competição",
+      description: `Funcionalidade de edição para "${competition.title}" será implementada em breve.`,
+    });
+  };
+
+  const handleDelete = async (competition: WeeklyCompetition) => {
+    if (!confirm(`Tem certeza que deseja excluir a competição "${competition.title}"?`)) {
+      return;
+    }
+
+    setDeletingId(competition.id);
+    
+    try {
+      // Por enquanto, simular exclusão - implementar com o serviço real
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Competição excluída",
+        description: `A competição "${competition.title}" foi excluída com sucesso.`,
+      });
+      
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error('Erro ao excluir competição:', error);
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir a competição. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -87,9 +134,34 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                 <Crown className="h-5 w-5 text-green-600" />
                 Competição Ativa
               </CardTitle>
-              <Badge className={getStatusColor(activeCompetition.status)}>
-                {getStatusText(activeCompetition.status)}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge className={getStatusColor(activeCompetition.status)}>
+                  {getStatusText(activeCompetition.status)}
+                </Badge>
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(activeCompetition)}
+                    className="h-8 w-8 p-0 hover:bg-blue-50"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(activeCompetition)}
+                    disabled={deletingId === activeCompetition.id}
+                    className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                  >
+                    {deletingId === activeCompetition.id ? (
+                      <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
+                    ) : (
+                      <Trash2 className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -180,6 +252,30 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                         <span>{competition.total_participants}/{competition.max_participants}</span>
                       </div>
                     </div>
+                  </div>
+                  
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(competition)}
+                      className="h-8 w-8 p-0 hover:bg-blue-50"
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(competition)}
+                      disabled={deletingId === competition.id}
+                      className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                    >
+                      {deletingId === competition.id ? (
+                        <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
+                      ) : (
+                        <Trash2 className="h-3 w-3" />
+                      )}
+                    </Button>
                   </div>
                 </div>
               </CardContent>

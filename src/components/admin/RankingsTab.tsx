@@ -17,7 +17,7 @@ import { useRankings } from '@/hooks/useRankings';
 export const RankingsTab = () => {
   const [isPrizeConfigOpen, setIsPrizeConfigOpen] = useState(false);
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
-  const { weeklyRanking, weeklyCompetitions, activeWeeklyCompetition, isLoading } = useRankings();
+  const { weeklyRanking, weeklyCompetitions, activeWeeklyCompetition, isLoading, refreshData } = useRankings();
 
   // Calcular prêmio total real baseado nos participantes semanais
   const totalPrizeDistributed = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
@@ -120,6 +120,7 @@ export const RankingsTab = () => {
                   competitions={weeklyCompetitions}
                   activeCompetition={activeWeeklyCompetition}
                   isLoading={isLoading}
+                  onRefresh={refreshData}
                 />
               </TabsContent>
 
