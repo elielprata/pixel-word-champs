@@ -21,8 +21,10 @@ export interface PaymentRecord {
 export const paymentService = {
   async getWinnersForPrizeLevel(prizeLevel: string): Promise<PaymentRecord[]> {
     try {
-      // Create a more specific query that includes position from daily_rankings
-      const { data, error } = await supabase
+      console.log('🔍 Buscando vencedores para nível de prêmio:', prizeLevel);
+      
+      // Buscar registros de pagamento com perfis de usuário
+      const { data: paymentRecords, error } = await supabase
         .from('payment_history')
         .select(`
           id,
@@ -37,101 +39,134 @@ export const paymentService = {
           notes,
           created_at,
           updated_at,
-          profiles!inner(username),
-          daily_rankings!left(position)
+          profiles!inner(username)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const records = (data || []).map((record: any) => ({
-        id: record.id,
-        user_id: record.user_id,
-        ranking_type: record.ranking_type,
-        ranking_id: record.ranking_id,
-        prize_amount: record.prize_amount,
-        payment_status: record.payment_status,
-        payment_date: record.payment_date,
-        pix_key: record.pix_key,
-        pix_holder_name: record.pix_holder_name,
-        notes: record.notes,
-        created_at: record.created_at,
-        updated_at: record.updated_at,
-        username: record.profiles?.username || 'Usuário',
-        position: record.daily_rankings?.position || 0
-      }));
+      // Buscar posições dos rankings
+      const { data: dailyRankings, error: rankingError } = await supabase
+        .from('daily_rankings')
+        .select('user_id, position, date')
+        .order('date', { ascending: false });
 
-      // Filter by prize level
-      if (prizeLevel.includes('1º ao 3º')) {
-        return records.filter(r => r.position >= 1 && r.position <= 3);
-      } else if (prizeLevel.includes('4º ao 10º')) {
-        return records.filter(r => r.position >= 4 && r.position <= 10);
-      } else if (prizeLevel.includes('11º ao 50º')) {
-        return records.filter(r => r.position >= 11 && r.position <= 50);
-      } else if (prizeLevel.includes('51º ao 100º')) {
-        return records.filter(r => r.position >= 51 && r.position <= 100);
+      if (rankingError) {
+        console.warn('⚠️ Aviso: Erro ao buscar rankings:', rankingError);
       }
 
-      return records;
+      // Mapear registros com informações completas
+      const records: PaymentRecord[] = (paymentRecords || []).map((record: any) => {
+        const ranking = dailyRankings?.find(r => r.user_id === record.user_id);
+        
+        return {
+          id: record.id,
+          user_id: record.user_id,
+          ranking_type: record.ranking_type,
+          ranking_id: record.ranking_id,
+          prize_amount: Number(record.prize_amount) || 0,
+          payment_status: record.payment_status,
+          payment_date: record.payment_date,
+          pix_key: record.pix_key,
+          pix_holder_name: record.pix_holder_name,
+          notes: record.notes,
+          created_at: record.created_at,
+          updated_at: record.updated_at,
+          username: record.profiles?.username || 'Usuário',
+          position: ranking?.position || 0
+        };
+      });
+
+      // Filtrar por nível de prêmio específico
+      let filteredRecords = records;
+      if (prizeLevel.includes('1º ao 3º')) {
+        filteredRecords = records.filter(r => r.position >= 1 && r.position <= 3);
+      } else if (prizeLevel.includes('4º ao 10º')) {
+        filteredRecords = records.filter(r => r.position >= 4 && r.position <= 10);
+      } else if (prizeLevel.includes('11º ao 50º')) {
+        filteredRecords = records.filter(r => r.position >= 11 && r.position <= 50);
+      } else if (prizeLevel.includes('51º ao 100º')) {
+        filteredRecords = records.filter(r => r.position >= 51 && r.position <= 100);
+      }
+
+      console.log('📊 Registros filtrados encontrados:', filteredRecords.length);
+      return filteredRecords;
     } catch (error) {
-      console.error('Error fetching winners:', error);
+      console.error('❌ Erro ao buscar vencedores:', error);
       return [];
     }
   },
 
   async markAsPaid(paymentId: string): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log('💰 Marcando pagamento como pago:', paymentId);
+      
       const { error } = await supabase
         .from('payment_history')
         .update({
           payment_status: 'paid',
-          payment_date: new Date().toISOString()
+          payment_date: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .eq('id', paymentId);
 
       if (error) throw error;
+      
+      console.log('✅ Pagamento marcado como pago com sucesso');
       return { success: true };
     } catch (error) {
-      console.error('Error marking payment as paid:', error);
+      console.error('❌ Erro ao marcar pagamento como pago:', error);
       return { success: false, error: 'Erro ao marcar pagamento como pago' };
     }
   },
 
   async createPaymentRecords(): Promise<void> {
     try {
-      // Buscar rankings recentes e criar registros de pagamento
+      console.log('📝 Criando registros de pagamento baseados nos rankings...');
+      
+      // Buscar rankings recentes com perfis de usuário
       const { data: dailyRankings, error: dailyError } = await supabase
         .from('daily_rankings')
         .select(`
-          *,
+          id,
+          user_id,
+          position,
+          score,
+          date,
           profiles!inner(username, pix_key, pix_holder_name)
         `)
         .eq('date', new Date().toISOString().split('T')[0])
-        .lte('position', 100);
+        .lte('position', 100)
+        .order('position', { ascending: true });
 
       if (dailyError) throw dailyError;
 
-      // Buscar configurações de prêmios
-      const { data: prizeConfigs } = await supabase
+      // Buscar configurações de prêmios ativas
+      const { data: prizeConfigs, error: prizeError } = await supabase
         .from('prize_configurations')
         .select('*')
         .eq('active', true);
 
-      if (!prizeConfigs) return;
+      if (prizeError) throw prizeError;
+
+      if (!dailyRankings?.length || !prizeConfigs?.length) {
+        console.log('ℹ️ Nenhum ranking ou configuração de prêmio encontrada');
+        return;
+      }
 
       // Criar registros de pagamento baseados nas configurações
       const paymentRecords = [];
 
-      for (const ranking of dailyRankings || []) {
+      for (const ranking of dailyRankings) {
         let prizeAmount = 0;
         
-        // Encontrar prêmio baseado na posição
+        // Verificar prêmios individuais
         const individualPrize = prizeConfigs.find(
           p => p.type === 'individual' && p.position === ranking.position
         );
         
         if (individualPrize) {
-          prizeAmount = individualPrize.prize_amount;
+          prizeAmount = Number(individualPrize.prize_amount) || 0;
         } else {
           // Verificar prêmios em grupo
           const groupPrize = prizeConfigs.find(p => {
@@ -141,7 +176,7 @@ export const paymentService = {
           });
           
           if (groupPrize) {
-            prizeAmount = groupPrize.prize_amount;
+            prizeAmount = Number(groupPrize.prize_amount) || 0;
           }
         }
 
@@ -164,9 +199,13 @@ export const paymentService = {
           .insert(paymentRecords);
 
         if (insertError) throw insertError;
+        
+        console.log('✅ Registros de pagamento criados:', paymentRecords.length);
+      } else {
+        console.log('ℹ️ Nenhum registro de pagamento para criar');
       }
     } catch (error) {
-      console.error('Error creating payment records:', error);
+      console.error('❌ Erro ao criar registros de pagamento:', error);
     }
   }
 };
