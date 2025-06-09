@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -193,6 +192,33 @@ class CustomCompetitionService {
     } catch (error) {
       console.error('❌ Erro na verificação de datas:', error);
       return false;
+    }
+  }
+
+  async deleteCompetition(id: string): Promise<ApiResponse<any>> {
+    try {
+      console.log('🗑️ Excluindo competição:', id);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { error } = await supabase
+        .from('custom_competitions')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('❌ Erro na exclusão:', error);
+        throw error;
+      }
+
+      console.log('✅ Competição excluída com sucesso');
+      return createSuccessResponse({ id });
+    } catch (error) {
+      console.error('❌ Erro ao excluir competição:', error);
+      return createErrorResponse(handleServiceError(error, 'DELETE_COMPETITION'));
     }
   }
 }

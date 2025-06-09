@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Calendar, Users, Crown, Clock, Edit, Trash2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
+import { EditCompetitionModal } from './EditCompetitionModal';
 
 interface WeeklyCompetition {
   id: string;
@@ -34,6 +35,8 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
 }) => {
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingCompetition, setEditingCompetition] = useState<WeeklyCompetition | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -64,11 +67,8 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   };
 
   const handleEdit = (competition: WeeklyCompetition) => {
-    // TODO: Implementar modal de edição
-    toast({
-      title: "Editar competição",
-      description: `Funcionalidade de edição para "${competition.title}" será implementada em breve.`,
-    });
+    setEditingCompetition(competition);
+    setIsEditModalOpen(true);
   };
 
   const handleDelete = async (competition: WeeklyCompetition) => {
@@ -79,26 +79,35 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
     setDeletingId(competition.id);
     
     try {
-      // Por enquanto, simular exclusão - implementar com o serviço real
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await customCompetitionService.deleteCompetition(competition.id);
       
-      toast({
-        title: "Competição excluída",
-        description: `A competição "${competition.title}" foi excluída com sucesso.`,
-      });
-      
-      if (onRefresh) {
-        onRefresh();
+      if (response.success) {
+        toast({
+          title: "Competição excluída",
+          description: `A competição "${competition.title}" foi excluída com sucesso.`,
+        });
+        
+        if (onRefresh) {
+          onRefresh();
+        }
+      } else {
+        throw new Error(response.error || 'Erro ao excluir competição');
       }
     } catch (error) {
       console.error('Erro ao excluir competição:', error);
       toast({
         title: "Erro ao excluir",
-        description: "Não foi possível excluir a competição. Tente novamente.",
+        description: error instanceof Error ? error.message : "Não foi possível excluir a competição. Tente novamente.",
         variant: "destructive",
       });
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleCompetitionUpdated = () => {
+    if (onRefresh) {
+      onRefresh();
     }
   };
 
@@ -283,6 +292,14 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Modal de Edição */}
+      <EditCompetitionModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        competition={editingCompetition}
+        onCompetitionUpdated={handleCompetitionUpdated}
+      />
     </div>
   );
 };
