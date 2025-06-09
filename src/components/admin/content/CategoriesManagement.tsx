@@ -9,26 +9,45 @@ import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
 import { useIntegrations } from '@/hooks/useIntegrations';
 
 export const CategoriesManagement = () => {
-  const { categories, isLoading } = useWordCategories();
+  const { 
+    categories, 
+    isLoading, 
+    createCategory, 
+    updateCategory, 
+    deleteCategory, 
+    isCreating, 
+    isUpdating, 
+    isDeleting 
+  } = useWordCategories();
+  
   const { generateWordsForAllCategories, isGenerating } = useAIWordGeneration();
-  const { integrations } = useIntegrations();
+  const { openAI } = useIntegrations();
 
-  const openaiConfigured = integrations?.openai_api_key ? true : false;
+  const openaiConfigured = openAI?.apiKey ? true : false;
 
   const handleGenerateAllCategories = (count: number) => {
-    generateWordsForAllCategories(count);
+    generateWordsForAllCategories({ categories, count });
   };
 
   return (
     <div className="space-y-6">
       {/* Formulário para criar nova categoria */}
-      <CategoryForm />
+      <CategoryForm 
+        onCreateCategory={createCategory}
+        isCreating={isCreating}
+      />
 
       {/* Upload via CSV */}
       <CSVUpload />
 
       {/* Lista de categorias existentes */}
-      <CategoryList />
+      <CategoryList 
+        categories={categories}
+        isUpdating={isUpdating}
+        isDeleting={isDeleting}
+        onUpdateCategory={updateCategory}
+        onDeleteCategory={deleteCategory}
+      />
 
       {/* Configuração de geração em lote */}
       <CategoryGenerationConfig
