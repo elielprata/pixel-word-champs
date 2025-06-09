@@ -64,33 +64,33 @@ export const DailyCompetitionsManagement = () => {
     fetchCompetitions();
   }, []);
 
-  // Função para calcular o final do dia baseado na data de início
-  const calculateEndOfDay = (startDate: string): string => {
-    if (!startDate) return '';
+  // Função para garantir que a data de fim seja sempre 23:59:59.999 do mesmo dia
+  const ensureEndOfDay = (dateString: string): string => {
+    if (!dateString) return '';
     
-    const date = new Date(startDate);
+    const date = new Date(dateString);
     // Definir como final do dia (23:59:59.999)
     date.setHours(23, 59, 59, 999);
     
-    // Retornar no formato datetime-local
-    return date.toISOString().slice(0, 19);
+    // Retornar no formato ISO
+    return date.toISOString();
   };
 
-  // Função para definir o início do dia
-  const setStartOfDay = (dateString: string): string => {
+  // Função para definir o início do dia como 00:00:00.000
+  const ensureStartOfDay = (dateString: string): string => {
     if (!dateString) return '';
     
     const date = new Date(dateString);
     // Definir como início do dia (00:00:00.000)
     date.setHours(0, 0, 0, 0);
     
-    // Retornar no formato datetime-local
-    return date.toISOString().slice(0, 19);
+    // Retornar no formato ISO
+    return date.toISOString();
   };
 
   const handleStartDateChange = (value: string) => {
-    const adjustedStartDate = setStartOfDay(value);
-    const adjustedEndDate = calculateEndOfDay(value);
+    const adjustedStartDate = ensureStartOfDay(value);
+    const adjustedEndDate = ensureEndOfDay(value);
     
     setNewCompetition({
       ...newCompetition, 
@@ -136,14 +136,19 @@ export const DailyCompetitionsManagement = () => {
 
   const addCompetition = async () => {
     try {
-      // Garantir que as datas estão corretas antes de salvar
+      // SEMPRE garantir que termine às 23:59:59.999 do mesmo dia
       const adjustedCompetition = {
         ...newCompetition,
-        start_date: setStartOfDay(newCompetition.start_date),
-        end_date: calculateEndOfDay(newCompetition.start_date), // Usar start_date para calcular o final do mesmo dia
+        start_date: ensureStartOfDay(newCompetition.start_date),
+        end_date: ensureEndOfDay(newCompetition.start_date), // Usar start_date para garantir mesmo dia
         competition_type: 'challenge',
         status: 'active' // Ativar automaticamente
       };
+
+      console.log('🎯 Criando competição diária com horários padronizados:', {
+        start: adjustedCompetition.start_date,
+        end: adjustedCompetition.end_date
+      });
 
       const { error } = await supabase
         .from('custom_competitions')
@@ -153,7 +158,7 @@ export const DailyCompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição diária criada com sucesso (ativa do início ao fim do dia)"
+        description: "Competição diária criada (00:00:00 às 23:59:59 do mesmo dia)"
       });
 
       setNewCompetition({
@@ -179,24 +184,32 @@ export const DailyCompetitionsManagement = () => {
     if (!editingCompetition) return;
 
     try {
+      // Para competições diárias, SEMPRE garantir que seja o dia completo
+      const updateData = {
+        title: editingCompetition.title,
+        description: editingCompetition.description,
+        theme: editingCompetition.theme,
+        start_date: ensureStartOfDay(editingCompetition.start_date),
+        end_date: ensureEndOfDay(editingCompetition.start_date), // Garantir 23:59:59 do mesmo dia
+        max_participants: editingCompetition.max_participants,
+        status: editingCompetition.status
+      };
+
+      console.log('🔧 Atualizando competição diária com horários padronizados:', {
+        start: updateData.start_date,
+        end: updateData.end_date
+      });
+
       const { error } = await supabase
         .from('custom_competitions')
-        .update({
-          title: editingCompetition.title,
-          description: editingCompetition.description,
-          theme: editingCompetition.theme,
-          start_date: editingCompetition.start_date,
-          end_date: editingCompetition.end_date,
-          max_participants: editingCompetition.max_participants,
-          status: editingCompetition.status
-        })
+        .update(updateData)
         .eq('id', editingCompetition.id);
 
       if (error) throw error;
 
       toast({
         title: "Sucesso",
-        description: "Competição diária atualizada com sucesso"
+        description: "Competição diária atualizada (horário padronizado: 00:00:00 às 23:59:59)"
       });
 
       setEditingCompetition(null);
@@ -265,11 +278,15 @@ export const DailyCompetitionsManagement = () => {
               Competições Diárias
             </CardTitle>
             <p className="text-sm text-slate-600">
-              Gerencie competições diárias com temas específicos. Duração: 00:00:00 às 23:59:59 do mesmo dia.
+              Gerencie competições diárias com temas específicos.
             </p>
-            <div className="mt-2 flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+            <div className="mt-2 flex items-center gap-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
               <Clock className="h-3 w-3" />
-              Pontos são automaticamente transferidos para a competição semanal quando finalizada
+              ✅ PADRÃO: Todas as competições duram 00:00:00 às 23:59:59 do mesmo dia
+            </div>
+            <div className="mt-1 flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+              <Target className="h-3 w-3" />
+              Pontos são automaticamente transferidos para a competição semanal
             </div>
           </div>
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
@@ -324,8 +341,8 @@ export const DailyCompetitionsManagement = () => {
                     value={newCompetition.start_date.split('T')[0]}
                     onChange={(e) => handleStartDateChange(e.target.value)}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Competição será ativa das 00:00:00 às 23:59:59 desta data
+                  <p className="text-xs text-green-600 mt-1 font-medium">
+                    ✅ Competição será ativa das 00:00:00 às 23:59:59 desta data (PADRÃO)
                   </p>
                 </div>
                 <div>
@@ -528,23 +545,24 @@ export const DailyCompetitionsManagement = () => {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Data/Hora Início</Label>
-                    <Input 
-                      type="datetime-local"
-                      value={editingCompetition.start_date}
-                      onChange={(e) => setEditingCompetition({...editingCompetition, start_date: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label>Data/Hora Fim</Label>
-                    <Input 
-                      type="datetime-local"
-                      value={editingCompetition.end_date}
-                      onChange={(e) => setEditingCompetition({...editingCompetition, end_date: e.target.value})}
-                    />
-                  </div>
+                <div>
+                  <Label>Data da Competição</Label>
+                  <Input 
+                    type="date"
+                    value={editingCompetition.start_date.split('T')[0]}
+                    onChange={(e) => {
+                      const newStartDate = ensureStartOfDay(e.target.value);
+                      const newEndDate = ensureEndOfDay(e.target.value);
+                      setEditingCompetition({
+                        ...editingCompetition, 
+                        start_date: newStartDate,
+                        end_date: newEndDate
+                      });
+                    }}
+                  />
+                  <p className="text-xs text-green-600 mt-1 font-medium">
+                    ✅ Será automaticamente configurada das 00:00:00 às 23:59:59
+                  </p>
                 </div>
                 <Button onClick={updateCompetition} className="w-full">
                   Salvar Alterações
