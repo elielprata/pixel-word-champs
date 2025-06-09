@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +16,7 @@ export const usePaymentData = () => {
 
   const fetchPrizeConfigurations = async () => {
     try {
-      console.log('🏆 Buscando configurações de prêmios...');
+      console.log('🏆 Buscando configurações de prêmios do banco...');
       
       const { data: prizeConfigs, error } = await supabase
         .from('prize_configurations')
@@ -23,6 +24,8 @@ export const usePaymentData = () => {
         .order('position', { ascending: true });
 
       if (error) throw error;
+
+      console.log('📊 Configurações carregadas do banco:', prizeConfigs?.length || 0);
 
       // Separar prêmios individuais e em grupo
       const individual: IndividualPrize[] = [];
@@ -47,16 +50,16 @@ export const usePaymentData = () => {
         }
       });
 
-      console.log('📊 Prêmios individuais carregados:', individual.length);
-      console.log('📊 Prêmios em grupo carregados:', groups.length);
+      console.log('📊 Prêmios individuais do banco:', individual.length);
+      console.log('📊 Prêmios em grupo do banco:', groups.length);
 
       setIndividualPrizes(individual);
       setGroupPrizes(groups);
     } catch (error) {
-      console.error('❌ Erro ao carregar configurações de prêmios:', error);
+      console.error('❌ Erro ao carregar configurações do banco:', error);
       toast({
         title: "Erro ao carregar prêmios",
-        description: "Não foi possível carregar as configurações de premiação.",
+        description: "Não foi possível carregar as configurações de premiação do banco de dados.",
         variant: "destructive",
       });
     } finally {
@@ -83,6 +86,8 @@ export const usePaymentData = () => {
 
       const prizeValue = parseFloat(editIndividualValue.replace(',', '.')) || 0;
 
+      console.log('💾 Salvando prêmio individual no banco:', { position, prizeValue });
+
       const { error } = await supabase
         .from('prize_configurations')
         .update({ 
@@ -106,13 +111,13 @@ export const usePaymentData = () => {
       
       toast({
         title: "Prêmio atualizado",
-        description: `Prêmio do ${position}º lugar atualizado com sucesso.`,
+        description: `Prêmio do ${position}º lugar atualizado no banco de dados.`,
       });
     } catch (error) {
-      console.error('❌ Erro ao atualizar prêmio individual:', error);
+      console.error('❌ Erro ao atualizar prêmio no banco:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o prêmio.",
+        description: "Não foi possível atualizar o prêmio no banco de dados.",
         variant: "destructive",
       });
     }
@@ -127,6 +132,8 @@ export const usePaymentData = () => {
     if (!editGroupPrize) return;
 
     try {
+      console.log('💾 Salvando grupo no banco:', editGroupPrize);
+
       const { error } = await supabase
         .from('prize_configurations')
         .update({
@@ -150,13 +157,13 @@ export const usePaymentData = () => {
       
       toast({
         title: "Grupo atualizado",
-        description: "Configurações do grupo atualizadas com sucesso.",
+        description: "Configurações do grupo atualizadas no banco de dados.",
       });
     } catch (error) {
-      console.error('❌ Erro ao atualizar grupo:', error);
+      console.error('❌ Erro ao atualizar grupo no banco:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o grupo.",
+        description: "Não foi possível atualizar o grupo no banco de dados.",
         variant: "destructive",
       });
     }
@@ -166,6 +173,8 @@ export const usePaymentData = () => {
     try {
       const group = groupPrizes.find(g => g.id === groupId);
       if (!group) return;
+
+      console.log('🔄 Alternando status do grupo no banco:', { groupId, currentStatus: group.active });
 
       const { error } = await supabase
         .from('prize_configurations')
@@ -185,13 +194,13 @@ export const usePaymentData = () => {
 
       toast({
         title: group.active ? "Grupo desativado" : "Grupo ativado",
-        description: `Grupo ${group.name} ${group.active ? 'desativado' : 'ativado'} com sucesso.`,
+        description: `Grupo ${group.name} ${group.active ? 'desativado' : 'ativado'} no banco de dados.`,
       });
     } catch (error) {
-      console.error('❌ Erro ao alternar estado do grupo:', error);
+      console.error('❌ Erro ao alternar estado do grupo no banco:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível alterar o estado do grupo.",
+        description: "Não foi possível alterar o estado do grupo no banco de dados.",
         variant: "destructive",
       });
     }
@@ -210,6 +219,7 @@ export const usePaymentData = () => {
       .filter(group => group.active)
       .reduce((sum, group) => sum + (group.totalWinners * group.prizePerWinner), 0);
     
+    console.log('💰 Total calculado baseado no banco:', { individualTotal, groupTotal, total: individualTotal + groupTotal });
     return individualTotal + groupTotal;
   };
 
@@ -219,6 +229,7 @@ export const usePaymentData = () => {
       .filter(group => group.active)
       .reduce((sum, group) => sum + group.totalWinners, 0);
     
+    console.log('🏆 Total de ganhadores baseado no banco:', { individualWinners, groupWinners, total: individualWinners + groupWinners });
     return individualWinners + groupWinners;
   };
 
