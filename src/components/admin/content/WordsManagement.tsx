@@ -10,9 +10,9 @@ import { WordsListTable } from './WordsListTable';
 export const WordsManagement = () => {
   const { categories } = useWordCategories();
   const { generateWordsForAllCategories, isGeneratingAll } = useAIWordGeneration();
-  const { integrations } = useIntegrations();
+  const { openAI } = useIntegrations();
   
-  const openaiConfigured = integrations?.openai_api_key && integrations.openai_api_key.length > 10;
+  const openaiConfigured = openAI?.apiKey && openAI.apiKey.length > 10;
 
   const handleGenerateAllCategories = (count: number) => {
     if (categories.length === 0) {
