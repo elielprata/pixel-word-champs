@@ -71,20 +71,21 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   }
 
   return (
-    <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen">
-      <HomeHeader />
-      
-      <UserStatsCard />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
+      <div className="max-w-md mx-auto space-y-4">
+        <HomeHeader />
+        <UserStatsCard />
 
-      {error && (
-        <ErrorState error={error} onRetry={loadCompetitions} />
-      )}
+        {error && (
+          <ErrorState error={error} onRetry={loadCompetitions} />
+        )}
 
-      <CompetitionsList
-        competitions={competitions}
-        onStartChallenge={onStartChallenge}
-        onRefresh={loadCompetitions}
-      />
+        <CompetitionsList
+          competitions={competitions}
+          onStartChallenge={onStartChallenge}
+          onRefresh={loadCompetitions}
+        />
+      </div>
     </div>
   );
 };
