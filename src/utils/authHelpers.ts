@@ -1,6 +1,5 @@
 
-import { User } from '@/types';
-import type { ApiResponse } from '@/types';
+import type { User, ApiResponse } from '@/types';
 import { createFallbackUser as createFallback } from './userMapper';
 import { TIMING_CONFIG } from '@/constants/app';
 

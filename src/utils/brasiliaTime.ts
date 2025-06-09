@@ -4,7 +4,6 @@
  */
 
 export const getBrasiliaTime = (): Date => {
-  // Criar uma nova data e ajustar para UTC-3 (Brasília)
   const now = new Date();
   const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
   const brasiliaOffset = -3; // UTC-3

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Trophy, Calendar, Users, Clock, Target, Star, RefreshCw } from 'lucide-react';
+import { Trophy, Calendar, Users, Clock, Star, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { useAuth } from '@/hooks/useAuth';
 import { APP_CONFIG, TIMING_CONFIG } from '@/constants/app';
@@ -58,7 +58,6 @@ const HomeScreen = ({ onStartChallenge }: HomeScreenProps) => {
   useEffect(() => {
     loadCompetitions();
     
-    // Usar constante em vez de número mágico
     const interval = setInterval(loadCompetitions, TIMING_CONFIG.COMPETITION_REFRESH_INTERVAL);
     
     return () => clearInterval(interval);
