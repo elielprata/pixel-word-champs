@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -22,131 +23,54 @@ class DailyCompetitionService {
       console.log('📅 Data atual (ISO):', nowISO);
       console.log('📅 Data atual (local):', now.toLocaleString('pt-BR'));
       
-      // Primeira consulta: buscar todas as competições para debug
-      console.log('🔍 Primeira consulta: buscar TODAS as competições...');
-      const { data: allCompetitions, error: allError } = await supabase
-        .from('custom_competitions')
-        .select('*');
-      
-      if (allError) {
-        console.error('❌ Erro na consulta de todas as competições:', allError);
-      } else {
-        console.log('📊 Total de competições no banco:', allCompetitions?.length || 0);
-        allCompetitions?.forEach((comp, index) => {
-          console.log(`📋 Competição ${index + 1}:`, {
-            id: comp.id,
-            title: comp.title,
-            type: comp.competition_type,
-            status: comp.status,
-            start_date: comp.start_date,
-            end_date: comp.end_date,
-            start_local: new Date(comp.start_date).toLocaleString('pt-BR'),
-            end_local: new Date(comp.end_date).toLocaleString('pt-BR')
-          });
-        });
-      }
-      
-      // Segunda consulta: buscar apenas competições ativas
-      console.log('🔍 Segunda consulta: buscar competições ativas...');
-      const { data: activeComps, error: activeError } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .eq('status', 'active');
-      
-      if (activeError) {
-        console.error('❌ Erro na consulta de competições ativas:', activeError);
-      } else {
-        console.log('📊 Competições com status ativo:', activeComps?.length || 0);
-        activeComps?.forEach((comp, index) => {
-          console.log(`🟢 Competição ativa ${index + 1}:`, {
-            id: comp.id,
-            title: comp.title,
-            type: comp.competition_type,
-            start_date: comp.start_date,
-            end_date: comp.end_date
-          });
-        });
-      }
-      
-      // Terceira consulta: buscar por tipo challenge ou daily
-      console.log('🔍 Terceira consulta: buscar por tipo challenge ou daily...');
-      const { data: typeComps, error: typeError } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .or('competition_type.eq.challenge,competition_type.eq.daily');
-      
-      if (typeError) {
-        console.error('❌ Erro na consulta por tipo:', typeError);
-      } else {
-        console.log('📊 Competições do tipo challenge/daily:', typeComps?.length || 0);
-        typeComps?.forEach((comp, index) => {
-          console.log(`🎯 Competição ${comp.competition_type} ${index + 1}:`, {
-            id: comp.id,
-            title: comp.title,
-            status: comp.status,
-            start_date: comp.start_date,
-            end_date: comp.end_date
-          });
-        });
-      }
-      
-      // Consulta principal: buscar competições que atendem todos os critérios
-      console.log('🔍 Consulta PRINCIPAL: aplicando todos os filtros...');
+      // Buscar competições do tipo 'challenge' ou 'daily' que estão ativas
+      console.log('🔍 Busca simplificada: competições challenge/daily ativas...');
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
-        .or('competition_type.eq.challenge,competition_type.eq.daily')
-        .eq('status', 'active')
-        .lte('start_date', nowISO)
-        .gte('end_date', nowISO);
+        .in('competition_type', ['challenge', 'daily'])
+        .eq('status', 'active');
 
       if (error) {
-        console.error('❌ Erro na consulta principal:', error);
+        console.error('❌ Erro na consulta:', error);
         throw error;
       }
 
-      console.log('📊 Resultado da consulta principal:', data?.length || 0);
-      data?.forEach((comp, index) => {
-        console.log(`✅ Competição encontrada ${index + 1}:`, {
+      console.log('📊 Competições encontradas:', data?.length || 0);
+      
+      // Filtrar por data no JavaScript para ter mais controle
+      const activeCompetitions = data?.filter(comp => {
+        const startDate = new Date(comp.start_date);
+        const endDate = new Date(comp.end_date);
+        const now = new Date();
+        
+        const isActive = startDate <= now && endDate >= now;
+        
+        console.log(`🔍 Verificando competição ${comp.title}:`, {
+          id: comp.id,
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+          now: now.toISOString(),
+          startCheck: startDate <= now,
+          endCheck: endDate >= now,
+          isActive
+        });
+        
+        return isActive;
+      }) || [];
+      
+      console.log('✅ Competições ativas após filtro de data:', activeCompetitions.length);
+      activeCompetitions.forEach((comp, index) => {
+        console.log(`📋 Competição ativa ${index + 1}:`, {
           id: comp.id,
           title: comp.title,
           type: comp.competition_type,
-          status: comp.status,
           start_date: comp.start_date,
-          end_date: comp.end_date,
-          start_check: `${comp.start_date} <= ${nowISO} = ${comp.start_date <= nowISO}`,
-          end_check: `${comp.end_date} >= ${nowISO} = ${comp.end_date >= nowISO}`
+          end_date: comp.end_date
         });
       });
       
-      // Se não encontrou nada, vamos testar individualmente cada filtro
-      if (!data || data.length === 0) {
-        console.log('🔍 Nenhuma competição encontrada. Testando filtros individuais...');
-        
-        // Teste 1: apenas por data
-        const { data: dateTest } = await supabase
-          .from('custom_competitions')
-          .select('*')
-          .lte('start_date', nowISO)
-          .gte('end_date', nowISO);
-        console.log('📅 Competições dentro do período de datas:', dateTest?.length || 0);
-        
-        // Teste 2: apenas por status
-        const { data: statusTest } = await supabase
-          .from('custom_competitions')
-          .select('*')
-          .eq('status', 'active');
-        console.log('🔄 Competições com status ativo:', statusTest?.length || 0);
-        
-        // Teste 3: apenas por tipo
-        const { data: typeTest } = await supabase
-          .from('custom_competitions')
-          .select('*')
-          .or('competition_type.eq.challenge,competition_type.eq.daily');
-        console.log('🎯 Competições do tipo challenge/daily:', typeTest?.length || 0);
-      }
-      
-      return createSuccessResponse(data || []);
+      return createSuccessResponse(activeCompetitions);
     } catch (error) {
       console.error('❌ Erro ao buscar competições diárias ativas:', error);
       return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_DAILY_COMPETITIONS'));
