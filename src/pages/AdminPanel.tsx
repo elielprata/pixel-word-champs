@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminRoute from '@/components/auth/AdminRoute';
@@ -12,18 +11,16 @@ import { RankingsTab } from "@/components/admin/RankingsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
-
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
-
+  const {
+    logout
+  } = useAuth();
   const handleLogout = async () => {
     await logout();
     navigate('/auth');
   };
-
-  return (
-    <AdminRoute>
+  return <AdminRoute>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8 flex justify-between items-center">
@@ -35,11 +32,7 @@ const AdminPanel = () => {
                 Gerencie todos os aspectos da plataforma
               </p>
             </div>
-            <Button 
-              onClick={handleLogout}
-              variant="outline"
-              className="flex items-center gap-2 hover:bg-red-50 border-red-200 text-red-700"
-            >
+            <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2 hover:bg-red-50 border-red-200 text-red-700">
               <LogOut className="h-4 w-4" />
               Logout
             </Button>
@@ -49,7 +42,7 @@ const AdminPanel = () => {
             <TabsList className="grid w-full grid-cols-6 lg:grid-cols-6">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
-              <TabsTrigger value="rankings">Rankings</TabsTrigger>
+              <TabsTrigger value="rankings">Competições/Rankings</TabsTrigger>
               <TabsTrigger value="content">Conteúdo</TabsTrigger>
               <TabsTrigger value="support">Suporte</TabsTrigger>
               <TabsTrigger value="integrations">Integrações</TabsTrigger>
@@ -81,8 +74,6 @@ const AdminPanel = () => {
           </Tabs>
         </div>
       </div>
-    </AdminRoute>
-  );
+    </AdminRoute>;
 };
-
 export default AdminPanel;
