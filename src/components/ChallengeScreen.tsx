@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Trophy, Star } from 'lucide-react';
 import GameBoard from './GameBoard';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { gameService } from '@/services/gameService';
+import { competitionParticipationService } from '@/services/competitionParticipationService';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChallengeScreenProps {
@@ -100,6 +100,8 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   const handleStopGame = async () => {
     try {
+      // Marcar a sessão como completada (participação realizada)
+      await competitionParticipationService.markUserAsParticipated(challengeId);
       await gameService.completeGameSession(challengeId);
       onBack();
     } catch (error) {
@@ -120,6 +122,8 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   const handleCompleteGame = async () => {
     try {
+      // Marcar a sessão como completada (participação realizada)
+      await competitionParticipationService.markUserAsParticipated(challengeId);
       await gameService.completeGameSession(challengeId);
       toast({
         title: "Jogo finalizado!",
@@ -178,7 +182,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={onBack}
+          onClick={handleStopGame}
           className="rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white"
         >
           <ArrowLeft className="w-6 h-6" />

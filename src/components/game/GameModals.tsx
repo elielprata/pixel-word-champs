@@ -40,12 +40,12 @@ const GameModals = ({
   };
 
   const handleStayLevel = () => {
-    console.log(`User chose to stop at level ${level}`);
+    console.log(`User chose to stop at level ${level} - marking as participated`);
     onStopGame();
   };
 
   const handleGameOverStop = () => {
-    console.log(`User chose to stop from Game Over modal at level ${level}`);
+    console.log(`User chose to stop from Game Over modal at level ${level} - marking as participated`);
     onStopGame();
   };
 

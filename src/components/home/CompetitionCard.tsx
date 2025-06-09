@@ -1,10 +1,11 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { gameService } from '@/services/gameService';
+import { competitionParticipationService } from '@/services/competitionParticipationService';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 
 interface Competition {
@@ -26,6 +27,31 @@ interface CompetitionCardProps {
 
 const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [hasParticipated, setHasParticipated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    checkParticipation();
+  }, [user]);
+
+  const checkParticipation = async () => {
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await competitionParticipationService.hasUserParticipated(user.id);
+      if (response.success) {
+        setHasParticipated(response.hasParticipated);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar participação:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const formatTimeRemaining = (endDate: string) => {
     const now = new Date();
@@ -55,6 +81,15 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const handleStartGame = async () => {
+    if (hasParticipated) {
+      toast({
+        title: "Participação já realizada",
+        description: "Você já participou desta competição hoje.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       console.log('🎮 Iniciando nova sessão de jogo...');
       
@@ -69,6 +104,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
           title: "Preparando jogo...",
           description: "Carregando as regras do jogo!",
         });
+        
+        // Marcar usuário como participante
+        setHasParticipated(true);
         
         // Usar o ID completo da sessão (UUID)
         onStartChallenge(response.data.id);
@@ -88,6 +126,17 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
         variant: "destructive",
       });
     }
+  };
+
+  const getButtonText = () => {
+    if (isLoading) return "Verificando...";
+    if (hasParticipated) return "JÁ PARTICIPOU";
+    return "🎯 PARTICIPAR AGORA";
+  };
+
+  const getButtonVariant = () => {
+    if (hasParticipated) return "secondary";
+    return "default";
   };
 
   return (
@@ -129,9 +178,15 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
           {/* Botão de ação */}
           <Button 
             onClick={handleStartGame}
-            className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-sm py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 border-amber-700/20"
+            disabled={hasParticipated || isLoading}
+            variant={getButtonVariant()}
+            className={`w-full font-bold text-sm py-3 rounded-lg shadow-md transition-all duration-200 border-2 ${
+              hasParticipated 
+                ? 'bg-gray-400 hover:bg-gray-400 text-gray-600 border-gray-300 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white hover:shadow-lg border-amber-700/20'
+            }`}
           >
-            🎯 PARTICIPAR AGORA
+            {getButtonText()}
           </Button>
         </div>
       </CardContent>
