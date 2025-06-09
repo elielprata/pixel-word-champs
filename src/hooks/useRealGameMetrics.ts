@@ -44,7 +44,7 @@ export const useRealGameMetrics = () => {
     },
     refetchInterval: 5000, // Reduzir para 5 segundos para atualização mais rápida
     staleTime: 0, // Considerar dados como stale imediatamente
-    cacheTime: 0, // Não manter cache
+    gcTime: 0, // Não manter cache (renomeado de cacheTime para gcTime na v5)
   });
 
   return {
