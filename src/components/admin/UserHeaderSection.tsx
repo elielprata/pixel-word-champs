@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { Users, TrendingUp } from 'lucide-react';
-import { Badge } from "@/components/ui/badge";
+import { Users } from 'lucide-react';
 
 export const UserHeaderSection = () => {
   return (
@@ -16,16 +15,6 @@ export const UserHeaderSection = () => {
             Administre usuários, permissões e estatísticas da plataforma
           </p>
         </div>
-      </div>
-      <div className="flex gap-2">
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-3 py-1">
-          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-          Sistema Ativo
-        </Badge>
-        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
-          <TrendingUp className="h-3 w-3 mr-1" />
-          Monitoramento
-        </Badge>
       </div>
     </div>
   );
