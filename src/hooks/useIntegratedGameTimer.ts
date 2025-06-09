@@ -20,27 +20,25 @@ export const useIntegratedGameTimer = (isGameStarted: boolean) => {
   useEffect(() => {
     const fetchTimerConfig = async () => {
       try {
-        // Buscar configuração de tempo inicial do banco
+        // Buscar configuração de tempo base do banco
         const { data: timerSettings, error } = await supabase
           .from('game_settings')
           .select('setting_key, setting_value')
-          .in('setting_key', ['game_timer_seconds', 'initial_time_seconds'])
+          .eq('setting_key', 'base_time_limit')
           .eq('category', 'gameplay');
 
         if (error) throw error;
 
         let initialTime = 180; // fallback
         
-        // Procurar por uma configuração de tempo
-        const timerSetting = timerSettings?.find(s => 
-          s.setting_key === 'game_timer_seconds' || s.setting_key === 'initial_time_seconds'
-        );
+        // Procurar pela configuração base_time_limit
+        const timerSetting = timerSettings?.find(s => s.setting_key === 'base_time_limit');
         
         if (timerSetting) {
           initialTime = parseInt(timerSetting.setting_value) || 180;
-          console.log(`⏰ Tempo inicial configurado: ${initialTime} segundos`);
+          console.log(`⏰ Tempo inicial configurado: ${initialTime} segundos (base_time_limit)`);
         } else {
-          console.log('⚠️ Configuração de tempo não encontrada, usando padrão de 180s');
+          console.log('⚠️ Configuração base_time_limit não encontrada, usando padrão de 180s');
         }
 
         setTimerConfig({
