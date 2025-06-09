@@ -12,7 +12,7 @@ export const WordsManagement = () => {
         <TabsList className="grid grid-cols-2 bg-slate-100">
           <TabsTrigger value="categories" className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
-            Categorias & IA
+            Categorias
           </TabsTrigger>
           <TabsTrigger value="words" className="flex items-center gap-2">
             <List className="h-4 w-4" />
