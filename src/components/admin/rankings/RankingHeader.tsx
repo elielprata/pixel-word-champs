@@ -10,9 +10,7 @@ export const RankingHeader = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Sistema de Competições</h1>
-            <p className="text-slate-600 mt-1 text-sm">
-              Gerencie rankings diários, semanais e acompanhe premiações
-            </p>
+            <p className="text-slate-600 mt-1 text-sm">Gerencie competições diárias, semanais e acompanhe premiações</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
