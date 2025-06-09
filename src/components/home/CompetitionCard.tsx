@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Users, Clock, Calendar, Star } from 'lucide-react';
+import { Users, Clock, Calendar, Star, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface Competition {
   id: string;
@@ -49,26 +50,31 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   return (
-    <Card className="bg-white shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
+    <Card className="bg-gradient-to-r from-gray-50 to-white border border-gray-200 hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">
-              {competition.title}
-            </h3>
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-lg font-bold text-gray-900">
+                {competition.title}
+              </h3>
+              <Badge className="bg-green-100 text-green-700 border-0">
+                <Trophy className="w-3 h-3 mr-1" />
+                Ativa
+              </Badge>
+            </div>
+            
             {competition.description && (
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-gray-600 mb-2">
                 {competition.description}
               </p>
             )}
+            
             {competition.theme && (
-              <div className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full mb-3">
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-0 mb-3">
                 🎯 {competition.theme}
-              </div>
+              </Badge>
             )}
-          </div>
-          <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
-            ⚔️ Batalha Ativa
           </div>
         </div>
 
@@ -87,24 +93,26 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
           </div>
         </div>
 
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-orange-500" />
-            <span className="text-sm text-orange-600 font-medium">
-              {formatTimeRemaining(competition.end_date)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <span className="text-xs text-gray-500">
-              Iniciou: {formatStartTime(competition.start_date)}
-            </span>
+        <div className="bg-gray-50 rounded-lg p-3 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-orange-500" />
+              <span className="text-sm text-orange-600 font-medium">
+                {formatTimeRemaining(competition.end_date)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              <span className="text-xs text-gray-500">
+                {formatStartTime(competition.start_date)}
+              </span>
+            </div>
           </div>
         </div>
 
         <Button 
           onClick={() => onStartChallenge(parseInt(competition.id))}
-          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
         >
           ⚔️ Entrar na Batalha
         </Button>
