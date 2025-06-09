@@ -217,25 +217,6 @@ const HomeScreen = ({ onStartChallenge }: HomeScreenProps) => {
               ))}
             </div>
           )}
-
-          {/* Info about daily battles */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-start gap-3">
-              <Target className="w-5 h-5 text-blue-600 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-medium text-blue-900 mb-1">
-                  💡 Sobre as Batalhas Diárias
-                </h4>
-                <p className="text-xs text-blue-700">
-                  • Cada batalha dura 24 horas (00:00 às 23:59)
-                  <br />
-                  • Pontos ganhos nas batalhas contam para a <strong>Guerra Semanal</strong>
-                  <br />
-                  • Vence a guerra quem mais pontua nas batalhas! 🏆
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
