@@ -27,86 +27,35 @@ const isValidWord = (word: string): boolean => {
   return trimmed.length >= 3 && /^[A-Z]+$/.test(trimmed);
 };
 
-// Função para chamar a OpenAI API para uma única categoria
-const callOpenAIAPI = async (categoryName: string, count: number, apiKey: string, config: any): Promise<string[]> => {
-  console.log('🤖 Chamando OpenAI API para categoria:', categoryName, 'quantidade:', count);
+// Função para buscar palavras já existentes em uma categoria
+const getExistingWordsForCategory = async (categoryName: string): Promise<string[]> => {
+  try {
+    console.log(`🔍 Buscando palavras existentes para categoria "${categoryName}"...`);
+    
+    const { data, error } = await supabase
+      .from('level_words')
+      .select('word')
+      .eq('category', categoryName)
+      .eq('is_active', true);
 
-  const prompt = `Gere ${count} palavras em português para a categoria "${categoryName}".
+    if (error) {
+      console.error(`❌ Erro ao buscar palavras existentes para "${categoryName}":`, error);
+      return [];
+    }
 
-REGRAS OBRIGATÓRIAS:
-- TODAS as palavras devem estar em MAIÚSCULAS
-- NENHUMA palavra pode ter acentos (á, à, â, ã, é, è, ê, í, ì, î, ó, ò, ô, õ, ú, ù, û, ç, ñ)
-- Apenas letras de A a Z (sem acentos, cedilhas ou til)
-- Palavras de 3-8 letras para diferentes níveis de dificuldade
-- Exatamente ${count} palavras
-- Uma palavra por linha
-- Sem numeração ou formatação adicional
-
-Exemplos de palavras CORRETAS: CASA, ARVORE, PEIXE, LIVRO
-Exemplos de palavras INCORRETAS: ÁRVORE, CORAÇÃO, PÁSSARO (têm acentos)
-
-Retorne apenas as palavras, uma por linha:`;
-
-  const requestBody = {
-    model: config.model || 'gpt-4o-mini',
-    messages: [
-      { 
-        role: 'system', 
-        content: config.systemPrompt || 'Você são um assistente especializado em gerar palavras para jogos de caça-palavras em português.'
-      },
-      { role: 'user', content: prompt }
-    ],
-    max_tokens: config.maxTokens || 300,
-    temperature: config.temperature || 0.7,
-  };
-
-  console.log('📤 Enviando requisição para OpenAI:', {
-    model: requestBody.model,
-    category: categoryName,
-    count: count
-  });
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  console.log('📥 Resposta da OpenAI:', response.status, response.statusText);
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('❌ Erro da OpenAI API:', errorText);
-    throw new Error(`OpenAI API error: ${response.status} - ${response.statusText}`);
+    const existingWords = data?.map(item => item.word) || [];
+    console.log(`📋 Categoria "${categoryName}" já possui ${existingWords.length} palavras:`, existingWords.slice(0, 10));
+    
+    return existingWords;
+  } catch (err) {
+    console.error(`❌ Erro inesperado ao buscar palavras para "${categoryName}":`, err);
+    return [];
   }
-
-  const data = await response.json();
-  console.log('📊 Dados recebidos da OpenAI para', categoryName);
-  
-  const content = data.choices[0].message.content;
-  
-  // Processar as palavras retornadas com remoção rigorosa de acentos
-  const words = content
-    .split('\n')
-    .map((word: string) => {
-      const cleaned = removeAccents(word.trim()).toUpperCase();
-      return cleaned;
-    })
-    .filter((word: string) => isValidWord(word))
-    .slice(0, count);
-  
-  console.log(`✅ Categoria ${categoryName}: ${words.length} palavras processadas (sem acentos)`);
-  console.log('🔍 Palavras geradas:', words);
-  
-  return words;
 };
 
-// Função para chamar a OpenAI API com múltiplas categorias
+// Função para chamar a OpenAI API com múltiplas categorias e contexto melhorado
 const callOpenAIAPIBatch = async (categories: Array<{id: string, name: string}>, countPerCategory: number, apiKey: string, config: any): Promise<Record<string, string[]>> => {
-  console.log('🤖 Chamando OpenAI API em lote com configurações:', {
+  console.log('🤖 Iniciando chamada OpenAI em lote com configurações:', {
     categoriesCount: categories.length,
     countPerCategory,
     hasKey: !!apiKey,
@@ -116,10 +65,27 @@ const callOpenAIAPIBatch = async (categories: Array<{id: string, name: string}>,
     temperature: config.temperature
   });
 
+  // Buscar palavras existentes para cada categoria
+  const existingWordsByCategory: Record<string, string[]> = {};
+  for (const category of categories) {
+    existingWordsByCategory[category.name] = await getExistingWordsForCategory(category.name);
+  }
+
   const categoriesList = categories.map(cat => cat.name).join(', ');
   
-  // PROMPT MELHORADO COM MAIS RIGIDEZ
-  const prompt = `Gere EXATAMENTE ${countPerCategory} palavras DIFERENTES em português para CADA UMA das seguintes categorias: ${categoriesList}
+  // PROMPT MELHORADO com contexto das palavras existentes
+  const existingWordsContext = categories.map(cat => {
+    const existing = existingWordsByCategory[cat.name];
+    if (existing.length > 0) {
+      return `${cat.name}: JÁ EXISTEM ${existing.length} palavras (exemplos: ${existing.slice(0, 5).join(', ')})`;
+    }
+    return `${cat.name}: categoria vazia`;
+  }).join('\n');
+
+  const prompt = `Gere EXATAMENTE ${countPerCategory} palavras DIFERENTES e CRIATIVAS em português para CADA UMA das seguintes categorias: ${categoriesList}
+
+PALAVRAS JÁ EXISTENTES NO BANCO (EVITE ESTAS):
+${existingWordsContext}
 
 REGRAS OBRIGATÓRIAS:
 - EXATAMENTE ${countPerCategory} palavras DIFERENTES para CADA categoria
@@ -129,9 +95,22 @@ REGRAS OBRIGATÓRIAS:
 - Palavras de 3-8 letras para diferentes níveis de dificuldade
 - PALAVRAS ÚNICAS - NUNCA repetir a mesma palavra em categorias diferentes
 - NUNCA repetir palavras dentro da mesma categoria
-- Formato JSON válido e limpo
+- EVITE palavras muito óbvias ou que já existem (veja lista acima)
+- Seja CRIATIVO e use palavras menos comuns mas conhecidas
 
-Exemplos de palavras CORRETAS: CASA, ARVORE, PEIXE, LIVRO, CACHORRO, MESA, CADEIRA
+ESTRATÉGIA DE CRIATIVIDADE:
+- Use sinônimos e variações menos óbvias
+- Explore subcategorias dentro do tema
+- Prefira palavras que jogadores não esperariam
+- Evite as palavras mais comuns da categoria
+
+DISTRIBUIÇÃO DE DIFICULDADE:
+- 20% palavras de 3-4 letras (fácil)
+- 30% palavras de 5 letras (médio) 
+- 30% palavras de 6-7 letras (difícil)
+- 20% palavras de 8+ letras (expert)
+
+Exemplos de palavras CORRETAS: ZEBRA, VIOLINO, BADMINTON, ARQUITETO, TELESCOPIO
 Exemplos de palavras INCORRETAS: ÁRVORE, CORAÇÃO, PÁSSARO (têm acentos)
 
 Retorne EXATAMENTE no formato JSON abaixo, SEM texto adicional antes ou depois:
@@ -143,6 +122,7 @@ ${categories.map(cat => `  "${cat.name}": ["PALAVRA1", "PALAVRA2", "PALAVRA3"${c
 IMPORTANTE: 
 - Total esperado: ${categories.length} categorias × ${countPerCategory} palavras = ${categories.length * countPerCategory} palavras ÚNICAS
 - Todas as ${categories.length * countPerCategory} palavras devem ser DIFERENTES entre si
+- EVITE as palavras já existentes listadas acima
 - SEM ACENTOS em nenhuma palavra`;
 
   const requestBody = {
@@ -150,12 +130,12 @@ IMPORTANTE:
     messages: [
       { 
         role: 'system', 
-        content: 'Você é um especialista em gerar palavras para jogos de caça-palavras. Retorne APENAS o JSON solicitado, sem texto adicional.'
+        content: 'Você é um especialista em gerar palavras únicas e criativas para jogos de caça-palavras. Retorne APENAS o JSON solicitado, sem texto adicional. Seja criativo e evite palavras óbvias.'
       },
       { role: 'user', content: prompt }
     ],
     max_tokens: config.maxTokens || 2500,
-    temperature: config.temperature || 0.3, // Temperatura mais baixa para mais consistência
+    temperature: config.temperature || 0.8, // Temperatura mais alta para mais criatividade
   };
 
   console.log('📤 Enviando requisição em lote para OpenAI:', {
@@ -163,9 +143,9 @@ IMPORTANTE:
     categoriesCount: categories.length,
     expectedWords: categories.length * countPerCategory,
     maxTokens: requestBody.max_tokens,
-    temperature: requestBody.temperature
+    temperature: requestBody.temperature,
+    existingWordsTotal: Object.values(existingWordsByCategory).flat().length
   });
-  console.log('📝 Prompt enviado:', prompt);
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -209,14 +189,22 @@ IMPORTANTE:
       console.warn('⚠️ Categorias ausentes na resposta:', missingCategories.map(c => c.name));
     }
     
-    // Processar e validar cada categoria com remoção rigorosa de acentos
+    // Processar e validar cada categoria com verificação rigorosa
     const processedData: Record<string, string[]> = {};
     let totalWordsProcessed = 0;
     const allGeneratedWords = new Set<string>(); // Para detectar duplicatas globais
     
     for (const category of categories) {
       const categoryWords = jsonData[category.name] || [];
-      console.log(`🔍 Categoria ${category.name}: recebeu ${categoryWords.length}/${countPerCategory} palavras`, categoryWords);
+      const existingInCategory = existingWordsByCategory[category.name] || [];
+      const existingSet = new Set(existingInCategory);
+      
+      console.log(`🔍 Processando categoria "${category.name}":`, {
+        recebidas: categoryWords.length,
+        esperadas: countPerCategory,
+        jaExistemNoBanco: existingInCategory.length,
+        palavrasRecebidas: categoryWords
+      });
       
       const validWords: string[] = [];
       
@@ -235,9 +223,15 @@ IMPORTANTE:
           continue;
         }
         
-        // Verificar duplicata global
+        // Verificar se já existe no banco para esta categoria
+        if (existingSet.has(cleaned)) {
+          console.warn(`⚠️ Palavra "${cleaned}" já existe no banco para categoria "${category.name}" - pulando`);
+          continue;
+        }
+        
+        // Verificar duplicata global nesta geração
         if (allGeneratedWords.has(cleaned)) {
-          console.warn(`⚠️ DUPLICATA GLOBAL detectada: "${cleaned}" já foi gerada em outra categoria`);
+          console.warn(`⚠️ DUPLICATA GLOBAL detectada: "${cleaned}" já foi gerada em outra categoria desta sessão`);
           continue;
         }
         
@@ -252,18 +246,21 @@ IMPORTANTE:
       processedData[category.name] = validWords;
       totalWordsProcessed += validWords.length;
       
-      console.log(`✅ Categoria ${category.name}: ${validWords.length}/${countPerCategory} palavras válidas processadas (sem acentos)`);
+      console.log(`✅ Categoria "${category.name}": ${validWords.length}/${countPerCategory} palavras válidas processadas (sem acentos e sem duplicatas)`);
       console.log('🔍 Palavras finais da categoria:', validWords);
       
       // Aviso se não conseguiu o número exato
       if (validWords.length < countPerCategory) {
-        console.warn(`⚠️ Categoria ${category.name}: esperado ${countPerCategory}, processado ${validWords.length}`);
+        console.warn(`⚠️ Categoria "${category.name}": esperado ${countPerCategory}, processado ${validWords.length}`);
       }
     }
     
-    console.log(`📊 RESUMO FINAL: ${totalWordsProcessed}/${categories.length * countPerCategory} palavras processadas (sem acentos)`);
-    console.log('🔍 Todas as palavras geradas:', Array.from(allGeneratedWords));
-    console.log('📈 Total de palavras únicas globais:', allGeneratedWords.size);
+    console.log(`📊 RESUMO FINAL DA GERAÇÃO:`, {
+      totalEsperado: categories.length * countPerCategory,
+      totalProcessado: totalWordsProcessed,
+      palavrasUnicasGlobais: allGeneratedWords.size,
+      eficiencia: `${Math.round((totalWordsProcessed / (categories.length * countPerCategory)) * 100)}%`
+    });
     
     return processedData;
     
@@ -271,18 +268,16 @@ IMPORTANTE:
     console.error('❌ Erro ao parsear JSON da OpenAI:', parseError);
     console.log('📄 Conteúdo recebido que falhou no parse:', content);
     
-    // Fallback mais inteligente: tentar extrair palavras do texto livre
+    // Fallback mais inteligente mantido igual
     console.log('🔄 Tentando fallback de extração de palavras...');
     const fallbackData: Record<string, string[]> = {};
     
-    // Tentar encontrar padrões de categoria no texto
     for (const category of categories) {
       const categoryPattern = new RegExp(`"?${category.name}"?\\s*[:\\[]([^\\]\\}]+)`, 'i');
       const match = content.match(categoryPattern);
       
       let words: string[] = [];
       if (match) {
-        // Extrair palavras do match
         words = match[1]
           .split(/[,\n\r"'\[\]]+/)
           .map((word: string) => removeAccents(word.trim()).toUpperCase())
@@ -290,7 +285,6 @@ IMPORTANTE:
           .slice(0, countPerCategory);
       }
       
-      // Se não encontrou palavras suficientes, tentar extrair do texto geral
       if (words.length < countPerCategory) {
         const allWords = content
           .split(/[\n\r\s,]+/)
@@ -302,8 +296,7 @@ IMPORTANTE:
       }
       
       fallbackData[category.name] = words;
-      console.log(`🔄 Fallback para ${category.name}: ${words.length} palavras extraídas (sem acentos)`);
-      console.log('🔍 Palavras extraídas:', words);
+      console.log(`🔄 Fallback para ${category.name}: ${words.length} palavras extraídas`);
     }
     
     return fallbackData;
@@ -369,7 +362,7 @@ export const generateWordsForCategory = async (categoryName: string, count: numb
 // Nova função para gerar palavras para múltiplas categorias
 export const generateWordsForCategories = async (categories: Array<{id: string, name: string}>, countPerCategory: number): Promise<Record<string, string[]>> => {
   try {
-    console.log('🚀 Iniciando geração em lote para categorias:', categories.map(c => c.name), 'quantidade por categoria:', countPerCategory);
+    console.log('🚀 Iniciando geração em lote MELHORADA para categorias:', categories.map(c => c.name), 'quantidade por categoria:', countPerCategory);
     
     // Buscar a API key e configurações da OpenAI
     const { data: openaiSettings, error } = await supabase
@@ -405,26 +398,25 @@ export const generateWordsForCategories = async (categories: Array<{id: string, 
     const config = {
       model: modelSetting?.setting_value || 'gpt-4o-mini',
       maxTokens: maxTokensSetting?.setting_value ? parseInt(maxTokensSetting.setting_value) : 2500,
-      temperature: temperatureSetting?.setting_value ? parseFloat(temperatureSetting.setting_value) : 0.7,
+      temperature: temperatureSetting?.setting_value ? parseFloat(temperatureSetting.setting_value) : 0.8, // Padrão mais alto
       systemPrompt: systemPromptSetting?.setting_value || 'Você é um assistente especializado em gerar palavras para jogos de caça-palavras em português.'
     };
 
     const apiKey = apiKeySetting.setting_value.trim();
     
-    console.log('🔧 Configurações carregadas para geração em lote:', {
+    console.log('🔧 Configurações carregadas para geração MELHORADA:', {
       hasApiKey: !!apiKey,
       keyLength: apiKey.length,
       model: config.model,
       maxTokens: config.maxTokens,
       temperature: config.temperature,
-      systemPromptLength: config.systemPrompt.length,
       expectedTotalWords: categories.length * countPerCategory
     });
     
     return await callOpenAIAPIBatch(categories, countPerCategory, apiKey, config);
     
   } catch (error) {
-    console.error('❌ Erro ao gerar palavras em lote com OpenAI:', error);
+    console.error('❌ Erro ao gerar palavras em lote MELHORADO:', error);
     throw error;
   }
 };
