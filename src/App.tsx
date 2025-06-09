@@ -12,6 +12,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import AuthScreen from '@/components/auth/AuthScreen';
 import AuthProvider from '@/components/auth/AuthProvider';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
@@ -32,13 +33,29 @@ function App() {
           <AuthProvider>
             <div className="App">
               <Routes>
-                <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<AuthScreen />} />
-                <Route path="/admin" element={<AdminPanel />} />
-                <Route path="/admin/competition/:competitionId/ranking" element={<DailyCompetitionRanking />} />
-                <Route path="/admin/weekly-competition/:competitionId/ranking" element={<WeeklyCompetitionRanking />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/competition/:competitionId/ranking" element={
+                  <ProtectedRoute>
+                    <DailyCompetitionRanking />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/weekly-competition/:competitionId/ranking" element={
+                  <ProtectedRoute>
+                    <WeeklyCompetitionRanking />
+                  </ProtectedRoute>
+                } />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster />
