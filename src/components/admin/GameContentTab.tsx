@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Settings, Activity, Crown, Award, Folder } from 'lucide-react';
+import { BookOpen, Settings, Activity, Crown, Folder } from 'lucide-react';
 import { WordsManagement } from './content/WordsManagement';
 import { GameSettings } from './content/GameSettings';
 import { useRealGameMetrics } from '@/hooks/useRealGameMetrics';
@@ -49,10 +49,6 @@ export const GameContentTab = () => {
               <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 px-3 py-1">
                 <Crown className="h-3 w-3 mr-1" />
                 Sistema Ativo
-              </Badge>
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
-                <Award className="h-3 w-3 mr-1" />
-                IA Integrada
               </Badge>
             </div>
           </div>
