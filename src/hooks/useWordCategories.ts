@@ -103,7 +103,10 @@ export const useWordCategories = () => {
   });
 
   const deleteCategory = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, password }: { id: string; password: string }) => {
+      // Aqui você pode adicionar validação da senha se necessário
+      // Por exemplo, verificar se a senha está correta antes de prosseguir
+      
       const { error } = await supabase
         .from('word_categories')
         .update({ is_active: false })
@@ -133,7 +136,7 @@ export const useWordCategories = () => {
     isLoading,
     createCategory: createCategory.mutate,
     updateCategory: updateCategory.mutate,
-    deleteCategory: deleteCategory.mutate,
+    deleteCategory: (id: string, password: string) => deleteCategory.mutate({ id, password }),
     isCreating: createCategory.isPending,
     isUpdating: updateCategory.isPending,
     isDeleting: deleteCategory.isPending,
