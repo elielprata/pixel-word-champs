@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from './pages/Index';
 import AdminPanel from './pages/AdminPanel';
-import DailyCompetitionRanking from './pages/DailyCompetitionRanking';
 import WeeklyCompetitionRanking from './pages/WeeklyCompetitionRanking';
 import NotFound from './pages/NotFound';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -44,11 +43,6 @@ function App() {
                 <Route path="/admin" element={
                   <ProtectedRoute>
                     <AdminPanel />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/daily-competition/:competitionId/ranking" element={
-                  <ProtectedRoute>
-                    <DailyCompetitionRanking />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/weekly-competition/:competitionId/ranking" element={
