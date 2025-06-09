@@ -47,6 +47,22 @@ export const ScheduleSection = ({
     }
   };
 
+  // Para competições diárias, permitir seleção a partir de hoje
+  // Para competições semanais, permitir seleção a partir de amanhã
+  const getMinDate = () => {
+    const today = new Date();
+    if (type === 'daily') {
+      // Para competições diárias, permitir a data atual
+      today.setHours(0, 0, 0, 0);
+      return today;
+    } else {
+      // Para competições semanais, permitir a partir de amanhã
+      today.setDate(today.getDate() + 1);
+      today.setHours(0, 0, 0, 0);
+      return today;
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-2">
@@ -82,7 +98,7 @@ export const ScheduleSection = ({
               mode="single"
               selected={startDate}
               onSelect={handleStartDateSelect}
-              disabled={(date) => date < new Date()}
+              disabled={(date) => date < getMinDate()}
               initialFocus
               className={cn("p-3 pointer-events-auto")}
             />
@@ -120,8 +136,8 @@ export const ScheduleSection = ({
                 selected={endDate}
                 onSelect={handleEndDateSelect}
                 disabled={(date) => {
-                  const today = new Date();
-                  return date < today || (startDate && date <= startDate);
+                  const minDate = getMinDate();
+                  return date < minDate || (startDate && date <= startDate);
                 }}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
