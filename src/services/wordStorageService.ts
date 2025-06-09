@@ -9,7 +9,7 @@ export const saveWordsToDatabase = async (
 ) => {
   console.log('📝 Palavras geradas:', words);
 
-  // Salvar palavras no banco (com nível padrão 1, mas organizadas por dificuldade)
+  // Salvar palavras no banco organizadas por dificuldade
   const wordsToInsert = words.map(word => ({
     word: word.toUpperCase(),
     category: categoryName,
@@ -33,7 +33,7 @@ export const saveWordsToDatabase = async (
     .from('ai_word_generation')
     .insert({
       category_id: categoryId,
-      level: 1, // Manter por compatibilidade, mas não é usado para organização
+      level: 1, // Manter por compatibilidade com o banco
       words_generated: words.length,
       last_generation: new Date().toISOString()
     });

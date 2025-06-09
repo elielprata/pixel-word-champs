@@ -10,7 +10,7 @@ export const useActiveWords = () => {
       
       const { data, error } = await supabase
         .from('level_words')
-        .select('id, word, level, category, difficulty, created_at')
+        .select('id, word, category, difficulty, created_at')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 

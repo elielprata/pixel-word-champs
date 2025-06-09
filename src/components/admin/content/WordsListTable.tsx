@@ -15,6 +15,7 @@ export const WordsListTable = () => {
       case 'easy': return 'bg-green-100 text-green-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'hard': return 'bg-red-100 text-red-800';
+      case 'expert': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -24,6 +25,7 @@ export const WordsListTable = () => {
       case 'easy': return 'Fácil';
       case 'medium': return 'Médio';
       case 'hard': return 'Difícil';
+      case 'expert': return 'Expert';
       default: return difficulty;
     }
   };
@@ -78,7 +80,6 @@ export const WordsListTable = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Palavra</TableHead>
-                    <TableHead>Nível</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Dificuldade</TableHead>
                     <TableHead>Data de Criação</TableHead>
@@ -89,11 +90,6 @@ export const WordsListTable = () => {
                     <TableRow key={word.id}>
                       <TableCell className="font-medium">
                         {word.word}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                          Nível {word.level}
-                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
