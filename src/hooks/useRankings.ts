@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { CompetitionStatusService } from '@/services/competitionStatusService';
 
 interface RankingPlayer {
   pos: number;
@@ -121,11 +121,14 @@ export const useRankings = () => {
     try {
       console.log('🏆 Buscando competições semanais...');
       
+      // Primeiro, atualizar status de todas as competições
+      await CompetitionStatusService.updateAllCompetitionsStatus();
+      
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
         .eq('competition_type', 'tournament')
-        .in('status', ['active', 'scheduled'])
+        .in('status', ['active', 'scheduled', 'completed'])
         .order('start_date', { ascending: false });
 
       if (error) throw error;
@@ -145,9 +148,15 @@ export const useRankings = () => {
       console.log('🏆 Competições semanais carregadas:', competitions.length);
       setWeeklyCompetitions(competitions);
 
-      // Definir competição ativa (primeira ativa encontrada)
+      // Definir competição ativa (deve haver apenas uma com status 'active')
       const active = competitions.find(comp => comp.status === 'active');
       setActiveWeeklyCompetition(active || null);
+      
+      if (active) {
+        console.log('👑 Competição ativa encontrada:', active.title);
+      } else {
+        console.log('📅 Nenhuma competição ativa no momento');
+      }
     } catch (error) {
       console.error('❌ Erro ao carregar competições semanais:', error);
     }
@@ -182,6 +191,19 @@ export const useRankings = () => {
 
   useEffect(() => {
     refreshData();
+    
+    // Configurar intervalo para atualizar status das competições a cada 2 minutos
+    const statusUpdateInterval = setInterval(() => {
+      console.log('🔄 Verificação automática de status das competições...');
+      CompetitionStatusService.updateAllCompetitionsStatus().then(() => {
+        // Recarregar competições após atualização de status
+        fetchWeeklyCompetitions();
+      });
+    }, 2 * 60 * 1000); // 2 minutos
+    
+    return () => {
+      clearInterval(statusUpdateInterval);
+    };
   }, []);
 
   return {

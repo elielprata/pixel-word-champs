@@ -1,7 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { CompetitionStatusService } from './competitionStatusService';
 
 export interface CustomCompetitionData {
   title: string;
@@ -33,6 +33,15 @@ class CustomCompetitionService {
         }
       }
 
+      // Calcular status correto baseado nas datas e horário de Brasília
+      let initialStatus = 'draft';
+      if (data.type === 'weekly' && data.startDate && data.endDate) {
+        initialStatus = CompetitionStatusService.calculateCorrectStatus(
+          data.startDate.toISOString(),
+          data.endDate.toISOString()
+        );
+      }
+
       // Preparar dados para inserção conforme a estrutura da tabela
       const competitionData = {
         title: data.title,
@@ -43,7 +52,7 @@ class CustomCompetitionService {
         end_date: data.endDate?.toISOString(),
         prize_pool: data.prizePool,
         max_participants: data.maxParticipants,
-        status: 'active',
+        status: initialStatus,
         created_by: user.id,
         rules: {
           category: data.category,
@@ -65,6 +74,8 @@ class CustomCompetitionService {
       }
 
       console.log('✅ Competição criada com sucesso:', result);
+      console.log('📅 Status inicial aplicado:', initialStatus);
+      
       return createSuccessResponse(result);
     } catch (error) {
       console.error('❌ Erro ao criar competição:', error);
@@ -107,6 +118,9 @@ class CustomCompetitionService {
   async getCustomCompetitions(): Promise<ApiResponse<any[]>> {
     try {
       console.log('📊 Buscando competições customizadas...');
+
+      // Atualizar status antes de buscar
+      await CompetitionStatusService.updateAllCompetitionsStatus();
 
       const { data, error } = await supabase
         .from('custom_competitions')
@@ -154,6 +168,9 @@ class CustomCompetitionService {
         console.error('❌ Erro na atualização:', error);
         throw error;
       }
+
+      // Atualizar status da competição após edição
+      await CompetitionStatusService.updateSingleCompetitionStatus(id);
 
       console.log('✅ Competição atualizada com sucesso:', result);
       return createSuccessResponse(result);

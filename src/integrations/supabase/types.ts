@@ -882,6 +882,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_competition_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_daily_ranking: {
         Args: Record<PropertyKey, never>
         Returns: undefined

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, Calendar, Users, Crown, Clock, Edit, Trash2 } from 'lucide-react';
+import { Trophy, Calendar, Users, Crown, Clock, Edit, Trash2, MapPin } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { EditCompetitionModal } from './EditCompetitionModal';
@@ -44,7 +44,9 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   );
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -149,6 +151,15 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Aviso sobre horário de Brasília */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+        <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+        <div className="text-sm text-blue-700">
+          <p className="font-medium">Horário de Referência: Brasília (UTC-3)</p>
+          <p>Os status das competições são atualizados automaticamente baseados no horário oficial do Brasil.</p>
+        </div>
+      </div>
+
       {/* Competição Ativa em Destaque */}
       {activeCompetition && (
         <Card className="border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
@@ -199,7 +210,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-green-600" />
                   <div>
-                    <p className="font-medium">Início</p>
+                    <p className="font-medium">Início (Brasília)</p>
                     <p className="text-green-700">{formatDate(activeCompetition.start_date)}</p>
                   </div>
                 </div>
@@ -207,7 +218,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                 <div className="flex items-center gap-2 text-sm">
                   <Clock className="h-4 w-4 text-green-600" />
                   <div>
-                    <p className="font-medium">Fim</p>
+                    <p className="font-medium">Fim (Brasília)</p>
                     <p className="text-green-700">{formatDate(activeCompetition.end_date)}</p>
                   </div>
                 </div>
