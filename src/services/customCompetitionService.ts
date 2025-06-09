@@ -139,6 +139,7 @@ class CustomCompetitionService {
         description: data.description,
         start_date: data.startDate?.toISOString(),
         end_date: data.endDate?.toISOString(),
+        prize_pool: data.prizePool,
         max_participants: data.maxParticipants
       };
 
