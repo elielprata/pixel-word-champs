@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +55,7 @@ export const WordsListTable = () => {
     return uniqueCategories.sort();
   }, [words]);
 
-  // Calcular paginação corrigida
+  // Calcular paginação
   const totalPages = Math.ceil(filteredWords.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredWords.length);
@@ -239,7 +238,7 @@ export const WordsListTable = () => {
                   <TableHeader>
                     <TableRow className="bg-slate-50">
                       <TableHead className="font-semibold text-slate-800 w-[200px]">Palavra</TableHead>
-                      <TableHead className="font-semibold text-slate-800 w-[150px]">Categoria</TableHead>
+                      <TableHead className="font-semibold text-slate-800 w-[200px]">Categoria</TableHead>
                       <TableHead className="font-semibold text-slate-800 w-[120px]">Dificuldade</TableHead>
                       <TableHead className="font-semibold text-slate-800">Data de Criação</TableHead>
                     </TableRow>
@@ -260,7 +259,7 @@ export const WordsListTable = () => {
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
                             <FolderOpen className="h-4 w-4 text-slate-500" />
-                            <span className="text-sm text-slate-700 capitalize">
+                            <span className="text-sm text-slate-700 capitalize whitespace-nowrap">
                               {word.category || 'Sem categoria'}
                             </span>
                           </div>
