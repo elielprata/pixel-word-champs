@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users, Trophy, Edit, Trash2, Clock } from 'lucide-react';
+import { Calendar, Users, Trophy, Edit, Trash2, Clock, Eye } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { EditCompetitionModal } from './EditCompetitionModal';
+import { DailyCompetitionRankingModal } from './DailyCompetitionRankingModal';
 
 interface DailyCompetition {
   id: string;
@@ -37,6 +37,8 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCompetition, setEditingCompetition] = useState<DailyCompetition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [viewingRankingId, setViewingRankingId] = useState<string | null>(null);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
 
   // Filtrar apenas competições diárias (tipo 'challenge')
   const dailyCompetitions = competitions.filter(comp => comp.status !== 'cancelled');
@@ -87,6 +89,12 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
     console.log('🔧 Editando competição diária:', competition.id);
     setEditingCompetition(competition);
     setIsEditModalOpen(true);
+  };
+
+  const handleViewRanking = (competitionId: string) => {
+    console.log('👀 Visualizando ranking da competição:', competitionId);
+    setViewingRankingId(competitionId);
+    setIsRankingModalOpen(true);
   };
 
   const handleDelete = async (competition: DailyCompetition) => {
@@ -167,6 +175,9 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
         <div className="text-sm text-blue-700">
           <p className="font-medium">Horário de Referência: Brasília (UTC-3)</p>
           <p>Competições diárias: 00:00:00 até 23:59:59 do dia selecionado</p>
+          <p className="text-xs mt-1 text-blue-600">
+            ⚠️ Competições diárias não possuem premiação (apenas semanais têm prêmios)
+          </p>
         </div>
       </div>
 
@@ -209,8 +220,8 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
                       </div>
                       
                       <div className="flex items-center gap-1">
-                        <Trophy className="h-3 w-3 text-yellow-600" />
-                        <span className="font-semibold">R$ {competition.prize_pool.toFixed(2)}</span>
+                        <Trophy className="h-3 w-3 text-slate-400" />
+                        <span className="text-slate-500">Sem premiação</span>
                       </div>
                       
                       <div className="flex items-center gap-1">
@@ -221,6 +232,15 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
                   </div>
                   
                   <div className="flex gap-2 ml-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewRanking(competition.id)}
+                      className="h-8 w-8 p-0 hover:bg-green-50"
+                      title="Ver ranking"
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -258,6 +278,13 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
         onOpenChange={setIsEditModalOpen}
         competition={editingCompetition}
         onCompetitionUpdated={handleCompetitionUpdated}
+      />
+
+      {/* Modal de Ranking */}
+      <DailyCompetitionRankingModal
+        open={isRankingModalOpen}
+        onOpenChange={setIsRankingModalOpen}
+        competitionId={viewingRankingId}
       />
     </div>
   );

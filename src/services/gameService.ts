@@ -7,6 +7,7 @@ import {
   ApiResponse 
 } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { dailyCompetitionService } from './dailyCompetitionService';
 
 class GameService {
   async createGameSession(config: GameConfig): Promise<ApiResponse<GameSession>> {
@@ -33,6 +34,10 @@ class GameService {
       if (error) throw error;
 
       const session = this.mapGameSession(data);
+      
+      // Participação automática em competições diárias
+      await dailyCompetitionService.joinCompetitionAutomatically(session.id);
+      
       return createSuccessResponse(session);
     } catch (error) {
       return createErrorResponse(handleServiceError(error, 'GAME_CREATE_SESSION'));
@@ -106,6 +111,12 @@ class GameService {
       if (error) throw error;
 
       const session = this.mapGameSession(data);
+      
+      // Atualizar pontuação final na competição diária
+      if (session.total_score > 0) {
+        await dailyCompetitionService.updateParticipationScore(sessionId, session.total_score);
+      }
+      
       return createSuccessResponse(session);
     } catch (error) {
       return createErrorResponse(handleServiceError(error, 'GAME_COMPLETE_SESSION'));
@@ -120,10 +131,15 @@ class GameService {
       .single();
 
     if (session) {
+      const newTotalScore = session.total_score + additionalPoints;
+      
       await supabase
         .from('game_sessions')
-        .update({ total_score: session.total_score + additionalPoints })
+        .update({ total_score: newTotalScore })
         .eq('id', sessionId);
+
+      // Atualizar pontuação na competição diária em tempo real
+      await dailyCompetitionService.updateParticipationScore(sessionId, newTotalScore);
     }
   }
 
