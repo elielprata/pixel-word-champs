@@ -1,89 +1,42 @@
 
 import React from 'react';
-import { useWordCategories } from '@/hooks/useWordCategories';
-import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { CategoryList } from './CategoryList';
 import { CategoryForm } from './CategoryForm';
 import { CategoryGenerationConfig } from './CategoryGenerationConfig';
-import { CategoryList } from './CategoryList';
-import { DifficultyInfoCard } from './DifficultyInfoCard';
+import { CSVUpload } from './CSVUpload';
+import { useWordCategories } from '@/hooks/useWordCategories';
+import { useAIWordGeneration } from '@/hooks/useAIWordGeneration';
+import { useIntegrations } from '@/hooks/useIntegrations';
 
 export const CategoriesManagement = () => {
-  const { 
-    categories, 
-    isLoading, 
-    createCategory, 
-    updateCategory, 
-    deleteCategory,
-    isCreating,
-    isUpdating,
-    isDeleting
-  } = useWordCategories();
+  const { categories, isLoading } = useWordCategories();
+  const { generateWordsForAllCategories, isGenerating } = useAIWordGeneration();
+  const { integrations } = useIntegrations();
 
-  const { generateWords, isGenerating, generateWordsForAllCategories, isGeneratingBatch } = useAIWordGeneration();
-
-  // Verificar se a API key da OpenAI está configurada
-  const { data: openaiConfigured } = useQuery({
-    queryKey: ['openaiConfig'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('game_settings')
-        .select('setting_value')
-        .eq('setting_key', 'openai_api_key')
-        .single();
-      
-      return !error && data?.setting_value && data.setting_value.length > 0;
-    },
-  });
-
-  const handleCreateCategory = (categoryData: { name: string; description: string }) => {
-    createCategory(categoryData);
-  };
-
-  const handleUpdateCategory = (data: { id: string; name: string; description: string }) => {
-    updateCategory(data);
-  };
+  const openaiConfigured = integrations?.openai_api_key ? true : false;
 
   const handleGenerateAllCategories = (count: number) => {
-    // Usar a função de geração em lote real
-    generateWordsForAllCategories({
-      categories: categories.map(cat => ({ id: cat.id, name: cat.name })),
-      count
-    });
+    generateWordsForAllCategories(count);
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <div className="text-slate-600">Carregando categorias...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      <CategoryForm 
-        onCreateCategory={handleCreateCategory}
-        isCreating={isCreating}
-      />
+      {/* Formulário para criar nova categoria */}
+      <CategoryForm />
 
+      {/* Upload via CSV */}
+      <CSVUpload />
+
+      {/* Lista de categorias existentes */}
+      <CategoryList />
+
+      {/* Configuração de geração em lote */}
       <CategoryGenerationConfig
         categories={categories}
-        isGenerating={isGeneratingBatch}
-        openaiConfigured={openaiConfigured || false}
+        isGenerating={isGenerating}
+        openaiConfigured={openaiConfigured}
         onGenerateAllCategories={handleGenerateAllCategories}
       />
-
-      <CategoryList
-        categories={categories}
-        isUpdating={isUpdating}
-        isDeleting={isDeleting}
-        onUpdateCategory={handleUpdateCategory}
-        onDeleteCategory={deleteCategory}
-      />
-
-      <DifficultyInfoCard />
     </div>
   );
 };
