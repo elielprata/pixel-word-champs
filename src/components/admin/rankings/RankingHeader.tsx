@@ -1,20 +1,15 @@
-
 import React from 'react';
 import { Trophy, TrendingUp, Users, Calendar, Award, Crown } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-
 export const RankingHeader = () => {
-  return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+  return <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-4">
           <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-3 rounded-lg shadow-md">
             <Trophy className="h-7 w-7 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Sistema de Rankings
-            </h1>
+            <h1 className="text-2xl font-bold text-slate-900">Sistema de Competições</h1>
             <p className="text-slate-600 mt-1 text-sm">
               Gerencie rankings diários, semanais e acompanhe premiações
             </p>
@@ -31,6 +26,5 @@ export const RankingHeader = () => {
           </Badge>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
