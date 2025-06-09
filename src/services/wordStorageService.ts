@@ -9,13 +9,13 @@ export const saveWordsToDatabase = async (
 ) => {
   console.log('📝 Palavras geradas:', words);
 
-  // Salvar palavras no banco (sem nível específico, usando dificuldade)
+  // Salvar palavras no banco (com nível padrão 1, mas organizadas por dificuldade)
   const wordsToInsert = words.map(word => ({
     word: word.toUpperCase(),
     category: categoryName,
     difficulty: getDifficultyFromLength(word.length),
+    level: 1, // Campo obrigatório no banco, mas não usado para organização
     is_active: true
-    // Removido o campo 'level' já que as palavras não são organizadas por nível
   }));
 
   const { data: insertedWords, error: insertError } = await supabase
