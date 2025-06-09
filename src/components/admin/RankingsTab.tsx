@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,10 @@ import { PrizeConfigModal } from './rankings/PrizeConfigModal';
 import { CreateCompetitionModal } from './rankings/CreateCompetitionModal';
 import { CompetitionHistory } from './rankings/CompetitionHistory';
 import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
+import { DailyCompetitionsManagement } from './content/DailyCompetitionsManagement';
 import { useRankings } from '@/hooks/useRankings';
+import { useCompetitions } from '@/hooks/useCompetitions';
+
 export const RankingsTab = () => {
   const [isPrizeConfigOpen, setIsPrizeConfigOpen] = useState(false);
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
@@ -22,6 +26,17 @@ export const RankingsTab = () => {
     isLoading,
     refreshData
   } = useRankings();
+  
+  const { customCompetitions, refetch: refetchCustomCompetitions } = useCompetitions();
+
+  // Filtrar competições diárias
+  const dailyCompetitions = customCompetitions.filter(comp => 
+    comp.competition_type === 'challenge' || comp.competition_type === 'daily'
+  );
+
+  console.log('📊 Competições customizadas carregadas:', customCompetitions.length);
+  console.log('📅 Competições diárias encontradas:', dailyCompetitions.length);
+  console.log('🗂️ Todas as competições:', customCompetitions);
 
   // Calcular prêmio total real baseado nos participantes semanais
   const totalPrizeDistributed = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
@@ -31,11 +46,18 @@ export const RankingsTab = () => {
     if (index <= 9) return total + 10;
     return total;
   }, 0);
-  const handleCompetitionCreated = () => {
+
+  const handleCompetitionCreated = async () => {
     console.log('🔄 Nova competição criada, atualizando dados...');
-    refreshData();
+    await Promise.all([
+      refreshData(),
+      refetchCustomCompetitions()
+    ]);
+    console.log('✅ Dados atualizados após criação da competição');
   };
-  return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
         <RankingHeader />
@@ -88,18 +110,16 @@ export const RankingsTab = () => {
                   <div className="space-y-1">
                     <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
                       <Calendar className="h-5 w-5 text-blue-600" />
-                      Competições Diárias
+                      Competições Diárias ({dailyCompetitions.length})
                     </h3>
                     <p className="text-slate-600 text-sm">
-                      Gerencie as competições diárias e suas configurações de premiação
+                      Gerencie as competições diárias e suas configurações
                     </p>
                   </div>
                 </div>
-                {/* Conteúdo específico do ranking diário */}
-                <div className="text-center py-12 text-slate-500">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-                  <p>Configurações e detalhes das competições diárias serão exibidos aqui</p>
-                </div>
+                
+                {/* Usar o componente de gerenciamento de competições diárias */}
+                <DailyCompetitionsManagement />
               </TabsContent>
 
               <TabsContent value="weekly" className="space-y-6 mt-0">
@@ -141,5 +161,6 @@ export const RankingsTab = () => {
         
         <CreateCompetitionModal open={isCreateCompetitionOpen} onOpenChange={setIsCreateCompetitionOpen} onCompetitionCreated={handleCompetitionCreated} />
       </div>
-    </div>;
+    </div>
+  );
 };
