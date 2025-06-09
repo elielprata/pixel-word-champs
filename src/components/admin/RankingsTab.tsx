@@ -11,12 +11,13 @@ import { RankingInfoCard } from './rankings/RankingInfoCard';
 import { PrizeConfigModal } from './rankings/PrizeConfigModal';
 import { CreateCompetitionModal } from './rankings/CreateCompetitionModal';
 import { CompetitionHistory } from './rankings/CompetitionHistory';
+import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
 import { useRankings } from '@/hooks/useRankings';
 
 export const RankingsTab = () => {
   const [isPrizeConfigOpen, setIsPrizeConfigOpen] = useState(false);
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
-  const { weeklyRanking } = useRankings();
+  const { weeklyRanking, weeklyCompetitions, activeWeeklyCompetition, isLoading } = useRankings();
 
   // Calcular prêmio total real baseado nos participantes semanais
   const totalPrizeDistributed = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
@@ -110,15 +111,16 @@ export const RankingsTab = () => {
                       Ranking Semanal
                     </h3>
                     <p className="text-slate-600 text-sm">
-                      Gerencie o ranking semanal e suas configurações de premiação
+                      Competições semanais ativas e suas configurações
                     </p>
                   </div>
                 </div>
-                {/* Conteúdo específico do ranking semanal */}
-                <div className="text-center py-12 text-slate-500">
-                  <Users className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-                  <p>Configurações e detalhes do ranking semanal serão exibidos aqui</p>
-                </div>
+                
+                <WeeklyCompetitionsView 
+                  competitions={weeklyCompetitions}
+                  activeCompetition={activeWeeklyCompetition}
+                  isLoading={isLoading}
+                />
               </TabsContent>
 
               <TabsContent value="history" className="space-y-6 mt-0">
