@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, Star, Medal, Award, Crown, Zap, Users, Sparkles } from 'lucide-react';
+import { Trophy, Star, Medal, Award, Crown, Zap, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,12 +13,53 @@ interface RankingPlayer {
   score: number;
 }
 
+interface PrizeConfig {
+  position: number;
+  prize_amount: number;
+}
+
 const RankingScreen = () => {
   const { user } = useAuth();
   const [ranking, setRanking] = useState<RankingPlayer[]>([]);
   const [userPosition, setUserPosition] = useState<number | null>(null);
+  const [prizeConfigs, setPrizeConfigs] = useState<PrizeConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const loadPrizeConfigurations = async () => {
+    try {
+      console.log('💰 Carregando configurações de prêmios...');
+      
+      const { data, error } = await supabase
+        .from('prize_configurations')
+        .select('position, prize_amount')
+        .eq('type', 'individual')
+        .eq('active', true)
+        .in('position', [1, 2, 3])
+        .order('position', { ascending: true });
+
+      if (error) {
+        console.error('❌ Erro ao carregar prêmios:', error);
+        throw error;
+      }
+
+      const prizes: PrizeConfig[] = (data || []).map(config => ({
+        position: config.position!,
+        prize_amount: Number(config.prize_amount) || 0
+      }));
+
+      setPrizeConfigs(prizes);
+      console.log('✅ Prêmios carregados:', prizes);
+    } catch (err) {
+      console.error('❌ Erro ao carregar configurações de prêmios:', err);
+      // Define prêmios padrão em caso de erro
+      setPrizeConfigs([
+        { position: 1, prize_amount: 100 },
+        { position: 2, prize_amount: 50 },
+        { position: 3, prize_amount: 25 }
+      ]);
+    }
+  };
 
   const loadRanking = async () => {
     try {
@@ -69,7 +110,10 @@ const RankingScreen = () => {
   };
 
   useEffect(() => {
-    loadRanking();
+    Promise.all([
+      loadPrizeConfigurations(),
+      loadRanking()
+    ]);
   }, [user?.id]);
 
   // Configurar atualizações em tempo real
@@ -119,12 +163,8 @@ const RankingScreen = () => {
   };
 
   const getPrizeAmount = (position: number) => {
-    switch (position) {
-      case 1: return 100;
-      case 2: return 50;
-      case 3: return 25;
-      default: return position <= 10 ? 10 : 0;
-    }
+    const prizeConfig = prizeConfigs.find(config => config.position === position);
+    return prizeConfig?.prize_amount || 0;
   };
 
   if (isLoading) {
@@ -196,28 +236,39 @@ const RankingScreen = () => {
           </p>
         </div>
 
-        {/* Stats Card com estilo do HomeScreen */}
+        {/* Premiação dos 3 primeiros colocados */}
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in">
           <CardContent className="p-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mr-2">
-                    <Zap className="w-5 h-5 text-white" />
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-bold text-slate-800 mb-2">🏆 Premiação</h3>
+              <p className="text-sm text-slate-600">Prêmios para os primeiros colocados</p>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3">
+              {[1, 2, 3].map((position) => {
+                const prizeAmount = getPrizeAmount(position);
+                const icons = [
+                  { icon: Crown, color: 'text-yellow-500', bg: 'from-yellow-400 to-yellow-500', medal: '🥇' },
+                  { icon: Medal, color: 'text-gray-400', bg: 'from-gray-400 to-gray-500', medal: '🥈' },
+                  { icon: Award, color: 'text-orange-500', bg: 'from-orange-400 to-orange-500', medal: '🥉' }
+                ];
+                const iconData = icons[position - 1];
+                
+                return (
+                  <div key={position} className="text-center">
+                    <div className={`w-12 h-12 bg-gradient-to-r ${iconData.bg} rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg`}>
+                      <iconData.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-2xl mb-1">{iconData.medal}</div>
+                    <div className="text-lg font-bold text-green-600">
+                      R$ {prizeAmount.toFixed(0)}
+                    </div>
+                    <div className="text-xs text-slate-600">
+                      {position}º lugar
+                    </div>
                   </div>
-                  <span className="text-xl font-bold text-green-600">R$ 185</span>
-                </div>
-                <p className="text-sm text-slate-600 font-medium">Prêmio Semanal</p>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full flex items-center justify-center mr-2">
-                    <Users className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-xl font-bold text-blue-600">{ranking.length}</span>
-                </div>
-                <p className="text-sm text-slate-600 font-medium">Jogadores Ativos</p>
-              </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
