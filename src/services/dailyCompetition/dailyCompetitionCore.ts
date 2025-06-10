@@ -8,11 +8,12 @@ class DailyCompetitionCoreService {
     try {
       console.log('🔍 Buscando competições diárias ativas no banco...');
       
-      // Buscar competições da tabela custom_competitions com status 'active'
+      // Buscar competições da tabela custom_competitions com status 'active' e tipo 'daily'
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
         .eq('status', 'active')
+        .eq('competition_type', 'daily')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -21,7 +22,7 @@ class DailyCompetitionCoreService {
       }
 
       console.log('📊 Resposta bruta do banco:', { data, error });
-      console.log('📊 Total de competições challenge ativas encontradas:', data?.length || 0);
+      console.log('📊 Total de competições diárias ativas encontradas:', data?.length || 0);
 
       // Converter para o formato esperado
       const competitions = data?.map((comp, index) => {
