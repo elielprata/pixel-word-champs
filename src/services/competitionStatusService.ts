@@ -29,8 +29,9 @@ export class CompetitionStatusService {
       // Buscar dados da competição
       const { data: competition, error: fetchError } = await supabase
         .from('custom_competitions')
-        .select('id, start_date, end_date, status, competition_type')
+        .select('id, start_date, end_date, status')
         .eq('id', competitionId)
+        .eq('competition_type', 'tournament')
         .single();
 
       if (fetchError || !competition) {
@@ -65,31 +66,28 @@ export class CompetitionStatusService {
   }
 
   /**
-   * Atualiza status de todas as competições (semanais e diárias)
+   * Atualiza status de todas as competições semanais
    */
   static async updateAllCompetitionsStatus(): Promise<void> {
     try {
       console.log('🔄 Atualizando status de todas as competições...');
       
-      // Buscar todas as competições (semanais e diárias)
+      // Buscar todas as competições semanais
       const { data: competitions, error } = await supabase
         .from('custom_competitions')
-        .select('id, start_date, end_date, status, competition_type')
-        .in('competition_type', ['tournament', 'challenge']);
+        .select('id, start_date, end_date, status')
+        .eq('competition_type', 'tournament');
 
       if (error || !competitions) {
         console.error('❌ Erro ao buscar competições:', error);
         return;
       }
 
-      console.log(`📊 Verificando ${competitions.length} competições (semanais e diárias)`);
-
       // Atualizar cada competição
       for (const competition of competitions) {
         const correctStatus = this.calculateCorrectStatus(competition.start_date, competition.end_date);
         
         if (competition.status !== correctStatus) {
-          console.log(`🔧 Competição ${competition.id} (${competition.competition_type}): ${competition.status} → ${correctStatus}`);
           await this.updateSingleCompetitionStatus(competition.id);
         }
       }
@@ -97,25 +95,6 @@ export class CompetitionStatusService {
       console.log('✅ Atualização de status concluída');
     } catch (error) {
       console.error('❌ Erro ao atualizar status das competições:', error);
-    }
-  }
-
-  /**
-   * Força atualização imediata de todas as competições
-   */
-  static async forceUpdateAllStatuses(): Promise<void> {
-    try {
-      console.log('⚡ Forçando atualização imediata de todos os status...');
-      await this.updateAllCompetitionsStatus();
-      
-      // Aguardar um pouco e verificar novamente para garantir
-      setTimeout(async () => {
-        console.log('🔄 Segunda verificação de status...');
-        await this.updateAllCompetitionsStatus();
-      }, 2000);
-      
-    } catch (error) {
-      console.error('❌ Erro na atualização forçada:', error);
     }
   }
 }

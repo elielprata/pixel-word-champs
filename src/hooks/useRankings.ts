@@ -83,8 +83,8 @@ export const useRankings = () => {
     try {
       console.log('🏆 Buscando competições semanais...');
       
-      // Primeiro, forçar atualização de status de todas as competições
-      await CompetitionStatusService.forceUpdateAllStatuses();
+      // Primeiro, atualizar status de todas as competições
+      await CompetitionStatusService.updateAllCompetitionsStatus();
       
       const { data, error } = await supabase
         .from('custom_competitions')
@@ -153,14 +153,14 @@ export const useRankings = () => {
   useEffect(() => {
     refreshData();
     
-    // Configurar intervalo para atualizar status das competições a cada 1 minuto
+    // Configurar intervalo para atualizar status das competições a cada 2 minutos
     const statusUpdateInterval = setInterval(() => {
       console.log('🔄 Verificação automática de status das competições...');
       CompetitionStatusService.updateAllCompetitionsStatus().then(() => {
         // Recarregar competições após atualização de status
         fetchWeeklyCompetitions();
       });
-    }, 60 * 1000); // 1 minuto
+    }, 2 * 60 * 1000); // 2 minutos
     
     return () => {
       clearInterval(statusUpdateInterval);
