@@ -33,7 +33,6 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   const [hasParticipated, setHasParticipated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState('');
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Obter tema baseado na categoria/theme da competição
   const theme = getCompetitionTheme(competition.theme);
@@ -42,17 +41,6 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   useEffect(() => {
     checkParticipation();
   }, [user, competition.id]);
-
-  // Pre-carregar a imagem
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => setImageLoaded(true);
-    img.onerror = () => {
-      console.log('Erro ao carregar imagem:', theme.backgroundImage);
-      setImageLoaded(false);
-    };
-    img.src = theme.backgroundImage;
-  }, [theme.backgroundImage]);
 
   // Timer em tempo real
   useEffect(() => {
@@ -221,30 +209,15 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
 
   return (
     <Card className={`group relative overflow-hidden bg-gradient-to-br ${theme.gradient} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}>
-      {/* Background image with overlay - only if loaded */}
-      {imageLoaded && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-15 transition-opacity duration-300"
-          style={{ 
-            backgroundImage: `url('${theme.backgroundImage}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        />
-      )}
-      
-      {/* Gradient overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} ${imageLoaded ? 'opacity-85' : 'opacity-95'} transition-opacity duration-300`} />
-      
       {/* Decorative grid pattern - themed */}
-      <div className="absolute inset-0 opacity-10">
+      <div className="absolute inset-0 opacity-20">
         <div className="w-full h-full" style={{
           backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 15px, ${theme.bgPattern} 15px, ${theme.bgPattern} 16px),
                            repeating-linear-gradient(0deg, transparent, transparent 15px, ${theme.bgPattern} 15px, ${theme.bgPattern} 16px)`
         }}></div>
       </div>
       
-      <CardContent className="relative p-4 z-10">
+      <CardContent className="relative p-4">
         <div className="space-y-4">
           {/* Header com tema */}
           <div className="space-y-2">
@@ -260,7 +233,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
           </div>
 
           {/* Tempo com design temático */}
-          <div className="flex items-center justify-center gap-2 bg-white/80 backdrop-blur-sm rounded-lg p-2 text-center shadow-sm">
+          <div className="flex items-center justify-center gap-2 bg-slate-50 rounded-lg p-2 text-center">
             <Clock className={`w-4 h-4 ${getTimeColor(competition.end_date)}`} />
             <div className="text-center">
               <span className="text-xs text-slate-600 block">Tempo restante</span>
@@ -278,7 +251,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             className={`w-full font-bold text-sm py-3 rounded-lg shadow-md transition-all duration-200 border-2 ${
               hasParticipated 
                 ? 'bg-gray-400 hover:bg-gray-400 text-gray-600 border-gray-300 cursor-not-allowed' 
-                : `bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} hover:opacity-90 text-white hover:shadow-lg border-${theme.decorativeElements.primary.replace('bg-', '')}/20 backdrop-blur-sm`
+                : `bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} hover:opacity-90 text-white hover:shadow-lg border-${theme.decorativeElements.primary.replace('bg-', '')}/20`
             }`}
           >
             {getButtonText()}
