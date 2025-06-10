@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckCircle, Star, Target } from 'lucide-react';
+import { CheckCircle, Star, Target, Lock } from 'lucide-react';
 
 interface FoundWord {
   word: string;
@@ -15,6 +15,23 @@ interface WordsListProps {
 }
 
 const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => {
+  // Calcular pontuação de cada palavra para identificar as 2 maiores
+  const getWordPoints = (word: string) => {
+    // Pontuação baseada no tamanho da palavra (mesmo cálculo do useGamePointsConfig)
+    const basePoints = word.length * 10;
+    const bonusPoints = Math.max(0, (word.length - 4) * 5);
+    return basePoints + bonusPoints;
+  };
+
+  // Identificar as 2 palavras com maior pontuação
+  const wordsWithPoints = levelWords.map(word => ({
+    word,
+    points: getWordPoints(word)
+  }));
+  
+  const sortedByPoints = [...wordsWithPoints].sort((a, b) => b.points - a.points);
+  const hiddenWords = new Set([sortedByPoints[0]?.word, sortedByPoints[1]?.word]);
+
   return (
     <div className="p-3">
       {/* Header compacto */}
@@ -36,6 +53,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
           const foundWordIndex = foundWords.findIndex(fw => fw.word === word);
           const isFound = foundWordIndex !== -1;
           const foundWord = foundWords[foundWordIndex];
+          const isHidden = hiddenWords.has(word);
           
           return (
             <div 
@@ -44,22 +62,39 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
                 relative px-3 py-2 rounded-lg transition-all duration-200 text-center
                 ${isFound 
                   ? `bg-gradient-to-r ${getWordColor(foundWordIndex)} text-white shadow-md` 
-                  : 'bg-slate-100 text-slate-600 border border-slate-200'
+                  : isHidden
+                    ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white border border-purple-300'
+                    : 'bg-slate-100 text-slate-600 border border-slate-200'
                 }
               `}
             >
-              {/* Palavra */}
+              {/* Palavra ou placeholder para palavras ocultas */}
               <div className="flex items-center justify-center gap-1">
                 {isFound && (
                   <CheckCircle className="w-3 h-3 text-white/90" />
                 )}
-                <span className="text-sm font-medium">{word}</span>
+                {isHidden && !isFound && (
+                  <Lock className="w-3 h-3 text-white/90" />
+                )}
+                <span className="text-sm font-medium">
+                  {isHidden && !isFound 
+                    ? `${word.length} letras` 
+                    : word
+                  }
+                </span>
               </div>
               
               {/* Pontos (só se encontrada) */}
               {isFound && foundWord && (
                 <div className="text-xs text-white/80 mt-1">
                   +{foundWord.points}pts
+                </div>
+              )}
+              
+              {/* Indicador especial para palavras ocultas não encontradas */}
+              {isHidden && !isFound && (
+                <div className="text-xs text-white/80 mt-1">
+                  Desafio Extra
                 </div>
               )}
               

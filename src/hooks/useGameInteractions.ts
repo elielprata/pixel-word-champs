@@ -19,14 +19,38 @@ export const useGameInteractions = (
   setShowGameOver: (value: boolean) => void,
   onTimeUp: () => void
 ) => {
+  // Função para calcular pontuação de uma palavra
+  const getWordPoints = (word: string) => {
+    const basePoints = word.length * 10;
+    const bonusPoints = Math.max(0, (word.length - 4) * 5);
+    return basePoints + bonusPoints;
+  };
+
+  // Identificar as 2 palavras com maior pontuação (palavras ocultas)
+  const getHiddenWords = () => {
+    const wordsWithPoints = levelWords.map(word => ({
+      word,
+      points: getWordPoints(word)
+    }));
+    
+    const sortedByPoints = [...wordsWithPoints].sort((a, b) => b.points - a.points);
+    return new Set([sortedByPoints[0]?.word, sortedByPoints[1]?.word]);
+  };
+
   const useHint = () => {
     if (hintsUsed >= 1) return;
     
-    const remainingWords = levelWords.filter(word => !foundWords.some(fw => fw.word === word));
+    const hiddenWords = getHiddenWords();
+    
+    // Filtrar palavras restantes, excluindo as palavras ocultas
+    const remainingWords = levelWords.filter(word => 
+      !foundWords.some(fw => fw.word === word) && !hiddenWords.has(word)
+    );
+    
     if (remainingWords.length > 0) {
       setHintsUsed(prev => prev + 1);
       
-      // Encontrar a primeira palavra não encontrada e destacar suas posições
+      // Encontrar a primeira palavra não encontrada (excluindo ocultas) e destacar suas posições
       const hintWord = remainingWords[0];
       const wordPlacement = boardData.placedWords.find(pw => pw.word === hintWord);
       
@@ -40,6 +64,8 @@ export const useGameInteractions = (
       }
       
       console.log(`Dica: Procure por "${hintWord}"`);
+    } else {
+      console.log('Nenhuma dica disponível - apenas palavras ocultas restantes');
     }
   };
 
