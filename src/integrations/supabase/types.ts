@@ -549,76 +549,80 @@ export type Database = {
       prize_configurations: {
         Row: {
           active: boolean
-          created_at: string
-          group_name: string | null
+          created_at: string | null
           id: string
           position: number | null
           position_range: string | null
           prize_amount: number
-          total_winners: number | null
+          total_winners: number
           type: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           active?: boolean
-          created_at?: string
-          group_name?: string | null
+          created_at?: string | null
           id?: string
           position?: number | null
           position_range?: string | null
           prize_amount?: number
-          total_winners?: number | null
+          total_winners?: number
           type: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           active?: boolean
-          created_at?: string
-          group_name?: string | null
+          created_at?: string | null
           id?: string
           position?: number | null
           position_range?: string | null
           prize_amount?: number
-          total_winners?: number | null
+          total_winners?: number
           type?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
       prize_distributions: {
         Row: {
-          amount: number
           competition_id: string | null
           created_at: string | null
           id: string
-          percentage: number
+          payment_status: string | null
+          pix_holder_name: string | null
+          pix_key: string | null
           position: number
+          prize_amount: number
+          ranking_type: string
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
-          amount: number
           competition_id?: string | null
           created_at?: string | null
           id?: string
-          percentage: number
+          payment_status?: string | null
+          pix_holder_name?: string | null
+          pix_key?: string | null
           position: number
+          prize_amount: number
+          ranking_type: string
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
-          amount?: number
           competition_id?: string | null
           created_at?: string | null
           id?: string
-          percentage?: number
+          payment_status?: string | null
+          pix_holder_name?: string | null
+          pix_key?: string | null
           position?: number
+          prize_amount?: number
+          ranking_type?: string
+          updated_at?: string | null
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "prize_distributions_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -739,50 +743,51 @@ export type Database = {
       }
       weekly_rankings: {
         Row: {
-          created_at: string
+          created_at: string | null
           id: string
-          payment_date: string | null
-          payment_status: Database["public"]["Enums"]["payment_status"] | null
+          payment_status: string | null
+          pix_holder_name: string | null
+          pix_key: string | null
           position: number
-          prize: number | null
-          score: number
+          prize_amount: number | null
+          total_score: number
+          updated_at: string | null
           user_id: string
+          username: string
           week_end: string
           week_start: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           id?: string
-          payment_date?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          payment_status?: string | null
+          pix_holder_name?: string | null
+          pix_key?: string | null
           position: number
-          prize?: number | null
-          score?: number
+          prize_amount?: number | null
+          total_score?: number
+          updated_at?: string | null
           user_id: string
+          username: string
           week_end: string
           week_start: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           id?: string
-          payment_date?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          payment_status?: string | null
+          pix_holder_name?: string | null
+          pix_key?: string | null
           position?: number
-          prize?: number | null
-          score?: number
+          prize_amount?: number | null
+          total_score?: number
+          updated_at?: string | null
           user_id?: string
+          username?: string
           week_end?: string
           week_start?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "weekly_rankings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       word_categories: {
         Row: {
@@ -859,6 +864,10 @@ export type Database = {
         Returns: boolean
       }
       update_competition_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_daily_ranking: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
