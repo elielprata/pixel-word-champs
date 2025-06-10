@@ -28,20 +28,20 @@ const GameCell = ({
   isSelecting,
   wordColorClass
 }: GameCellProps) => {
-  const getLetterClasses = () => {
+  const getCellClasses = () => {
     if (isPermanent && wordColorClass) {
-      return `text-transparent bg-gradient-to-br ${wordColorClass} bg-clip-text font-bold`;
+      return `bg-gradient-to-br ${wordColorClass} text-white rounded-lg`;
     }
     if (isPermanent) {
-      return 'text-transparent bg-gradient-to-br from-emerald-400 to-green-500 bg-clip-text font-bold';
+      return 'bg-gradient-to-br from-emerald-400 to-green-500 text-white rounded-lg';
     }
     if (isSelected) {
-      return 'text-transparent bg-gradient-to-br from-indigo-500 to-purple-600 bg-clip-text font-bold';
+      return 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg';
     }
     if (isHintHighlighted) {
-      return 'text-transparent bg-gradient-to-br from-yellow-400 to-amber-500 bg-clip-text font-bold animate-pulse';
+      return 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white rounded-lg animate-pulse';
     }
-    return 'text-slate-700 font-bold';
+    return 'text-slate-700';
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -75,8 +75,8 @@ const GameCell = ({
     <div
       className={`
         flex items-center justify-center cursor-pointer
-        transition-all duration-300 select-none
-        ${getLetterClasses()}
+        transition-all duration-300 select-none font-bold
+        ${getCellClasses()}
       `}
       style={{ 
         width: `${cellSize}px`, 
