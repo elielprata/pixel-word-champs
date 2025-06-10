@@ -26,7 +26,7 @@ export const rankingDebugService = {
 
       const { data: weeklyRanking, error: rankingError } = await supabase
         .from('weekly_rankings')
-        .select('user_id, score, position')
+        .select('user_id, total_score, position')
         .eq('week_start', weekStartStr)
         .order('position', { ascending: true });
 
@@ -43,17 +43,17 @@ export const rankingDebugService = {
       console.log('📊 Dados do weekly_rankings:');
       weeklyRanking?.forEach((ranking) => {
         const profile = profiles?.find(p => p.id === ranking.user_id);
-        console.log(`#${ranking.position} - Score no ranking: ${ranking.score}, Score real: ${profile?.total_score || 'N/A'} (${profile?.username || 'N/A'})`);
+        console.log(`#${ranking.position} - Score no ranking: ${ranking.total_score}, Score real: ${profile?.total_score || 'N/A'} (${profile?.username || 'N/A'})`);
         
-        if (profile && ranking.score !== profile.total_score) {
-          console.warn(`⚠️ INCONSISTÊNCIA DETECTADA para ${profile.username}: Ranking=${ranking.score}, Real=${profile.total_score}`);
+        if (profile && ranking.total_score !== profile.total_score) {
+          console.warn(`⚠️ INCONSISTÊNCIA DETECTADA para ${profile.username}: Ranking=${ranking.total_score}, Real=${profile.total_score}`);
         }
       });
 
       // Análise de inconsistências
       const inconsistencies = weeklyRanking?.filter(ranking => {
         const profile = profiles?.find(p => p.id === ranking.user_id);
-        return profile && ranking.score !== profile.total_score;
+        return profile && ranking.total_score !== profile.total_score;
       }) || [];
 
       console.log(`📈 Resumo da análise:`);

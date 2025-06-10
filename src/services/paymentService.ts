@@ -137,7 +137,7 @@ export const paymentService = {
           id,
           user_id,
           position,
-          score,
+          total_score,
           week_start,
           profiles!inner(username, pix_key, pix_holder_name)
         `)

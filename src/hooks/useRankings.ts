@@ -47,7 +47,7 @@ export const useRankings = () => {
         .from('weekly_rankings')
         .select(`
           position,
-          score,
+          total_score,
           user_id,
           profiles!inner(username, avatar_url)
         `)
@@ -60,7 +60,7 @@ export const useRankings = () => {
       const rankings = (data || []).map((item) => ({
         pos: item.position,
         name: item.profiles?.username || 'Usuário',
-        score: item.score,
+        score: item.total_score,
         avatar: item.profiles?.username?.substring(0, 2).toUpperCase() || 'U',
         trend: '',
         user_id: item.user_id

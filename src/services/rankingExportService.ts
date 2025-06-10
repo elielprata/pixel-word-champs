@@ -23,7 +23,7 @@ export const rankingExportService = {
         .from('weekly_rankings')
         .select(`
           position,
-          score,
+          total_score,
           week_start,
           profiles!inner(username)
         `)
@@ -35,7 +35,7 @@ export const rankingExportService = {
       return (data || []).map(item => ({
         position: item.position,
         username: item.profiles?.username || 'Usuário',
-        score: item.score,
+        score: item.total_score,
         date: item.week_start,
         type: 'weekly' as const
       }));
