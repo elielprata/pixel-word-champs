@@ -1,6 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
 
-type PaymentStatus = 'pending' | 'paid' | 'not_eligible';
+import { supabase } from '@/integrations/supabase/client';
 
 export class RankingUpdateService {
   async updateWeeklyRanking(): Promise<void> {
@@ -31,58 +30,32 @@ export class RankingUpdateService {
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       const weekStart = new Date(today.setDate(diff));
-      weekStart.setHours(0, 0, 0, 0);
       const weekStartStr = weekStart.toISOString().split('T')[0];
       
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
-      weekEnd.setHours(23, 59, 59, 999);
       const weekEndStr = weekEnd.toISOString().split('T')[0];
 
       console.log('📅 Semana atual:', weekStartStr, 'até', weekEndStr);
 
-      // SOLUÇÃO: Deletar TODOS os registros da semana de uma vez, sem condições adicionais
-      console.log('🗑️ Deletando TODOS os rankings da semana atual...');
-      
-      const { error: deleteError, count: deletedCount } = await supabase
+      // Deletar rankings da semana atual
+      const { error: deleteError } = await supabase
         .from('weekly_rankings')
-        .delete({ count: 'exact' })
+        .delete()
         .eq('week_start', weekStartStr);
 
       if (deleteError) {
-        console.error('❌ Erro ao deletar rankings da semana:', deleteError);
+        console.error('❌ Erro ao deletar rankings antigos:', deleteError);
         throw deleteError;
       }
 
-      console.log('🗑️ Rankings deletados:', deletedCount || 0);
-
-      // Aguardar para garantir que a transação foi processada
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Verificação final para garantir que não há registros
-      const { data: remainingRecords, error: checkError } = await supabase
-        .from('weekly_rankings')
-        .select('id')
-        .eq('week_start', weekStartStr)
-        .limit(1);
-
-      if (checkError) {
-        console.error('❌ Erro na verificação final:', checkError);
-        throw checkError;
-      }
-
-      if (remainingRecords && remainingRecords.length > 0) {
-        console.error('❌ ERRO CRÍTICO: Ainda existem registros após delete!');
-        throw new Error('Falha ao limpar rankings existentes');
-      }
-
-      console.log('✅ Verificação: Nenhum registro restante da semana');
+      console.log('🗑️ Rankings antigos deletados');
 
       // Criar novos rankings
       const rankingEntries = profiles.map((profile, index) => {
         const position = index + 1;
         let prize = 0;
-        let paymentStatus: PaymentStatus = 'not_eligible';
+        let paymentStatus = 'not_eligible';
 
         // Calcular prêmios baseado na posição
         if (position === 1) {
@@ -110,29 +83,24 @@ export class RankingUpdateService {
         };
       });
 
-      console.log('📝 Inserindo', rankingEntries.length, 'novos rankings...');
+      console.log('📝 Criando', rankingEntries.length, 'entradas de ranking');
 
       // Inserir novos rankings
-      const { data: insertedData, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('weekly_rankings')
-        .insert(rankingEntries)
-        .select();
+        .insert(rankingEntries);
 
       if (insertError) {
         console.error('❌ Erro ao inserir novos rankings:', insertError);
-        console.error('📊 Dados sendo inseridos:', rankingEntries);
         throw insertError;
       }
 
-      console.log('✅ Ranking semanal atualizado com sucesso!');
-      console.log('📊 Registros inseridos:', insertedData?.length || 0);
+      console.log('✅ Ranking semanal atualizado com sucesso');
       
       // Log detalhado dos rankings criados
-      if (insertedData) {
-        insertedData.forEach((entry: any) => {
-          console.log(`#${entry.position} - User ${entry.user_id.substring(0, 8)} - ${entry.score} pontos - R$ ${entry.prize}`);
-        });
-      }
+      rankingEntries.forEach((entry, index) => {
+        console.log(`#${entry.position} - User ${entry.user_id.substring(0, 8)} - ${entry.score} pontos - R$ ${entry.prize}`);
+      });
 
     } catch (error) {
       console.error('❌ Erro na atualização do ranking semanal:', error);
