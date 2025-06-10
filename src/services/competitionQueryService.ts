@@ -2,39 +2,37 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { getBrasiliaTime, isCompetitionActiveInBrasilia } from '@/utils/brasiliaTime';
+import { getBrasiliaTime } from '@/utils/brasiliaTime';
 
 export class CompetitionQueryService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
     try {
       console.log('🔍 Buscando competições diárias ativas no banco...');
       
-      const brasiliaNow = getBrasiliaTime();
-      console.log('📅 Data atual de Brasília:', brasiliaNow.toISOString());
+      const brasiliaTime = getBrasiliaTime();
+      console.log('📅 Data atual de Brasília:', brasiliaTime.toISOString());
 
-      // Buscar todas as competições do tipo 'challenge' que estão ativas
-      const { data: competitions, error } = await supabase
+      const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
         .eq('competition_type', 'challenge')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .eq('status', 'active');
+
+      console.log('📊 Resposta bruta do banco:', { data, error });
 
       if (error) {
-        console.error('❌ Erro ao buscar competições:', error);
+        console.error('❌ Erro na consulta SQL:', error);
         throw error;
       }
 
-      console.log('📊 Resposta bruta do banco:', { data: competitions, error });
-      console.log('📊 Total de competições challenge ativas encontradas:', competitions?.length || 0);
-
-      if (!competitions || competitions.length === 0) {
-        console.log('📅 Nenhuma competição challenge ativa encontrada no banco');
+      if (!data) {
+        console.log('⚠️ Nenhum dado retornado do banco');
         return createSuccessResponse([]);
       }
 
-      // Log das competições encontradas
-      competitions.forEach((comp, index) => {
+      console.log(`📊 Total de competições challenge ativas encontradas: ${data.length}`);
+      
+      data.forEach((comp, index) => {
         console.log(`📋 Competição ${index + 1}:`, {
           id: comp.id,
           title: comp.title,
@@ -45,60 +43,40 @@ export class CompetitionQueryService {
         });
       });
 
-      // Filtrar competições que estão ativas no horário de Brasília
-      const activeCompetitions = competitions.filter(comp => {
-        const startDate = new Date(comp.start_date);
-        const endDate = new Date(comp.end_date);
-        
-        console.log(`🔍 Verificando "${comp.title}":`);
-        console.log('  📅 Início UTC:', startDate.toISOString());
-        console.log('  📅 Fim UTC:', endDate.toISOString());
-        console.log('  🕐 Agora Brasília:', brasiliaNow.toISOString());
-        
-        const isActive = isCompetitionActiveInBrasilia(startDate, endDate);
-        console.log('  ✅ Ativo:', isActive);
-        
-        return isActive;
-      });
-
-      console.log('✅ Competições ativas filtradas por horário de Brasília:', activeCompetitions.length);
-
-      return createSuccessResponse(activeCompetitions);
+      return createSuccessResponse(data);
     } catch (error) {
-      console.error('❌ Erro no serviço de consulta de competições:', error);
-      return createErrorResponse(handleServiceError(error, 'COMPETITION_QUERY_DAILY'));
+      console.error('❌ Erro ao buscar competições diárias ativas:', error);
+      return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_DAILY_COMPETITIONS'));
     }
   }
 
   async getDailyCompetitionRanking(competitionId: string): Promise<ApiResponse<any[]>> {
     try {
-      console.log('🏆 Buscando ranking da competição:', competitionId);
-
-      const { data: participations, error } = await supabase
-        .from('competition_participations')
-        .select(`
-          user_id,
-          user_score,
-          prize,
-          payment_status,
-          created_at
-        `)
-        .eq('competition_id', competitionId)
-        .order('user_score', { ascending: false })
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('❌ Erro ao buscar participações:', error);
-        throw error;
+      console.log('📊 Buscando ranking da competição diária:', competitionId);
+      
+      if (!competitionId) {
+        console.error('❌ ID da competição não fornecido');
+        return createErrorResponse('ID da competição é obrigatório');
       }
 
-      console.log('📊 Participações encontradas:', participations?.length || 0);
+      const { data: participations, error: participationsError } = await supabase
+        .from('competition_participations')
+        .select('user_position, user_score, user_id, created_at')
+        .eq('competition_id', competitionId)
+        .not('user_position', 'is', null)
+        .order('user_position', { ascending: true })
+        .limit(100);
+
+      if (participationsError) {
+        console.error('❌ Erro ao buscar participações:', participationsError);
+        throw participationsError;
+      }
 
       if (!participations || participations.length === 0) {
+        console.log('📊 Nenhuma participação encontrada para a competição');
         return createSuccessResponse([]);
       }
 
-      // Buscar perfis dos usuários separadamente
       const userIds = participations.map(p => p.user_id);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -110,29 +88,22 @@ export class CompetitionQueryService {
         throw profilesError;
       }
 
-      // Criar um mapa de perfis para facilitar o lookup
-      const profilesMap = new Map();
-      profiles?.forEach(profile => {
-        profilesMap.set(profile.id, profile);
-      });
-
-      const rankingData = participations.map((participation, index) => {
-        const profile = profilesMap.get(participation.user_id);
+      const rankingData = participations.map(participation => {
+        const profile = profiles?.find(p => p.id === participation.user_id);
         return {
-          position: index + 1,
-          user_id: participation.user_id,
-          username: profile?.username || 'Usuário',
-          avatar_url: profile?.avatar_url,
-          score: participation.user_score || 0,
-          prize: participation.prize || 0,
-          payment_status: participation.payment_status || 'not_eligible'
+          ...participation,
+          profiles: profile ? {
+            username: profile.username,
+            avatar_url: profile.avatar_url
+          } : null
         };
       });
 
+      console.log('✅ Ranking da competição diária carregado:', rankingData.length);
       return createSuccessResponse(rankingData);
     } catch (error) {
-      console.error('❌ Erro ao buscar ranking da competição:', error);
-      return createErrorResponse(handleServiceError(error, 'COMPETITION_RANKING_QUERY'));
+      console.error('❌ Erro ao carregar ranking:', error);
+      return createErrorResponse(handleServiceError(error, 'GET_DAILY_COMPETITION_RANKING'));
     }
   }
 }

@@ -2,7 +2,6 @@
 import { useEffect } from 'react';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { supabase } from '@/integrations/supabase/client';
-import { getBrasiliaTime, convertToBrasiliaTime } from '@/utils/brasiliaTime';
 
 export const useDailyCompetitionFinalization = () => {
   useEffect(() => {
@@ -10,42 +9,22 @@ export const useDailyCompetitionFinalization = () => {
       try {
         console.log('🔍 Verificando competições diárias expiradas...');
         
-        const brasiliaNow = getBrasiliaTime();
-        console.log('🕐 Horário atual de Brasília:', brasiliaNow.toISOString());
+        const now = new Date().toISOString();
         
-        // Buscar competições ativas
-        const { data: competitions, error } = await supabase
+        // Buscar competições ativas que já expiraram
+        const { data: expiredCompetitions, error } = await supabase
           .from('custom_competitions')
-          .select('id, title, end_date')
+          .select('id, title')
           .eq('competition_type', 'challenge')
-          .eq('status', 'active');
+          .eq('status', 'active')
+          .lt('end_date', now);
 
         if (error) {
-          console.error('❌ Erro ao buscar competições:', error);
+          console.error('❌ Erro ao buscar competições expiradas:', error);
           return;
         }
 
-        if (!competitions || competitions.length === 0) {
-          console.log('✅ Nenhuma competição ativa encontrada');
-          return;
-        }
-
-        // Filtrar competições expiradas usando horário de Brasília
-        const expiredCompetitions = competitions.filter(comp => {
-          const endDate = new Date(comp.end_date);
-          const endBrasilia = convertToBrasiliaTime(endDate);
-          
-          console.log(`🔍 Verificando "${comp.title}":`, {
-            endUTC: endDate.toISOString(),
-            endBrasilia: endBrasilia.toISOString(),
-            nowBrasilia: brasiliaNow.toISOString(),
-            isExpired: brasiliaNow > endBrasilia
-          });
-          
-          return brasiliaNow > endBrasilia;
-        });
-
-        if (expiredCompetitions.length > 0) {
+        if (expiredCompetitions && expiredCompetitions.length > 0) {
           console.log(`📋 Encontradas ${expiredCompetitions.length} competições expiradas`);
           
           // Finalizar cada competição expirada

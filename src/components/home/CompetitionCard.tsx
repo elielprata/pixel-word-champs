@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,6 @@ import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { getBrasiliaTime, convertToBrasiliaTime } from '@/utils/brasiliaTime';
 
 interface Competition {
   id: string;
@@ -57,9 +55,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const formatTimeRemaining = (endDate: string) => {
-    const brasiliaNow = getBrasiliaTime();
-    const endBrasilia = convertToBrasiliaTime(new Date(endDate));
-    const diff = endBrasilia.getTime() - brasiliaNow.getTime();
+    const now = new Date();
+    const end = new Date(endDate);
+    const diff = end.getTime() - now.getTime();
     
     if (diff <= 0) return 'Finalizada';
     
@@ -73,9 +71,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const getTimeColor = (endDate: string) => {
-    const brasiliaNow = getBrasiliaTime();
-    const endBrasilia = convertToBrasiliaTime(new Date(endDate));
-    const diff = endBrasilia.getTime() - brasiliaNow.getTime();
+    const now = new Date();
+    const end = new Date(endDate);
+    const diff = end.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     
     if (hours <= 1) return 'text-red-600';
