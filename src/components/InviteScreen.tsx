@@ -98,11 +98,7 @@ const InviteScreen = () => {
       </div>
 
       {/* Progress to Next Reward */}
-      <Card className="mb-6 border-0 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-sm relative overflow-hidden">
-        {/* Tarja "em breve" */}
-        <div className="absolute top-3 right-3 bg-gray-400 text-white text-xs px-2 py-1 rounded-full font-medium opacity-80">
-          em breve
-        </div>
+      <Card className="mb-6 border-0 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-sm">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
