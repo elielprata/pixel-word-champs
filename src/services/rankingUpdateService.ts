@@ -1,6 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+type PaymentStatus = 'pending' | 'paid' | 'not_eligible';
+
 export class RankingUpdateService {
   async updateWeeklyRanking(): Promise<void> {
     try {
@@ -55,7 +57,7 @@ export class RankingUpdateService {
       const rankingEntries = profiles.map((profile, index) => {
         const position = index + 1;
         let prize = 0;
-        let paymentStatus = 'not_eligible';
+        let paymentStatus: PaymentStatus = 'not_eligible';
 
         // Calcular prêmios baseado na posição
         if (position === 1) {
