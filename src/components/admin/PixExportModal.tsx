@@ -14,6 +14,21 @@ interface PixExportModalProps {
 export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModalProps) => {
   const pixExportData = usePixExportModal();
 
+  // Convert Winner[] to PaymentRecord[] format for the modal
+  const paymentRecords = pixExportData.displayWinners.map(winner => ({
+    id: winner.id,
+    user_id: winner.user_id,
+    username: winner.username,
+    position: winner.position,
+    score: winner.score,
+    prize_amount: winner.prize_amount,
+    pix_key: winner.pix_key,
+    pix_holder_name: winner.pix_holder_name,
+    payment_status: winner.payment_status,
+    created_at: new Date().toISOString(), // Add missing property
+    ranking_type: 'weekly' as const // Add missing property
+  }));
+
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
       if (!newOpen) {
@@ -33,7 +48,7 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
           startDate={pixExportData.startDate}
           endDate={pixExportData.endDate}
           isFiltered={pixExportData.isFiltered}
-          displayWinners={pixExportData.displayWinners}
+          displayWinners={paymentRecords}
           isLoading={pixExportData.isLoading}
           prizeLevel={prizeLevel}
           onStartDateChange={pixExportData.setStartDate}

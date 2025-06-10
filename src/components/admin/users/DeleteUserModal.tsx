@@ -39,10 +39,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
       setIsSubmitting(true);
       console.log('🗑️ Iniciando exclusão do usuário:', user.username);
       
-      await deleteUser({
-        userId: user.id,
-        adminPassword: adminPassword.trim()
-      });
+      await deleteUser(user.id);
       
       // Reset form e fechar modal
       setAdminPassword('');
