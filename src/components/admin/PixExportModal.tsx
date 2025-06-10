@@ -24,7 +24,7 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
     prize_amount: winner.prize_amount,
     pix_key: winner.pix_key,
     pix_holder_name: winner.pix_holder_name,
-    payment_status: winner.payment_status,
+    payment_status: winner.payment_status as 'pending' | 'paid' | 'cancelled',
     created_at: new Date().toISOString(), // Add missing property
     ranking_type: 'weekly' as const // Add missing property
   }));
