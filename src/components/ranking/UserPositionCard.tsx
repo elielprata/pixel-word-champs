@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Trophy, TrendingUp, Star, Coins } from 'lucide-react';
+import { Trophy, TrendingUp, Star, Coins, Crown, Medal, Award } from 'lucide-react';
 
 interface RankingPlayer {
   position: number;
@@ -26,22 +26,38 @@ const UserPositionCard = ({ userWeeklyPosition, weeklyRanking, user, getPrizeAmo
   const prizeAmount = getPrizeAmount(userWeeklyPosition);
 
   const getPositionColor = () => {
-    if (userWeeklyPosition <= 3) return "from-yellow-400 to-orange-500";
-    if (userWeeklyPosition <= 10) return "from-purple-400 to-purple-600";
-    return "from-blue-400 to-blue-600";
+    if (userWeeklyPosition === 1) return "from-yellow-400 to-orange-500";
+    if (userWeeklyPosition <= 3) return "from-gray-300 to-gray-500";
+    if (userWeeklyPosition <= 10) return "from-orange-400 to-orange-600";
+    if (userWeeklyPosition <= 50) return "from-purple-400 to-purple-600";
+    if (userWeeklyPosition <= 100) return "from-blue-400 to-blue-600";
+    return "from-gray-400 to-gray-600";
   };
 
   const getPositionIcon = () => {
-    if (userWeeklyPosition <= 3) return <Trophy className="w-6 h-6" />;
-    if (userWeeklyPosition <= 10) return <Star className="w-6 h-6" />;
+    if (userWeeklyPosition === 1) return <Crown className="w-6 h-6" />;
+    if (userWeeklyPosition <= 3) return <Medal className="w-6 h-6" />;
+    if (userWeeklyPosition <= 10) return <Award className="w-6 h-6" />;
+    if (userWeeklyPosition <= 50) return <Star className="w-6 h-6" />;
+    if (userWeeklyPosition <= 100) return <Trophy className="w-6 h-6" />;
     return <TrendingUp className="w-6 h-6" />;
   };
 
   const getPositionMessage = () => {
-    if (userWeeklyPosition === 1) return "🏆 Você está em 1º lugar!";
+    if (userWeeklyPosition === 1) return "🏆 Você é o CAMPEÃO!";
     if (userWeeklyPosition <= 3) return "🥇 Você está no pódio!";
     if (userWeeklyPosition <= 10) return "⭐ Você está no Top 10!";
-    return "💪 Continue jogando para subir!";
+    if (userWeeklyPosition <= 50) return "💎 Você está no Top 50!";
+    if (userWeeklyPosition <= 100) return "🎯 Você está no Top 100!";
+    return "💪 Continue jogando para entrar no Top 100!";
+  };
+
+  const getPrizeMessage = () => {
+    if (userWeeklyPosition <= 100) {
+      return "Você está na zona premiada! 🎉";
+    }
+    const positionsToTop100 = userWeeklyPosition - 100;
+    return `Faltam ${positionsToTop100} posições para a zona premiada`;
   };
 
   return (
@@ -66,14 +82,27 @@ const UserPositionCard = ({ userWeeklyPosition, weeklyRanking, user, getPrizeAmo
               {userScore.toLocaleString()}
             </div>
             <p className="text-sm opacity-90 mb-2">pontos</p>
-            {prizeAmount > 0 && (
+            
+            {userWeeklyPosition <= 100 ? (
               <div className="flex items-center gap-1 text-yellow-300 font-semibold">
                 <Coins className="w-4 h-4" />
                 <span className="text-sm">R$ {prizeAmount.toFixed(2)}</span>
               </div>
+            ) : (
+              <div className="text-xs opacity-75">
+                {getPrizeMessage()}
+              </div>
             )}
           </div>
         </div>
+
+        {userWeeklyPosition <= 100 && (
+          <div className="mt-4 p-3 bg-white/10 rounded-lg backdrop-blur-sm">
+            <p className="text-center text-sm opacity-90">
+              🎁 {getPrizeMessage()}
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
