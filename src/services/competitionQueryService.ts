@@ -2,15 +2,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { getBrasiliaTime, formatBrasiliaTime, isDateInCurrentBrasiliaRange } from '@/utils/brasiliaTime';
 
 export class CompetitionQueryService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
     try {
       console.log('🔍 Buscando competições diárias ativas no banco...');
-      
-      const brasiliaTime = getBrasiliaTime();
-      console.log('📅 Data atual de Brasília:', formatBrasiliaTime(brasiliaTime));
 
       const { data, error } = await supabase
         .from('custom_competitions')
@@ -32,24 +28,9 @@ export class CompetitionQueryService {
 
       console.log(`📊 Total de competições challenge ativas encontradas: ${data.length}`);
       
-      // Filtrar competições que estão realmente ativas no horário de Brasília
-      const activeCompetitions = data.filter(comp => {
-        const startDate = new Date(comp.start_date);
-        const endDate = new Date(comp.end_date);
-        const isActive = isDateInCurrentBrasiliaRange(startDate, endDate);
-        
-        console.log(`📋 Competição "${comp.title}":`, {
-          id: comp.id,
-          start: formatBrasiliaTime(startDate),
-          end: formatBrasiliaTime(endDate),
-          isActive
-        });
-        
-        return isActive;
-      });
-
-      console.log(`✅ Competições realmente ativas: ${activeCompetitions.length}`);
-      return createSuccessResponse(activeCompetitions);
+      // Retornar diretamente os dados do backend, sem filtros adicionais
+      console.log(`✅ Competições retornadas: ${data.length}`);
+      return createSuccessResponse(data);
     } catch (error) {
       console.error('❌ Erro ao buscar competições diárias ativas:', error);
       return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_DAILY_COMPETITIONS'));
