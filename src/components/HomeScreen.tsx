@@ -38,25 +38,13 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
       setIsLoading(true);
       setError(null);
       
-      console.log('🎯 Carregando competições diárias do backend...');
+      console.log('🎯 Carregando competições diárias ativas...');
 
       const response = await dailyCompetitionService.getActiveDailyCompetitions();
       
       if (response.success) {
-        console.log(`✅ Backend retornou ${response.data.length} competições`);
-        // Não fazer nenhum filtro aqui - apenas exibir o que o backend retorna
+        console.log(`✅ ${response.data.length} competições diárias encontradas`);
         setCompetitions(response.data);
-        
-        // Log detalhado das competições recebidas
-        response.data.forEach((comp, index) => {
-          console.log(`📋 Competição ${index + 1}:`, {
-            id: comp.id,
-            title: comp.title,
-            status: comp.status,
-            start_date: comp.start_date,
-            end_date: comp.end_date
-          });
-        });
       } else {
         console.error('❌ Erro ao buscar competições:', response.error);
         setError(response.error || 'Erro ao carregar competições');
