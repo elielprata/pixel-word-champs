@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, TrendingUp, Star } from 'lucide-react';
 
 interface UserPositionCardProps {
@@ -26,8 +27,8 @@ const UserPositionCard = ({ position, score, userName, type }: UserPositionCardP
   };
 
   return (
-    <div className={`mb-6 bg-gradient-to-r ${getPositionColor()} text-white border-0 shadow-lg rounded-lg`}>
-      <div className="p-4">
+    <Card className={`mb-6 bg-gradient-to-r ${getPositionColor()} text-white border-0 shadow-lg`}>
+      <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {getPositionIcon()}
@@ -43,8 +44,8 @@ const UserPositionCard = ({ position, score, userName, type }: UserPositionCardP
             <p className="text-xl font-bold">{score.toLocaleString()}</p>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

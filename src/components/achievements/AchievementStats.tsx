@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface AchievementStatsProps {
   unlockedCount: number;
@@ -11,8 +12,8 @@ const AchievementStats = ({ unlockedCount, totalCount, totalPoints }: Achievemen
   const progressPercentage = (unlockedCount / totalCount) * 100;
 
   return (
-    <div className="mb-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0 rounded-lg shadow-sm">
-      <div className="p-6">
+    <Card className="mb-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0">
+      <CardContent className="p-6">
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-xl font-bold mb-2">Progresso Geral</h2>
@@ -31,8 +32,8 @@ const AchievementStats = ({ unlockedCount, totalCount, totalPoints }: Achievemen
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
