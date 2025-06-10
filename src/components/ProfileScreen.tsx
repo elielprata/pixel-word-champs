@@ -5,9 +5,12 @@ import { ArrowLeft, User, Trophy, Target, Calendar, Edit } from 'lucide-react';
 
 interface ProfileScreenProps {
   onBack: () => void;
+  onNavigateToSettings?: () => void;
+  onNavigateToHelp?: () => void;
+  onNavigateToAchievements?: () => void;
 }
 
-const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
+const ProfileScreen = ({ onBack, onNavigateToSettings, onNavigateToHelp, onNavigateToAchievements }: ProfileScreenProps) => {
   const userStats = {
     gamesPlayed: 127,
     bestScore: 2547,
