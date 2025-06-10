@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
 import { Target, Users, TrendingUp, DollarSign } from 'lucide-react';
 
 interface PaymentStatsCardsProps {
@@ -32,8 +31,8 @@ export const PaymentStatsCards = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
-        <CardContent className="p-4">
+      <div className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg">
+        <div className="p-4">
           <div className="flex items-center gap-3">
             <div className="bg-blue-100 p-2 rounded-lg">
               <Target className="h-4 w-4 text-blue-600" />
@@ -45,11 +44,11 @@ export const PaymentStatsCards = ({
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50">
-        <CardContent className="p-4">
+      <div className="border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg">
+        <div className="p-4">
           <div className="flex items-center gap-3">
             <div className="bg-purple-100 p-2 rounded-lg">
               <Users className="h-4 w-4 text-purple-600" />
@@ -61,11 +60,11 @@ export const PaymentStatsCards = ({
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50">
-        <CardContent className="p-4">
+      <div className="border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg">
+        <div className="p-4">
           <div className="flex items-center gap-3">
             <div className="bg-amber-100 p-2 rounded-lg">
               <TrendingUp className="h-4 w-4 text-amber-600" />
@@ -77,11 +76,11 @@ export const PaymentStatsCards = ({
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
-        <CardContent className="p-4">
+      <div className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
+        <div className="p-4">
           <div className="flex items-center gap-3">
             <div className="bg-green-100 p-2 rounded-lg">
               <DollarSign className="h-4 w-4 text-green-600" />
@@ -93,8 +92,8 @@ export const PaymentStatsCards = ({
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

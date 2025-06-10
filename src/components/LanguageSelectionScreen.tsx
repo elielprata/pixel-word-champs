@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Check } from 'lucide-react';
 
 interface LanguageSelectionScreenProps {
@@ -32,11 +31,11 @@ const LanguageSelectionScreen = ({ onBack }: LanguageSelectionScreenProps) => {
         <h1 className="text-2xl font-bold text-purple-800 ml-3">Selecionar Idioma</h1>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg">Idiomas Disponíveis</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold">Idiomas Disponíveis</h2>
+        </div>
+        <div className="p-4 space-y-3">
           {languages.map((language) => (
             <div
               key={language.code}
@@ -56,8 +55,8 @@ const LanguageSelectionScreen = ({ onBack }: LanguageSelectionScreenProps) => {
               )}
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Button onClick={handleSave} className="w-full">
         Salvar Alterações

@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,11 +22,11 @@ const TermsOfService = () => {
           <h1 className="text-2xl font-bold text-white">Termos de Uso</h1>
         </div>
 
-        <Card className="bg-white/95 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Termos de Uso - Letra Arena</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+        <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold">Termos de Uso - Letra Arena</h2>
+          </div>
+          <div className="p-6 space-y-6">
             <section>
               <h3 className="text-lg font-semibold mb-3">1. Aceitação dos Termos</h3>
               <p className="text-gray-700">
@@ -91,8 +90,8 @@ const TermsOfService = () => {
                 dentro do aplicativo.
               </p>
             </section>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

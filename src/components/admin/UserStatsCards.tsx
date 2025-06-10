@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2, Activity } from 'lucide-react';
 import { useRealUserStats } from '@/hooks/useRealUserStats';
 
@@ -11,11 +10,9 @@ export const UserStatsCards = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[...Array(6)].map((_, index) => (
-          <Card key={index} className="border-slate-200 shadow-sm animate-pulse">
-            <CardContent className="p-4">
-              <div className="h-16 bg-slate-200 rounded"></div>
-            </CardContent>
-          </Card>
+          <div key={index} className="border-slate-200 shadow-sm animate-pulse bg-white rounded-lg p-4">
+            <div className="h-16 bg-slate-200 rounded"></div>
+          </div>
         ))}
       </div>
     );
@@ -89,8 +86,8 @@ export const UserStatsCards = () => {
       {cards.map((card, index) => {
         const Icon = card.icon;
         return (
-          <Card key={index} className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white">
-            <CardContent className="p-4">
+          <div key={index} className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white rounded-lg">
+            <div className="p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-2 flex-1">
                   <div className="flex items-center justify-between">
@@ -110,8 +107,8 @@ export const UserStatsCards = () => {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       })}
     </div>

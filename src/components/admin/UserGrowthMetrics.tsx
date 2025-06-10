@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { useUserGrowth } from '@/hooks/useUserGrowth';
@@ -10,37 +9,37 @@ export const UserGrowthMetrics = () => {
 
   if (isLoading) {
     return (
-      <Card className="border-slate-200 shadow-lg">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
+      <div className="border-slate-200 shadow-lg bg-white rounded-lg">
+        <div className="pb-3 p-4 border-b border-gray-200">
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
             <TrendingUp className="h-4 w-4 text-blue-600" />
             Crescimento de Usuários
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4">
           <div className="h-64 flex items-center justify-center">
             <div className="animate-pulse text-slate-500">Carregando dados...</div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="border-slate-200 shadow-lg">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
+      <div className="border-slate-200 shadow-lg bg-white rounded-lg">
+        <div className="pb-3 p-4 border-b border-gray-200">
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
             <TrendingUp className="h-4 w-4 text-red-600" />
             Crescimento de Usuários
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4">
           <div className="h-64 flex items-center justify-center">
             <p className="text-red-600">Erro ao carregar dados de crescimento</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -62,13 +61,13 @@ export const UserGrowthMetrics = () => {
     : 0;
 
   return (
-    <Card className="border-slate-200 shadow-lg">
-      <CardHeader className="pb-3">
+    <div className="border-slate-200 shadow-lg bg-white rounded-lg">
+      <div className="pb-3 p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
             <TrendingUp className="h-4 w-4 text-blue-600" />
             Crescimento de Usuários
-          </CardTitle>
+          </h3>
           <div className="text-right">
             <div className="text-sm text-slate-600">Últimos 7 dias</div>
             <div className={`text-lg font-bold ${totalGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -76,8 +75,8 @@ export const UserGrowthMetrics = () => {
             </div>
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="p-4">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
@@ -109,7 +108,7 @@ export const UserGrowthMetrics = () => {
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

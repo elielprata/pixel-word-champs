@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertCircle, Activity } from 'lucide-react';
 
@@ -39,42 +38,42 @@ export const IntegrationStatusOverview = ({ fingerprintJS }: IntegrationStatusOv
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <Card className="border-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total de Integrações</CardTitle>
+      <div className="border-slate-200 bg-white rounded-lg shadow-sm">
+        <div className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 border-b border-gray-100">
+          <h3 className="text-sm font-medium">Total de Integrações</h3>
           <Activity className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-4">
           <div className="text-2xl font-bold">1</div>
           <p className="text-xs text-muted-foreground">
             Integração disponível na plataforma
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="border-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Integrações Ativas</CardTitle>
+      <div className="border-slate-200 bg-white rounded-lg shadow-sm">
+        <div className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 border-b border-gray-100">
+          <h3 className="text-sm font-medium">Integrações Ativas</h3>
           <CheckCircle className="h-4 w-4 text-green-500" />
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-4">
           <div className="text-2xl font-bold text-green-600">{activeIntegrations.length}</div>
           <p className="text-xs text-muted-foreground">
             Funcionando corretamente
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="border-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Status Geral</CardTitle>
+      <div className="border-slate-200 bg-white rounded-lg shadow-sm">
+        <div className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 border-b border-gray-100">
+          <h3 className="text-sm font-medium">Status Geral</h3>
           {activeIntegrations.length > 0 ? (
             <CheckCircle className="h-4 w-4 text-green-500" />
           ) : (
             <AlertCircle className="h-4 w-4 text-yellow-500" />
           )}
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-4">
           <div className="flex items-center gap-2">
             {activeIntegrations.length > 0 ? (
               <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
@@ -89,8 +88,8 @@ export const IntegrationStatusOverview = ({ fingerprintJS }: IntegrationStatusOv
           <p className="text-xs text-muted-foreground mt-1">
             Sistema de integrações
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

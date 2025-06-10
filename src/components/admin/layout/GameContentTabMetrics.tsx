@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
 import { Activity, BookOpen, Folder } from 'lucide-react';
 import { useRealGameMetrics } from '@/hooks/useRealGameMetrics';
 
@@ -33,8 +32,8 @@ export const GameContentTabMetrics = () => {
       
       <div className="grid grid-cols-2 gap-4">
         {quickStats.map((stat, index) => (
-          <Card key={index} className="border-slate-200 shadow-sm">
-            <CardContent className="p-4">
+          <div key={index} className="border-slate-200 shadow-sm bg-white rounded-lg">
+            <div className="p-4">
               <div className="flex items-center gap-3">
                 <div className="bg-slate-100 p-2 rounded-lg">
                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
@@ -44,8 +43,8 @@ export const GameContentTabMetrics = () => {
                   <p className="text-slate-600 text-sm">{stat.label}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
     </div>
