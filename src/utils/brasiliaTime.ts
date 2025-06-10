@@ -1,5 +1,5 @@
 
-import { zonedTimeToUtc, utcToZonedTime, format } from 'date-fns-tz';
+import { toZonedTime, fromZonedTime, format } from 'date-fns-tz';
 
 /**
  * Configuração padrão de fuso horário para o projeto
@@ -11,7 +11,7 @@ export const BRASILIA_TIMEZONE = 'America/Sao_Paulo';
  */
 export const getBrasiliaTime = (): Date => {
   const now = new Date();
-  const brasiliaTime = utcToZonedTime(now, BRASILIA_TIMEZONE);
+  const brasiliaTime = toZonedTime(now, BRASILIA_TIMEZONE);
   
   console.log('🕐 Horário UTC:', now.toISOString());
   console.log('🇧🇷 Horário Brasília:', brasiliaTime.toISOString());
@@ -23,21 +23,21 @@ export const getBrasiliaTime = (): Date => {
  * Converte uma data UTC para o fuso horário de Brasília
  */
 export const utcToBrasilia = (utcDate: Date): Date => {
-  return utcToZonedTime(utcDate, BRASILIA_TIMEZONE);
+  return toZonedTime(utcDate, BRASILIA_TIMEZONE);
 };
 
 /**
  * Converte uma data do fuso horário de Brasília para UTC
  */
 export const brasiliaToUtc = (brasiliaDate: Date): Date => {
-  return zonedTimeToUtc(brasiliaDate, BRASILIA_TIMEZONE);
+  return fromZonedTime(brasiliaDate, BRASILIA_TIMEZONE);
 };
 
 /**
  * Formata uma data no fuso horário de Brasília
  */
 export const formatBrasiliaTime = (date: Date, formatString: string = 'yyyy-MM-dd HH:mm:ss'): string => {
-  return format(utcToZonedTime(date, BRASILIA_TIMEZONE), formatString, { timeZone: BRASILIA_TIMEZONE });
+  return format(toZonedTime(date, BRASILIA_TIMEZONE), formatString, { timeZone: BRASILIA_TIMEZONE });
 };
 
 /**
