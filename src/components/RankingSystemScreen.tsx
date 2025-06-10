@@ -1,6 +1,5 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Trophy, Medal, Crown, Gift } from 'lucide-react';
 
 interface RankingSystemScreenProps {
@@ -18,14 +17,14 @@ const RankingSystemScreen = ({ onBack }: RankingSystemScreenProps) => {
       </div>
 
       <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg flex items-center gap-2">
               <Trophy className="w-5 h-5 text-yellow-500" />
               Tipos de Ranking
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+            </h2>
+          </div>
+          <div className="p-4 space-y-3">
             <div className="flex items-start gap-3">
               <Medal className="w-5 h-5 text-blue-500 mt-1" />
               <div>
@@ -47,17 +46,17 @@ const RankingSystemScreen = ({ onBack }: RankingSystemScreenProps) => {
                 <p className="text-sm text-gray-600">Soma de pontos da semana toda</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg flex items-center gap-2">
               <Gift className="w-5 h-5 text-green-500" />
               Sistema de Premiação
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+            </h2>
+          </div>
+          <div className="p-4 space-y-3">
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <h4 className="font-medium text-yellow-800 mb-2">🥇 1º Lugar Semanal</h4>
               <p className="text-sm text-yellow-700">R$ 50,00 via Pix</p>
@@ -75,8 +74,8 @@ const RankingSystemScreen = ({ onBack }: RankingSystemScreenProps) => {
               <h4 className="font-medium text-blue-800 mb-2">🏆 Premiações Estendidas</h4>
               <p className="text-sm text-blue-700">Alguns torneios especiais podem oferecer premiações até a <strong>100ª posição</strong>!</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <Card>
           <CardHeader>

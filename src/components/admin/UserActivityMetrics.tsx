@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Activity } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -71,51 +70,50 @@ export const UserActivityMetrics = () => {
 
   if (isLoading) {
     return (
-      <Card className="border-slate-200 shadow-lg">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
+      <div className="border-slate-200 shadow-lg bg-white rounded-lg">
+        <div className="pb-3 p-4 border-b border-gray-200">
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
             <Activity className="h-4 w-4 text-green-600" />
             Atividade dos Usuários
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4">
           <div className="h-64 flex items-center justify-center">
             <div className="animate-pulse text-slate-500">Carregando dados...</div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="border-slate-200 shadow-lg">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
+      <div className="border-slate-200 shadow-lg bg-white rounded-lg">
+        <div className="pb-3 p-4 border-b border-gray-200">
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
             <Activity className="h-4 w-4 text-red-600" />
             Atividade dos Usuários
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4">
           <div className="h-64 flex items-center justify-center">
             <p className="text-red-600">Erro ao carregar dados de atividade</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   const totalSessions = activityData?.reduce((sum, day) => sum + day.sessions, 0) || 0;
-  const totalActiveUsers = activityData?.reduce((sum, day) => sum + day.activeUsers, 0) || 0;
 
   return (
-    <Card className="border-slate-200 shadow-lg">
-      <CardHeader className="pb-3">
+    <div className="border-slate-200 shadow-lg bg-white rounded-lg">
+      <div className="pb-3 p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
             <Activity className="h-4 w-4 text-green-600" />
             Atividade dos Usuários
-          </CardTitle>
+          </h3>
           <div className="text-right">
             <div className="text-sm text-slate-600">7 dias</div>
             <div className="text-lg font-bold text-green-600">
@@ -123,8 +121,8 @@ export const UserActivityMetrics = () => {
             </div>
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="p-4">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={activityData}>
@@ -153,7 +151,7 @@ export const UserActivityMetrics = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

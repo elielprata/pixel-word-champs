@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Medal, Award, Crown } from 'lucide-react';
 import { RankingPlayer } from '@/types';
 
@@ -33,8 +32,8 @@ const PodiumCard = ({ players, isCurrentUser }: PodiumCardProps) => {
   if (podiumPlayers.length === 0) return null;
 
   return (
-    <Card className="mb-6 bg-gradient-to-br from-purple-50 to-blue-50 border-0 shadow-lg overflow-hidden">
-      <CardContent className="p-6">
+    <div className="mb-6 bg-gradient-to-br from-purple-50 to-blue-50 border-0 shadow-lg overflow-hidden rounded-lg">
+      <div className="p-6">
         <div className="text-center mb-6">
           <h3 className="text-xl font-bold text-gray-800 mb-2">🏆 Top 3</h3>
           <p className="text-sm text-gray-600">Os melhores da competição</p>
@@ -104,8 +103,8 @@ const PodiumCard = ({ players, isCurrentUser }: PodiumCardProps) => {
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
