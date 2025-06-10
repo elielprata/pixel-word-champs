@@ -5,7 +5,7 @@ import { dailyCompetitionParticipationService } from './dailyCompetitionParticip
 export class DailyCompetitionFinalizationService {
   async finalizeDailyCompetition(competitionId: string): Promise<void> {
     try {
-      console.log('🏁 Finalizando competição diária e consolidando pontos...');
+      console.log('🏁 Finalizando competição diária (nova dinâmica - sem ranking diário)...');
 
       // Buscar informações da competição diária
       const { data: competition, error: compError } = await supabase
@@ -21,17 +21,13 @@ export class DailyCompetitionFinalizationService {
 
       // Verificar se há competição semanal vinculada
       if (!competition.weekly_tournament_id) {
-        console.warn('⚠️ Competição diária não está vinculada a uma competição semanal');
+        console.error('❌ Competição diária não está vinculada a uma competição semanal');
+        return;
       }
 
-      // Atualizar rankings finais da competição diária
-      await dailyCompetitionParticipationService.updateCompetitionRankings(competitionId);
-
-      // Se há competição semanal vinculada, atualizar seus rankings também
-      if (competition.weekly_tournament_id) {
-        await dailyCompetitionParticipationService.updateCompetitionRankings(competition.weekly_tournament_id);
-        console.log('✅ Rankings da competição semanal atualizados');
-      }
+      // Como não há ranking diário separado, atualizar apenas os rankings da competição semanal
+      await dailyCompetitionParticipationService.updateCompetitionRankings(competition.weekly_tournament_id);
+      console.log('✅ Rankings da competição semanal atualizados');
 
       // Finalizar a competição diária
       await supabase
@@ -42,7 +38,7 @@ export class DailyCompetitionFinalizationService {
         })
         .eq('id', competitionId);
 
-      console.log('✅ Competição diária finalizada com sucesso');
+      console.log('✅ Competição diária finalizada com sucesso (pontos já na competição semanal)');
     } catch (error) {
       console.error('❌ Erro ao finalizar competição diária:', error);
     }
@@ -50,12 +46,12 @@ export class DailyCompetitionFinalizationService {
 
   async transferScoresToWeeklyCompetition(dailyCompetitionId: string): Promise<void> {
     try {
-      console.log('🔄 Verificando transferência de pontos para competição semanal...');
+      console.log('ℹ️ Com a nova dinâmica, não há transferência de pontos - os pontos já são contabilizados diretamente na competição semanal');
 
-      // Buscar competição diária e sua vinculação semanal
+      // Buscar competição diária e sua vinculação semanal para validação
       const { data: dailyCompetition, error: dailyError } = await supabase
         .from('custom_competitions')
-        .select('weekly_tournament_id')
+        .select('weekly_tournament_id, title')
         .eq('id', dailyCompetitionId)
         .single();
 
@@ -64,41 +60,10 @@ export class DailyCompetitionFinalizationService {
         return;
       }
 
-      // Buscar todas as participações da competição diária
-      const { data: dailyParticipations, error: participationsError } = await supabase
-        .from('competition_participations')
-        .select('user_id, user_score')
-        .eq('competition_id', dailyCompetitionId)
-        .gt('user_score', 0);
-
-      if (participationsError) {
-        console.error('❌ Erro ao buscar participações diárias:', participationsError);
-        return;
-      }
-
-      console.log(`📊 Processando ${dailyParticipations?.length || 0} participações`);
-
-      // Como os pontos já estão sendo transferidos em tempo real durante o jogo,
-      // esta função agora apenas valida a consistência
-      for (const participation of dailyParticipations || []) {
-        const { data: weeklyParticipation, error: weeklyError } = await supabase
-          .from('competition_participations')
-          .select('user_score')
-          .eq('competition_id', dailyCompetition.weekly_tournament_id)
-          .eq('user_id', participation.user_id)
-          .single();
-
-        if (weeklyError) {
-          console.warn(`⚠️ Participação semanal não encontrada para usuário ${participation.user_id}`);
-          continue;
-        }
-
-        console.log(`✅ Usuário ${participation.user_id}: ${participation.user_score} pontos diários, ${weeklyParticipation.user_score} pontos semanais`);
-      }
-
-      console.log('✅ Verificação de consistência de pontos concluída');
+      console.log(`✅ Competição diária "${dailyCompetition.title || 'Sem título'}" está corretamente vinculada à competição semanal`);
+      console.log('ℹ️ Os pontos são transferidos automaticamente em tempo real durante o jogo');
     } catch (error) {
-      console.error('❌ Erro ao verificar transferência de pontos:', error);
+      console.error('❌ Erro ao verificar vinculação:', error);
     }
   }
 }

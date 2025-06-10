@@ -45,43 +45,15 @@ export class DailyCompetitionParticipationService {
         return;
       }
 
-      // Verificar se o usuário já tem participação na competição diária
-      const { data: existingParticipation, error: checkError } = await supabase
-        .from('competition_participations')
-        .select('id, user_score')
-        .eq('competition_id', targetCompetition.id)
-        .eq('user_id', session.user_id)
-        .maybeSingle();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('❌ Erro ao verificar participação existente:', checkError);
+      // Como não há ranking diário separado, criar participação diretamente na competição semanal
+      if (targetCompetition.weekly_tournament_id) {
+        await this.ensureWeeklyParticipation(session.user_id, targetCompetition.weekly_tournament_id);
+      } else {
+        console.error('❌ Competição diária não está vinculada a uma competição semanal');
         return;
       }
 
-      if (!existingParticipation) {
-        // Criar participação na competição diária
-        const { error: insertError } = await supabase
-          .from('competition_participations')
-          .insert({
-            competition_id: targetCompetition.id,
-            user_id: session.user_id,
-            user_score: 0
-          });
-
-        if (insertError) {
-          console.error('❌ Erro ao criar participação na competição diária:', insertError);
-          return;
-        }
-
-        console.log('✅ Participação criada na competição diária');
-      }
-
-      // Verificar se há competição semanal vinculada e criar participação se necessário
-      if (targetCompetition.weekly_tournament_id) {
-        await this.ensureWeeklyParticipation(session.user_id, targetCompetition.weekly_tournament_id);
-      }
-
-      console.log('✅ Usuário inscrito automaticamente na competição diária');
+      console.log('✅ Usuário inscrito automaticamente na competição semanal vinculada');
     } catch (error) {
       console.error('❌ Erro ao inscrever automaticamente:', error);
     }
@@ -128,7 +100,7 @@ export class DailyCompetitionParticipationService {
 
   async updateParticipationScore(sessionId: string, totalScore: number): Promise<void> {
     try {
-      console.log('📊 Atualizando pontuação da sessão e transferindo para competições...');
+      console.log('📊 Atualizando pontuação da sessão e transferindo diretamente para competição semanal...');
 
       // Buscar informações da sessão
       const { data: session, error: sessionError } = await supabase
@@ -157,9 +129,6 @@ export class DailyCompetitionParticipationService {
       }
 
       if (session.competition_id && scoreDifference > 0) {
-        // Atualizar pontuação na competição diária
-        await this.updateCompetitionScore(session.competition_id, session.user_id, scoreDifference);
-
         // Buscar informações da competição diária para obter o ID da competição semanal
         const { data: dailyCompetition, error: dailyCompError } = await supabase
           .from('custom_competitions')
@@ -168,13 +137,15 @@ export class DailyCompetitionParticipationService {
           .single();
 
         if (!dailyCompError && dailyCompetition?.weekly_tournament_id) {
-          // Transferir pontos para a competição semanal
+          // Transferir pontos diretamente para a competição semanal (não há ranking diário)
           await this.updateCompetitionScore(
             dailyCompetition.weekly_tournament_id, 
             session.user_id, 
             scoreDifference
           );
-          console.log('✅ Pontos transferidos para competição semanal');
+          console.log('✅ Pontos transferidos diretamente para competição semanal');
+        } else {
+          console.error('❌ Competição diária não vinculada a uma competição semanal');
         }
       }
 
@@ -210,7 +181,7 @@ export class DailyCompetitionParticipationService {
         return;
       }
 
-      console.log(`✅ Pontuação atualizada na competição ${competitionId}: +${scoreIncrease} pontos`);
+      console.log(`✅ Pontuação atualizada na competição ${competitionId}: +${scoreIncrease} pontos (total: ${newScore})`);
     } catch (error) {
       console.error('❌ Erro ao atualizar pontuação da competição:', error);
     }

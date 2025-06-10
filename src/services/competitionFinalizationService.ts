@@ -4,12 +4,12 @@ import { competitionParticipationService } from './competitionParticipationServi
 import { dailyCompetitionFinalizationService } from './dailyCompetition/dailyCompetitionFinalization';
 
 /**
- * Serviço para finalização de competições - atualizado para nova dinâmica
+ * Serviço para finalização de competições - nova dinâmica sem ranking diário
  */
 class CompetitionFinalizationService {
   async finalizeDailyCompetition(competitionId: string): Promise<void> {
     try {
-      console.log('🏁 Finalizando competição diária com nova dinâmica...');
+      console.log('🏁 Finalizando competição diária (nova dinâmica - pontos já na semanal)...');
 
       // Usar o novo serviço específico para competições diárias
       await dailyCompetitionFinalizationService.finalizeDailyCompetition(competitionId);
@@ -24,10 +24,10 @@ class CompetitionFinalizationService {
     try {
       console.log('🏁 Finalizando competição semanal...');
 
-      // Atualizar rankings finais
+      // Atualizar rankings finais da competição semanal
       await competitionParticipationService.updateCompetitionRankings(competitionId);
 
-      // Finalizar a competição
+      // Finalizar a competição semanal
       await supabase
         .from('custom_competitions')
         .update({ 
@@ -54,12 +54,6 @@ class CompetitionFinalizationService {
     } catch (error) {
       console.error('❌ Erro ao finalizar competição semanal:', error);
     }
-  }
-
-  private async transferPointsToWeeklyCompetition(weeklyCompetitionId: string, participations: any[]): Promise<void> {
-    // Este método não é mais necessário com a nova dinâmica,
-    // pois os pontos são transferidos em tempo real durante o jogo
-    console.log('ℹ️ Transferência de pontos não necessária - pontos já transferidos em tempo real');
   }
 }
 

@@ -51,18 +51,30 @@ export class DailyCompetitionCoreService {
 
   async getDailyCompetitionRanking(competitionId: string): Promise<ApiResponse<any[]>> {
     try {
-      console.log('📊 Buscando ranking da competição diária:', competitionId);
+      console.log('📊 Buscando ranking da competição diária (transferido para semanal):', competitionId);
       
       if (!competitionId) {
         console.error('❌ ID da competição não fornecido');
         return createErrorResponse('ID da competição é obrigatório');
       }
 
-      // Buscar participações da competição diária
+      // Buscar a competição diária e sua vinculação semanal
+      const { data: dailyCompetition, error: dailyError } = await supabase
+        .from('custom_competitions')
+        .select('weekly_tournament_id')
+        .eq('id', competitionId)
+        .single();
+
+      if (dailyError || !dailyCompetition?.weekly_tournament_id) {
+        console.error('❌ Competição diária não vinculada a uma competição semanal');
+        return createErrorResponse('Competição diária deve estar vinculada a uma competição semanal');
+      }
+
+      // Como não há ranking diário separado, buscar participações da competição semanal vinculada
       const { data: participations, error: participationsError } = await supabase
         .from('competition_participations')
         .select('user_position, user_score, user_id, created_at')
-        .eq('competition_id', competitionId)
+        .eq('competition_id', dailyCompetition.weekly_tournament_id)
         .not('user_position', 'is', null)
         .order('user_position', { ascending: true })
         .limit(100);
@@ -73,7 +85,7 @@ export class DailyCompetitionCoreService {
       }
 
       if (!participations || participations.length === 0) {
-        console.log('📊 Nenhuma participação encontrada para a competição');
+        console.log('📊 Nenhuma participação encontrada para a competição semanal vinculada');
         return createSuccessResponse([]);
       }
 
@@ -101,11 +113,11 @@ export class DailyCompetitionCoreService {
         };
       });
 
-      console.log('✅ Ranking da competição diária carregado:', rankingData.length);
+      console.log('✅ Ranking da competição semanal vinculada carregado:', rankingData.length);
       return createSuccessResponse(rankingData);
     } catch (error) {
       console.error('❌ Erro ao carregar ranking:', error);
-      return createErrorResponse(handleServiceError(error, 'GET_DAILY_COMPETITION_RANKING'));
+      return createErrorResponse(handleServiceError(error, 'GET_WEEKLY_COMPETITION_RANKING'));
     }
   }
 }
