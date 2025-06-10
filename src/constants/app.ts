@@ -10,7 +10,7 @@ export const APP_CONFIG = {
 } as const;
 
 export const TIMING_CONFIG = {
-  COMPETITION_REFRESH_INTERVAL: 30000, // 30 segundos
+  COMPETITION_REFRESH_INTERVAL: 30 * 60 * 1000, // 30 minutos
   RANKING_UPDATE_INTERVAL: 5 * 60 * 1000, // 5 minutos
   DEFAULT_TIMEOUT: 3000 // 3 segundos
 } as const;
