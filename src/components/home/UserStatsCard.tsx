@@ -1,15 +1,15 @@
 
 import React from 'react';
-import { Trophy, Target, Zap, Star } from 'lucide-react';
+import { Trophy, Target, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRealUserStats } from '@/hooks/useRealUserStats';
 
 const UserStatsCard = () => {
-  const { stats, isLoading } = useRealUserStats();
+  const { data: stats, isLoading } = useRealUserStats();
 
   if (isLoading) {
     return (
-      <Card className="mb-6 bg-gradient-to-br from-slate-50 to-white border border-gray-200 shadow-lg">
+      <Card className="mb-6 bg-white border border-gray-200 shadow-sm">
         <CardContent className="p-4">
           <div className="grid grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
@@ -28,37 +28,37 @@ const UserStatsCard = () => {
   const statsData = [
     {
       icon: Trophy,
-      value: stats?.totalScore || 0,
-      label: 'Pontos',
-      color: 'from-yellow-400 to-orange-500',
-      iconColor: 'text-yellow-600'
-    },
-    {
-      icon: Target,
-      value: stats?.gamesPlayed || 0,
-      label: 'Jogos',
-      color: 'from-blue-400 to-purple-500',
+      value: stats?.totalUsers || 0,
+      label: 'Usuários',
+      color: 'from-blue-400 to-blue-600',
       iconColor: 'text-blue-600'
     },
     {
+      icon: Target,
+      value: stats?.totalSessions || 0,
+      label: 'Sessões',
+      color: 'from-green-400 to-green-600',
+      iconColor: 'text-green-600'
+    },
+    {
       icon: Star,
-      value: stats?.bestScore || 0,
-      label: 'Recorde',
-      color: 'from-pink-400 to-purple-500',
-      iconColor: 'text-pink-600'
+      value: stats?.averageScore || 0,
+      label: 'Média',
+      color: 'from-purple-400 to-purple-600',
+      iconColor: 'text-purple-600'
     }
   ];
 
   return (
-    <Card className="mb-6 bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
+    <Card className="mb-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-4">
         <div className="grid grid-cols-3 gap-4">
           {statsData.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <div key={index} className="text-center group">
-                <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl mx-auto flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-2`}>
-                  <Icon className={`w-6 h-6 text-white`} />
+                <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl mx-auto flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform mb-2`}>
+                  <Icon className="w-6 h-6 text-white" />
                 </div>
                 <div className="font-bold text-lg text-gray-900">
                   {stat.value.toLocaleString()}
