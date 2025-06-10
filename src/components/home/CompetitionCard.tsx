@@ -33,6 +33,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   const [hasParticipated, setHasParticipated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState('');
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Obter tema baseado na categoria/theme da competição
   const theme = getCompetitionTheme(competition.theme);
@@ -41,6 +42,17 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   useEffect(() => {
     checkParticipation();
   }, [user, competition.id]);
+
+  // Pre-carregar a imagem
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setImageLoaded(true);
+    img.onerror = () => {
+      console.log('Erro ao carregar imagem:', theme.backgroundImage);
+      setImageLoaded(false);
+    };
+    img.src = theme.backgroundImage;
+  }, [theme.backgroundImage]);
 
   // Timer em tempo real
   useEffect(() => {
@@ -209,18 +221,20 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
 
   return (
     <Card className={`group relative overflow-hidden bg-gradient-to-br ${theme.gradient} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}>
-      {/* Background image with overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-20"
-        style={{ 
-          backgroundImage: `url('${theme.backgroundImage}')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      />
+      {/* Background image with overlay - only if loaded */}
+      {imageLoaded && (
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-15 transition-opacity duration-300"
+          style={{ 
+            backgroundImage: `url('${theme.backgroundImage}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        />
+      )}
       
       {/* Gradient overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-90`} />
+      <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} ${imageLoaded ? 'opacity-85' : 'opacity-95'} transition-opacity duration-300`} />
       
       {/* Decorative grid pattern - themed */}
       <div className="absolute inset-0 opacity-10">
