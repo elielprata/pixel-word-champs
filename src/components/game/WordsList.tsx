@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CheckCircle, Star } from 'lucide-react';
 
@@ -15,7 +16,7 @@ interface WordsListProps {
 
 const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => {
   return (
-    <div className="p-2">
+    <div className="p-4">
       <div className="flex items-center gap-2 mb-4">
         <Star className="w-5 h-5 text-indigo-600" />
         <h3 className="text-lg font-bold text-slate-800">Palavras do Nível</h3>
