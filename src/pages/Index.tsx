@@ -112,13 +112,7 @@ const Index = () => {
       case 'invite':
         return <InviteScreen />;
       case 'profile':
-        return (
-          <ProfileScreen 
-            onNavigateToSettings={handleNavigateToSettings}
-            onNavigateToHelp={handleNavigateToHelp}
-            onNavigateToAchievements={handleNavigateToAchievements}
-          />
-        );
+        return <ProfileScreen />;
       default:
         return (
           <HomeScreen 

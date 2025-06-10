@@ -278,9 +278,9 @@ export const useUserMutations = () => {
     updateProfile,
     updateUserRole,
     updatePassword,
-    banUser,
-    unbanUser,
-    deleteUser,
+    banUser: banUser.mutate,
+    unbanUser: unbanUser.mutate,
+    deleteUser: deleteUser.mutate,
     resetUserScores,
     // Loading states
     isBanningUser: banUser.isPending,

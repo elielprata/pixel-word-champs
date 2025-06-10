@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 
 export interface NavigationState {
@@ -28,6 +27,10 @@ export const useAppNavigation = () => {
 
   const setActiveTab = (tab: string) => {
     setNavigationState(prev => ({ ...prev, activeTab: tab }));
+  };
+
+  const navigateToScreen = (screen: string) => {
+    setActiveTab(screen);
   };
 
   const handleStartChallenge = (challengeId: string) => {
@@ -107,6 +110,7 @@ export const useAppNavigation = () => {
   return {
     navigationState,
     setActiveTab,
+    navigateToScreen,
     handleStartChallenge,
     handleStartGameFromRules,
     handleBackFromRules,

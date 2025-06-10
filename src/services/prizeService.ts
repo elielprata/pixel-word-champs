@@ -11,6 +11,11 @@ export interface PrizeConfiguration {
   active: boolean;
 }
 
+export interface ServiceResult {
+  success: boolean;
+  error?: string;
+}
+
 class PrizeService {
   async getPrizeConfigurations(): Promise<PrizeConfiguration[]> {
     try {
@@ -25,13 +30,14 @@ class PrizeService {
     }
   }
 
-  async updatePrizeConfiguration(id: string, updates: Partial<PrizeConfiguration>): Promise<void> {
+  async updatePrizeConfiguration(id: string, updates: Partial<PrizeConfiguration>): Promise<ServiceResult> {
     try {
       console.log('⚠️ Sistema de prêmios simplificado');
       // Função desabilitada no sistema simplificado
+      return { success: false, error: 'Sistema de prêmios foi simplificado' };
     } catch (error) {
       console.error('Erro ao atualizar configuração de prêmio:', error);
-      throw error;
+      return { success: false, error: 'Erro ao atualizar configuração de prêmio' };
     }
   }
 
@@ -46,13 +52,14 @@ class PrizeService {
     }
   }
 
-  async deletePrizeConfiguration(id: string): Promise<void> {
+  async deletePrizeConfiguration(id: string): Promise<ServiceResult> {
     try {
       console.log('⚠️ Sistema de prêmios simplificado');
       // Função desabilitada no sistema simplificado
+      return { success: false, error: 'Sistema de prêmios foi simplificado' };
     } catch (error) {
       console.error('Erro ao deletar configuração de prêmio:', error);
-      throw error;
+      return { success: false, error: 'Erro ao deletar configuração de prêmio' };
     }
   }
 }

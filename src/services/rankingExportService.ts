@@ -46,6 +46,10 @@ class RankingExportService {
     }
   }
 
+  async exportWeeklyRankings(startDate?: string, endDate?: string): Promise<RankingExportData[]> {
+    return this.exportWeeklyRanking(startDate, endDate);
+  }
+
   async exportDailyRanking(startDate?: string, endDate?: string): Promise<RankingExportData[]> {
     try {
       console.log('📊 Exportando ranking diário (usando mesmo que semanal)...');
@@ -72,7 +76,7 @@ class RankingExportService {
     return headers + rows;
   }
 
-  downloadCSV(data: RankingExportData[], filename: string): void {
+  exportToCSV(data: RankingExportData[], filename: string): void {
     const csv = this.generateCSV(data);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -86,6 +90,10 @@ class RankingExportService {
       link.click();
       document.body.removeChild(link);
     }
+  }
+
+  downloadCSV(data: RankingExportData[], filename: string): void {
+    this.exportToCSV(data, filename);
   }
 }
 
