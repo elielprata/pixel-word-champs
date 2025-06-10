@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Star, Medal, Award, Crown, Zap, Flame, Sparkles } from 'lucide-react';
+import { Trophy, Star, Medal, Award, Crown, Zap, Flame, Sparkles, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import RankingDebugPanel from './RankingDebugPanel';
 
 interface RankingPlayer {
   position: number;
@@ -31,6 +32,7 @@ const RankingScreen = () => {
   const [userWeeklyPosition, setUserWeeklyPosition] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
 
   const loadWeeklyRankingData = async () => {
     try {
@@ -39,7 +41,8 @@ const RankingScreen = () => {
       
       console.log('📊 Carregando ranking semanal em tempo real...');
       
-      // Primeiro, atualizar o ranking semanal
+      // Primeiro, atualizar o ranking semanal para garantir dados atualizados
+      console.log('🔄 Forçando atualização do ranking antes de carregar...');
       await supabase.rpc('update_weekly_ranking');
       
       const todayDate = new Date();
@@ -48,7 +51,9 @@ const RankingScreen = () => {
       const weekStart = new Date(todayDate.setDate(diff));
       const weekStartStr = weekStart.toISOString().split('T')[0];
 
-      // Buscar ranking atualizado
+      // Buscar ranking atualizado com logs detalhados
+      console.log(`📅 Buscando ranking para semana iniciada em: ${weekStartStr}`);
+      
       const { data: weeklyData, error: weeklyError } = await supabase
         .from('weekly_rankings')
         .select(`
@@ -67,6 +72,8 @@ const RankingScreen = () => {
         throw weeklyError;
       }
 
+      console.log('📊 Dados brutos do ranking:', weeklyData);
+
       // Buscar competição ativa
       const { data: competition, error: competitionError } = await supabase
         .from('custom_competitions')
@@ -83,19 +90,23 @@ const RankingScreen = () => {
       const weeklyPlayers: RankingPlayer[] = (weeklyData || [])
         .filter(item => {
           if (uniquePlayerIds.has(item.user_id)) {
+            console.warn(`⚠️ Usuário duplicado detectado: ${item.user_id}`);
             return false;
           }
           uniquePlayerIds.add(item.user_id);
           return true;
         })
-        .map(item => ({
-          position: item.position,
-          user_id: item.user_id,
-          username: item.profiles?.username || 'Usuário',
-          avatar_url: item.profiles?.avatar_url,
-          score: item.score,
-          prize: item.prize || 0
-        }));
+        .map(item => {
+          console.log(`👤 Mapeando usuário: ${item.profiles?.username} - Posição: ${item.position} - Score: ${item.score}`);
+          return {
+            position: item.position,
+            user_id: item.user_id,
+            username: item.profiles?.username || 'Usuário',
+            avatar_url: item.profiles?.avatar_url,
+            score: item.score,
+            prize: item.prize || 0
+          };
+        });
 
       setWeeklyRanking(weeklyPlayers);
       setWeeklyCompetition(competition);
@@ -103,6 +114,12 @@ const RankingScreen = () => {
       if (user?.id) {
         const userWeekly = weeklyPlayers.find(p => p.user_id === user.id);
         setUserWeeklyPosition(userWeekly?.position || null);
+        
+        if (userWeekly) {
+          console.log(`🏆 Posição do usuário atual: #${userWeekly.position} com ${userWeekly.score} pontos`);
+        } else {
+          console.log('ℹ️ Usuário atual não encontrado no ranking');
+        }
       }
 
       console.log('✅ Ranking semanal carregado em tempo real:', {
@@ -261,14 +278,29 @@ const RankingScreen = () => {
     );
   }
 
+  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname.includes('lovable');
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="relative z-10 p-4 pb-24 max-w-lg mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            🏆 Ranking Semanal
-          </h1>
+          <div className="flex justify-between items-center mb-2">
+            <h1 className="text-2xl font-bold text-gray-900">
+              🏆 Ranking Semanal
+            </h1>
+            {isDevelopment && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDebug(!showDebug)}
+                className="text-yellow-600 hover:text-yellow-700"
+              >
+                <Bug className="w-4 h-4 mr-1" />
+                Debug
+              </Button>
+            )}
+          </div>
           <p className="text-gray-600 text-sm">Competição dos Campeões</p>
           
           {weeklyCompetition && (
@@ -298,6 +330,9 @@ const RankingScreen = () => {
             </Card>
           )}
         </div>
+
+        {/* Debug Panel */}
+        {showDebug && isDevelopment && <RankingDebugPanel />}
 
         {/* Prize Distribution */}
         {weeklyCompetition && (
@@ -409,6 +444,9 @@ const RankingScreen = () => {
                             {player.position === 1 && <span>👑</span>}
                             {player.position === 2 && <span>🥈</span>}
                             {player.position === 3 && <span>🥉</span>}
+                            {isCurrentUser && (
+                              <span className="text-xs text-blue-600 font-normal">(ID: {player.user_id.slice(0, 8)}...)</span>
+                            )}
                           </p>
                           <p className="text-sm text-gray-500">
                             {player.score.toLocaleString()} pts
