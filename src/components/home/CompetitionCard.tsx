@@ -42,17 +42,13 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
     checkParticipation();
   }, [user, competition.id]);
 
-  // Timer em tempo real
   useEffect(() => {
     const updateTimer = () => {
       const remaining = formatTimeRemaining(competition.end_date);
       setTimeRemaining(remaining);
     };
 
-    // Atualiza imediatamente
     updateTimer();
-
-    // Atualiza a cada segundo
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
@@ -65,7 +61,6 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
     }
 
     try {
-      // Verificar se o usuário já participou desta competição específica
       const response = await competitionParticipationService.hasUserParticipatedInCompetition(user.id, competition.id);
       if (response.success) {
         setHasParticipated(response.hasParticipated);
@@ -78,22 +73,12 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const formatTimeRemaining = (endDate: string) => {
-    // Obter horário atual de Brasília
     const now = new Date();
-    
-    // Converter a data de fim UTC para horário de Brasília
     const endUtc = new Date(endDate);
     const endBrasilia = utcToBrasilia(endUtc);
-    
-    // Se a data de fim for 23:59:59 de um dia, ela representa o final daquele dia em Brasília
-    // Precisamos ajustar para que seja realmente 23:59:59 de Brasília em UTC
     const adjustedEndBrasilia = new Date(endBrasilia);
     adjustedEndBrasilia.setHours(23, 59, 59, 999);
-    
-    // Converter de volta para UTC para comparação
     const adjustedEndUtc = brasiliaToUtc(adjustedEndBrasilia);
-    
-    // Calcular diferença
     const diff = adjustedEndUtc.getTime() - now.getTime();
     
     console.log('🕐 Comparação de tempo (Brasília):', {
@@ -124,21 +109,12 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const getTimeColor = (endDate: string) => {
-    // Obter horário atual de Brasília
     const now = new Date();
-    
-    // Converter a data de fim UTC para horário de Brasília
     const endUtc = new Date(endDate);
     const endBrasilia = utcToBrasilia(endUtc);
-    
-    // Ajustar para 23:59:59 de Brasília
     const adjustedEndBrasilia = new Date(endBrasilia);
     adjustedEndBrasilia.setHours(23, 59, 59, 999);
-    
-    // Converter de volta para UTC para comparação
     const adjustedEndUtc = brasiliaToUtc(adjustedEndBrasilia);
-    
-    // Calcular diferença
     const diff = adjustedEndUtc.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     
@@ -173,10 +149,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
           description: "Carregando as regras do jogo!",
         });
         
-        // Marcar usuário como participante desta competição
         setHasParticipated(true);
-        
-        // Usar o ID completo da sessão (UUID)
         onStartChallenge(response.data.id);
       } else {
         console.error('❌ Erro ao criar sessão:', response.error);
@@ -208,60 +181,57 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   return (
-    <Card className={`group relative overflow-hidden bg-gradient-to-br ${theme.gradient} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}>
+    <Card className={`group relative overflow-hidden bg-gradient-to-br ${theme.gradient} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-32`}>
       {/* Decorative grid pattern - themed */}
-      <div className="absolute inset-0 opacity-20">
+      <div className="absolute inset-0 opacity-10">
         <div className="w-full h-full" style={{
           backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 15px, ${theme.bgPattern} 15px, ${theme.bgPattern} 16px),
                            repeating-linear-gradient(0deg, transparent, transparent 15px, ${theme.bgPattern} 15px, ${theme.bgPattern} 16px)`
         }}></div>
       </div>
       
-      <CardContent className="relative p-4">
-        <div className="space-y-4">
-          {/* Header com tema */}
-          <div className="space-y-2">
-            <h3 className="font-bold text-slate-800 text-lg leading-tight">
+      <CardContent className="relative p-3 h-full flex flex-col justify-between">
+        {/* Header section */}
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-slate-800 text-sm leading-tight truncate mb-1">
               {competition.title}
             </h3>
             
             {competition.theme && (
-              <Badge className={`bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} to-${theme.decorativeElements.primary.replace('bg-', '')} text-white border-0 text-sm px-3 py-1 shadow-md`}>
+              <Badge className={`bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} to-${theme.decorativeElements.primary.replace('bg-', '')} text-white border-0 text-xs px-2 py-0.5 shadow-md`}>
                 {categoryEmoji} {competition.theme}
               </Badge>
             )}
           </div>
 
-          {/* Tempo com design temático */}
-          <div className="flex items-center justify-center gap-2 bg-slate-50 rounded-lg p-2 text-center">
-            <Clock className={`w-4 h-4 ${getTimeColor(competition.end_date)}`} />
-            <div className="text-center">
-              <span className="text-xs text-slate-600 block">Tempo restante</span>
-              <span className={`text-sm font-bold ${getTimeColor(competition.end_date)}`}>
-                {timeRemaining}
-              </span>
-            </div>
+          {/* Timer */}
+          <div className="flex items-center gap-1 bg-slate-50 rounded-md px-2 py-1">
+            <Clock className={`w-3 h-3 ${getTimeColor(competition.end_date)}`} />
+            <span className={`text-xs font-bold ${getTimeColor(competition.end_date)}`}>
+              {timeRemaining}
+            </span>
           </div>
-
-          {/* Botão de ação - themed */}
-          <Button 
-            onClick={handleStartGame}
-            disabled={hasParticipated || isLoading}
-            variant={getButtonVariant()}
-            className={`w-full font-bold text-sm py-3 rounded-lg shadow-md transition-all duration-200 border-2 ${
-              hasParticipated 
-                ? 'bg-gray-400 hover:bg-gray-400 text-gray-600 border-gray-300 cursor-not-allowed' 
-                : `bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} hover:opacity-90 text-white hover:shadow-lg border-${theme.decorativeElements.primary.replace('bg-', '')}/20`
-            }`}
-          >
-            {getButtonText()}
-          </Button>
         </div>
+
+        {/* Button section */}
+        <Button 
+          onClick={handleStartGame}
+          disabled={hasParticipated || isLoading}
+          variant={getButtonVariant()}
+          className={`w-full font-bold text-xs py-2 rounded-lg shadow-md transition-all duration-200 border-2 ${
+            hasParticipated 
+              ? 'bg-gray-400 hover:bg-gray-400 text-gray-600 border-gray-300 cursor-not-allowed' 
+              : `bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} hover:opacity-90 text-white hover:shadow-lg border-${theme.decorativeElements.primary.replace('bg-', '')}/20`
+          }`}
+        >
+          {getButtonText()}
+        </Button>
       </CardContent>
       
       {/* Corner decoration - themed */}
-      <div className={`absolute top-2 right-2 w-3 h-3 ${theme.decorativeElements.primary} rounded-full opacity-60`}></div>
-      <div className={`absolute bottom-2 left-2 w-2 h-2 ${theme.decorativeElements.secondary} rounded-full opacity-60`}></div>
+      <div className={`absolute top-1 right-1 w-2 h-2 ${theme.decorativeElements.primary} rounded-full opacity-60`}></div>
+      <div className={`absolute bottom-1 left-1 w-1.5 h-1.5 ${theme.decorativeElements.secondary} rounded-full opacity-60`}></div>
     </Card>
   );
 };
