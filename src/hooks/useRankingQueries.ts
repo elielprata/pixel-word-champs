@@ -5,31 +5,10 @@ import { RankingPlayer } from '@/types';
 import { rankingService } from '@/services/rankingService';
 
 export const useRankingQueries = () => {
-  const [dailyRanking, setDailyRanking] = useState<RankingPlayer[]>([]);
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
   const [historicalCompetitions, setHistoricalCompetitions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const loadDailyRanking = async () => {
-    try {
-      console.log('🔄 Carregando ranking diário...');
-      
-      try {
-        await rankingService.updateDailyRanking();
-        console.log('✅ Ranking diário atualizado com sucesso');
-      } catch (updateError) {
-        console.warn('⚠️ Erro ao atualizar ranking diário, continuando com dados existentes:', updateError);
-      }
-
-      const daily = await rankingApi.getDailyRanking();
-      console.log('📊 Ranking diário carregado:', daily.length);
-      setDailyRanking(daily);
-    } catch (err) {
-      console.error('❌ Erro ao carregar ranking diário:', err);
-      throw err;
-    }
-  };
 
   const loadWeeklyRanking = async () => {
     try {
@@ -65,14 +44,14 @@ export const useRankingQueries = () => {
   };
 
   return {
-    dailyRanking,
+    dailyRanking: weeklyRanking, // Retorna ranking semanal no lugar do diário
     weeklyRanking,
     historicalCompetitions,
     isLoading,
     error,
     setIsLoading,
     setError,
-    loadDailyRanking,
+    loadDailyRanking: loadWeeklyRanking, // Aponta para o ranking semanal
     loadWeeklyRanking,
     loadHistoricalRanking
   };

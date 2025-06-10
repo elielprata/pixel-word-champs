@@ -305,41 +305,6 @@ export type Database = {
           },
         ]
       }
-      daily_rankings: {
-        Row: {
-          created_at: string
-          date: string
-          id: string
-          position: number
-          score: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          date?: string
-          id?: string
-          position: number
-          score?: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          date?: string
-          id?: string
-          position?: number
-          score?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "daily_rankings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       game_sessions: {
         Row: {
           board: Json
@@ -894,10 +859,6 @@ export type Database = {
         Returns: boolean
       }
       update_competition_status: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      update_daily_ranking: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

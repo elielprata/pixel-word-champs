@@ -9,6 +9,9 @@ export const DailyCompetitionsEmpty: React.FC = () => {
       <p className="font-medium mb-2">Nenhuma competição diária ativa</p>
       <p className="text-sm">Use o botão "Criar Competição" para adicionar uma nova competição diária.</p>
       <p className="text-xs text-slate-400 mt-2">
+        Competições diárias transferem pontos automaticamente para competições semanais
+      </p>
+      <p className="text-xs text-slate-400 mt-1">
         Competições finalizadas podem ser vistas na aba "Histórico"
       </p>
     </div>

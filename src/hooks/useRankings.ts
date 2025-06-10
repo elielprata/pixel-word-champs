@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -26,56 +27,17 @@ interface WeeklyCompetition {
 
 export const useRankings = () => {
   const { toast } = useToast();
-  const [dailyRanking, setDailyRanking] = useState<RankingPlayer[]>([]);
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
   const [weeklyCompetitions, setWeeklyCompetitions] = useState<WeeklyCompetition[]>([]);
   const [activeWeeklyCompetition, setActiveWeeklyCompetition] = useState<WeeklyCompetition | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [totalPlayers, setTotalPlayers] = useState(0);
 
-  const fetchDailyRankings = async () => {
-    try {
-      console.log('📊 Buscando ranking diário...');
-      
-      const { data, error } = await supabase
-        .from('daily_rankings')
-        .select(`
-          position,
-          score,
-          user_id,
-          profiles!inner(username, avatar_url)
-        `)
-        .eq('date', new Date().toISOString().split('T')[0])
-        .order('position', { ascending: true })
-        .limit(10);
-
-      if (error) throw error;
-
-      const rankings = (data || []).map((item) => ({
-        pos: item.position,
-        name: item.profiles?.username || 'Usuário',
-        score: item.score,
-        avatar: item.profiles?.username?.substring(0, 2).toUpperCase() || 'U',
-        trend: '',
-        user_id: item.user_id
-      }));
-
-      console.log('📊 Ranking diário carregado:', rankings.length, 'jogadores');
-      setDailyRanking(rankings);
-    } catch (error) {
-      console.error('❌ Erro ao carregar ranking diário:', error);
-      toast({
-        title: "Erro ao carregar ranking diário",
-        description: "Não foi possível carregar os dados do ranking.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const fetchWeeklyRankings = async () => {
     try {
       console.log('📊 Buscando ranking semanal...');
       
+      // Calcular início da semana atual (segunda-feira)
       const today = new Date();
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
@@ -181,7 +143,6 @@ export const useRankings = () => {
   const refreshData = async () => {
     setIsLoading(true);
     await Promise.all([
-      fetchDailyRankings(),
       fetchWeeklyRankings(),
       fetchWeeklyCompetitions(),
       fetchTotalPlayers()
@@ -207,7 +168,7 @@ export const useRankings = () => {
   }, []);
 
   return {
-    dailyRanking,
+    dailyRanking: weeklyRanking, // Retorna ranking semanal no lugar do diário
     weeklyRanking,
     weeklyCompetitions,
     activeWeeklyCompetition,

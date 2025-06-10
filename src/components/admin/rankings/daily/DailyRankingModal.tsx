@@ -18,14 +18,15 @@ export const DailyRankingModal: React.FC<DailyRankingModalProps> = ({
 
   const formatTime = () => {
     const now = new Date();
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    const endOfWeek = new Date();
+    endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()));
+    endOfWeek.setHours(23, 59, 59, 999);
     
-    const diff = endOfDay.getTime() - now.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const diff = endOfWeek.getTime() - now.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     
-    return `${hours}h ${minutes}m`;
+    return `${days}d ${hours}h`;
   };
 
   const getRankingColor = (position: number) => {
@@ -48,13 +49,13 @@ export const DailyRankingModal: React.FC<DailyRankingModalProps> = ({
         <DialogHeader className="border-b border-slate-200 pb-4">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Trophy className="h-6 w-6 text-orange-500" />
-            Ranking Diário Consolidado
+            Ranking Semanal Consolidado
           </DialogTitle>
           
           <div className="flex items-center gap-4 mt-3 text-sm text-slate-600">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              <span>{new Date().toLocaleDateString('pt-BR')}</span>
+              <span>Semana atual</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
@@ -78,7 +79,7 @@ export const DailyRankingModal: React.FC<DailyRankingModalProps> = ({
           ) : dailyRanking.length === 0 ? (
             <div className="text-center py-12">
               <Trophy className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">Nenhuma pontuação registrada hoje</p>
+              <p className="text-slate-500">Nenhuma pontuação registrada esta semana</p>
             </div>
           ) : (
             <div className="space-y-2 p-4">
@@ -131,7 +132,7 @@ export const DailyRankingModal: React.FC<DailyRankingModalProps> = ({
 
         <div className="border-t border-slate-200 pt-4 text-center">
           <p className="text-xs text-slate-500">
-            💡 O ranking é resetado diariamente às 23:59:59 e transferido para o ranking semanal
+            💡 O ranking é acumulativo semanal - pontos das competições diárias são somados automaticamente
           </p>
         </div>
       </DialogContent>

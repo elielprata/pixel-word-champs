@@ -10,11 +10,11 @@ export const CompetitionTimeInfo: React.FC = () => {
       <div className="text-sm text-blue-700">
         <p className="font-medium">Horário de Referência: {BRASILIA_TIMEZONE}</p>
         <p>Competições diárias: 00:00:00 até 23:59:59 do dia selecionado</p>
-        <p className="text-xs mt-1 text-blue-600">
+        <p className="text-xs mt-1 text-red-600">
           ⚠️ Competições diárias não possuem premiação (apenas semanais têm prêmios)
         </p>
         <p className="text-xs mt-1 text-purple-600">
-          📋 Competições finalizadas são exibidas apenas na aba "Histórico"
+          📊 Pontos são transferidos automaticamente para a competição semanal vinculada
         </p>
         <p className="text-xs mt-1 text-green-600">
           🕐 Todos os horários do sistema seguem o fuso horário de Brasília

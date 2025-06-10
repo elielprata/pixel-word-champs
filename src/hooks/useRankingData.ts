@@ -8,24 +8,19 @@ import { useEffect } from 'react';
 export const useRankingData = () => {
   const { user } = useAuth();
   const {
-    dailyRanking,
     weeklyRanking,
     historicalCompetitions,
     isLoading,
     error,
     setIsLoading,
     setError,
-    loadDailyRanking,
     loadWeeklyRanking,
     loadHistoricalRanking
   } = useRankingQueries();
 
   const {
-    dailyLimit,
     weeklyLimit,
-    loadMoreDaily,
     loadMoreWeekly,
-    canLoadMoreDaily,
     canLoadMoreWeekly
   } = useRankingPagination();
 
@@ -40,7 +35,6 @@ export const useRankingData = () => {
     
     try {
       await Promise.all([
-        loadDailyRanking(),
         loadWeeklyRanking(),
         loadHistoricalRanking(user.id)
       ]);
@@ -66,14 +60,14 @@ export const useRankingData = () => {
   };
 
   return {
-    dailyRanking: dailyRanking.slice(0, dailyLimit),
+    dailyRanking: weeklyRanking.slice(0, weeklyLimit), // Retorna ranking semanal
     weeklyRanking: weeklyRanking.slice(0, weeklyLimit),
     historicalCompetitions,
     isLoading,
     error,
-    canLoadMoreDaily: canLoadMoreDaily(dailyRanking.length),
+    canLoadMoreDaily: false, // Não há mais ranking diário
     canLoadMoreWeekly: canLoadMoreWeekly(weeklyRanking.length),
-    loadMoreDaily,
+    loadMoreDaily: () => {}, // Função vazia
     loadMoreWeekly,
     getUserPosition,
     refetch

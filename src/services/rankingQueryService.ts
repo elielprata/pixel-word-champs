@@ -3,46 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { RankingPlayer } from '@/types';
 
 export class RankingQueryService {
-  async getDailyRanking(): Promise<RankingPlayer[]> {
-    try {
-      console.log('📊 Buscando ranking diário...');
-      
-      const { data, error } = await supabase
-        .from('daily_rankings')
-        .select(`
-          position,
-          score,
-          user_id,
-          profiles!inner(
-            username,
-            avatar_url
-          )
-        `)
-        .eq('date', new Date().toISOString().split('T')[0])
-        .order('position', { ascending: true })
-        .limit(100);
-
-      if (error) {
-        console.error('❌ Erro ao buscar ranking diário:', error);
-        throw error;
-      }
-
-      const rankings = data?.map((ranking) => ({
-        pos: ranking.position,
-        name: ranking.profiles.username || 'Usuário',
-        score: ranking.score,
-        avatar_url: ranking.profiles.avatar_url || undefined,
-        user_id: ranking.user_id
-      })) || [];
-
-      console.log('✅ Ranking diário carregado:', rankings.length, 'jogadores');
-      return rankings;
-    } catch (error) {
-      console.error('❌ Erro ao buscar ranking diário:', error);
-      return [];
-    }
-  }
-
   async getWeeklyRanking(): Promise<RankingPlayer[]> {
     try {
       console.log('📊 Buscando ranking semanal...');
@@ -142,11 +102,18 @@ export class RankingQueryService {
 
   async getUserPosition(userId: string): Promise<number | null> {
     try {
+      // Calcular início da semana atual
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekStart = new Date(today.setDate(diff));
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
       const { data, error } = await supabase
-        .from('daily_rankings')
+        .from('weekly_rankings')
         .select('position')
         .eq('user_id', userId)
-        .eq('date', new Date().toISOString().split('T')[0])
+        .eq('week_start', weekStartStr)
         .single();
 
       if (error) {
