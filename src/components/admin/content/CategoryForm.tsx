@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, AlertCircle } from 'lucide-react';
@@ -46,14 +45,14 @@ export const CategoryForm = ({ onCreateCategory, isCreating }: CategoryFormProps
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <div className="bg-white rounded-lg shadow-md border border-gray-200">
+      <div className="p-4 border-b border-gray-200">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
           <Plus className="h-5 w-5" />
           Nova Categoria
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </h3>
+      </div>
+      <div className="p-4 space-y-4">
         {validationError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -88,7 +87,7 @@ export const CategoryForm = ({ onCreateCategory, isCreating }: CategoryFormProps
           <Plus className="h-4 w-4 mr-2" />
           {isCreating ? 'Criando...' : 'Criar Categoria'}
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

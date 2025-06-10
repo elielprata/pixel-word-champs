@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Trophy, Medal, Crown, Gift } from 'lucide-react';
@@ -77,11 +78,11 @@ const RankingSystemScreen = ({ onBack }: RankingSystemScreenProps) => {
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Como Funciona a Pontuação</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold">Como Funciona a Pontuação</h3>
+          </div>
+          <div className="p-4 space-y-3">
             <div className="space-y-2">
               <h4 className="font-medium text-gray-800">Ranking Local (por desafio):</h4>
               <p className="text-sm text-gray-600">Sua pontuação específica naquele desafio determina sua posição entre todos que jogaram</p>
@@ -95,14 +96,14 @@ const RankingSystemScreen = ({ onBack }: RankingSystemScreenProps) => {
                 💡 <strong>Estratégia:</strong> Para subir no ranking global, jogue o máximo de desafios possível!
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Regras Importantes</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold">Regras Importantes</h3>
+          </div>
+          <div className="p-4 space-y-2">
             <div className="flex items-start gap-2">
               <span className="text-red-500">•</span>
               <p className="text-sm text-gray-700">Cada desafio só pode ser jogado uma vez</p>
@@ -119,8 +120,8 @@ const RankingSystemScreen = ({ onBack }: RankingSystemScreenProps) => {
               <span className="text-red-500">•</span>
               <p className="text-sm text-gray-700">Sistema antifraude monitora todas as pontuações</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

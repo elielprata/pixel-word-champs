@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GameSettingItem } from './GameSettingItem';
 
@@ -41,18 +40,18 @@ export const GameSettingsCategory = ({
   };
 
   return (
-    <Card className={`border-2 bg-gradient-to-br ${getCategoryColor(category)}`}>
-      <CardHeader className="pb-4">
+    <div className={`border-2 bg-gradient-to-br ${getCategoryColor(category)} rounded-lg shadow-md`}>
+      <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg text-slate-800">
+          <h3 className="text-lg font-semibold text-slate-800">
             {getCategoryTitle(category)}
-          </CardTitle>
+          </h3>
           <Badge variant="outline" className="bg-white/50">
             {settings.length} configurações
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
+      </div>
+      <div className="p-4 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {settings.map((setting) => (
             <GameSettingItem
@@ -62,7 +61,7 @@ export const GameSettingsCategory = ({
             />
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

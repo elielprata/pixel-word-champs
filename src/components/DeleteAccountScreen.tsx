@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, AlertTriangle, Trash2, Shield, CheckCircle2 } from 'lucide-react';
 
 interface DeleteAccountScreenProps {
@@ -52,34 +51,34 @@ const DeleteAccountScreen = ({ onBack }: DeleteAccountScreenProps) => {
       </div>
 
       {/* Aviso principal */}
-      <Card className="mb-4 border-red-200 bg-red-50">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base flex items-center gap-3 text-red-800">
+      <div className="bg-red-50 border border-red-200 rounded-lg shadow-md mb-4">
+        <div className="p-4 border-b border-red-200">
+          <h3 className="text-lg font-semibold flex items-center gap-3 text-red-800">
             <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
               <AlertTriangle className="w-5 h-5 text-red-600" />
             </div>
             Atenção: Ação Irreversível
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
+          </h3>
+        </div>
+        <div className="p-4">
           <p className="text-sm text-red-700">
             Uma vez excluída, sua conta e todos os dados associados serão permanentemente removidos. 
             Esta ação não pode ser desfeita.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* O que será perdido */}
-      <Card className="mb-4 shadow-sm border-0">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base flex items-center gap-3">
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold flex items-center gap-3">
             <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center">
               <Trash2 className="w-5 h-5 text-gray-600" />
             </div>
             Dados que serão perdidos
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
+          </h3>
+        </div>
+        <div className="p-4">
           <div className="space-y-2">
             {dataItems.map((item, index) => (
               <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
@@ -88,12 +87,12 @@ const DeleteAccountScreen = ({ onBack }: DeleteAccountScreenProps) => {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Confirmação */}
-      <Card className="mb-4 shadow-sm border-0">
-        <CardContent className="p-4">
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+        <div className="p-4">
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Para confirmar, digite <span className="font-bold text-red-600">EXCLUIR</span> na caixa abaixo:
           </label>
@@ -113,12 +112,12 @@ const DeleteAccountScreen = ({ onBack }: DeleteAccountScreenProps) => {
               )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Alternativa */}
-      <Card className="mb-6 border-blue-200 bg-blue-50">
-        <CardContent className="p-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg shadow-md mb-6">
+        <div className="p-4">
           <div className="flex gap-3">
             <Shield className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <div>
@@ -128,8 +127,8 @@ const DeleteAccountScreen = ({ onBack }: DeleteAccountScreenProps) => {
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Botões de ação */}
       <div className="space-y-3">
