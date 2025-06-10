@@ -1,5 +1,7 @@
 
+
 import { type Position } from '@/utils/boardUtils';
+import { toast } from '@/hooks/use-toast';
 
 interface FoundWord {
   word: string;
@@ -47,6 +49,22 @@ export const useGameInteractions = (
       !foundWords.some(fw => fw.word === word) && !hiddenWords.has(word)
     );
     
+    // Verificar se só restam palavras ocultas
+    const allRemainingWords = levelWords.filter(word => 
+      !foundWords.some(fw => fw.word === word)
+    );
+    
+    const onlyHiddenWordsLeft = allRemainingWords.every(word => hiddenWords.has(word));
+    
+    if (onlyHiddenWordsLeft && allRemainingWords.length > 0) {
+      toast({
+        title: "Dica não disponível",
+        description: "As dicas não podem ser usadas nas palavras de Desafio Extra. Tente encontrá-las por conta própria!",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (remainingWords.length > 0) {
       setHintsUsed(prev => prev + 1);
       
@@ -65,7 +83,11 @@ export const useGameInteractions = (
       
       console.log(`Dica: Procure por "${hintWord}"`);
     } else {
-      console.log('Nenhuma dica disponível - apenas palavras ocultas restantes');
+      toast({
+        title: "Dica não disponível",
+        description: "As dicas não podem ser usadas nas palavras de Desafio Extra. Tente encontrá-las por conta própria!",
+        variant: "destructive"
+      });
     }
   };
 
@@ -90,3 +112,4 @@ export const useGameInteractions = (
     handleGoHome
   };
 };
+
