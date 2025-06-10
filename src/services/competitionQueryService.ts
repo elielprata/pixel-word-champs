@@ -78,7 +78,7 @@ export class CompetitionQueryService {
         .from('competition_participations')
         .select(`
           *,
-          profiles!inner (
+          profiles!competition_participations_user_id_fkey (
             id,
             username,
             avatar_url
