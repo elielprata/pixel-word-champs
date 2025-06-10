@@ -1,165 +1,177 @@
 
-import { useState, useEffect } from 'react';
-import { type Position } from '@/utils/boardUtils';
-import { useGamePointsConfig } from './useGamePointsConfig';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Position, WordFound, GameConfig } from '@/types';
+import { gameService } from '@/services/gameService';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-interface FoundWord {
-  word: string;
-  positions: Position[];
-  points: number;
+interface UseGameLogicProps {
+  config: GameConfig;
+  onLevelComplete?: (score: number, timeElapsed: number) => void;
+  onGameComplete?: (totalScore: number) => void;
 }
 
-export const useGameLogic = (
-  level: number,
-  timeLeft: number,
-  levelWords: string[],
-  onWordFound: (word: string, points: number) => void,
-  onLevelComplete: (levelScore: number) => void
-) => {
-  const [foundWords, setFoundWords] = useState<FoundWord[]>([]);
-  const [permanentlyMarkedCells, setPermanentlyMarkedCells] = useState<Position[]>([]);
-  const [hintsUsed, setHintsUsed] = useState(0);
-  const [showGameOver, setShowGameOver] = useState(false);
-  const [showLevelComplete, setShowLevelComplete] = useState(false);
-  const [hintHighlightedCells, setHintHighlightedCells] = useState<Position[]>([]);
-  const [isLevelCompleted, setIsLevelCompleted] = useState(false);
-  
-  const { getPointsForWord } = useGamePointsConfig();
+export const useGameLogic = ({ config, onLevelComplete, onGameComplete }: UseGameLogicProps) => {
+  const { toast } = useToast();
+  const [board, setBoard] = useState<string[][]>([]);
+  const [wordsToFind, setWordsToFind] = useState<string[]>([]);
+  const [wordsFound, setWordsFound] = useState<WordFound[]>([]);
+  const [currentScore, setCurrentScore] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [gameSessionId, setGameSessionId] = useState<string | null>(null);
+  const sessionRef = useRef<string | null>(null);
 
-  // Reset state when level changes
-  useEffect(() => {
-    console.log(`Resetting game state for level ${level}`);
-    setFoundWords([]);
-    setPermanentlyMarkedCells([]);
-    setHintsUsed(0);
-    setShowLevelComplete(false);
-    setShowGameOver(false);
-    setHintHighlightedCells([]);
-    setIsLevelCompleted(false);
-  }, [level]);
-
-  // Detecta quando o tempo acaba
-  useEffect(() => {
-    if (timeLeft === 0 && !showGameOver) {
-      setShowGameOver(true);
-    }
-  }, [timeLeft, showGameOver]);
-
-  // Verifica se completou o nível e AGORA registra os pontos
-  useEffect(() => {
-    if (foundWords.length === 5 && !showLevelComplete && !isLevelCompleted) {
-      const levelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
-      console.log(`Level ${level} completed with score ${levelScore} - NOW registering points in database`);
-      
-      setShowLevelComplete(true);
-      setIsLevelCompleted(true);
-      
-      // Só agora registra os pontos no banco de dados
-      updateUserScore(levelScore);
-      onLevelComplete(levelScore);
-    }
-  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete, level, isLevelCompleted]);
-
-  const updateUserScore = async (points: number) => {
+  const initializeGame = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.warn('⚠️ Usuário não autenticado, não é possível atualizar pontuação');
-        return;
+      setIsLoading(true);
+      setError(null);
+      console.log('🎮 Inicializando jogo para nível:', config.level);
+
+      const gameData = await gameService.generateBoard(config.level, config.competitionId);
+      
+      if (!gameData.success || !gameData.data) {
+        throw new Error(gameData.error || 'Erro ao gerar tabuleiro');
       }
 
-      console.log(`🔄 Registrando pontuação do nível completado para usuário ${user.id}: +${points} pontos`);
+      const { board: newBoard, words, sessionId } = gameData.data;
+      
+      setBoard(newBoard);
+      setWordsToFind(words);
+      setWordsFound([]);
+      setCurrentScore(0);
+      setGameSessionId(sessionId);
+      sessionRef.current = sessionId;
 
-      // Buscar pontuação atual do usuário
-      const { data: profile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('total_score, games_played')
-        .eq('id', user.id)
-        .single();
-
-      if (fetchError) {
-        console.error('❌ Erro ao buscar perfil:', fetchError);
-        return;
-      }
-
-      const currentScore = profile?.total_score || 0;
-      const newScore = currentScore + points;
-
-      // Atualizar pontuação no perfil
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          total_score: newScore,
-          games_played: (profile?.games_played || 0) + 1 // Incrementa games_played quando completa nível
-        })
-        .eq('id', user.id);
-
-      if (updateError) {
-        console.error('❌ Erro ao atualizar pontuação:', updateError);
-        throw updateError;
-      }
-
-      console.log(`✅ Pontuação do nível completado registrada: ${currentScore} → ${newScore} (+${points})`);
-
-      // Forçar atualização do ranking semanal
-      try {
-        const { error: rankingError } = await supabase.rpc('update_weekly_ranking');
-        if (rankingError) {
-          console.warn('⚠️ Erro ao atualizar ranking semanal:', rankingError);
-        } else {
-          console.log('✅ Ranking semanal atualizado após completar nível');
-        }
-      } catch (rankingUpdateError) {
-        console.warn('⚠️ Erro ao forçar atualização do ranking:', rankingUpdateError);
-      }
-
+      console.log('✅ Jogo inicializado com sucesso');
+      console.log('📋 Palavras para encontrar:', words.length);
+      console.log('🆔 Session ID:', sessionId);
+      
     } catch (error) {
-      console.error('❌ Erro ao atualizar pontuação do usuário:', error);
+      console.error('❌ Erro ao inicializar jogo:', error);
+      setError(error instanceof Error ? error.message : 'Erro desconhecido');
+      toast({
+        title: "Erro",
+        description: "Não foi possível inicializar o jogo. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [config.level, config.competitionId, toast]);
 
-  const addFoundWord = async (word: string, positions: Position[]) => {
-    const points = getPointsForWord(word);
-    const newFoundWord = { word, positions: [...positions], points };
-    
-    console.log(`📝 Palavra encontrada: "${word}" = ${points} pontos (acumulando para registrar quando nível completar)`);
-    
-    setFoundWords(prev => [...prev, newFoundWord]);
-    setPermanentlyMarkedCells(prev => [...prev, ...positions]);
-    
-    // NÃO registra pontos aqui - apenas chama callback para UI
-    onWordFound(word, points);
-  };
+  const findWord = useCallback(async (positions: Position[]): Promise<boolean> => {
+    if (!sessionRef.current) {
+      console.error('❌ Session ID não encontrado');
+      return false;
+    }
 
-  const isCellPermanentlyMarked = (row: number, col: number) => {
-    return permanentlyMarkedCells.some(pos => pos.row === row && pos.col === col);
-  };
+    try {
+      console.log('🔍 Tentando encontrar palavra nas posições:', positions);
+      
+      const result = await gameService.validateWord(
+        sessionRef.current,
+        positions,
+        board
+      );
 
-  const isCellHintHighlighted = (row: number, col: number) => {
-    return hintHighlightedCells.some(pos => pos.row === row && pos.col === col);
-  };
+      if (result.success && result.data) {
+        const { word, points } = result.data;
+        
+        const newWordFound: WordFound = {
+          word,
+          points,
+          positions,
+          foundAt: new Date().toISOString()
+        };
 
-  // Função para fechar o modal do Game Over (usado no revive)
-  const closeGameOver = () => {
-    setShowGameOver(false);
-  };
+        setWordsFound(prev => [...prev, newWordFound]);
+        setCurrentScore(prev => prev + points);
+
+        console.log('✅ Palavra encontrada:', word, 'Pontos:', points);
+        
+        toast({
+          title: "Palavra encontrada!",
+          description: `${word} (+${points} pontos)`,
+        });
+
+        return true;
+      } else {
+        console.log('❌ Palavra não encontrada ou inválida');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Erro ao validar palavra:', error);
+      return false;
+    }
+  }, [board, toast]);
+
+  const completeLevel = useCallback(async (timeElapsed: number) => {
+    if (!sessionRef.current) {
+      console.error('❌ Session ID não encontrado para completar nível');
+      return;
+    }
+
+    try {
+      console.log('🏁 Completando nível com sessão:', sessionRef.current);
+      
+      const result = await gameService.completeSession(
+        sessionRef.current,
+        currentScore,
+        timeElapsed,
+        wordsFound
+      );
+
+      if (result.success) {
+        console.log('✅ Sessão completada com sucesso');
+        
+        // Não chamamos mais update_weekly_ranking pois foi removido
+        console.log('📊 Pontuação final:', currentScore);
+        
+        onLevelComplete?.(currentScore, timeElapsed);
+      } else {
+        throw new Error(result.error || 'Erro ao completar sessão');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao completar nível:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar progresso do jogo.",
+        variant: "destructive",
+      });
+    }
+  }, [currentScore, wordsFound, onLevelComplete, toast]);
+
+  const resetGame = useCallback(() => {
+    setBoard([]);
+    setWordsToFind([]);
+    setWordsFound([]);
+    setCurrentScore(0);
+    setError(null);
+    setGameSessionId(null);
+    sessionRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    initializeGame();
+  }, [initializeGame]);
+
+  const isGameComplete = wordsToFind.length > 0 && wordsFound.length === wordsToFind.length;
+  const progress = wordsToFind.length > 0 ? (wordsFound.length / wordsToFind.length) * 100 : 0;
 
   return {
-    foundWords,
-    permanentlyMarkedCells,
-    hintsUsed,
-    showGameOver,
-    showLevelComplete,
-    hintHighlightedCells,
-    isLevelCompleted,
-    setHintsUsed,
-    setShowGameOver,
-    setShowLevelComplete,
-    setHintHighlightedCells,
-    addFoundWord,
-    isCellPermanentlyMarked,
-    isCellHintHighlighted,
-    closeGameOver
+    board,
+    wordsToFind,
+    wordsFound,
+    currentScore,
+    isLoading,
+    error,
+    gameSessionId,
+    isGameComplete,
+    progress,
+    findWord,
+    completeLevel,
+    resetGame,
+    initializeGame
   };
 };

@@ -9,6 +9,7 @@ export interface User {
   games_played: number;
   created_at: string;
   updated_at: string;
+  // Removidas propriedades do sistema de ranking complexo
 }
 
 export interface GameSession {
