@@ -7,9 +7,9 @@ import { useRankings } from '@/hooks/useRankings';
 export const RankingMetrics = () => {
   const { totalPlayers, dailyRanking, weeklyRanking } = useRankings();
 
-  // Calcular métricas reais baseadas nos dados
-  const dailyParticipants = dailyRanking.length;
-  const weeklyParticipants = weeklyRanking.length;
+  // Calcular métricas reais baseadas nos dados com usuários únicos
+  const dailyParticipants = new Set(dailyRanking.map(player => player.user_id)).size;
+  const weeklyParticipants = new Set(weeklyRanking.map(player => player.user_id)).size;
   const prizePoolWeekly = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
     if (index === 0) return total + 100;
     if (index === 1) return total + 50;
@@ -38,7 +38,7 @@ export const RankingMetrics = () => {
     {
       title: "Competições Diárias",
       value: dailyParticipants.toString(),
-      subtitle: "Participantes hoje",
+      subtitle: "Usuários únicos hoje",
       icon: Calendar,
       color: "from-purple-500 to-purple-600",
       trend: "Hoje"
@@ -46,7 +46,7 @@ export const RankingMetrics = () => {
     {
       title: "Competição Semanal",
       value: weeklyParticipants.toString(),
-      subtitle: "Participantes esta semana",
+      subtitle: "Usuários únicos esta semana",
       icon: TrendingUp,
       color: "from-cyan-500 to-cyan-600",
       trend: "Esta semana"
