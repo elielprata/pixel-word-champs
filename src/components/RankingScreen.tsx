@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useDailyRanking } from '@/hooks/useDailyRanking';
 
 interface RankingPlayer {
   position: number;
@@ -29,24 +30,21 @@ interface WeeklyCompetition {
 
 const RankingScreen = () => {
   const { user } = useAuth();
-  const [dailyRanking, setDailyRanking] = useState<RankingPlayer[]>([]);
+  const { dailyRanking, isLoading: isDailyLoading, error: dailyError } = useDailyRanking();
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
   const [weeklyCompetition, setWeeklyCompetition] = useState<WeeklyCompetition | null>(null);
   const [userDailyPosition, setUserDailyPosition] = useState<number | null>(null);
   const [userWeeklyPosition, setUserWeeklyPosition] = useState<number | null>(null);
-  const [totalDailyPlayers, setTotalDailyPlayers] = useState(0);
   const [totalWeeklyPlayers, setTotalWeeklyPlayers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadRankingData = async () => {
+  const loadWeeklyRankingData = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      console.log('📊 Carregando dados dos rankings...');
-      
-      const today = new Date().toISOString().split('T')[0];
+      console.log('📊 Carregando dados dos rankings semanais...');
       
       // Calcular início da semana (segunda-feira)
       const todayDate = new Date();
@@ -54,24 +52,6 @@ const RankingScreen = () => {
       const diff = todayDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       const weekStart = new Date(todayDate.setDate(diff));
       const weekStartStr = weekStart.toISOString().split('T')[0];
-
-      // Buscar ranking diário
-      const { data: dailyData, error: dailyError } = await supabase
-        .from('daily_rankings')
-        .select(`
-          position,
-          user_id,
-          score,
-          profiles!inner(username, avatar_url)
-        `)
-        .eq('date', today)
-        .order('position', { ascending: true })
-        .limit(50);
-
-      if (dailyError) {
-        console.error('❌ Erro ao buscar ranking diário:', dailyError);
-        throw dailyError;
-      }
 
       // Buscar ranking semanal
       const { data: weeklyData, error: weeklyError } = await supabase
@@ -104,26 +84,13 @@ const RankingScreen = () => {
         console.error('❌ Erro ao buscar competição semanal:', competitionError);
       }
 
-      // Contar total de jogadores
-      const { count: dailyCount } = await supabase
-        .from('daily_rankings')
-        .select('*', { count: 'exact', head: true })
-        .eq('date', today);
-
+      // Contar total de jogadores semanais
       const { count: weeklyCount } = await supabase
         .from('weekly_rankings')
         .select('*', { count: 'exact', head: true })
         .eq('week_start', weekStartStr);
 
-      // Processar dados
-      const dailyPlayers: RankingPlayer[] = (dailyData || []).map(item => ({
-        position: item.position,
-        user_id: item.user_id,
-        username: item.profiles?.username || 'Usuário',
-        avatar_url: item.profiles?.avatar_url,
-        score: item.score
-      }));
-
+      // Processar dados semanais
       const weeklyPlayers: RankingPlayer[] = (weeklyData || []).map(item => ({
         position: item.position,
         user_id: item.user_id,
@@ -133,40 +100,42 @@ const RankingScreen = () => {
         prize: item.prize || 0
       }));
 
-      setDailyRanking(dailyPlayers);
       setWeeklyRanking(weeklyPlayers);
       setWeeklyCompetition(competition);
-      setTotalDailyPlayers(dailyCount || 0);
       setTotalWeeklyPlayers(weeklyCount || 0);
 
-      // Encontrar posição do usuário atual
+      // Encontrar posição do usuário atual no ranking semanal
       if (user?.id) {
-        const userDaily = dailyPlayers.find(p => p.user_id === user.id);
         const userWeekly = weeklyPlayers.find(p => p.user_id === user.id);
-        
-        setUserDailyPosition(userDaily?.position || null);
         setUserWeeklyPosition(userWeekly?.position || null);
       }
 
-      console.log('✅ Rankings carregados:', {
-        daily: dailyPlayers.length,
+      console.log('✅ Rankings semanais carregados:', {
         weekly: weeklyPlayers.length,
         competition: !!competition
       });
 
     } catch (err) {
-      console.error('❌ Erro ao carregar rankings:', err);
-      setError('Erro ao carregar rankings');
+      console.error('❌ Erro ao carregar rankings semanais:', err);
+      setError('Erro ao carregar rankings semanais');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadRankingData();
+    loadWeeklyRankingData();
   }, [user?.id]);
 
-  const renderRankingList = (players: RankingPlayer[], userPosition: number | null, totalPlayers: number, showPrize = false) => {
+  // Encontrar posição do usuário no ranking diário
+  useEffect(() => {
+    if (user?.id && dailyRanking.length > 0) {
+      const userDaily = dailyRanking.find(p => p.user_id === user.id);
+      setUserDailyPosition(userDaily?.pos || null);
+    }
+  }, [user?.id, dailyRanking]);
+
+  const renderRankingList = (players: any[], userPosition: number | null, totalPlayers: number, showPrize = false, isDailyRanking = false) => {
     if (players.length === 0) {
       return (
         <div className="text-center py-8 text-gray-500">
@@ -204,7 +173,9 @@ const RankingScreen = () => {
         {/* Top players */}
         {players.map((player) => {
           const isCurrentUser = user?.id === player.user_id;
-          const isTopThree = player.position <= 3;
+          const isTopThree = (isDailyRanking ? player.pos : player.position) <= 3;
+          const position = isDailyRanking ? player.pos : player.position;
+          const username = isDailyRanking ? player.name : player.username;
           
           return (
             <div 
@@ -216,22 +187,22 @@ const RankingScreen = () => {
               }`}
             >
               <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold text-white shadow-sm ${
-                player.position === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : 
-                player.position === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500' : 
-                player.position === 3 ? 'bg-gradient-to-br from-orange-400 to-orange-600' :
+                position === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : 
+                position === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500' : 
+                position === 3 ? 'bg-gradient-to-br from-orange-400 to-orange-600' :
                 isCurrentUser ? 'bg-purple-600' : 'bg-gray-400'
               }`}>
-                {player.position}
+                {position}
               </div>
               
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className={`font-medium ${isCurrentUser ? 'text-purple-900' : 'text-gray-900'}`}>
-                    {isCurrentUser ? 'Você' : player.username}
+                    {isCurrentUser ? 'Você' : username}
                   </span>
                   {isTopThree && (
                     <Badge variant="outline" className="text-xs">
-                      Top {player.position}
+                      Top {position}
                     </Badge>
                   )}
                 </div>
@@ -262,7 +233,7 @@ const RankingScreen = () => {
     );
   };
 
-  if (isLoading) {
+  if (isDailyLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 flex items-center justify-center">
         <div className="text-center">
@@ -286,12 +257,12 @@ const RankingScreen = () => {
         </div>
 
         {/* Error State */}
-        {error && (
+        {(error || dailyError) && (
           <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-red-200 mb-6">
             <Trophy className="w-12 h-12 mx-auto mb-3 text-red-400" />
             <p className="text-red-600 font-medium mb-2">Erro ao carregar rankings</p>
-            <p className="text-sm text-red-500 mb-4">{error}</p>
-            <Button onClick={loadRankingData} variant="outline" size="sm">
+            <p className="text-sm text-red-500 mb-4">{error || dailyError}</p>
+            <Button onClick={loadWeeklyRankingData} variant="outline" size="sm">
               🔄 Tentar novamente
             </Button>
           </div>
@@ -318,11 +289,11 @@ const RankingScreen = () => {
                   Ranking Diário
                 </CardTitle>
                 <p className="text-sm text-gray-600">
-                  Classificação baseada na pontuação de hoje
+                  Classificação baseada na pontuação consolidada de hoje
                 </p>
               </CardHeader>
               <CardContent>
-                {renderRankingList(dailyRanking, userDailyPosition, totalDailyPlayers)}
+                {renderRankingList(dailyRanking, userDailyPosition, dailyRanking.length, false, true)}
               </CardContent>
             </Card>
           </TabsContent>
