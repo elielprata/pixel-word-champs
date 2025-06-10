@@ -4,7 +4,7 @@ import { rankingQueryService } from '@/services/rankingQueryService';
 
 export const rankingApi = {
   async getDailyRanking(): Promise<RankingPlayer[]> {
-    return rankingQueryService.getDailyRanking();
+    return rankingQueryService.getWeeklyRanking();
   },
 
   async getWeeklyRanking(): Promise<RankingPlayer[]> {

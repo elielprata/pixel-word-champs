@@ -139,12 +139,7 @@ export const useUserMutations = () => {
           .delete()
           .eq('user_id', userId);
 
-        // Deletar rankings
-        await supabase
-          .from('daily_rankings')
-          .delete()
-          .eq('user_id', userId);
-
+        // Deletar rankings semanais
         await supabase
           .from('weekly_rankings')
           .delete()

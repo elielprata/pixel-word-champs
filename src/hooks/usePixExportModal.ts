@@ -62,11 +62,11 @@ export const usePixExportModal = (open: boolean, prizeLevel: string) => {
 
       if (error) throw error;
 
-      // Buscar posições dos rankings para cada usuário
-      const { data: dailyRankings, error: rankingError } = await supabase
-        .from('daily_rankings')
-        .select('user_id, position, date')
-        .order('date', { ascending: false });
+      // Buscar posições dos rankings semanais para cada usuário
+      const { data: weeklyRankings, error: rankingError } = await supabase
+        .from('weekly_rankings')
+        .select('user_id, position, week_start')
+        .order('week_start', { ascending: false });
 
       if (rankingError) {
         console.warn('⚠️ Erro ao buscar rankings:', rankingError);
@@ -74,7 +74,7 @@ export const usePixExportModal = (open: boolean, prizeLevel: string) => {
 
       // Mapear registros com posições
       const winnersWithPositions: PaymentRecord[] = (paymentRecords || []).map(record => {
-        const ranking = dailyRankings?.find(r => r.user_id === record.user_id);
+        const ranking = weeklyRankings?.find(r => r.user_id === record.user_id);
         
         return {
           id: record.id,

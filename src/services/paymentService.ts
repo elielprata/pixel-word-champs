@@ -45,11 +45,11 @@ export const paymentService = {
 
       if (error) throw error;
 
-      // Buscar posições dos rankings
-      const { data: dailyRankings, error: rankingError } = await supabase
-        .from('daily_rankings')
-        .select('user_id, position, date')
-        .order('date', { ascending: false });
+      // Buscar posições dos rankings semanais
+      const { data: weeklyRankings, error: rankingError } = await supabase
+        .from('weekly_rankings')
+        .select('user_id, position, week_start')
+        .order('week_start', { ascending: false });
 
       if (rankingError) {
         console.warn('⚠️ Aviso: Erro ao buscar rankings:', rankingError);
@@ -57,7 +57,7 @@ export const paymentService = {
 
       // Mapear registros com informações completas
       const records: PaymentRecord[] = (paymentRecords || []).map((record: any) => {
-        const ranking = dailyRankings?.find(r => r.user_id === record.user_id);
+        const ranking = weeklyRankings?.find(r => r.user_id === record.user_id);
         
         return {
           id: record.id,
@@ -122,24 +122,30 @@ export const paymentService = {
 
   async createPaymentRecords(): Promise<void> {
     try {
-      console.log('📝 Criando registros de pagamento baseados nos rankings...');
+      console.log('📝 Criando registros de pagamento baseados nos rankings semanais...');
       
-      // Buscar rankings recentes com perfis de usuário
-      const { data: dailyRankings, error: dailyError } = await supabase
-        .from('daily_rankings')
+      // Buscar rankings semanais recentes com perfis de usuário
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekStart = new Date(today.setDate(diff));
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      const { data: weeklyRankings, error: weeklyError } = await supabase
+        .from('weekly_rankings')
         .select(`
           id,
           user_id,
           position,
           score,
-          date,
+          week_start,
           profiles!inner(username, pix_key, pix_holder_name)
         `)
-        .eq('date', new Date().toISOString().split('T')[0])
+        .eq('week_start', weekStartStr)
         .lte('position', 100)
         .order('position', { ascending: true });
 
-      if (dailyError) throw dailyError;
+      if (weeklyError) throw weeklyError;
 
       // Buscar configurações de prêmios ativas
       const { data: prizeConfigs, error: prizeError } = await supabase
@@ -149,7 +155,7 @@ export const paymentService = {
 
       if (prizeError) throw prizeError;
 
-      if (!dailyRankings?.length || !prizeConfigs?.length) {
+      if (!weeklyRankings?.length || !prizeConfigs?.length) {
         console.log('ℹ️ Nenhum ranking ou configuração de prêmio encontrada');
         return;
       }
@@ -157,7 +163,7 @@ export const paymentService = {
       // Criar registros de pagamento baseados nas configurações
       const paymentRecords = [];
 
-      for (const ranking of dailyRankings) {
+      for (const ranking of weeklyRankings) {
         let prizeAmount = 0;
         
         // Verificar prêmios individuais
@@ -183,7 +189,7 @@ export const paymentService = {
         if (prizeAmount > 0) {
           paymentRecords.push({
             user_id: ranking.user_id,
-            ranking_type: 'daily',
+            ranking_type: 'weekly',
             ranking_id: ranking.id,
             prize_amount: prizeAmount,
             payment_status: 'pending',

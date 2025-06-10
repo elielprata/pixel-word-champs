@@ -46,16 +46,22 @@ export const useUserStats = () => {
 
       if (profileError) throw profileError;
 
-      // Buscar posição no ranking diário
-      const { data: dailyRanking, error: dailyError } = await supabase
-        .from('daily_rankings')
+      // Buscar posição no ranking semanal atual
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekStart = new Date(today.setDate(diff));
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      const { data: weeklyRanking, error: weeklyError } = await supabase
+        .from('weekly_rankings')
         .select('position')
         .eq('user_id', user.id)
-        .eq('date', new Date().toISOString().split('T')[0])
+        .eq('week_start', weekStartStr)
         .maybeSingle();
 
-      if (dailyError && dailyError.code !== 'PGRST116') {
-        console.warn('Erro ao buscar ranking diário:', dailyError);
+      if (weeklyError && weeklyError.code !== 'PGRST116') {
+        console.warn('Erro ao buscar ranking semanal:', weeklyError);
       }
 
       // Calcular sequência de vitórias baseada em jogos completados recentemente
@@ -93,7 +99,7 @@ export const useUserStats = () => {
       }
 
       const userStats = {
-        position: dailyRanking?.position || null,
+        position: weeklyRanking?.position || null,
         totalScore: profile?.total_score || 0,
         gamesPlayed: profile?.games_played || 0,
         winStreak: streak,
