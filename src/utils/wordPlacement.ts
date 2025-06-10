@@ -19,16 +19,17 @@ export class WordPlacer {
   canPlaceWord(word: string, startRow: number, startCol: number, direction: 'horizontal' | 'vertical' | 'diagonal'): boolean {
     const positions = this.getWordPositions(word, startRow, startCol, direction);
     
-    // Check if all positions are within bounds
+    // Verificar se todas as posições estão dentro dos limites
     if (!positions.every(pos => pos.row >= 0 && pos.row < this.size && pos.col >= 0 && pos.col < this.size)) {
       return false;
     }
     
-    // Check for conflicts with existing letters
+    // Verificar conflitos com letras existentes
     for (let i = 0; i < positions.length; i++) {
       const pos = positions[i];
       const existingLetter = this.board[pos.row][pos.col];
       
+      // Se há uma letra e não é a mesma, há conflito
       if (existingLetter !== '' && existingLetter !== word[i]) {
         return false;
       }
@@ -40,11 +41,13 @@ export class WordPlacer {
   placeWord(word: string, startRow: number, startCol: number, direction: 'horizontal' | 'vertical' | 'diagonal'): Position[] {
     const positions = this.getWordPositions(word, startRow, startCol, direction);
     
+    // Colocar cada letra da palavra no tabuleiro
     for (let i = 0; i < positions.length; i++) {
       const pos = positions[i];
       this.board[pos.row][pos.col] = word[i];
     }
 
+    // Adicionar à lista de palavras colocadas
     this.placedWords.push({
       word,
       startRow,
@@ -53,6 +56,7 @@ export class WordPlacer {
       positions
     });
     
+    console.log(`📍 Palavra "${word}" colocada em ${direction} (${startRow}, ${startCol})`);
     return positions;
   }
 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,12 +27,12 @@ export const useGameState = (level: number, board: string[][]) => {
       try {
         console.log('🔍 Buscando palavras ativas para o jogo...');
         
-        // Buscar palavras do banco de dados (todas as ativas, sem filtro por nível)
+        // Buscar palavras do banco de dados
         const { data: words, error } = await supabase
           .from('level_words')
           .select('word, difficulty, category')
           .eq('is_active', true)
-          .limit(15); // Limitar para um jogo balanceado
+          .limit(15);
 
         if (error) {
           console.error('❌ Erro ao buscar palavras:', error);
@@ -49,15 +50,20 @@ export const useGameState = (level: number, board: string[][]) => {
 
         console.log('✅ Palavras encontradas:', words.length);
 
-        // Calcular posições reais das palavras no tabuleiro
-        const wordPositions: WordPosition[] = words.map((wordData, index) => {
-          const positions = calculateWordPositions(wordData.word, board, index);
-          return {
-            word: wordData.word,
-            positions,
-            direction: getDirectionFromIndex(index)
-          };
-        }).filter(wp => wp.positions.length > 0); // Remover palavras que não couberem
+        // Usar as palavras que foram realmente colocadas no tabuleiro
+        const wordPositions: WordPosition[] = [];
+        
+        // Buscar cada palavra no tabuleiro gerado
+        for (const wordData of words.slice(0, 5)) { // Apenas as primeiras 5 palavras
+          const positions = findWordInBoard(board, wordData.word);
+          if (positions.length > 0) {
+            wordPositions.push({
+              word: wordData.word,
+              positions,
+              direction: getDirectionFromPositions(positions)
+            });
+          }
+        }
 
         const data: AIGeneratedData = {
           validWords: wordPositions,
@@ -74,7 +80,7 @@ export const useGameState = (level: number, board: string[][]) => {
         setGameData(data);
         setValidWords(wordPositions);
         setFoundWords([]);
-        setHintsRemaining(Math.max(1, Math.floor(wordPositions.length / 5))); // 1 dica para cada 5 palavras
+        setHintsRemaining(Math.max(1, Math.floor(wordPositions.length / 5)));
       } catch (error) {
         console.error('❌ Erro ao gerar dados do jogo:', error);
         setValidWords([]);
@@ -89,32 +95,69 @@ export const useGameState = (level: number, board: string[][]) => {
     }
   }, [level, board]);
 
-  // Calcular posições reais para as palavras no tabuleiro
-  const calculateWordPositions = (word: string, board: string[][], index: number) => {
-    const positions = [];
-    const maxRow = board.length;
-    const maxCol = board[0]?.length || 0;
-    
-    if (maxRow === 0 || maxCol === 0) return [];
+  // Buscar palavra no tabuleiro em todas as direções
+  const findWordInBoard = (board: string[][], word: string): Array<{row: number, col: number}> => {
+    const size = board.length;
+    const directions = [
+      { row: 0, col: 1 },   // horizontal
+      { row: 1, col: 0 },   // vertical
+      { row: 1, col: 1 },   // diagonal
+    ];
 
-    // Tentar posicionamento horizontal
-    const startRow = Math.min(index % maxRow, maxRow - 1);
-    const startCol = Math.max(0, Math.min(index % maxCol, maxCol - word.length));
-    
-    // Verificar se a palavra cabe horizontalmente
-    if (startCol + word.length <= maxCol) {
-      for (let i = 0; i < word.length; i++) {
-        positions.push({ row: startRow, col: startCol + i });
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
+        for (const dir of directions) {
+          const positions = checkWordAtPosition(board, word, row, col, dir.row, dir.col, size);
+          if (positions.length > 0) {
+            return positions;
+          }
+        }
       }
+    }
+    
+    return [];
+  };
+
+  // Verificar se a palavra existe na posição específica
+  const checkWordAtPosition = (
+    board: string[][], 
+    word: string, 
+    startRow: number, 
+    startCol: number, 
+    deltaRow: number, 
+    deltaCol: number,
+    size: number
+  ): Array<{row: number, col: number}> => {
+    const positions: Array<{row: number, col: number}> = [];
+    
+    for (let i = 0; i < word.length; i++) {
+      const row = startRow + i * deltaRow;
+      const col = startCol + i * deltaCol;
+      
+      if (row < 0 || row >= size || col < 0 || col >= size) {
+        return [];
+      }
+      
+      if (board[row][col] !== word[i]) {
+        return [];
+      }
+      
+      positions.push({ row, col });
     }
     
     return positions;
   };
 
-  // Determinar direção baseada no índice
-  const getDirectionFromIndex = (index: number): 'horizontal' | 'vertical' | 'diagonal' => {
-    const directions: Array<'horizontal' | 'vertical' | 'diagonal'> = ['horizontal', 'vertical', 'diagonal'];
-    return directions[index % 3];
+  // Determinar direção baseada nas posições
+  const getDirectionFromPositions = (positions: Array<{row: number, col: number}>): 'horizontal' | 'vertical' | 'diagonal' => {
+    if (positions.length < 2) return 'horizontal';
+    
+    const deltaRow = positions[1].row - positions[0].row;
+    const deltaCol = positions[1].col - positions[0].col;
+    
+    if (deltaRow === 0) return 'horizontal';
+    if (deltaCol === 0) return 'vertical';
+    return 'diagonal';
   };
 
   // Calcular dificuldade do jogo baseada nas palavras
