@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Loader2 } from 'lucide-react';
 import { useRankingData } from '@/hooks/useRankingData';
 
@@ -15,14 +14,14 @@ const RankingPreview = ({ onViewFullRanking }: RankingPreviewProps) => {
   const topPlayers = dailyRanking.slice(0, 3);
 
   return (
-    <Card className="mt-8 border-0 shadow-lg">
-      <CardHeader className="pb-4">
+    <div className="mt-8 border-0 shadow-lg rounded-lg bg-white">
+      <div className="p-6 pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-bold text-gray-900">Top Players Hoje</CardTitle>
+          <h2 className="text-lg font-bold text-gray-900">Top Players Hoje</h2>
           <TrendingUp className="w-5 h-5 text-purple-600" />
         </div>
-      </CardHeader>
-      <CardContent className="pt-0">
+      </div>
+      <div className="pt-0 p-6">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
@@ -60,8 +59,8 @@ const RankingPreview = ({ onViewFullRanking }: RankingPreviewProps) => {
         >
           Ver Ranking Completo
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
