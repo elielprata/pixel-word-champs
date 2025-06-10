@@ -4,21 +4,24 @@
  */
 
 export const getBrasiliaTime = (): Date => {
-  // Usar a API nativa de fuso horário para obter o horário de Brasília
-  const brasiliaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+  // Criar uma data no fuso horário de Brasília usando Intl API
+  const now = new Date();
+  const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
   
-  console.log('🕐 Horário UTC:', new Date().toISOString());
+  console.log('🕐 Horário UTC:', now.toISOString());
   console.log('🇧🇷 Horário Brasília calculado:', brasiliaTime.toISOString());
   
   return brasiliaTime;
 };
 
+export const convertToBrasiliaTime = (date: Date): Date => {
+  return new Date(date.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+};
+
 export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): boolean => {
   const brasiliaNow = getBrasiliaTime();
-  
-  // Converter as datas para o fuso horário de Brasília
-  const brasiliaStart = new Date(startDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-  const brasiliaEnd = new Date(endDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+  const brasiliaStart = convertToBrasiliaTime(startDate);
+  const brasiliaEnd = convertToBrasiliaTime(endDate);
   
   console.log('🔍 Verificando período ativo:');
   console.log('  📅 Início (Brasília):', brasiliaStart.toISOString());
@@ -33,7 +36,7 @@ export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): bo
 
 export const isBrasiliaDateInFuture = (date: Date): boolean => {
   const brasiliaNow = getBrasiliaTime();
-  const brasiliaDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+  const brasiliaDate = convertToBrasiliaTime(date);
   
   console.log('🔍 Verificando se data é futura:');
   console.log('  📅 Data (Brasília):', brasiliaDate.toISOString());
@@ -45,7 +48,7 @@ export const isBrasiliaDateInFuture = (date: Date): boolean => {
   return isFuture;
 };
 
-// Nova função para verificar se uma competição está ativa considerando Brasília
+// Função para verificar se uma competição está ativa considerando Brasília
 export const isCompetitionActiveInBrasilia = (startDate: Date, endDate: Date): boolean => {
   const brasiliaNow = getBrasiliaTime();
   
@@ -54,9 +57,9 @@ export const isCompetitionActiveInBrasilia = (startDate: Date, endDate: Date): b
   console.log('  📅 Fim UTC:', endDate.toISOString());
   console.log('  🕐 Agora Brasília:', brasiliaNow.toISOString());
   
-  // Para competições diárias, verificar se estamos no mesmo dia em Brasília
-  const startDateBrasilia = new Date(startDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-  const endDateBrasilia = new Date(endDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+  // Converter as datas UTC para o contexto de Brasília
+  const startDateBrasilia = convertToBrasiliaTime(startDate);
+  const endDateBrasilia = convertToBrasiliaTime(endDate);
   
   console.log('  📅 Início Brasília:', startDateBrasilia.toISOString());
   console.log('  📅 Fim Brasília:', endDateBrasilia.toISOString());
@@ -65,4 +68,26 @@ export const isCompetitionActiveInBrasilia = (startDate: Date, endDate: Date): b
   console.log('  ✅ Ativo:', isActive);
   
   return isActive;
+};
+
+// Função para verificar se estamos no mesmo dia em Brasília
+export const isSameDayInBrasilia = (date1: Date, date2: Date): boolean => {
+  const brasilia1 = convertToBrasiliaTime(date1);
+  const brasilia2 = convertToBrasiliaTime(date2);
+  
+  return brasilia1.toDateString() === brasilia2.toDateString();
+};
+
+// Função para obter o início do dia em Brasília
+export const getStartOfDayInBrasilia = (date: Date): Date => {
+  const brasiliaDate = convertToBrasiliaTime(date);
+  brasiliaDate.setHours(0, 0, 0, 0);
+  return brasiliaDate;
+};
+
+// Função para obter o fim do dia em Brasília
+export const getEndOfDayInBrasilia = (date: Date): Date => {
+  const brasiliaDate = convertToBrasiliaTime(date);
+  brasiliaDate.setHours(23, 59, 59, 999);
+  return brasiliaDate;
 };
