@@ -48,16 +48,9 @@ export const RankingInfoCard = ({
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      let data;
-      let filename;
-      
-      if (isDaily) {
-        data = await rankingExportService.exportDailyRankings();
-        filename = `ranking_diario_${new Date().toISOString().split('T')[0]}.csv`;
-      } else {
-        data = await rankingExportService.exportWeeklyRankings();
-        filename = `ranking_semanal_${new Date().toISOString().split('T')[0]}.csv`;
-      }
+      // Para ambos os tipos, exportar apenas ranking semanal
+      const data = await rankingExportService.exportWeeklyRankings();
+      const filename = `ranking_${isDaily ? 'diario' : 'semanal'}_${new Date().toISOString().split('T')[0]}.csv`;
 
       if (data.length === 0) {
         toast({
