@@ -160,6 +160,7 @@ export type Database = {
           created_at: string | null
           id: string
           payment_date: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
           prize: number | null
           user_id: string | null
           user_position: number | null
@@ -170,6 +171,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           payment_date?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           prize?: number | null
           user_id?: string | null
           user_position?: number | null
@@ -180,6 +182,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           payment_date?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           prize?: number | null
           user_id?: string | null
           user_position?: number | null
@@ -739,6 +742,7 @@ export type Database = {
           created_at: string
           id: string
           payment_date: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
           position: number
           prize: number | null
           score: number
@@ -750,6 +754,7 @@ export type Database = {
           created_at?: string
           id?: string
           payment_date?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           position: number
           prize?: number | null
           score?: number
@@ -761,6 +766,7 @@ export type Database = {
           created_at?: string
           id?: string
           payment_date?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           position?: number
           prize?: number | null
           score?: number

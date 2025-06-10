@@ -74,7 +74,7 @@ export class RankingQueryService {
         throw error;
       }
 
-      const historical = data?.map((ranking) => {
+      const historical = data?.map((ranking: any) => {
         const weekStart = new Date(ranking.week_start);
         const weekEnd = new Date(ranking.week_end);
         
