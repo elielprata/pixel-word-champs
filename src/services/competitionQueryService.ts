@@ -77,33 +77,57 @@ export class CompetitionQueryService {
       const { data: participations, error } = await supabase
         .from('competition_participations')
         .select(`
-          *,
-          profiles!competition_participations_user_id_fkey (
-            id,
-            username,
-            avatar_url
-          )
+          user_id,
+          user_score,
+          prize,
+          payment_status,
+          created_at
         `)
         .eq('competition_id', competitionId)
         .order('user_score', { ascending: false })
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('❌ Erro ao buscar ranking:', error);
+        console.error('❌ Erro ao buscar participações:', error);
         throw error;
       }
 
       console.log('📊 Participações encontradas:', participations?.length || 0);
 
-      const rankingData = participations?.map((participation, index) => ({
-        position: index + 1,
-        user_id: participation.user_id,
-        username: participation.profiles?.username || 'Usuário',
-        avatar_url: participation.profiles?.avatar_url,
-        score: participation.user_score || 0,
-        prize: participation.prize || 0,
-        payment_status: participation.payment_status || 'not_eligible'
-      })) || [];
+      if (!participations || participations.length === 0) {
+        return createSuccessResponse([]);
+      }
+
+      // Buscar perfis dos usuários separadamente
+      const userIds = participations.map(p => p.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('❌ Erro ao buscar perfis:', profilesError);
+        throw profilesError;
+      }
+
+      // Criar um mapa de perfis para facilitar o lookup
+      const profilesMap = new Map();
+      profiles?.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
+
+      const rankingData = participations.map((participation, index) => {
+        const profile = profilesMap.get(participation.user_id);
+        return {
+          position: index + 1,
+          user_id: participation.user_id,
+          username: profile?.username || 'Usuário',
+          avatar_url: profile?.avatar_url,
+          score: participation.user_score || 0,
+          prize: participation.prize || 0,
+          payment_status: participation.payment_status || 'not_eligible'
+        };
+      });
 
       return createSuccessResponse(rankingData);
     } catch (error) {
