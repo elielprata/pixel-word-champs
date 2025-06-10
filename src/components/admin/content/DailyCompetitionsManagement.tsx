@@ -9,7 +9,6 @@ import { useDailyCompetitionFinalization } from "@/hooks/useDailyCompetitionFina
 import { DailyCompetitionForm } from './daily/DailyCompetitionForm';
 import { DailyCompetitionStats } from './daily/DailyCompetitionStats';
 import { DailyCompetitionTable } from './daily/DailyCompetitionTable';
-import { DeleteTestCompetitionsButton } from '../utils/DeleteTestCompetitionsButton';
 import { createBrasiliaStartOfDay, createBrasiliaEndOfDay, formatBrasiliaTime } from '@/utils/brasiliaTime';
 
 interface DailyCompetition {
@@ -262,17 +261,14 @@ export const DailyCompetitionsManagement = () => {
               Pontos são automaticamente transferidos para a competição semanal
             </div>
           </div>
-          <div className="flex gap-2">
-            <DeleteTestCompetitionsButton />
-            <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Competição Diária
-                </Button>
-              </DialogTrigger>
-            </Dialog>
-          </div>
+          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Competição Diária
+              </Button>
+            </DialogTrigger>
+          </Dialog>
         </div>
       </CardHeader>
 
