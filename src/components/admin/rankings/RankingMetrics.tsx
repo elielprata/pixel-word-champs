@@ -13,14 +13,6 @@ export const RankingMetrics = () => {
 
   const metrics = [
     {
-      title: "Total de Participantes",
-      value: totalPlayers.toLocaleString(),
-      subtitle: "Usuários competindo",
-      icon: Users,
-      color: "from-blue-500 to-blue-600",
-      trend: "Usuários ativos"
-    },
-    {
       title: "Competições Diárias",
       value: dailyParticipants.toString(),
       subtitle: "Usuários únicos hoje",
@@ -39,7 +31,7 @@ export const RankingMetrics = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {metrics.map((metric, index) => {
         const Icon = metric.icon;
         return (
