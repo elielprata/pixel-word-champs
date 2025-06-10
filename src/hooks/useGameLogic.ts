@@ -46,11 +46,11 @@ export const useGameLogic = (
     }
   }, [timeLeft, showGameOver]);
 
-  // Verifica se completou o nível (5 palavras encontradas)
+  // Verifica se completou o nível
   useEffect(() => {
     if (foundWords.length === 5 && !showLevelComplete && !isLevelCompleted) {
       const levelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
-      console.log(`Level ${level} completed! Total score: ${levelScore}`);
+      console.log(`Level ${level} completed with score ${levelScore}`);
       setShowLevelComplete(true);
       setIsLevelCompleted(true);
       onLevelComplete(levelScore);
@@ -60,12 +60,7 @@ export const useGameLogic = (
   const updateUserScore = async (points: number) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('❌ Usuário não autenticado, não foi possível atualizar pontuação');
-        return;
-      }
-
-      console.log(`💰 Registrando ${points} pontos para o usuário ${user.id}`);
+      if (!user) return;
 
       // Buscar pontuação atual do usuário
       const { data: profile, error: fetchError } = await supabase
@@ -75,28 +70,29 @@ export const useGameLogic = (
         .single();
 
       if (fetchError) {
-        console.error('❌ Erro ao buscar perfil:', fetchError);
+        console.error('Erro ao buscar perfil:', fetchError);
         return;
       }
 
       const currentScore = profile?.total_score || 0;
       const newScore = currentScore + points;
 
-      console.log(`📊 Pontuação atual: ${currentScore}, nova pontuação: ${newScore}`);
-
       // Atualizar pontuação no perfil
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ total_score: newScore })
+        .update({ 
+          total_score: newScore,
+          games_played: (profile?.games_played || 0) + (points > 0 ? 0 : 0) // Só incrementa games_played quando necessário
+        })
         .eq('id', user.id);
 
       if (updateError) {
-        console.error('❌ Erro ao atualizar pontuação:', updateError);
+        console.error('Erro ao atualizar pontuação:', updateError);
       } else {
-        console.log(`✅ Pontuação atualizada com sucesso: +${points} pontos (total: ${newScore})`);
+        console.log(`✅ Pontuação atualizada: +${points} pontos (total: ${newScore})`);
       }
     } catch (error) {
-      console.error('❌ Erro ao atualizar pontuação do usuário:', error);
+      console.error('Erro ao atualizar pontuação do usuário:', error);
     }
   };
 
@@ -104,16 +100,13 @@ export const useGameLogic = (
     const points = getPointsForWord(word);
     const newFoundWord = { word, positions: [...positions], points };
     
-    console.log(`🎯 Palavra encontrada: "${word}" = ${points} pontos`);
+    console.log(`Palavra encontrada: ${word} = ${points} pontos`);
     
-    // Adicionar palavra encontrada ao estado
     setFoundWords(prev => [...prev, newFoundWord]);
     setPermanentlyMarkedCells(prev => [...prev, ...positions]);
     
-    // Registrar pontos imediatamente na base de dados
+    // Registrar pontos imediatamente quando a palavra é encontrada
     await updateUserScore(points);
-    
-    // Notificar o componente pai
     onWordFound(word, points);
   };
 
