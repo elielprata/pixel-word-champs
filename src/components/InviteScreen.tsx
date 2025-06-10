@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Share2, Copy, Users, Gift, Star, Trophy, Loader2 } from 'lucide-react';
+import { Share2, Copy, Users, Gift, Star, Trophy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import SocialShareModal from './SocialShareModal';
 import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
+import LoadingState from './home/LoadingState';
 
 const InviteScreen = () => {
   const [showShareModal, setShowShareModal] = useState(false);
@@ -71,16 +72,7 @@ const InviteScreen = () => {
   }
 
   if (isLoading) {
-    return (
-      <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen flex items-center justify-center">
-        <Card className="text-center p-8">
-          <CardContent className="flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin mr-2" />
-            <span>Carregando dados de convites...</span>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
