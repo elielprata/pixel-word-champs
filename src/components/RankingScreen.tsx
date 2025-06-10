@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -141,13 +140,13 @@ const RankingScreen = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl mx-auto flex items-center justify-center animate-pulse">
-            <Trophy className="w-8 h-8 text-white" />
+        <div className="text-center space-y-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-3xl mx-auto flex items-center justify-center animate-pulse">
+            <Trophy className="w-10 h-10 text-white" />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <div className="h-6 bg-slate-200 rounded-lg w-48 mx-auto animate-pulse"></div>
             <div className="h-4 bg-slate-200 rounded w-32 mx-auto animate-pulse"></div>
-            <div className="h-3 bg-slate-200 rounded w-24 mx-auto animate-pulse"></div>
           </div>
         </div>
       </div>
@@ -156,14 +155,14 @@ const RankingScreen = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
-      <div className="p-6 pb-24 max-w-4xl mx-auto space-y-6">
+      <div className="p-6 pb-24 max-w-5xl mx-auto space-y-8">
         {/* Header */}
         <RankingHeader 
           weeklyCompetition={weeklyCompetition}
           totalWeeklyPlayers={totalWeeklyPlayers}
         />
 
-        {/* Prize Distribution */}
+        {/* Prize Distribution - Destaque especial */}
         <PrizeDistribution weeklyCompetition={weeklyCompetition} />
 
         {/* User Position */}
