@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, ArrowRight, StopCircle } from 'lucide-react';
 
 interface LevelCompleteModalProps {
@@ -22,8 +23,8 @@ const LevelCompleteModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="w-80 m-4 rounded-lg border bg-white text-gray-900 shadow-lg">
-        <div className="p-6 text-center">
+      <Card className="w-80 m-4">
+        <CardContent className="p-6 text-center">
           <div className="mb-4">
             <Trophy className="w-16 h-16 mx-auto text-amber-500 mb-2" />
             <h2 className="text-xl font-bold text-gray-800">Nível {level} Completado!</h2>
@@ -54,8 +55,8 @@ const LevelCompleteModal = ({
               Quero Parar
             </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

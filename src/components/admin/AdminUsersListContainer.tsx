@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Shield } from 'lucide-react';
 import { AdminUser } from '@/hooks/useAdminUsers';
@@ -20,29 +21,29 @@ export const AdminUsersListContainer = ({
 }: AdminUsersListContainerProps) => {
   if (isLoading) {
     return (
-      <div className="border-slate-200 shadow-sm bg-white rounded-lg">
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-slate-200 p-4">
-          <h3 className="flex items-center gap-2 text-slate-800 font-semibold">
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-slate-200">
+          <CardTitle className="flex items-center gap-2 text-slate-800">
             <div className="bg-green-100 p-2 rounded-lg">
               <Shield className="h-4 w-4 text-green-600" />
             </div>
             <span>Lista de Administradores</span>
-          </h3>
-        </div>
-        <div className="p-6">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-600"></div>
             <span className="ml-2 text-slate-600">Carregando administradores...</span>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="border-slate-200 shadow-sm bg-white rounded-lg">
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-slate-200 p-4">
-        <h3 className="flex items-center justify-between text-slate-800 font-semibold">
+    <Card className="border-slate-200 shadow-sm">
+      <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-slate-200">
+        <CardTitle className="flex items-center justify-between text-slate-800">
           <div className="flex items-center gap-2">
             <div className="bg-green-100 p-2 rounded-lg">
               <Shield className="h-4 w-4 text-green-600" />
@@ -52,9 +53,9 @@ export const AdminUsersListContainer = ({
           <Badge className="bg-green-100 text-green-800 border-green-200">
             {usersList.length} {usersList.length === 1 ? 'administrador' : 'administradores'}
           </Badge>
-        </h3>
-      </div>
-      <div className="p-6">
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
         <div className="space-y-3">
           {usersList.length > 0 ? (
             usersList.map((user) => (
@@ -77,7 +78,7 @@ export const AdminUsersListContainer = ({
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

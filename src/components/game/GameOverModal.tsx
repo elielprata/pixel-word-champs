@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { StopCircle, Trophy, Play, X } from 'lucide-react';
 
 interface GameOverModalProps {
@@ -45,8 +46,8 @@ const GameOverModal = ({
   if (isWatchingAd) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-        <div className="w-80 m-4 rounded-lg border bg-white text-gray-900 shadow-lg">
-          <div className="p-6 text-center relative">
+        <Card className="w-80 m-4">
+          <CardContent className="p-6 text-center relative">
             <Button 
               onClick={handleCloseAd}
               className="absolute top-2 right-2 w-8 h-8 p-0 bg-gray-600 hover:bg-gray-700"
@@ -65,16 +66,16 @@ const GameOverModal = ({
             <div className="bg-gray-800 rounded-lg p-3">
               <p className="text-sm text-gray-400">Clique no X quando o anúncio terminar</p>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="w-80 m-4 rounded-lg border bg-white text-gray-900 shadow-lg">
-        <div className="p-6 text-center">
+      <Card className="w-80 m-4">
+        <CardContent className="p-6 text-center">
           <div className="mb-4">
             <Trophy className="w-16 h-16 mx-auto text-amber-500 mb-2" />
             <h2 className="text-xl font-bold text-gray-800">Tempo Esgotado!</h2>
@@ -116,8 +117,8 @@ const GameOverModal = ({
               💡 Você pode usar o revive quantas vezes quiser!
             </p>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

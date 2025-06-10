@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Save } from 'lucide-react';
 
@@ -10,11 +11,11 @@ interface GameSettingsHeaderProps {
 
 export const GameSettingsHeader = ({ onSave, saving }: GameSettingsHeaderProps) => {
   return (
-    <div className="bg-white rounded-lg shadow-md border border-slate-200">
-      <div className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200 p-4">
+    <Card className="border-slate-200 shadow-sm">
+      <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-800">Configurações do Jogo</h2>
+            <CardTitle className="text-lg text-slate-800">Configurações do Jogo</CardTitle>
             <p className="text-sm text-slate-600">
               Ajuste pontuações e mecânicas do jogo. Para valores de premiação, acesse o menu "Premiação".
             </p>
@@ -30,7 +31,7 @@ export const GameSettingsHeader = ({ onSave, saving }: GameSettingsHeaderProps) 
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </CardHeader>
+    </Card>
   );
 };

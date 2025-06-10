@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Gift, Loader2 } from 'lucide-react';
@@ -54,15 +55,15 @@ const UseInviteCodeModal = ({ isOpen, onClose }: UseInviteCodeModalProps) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-3 backdrop-blur-sm">
-      <div className="w-full max-w-md border-0 bg-white shadow-2xl animate-scale-in rounded-lg">
-        <div className="pb-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-t-lg p-4">
+      <Card className="w-full max-w-md border-0 bg-white shadow-2xl animate-scale-in">
+        <CardHeader className="pb-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-t-lg p-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 <Gift className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Usar Código de Convite</h2>
+                <CardTitle className="text-lg">Usar Código de Convite</CardTitle>
                 <p className="text-sm text-white/80">Digite o código do seu amigo</p>
               </div>
             </div>
@@ -76,9 +77,9 @@ const UseInviteCodeModal = ({ isOpen, onClose }: UseInviteCodeModalProps) => {
               <X className="w-4 h-4" />
             </Button>
           </div>
-        </div>
+        </CardHeader>
         
-        <div className="p-4">
+        <CardContent className="p-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="invite-code" className="block text-sm font-medium text-gray-700 mb-2">
@@ -128,8 +129,8 @@ const UseInviteCodeModal = ({ isOpen, onClose }: UseInviteCodeModalProps) => {
               </Button>
             </div>
           </form>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

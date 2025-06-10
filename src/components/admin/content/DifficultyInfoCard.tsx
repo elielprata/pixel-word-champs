@@ -1,14 +1,15 @@
 
 import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const DifficultyInfoCard = () => {
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-lg shadow-md">
-      <div className="p-4 border-b border-amber-200">
-        <h3 className="text-amber-800 text-sm font-semibold">Sistema de Dificuldade Automática</h3>
-      </div>
-      <div className="p-4">
+    <Card className="bg-amber-50 border-amber-200">
+      <CardHeader>
+        <CardTitle className="text-amber-800 text-sm">Sistema de Dificuldade Automática</CardTitle>
+      </CardHeader>
+      <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div className="flex items-center gap-2">
             <Badge className="bg-green-100 text-green-800 border-green-200">Fácil</Badge>
@@ -27,7 +28,7 @@ export const DifficultyInfoCard = () => {
             <span className="text-slate-600">8+ letras</span>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

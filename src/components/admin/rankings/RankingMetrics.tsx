@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock, AlertCircle } from 'lucide-react';
 import { useRankings } from '@/hooks/useRankings';
 
@@ -23,7 +23,7 @@ export const RankingMetrics = () => {
       value: totalPlayers.toLocaleString(),
       subtitle: "Usuários competindo",
       icon: Users,
-      color: "blue",
+      color: "from-blue-500 to-blue-600",
       trend: "Usuários ativos"
     },
     {
@@ -31,7 +31,7 @@ export const RankingMetrics = () => {
       value: `R$ ${prizePoolWeekly.toFixed(2)}`,
       subtitle: "Valor total disponível",
       icon: DollarSign,
-      color: "green",
+      color: "from-green-500 to-green-600",
       trend: "Esta semana"
     },
     {
@@ -39,7 +39,7 @@ export const RankingMetrics = () => {
       value: dailyParticipants.toString(),
       subtitle: "Participantes hoje",
       icon: Calendar,
-      color: "purple",
+      color: "from-purple-500 to-purple-600",
       trend: "Hoje"
     },
     {
@@ -47,20 +47,10 @@ export const RankingMetrics = () => {
       value: weeklyParticipants.toString(),
       subtitle: "Participantes esta semana",
       icon: TrendingUp,
-      color: "cyan",
+      color: "from-cyan-500 to-cyan-600",
       trend: "Esta semana"
     }
   ];
-
-  const getColorClasses = (color: string) => {
-    const colors = {
-      blue: "from-blue-500 to-blue-600 text-white",
-      green: "from-emerald-500 to-emerald-600 text-white",
-      purple: "from-violet-500 to-violet-600 text-white",
-      cyan: "from-cyan-500 to-cyan-600 text-white"
-    };
-    return colors[color as keyof typeof colors] || colors.blue;
-  };
 
   return (
     <div className="space-y-4">
@@ -68,14 +58,14 @@ export const RankingMetrics = () => {
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
           return (
-            <div key={index} className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white rounded-lg">
-              <div className="p-4">
+            <Card key={index} className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-slate-600">{metric.title}</p>
-                      <div className={`bg-gradient-to-r ${getColorClasses(metric.color)} p-2 rounded-lg shadow-sm`}>
-                        <Icon className="h-4 w-4" />
+                      <div className={`bg-gradient-to-r ${metric.color} p-2 rounded-lg shadow-sm`}>
+                        <Icon className="h-4 w-4 text-white" />
                       </div>
                     </div>
                     <div className="space-y-1">
@@ -93,8 +83,8 @@ export const RankingMetrics = () => {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           );
         })}
       </div>

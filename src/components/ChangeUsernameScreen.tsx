@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, User, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -50,16 +51,16 @@ const ChangeUsernameScreen = ({ onBack }: ChangeUsernameScreenProps) => {
       </div>
 
       {/* Card principal */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold flex items-center gap-3">
+      <Card className="mb-6 shadow-sm border-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
               <User className="w-5 h-5 text-blue-600" />
             </div>
             Nome de Usuário
-          </h3>
-        </div>
-        <div className="p-4 space-y-4">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           {/* Nome atual */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -114,12 +115,12 @@ const ChangeUsernameScreen = ({ onBack }: ChangeUsernameScreenProps) => {
               )}
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Aviso de limitação */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg shadow-md mb-6">
-        <div className="p-4">
+      <Card className="mb-6 border-yellow-200 bg-yellow-50">
+        <CardContent className="p-4">
           <div className="flex gap-3">
             <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
             <div>
@@ -127,8 +128,8 @@ const ChangeUsernameScreen = ({ onBack }: ChangeUsernameScreenProps) => {
               <p className="text-sm text-yellow-700">Você pode alterar seu nome apenas uma vez por mês.</p>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Botões de ação */}
       <div className="space-y-3">

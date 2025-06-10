@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, CreditCard, Save, Eye, EyeOff } from 'lucide-react';
@@ -61,14 +62,14 @@ const PixConfigScreen = ({ onBack }: PixConfigScreenProps) => {
         <h1 className="text-2xl font-bold text-purple-800 ml-3">PIX para Recebimento</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md border border-gray-200">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="flex items-center gap-2">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-green-500" />
             Configurar PIX
-          </h2>
-        </div>
-        <div className="p-4 space-y-4">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div>
             <Label htmlFor="holderName">Nome do titular</Label>
             <Input
@@ -120,16 +121,17 @@ const PixConfigScreen = ({ onBack }: PixConfigScreenProps) => {
 
           <div className="bg-blue-50 p-3 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Importante:</strong> Essas informações serão usadas para receber os prêmios das competições.
+              <strong>Importante:</strong> Essas informações serão usadas para receber premiações. 
+              Certifique-se de que os dados estão corretos e que a chave PIX está ativa.
             </p>
           </div>
 
           <Button onClick={handleSave} className="w-full">
             <Save className="w-4 h-4 mr-2" />
-            Salvar Configurações
+            Salvar configurações PIX
           </Button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Users, Clock, Target } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Target, Calendar, Users } from 'lucide-react';
 
 interface DailyCompetition {
   id: string;
@@ -19,56 +19,56 @@ interface DailyCompetitionStatsProps {
   competitions: DailyCompetition[];
 }
 
-export const DailyCompetitionStats: React.FC<DailyCompetitionStatsProps> = ({ competitions }) => {
-  // Calculate real stats from competitions data
-  const activeCompetitions = competitions.filter(comp => comp.status === 'active').length;
-  const totalParticipants = competitions.reduce((sum, comp) => sum + (comp.max_participants || 0), 0);
-  const averageParticipants = competitions.length > 0 ? Math.round(totalParticipants / competitions.length) : 0;
-  
-  const stats = [
-    {
-      title: "Competições Ativas",
-      value: activeCompetitions.toString(),
-      icon: Trophy,
-      color: "text-yellow-600"
-    },
-    {
-      title: "Participantes Médio",
-      value: averageParticipants.toString(),
-      icon: Users,
-      color: "text-blue-600"
-    },
-    {
-      title: "Total Competições",
-      value: competitions.length.toString(),
-      icon: Clock,
-      color: "text-green-600"
-    },
-    {
-      title: "Taxa de Atividade",
-      value: competitions.length > 0 ? `${Math.round((activeCompetitions / competitions.length) * 100)}%` : "0%",
-      icon: Target,
-      color: "text-purple-600"
-    }
-  ];
-
+export const DailyCompetitionStats: React.FC<DailyCompetitionStatsProps> = ({
+  competitions
+}) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      {stats.map((stat, index) => (
-        <Card key={index}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              {stat.title}
-            </CardTitle>
-            <stat.icon className={`h-4 w-4 ${stat.color}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <Target className="h-4 w-4 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-blue-600 font-medium">Total</p>
+              <p className="text-2xl font-bold text-blue-700">{competitions.length}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-green-100 p-2 rounded-lg">
+              <Calendar className="h-4 w-4 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-green-600 font-medium">Ativas</p>
+              <p className="text-2xl font-bold text-green-700">
+                {competitions.filter(c => c.status === 'active').length}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-amber-100 p-2 rounded-lg">
+              <Users className="h-4 w-4 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm text-amber-600 font-medium">Agendadas</p>
+              <p className="text-2xl font-bold text-amber-700">
+                {competitions.filter(c => c.status === 'scheduled').length}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
-
-export default DailyCompetitionStats;

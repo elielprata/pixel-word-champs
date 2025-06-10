@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { useGameSettings } from "@/hooks/useGameSettings";
 import { GameSettingsHeader } from './GameSettingsHeader';
 import { GameSettingsCategory } from './GameSettingsCategory';
@@ -15,12 +16,12 @@ export const GameSettings = () => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md border border-gray-200">
-        <div className="p-8 text-center">
+      <Card>
+        <CardContent className="p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
           <p>Carregando configurações...</p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -51,11 +52,11 @@ export const GameSettings = () => {
       ))}
 
       {Object.keys(groupedSettings).length === 0 && (
-        <div className="bg-white rounded-lg shadow-md border border-gray-200">
-          <div className="p-8 text-center text-gray-500">
+        <Card>
+          <CardContent className="p-8 text-center text-gray-500">
             <p>Nenhuma configuração encontrada</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

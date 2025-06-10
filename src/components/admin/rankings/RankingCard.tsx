@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw } from 'lucide-react';
 import { getRankingIcon, getRankingColors } from './RankingIcons';
@@ -33,19 +34,19 @@ export const RankingCard = ({
   emptyMessage 
 }: RankingCardProps) => {
   return (
-    <div className="border-0 shadow-lg bg-white rounded-lg">
-      <div className={`bg-gradient-to-r ${badgeColor} border-b border-gray-100 p-4`}>
+    <Card className="border-0 shadow-lg">
+      <CardHeader className={`bg-gradient-to-r ${badgeColor} border-b border-gray-100`}>
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xl text-gray-800 font-semibold">{title}</h3>
+            <CardTitle className="text-xl text-gray-800">{title}</CardTitle>
             <p className="text-sm text-gray-600 mt-1">{description}</p>
           </div>
           <Badge className={`bg-${badgeColor.includes('blue') ? 'blue' : 'purple'}-100 text-${badgeColor.includes('blue') ? 'blue' : 'purple'}-800 border-${badgeColor.includes('blue') ? 'blue' : 'purple'}-200`}>
             {ranking.length} participantes
           </Badge>
         </div>
-      </div>
-      <div className="p-0">
+      </CardHeader>
+      <CardContent className="p-0">
         {isLoading ? (
           <div className="flex items-center justify-center p-8">
             <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
@@ -94,7 +95,7 @@ export const RankingCard = ({
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Lightbulb, RotateCcw, Play } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
@@ -85,8 +86,8 @@ const HelpSystem = ({ onHintUsed, onReviveUsed, hintsRemaining, canUseRevive }: 
   if (showAdModal) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="w-80 m-4 bg-white rounded-lg shadow-lg border">
-          <div className="p-6 text-center">
+        <Card className="w-80 m-4">
+          <CardContent className="p-6 text-center">
             <div className="mb-4">
               {adType === 'hint' ? (
                 <Lightbulb className="w-12 h-12 mx-auto text-yellow-500" />
@@ -122,8 +123,8 @@ const HelpSystem = ({ onHintUsed, onReviveUsed, hintsRemaining, canUseRevive }: 
                 Assistir
               </Button>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -131,13 +132,13 @@ const HelpSystem = ({ onHintUsed, onReviveUsed, hintsRemaining, canUseRevive }: 
   if (isWatchingAd) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-        <div className="w-80 m-4 bg-white rounded-lg shadow-lg border">
-          <div className="p-6 text-center">
+        <Card className="w-80 m-4">
+          <CardContent className="p-6 text-center">
             <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
             <h3 className="text-lg font-bold mb-2 text-white">Anúncio em Exibição</h3>
             <p className="text-gray-300">Aguarde para receber sua recompensa...</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

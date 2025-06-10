@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Bug, Send, AlertTriangle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -81,14 +82,14 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
         <h1 className="text-2xl font-bold text-red-800 ml-3">Reportar Bug</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg flex items-center gap-2">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
             <Bug className="w-5 h-5 text-red-500" />
             Relatar Problema
-          </h2>
-        </div>
-        <div className="p-4 space-y-4">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-yellow-600" />
@@ -150,8 +151,8 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
               <p>• Versão do app: 1.0.0</p>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <Button 
         onClick={handleSubmitBug}

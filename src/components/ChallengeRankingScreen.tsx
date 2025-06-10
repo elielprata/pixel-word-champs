@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Trophy, Medal, Award } from 'lucide-react';
 
 interface ChallengeRankingScreenProps {
@@ -45,20 +46,20 @@ const ChallengeRankingScreen = ({ challengeId, onBack }: ChallengeRankingScreenP
         </div>
       </div>
 
-      <div className="mb-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0 rounded-lg shadow-md">
-        <div className="p-4 text-center">
+      <Card className="mb-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0">
+        <CardContent className="p-4 text-center">
           <Trophy className="w-8 h-8 mx-auto mb-2" />
           <p className="text-lg font-bold">Sua Posição</p>
           <p className="text-2xl font-bold">#42</p>
           <p className="text-sm opacity-80">1,890 pontos</p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="bg-white rounded-lg shadow-md border border-gray-200">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold">Ranking do Desafio</h2>
-        </div>
-        <div className="p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Ranking do Desafio</CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="space-y-3">
             {mockRanking.map((player) => (
               <div 
@@ -85,8 +86,8 @@ const ChallengeRankingScreen = ({ challengeId, onBack }: ChallengeRankingScreenP
               </div>
             ))}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

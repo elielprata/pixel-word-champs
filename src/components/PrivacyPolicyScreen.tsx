@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Shield } from 'lucide-react';
 
 interface PrivacyPolicyScreenProps {
@@ -17,14 +18,14 @@ const PrivacyPolicyScreen = ({ onBack }: PrivacyPolicyScreenProps) => {
         <h1 className="text-2xl font-bold text-purple-800 ml-3">Política de Privacidade</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg flex items-center gap-2">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
             <Shield className="w-5 h-5 text-green-500" />
             Sua Privacidade é Importante
-          </h2>
-        </div>
-        <div className="p-4 space-y-4">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <p className="text-sm text-gray-600">
             Última atualização: Janeiro 2025
           </p>
@@ -85,8 +86,8 @@ const PrivacyPolicyScreen = ({ onBack }: PrivacyPolicyScreenProps) => {
               📧 Dúvidas sobre privacidade? Entre em contato: privacidade@letraarena.com
             </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

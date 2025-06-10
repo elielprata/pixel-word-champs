@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, MessageCircle, Send, User, Bot } from 'lucide-react';
 
 interface LiveChatScreenProps {
@@ -53,19 +54,19 @@ const LiveChatScreen = ({ onBack }: LiveChatScreenProps) => {
       </div>
 
       {/* Status */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-4">
-        <div className="p-4">
+      <Card className="mb-4">
+        <CardContent className="p-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
             <span className="text-sm font-medium">Atendimento online</span>
             <span className="text-xs text-gray-500">• Resposta em até 5 minutos</span>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Chat Messages */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-4 flex-1">
-        <div className="p-4 h-96 overflow-y-auto">
+      <Card className="mb-4 flex-1">
+        <CardContent className="p-4 h-96 overflow-y-auto">
           <div className="space-y-4">
             {messages.map((msg) => (
               <div
@@ -90,12 +91,12 @@ const LiveChatScreen = ({ onBack }: LiveChatScreenProps) => {
               </div>
             ))}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Message Input */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200">
-        <div className="p-4">
+      <Card>
+        <CardContent className="p-4">
           <div className="flex gap-2">
             <input
               type="text"
@@ -109,8 +110,8 @@ const LiveChatScreen = ({ onBack }: LiveChatScreenProps) => {
               <Send className="w-4 h-4" />
             </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

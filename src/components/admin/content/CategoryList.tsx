@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Tag } from 'lucide-react';
 import { CategoryItem } from './CategoryItem';
 
@@ -44,12 +45,12 @@ export const CategoryList = ({
       <h3 className="text-lg font-semibold text-slate-900">Categorias Existentes</h3>
       
       {categories.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-md border border-gray-200">
-          <div className="text-center py-8">
+        <Card>
+          <CardContent className="text-center py-8">
             <Tag className="h-12 w-12 text-slate-400 mx-auto mb-2" />
             <p className="text-slate-500">Nenhuma categoria encontrada</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-3">
           {categories.map((category) => (

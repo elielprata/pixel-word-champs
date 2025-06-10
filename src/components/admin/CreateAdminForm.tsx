@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, UserPlus, Mail, User, Key } from 'lucide-react';
@@ -118,16 +119,16 @@ export const CreateAdminForm = () => {
   };
 
   return (
-    <div className="border-slate-200 shadow-sm bg-white rounded-lg">
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200 p-6 rounded-t-lg">
-        <h3 className="flex items-center gap-2 text-slate-800 text-lg font-semibold">
+    <Card className="border-slate-200 shadow-sm">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200">
+        <CardTitle className="flex items-center gap-2 text-slate-800">
           <div className="bg-blue-100 p-2 rounded-lg">
             <UserPlus className="h-4 w-4 text-blue-600" />
           </div>
           <span>Novo Administrador</span>
-        </h3>
-      </div>
-      <div className="p-6">
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium text-slate-700 flex items-center gap-2">
@@ -197,7 +198,7 @@ export const CreateAdminForm = () => {
             )}
           </Button>
         </form>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

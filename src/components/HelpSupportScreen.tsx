@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, MessageCircle, Mail, BookOpen, Star, HelpCircle, Bug } from 'lucide-react';
 import LiveChatScreen from './LiveChatScreen';
 import SendEmailScreen from './SendEmailScreen';
@@ -70,14 +71,14 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
             <HelpCircle className="w-5 h-5 text-blue-500" />
             Precisa de Ajuda?
-          </h3>
-        </div>
-        <div className="p-4 space-y-3">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           <Button 
             variant="outline" 
             className="w-full justify-start" 
@@ -105,36 +106,36 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
             <Bug className="w-5 h-5 mr-3" />
             Reportar Bug
           </Button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* FAQ */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-green-500" />
             Perguntas Frequentes
-          </h3>
-        </div>
-        <div className="p-4 space-y-4">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           {faqs.map((faq, index) => (
             <div key={index} className="border-b border-gray-200 last:border-b-0 pb-4 last:pb-0">
               <h3 className="font-medium text-gray-800 mb-2">{faq.question}</h3>
               <p className="text-sm text-gray-600">{faq.answer}</p>
             </div>
           ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Tutorial */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
             <Star className="w-5 h-5 text-yellow-500" />
             Tutorial
-          </h3>
-        </div>
-        <div className="p-4">
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="space-y-3">
             <Button 
               variant="outline" 
@@ -158,15 +159,15 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
               Sistema de ranking
             </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Contact Info */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Informações de Contato</h3>
-        </div>
-        <div className="p-4 space-y-2">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Informações de Contato</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Mail className="w-4 h-4" />
             <span>suporte@letraarena.com</span>
@@ -175,8 +176,8 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
             <MessageCircle className="w-4 h-4" />
             <span>Chat disponível das 9h às 18h</span>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Footer */}
       <div className="text-center text-gray-500 text-sm">

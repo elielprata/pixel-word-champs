@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Mail, Send } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -71,14 +72,14 @@ const SendEmailScreen = ({ onBack }: SendEmailScreenProps) => {
         <h1 className="text-2xl font-bold text-purple-800 ml-3">Enviar Email</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg flex items-center gap-2">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
             <Mail className="w-5 h-5 text-blue-500" />
             Contate Nossa Equipe
-          </h2>
-        </div>
-        <div className="p-4 space-y-4">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Prioridade
@@ -129,8 +130,8 @@ const SendEmailScreen = ({ onBack }: SendEmailScreenProps) => {
               💡 <strong>Dica:</strong> Inclua detalhes como seu dispositivo, versão do app e passos para reproduzir o problema.
             </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <Button 
         onClick={handleSendEmail}

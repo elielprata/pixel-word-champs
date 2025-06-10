@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, FileText } from 'lucide-react';
 
 interface TermsOfServiceScreenProps {
@@ -17,14 +18,14 @@ const TermsOfServiceScreen = ({ onBack }: TermsOfServiceScreenProps) => {
         <h1 className="text-2xl font-bold text-purple-800 ml-3">Termos de Uso</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg flex items-center gap-2">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
             <FileText className="w-5 h-5 text-blue-500" />
             Termos de Serviço
-          </h2>
-        </div>
-        <div className="p-4 space-y-4">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <p className="text-sm text-gray-600">
             Última atualização: Janeiro 2025
           </p>
@@ -94,8 +95,8 @@ const TermsOfServiceScreen = ({ onBack }: TermsOfServiceScreenProps) => {
               📧 Dúvidas sobre os termos? Entre em contato: legal@letraarena.com
             </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

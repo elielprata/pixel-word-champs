@@ -1,5 +1,6 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -145,17 +146,19 @@ class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-lg shadow-lg border">
-            <div className="p-6 text-center">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
               <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-lg font-bold text-red-600 mb-4">
+              <CardTitle className="text-red-600">
                 {this.state.errorCategory === 'auth' ? 'Erro de Autenticação' : 'Oops! Algo deu errado'}
-              </h2>
-              <p className="text-gray-600 mb-4">
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <p className="text-gray-600">
                 {this.getErrorMessage()}
               </p>
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <details className="text-left bg-gray-100 p-3 rounded text-sm mb-4">
+                <details className="text-left bg-gray-100 p-3 rounded text-sm">
                   <summary className="cursor-pointer font-medium">
                     Detalhes do erro (desenvolvimento)
                   </summary>
@@ -186,8 +189,8 @@ class ErrorBoundary extends Component<Props, State> {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 {this.getErrorAction()}
               </Button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       );
     }

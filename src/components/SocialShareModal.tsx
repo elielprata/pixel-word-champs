@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import ShareHeader from './share/ShareHeader';
 import InviteCodeDisplay from './share/InviteCodeDisplay';
 import MessagePreview from './share/MessagePreview';
@@ -26,10 +27,10 @@ const SocialShareModal = ({ isOpen, onClose, inviteCode, shareText, shareUrl }: 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-3 backdrop-blur-sm">
-      <div className="w-full max-w-md max-h-[85vh] overflow-y-auto border-0 bg-white shadow-2xl animate-scale-in rounded-lg">
+      <Card className="w-full max-w-md max-h-[85vh] overflow-y-auto border-0 bg-white shadow-2xl animate-scale-in">
         <ShareHeader onClose={onClose} />
         
-        <div className="p-2 space-y-2">
+        <CardContent className="p-2 space-y-2">
           <InviteCodeDisplay inviteCode={inviteCode} />
           <MessagePreview shareText={shareText} shareUrl={shareUrl} />
           <CopyButton fullMessage={fullMessage} />
@@ -39,8 +40,8 @@ const SocialShareModal = ({ isOpen, onClose, inviteCode, shareText, shareUrl }: 
             onCopy={copyToClipboard}
           />
           <RewardTip />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
