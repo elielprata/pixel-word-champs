@@ -47,10 +47,13 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
     }
   };
 
-  // Filtrar duplicatas
+  // Filtrar duplicatas baseado no user_id E position para evitar duplicações
   const uniqueRanking = weeklyRanking.filter((player, index, self) => 
-    index === self.findIndex(p => p.user_id === player.user_id && p.position === player.position)
+    index === self.findIndex(p => p.user_id === player.user_id)
   );
+
+  console.log('🔍 Ranking original:', weeklyRanking.length, 'items');
+  console.log('🔍 Ranking após filtro:', uniqueRanking.length, 'items');
 
   return (
     <Card className="shadow-sm border border-gray-200">
@@ -75,7 +78,7 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
               
               return (
                 <div 
-                  key={`${player.user_id}-${player.position}-${index}`}
+                  key={`${player.user_id}-${index}`}
                   className={`flex items-center justify-between p-3 ${getRowStyle(player.position, isCurrentUser)}`}
                 >
                   <div className="flex items-center gap-3">

@@ -28,7 +28,7 @@ export class CompetitionJoinService {
         user_position: data.user_position || 0,
         user_score: data.user_score || 0,
         prize: data.prize ? Number(data.prize) : undefined,
-        payment_status: (data as any).payment_status || 'pending', // Usando type assertion temporariamente
+        payment_status: data.payment_status || 'pending',
         payment_date: data.payment_date || undefined
       };
 
