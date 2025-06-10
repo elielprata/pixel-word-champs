@@ -1,13 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, Calendar, Clock, Users, Star, TrendingUp } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Trophy, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useDailyRanking } from '@/hooks/useDailyRanking';
 
 interface RankingPlayer {
   position: number;
@@ -30,23 +28,12 @@ interface WeeklyCompetition {
 
 const RankingScreen = () => {
   const { user } = useAuth();
-  const { dailyRanking: consolidatedDailyRanking, isLoading: isDailyLoading, error: dailyError } = useDailyRanking();
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
   const [weeklyCompetition, setWeeklyCompetition] = useState<WeeklyCompetition | null>(null);
-  const [userDailyPosition, setUserDailyPosition] = useState<number | null>(null);
   const [userWeeklyPosition, setUserWeeklyPosition] = useState<number | null>(null);
   const [totalWeeklyPlayers, setTotalWeeklyPlayers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Converter o formato do hook useDailyRanking para o formato esperado
-  const dailyRanking: RankingPlayer[] = consolidatedDailyRanking.map(player => ({
-    position: player.pos,
-    user_id: player.user_id,
-    username: player.name,
-    avatar_url: player.avatar_url,
-    score: player.score
-  }));
 
   const loadWeeklyRankingData = async () => {
     try {
@@ -115,10 +102,7 @@ const RankingScreen = () => {
 
       // Encontrar posição do usuário atual
       if (user?.id) {
-        const userDaily = dailyRanking.find(p => p.user_id === user.id);
         const userWeekly = weeklyPlayers.find(p => p.user_id === user.id);
-        
-        setUserDailyPosition(userDaily?.position || null);
         setUserWeeklyPosition(userWeekly?.position || null);
       }
 
@@ -138,14 +122,6 @@ const RankingScreen = () => {
   useEffect(() => {
     loadWeeklyRankingData();
   }, [user?.id]);
-
-  // Atualizar posições do usuário quando o ranking diário mudar
-  useEffect(() => {
-    if (user?.id && dailyRanking.length > 0) {
-      const userDaily = dailyRanking.find(p => p.user_id === user.id);
-      setUserDailyPosition(userDaily?.position || null);
-    }
-  }, [user?.id, dailyRanking]);
 
   const renderRankingList = (players: RankingPlayer[], userPosition: number | null, totalPlayers: number, showPrize = false) => {
     if (players.length === 0) {
@@ -243,15 +219,12 @@ const RankingScreen = () => {
     );
   };
 
-  const currentError = dailyError || error;
-  const currentLoading = isDailyLoading || isLoading;
-
-  if (currentLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando rankings...</p>
+          <p className="text-gray-600">Carregando ranking...</p>
         </div>
       </div>
     );
@@ -265,80 +238,48 @@ const RankingScreen = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl mb-4 shadow-lg">
             <Trophy className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Rankings</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Ranking Semanal</h1>
           <p className="text-gray-600">Veja como você está se saindo</p>
         </div>
 
         {/* Error State */}
-        {currentError && (
+        {error && (
           <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-red-200 mb-6">
             <Trophy className="w-12 h-12 mx-auto mb-3 text-red-400" />
-            <p className="text-red-600 font-medium mb-2">Erro ao carregar rankings</p>
-            <p className="text-sm text-red-500 mb-4">{currentError}</p>
+            <p className="text-red-600 font-medium mb-2">Erro ao carregar ranking</p>
+            <p className="text-sm text-red-500 mb-4">{error}</p>
             <Button onClick={loadWeeklyRankingData} variant="outline" size="sm">
               🔄 Tentar novamente
             </Button>
           </div>
         )}
 
-        {/* Rankings Tabs */}
-        <Tabs defaultValue="daily" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="daily" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Diário
-            </TabsTrigger>
-            <TabsTrigger value="weekly" className="flex items-center gap-2">
-              <Trophy className="w-4 h-4" />
-              Semanal
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="daily">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
-                  Ranking Diário Consolidado
-                </CardTitle>
-                <p className="text-sm text-gray-600">
-                  Soma de pontos de todas as competições diárias participadas hoje
-                </p>
-              </CardHeader>
-              <CardContent>
-                {renderRankingList(dailyRanking, userDailyPosition, dailyRanking.length)}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="weekly">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-purple-600" />
-                  Ranking Semanal
-                </CardTitle>
-                <p className="text-sm text-gray-600">
-                  Classificação da semana atual com prêmios
-                </p>
-                {weeklyCompetition && (
-                  <div className="mt-2 p-3 bg-purple-50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Trophy className="w-4 h-4 text-purple-600" />
-                      <span className="font-medium text-purple-900">{weeklyCompetition.title}</span>
-                    </div>
-                    <div className="text-sm text-purple-700">
-                      Prêmio total: R$ {weeklyCompetition.prize_pool.toFixed(2)}
-                    </div>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent>
-                {renderRankingList(weeklyRanking, userWeeklyPosition, totalWeeklyPlayers, true)}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Weekly Ranking */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="w-5 h-5 text-purple-600" />
+              Ranking Semanal
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              Classificação da semana atual com prêmios
+            </p>
+            {weeklyCompetition && (
+              <div className="mt-2 p-3 bg-purple-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Trophy className="w-4 h-4 text-purple-600" />
+                  <span className="font-medium text-purple-900">{weeklyCompetition.title}</span>
+                </div>
+                <div className="text-sm text-purple-700">
+                  Prêmio total: R$ {weeklyCompetition.prize_pool.toFixed(2)}
+                </div>
+              </div>
+            )}
+          </CardHeader>
+          <CardContent>
+            {renderRankingList(weeklyRanking, userWeeklyPosition, totalWeeklyPlayers, true)}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
