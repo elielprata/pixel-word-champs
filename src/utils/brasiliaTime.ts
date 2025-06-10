@@ -1,3 +1,4 @@
+
 import { toZonedTime, fromZonedTime, format } from 'date-fns-tz';
 
 /**
@@ -6,16 +7,16 @@ import { toZonedTime, fromZonedTime, format } from 'date-fns-tz';
 export const BRASILIA_TIMEZONE = 'America/Sao_Paulo';
 
 /**
- * Obtém a data/hora atual no fuso horário de Brasília
+ * Obtém a data/hora atual no fuso horário de Brasília (convertida para UTC)
  */
 export const getBrasiliaTime = (): Date => {
   const now = new Date();
-  const brasiliaTime = toZonedTime(now, BRASILIA_TIMEZONE);
   
-  console.log('🕐 Horário UTC original:', now.toISOString());
-  console.log('🇧🇷 Horário Brasília convertido:', brasiliaTime.toISOString());
+  console.log('🕐 Horário UTC atual do sistema:', now.toISOString());
   
-  return brasiliaTime;
+  // Retornar o horário atual sem conversão, pois o banco já armazena em UTC
+  // e queremos comparar com os timestamps UTC do banco
+  return now;
 };
 
 /**
@@ -62,7 +63,7 @@ export const formatBrasiliaTime = (date: Date, formatString: string = 'yyyy-MM-d
 export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): boolean => {
   const brasiliaStart = utcToBrasilia(startDate);
   const brasiliaEnd = utcToBrasilia(endDate);
-  const brasiliaNow = getBrasiliaTime();
+  const brasiliaNow = utcToBrasilia(new Date());
   
   console.log('🔍 Verificando período ativo (Brasília):');
   console.log('  📅 Início:', formatBrasiliaTime(brasiliaStart));
@@ -79,7 +80,7 @@ export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): bo
  * Verifica se uma data está no futuro (horário de Brasília)
  */
 export const isBrasiliaDateInFuture = (date: Date): boolean => {
-  const brasiliaNow = getBrasiliaTime();
+  const brasiliaNow = utcToBrasilia(new Date());
   const brasiliaDate = utcToBrasilia(date);
   
   console.log('🔍 Verificando se data é futura (Brasília):');

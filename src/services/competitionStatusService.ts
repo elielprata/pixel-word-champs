@@ -1,32 +1,42 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getBrasiliaTime, isDateInCurrentBrasiliaRange, isBrasiliaDateInFuture, utcToBrasilia } from '@/utils/brasiliaTime';
+import { getBrasiliaTime, formatBrasiliaTime } from '@/utils/brasiliaTime';
 
 export class CompetitionStatusService {
   /**
    * Calcula o status correto de uma competição baseado no horário de Brasília
    */
   static calculateCorrectStatus(startDate: string, endDate: string): string {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    // Converter para horário de Brasília para fazer a comparação
-    const brasiliaStart = utcToBrasilia(start);
-    const brasiliaEnd = utcToBrasilia(end);
+    // Obter horário atual de Brasília
     const brasiliaNow = getBrasiliaTime();
     
+    // Converter as datas de início e fim para objetos Date (já estão em UTC no banco)
+    const startUTC = new Date(startDate);
+    const endUTC = new Date(endDate);
+    
     console.log('🔍 Calculando status da competição:');
-    console.log('  📅 Início (Brasília):', brasiliaStart.toLocaleString('pt-BR'));
-    console.log('  📅 Fim (Brasília):', brasiliaEnd.toLocaleString('pt-BR'));
-    console.log('  🕐 Agora (Brasília):', brasiliaNow.toLocaleString('pt-BR'));
+    console.log('  📅 Início (UTC no banco):', startUTC.toISOString());
+    console.log('  📅 Fim (UTC no banco):', endUTC.toISOString());
+    console.log('  🕐 Agora (Brasília):', formatBrasiliaTime(brasiliaNow));
+    console.log('  🕐 Agora (UTC):', brasiliaNow.toISOString());
+    
+    // Comparar diretamente os timestamps UTC
+    const nowUTC = brasiliaNow.getTime();
+    const startTime = startUTC.getTime();
+    const endTime = endUTC.getTime();
+    
+    console.log('  🔢 Comparação timestamps:');
+    console.log('    - Início:', startTime);
+    console.log('    - Fim:', endTime);
+    console.log('    - Agora:', nowUTC);
     
     // Verificar se está no período ativo
-    if (brasiliaNow >= brasiliaStart && brasiliaNow <= brasiliaEnd) {
+    if (nowUTC >= startTime && nowUTC <= endTime) {
       console.log('  ✅ Status: ATIVA');
       return 'active';
     } 
     // Verificar se é futuro
-    else if (brasiliaNow < brasiliaStart) {
+    else if (nowUTC < startTime) {
       console.log('  📅 Status: AGENDADA (futuro)');
       return 'scheduled';
     } 
