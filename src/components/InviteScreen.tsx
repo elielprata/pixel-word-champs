@@ -1,18 +1,16 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Share2, Copy, Users, Gift, Star, Trophy } from 'lucide-react';
+import { Copy, Users, Gift, Star, Trophy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import SocialShareModal from './SocialShareModal';
 import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingState from './home/LoadingState';
 
 const InviteScreen = () => {
-  const [showShareModal, setShowShareModal] = useState(false);
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const {
@@ -23,9 +21,6 @@ const InviteScreen = () => {
     error
   } = useInvites();
 
-  const shareText = `Jogue Letra Arena comigo! Use meu código ${inviteCode} e ganhe bônus especiais! 🎮`;
-  const shareUrl = `https://letraarena.com/convite/${inviteCode}`;
-
   const handleCopyCode = () => {
     if (!inviteCode) return;
     
@@ -34,25 +29,6 @@ const InviteScreen = () => {
       title: "Código copiado!",
       description: "Compartilhe com seus amigos para ganhar recompensas.",
     });
-  };
-
-  const handleShare = async () => {
-    if (!inviteCode) return;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Letra Arena',
-          text: shareText,
-          url: shareUrl,
-        });
-      } catch (error) {
-        console.log('Native share failed, showing modal:', error);
-        setShowShareModal(true);
-      }
-    } else {
-      setShowShareModal(true);
-    }
   };
 
   const nextRewardAt = 5;
@@ -152,24 +128,15 @@ const InviteScreen = () => {
             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
               <p className="text-2xl font-bold tracking-widest">{inviteCode}</p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex justify-center">
               <Button 
                 variant="secondary" 
                 size="sm"
                 onClick={handleCopyCode}
-                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white"
+                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white px-6"
               >
                 <Copy className="w-4 h-4 mr-2" />
-                Copiar
-              </Button>
-              <Button 
-                variant="secondary" 
-                size="sm"
-                onClick={handleShare}
-                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Compartilhar
+                Copiar Código
               </Button>
             </div>
           </CardContent>
@@ -184,11 +151,11 @@ const InviteScreen = () => {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-bold">1</div>
-            <p className="text-sm text-gray-700">Compartilhe seu código único</p>
+            <p className="text-sm text-gray-700">Copie seu código único</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
-            <p className="text-sm text-gray-700">Amigo se cadastra com seu código</p>
+            <p className="text-sm text-gray-700">Amigo se cadastra informando seu código</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
@@ -249,22 +216,11 @@ const InviteScreen = () => {
                 <Users className="w-8 h-8 text-gray-400" />
               </div>
               <p className="font-medium mb-1">Nenhum convite ainda</p>
-              <p className="text-sm">Compartilhe seu código e comece a ganhar!</p>
+              <p className="text-sm">Copie seu código e convide amigos!</p>
             </div>
           )}
         </CardContent>
       </Card>
-
-      {/* Social Share Modal */}
-      {inviteCode && (
-        <SocialShareModal
-          isOpen={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          inviteCode={inviteCode}
-          shareText={shareText}
-          shareUrl={shareUrl}
-        />
-      )}
     </div>
   );
 };
