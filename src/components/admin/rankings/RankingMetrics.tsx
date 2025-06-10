@@ -10,7 +10,9 @@ export const RankingMetrics = () => {
   // Calcular métricas reais baseadas nos dados com usuários únicos
   const dailyParticipants = new Set(dailyRanking.map(player => player.user_id)).size;
   const weeklyParticipants = new Set(weeklyRanking.map(player => player.user_id)).size;
-  const prizePoolWeekly = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
+  
+  // Calcular prêmio semanal baseado apenas nos participantes que realmente existem
+  const prizePoolWeekly = weeklyRanking.reduce((total, _, index) => {
     if (index === 0) return total + 100;
     if (index === 1) return total + 50;
     if (index === 2) return total + 25;
