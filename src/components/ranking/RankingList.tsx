@@ -68,6 +68,11 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
     return null;
   };
 
+  // Filtrar duplicatas baseado no user_id e position
+  const uniqueRanking = weeklyRanking.filter((player, index, self) => 
+    index === self.findIndex(p => p.user_id === player.user_id && p.position === player.position)
+  );
+
   return (
     <Card className="shadow-lg border-0 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100 py-4">
@@ -81,7 +86,7 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
       </CardHeader>
       
       <CardContent className="p-0">
-        {weeklyRanking.length === 0 ? (
+        {uniqueRanking.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trophy className="w-10 h-10 text-gray-300" />
@@ -91,13 +96,13 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {weeklyRanking.slice(0, 50).map((player) => {
+            {uniqueRanking.slice(0, 50).map((player, index) => {
               const isCurrentUser = user?.id === player.user_id;
               const prizeAmount = getPrizeAmount(player.position);
               
               return (
                 <div 
-                  key={player.user_id} 
+                  key={`${player.user_id}-${player.position}-${index}`}
                   className={`
                     flex items-center gap-4 p-4 transition-all duration-300
                     ${getRankStyle(player.position, isCurrentUser)}
@@ -147,8 +152,8 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
           </div>
         )}
 
-        {/* Footer Stats - Removido o número de usuários */}
-        {weeklyRanking.length > 0 && (
+        {/* Footer Stats */}
+        {uniqueRanking.length > 0 && (
           <div className="p-6 bg-gradient-to-r from-gray-50 to-slate-50 border-t">
             <div className="flex items-center justify-center">
               <div className="flex items-center gap-2">
