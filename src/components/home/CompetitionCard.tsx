@@ -182,7 +182,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   return (
-    <Card className={`group relative overflow-hidden bg-gradient-to-br ${getCardGradient(timeProgress)} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-32`}>
+    <Card className={`group relative overflow-hidden bg-gradient-to-br ${getCardGradient(timeProgress)} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-36`}>
       {/* Textura temática de fundo */}
       <div className="absolute inset-0 opacity-5">
         <div 
@@ -201,7 +201,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
         }}></div>
       </div>
       
-      <CardContent className="relative p-3 h-full flex flex-col justify-between">
+      <CardContent className="relative p-2.5 h-full flex flex-col justify-between gap-1">
         {/* Header section */}
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
@@ -260,7 +260,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
         </div>
 
         {/* Barra de progresso de tempo */}
-        <div className="mb-2">
+        <div className="mb-1">
           <Progress 
             value={timeProgress} 
             className="h-1 bg-gray-200"
@@ -279,7 +279,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
           onClick={handleStartGame}
           disabled={hasParticipated || isLoading}
           variant={getButtonVariant()}
-          className={`w-full font-bold text-xs py-2 rounded-lg shadow-md transition-all duration-200 border-2 ${
+          className={`w-full font-bold text-xs py-1.5 rounded-lg shadow-md transition-all duration-200 border-2 ${
             hasParticipated 
               ? 'bg-gray-400 hover:bg-gray-400 text-gray-600 border-gray-300 cursor-not-allowed' 
               : `bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} hover:opacity-90 text-white hover:shadow-lg border-${theme.decorativeElements.primary.replace('bg-', '')}/20`
