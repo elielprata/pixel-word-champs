@@ -60,17 +60,13 @@ class DailyCompetitionCoreService {
   async getDailyCompetitionRanking(competitionId: string): Promise<ApiResponse<any[]>> {
     try {
       // Buscar participações da competição ordenadas por pontuação
-      const { data, error } = await supabase
+      const { data: sessions, error } = await supabase
         .from('game_sessions')
         .select(`
           id,
           user_id,
           total_score,
-          completed_at,
-          profiles!game_sessions_user_id_fkey (
-            username,
-            avatar_url
-          )
+          completed_at
         `)
         .eq('competition_id', competitionId)
         .eq('is_completed', true)
@@ -79,14 +75,32 @@ class DailyCompetitionCoreService {
 
       if (error) throw error;
 
-      const ranking = data?.map((session, index) => ({
-        position: index + 1,
-        user_id: session.user_id,
-        username: session.profiles?.username || 'Usuário',
-        avatar_url: session.profiles?.avatar_url,
-        total_score: session.total_score || 0,
-        completed_at: session.completed_at
-      })) || [];
+      if (!sessions || sessions.length === 0) {
+        return createSuccessResponse([]);
+      }
+
+      // Buscar perfis dos usuários separadamente
+      const userIds = sessions.map(session => session.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combinar dados das sessões com perfis
+      const ranking = sessions.map((session, index) => {
+        const profile = profiles?.find(p => p.id === session.user_id);
+        
+        return {
+          position: index + 1,
+          user_id: session.user_id,
+          username: profile?.username || 'Usuário',
+          avatar_url: profile?.avatar_url,
+          total_score: session.total_score || 0,
+          completed_at: session.completed_at
+        };
+      });
 
       return createSuccessResponse(ranking);
     } catch (error) {
