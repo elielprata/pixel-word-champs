@@ -47,7 +47,7 @@ export interface CompetitionParticipation {
   user_position: number;
   user_score: number;
   prize?: number;
-  payment_status: 'pending' | 'paid' | 'not_eligible';
+  payment_status: 'pending' | 'paid' | 'failed' | 'not_eligible';
   payment_date?: string;
 }
 
