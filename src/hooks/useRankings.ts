@@ -153,14 +153,14 @@ export const useRankings = () => {
   useEffect(() => {
     refreshData();
     
-    // Configurar intervalo para atualizar status das competições a cada 1 minuto
+    // Configurar intervalo para atualizar status das competições a cada 30 segundos (mais frequente)
     const statusUpdateInterval = setInterval(() => {
       console.log('🔄 Verificação automática de status das competições...');
       CompetitionStatusService.updateAllCompetitionsStatus().then(() => {
         // Recarregar competições após atualização de status
         fetchWeeklyCompetitions();
       });
-    }, 60 * 1000); // 1 minuto
+    }, 30 * 1000); // 30 segundos
     
     return () => {
       clearInterval(statusUpdateInterval);

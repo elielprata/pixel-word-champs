@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getBrasiliaTime, isDateInCurrentBrasiliaRange, isBrasiliaDateInFuture } from '@/utils/brasiliaTime';
+import { getBrasiliaTime, isDateInCurrentBrasiliaRange, isBrasiliaDateInFuture, utcToBrasilia } from '@/utils/brasiliaTime';
 
 export class CompetitionStatusService {
   /**
@@ -10,11 +10,29 @@ export class CompetitionStatusService {
     const start = new Date(startDate);
     const end = new Date(endDate);
     
-    if (isDateInCurrentBrasiliaRange(start, end)) {
+    // Converter para horário de Brasília para fazer a comparação
+    const brasiliaStart = utcToBrasilia(start);
+    const brasiliaEnd = utcToBrasilia(end);
+    const brasiliaNow = getBrasiliaTime();
+    
+    console.log('🔍 Calculando status da competição:');
+    console.log('  📅 Início (Brasília):', brasiliaStart.toLocaleString('pt-BR'));
+    console.log('  📅 Fim (Brasília):', brasiliaEnd.toLocaleString('pt-BR'));
+    console.log('  🕐 Agora (Brasília):', brasiliaNow.toLocaleString('pt-BR'));
+    
+    // Verificar se está no período ativo
+    if (brasiliaNow >= brasiliaStart && brasiliaNow <= brasiliaEnd) {
+      console.log('  ✅ Status: ATIVA');
       return 'active';
-    } else if (isBrasiliaDateInFuture(start)) {
+    } 
+    // Verificar se é futuro
+    else if (brasiliaNow < brasiliaStart) {
+      console.log('  📅 Status: AGENDADA (futuro)');
       return 'scheduled';
-    } else {
+    } 
+    // Se passou do horário de fim
+    else {
+      console.log('  🏁 Status: FINALIZADA (passou do horário)');
       return 'completed';
     }
   }
@@ -29,7 +47,7 @@ export class CompetitionStatusService {
       // Buscar dados da competição
       const { data: competition, error: fetchError } = await supabase
         .from('custom_competitions')
-        .select('id, start_date, end_date, status, competition_type')
+        .select('id, start_date, end_date, status, competition_type, title')
         .eq('id', competitionId)
         .single();
 
@@ -38,12 +56,15 @@ export class CompetitionStatusService {
         return;
       }
 
+      console.log(`📝 Competição: "${competition.title}" (${competition.competition_type})`);
+      console.log(`📊 Status atual: "${competition.status}"`);
+
       // Calcular status correto
       const correctStatus = this.calculateCorrectStatus(competition.start_date, competition.end_date);
       
       // Atualizar apenas se o status mudou
       if (competition.status !== correctStatus) {
-        console.log(`📝 Atualizando status de "${competition.status}" para "${correctStatus}"`);
+        console.log(`🔧 Atualizando status de "${competition.status}" para "${correctStatus}"`);
         
         const { error: updateError } = await supabase
           .from('custom_competitions')
@@ -58,6 +79,8 @@ export class CompetitionStatusService {
         } else {
           console.log('✅ Status atualizado com sucesso');
         }
+      } else {
+        console.log('ℹ️ Status já está correto, nenhuma atualização necessária');
       }
     } catch (error) {
       console.error('❌ Erro inesperado ao atualizar status:', error);
@@ -74,7 +97,7 @@ export class CompetitionStatusService {
       // Buscar todas as competições (semanais e diárias)
       const { data: competitions, error } = await supabase
         .from('custom_competitions')
-        .select('id, start_date, end_date, status, competition_type')
+        .select('id, start_date, end_date, status, competition_type, title')
         .in('competition_type', ['tournament', 'challenge']);
 
       if (error || !competitions) {
@@ -89,7 +112,7 @@ export class CompetitionStatusService {
         const correctStatus = this.calculateCorrectStatus(competition.start_date, competition.end_date);
         
         if (competition.status !== correctStatus) {
-          console.log(`🔧 Competição ${competition.id} (${competition.competition_type}): ${competition.status} → ${correctStatus}`);
+          console.log(`🔧 Competição "${competition.title}" (${competition.competition_type}): ${competition.status} → ${correctStatus}`);
           await this.updateSingleCompetitionStatus(competition.id);
         }
       }
