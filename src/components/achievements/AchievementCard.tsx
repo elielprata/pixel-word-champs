@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LucideIcon } from 'lucide-react';
 
@@ -26,14 +25,14 @@ const AchievementCard = ({ achievement, getRarityColor }: AchievementCardProps) 
   const progressPercentage = (achievement.progress / achievement.total) * 100;
   
   return (
-    <Card 
-      className={`border transition-all duration-200 ${
+    <div 
+      className={`border transition-all duration-200 rounded-lg ${
         achievement.unlocked 
           ? 'bg-white shadow-md hover:shadow-lg' 
           : 'bg-gray-50 opacity-75'
       }`}
     >
-      <CardContent className="p-4">
+      <div className="p-4">
         <div className="flex items-start gap-4">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
             achievement.unlocked 
@@ -85,8 +84,8 @@ const AchievementCard = ({ achievement, getRarityColor }: AchievementCardProps) 
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

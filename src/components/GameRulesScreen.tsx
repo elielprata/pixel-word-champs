@@ -1,149 +1,120 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Clock, Trophy, Target, Zap, Star, Award, Timer } from 'lucide-react';
+
 interface GameRulesScreenProps {
   onBack: () => void;
   onStartGame: () => void;
 }
-const GameRulesScreen = ({
-  onBack,
-  onStartGame
-}: GameRulesScreenProps) => {
-  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 p-4">
+
+const GameRulesScreen = ({ onBack, onStartGame }: GameRulesScreenProps) => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 p-4">
       <div className="max-w-lg mx-auto">
         {/* Header minimalista */}
         <div className="flex items-center justify-between mb-8 pt-2">
-          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full h-10 w-10 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onBack} 
+            className="rounded-full h-10 w-10 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white"
+          >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-xl font-bold text-slate-800">Como Jogar</h1>
           <div className="w-10"></div>
         </div>
 
-        {/* Hero Card */}
-        <Card className="mb-6 overflow-hidden border-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-xl">
-          <CardContent className="p-6 text-center relative">
-            <div className="absolute inset-0 opacity-30">
-              <div className="w-full h-full bg-gradient-to-br from-white/10 to-transparent"></div>
-            </div>
-            <div className="relative z-10">
-              <div className="flex justify-center items-center gap-2 mb-3">
-                <Trophy className="w-8 h-8" />
-                <Star className="w-6 h-6" />
-                <Award className="w-8 h-8" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2">Caça-Palavras</h2>
-              <p className="text-violet-100 text-sm">20 níveis de pura diversão</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Rules em cards compactos */}
-        <div className="space-y-4 mb-8">
+        <div className="space-y-4">
           {/* Objetivo */}
-          <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <Target className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800 mb-1">Encontre as Palavras</h3>
-                  <p className="text-sm text-slate-600">
-                    Selecione palavras em qualquer direção: horizontal, vertical ou diagonal.
-                  </p>
-                </div>
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200 p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <Target className="w-5 h-5 text-blue-600" />
               </div>
-            </CardContent>
-          </Card>
+              <h2 className="text-lg font-semibold text-slate-800">Objetivo</h2>
+            </div>
+            <p className="text-slate-600 leading-relaxed">
+              Encontre o maior número de palavras possível conectando letras adjacentes no tabuleiro. 
+              Arraste o dedo para formar palavras em qualquer direção.
+            </p>
+          </div>
+
+          {/* Como jogar */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200 p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-green-100 p-2 rounded-lg">
+                <Zap className="w-5 h-5 text-green-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-slate-800">Como Formar Palavras</h2>
+            </div>
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <span className="bg-slate-100 text-slate-600 text-sm font-medium px-2 py-1 rounded">1</span>
+                <p className="text-slate-600">Toque na primeira letra</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="bg-slate-100 text-slate-600 text-sm font-medium px-2 py-1 rounded">2</span>
+                <p className="text-slate-600">Arraste conectando letras adjacentes</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="bg-slate-100 text-slate-600 text-sm font-medium px-2 py-1 rounded">3</span>
+                <p className="text-slate-600">Solte para formar a palavra</p>
+              </div>
+            </div>
+          </div>
 
           {/* Tempo */}
-          <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-orange-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800 mb-1">1 Minutos por Nível</h3>
-                  <p className="text-sm text-slate-600">
-                    Seja rápido! Use o tempo com sabedoria para avançar.
-                  </p>
-                </div>
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200 p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-orange-100 p-2 rounded-lg">
+                <Timer className="w-5 h-5 text-orange-600" />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Power-ups */}
-          <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-yellow-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800 mb-1">Dicas & Revive</h3>
-                  <p className="text-sm text-slate-600">
-                    Use dicas para destacar palavras ou revive para +30 segundos.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Progressão */}
-          <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800 mb-1">20 Níveis Desafiadores</h3>
-                  <p className="text-sm text-slate-600">
-                    Tabuleiros maiores e mais palavras a cada nível.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Estatísticas visuais */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          <Card className="border-0 bg-gradient-to-br from-emerald-50 to-emerald-100 text-center">
-            <CardContent className="p-3">
-              <div className="text-xl font-bold text-emerald-700">20</div>
-              <div className="text-xs text-emerald-600">Níveis</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 bg-gradient-to-br from-blue-50 to-blue-100 text-center">
-            <CardContent className="p-3">
-              <div className="text-xl font-bold text-blue-700">3</div>
-              <div className="text-xs text-blue-600">Minutos</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 bg-gradient-to-br from-purple-50 to-purple-100 text-center">
-            <CardContent className="p-3">
-              <div className="text-xl font-bold text-purple-700">∞</div>
-              <div className="text-xs text-purple-600">Diversão</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Botão de ação principal */}
-        <Button onClick={onStartGame} className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold text-base py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0">
-          <div className="flex items-center justify-center gap-2">
-            <Timer className="w-5 h-5" />
-            COMEÇAR AGORA
+              <h2 className="text-lg font-semibold text-slate-800">Sistema de Tempo</h2>
+            </div>
+            <div className="space-y-2 text-slate-600">
+              <p>• 3 minutos por nível</p>
+              <p>• 20 níveis por desafio</p>
+              <p>• Use anúncios para +30s extras</p>
+            </div>
           </div>
-        </Button>
-        
-        <p className="text-center text-xs text-slate-500 mt-3">
-          Boa sorte no desafio! 🎯
-        </p>
+
+          {/* Pontuação */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200 p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-yellow-100 p-2 rounded-lg">
+                <Trophy className="w-5 h-5 text-yellow-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-slate-800">Pontuação</h2>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-slate-600">
+                <span>3 letras:</span>
+                <span className="font-medium text-green-600">1 ponto</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>4 letras:</span>
+                <span className="font-medium text-green-600">2 pontos</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>5+ letras:</span>
+                <span className="font-medium text-green-600">3+ pontos</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Botão de ação */}
+        <div className="mt-8 pb-6">
+          <Button onClick={onStartGame} className="w-full h-12 text-base font-medium">
+            <Star className="w-5 h-5 mr-2" />
+            Começar a Jogar
+          </Button>
+        </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default GameRulesScreen;
