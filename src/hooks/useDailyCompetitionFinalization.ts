@@ -2,7 +2,6 @@
 import { useEffect } from 'react';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { supabase } from '@/integrations/supabase/client';
-import { getBrasiliaTime, formatBrasiliaTime } from '@/utils/brasiliaTime';
 
 export const useDailyCompetitionFinalization = () => {
   useEffect(() => {
@@ -10,18 +9,18 @@ export const useDailyCompetitionFinalization = () => {
       try {
         console.log('🔍 Verificando competições diárias expiradas...');
         
-        const brasiliaTime = getBrasiliaTime();
-        const now = brasiliaTime.toISOString();
+        const now = new Date();
+        const nowISO = now.toISOString();
         
-        console.log('🕐 Horário atual de Brasília:', formatBrasiliaTime(brasiliaTime));
+        console.log('🕐 Horário atual (UTC):', nowISO);
         
-        // Buscar competições ativas que já expiraram
+        // Buscar competições ativas que já expiraram (com margem de segurança)
         const { data: expiredCompetitions, error } = await supabase
           .from('custom_competitions')
           .select('id, title, end_date')
           .eq('competition_type', 'challenge')
           .eq('status', 'active')
-          .lt('end_date', now);
+          .lt('end_date', nowISO);
 
         if (error) {
           console.error('❌ Erro ao buscar competições expiradas:', error);
@@ -29,11 +28,11 @@ export const useDailyCompetitionFinalization = () => {
         }
 
         if (expiredCompetitions && expiredCompetitions.length > 0) {
-          console.log(`📋 Encontradas ${expiredCompetitions.length} competições expiradas`);
+          console.log(`📋 Encontradas ${expiredCompetitions.length} competições realmente expiradas`);
           
           // Finalizar cada competição expirada
           for (const competition of expiredCompetitions) {
-            console.log(`🏁 Finalizando competição: ${competition.title} (fim: ${formatBrasiliaTime(new Date(competition.end_date))})`);
+            console.log(`🏁 Finalizando competição: ${competition.title} (fim: ${competition.end_date})`);
             await dailyCompetitionService.finalizeDailyCompetition(competition.id);
           }
         } else {
@@ -47,8 +46,8 @@ export const useDailyCompetitionFinalization = () => {
     // Verificar imediatamente
     checkExpiredCompetitions();
 
-    // Verificar a cada 5 minutos
-    const interval = setInterval(checkExpiredCompetitions, 5 * 60 * 1000);
+    // Verificar a cada 10 minutos (reduzindo frequência)
+    const interval = setInterval(checkExpiredCompetitions, 10 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);

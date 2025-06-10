@@ -1,20 +1,33 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getBrasiliaTime, isDateInCurrentBrasiliaRange, isBrasiliaDateInFuture } from '@/utils/brasiliaTime';
 
 export class CompetitionStatusService {
   /**
-   * Calcula o status correto de uma competição baseado no horário de Brasília
+   * Calcula o status correto de uma competição baseado nas datas UTC
    */
   static calculateCorrectStatus(startDate: string, endDate: string): string {
+    const now = new Date();
     const start = new Date(startDate);
     const end = new Date(endDate);
     
-    if (isDateInCurrentBrasiliaRange(start, end)) {
+    console.log('🔍 Calculando status da competição:', {
+      now: now.toISOString(),
+      start: start.toISOString(), 
+      end: end.toISOString(),
+      nowTime: now.getTime(),
+      startTime: start.getTime(),
+      endTime: end.getTime()
+    });
+    
+    // Verificar se estamos dentro do período da competição
+    if (now >= start && now <= end) {
+      console.log('✅ Competição está ATIVA');
       return 'active';
-    } else if (isBrasiliaDateInFuture(start)) {
+    } else if (now < start) {
+      console.log('📅 Competição está AGENDADA'); 
       return 'scheduled';
     } else {
+      console.log('🏁 Competição está FINALIZADA');
       return 'completed';
     }
   }
@@ -31,7 +44,6 @@ export class CompetitionStatusService {
         .from('custom_competitions')
         .select('id, start_date, end_date, status')
         .eq('id', competitionId)
-        .eq('competition_type', 'tournament')
         .single();
 
       if (fetchError || !competition) {
@@ -59,6 +71,8 @@ export class CompetitionStatusService {
         } else {
           console.log('✅ Status atualizado com sucesso');
         }
+      } else {
+        console.log('ℹ️ Status já está correto:', correctStatus);
       }
     } catch (error) {
       console.error('❌ Erro inesperado ao atualizar status:', error);
@@ -66,29 +80,34 @@ export class CompetitionStatusService {
   }
 
   /**
-   * Atualiza status de todas as competições semanais
+   * Atualiza status de todas as competições
    */
   static async updateAllCompetitionsStatus(): Promise<void> {
     try {
       console.log('🔄 Atualizando status de todas as competições...');
       
-      // Buscar todas as competições semanais
+      // Buscar todas as competições
       const { data: competitions, error } = await supabase
         .from('custom_competitions')
-        .select('id, start_date, end_date, status')
-        .eq('competition_type', 'tournament');
+        .select('id, start_date, end_date, status, title, competition_type');
 
       if (error || !competitions) {
         console.error('❌ Erro ao buscar competições:', error);
         return;
       }
 
+      console.log(`📋 Encontradas ${competitions.length} competições para verificar`);
+
       // Atualizar cada competição
       for (const competition of competitions) {
+        console.log(`🔍 Verificando competição: "${competition.title}" (${competition.competition_type})`);
         const correctStatus = this.calculateCorrectStatus(competition.start_date, competition.end_date);
         
         if (competition.status !== correctStatus) {
+          console.log(`🔄 Necessária atualização: ${competition.status} → ${correctStatus}`);
           await this.updateSingleCompetitionStatus(competition.id);
+        } else {
+          console.log(`✅ Status já correto: ${correctStatus}`);
         }
       }
       
