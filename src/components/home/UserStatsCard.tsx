@@ -2,10 +2,10 @@
 import React from 'react';
 import { Trophy, Target, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useRealUserStats } from '@/hooks/useRealUserStats';
+import { useUserStats } from '@/hooks/useUserStats';
 
 const UserStatsCard = () => {
-  const { data: stats, isLoading } = useRealUserStats();
+  const { stats, isLoading } = useUserStats();
 
   if (isLoading) {
     return (
@@ -28,22 +28,22 @@ const UserStatsCard = () => {
   const statsData = [
     {
       icon: Trophy,
-      value: stats?.totalUsers || 0,
-      label: 'Usuários',
+      value: stats?.totalScore || 0,
+      label: 'Pontuação',
       color: 'from-blue-400 to-blue-600',
       iconColor: 'text-blue-600'
     },
     {
       icon: Target,
-      value: stats?.totalSessions || 0,
-      label: 'Sessões',
+      value: stats?.gamesPlayed || 0,
+      label: 'Partidas',
       color: 'from-green-400 to-green-600',
       iconColor: 'text-green-600'
     },
     {
       icon: Star,
-      value: stats?.averageScore || 0,
-      label: 'Média',
+      value: stats?.bestDailyPosition || 0,
+      label: 'Melhor',
       color: 'from-purple-400 to-purple-600',
       iconColor: 'text-purple-600'
     }
