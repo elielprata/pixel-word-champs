@@ -60,7 +60,12 @@ export const useGameLogic = (
   const updateUserScore = async (points: number) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.warn('⚠️ Usuário não autenticado, não é possível atualizar pontuação');
+        return;
+      }
+
+      console.log(`🔄 Atualizando pontuação do usuário ${user.id}: +${points} pontos`);
 
       // Buscar pontuação atual do usuário
       const { data: profile, error: fetchError } = await supabase
@@ -70,7 +75,7 @@ export const useGameLogic = (
         .single();
 
       if (fetchError) {
-        console.error('Erro ao buscar perfil:', fetchError);
+        console.error('❌ Erro ao buscar perfil:', fetchError);
         return;
       }
 
@@ -82,17 +87,31 @@ export const useGameLogic = (
         .from('profiles')
         .update({ 
           total_score: newScore,
-          games_played: (profile?.games_played || 0) + (points > 0 ? 0 : 0) // Só incrementa games_played quando necessário
+          games_played: (profile?.games_played || 0) + (points > 0 ? 0 : 0) // Incrementa apenas se necessário
         })
         .eq('id', user.id);
 
       if (updateError) {
-        console.error('Erro ao atualizar pontuação:', updateError);
-      } else {
-        console.log(`✅ Pontuação atualizada: +${points} pontos (total: ${newScore})`);
+        console.error('❌ Erro ao atualizar pontuação:', updateError);
+        throw updateError;
       }
+
+      console.log(`✅ Pontuação atualizada com sucesso: ${currentScore} → ${newScore} (+${points})`);
+
+      // Forçar atualização do ranking semanal
+      try {
+        const { error: rankingError } = await supabase.rpc('update_weekly_ranking');
+        if (rankingError) {
+          console.warn('⚠️ Erro ao atualizar ranking semanal:', rankingError);
+        } else {
+          console.log('✅ Ranking semanal atualizado após pontuação');
+        }
+      } catch (rankingUpdateError) {
+        console.warn('⚠️ Erro ao forçar atualização do ranking:', rankingUpdateError);
+      }
+
     } catch (error) {
-      console.error('Erro ao atualizar pontuação do usuário:', error);
+      console.error('❌ Erro ao atualizar pontuação do usuário:', error);
     }
   };
 
@@ -100,7 +119,7 @@ export const useGameLogic = (
     const points = getPointsForWord(word);
     const newFoundWord = { word, positions: [...positions], points };
     
-    console.log(`Palavra encontrada: ${word} = ${points} pontos`);
+    console.log(`📝 Palavra encontrada: "${word}" = ${points} pontos`);
     
     setFoundWords(prev => [...prev, newFoundWord]);
     setPermanentlyMarkedCells(prev => [...prev, ...positions]);

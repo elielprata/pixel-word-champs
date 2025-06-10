@@ -37,7 +37,10 @@ const RankingScreen = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log('📊 Carregando dados do ranking semanal...');
+      console.log('📊 Carregando ranking semanal em tempo real...');
+      
+      // Primeiro, atualizar o ranking semanal
+      await supabase.rpc('update_weekly_ranking');
       
       const todayDate = new Date();
       const dayOfWeek = todayDate.getDay();
@@ -45,6 +48,7 @@ const RankingScreen = () => {
       const weekStart = new Date(todayDate.setDate(diff));
       const weekStartStr = weekStart.toISOString().split('T')[0];
 
+      // Buscar ranking atualizado
       const { data: weeklyData, error: weeklyError } = await supabase
         .from('weekly_rankings')
         .select(`
@@ -63,6 +67,7 @@ const RankingScreen = () => {
         throw weeklyError;
       }
 
+      // Buscar competição ativa
       const { data: competition, error: competitionError } = await supabase
         .from('custom_competitions')
         .select('*')
@@ -100,7 +105,7 @@ const RankingScreen = () => {
         setUserWeeklyPosition(userWeekly?.position || null);
       }
 
-      console.log('✅ Ranking semanal carregado:', {
+      console.log('✅ Ranking semanal carregado em tempo real:', {
         weekly: weeklyPlayers.length,
         competition: !!competition
       });
@@ -115,6 +120,77 @@ const RankingScreen = () => {
 
   useEffect(() => {
     loadWeeklyRankingData();
+  }, [user?.id]);
+
+  // Configurar atualizações em tempo real
+  useEffect(() => {
+    console.log('🔄 Configurando monitoramento em tempo real para rankings...');
+
+    // Monitorar mudanças na tabela profiles (pontuação total)
+    const profilesChannel = supabase
+      .channel('profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log('📡 Mudança detectada nos perfis:', payload);
+          // Recarregar ranking quando pontuação mudar
+          loadWeeklyRankingData();
+        }
+      )
+      .subscribe();
+
+    // Monitorar mudanças na tabela weekly_rankings
+    const rankingsChannel = supabase
+      .channel('weekly-rankings-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'weekly_rankings'
+        },
+        (payload) => {
+          console.log('📡 Mudança detectada no ranking semanal:', payload);
+          loadWeeklyRankingData();
+        }
+      )
+      .subscribe();
+
+    // Monitorar mudanças nas competições
+    const competitionsChannel = supabase
+      .channel('competitions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'custom_competitions'
+        },
+        (payload) => {
+          console.log('📡 Mudança detectada nas competições:', payload);
+          loadWeeklyRankingData();
+        }
+      )
+      .subscribe();
+
+    // Atualizar periodicamente para garantir sincronização
+    const interval = setInterval(() => {
+      console.log('🔄 Atualização periódica do ranking...');
+      loadWeeklyRankingData();
+    }, 30000); // A cada 30 segundos
+
+    return () => {
+      console.log('🔌 Desconectando canais de tempo real');
+      supabase.removeChannel(profilesChannel);
+      supabase.removeChannel(rankingsChannel);
+      supabase.removeChannel(competitionsChannel);
+      clearInterval(interval);
+    };
   }, [user?.id]);
 
   const getPrizeAmount = (position: number) => {
@@ -158,7 +234,6 @@ const RankingScreen = () => {
     return `${hours}h`;
   };
 
-  // Definir as URLs SVG como constantes para evitar problemas de escape
   const backgroundPattern = "data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E";
 
   if (isLoading) {
