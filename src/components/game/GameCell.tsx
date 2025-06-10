@@ -28,20 +28,20 @@ const GameCell = ({
   isSelecting,
   wordColorClass
 }: GameCellProps) => {
-  const getCellClasses = () => {
+  const getLetterClasses = () => {
     if (isPermanent && wordColorClass) {
-      return `bg-gradient-to-br ${wordColorClass} text-white border-white/30 shadow-lg transform scale-105`;
+      return `text-transparent bg-gradient-to-br ${wordColorClass} bg-clip-text font-bold`;
     }
     if (isPermanent) {
-      return 'bg-gradient-to-br from-emerald-400 to-green-500 text-white border-emerald-300 shadow-lg transform scale-105';
+      return 'text-transparent bg-gradient-to-br from-emerald-400 to-green-500 bg-clip-text font-bold';
     }
     if (isSelected) {
-      return 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-indigo-300 shadow-lg scale-110 ring-2 ring-indigo-300';
+      return 'text-transparent bg-gradient-to-br from-indigo-500 to-purple-600 bg-clip-text font-bold';
     }
     if (isHintHighlighted) {
-      return 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white border-yellow-300 shadow-lg animate-pulse ring-2 ring-yellow-300';
+      return 'text-transparent bg-gradient-to-br from-yellow-400 to-amber-500 bg-clip-text font-bold animate-pulse';
     }
-    return 'bg-gradient-to-br from-slate-50 to-gray-100 text-slate-700 border-slate-200 hover:border-indigo-300 hover:shadow-md hover:scale-105';
+    return 'text-slate-700 font-bold';
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -74,14 +74,14 @@ const GameCell = ({
   return (
     <div
       className={`
-        flex items-center justify-center font-bold cursor-pointer
-        transition-all duration-300 rounded-xl border-2 select-none
-        ${getCellClasses()}
+        flex items-center justify-center cursor-pointer
+        transition-all duration-300 select-none
+        ${getLetterClasses()}
       `}
       style={{ 
         width: `${cellSize}px`, 
         height: `${cellSize}px`,
-        fontSize: `${Math.max(cellSize * 0.4, 12)}px`,
+        fontSize: `${Math.max(cellSize * 0.5, 14)}px`,
         touchAction: 'none',
         fontFamily: 'system-ui, -apple-system, sans-serif'
       }}
