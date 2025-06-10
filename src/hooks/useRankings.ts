@@ -43,28 +43,45 @@ export const useRankings = () => {
       const weekStart = new Date(today.setDate(diff));
       const weekStartStr = weekStart.toISOString().split('T')[0];
 
-      const { data, error } = await supabase
+      // Buscar dados do ranking semanal
+      const { data: rankingData, error: rankingError } = await supabase
         .from('weekly_rankings')
-        .select(`
-          position,
-          total_score,
-          user_id,
-          profiles!inner(username, avatar_url)
-        `)
+        .select('position, total_score, user_id')
         .eq('week_start', weekStartStr)
         .order('position', { ascending: true })
         .limit(10);
 
-      if (error) throw error;
+      if (rankingError) throw rankingError;
 
-      const rankings = (data || []).map((item) => ({
-        pos: item.position,
-        name: item.profiles?.username || 'Usuário',
-        score: item.total_score,
-        avatar: item.profiles?.username?.substring(0, 2).toUpperCase() || 'U',
-        trend: '',
-        user_id: item.user_id
-      }));
+      if (!rankingData || rankingData.length === 0) {
+        console.log('📊 Nenhum ranking semanal encontrado');
+        setWeeklyRanking([]);
+        return;
+      }
+
+      // Buscar perfis dos usuários separadamente
+      const userIds = rankingData.map(item => item.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.warn('⚠️ Erro ao buscar perfis:', profilesError);
+      }
+
+      // Combinar dados do ranking com perfis
+      const rankings = rankingData.map((item) => {
+        const profile = profilesData?.find(p => p.id === item.user_id);
+        return {
+          pos: item.position,
+          name: profile?.username || 'Usuário',
+          score: item.total_score,
+          avatar: profile?.username?.substring(0, 2).toUpperCase() || 'U',
+          trend: '',
+          user_id: item.user_id
+        };
+      });
 
       console.log('📊 Ranking semanal carregado:', rankings.length, 'jogadores');
       setWeeklyRanking(rankings);

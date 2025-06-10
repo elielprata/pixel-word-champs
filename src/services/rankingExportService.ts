@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface RankingExportData {
@@ -19,26 +18,41 @@ export const rankingExportService = {
       const weekStart = new Date(today.setDate(diff));
       const weekStartStr = weekStart.toISOString().split('T')[0];
 
-      const { data, error } = await supabase
+      // Buscar dados do ranking semanal
+      const { data: rankingData, error } = await supabase
         .from('weekly_rankings')
-        .select(`
-          position,
-          total_score,
-          week_start,
-          profiles!inner(username)
-        `)
+        .select('position, total_score, week_start, user_id')
         .eq('week_start', weekStartStr)
         .order('position', { ascending: true });
 
       if (error) throw error;
 
-      return (data || []).map(item => ({
-        position: item.position,
-        username: item.profiles?.username || 'Usuário',
-        score: item.total_score,
-        date: item.week_start,
-        type: 'weekly' as const
-      }));
+      if (!rankingData || rankingData.length === 0) {
+        return [];
+      }
+
+      // Buscar perfis dos usuários
+      const userIds = rankingData.map(item => item.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.warn('⚠️ Erro ao buscar perfis:', profilesError);
+      }
+
+      // Combinar dados do ranking com perfis
+      return rankingData.map(item => {
+        const profile = profilesData?.find(p => p.id === item.user_id);
+        return {
+          position: item.position,
+          username: profile?.username || 'Usuário',
+          score: item.total_score,
+          date: item.week_start,
+          type: 'weekly' as const
+        };
+      });
     } catch (error) {
       console.error('Error exporting weekly rankings:', error);
       return [];

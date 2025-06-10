@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PaymentRecord {
@@ -23,27 +22,24 @@ export const paymentService = {
     try {
       console.log('🔍 Buscando vencedores para nível de prêmio:', prizeLevel);
       
-      // Buscar registros de pagamento com perfis de usuário
+      // Buscar registros de pagamento
       const { data: paymentRecords, error } = await supabase
         .from('payment_history')
-        .select(`
-          id,
-          user_id,
-          ranking_type,
-          ranking_id,
-          prize_amount,
-          payment_status,
-          payment_date,
-          pix_key,
-          pix_holder_name,
-          notes,
-          created_at,
-          updated_at,
-          profiles!inner(username)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      // Buscar perfis dos usuários
+      const userIds = paymentRecords?.map(record => record.user_id) || [];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.warn('⚠️ Erro ao buscar perfis:', profilesError);
+      }
 
       // Buscar posições dos rankings semanais
       const { data: weeklyRankings, error: rankingError } = await supabase
@@ -57,6 +53,7 @@ export const paymentService = {
 
       // Mapear registros com informações completas
       const records: PaymentRecord[] = (paymentRecords || []).map((record: any) => {
+        const profile = profiles?.find(p => p.id === record.user_id);
         const ranking = weeklyRankings?.find(r => r.user_id === record.user_id);
         
         return {
@@ -72,7 +69,7 @@ export const paymentService = {
           notes: record.notes,
           created_at: record.created_at,
           updated_at: record.updated_at,
-          username: record.profiles?.username || 'Usuário',
+          username: profile?.username || 'Usuário',
           position: ranking?.position || 0
         };
       });
@@ -124,7 +121,7 @@ export const paymentService = {
     try {
       console.log('📝 Criando registros de pagamento baseados nos rankings semanais...');
       
-      // Buscar rankings semanais recentes com perfis de usuário
+      // Buscar rankings semanais recentes
       const today = new Date();
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
@@ -133,19 +130,28 @@ export const paymentService = {
 
       const { data: weeklyRankings, error: weeklyError } = await supabase
         .from('weekly_rankings')
-        .select(`
-          id,
-          user_id,
-          position,
-          total_score,
-          week_start,
-          profiles!inner(username, pix_key, pix_holder_name)
-        `)
+        .select('id, user_id, position, total_score, week_start')
         .eq('week_start', weekStartStr)
         .lte('position', 100)
         .order('position', { ascending: true });
 
       if (weeklyError) throw weeklyError;
+
+      if (!weeklyRankings?.length) {
+        console.log('ℹ️ Nenhum ranking semanal encontrado');
+        return;
+      }
+
+      // Buscar perfis dos usuários
+      const userIds = weeklyRankings.map(r => r.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, pix_key, pix_holder_name')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.warn('⚠️ Erro ao buscar perfis:', profilesError);
+      }
 
       // Buscar configurações de prêmios ativas
       const { data: prizeConfigs, error: prizeError } = await supabase
@@ -155,8 +161,8 @@ export const paymentService = {
 
       if (prizeError) throw prizeError;
 
-      if (!weeklyRankings?.length || !prizeConfigs?.length) {
-        console.log('ℹ️ Nenhum ranking ou configuração de prêmio encontrada');
+      if (!prizeConfigs?.length) {
+        console.log('ℹ️ Nenhuma configuração de prêmio encontrada');
         return;
       }
 
@@ -164,6 +170,7 @@ export const paymentService = {
       const paymentRecords = [];
 
       for (const ranking of weeklyRankings) {
+        const profile = profiles?.find(p => p.id === ranking.user_id);
         let prizeAmount = 0;
         
         // Verificar prêmios individuais
@@ -193,8 +200,8 @@ export const paymentService = {
             ranking_id: ranking.id,
             prize_amount: prizeAmount,
             payment_status: 'pending',
-            pix_key: ranking.profiles.pix_key,
-            pix_holder_name: ranking.profiles.pix_holder_name
+            pix_key: profile?.pix_key,
+            pix_holder_name: profile?.pix_holder_name
           });
         }
       }
