@@ -6,11 +6,11 @@ import { Lightbulb, Clock, Trophy } from 'lucide-react';
 interface GameStatsProps {
   timeLeft: number;
   hintsUsed: number;
-  totalScore: number;
+  levelScore: number; // Pontuação do nível atual (palavras encontradas)
   onUseHint: () => void;
 }
 
-const GameStats = ({ timeLeft, hintsUsed, totalScore, onUseHint }: GameStatsProps) => {
+const GameStats = ({ timeLeft, hintsUsed, levelScore, onUseHint }: GameStatsProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -37,7 +37,7 @@ const GameStats = ({ timeLeft, hintsUsed, totalScore, onUseHint }: GameStatsProp
       
       <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-md">
         <Trophy className="w-4 h-4 text-amber-600" />
-        <span className="text-sm font-bold text-gray-800">{totalScore}</span>
+        <span className="text-sm font-bold text-gray-800">{levelScore}</span>
       </div>
     </div>
   );

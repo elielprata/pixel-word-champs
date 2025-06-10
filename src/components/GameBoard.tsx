@@ -1,4 +1,3 @@
-
 import React from 'react';
 import GameProgressBar from './game/GameProgressBar';
 import GameStats from './game/GameStats';
@@ -130,6 +129,9 @@ const GameBoard = ({
   // Calcular pontuação que será exibida (só conta se nível completado)
   const displayScore = isLevelCompleted ? foundWords.reduce((sum, fw) => sum + fw.points, 0) : 0;
 
+  // Calcular pontuação atual do nível (palavras encontradas)
+  const currentLevelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
       <div className="max-w-md mx-auto space-y-6">
@@ -144,7 +146,7 @@ const GameBoard = ({
           <GameStats 
             timeLeft={timeLeft}
             hintsUsed={hintsUsed}
-            totalScore={displayScore}
+            levelScore={currentLevelScore}
             onUseHint={useHint}
           />
         </div>
@@ -193,3 +195,5 @@ const GameBoard = ({
 };
 
 export default GameBoard;
+
+</edits_to_apply>
