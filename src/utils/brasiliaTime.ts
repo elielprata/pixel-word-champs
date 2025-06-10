@@ -1,29 +1,57 @@
 
-/**
- * Utilitários para trabalhar com horário de Brasília (UTC-3)
- */
+import { zonedTimeToUtc, utcToZonedTime, format } from 'date-fns-tz';
 
+/**
+ * Configuração padrão de fuso horário para o projeto
+ */
+export const BRASILIA_TIMEZONE = 'America/Sao_Paulo';
+
+/**
+ * Obtém a data/hora atual no fuso horário de Brasília
+ */
 export const getBrasiliaTime = (): Date => {
   const now = new Date();
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const brasiliaOffset = -3; // UTC-3
-  const brasiliaTime = new Date(utc + (brasiliaOffset * 3600000));
+  const brasiliaTime = utcToZonedTime(now, BRASILIA_TIMEZONE);
   
   console.log('🕐 Horário UTC:', now.toISOString());
-  console.log('🇧🇷 Horário Brasília calculado:', brasiliaTime.toISOString());
+  console.log('🇧🇷 Horário Brasília:', brasiliaTime.toISOString());
   
   return brasiliaTime;
 };
 
+/**
+ * Converte uma data UTC para o fuso horário de Brasília
+ */
+export const utcToBrasilia = (utcDate: Date): Date => {
+  return utcToZonedTime(utcDate, BRASILIA_TIMEZONE);
+};
+
+/**
+ * Converte uma data do fuso horário de Brasília para UTC
+ */
+export const brasiliaToUtc = (brasiliaDate: Date): Date => {
+  return zonedTimeToUtc(brasiliaDate, BRASILIA_TIMEZONE);
+};
+
+/**
+ * Formata uma data no fuso horário de Brasília
+ */
+export const formatBrasiliaTime = (date: Date, formatString: string = 'yyyy-MM-dd HH:mm:ss'): string => {
+  return format(utcToZonedTime(date, BRASILIA_TIMEZONE), formatString, { timeZone: BRASILIA_TIMEZONE });
+};
+
+/**
+ * Verifica se uma data está no período atual de Brasília
+ */
 export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): boolean => {
-  const brasiliaStart = new Date(startDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-  const brasiliaEnd = new Date(endDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+  const brasiliaStart = utcToBrasilia(startDate);
+  const brasiliaEnd = utcToBrasilia(endDate);
   const brasiliaNow = getBrasiliaTime();
   
-  console.log('🔍 Verificando período ativo:');
-  console.log('  📅 Início:', brasiliaStart.toISOString());
-  console.log('  📅 Fim:', brasiliaEnd.toISOString());
-  console.log('  🕐 Agora:', brasiliaNow.toISOString());
+  console.log('🔍 Verificando período ativo (Brasília):');
+  console.log('  📅 Início:', formatBrasiliaTime(brasiliaStart));
+  console.log('  📅 Fim:', formatBrasiliaTime(brasiliaEnd));
+  console.log('  🕐 Agora:', formatBrasiliaTime(brasiliaNow));
   
   const isActive = brasiliaNow >= brasiliaStart && brasiliaNow <= brasiliaEnd;
   console.log('  ✅ Ativo:', isActive);
@@ -31,16 +59,51 @@ export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): bo
   return isActive;
 };
 
+/**
+ * Verifica se uma data está no futuro (horário de Brasília)
+ */
 export const isBrasiliaDateInFuture = (date: Date): boolean => {
   const brasiliaNow = getBrasiliaTime();
-  const brasiliaDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+  const brasiliaDate = utcToBrasilia(date);
   
-  console.log('🔍 Verificando se data é futura:');
-  console.log('  📅 Data:', brasiliaDate.toISOString());
-  console.log('  🕐 Agora:', brasiliaNow.toISOString());
+  console.log('🔍 Verificando se data é futura (Brasília):');
+  console.log('  📅 Data:', formatBrasiliaTime(brasiliaDate));
+  console.log('  🕐 Agora:', formatBrasiliaTime(brasiliaNow));
   
   const isFuture = brasiliaDate > brasiliaNow;
   console.log('  ➡️ É futura:', isFuture);
   
   return isFuture;
+};
+
+/**
+ * Cria uma data para o início do dia em Brasília (00:00:00)
+ */
+export const createBrasiliaStartOfDay = (date: Date): Date => {
+  const brasiliaDate = utcToBrasilia(date);
+  brasiliaDate.setHours(0, 0, 0, 0);
+  return brasiliaToUtc(brasiliaDate);
+};
+
+/**
+ * Cria uma data para o final do dia em Brasília (23:59:59.999)
+ */
+export const createBrasiliaEndOfDay = (date: Date): Date => {
+  const brasiliaDate = utcToBrasilia(date);
+  brasiliaDate.setHours(23, 59, 59, 999);
+  return brasiliaToUtc(brasiliaDate);
+};
+
+/**
+ * Obtém a data atual de Brasília apenas (sem horário)
+ */
+export const getBrasiliaDateOnly = (): string => {
+  return formatBrasiliaTime(new Date(), 'yyyy-MM-dd');
+};
+
+/**
+ * Converte uma data ISO string para o horário de Brasília
+ */
+export const isoToBrasilia = (isoString: string): Date => {
+  return utcToBrasilia(new Date(isoString));
 };

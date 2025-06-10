@@ -7,6 +7,7 @@ import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
+import { formatBrasiliaTime, getBrasiliaTime } from '@/utils/brasiliaTime';
 
 interface Competition {
   id: string;
@@ -55,9 +56,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const formatTimeRemaining = (endDate: string) => {
-    const now = new Date();
+    const brasiliaTime = getBrasiliaTime();
     const end = new Date(endDate);
-    const diff = end.getTime() - now.getTime();
+    const diff = end.getTime() - brasiliaTime.getTime();
     
     if (diff <= 0) return 'Finalizada';
     
@@ -71,9 +72,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const getTimeColor = (endDate: string) => {
-    const now = new Date();
+    const brasiliaTime = getBrasiliaTime();
     const end = new Date(endDate);
-    const diff = end.getTime() - now.getTime();
+    const diff = end.getTime() - brasiliaTime.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     
     if (hours <= 1) return 'text-red-600';

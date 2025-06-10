@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { useDailyCompetitionFinalization } from "@/hooks/useDailyCompetitionFina
 import { DailyCompetitionForm } from './daily/DailyCompetitionForm';
 import { DailyCompetitionStats } from './daily/DailyCompetitionStats';
 import { DailyCompetitionTable } from './daily/DailyCompetitionTable';
+import { createBrasiliaStartOfDay, createBrasiliaEndOfDay, formatBrasiliaTime } from '@/utils/brasiliaTime';
 
 interface DailyCompetition {
   id: string;
@@ -45,28 +45,28 @@ export const DailyCompetitionsManagement = () => {
     fetchCompetitions();
   }, []);
 
-  // Função para garantir que a data de fim seja sempre 23:59:59.999 do mesmo dia
+  // Função para garantir que a data de fim seja sempre 23:59:59.999 do mesmo dia em Brasília
   const ensureEndOfDay = (dateString: string): string => {
     if (!dateString) return '';
     
     const date = new Date(dateString);
-    // Definir como final do dia (23:59:59.999)
-    date.setHours(23, 59, 59, 999);
+    const endOfDay = createBrasiliaEndOfDay(date);
     
-    // Retornar no formato ISO
-    return date.toISOString();
+    console.log('📅 Ajustando fim do dia (Brasília):', formatBrasiliaTime(endOfDay));
+    
+    return endOfDay.toISOString();
   };
 
-  // Função para definir o início do dia como 00:00:00.000
+  // Função para definir o início do dia como 00:00:00.000 em Brasília
   const ensureStartOfDay = (dateString: string): string => {
     if (!dateString) return '';
     
     const date = new Date(dateString);
-    // Definir como início do dia (00:00:00.000)
-    date.setHours(0, 0, 0, 0);
+    const startOfDay = createBrasiliaStartOfDay(date);
     
-    // Retornar no formato ISO
-    return date.toISOString();
+    console.log('📅 Ajustando início do dia (Brasília):', formatBrasiliaTime(startOfDay));
+    
+    return startOfDay.toISOString();
   };
 
   const handleStartDateChange = (value: string) => {

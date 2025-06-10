@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { getBrasiliaTime } from '@/utils/brasiliaTime';
+import { getBrasiliaTime, formatBrasiliaTime, isDateInCurrentBrasiliaRange } from '@/utils/brasiliaTime';
 
 export class CompetitionQueryService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
@@ -10,7 +10,7 @@ export class CompetitionQueryService {
       console.log('🔍 Buscando competições diárias ativas no banco...');
       
       const brasiliaTime = getBrasiliaTime();
-      console.log('📅 Data atual de Brasília:', brasiliaTime.toISOString());
+      console.log('📅 Data atual de Brasília:', formatBrasiliaTime(brasiliaTime));
 
       const { data, error } = await supabase
         .from('custom_competitions')
@@ -32,18 +32,24 @@ export class CompetitionQueryService {
 
       console.log(`📊 Total de competições challenge ativas encontradas: ${data.length}`);
       
-      data.forEach((comp, index) => {
-        console.log(`📋 Competição ${index + 1}:`, {
+      // Filtrar competições que estão realmente ativas no horário de Brasília
+      const activeCompetitions = data.filter(comp => {
+        const startDate = new Date(comp.start_date);
+        const endDate = new Date(comp.end_date);
+        const isActive = isDateInCurrentBrasiliaRange(startDate, endDate);
+        
+        console.log(`📋 Competição "${comp.title}":`, {
           id: comp.id,
-          title: comp.title,
-          type: comp.competition_type,
-          status: comp.status,
-          start_date: comp.start_date,
-          end_date: comp.end_date
+          start: formatBrasiliaTime(startDate),
+          end: formatBrasiliaTime(endDate),
+          isActive
         });
+        
+        return isActive;
       });
 
-      return createSuccessResponse(data);
+      console.log(`✅ Competições realmente ativas: ${activeCompetitions.length}`);
+      return createSuccessResponse(activeCompetitions);
     } catch (error) {
       console.error('❌ Erro ao buscar competições diárias ativas:', error);
       return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_DAILY_COMPETITIONS'));
@@ -59,6 +65,7 @@ export class CompetitionQueryService {
         return createErrorResponse('ID da competição é obrigatório');
       }
 
+      // Buscar participações primeiro
       const { data: participations, error: participationsError } = await supabase
         .from('competition_participations')
         .select('user_position, user_score, user_id, created_at')
@@ -77,6 +84,7 @@ export class CompetitionQueryService {
         return createSuccessResponse([]);
       }
 
+      // Buscar perfis dos usuários
       const userIds = participations.map(p => p.user_id);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -88,6 +96,7 @@ export class CompetitionQueryService {
         throw profilesError;
       }
 
+      // Combinar dados
       const rankingData = participations.map(participation => {
         const profile = profiles?.find(p => p.id === participation.user_id);
         return {
