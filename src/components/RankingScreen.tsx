@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Star, Medal, Award, Crown, Zap, Fire, Sparkles } from 'lucide-react';
+import { Trophy, Star, Medal, Award, Crown, Zap, Flame, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -226,7 +226,7 @@ const RankingScreen = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="flex items-center justify-center space-x-2 mb-1">
-                      <Fire className="w-4 h-4 text-orange-400" />
+                      <Flame className="w-4 h-4 text-orange-400" />
                       <span className="text-2xl font-bold text-green-400">
                         R$ {weeklyCompetition.prize_pool.toFixed(0)}
                       </span>
@@ -373,7 +373,7 @@ const RankingScreen = () => {
                             {player.position === 3 && <span className="text-orange-400">🥉</span>}
                           </p>
                           <p className="text-sm text-purple-200 flex items-center space-x-1">
-                            <Fire className="w-3 h-3" />
+                            <Flame className="w-3 h-3" />
                             <span>{player.score.toLocaleString()} pts</span>
                           </p>
                         </div>
