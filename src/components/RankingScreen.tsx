@@ -154,15 +154,15 @@ const RankingScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
-      <div className="p-6 pb-24 max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-4 pb-24 max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <RankingHeader 
           weeklyCompetition={weeklyCompetition}
           totalWeeklyPlayers={totalWeeklyPlayers}
         />
 
-        {/* Prize Distribution - Destaque especial */}
+        {/* Prize Distribution */}
         <PrizeDistribution weeklyCompetition={weeklyCompetition} />
 
         {/* User Position */}
@@ -176,9 +176,9 @@ const RankingScreen = () => {
         {/* Error State */}
         {error && (
           <Card className="border-red-200 bg-red-50">
-            <CardContent className="p-6 text-center">
-              <Trophy className="w-12 h-12 mx-auto mb-3 text-red-400" />
-              <p className="text-red-600 font-medium mb-2">{error}</p>
+            <CardContent className="p-4 text-center">
+              <Trophy className="w-8 h-8 mx-auto mb-2 text-red-400" />
+              <p className="text-red-600 text-sm mb-2">{error}</p>
               <Button onClick={loadWeeklyRankingData} variant="outline" size="sm" className="border-red-300 text-red-600 hover:bg-red-100">
                 🔄 Tentar novamente
               </Button>

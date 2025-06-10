@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Crown, Medal, Award, Coins, Sparkles } from 'lucide-react';
+import { Trophy, Medal, Award } from 'lucide-react';
 
 interface WeeklyCompetition {
   id: string;
@@ -20,87 +20,48 @@ interface PrizeDistributionProps {
 const PrizeDistribution = ({ weeklyCompetition }: PrizeDistributionProps) => {
   if (!weeklyCompetition) return null;
 
-  const prizeData = [
+  const prizes = [
     {
-      position: '1º Lugar',
-      icon: <Crown className="w-6 h-6 text-yellow-400" />,
-      percentage: 50,
+      position: '1º',
+      icon: <Trophy className="w-4 h-4 text-yellow-500" />,
       amount: weeklyCompetition.prize_pool * 0.50,
-      bgColor: 'from-yellow-50 to-yellow-100',
-      borderColor: 'border-yellow-200',
-      textColor: 'text-yellow-700'
+      color: 'bg-yellow-50 border-yellow-200'
     },
     {
-      position: '2º Lugar',
-      icon: <Medal className="w-6 h-6 text-gray-400" />,
-      percentage: 30,
+      position: '2º',
+      icon: <Medal className="w-4 h-4 text-gray-500" />,
       amount: weeklyCompetition.prize_pool * 0.30,
-      bgColor: 'from-gray-50 to-gray-100',
-      borderColor: 'border-gray-200',
-      textColor: 'text-gray-700'
+      color: 'bg-gray-50 border-gray-200'
     },
     {
-      position: '3º Lugar',
-      icon: <Award className="w-6 h-6 text-orange-400" />,
-      percentage: 20,
+      position: '3º',
+      icon: <Award className="w-4 h-4 text-orange-500" />,
       amount: weeklyCompetition.prize_pool * 0.20,
-      bgColor: 'from-orange-50 to-orange-100',
-      borderColor: 'border-orange-200',
-      textColor: 'text-orange-700'
+      color: 'bg-orange-50 border-orange-200'
     }
   ];
 
   return (
-    <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
-      <div className="absolute inset-0 bg-black/10"></div>
-      <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-12 translate-x-12"></div>
-      <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-8 -translate-x-8"></div>
-      
-      <CardContent className="relative z-10 p-6 text-white">
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Sparkles className="w-6 h-6 text-yellow-300" />
-            <span className="text-yellow-300 font-bold">DISTRIBUIÇÃO DE PRÊMIOS</span>
-            <Sparkles className="w-6 h-6 text-yellow-300" />
-          </div>
-          <div className="text-3xl font-bold mb-1">
-            R$ {weeklyCompetition.prize_pool.toFixed(2)}
-          </div>
-          <p className="text-blue-100">{weeklyCompetition.title}</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {prizeData.map((prize, index) => (
-            <div 
-              key={index}
-              className="text-center p-4 bg-white/15 rounded-xl backdrop-blur-md border border-white/30 hover:bg-white/20 transition-all duration-300"
-            >
-              <div className="flex justify-center mb-3">
-                {prize.icon}
-              </div>
-              <div className="text-lg font-bold mb-1">
-                R$ {prize.amount.toFixed(2)}
-              </div>
-              <div className="text-sm text-blue-100 mb-2">
-                {prize.position}
-              </div>
-              <div className="text-xs text-yellow-300 font-semibold bg-white/10 px-2 py-1 rounded-full">
-                {prize.percentage}% do total
-              </div>
+    <div className="mb-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-3 text-center">
+        💰 Distribuição de Prêmios
+      </h3>
+      <div className="grid grid-cols-3 gap-3">
+        {prizes.map((prize, index) => (
+          <div key={index} className={`${prize.color} rounded-lg p-3 border text-center`}>
+            <div className="flex justify-center mb-2">
+              {prize.icon}
             </div>
-          ))}
-        </div>
-
-        <div className="mt-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-2 rounded-full">
-            <Coins className="w-4 h-4 text-green-300" />
-            <span className="text-sm text-blue-200">
-              Pagamento via PIX • Valores creditados em até 24h
-            </span>
+            <div className="text-sm font-bold text-gray-900">
+              R$ {prize.amount.toFixed(0)}
+            </div>
+            <div className="text-xs text-gray-600">
+              {prize.position} lugar
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+    </div>
   );
 };
 
