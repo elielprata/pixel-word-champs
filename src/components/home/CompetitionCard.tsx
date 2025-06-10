@@ -8,6 +8,7 @@ import { competitionParticipationService } from '@/services/competitionParticipa
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { utcToBrasilia, brasiliaToUtc, formatBrasiliaTime } from '@/utils/brasiliaTime';
+import { getCompetitionTheme, getCategoryEmoji } from '@/utils/competitionThemes';
 
 interface Competition {
   id: string;
@@ -32,6 +33,10 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   const [hasParticipated, setHasParticipated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState('');
+
+  // Obter tema baseado na categoria/theme da competição
+  const theme = getCompetitionTheme(competition.theme);
+  const categoryEmoji = getCategoryEmoji(competition.theme);
 
   useEffect(() => {
     checkParticipation();
@@ -137,9 +142,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
     const diff = adjustedEndUtc.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     
-    if (hours <= 1) return 'text-red-600';
-    if (hours <= 6) return 'text-orange-600';
-    return 'text-emerald-600';
+    if (hours <= 1) return theme.timeColors.urgent;
+    if (hours <= 6) return theme.timeColors.warning;
+    return theme.timeColors.safe;
   };
 
   const handleStartGame = async () => {
@@ -203,12 +208,12 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   return (
-    <Card className="group relative overflow-hidden bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-200/60 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:border-amber-300">
-      {/* Decorative grid pattern */}
+    <Card className={`group relative overflow-hidden bg-gradient-to-br ${theme.gradient} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}>
+      {/* Decorative grid pattern - themed */}
       <div className="absolute inset-0 opacity-20">
         <div className="w-full h-full" style={{
-          backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(217, 119, 6, 0.1) 15px, rgba(217, 119, 6, 0.1) 16px),
-                           repeating-linear-gradient(0deg, transparent, transparent 15px, rgba(217, 119, 6, 0.1) 15px, rgba(217, 119, 6, 0.1) 16px)`
+          backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 15px, ${theme.bgPattern} 15px, ${theme.bgPattern} 16px),
+                           repeating-linear-gradient(0deg, transparent, transparent 15px, ${theme.bgPattern} 15px, ${theme.bgPattern} 16px)`
         }}></div>
       </div>
       
@@ -221,13 +226,13 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             </h3>
             
             {competition.theme && (
-              <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-sm px-3 py-1 shadow-md">
-                📝 {competition.theme}
+              <Badge className={`bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} to-${theme.decorativeElements.primary.replace('bg-', '')} text-white border-0 text-sm px-3 py-1 shadow-md`}>
+                {categoryEmoji} {competition.theme}
               </Badge>
             )}
           </div>
 
-          {/* Tempo com design de tabuleiro */}
+          {/* Tempo com design temático */}
           <div className="flex items-center justify-center gap-2 bg-slate-50 rounded-lg p-2 text-center">
             <Clock className={`w-4 h-4 ${getTimeColor(competition.end_date)}`} />
             <div className="text-center">
@@ -238,7 +243,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             </div>
           </div>
 
-          {/* Botão de ação */}
+          {/* Botão de ação - themed */}
           <Button 
             onClick={handleStartGame}
             disabled={hasParticipated || isLoading}
@@ -246,7 +251,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             className={`w-full font-bold text-sm py-3 rounded-lg shadow-md transition-all duration-200 border-2 ${
               hasParticipated 
                 ? 'bg-gray-400 hover:bg-gray-400 text-gray-600 border-gray-300 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white hover:shadow-lg border-amber-700/20'
+                : `bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} hover:opacity-90 text-white hover:shadow-lg border-${theme.decorativeElements.primary.replace('bg-', '')}/20`
             }`}
           >
             {getButtonText()}
@@ -254,9 +259,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
         </div>
       </CardContent>
       
-      {/* Corner decoration */}
-      <div className="absolute top-2 right-2 w-3 h-3 bg-amber-400 rounded-full opacity-60"></div>
-      <div className="absolute bottom-2 left-2 w-2 h-2 bg-orange-400 rounded-full opacity-60"></div>
+      {/* Corner decoration - themed */}
+      <div className={`absolute top-2 right-2 w-3 h-3 ${theme.decorativeElements.primary} rounded-full opacity-60`}></div>
+      <div className={`absolute bottom-2 left-2 w-2 h-2 ${theme.decorativeElements.secondary} rounded-full opacity-60`}></div>
     </Card>
   );
 };
