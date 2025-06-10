@@ -182,7 +182,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   return (
-    <Card className={`group relative overflow-hidden bg-gradient-to-br ${getCardGradient(timeProgress)} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-36`}>
+    <Card className={`group relative overflow-hidden bg-gradient-to-br ${getCardGradient(timeProgress)} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-32`}>
       {/* Textura temática de fundo */}
       <div className="absolute inset-0 opacity-5">
         <div 
@@ -264,15 +264,14 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
           <Progress 
             value={timeProgress} 
             className="h-1 bg-gray-200"
-            style={{
-              background: 'rgb(229 231 235)'
-            }}
           />
-          <style jsx>{`
-            .progress-indicator {
-              background: ${timeProgress <= 10 ? '#ef4444' : timeProgress <= 30 ? '#f97316' : '#10b981'};
-            }
-          `}</style>
+          <style>
+            {`
+              .progress-indicator {
+                background: ${timeProgress <= 10 ? '#ef4444' : timeProgress <= 30 ? '#f97316' : '#10b981'};
+              }
+            `}
+          </style>
         </div>
 
         {/* Button section */}
