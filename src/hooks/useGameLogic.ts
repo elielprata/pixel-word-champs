@@ -65,7 +65,7 @@ export const useGameLogic = (
       // Buscar pontuação atual do usuário
       const { data: profile, error: fetchError } = await supabase
         .from('profiles')
-        .select('total_score')
+        .select('total_score, games_played')
         .eq('id', user.id)
         .single();
 
