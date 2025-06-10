@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Server, Database, Users, CheckCircle, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -80,14 +79,14 @@ export const UserSystemStatus = () => {
 
   if (isLoading) {
     return (
-      <Card className="border-slate-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="border-slate-200 shadow-lg bg-white rounded-lg">
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
             <Server className="h-5 w-5 text-purple-600" />
             Status do Sistema
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4">
           <div className="space-y-4">
             <div className="animate-pulse">
               <div className="h-4 bg-slate-200 rounded mb-2"></div>
@@ -95,24 +94,24 @@ export const UserSystemStatus = () => {
               <div className="h-4 bg-slate-200 rounded"></div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="border-slate-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="border-slate-200 shadow-lg bg-white rounded-lg">
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
             <Server className="h-5 w-5 text-red-600" />
             Status do Sistema
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4">
           <p className="text-red-600">Erro ao verificar status</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -141,14 +140,14 @@ export const UserSystemStatus = () => {
   };
 
   return (
-    <Card className="border-slate-200 shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <div className="border-slate-200 shadow-lg bg-white rounded-lg">
+      <div className="p-4 border-b border-gray-200">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
           <Server className="h-5 w-5 text-purple-600" />
           Status do Sistema
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <div className="p-4">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -180,7 +179,7 @@ export const UserSystemStatus = () => {
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
