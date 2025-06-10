@@ -10,15 +10,6 @@ export const RankingMetrics = () => {
   // Calcular métricas reais baseadas nos dados com usuários únicos
   const dailyParticipants = new Set(dailyRanking.map(player => player.user_id)).size;
   const weeklyParticipants = new Set(weeklyRanking.map(player => player.user_id)).size;
-  
-  // Calcular prêmio semanal baseado apenas nos participantes que realmente existem
-  const prizePoolWeekly = weeklyRanking.reduce((total, _, index) => {
-    if (index === 0) return total + 100;
-    if (index === 1) return total + 50;
-    if (index === 2) return total + 25;
-    if (index <= 9) return total + 10;
-    return total;
-  }, 0);
 
   const metrics = [
     {
@@ -28,14 +19,6 @@ export const RankingMetrics = () => {
       icon: Users,
       color: "from-blue-500 to-blue-600",
       trend: "Usuários ativos"
-    },
-    {
-      title: "Prêmios Semanais",
-      value: `R$ ${prizePoolWeekly.toFixed(2)}`,
-      subtitle: "Valor total disponível",
-      icon: DollarSign,
-      color: "from-green-500 to-green-600",
-      trend: "Esta semana"
     },
     {
       title: "Competições Diárias",
@@ -56,7 +39,7 @@ export const RankingMetrics = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {metrics.map((metric, index) => {
         const Icon = metric.icon;
         return (
