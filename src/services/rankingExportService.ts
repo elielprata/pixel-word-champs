@@ -6,43 +6,18 @@ interface RankingExportData {
   username: string;
   score: number;
   date: string;
-  type: 'daily' | 'weekly';
+  type: 'weekly';
 }
 
 export const rankingExportService = {
-  async exportDailyRankings(): Promise<RankingExportData[]> {
-    try {
-      const { data, error } = await supabase
-        .from('daily_rankings')
-        .select(`
-          position,
-          score,
-          date,
-          profiles!inner(username)
-        `)
-        .eq('date', new Date().toISOString().split('T')[0])
-        .order('position', { ascending: true });
-
-      if (error) throw error;
-
-      return (data || []).map(item => ({
-        position: item.position,
-        username: item.profiles?.username || 'Usuário',
-        score: item.score,
-        date: item.date,
-        type: 'daily' as const
-      }));
-    } catch (error) {
-      console.error('Error exporting daily rankings:', error);
-      return [];
-    }
-  },
-
   async exportWeeklyRankings(): Promise<RankingExportData[]> {
     try {
+      // Calcular início e fim da semana atual (segunda a domingo)
       const today = new Date();
-      const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
-      const weekEnd = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekStart = new Date(today.setDate(diff));
+      const weekStartStr = weekStart.toISOString().split('T')[0];
 
       const { data, error } = await supabase
         .from('weekly_rankings')
@@ -52,8 +27,7 @@ export const rankingExportService = {
           week_start,
           profiles!inner(username)
         `)
-        .gte('week_start', weekStart.toISOString().split('T')[0])
-        .lte('week_end', weekEnd.toISOString().split('T')[0])
+        .eq('week_start', weekStartStr)
         .order('position', { ascending: true });
 
       if (error) throw error;
@@ -80,7 +54,7 @@ export const rankingExportService = {
         `"${row.username}"`,
         row.score,
         row.date,
-        row.type === 'daily' ? 'Diário' : 'Semanal'
+        'Semanal'
       ].join(','))
     ].join('\n');
 
