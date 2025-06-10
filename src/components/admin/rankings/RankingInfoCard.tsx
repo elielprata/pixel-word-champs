@@ -23,13 +23,14 @@ export const RankingInfoCard = ({
 }: RankingInfoCardProps) => {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
-  const { dailyRanking, weeklyRanking } = useRankings();
+  const { weeklyRanking } = useRankings();
   
   const isDaily = type === 'daily';
   const iconColor = isDaily ? 'from-blue-500 to-blue-600' : 'from-purple-500 to-purple-600';
   
-  // Usar dados reais dos rankings
-  const participants = isDaily ? dailyRanking.length : weeklyRanking.length;
+  // Para competições diárias, mostrar 0 participantes já que não há ranking diário
+  // Para competições semanais, usar dados reais dos rankings
+  const participants = isDaily ? 0 : weeklyRanking.length;
   const prizePool = isDaily ? 0 : weeklyRanking.slice(0, 10).reduce((total, _, index) => {
     if (index === 0) return total + 100;
     if (index === 1) return total + 50;
@@ -46,18 +47,20 @@ export const RankingInfoCard = ({
   };
 
   const handleExport = async () => {
+    // Só permitir exportação para rankings semanais
+    if (isDaily) {
+      toast({
+        title: "Exportação não disponível",
+        description: "A exportação de rankings diários não está disponível. Os pontos diários são consolidados no ranking semanal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsExporting(true);
     try {
-      let data;
-      let filename;
-      
-      if (isDaily) {
-        data = await rankingExportService.exportDailyRankings();
-        filename = `ranking_diario_${new Date().toISOString().split('T')[0]}.csv`;
-      } else {
-        data = await rankingExportService.exportWeeklyRankings();
-        filename = `ranking_semanal_${new Date().toISOString().split('T')[0]}.csv`;
-      }
+      const data = await rankingExportService.exportWeeklyRankings();
+      const filename = `ranking_semanal_${new Date().toISOString().split('T')[0]}.csv`;
 
       if (data.length === 0) {
         toast({
@@ -185,7 +188,7 @@ export const RankingInfoCard = ({
               size="sm" 
               className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
               onClick={handleExport}
-              disabled={isExporting}
+              disabled={isExporting || isDaily}
             >
               <Download className="h-4 w-4 mr-1" />
               {isExporting ? 'Exportando...' : 'Exportar'}
