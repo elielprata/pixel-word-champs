@@ -3,11 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, Users, Calendar, Medal, Crown, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Trophy, Users, Calendar, Medal, Crown } from 'lucide-react';
 import PlayerAvatar from '@/components/ui/PlayerAvatar';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { rankingService } from '@/services/rankingService';
 import {
   Table,
   TableBody,
@@ -60,7 +59,6 @@ export default function WeeklyCompetitionRanking() {
   const [ranking, setRanking] = useState<RankingParticipant[]>([]);
   const [competition, setCompetition] = useState<CompetitionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUpdatingRanking, setIsUpdatingRanking] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -68,33 +66,6 @@ export default function WeeklyCompetitionRanking() {
       loadCompetitionData();
     }
   }, [competitionId]);
-
-  const handleForceRankingUpdate = async () => {
-    setIsUpdatingRanking(true);
-    try {
-      console.log('🔄 Forçando atualização do ranking...');
-      
-      await rankingService.updateWeeklyRanking();
-      
-      toast({
-        title: "Ranking Atualizado",
-        description: "O ranking foi atualizado com sucesso. Recarregando dados...",
-      });
-      
-      // Recarregar dados após atualização
-      await loadCompetitionData();
-      
-    } catch (error) {
-      console.error('❌ Erro ao atualizar ranking:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o ranking.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdatingRanking(false);
-    }
-  };
 
   const loadCompetitionData = async () => {
     if (!competitionId) return;
@@ -308,25 +279,14 @@ export default function WeeklyCompetitionRanking() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/admin')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar ao Painel
-            </Button>
-          </div>
-          
+        <div className="flex items-center gap-4">
           <Button
-            onClick={handleForceRankingUpdate}
-            disabled={isUpdatingRanking}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+            variant="outline"
+            onClick={() => navigate('/admin')}
+            className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${isUpdatingRanking ? 'animate-spin' : ''}`} />
-            {isUpdatingRanking ? 'Atualizando...' : 'Atualizar Ranking'}
+            <ArrowLeft className="h-4 w-4" />
+            Voltar ao Painel
           </Button>
         </div>
 
@@ -395,15 +355,6 @@ export default function WeeklyCompetitionRanking() {
                 <Trophy className="h-12 w-12 mx-auto mb-4 text-slate-300" />
                 <p className="font-medium mb-2">Nenhum participante ainda</p>
                 <p className="text-sm">Os participantes aparecerão aqui conforme participarem do torneio.</p>
-                <Button 
-                  onClick={handleForceRankingUpdate}
-                  disabled={isUpdatingRanking}
-                  className="mt-4 flex items-center gap-2"
-                  variant="outline"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isUpdatingRanking ? 'animate-spin' : ''}`} />
-                  Verificar Ranking
-                </Button>
               </div>
             ) : (
               <>
