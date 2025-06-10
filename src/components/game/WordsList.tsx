@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckCircle, Star } from 'lucide-react';
+import { CheckCircle, Star, Target } from 'lucide-react';
 
 interface FoundWord {
   word: string;
@@ -16,14 +16,22 @@ interface WordsListProps {
 
 const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => {
   return (
-    <div className="p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Star className="w-5 h-5 text-indigo-600" />
-        <h3 className="text-lg font-bold text-slate-800">Palavras do Nível</h3>
-        <div className="text-sm text-slate-500">({foundWords.length}/5)</div>
+    <div className="p-3">
+      {/* Header compacto */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Target className="w-4 h-4 text-indigo-600" />
+          <span className="text-sm font-semibold text-slate-700">Palavras</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs font-bold text-indigo-600">{foundWords.length}</span>
+          <span className="text-xs text-slate-400">/</span>
+          <span className="text-xs text-slate-500">{levelWords.length}</span>
+        </div>
       </div>
       
-      <div className="grid grid-cols-1 gap-3">
+      {/* Grid de palavras em 2 colunas */}
+      <div className="grid grid-cols-2 gap-2">
         {levelWords.map((word, index) => {
           const foundWordIndex = foundWords.findIndex(fw => fw.word === word);
           const isFound = foundWordIndex !== -1;
@@ -33,42 +41,32 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
             <div 
               key={index}
               className={`
-                relative p-3 rounded-xl transition-all duration-300 border-2
+                relative px-3 py-2 rounded-lg transition-all duration-200 text-center
                 ${isFound 
-                  ? `bg-gradient-to-r ${getWordColor(foundWordIndex)} text-white border-white/30 shadow-lg transform scale-105` 
-                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-200'
+                  ? `bg-gradient-to-r ${getWordColor(foundWordIndex)} text-white shadow-md` 
+                  : 'bg-slate-100 text-slate-600 border border-slate-200'
                 }
               `}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {isFound && (
-                    <CheckCircle className="w-5 h-5 text-white/90" />
-                  )}
-                  <div className="font-semibold text-base">{word}</div>
-                </div>
-                
-                {isFound && foundWord && (
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-white/90">
-                      +{foundWord.points} pts
-                    </div>
-                    <div className="text-xs text-white/70">
-                      Encontrada!
-                    </div>
-                  </div>
+              {/* Palavra */}
+              <div className="flex items-center justify-center gap-1">
+                {isFound && (
+                  <CheckCircle className="w-3 h-3 text-white/90" />
                 )}
-                
-                {!isFound && (
-                  <div className="text-sm text-slate-400">
-                    Procurar...
-                  </div>
-                )}
+                <span className="text-sm font-medium">{word}</span>
               </div>
               
+              {/* Pontos (só se encontrada) */}
+              {isFound && foundWord && (
+                <div className="text-xs text-white/80 mt-1">
+                  +{foundWord.points}pts
+                </div>
+              )}
+              
+              {/* Indicador visual se encontrada */}
               {isFound && (
                 <div className="absolute top-1 right-1">
-                  <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse"></div>
+                  <div className="w-1.5 h-1.5 bg-white/60 rounded-full"></div>
                 </div>
               )}
             </div>
@@ -76,11 +74,12 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
         })}
       </div>
       
-      {foundWords.length === 5 && (
-        <div className="mt-4 p-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl text-center">
-          <div className="flex items-center justify-center gap-2">
-            <Star className="w-5 h-5" />
-            <span className="font-bold">Nível Completo!</span>
+      {/* Status de conclusão */}
+      {foundWords.length === levelWords.length && (
+        <div className="mt-3 px-3 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg text-center">
+          <div className="flex items-center justify-center gap-1">
+            <Star className="w-4 h-4" />
+            <span className="text-sm font-semibold">Completo!</span>
           </div>
         </div>
       )}
