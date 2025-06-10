@@ -546,80 +546,6 @@ export type Database = {
           },
         ]
       }
-      prize_configurations: {
-        Row: {
-          active: boolean
-          created_at: string
-          group_name: string | null
-          id: string
-          position: number | null
-          position_range: string | null
-          prize_amount: number
-          total_winners: number | null
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          group_name?: string | null
-          id?: string
-          position?: number | null
-          position_range?: string | null
-          prize_amount?: number
-          total_winners?: number | null
-          type: string
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          group_name?: string | null
-          id?: string
-          position?: number | null
-          position_range?: string | null
-          prize_amount?: number
-          total_winners?: number | null
-          type?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      prize_distributions: {
-        Row: {
-          amount: number
-          competition_id: string | null
-          created_at: string | null
-          id: string
-          percentage: number
-          position: number
-        }
-        Insert: {
-          amount: number
-          competition_id?: string | null
-          created_at?: string | null
-          id?: string
-          percentage: number
-          position: number
-        }
-        Update: {
-          amount?: number
-          competition_id?: string | null
-          created_at?: string | null
-          id?: string
-          percentage?: number
-          position?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "prize_distributions_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -737,53 +663,6 @@ export type Database = {
         }
         Relationships: []
       }
-      weekly_rankings: {
-        Row: {
-          created_at: string
-          id: string
-          payment_date: string | null
-          payment_status: Database["public"]["Enums"]["payment_status"] | null
-          position: number
-          prize: number | null
-          score: number
-          user_id: string
-          week_end: string
-          week_start: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          payment_date?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"] | null
-          position: number
-          prize?: number | null
-          score?: number
-          user_id: string
-          week_end: string
-          week_start: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          payment_date?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"] | null
-          position?: number
-          prize?: number | null
-          score?: number
-          user_id?: string
-          week_end?: string
-          week_start?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "weekly_rankings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       word_categories: {
         Row: {
           created_at: string | null
@@ -859,10 +738,6 @@ export type Database = {
         Returns: boolean
       }
       update_competition_status: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      update_weekly_ranking: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
