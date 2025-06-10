@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, Star, Medal, Award, Crown, Zap, Sparkles } from 'lucide-react';
+import { Trophy, Star, Medal, Award, Crown, Zap, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -25,7 +25,7 @@ const RankingScreen = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log('📊 Carregando ranking simplificado...');
+      console.log('📊 Carregando ranking...');
       
       const { data, error } = await supabase
         .from('profiles')
@@ -58,7 +58,7 @@ const RankingScreen = () => {
         }
       }
 
-      console.log('✅ Ranking simplificado carregado:', players.length, 'jogadores');
+      console.log('✅ Ranking carregado:', players.length, 'jogadores');
 
     } catch (err) {
       console.error('❌ Erro ao carregar ranking:', err);
@@ -107,11 +107,11 @@ const RankingScreen = () => {
 
   const getPositionIcon = (position: number) => {
     switch (position) {
-      case 1: return <Crown className="w-5 h-5 text-yellow-600" />;
-      case 2: return <Medal className="w-5 h-5 text-gray-500" />;
-      case 3: return <Award className="w-5 h-5 text-orange-600" />;
+      case 1: return <Crown className="w-5 h-5 text-yellow-500" />;
+      case 2: return <Medal className="w-5 h-5 text-gray-400" />;
+      case 3: return <Award className="w-5 h-5 text-orange-500" />;
       default: return (
-        <div className="w-5 h-5 rounded-full bg-gray-400 flex items-center justify-center text-xs font-bold text-white">
+        <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-600">
           {position}
         </div>
       );
@@ -129,82 +129,70 @@ const RankingScreen = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-center space-y-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-full mx-auto flex items-center justify-center animate-bounce shadow-2xl">
-            <Trophy className="w-12 h-12 text-white" />
-          </div>
-          <div className="space-y-3">
-            <div className="h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full w-64 mx-auto animate-pulse opacity-80"></div>
-            <div className="h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full w-48 mx-auto animate-pulse opacity-60"></div>
-          </div>
-          <div className="flex justify-center space-x-2">
-            <Sparkles className="w-6 h-6 text-yellow-400 animate-spin" />
-            <Star className="w-6 h-6 text-pink-400 animate-pulse" />
-            <Sparkles className="w-6 h-6 text-blue-400 animate-spin" />
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <Trophy className="w-16 h-16 text-purple-500 mx-auto mb-4 animate-pulse" />
+          <p className="text-lg font-semibold text-gray-700">Carregando ranking...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="relative z-10 p-4 pb-24 max-w-lg mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
         {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            🏆 Ranking Geral
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-purple-800 mb-2 flex items-center justify-center gap-2">
+            <Trophy className="w-8 h-8" />
+            Ranking Geral
           </h1>
-          <p className="text-gray-600 text-sm">Classificação por Pontuação Total</p>
-          
-          <Card className="mt-4 bg-white border-gray-200 shadow-sm">
-            <CardContent className="p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="flex items-center justify-center space-x-2 mb-1">
-                    <Trophy className="w-4 h-4 text-yellow-600" />
-                    <span className="text-xl font-bold text-green-600">
-                      R$ 185
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500">Prêmio Semanal</div>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center space-x-2 mb-1">
-                    <Zap className="w-4 h-4 text-blue-600" />
-                    <span className="text-xl font-bold text-blue-600">
-                      {ranking.length}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500">Jogadores Ativos</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <p className="text-purple-600">Classificação por pontuação total</p>
         </div>
 
-        {/* User Position */}
+        {/* Stats Card */}
+        <Card className="mb-6 bg-white/70 backdrop-blur-sm border-purple-200 shadow-lg">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-2">
+                  <Zap className="w-5 h-5 text-green-500 mr-2" />
+                  <span className="text-2xl font-bold text-green-600">R$ 185</span>
+                </div>
+                <p className="text-sm text-gray-600">Prêmio Semanal</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-2">
+                  <Users className="w-5 h-5 text-blue-500 mr-2" />
+                  <span className="text-2xl font-bold text-blue-600">{ranking.length}</span>
+                </div>
+                <p className="text-sm text-gray-600">Jogadores Ativos</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* User Position Card */}
         {userPosition && user && (
-          <Card className="mb-6 bg-blue-50 border-blue-200">
+          <Card className="mb-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0 shadow-lg">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-full">
                     {getPositionIcon(userPosition)}
                   </div>
                   <div>
-                    <div className="font-bold text-gray-900">#{userPosition}</div>
-                    <div className="text-sm text-gray-600">Sua Posição</div>
+                    <p className="font-bold text-lg">#{userPosition}</p>
+                    <p className="text-purple-100">Sua Posição</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-gray-900">
+                  <p className="text-2xl font-bold">
                     {ranking.find(p => p.user_id === user.id)?.score.toLocaleString() || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">pontos</div>
+                  </p>
+                  <p className="text-purple-100">pontos</p>
                   {getPrizeAmount(userPosition) > 0 && (
-                    <div className="text-sm font-semibold text-green-600 bg-green-100 rounded px-2 py-1 mt-1">
+                    <div className="text-sm font-semibold text-green-300 bg-green-600/30 rounded px-2 py-1 mt-1">
                       R$ {getPrizeAmount(userPosition).toFixed(2)}
                     </div>
                   )}
@@ -217,10 +205,10 @@ const RankingScreen = () => {
         {/* Error State */}
         {error && (
           <Card className="border-red-200 bg-red-50 mb-6">
-            <CardContent className="p-4 text-center">
-              <Trophy className="w-8 h-8 mx-auto mb-2 text-red-500" />
-              <p className="text-red-700 text-sm mb-3">{error}</p>
-              <Button onClick={loadRanking} variant="outline" size="sm" className="border-red-300 text-red-700 hover:bg-red-100">
+            <CardContent className="p-6 text-center">
+              <Trophy className="w-12 h-12 mx-auto mb-3 text-red-400" />
+              <p className="text-red-700 mb-4">{error}</p>
+              <Button onClick={loadRanking} variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
                 🔄 Tentar novamente
               </Button>
             </CardContent>
@@ -228,16 +216,22 @@ const RankingScreen = () => {
         )}
 
         {/* Ranking List */}
-        <Card className="bg-white border-gray-200 shadow-sm">
+        <Card className="bg-white/70 backdrop-blur-sm border-purple-200 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl text-purple-800 flex items-center gap-2">
+              <Star className="w-5 h-5" />
+              Classificação
+            </CardTitle>
+          </CardHeader>
           <CardContent className="p-0">
             {ranking.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="font-semibold text-lg mb-2">Arena Vazia!</p>
-                <p className="text-sm">Seja o primeiro campeão!</p>
+              <div className="text-center py-16 text-gray-500">
+                <Trophy className="w-20 h-20 text-gray-300 mx-auto mb-4" />
+                <p className="font-semibold text-xl mb-2">Arena Vazia!</p>
+                <p>Seja o primeiro campeão!</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-purple-100">
                 {ranking.map((player) => {
                   const isCurrentUser = user?.id === player.user_id;
                   const prizeAmount = getPrizeAmount(player.pos);
@@ -245,38 +239,38 @@ const RankingScreen = () => {
                   return (
                     <div 
                       key={player.user_id}
-                      className={`flex items-center justify-between p-4 transition-colors hover:bg-gray-50 ${
-                        isCurrentUser ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                      } ${player.pos <= 3 ? 'bg-yellow-50' : ''}`}
+                      className={`flex items-center justify-between p-4 transition-all hover:bg-purple-50 ${
+                        isCurrentUser ? 'bg-purple-100 border-l-4 border-purple-500' : ''
+                      } ${player.pos <= 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50' : ''}`}
                     >
-                      <div className="flex items-center space-x-4">
-                        <div className="relative">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-12 h-12">
                           {getPositionIcon(player.pos)}
                         </div>
                         
-                        <div className="w-10 h-10 rounded-lg bg-gray-600 flex items-center justify-center text-white font-semibold">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                           {player.name?.charAt(0).toUpperCase() || 'U'}
                         </div>
                         
                         <div>
-                          <p className="font-semibold text-gray-900 flex items-center space-x-2">
+                          <p className="font-bold text-gray-900 flex items-center gap-2">
                             <span>{isCurrentUser ? 'Você' : player.name}</span>
                             {player.pos === 1 && <span>👑</span>}
                             {player.pos === 2 && <span>🥈</span>}
                             {player.pos === 3 && <span>🥉</span>}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {player.score.toLocaleString()} pts
+                            {player.score.toLocaleString()} pontos
                           </p>
                         </div>
                       </div>
                       
                       <div className="text-right">
-                        <div className="font-bold text-gray-900">
+                        <div className="font-bold text-lg text-purple-700">
                           #{player.pos}
                         </div>
                         {prizeAmount > 0 && (
-                          <div className="text-sm text-green-600 font-semibold bg-green-100 rounded px-2 py-1">
+                          <div className="text-sm text-green-600 font-semibold bg-green-100 rounded-full px-3 py-1 mt-1">
                             R$ {prizeAmount.toFixed(2)}
                           </div>
                         )}
