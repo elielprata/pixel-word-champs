@@ -40,7 +40,7 @@ const competitionThemes: Record<string, CompetitionTheme> = {
     borderColor: 'border-green-200/60 hover:border-green-300',
     bgPattern: 'rgba(34, 197, 94, 0.1)',
     emoji: '🦁',
-    description: 'Descubra nomes de animais em 1 minuto! 🐍🦜',
+    description: 'Eles correm, voam ou nadam. Encontre todos! 🐰🦅🐠',
     texture: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2322c55e' fill-opacity='0.15'%3E%3Ccircle cx='8' cy='8' r='2'/%3E%3Ccircle cx='18' cy='18' r='1.5'/%3E%3Ccircle cx='28' cy='12' r='1'/%3E%3Ccircle cx='32' cy='32' r='2'/%3E%3Cpath d='M6 30c2-2 4-2 6 0s4 2 6 0' stroke='%2322c55e' stroke-width='1' fill='none'/%3E%3C/g%3E%3C/svg%3E")`,
     decorativeElements: {
       primary: 'bg-green-400',
@@ -52,12 +52,29 @@ const competitionThemes: Record<string, CompetitionTheme> = {
       safe: 'text-green-600'
     }
   },
+  cores: {
+    gradient: 'from-pink-50 via-rose-50 to-red-50',
+    borderColor: 'border-pink-200/60 hover:border-pink-300',
+    bgPattern: 'rgba(236, 72, 153, 0.1)',
+    emoji: '🎨',
+    description: 'Tons que pintam o mundo. Ache as cores! 🎨🌈',
+    texture: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ec4899' fill-opacity='0.1'%3E%3Ccircle cx='10' cy='10' r='4'/%3E%3Ccircle cx='25' cy='15' r='3'/%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3Cpath d='M15 25c3 0 3 3 6 3s3-3 6-3' fill='none' stroke='%23ec4899' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E")`,
+    decorativeElements: {
+      primary: 'bg-pink-400',
+      secondary: 'bg-rose-400'
+    },
+    timeColors: {
+      urgent: 'text-red-600',
+      warning: 'text-orange-600',
+      safe: 'text-pink-600'
+    }
+  },
   esportes: {
     gradient: 'from-blue-50 via-sky-50 to-cyan-50',
     borderColor: 'border-blue-200/60 hover:border-blue-300',
     bgPattern: 'rgba(59, 130, 246, 0.1)',
     emoji: '⚽',
-    description: 'Mostre seu conhecimento esportivo em 1 minuto! 🏆⚡',
+    description: 'Corrida, bola e ação! Adivinhe o esporte. ⚽🏆⚾',
     texture: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%233b82f6' fill-opacity='0.1'%3E%3Ccircle cx='12' cy='12' r='6' fill='none' stroke='%233b82f6' stroke-width='1'/%3E%3Cpath d='M25 25l8 8M25 33l8-8' stroke='%233b82f6' stroke-width='2'/%3E%3Crect x='2' y='25' width='12' height='8' rx='2' fill='none' stroke='%233b82f6' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E")`,
     decorativeElements: {
       primary: 'bg-blue-400',
@@ -69,6 +86,75 @@ const competitionThemes: Record<string, CompetitionTheme> = {
       safe: 'text-blue-600'
     }
   },
+  natureza: {
+    gradient: 'from-green-50 via-lime-50 to-emerald-50',
+    borderColor: 'border-green-200/60 hover:border-green-300',
+    bgPattern: 'rgba(34, 197, 94, 0.1)',
+    emoji: '🌿',
+    description: 'Elementos naturais do mundo. Descubra-os! 🌿🏔️⛰️',
+    texture: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2322c55e' fill-opacity='0.1'%3E%3Cpath d='M10 30c0-5 2-8 5-8s5 3 5 8M20 25c0-3 2-5 4-5s4 2 4 5' stroke='%2322c55e' stroke-width='1' fill='none'/%3E%3Ccircle cx='8' cy='8' r='3' fill='none' stroke='%2322c55e' stroke-width='1'/%3E%3Cpath d='M25 8l5 5-5 5-5-5z' fill='none' stroke='%2322c55e' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E")`,
+    decorativeElements: {
+      primary: 'bg-green-400',
+      secondary: 'bg-lime-400'
+    },
+    timeColors: {
+      urgent: 'text-red-600',
+      warning: 'text-orange-600',
+      safe: 'text-green-600'
+    }
+  },
+  'objetos da casa': {
+    gradient: 'from-slate-50 via-gray-50 to-zinc-50',
+    borderColor: 'border-slate-200/60 hover:border-slate-300',
+    bgPattern: 'rgba(71, 85, 105, 0.1)',
+    emoji: '🏠',
+    description: 'Itens do lar escondidos nas letras! 🛏️🪑📺',
+    texture: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23475569' fill-opacity='0.1'%3E%3Crect x='8' y='12' width='8' height='12' rx='1' fill='none' stroke='%23475569' stroke-width='1'/%3E%3Crect x='20' y='8' width='12' height='8' rx='1' fill='none' stroke='%23475569' stroke-width='1'/%3E%3Ccircle cx='10' cy='30' r='2'/%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/svg%3E")`,
+    decorativeElements: {
+      primary: 'bg-slate-400',
+      secondary: 'bg-gray-400'
+    },
+    timeColors: {
+      urgent: 'text-red-600',
+      warning: 'text-orange-600',
+      safe: 'text-slate-600'
+    }
+  },
+  'países e capitais': {
+    gradient: 'from-violet-50 via-purple-50 to-indigo-50',
+    borderColor: 'border-violet-200/60 hover:border-violet-300',
+    bgPattern: 'rgba(139, 92, 246, 0.1)',
+    emoji: '🌍',
+    description: 'Viaje pelo mundo e ache os lugares! 🗺️🏛️✈️',
+    texture: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%238b5cf6' fill-opacity='0.1'%3E%3Ccircle cx='20' cy='20' r='12' fill='none' stroke='%238b5cf6' stroke-width='1'/%3E%3Cpath d='M8 20h24M20 8v24M12 12l16 16M28 12L12 28' stroke='%238b5cf6' stroke-width='0.5'/%3E%3Cpath d='M15 15c3 0 3 3 6 3s3-3 6-3' fill='none' stroke='%238b5cf6' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E")`,
+    decorativeElements: {
+      primary: 'bg-violet-400',
+      secondary: 'bg-purple-400'
+    },
+    timeColors: {
+      urgent: 'text-red-600',
+      warning: 'text-orange-600',
+      safe: 'text-violet-600'
+    }
+  },
+  profissoes: {
+    gradient: 'from-orange-50 via-amber-50 to-yellow-50',
+    borderColor: 'border-orange-200/60 hover:border-orange-300',
+    bgPattern: 'rgba(251, 146, 60, 0.1)',
+    emoji: '👨‍💼',
+    description: 'Quem faz o quê? Descubra as profissões! 👨‍💼👩‍⚕️👨‍🍳',
+    texture: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fb923c' fill-opacity='0.1'%3E%3Ccircle cx='12' cy='8' r='4' fill='none' stroke='%23fb923c' stroke-width='1'/%3E%3Crect x='8' y='16' width='8' height='12' rx='2' fill='none' stroke='%23fb923c' stroke-width='1'/%3E%3Ccircle cx='28' cy='12' r='3' fill='none' stroke='%23fb923c' stroke-width='1'/%3E%3Crect x='24' y='18' width='8' height='10' rx='1' fill='none' stroke='%23fb923c' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E")`,
+    decorativeElements: {
+      primary: 'bg-orange-400',
+      secondary: 'bg-amber-400'
+    },
+    timeColors: {
+      urgent: 'text-red-600',
+      warning: 'text-orange-600',
+      safe: 'text-orange-600'
+    }
+  },
+  // Manter categorias existentes para compatibilidade
   tecnologia: {
     gradient: 'from-purple-50 via-violet-50 to-indigo-50',
     borderColor: 'border-purple-200/60 hover:border-purple-300',
