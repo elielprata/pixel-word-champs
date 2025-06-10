@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Trophy, Star } from 'lucide-react';
@@ -6,7 +5,6 @@ import GameBoard from './GameBoard';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
-import { supabase } from '@/integrations/supabase/client';
 
 interface ChallengeScreenProps {
   challengeId: string;
@@ -58,40 +56,9 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     }
   };
 
-  const updateGamesPlayed = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('games_played')
-        .eq('id', user.id)
-        .single();
-
-      if (fetchError) {
-        console.error('Erro ao buscar perfil:', fetchError);
-        return;
-      }
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ games_played: (profile?.games_played || 0) + 1 })
-        .eq('id', user.id);
-
-      if (updateError) {
-        console.error('Erro ao atualizar games_played:', updateError);
-      } else {
-        console.log('✅ Games played incrementado');
-      }
-    } catch (error) {
-      console.error('Erro ao atualizar games_played:', error);
-    }
-  };
-
   const handleWordFound = async (word: string, points: number) => {
-    console.log(`Palavra encontrada: ${word} com ${points} pontos`);
-    // A pontuação já é registrada no useGameLogic
+    console.log(`Palavra encontrada: ${word} com ${points} pontos (pontos serão registrados apenas quando nível completar)`);
+    // Pontos não são mais registrados aqui - apenas quando o nível for completado
   };
 
   const handleTimeUp = () => {
@@ -102,10 +69,9 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     const newTotalScore = totalScore + levelScore;
     setTotalScore(newTotalScore);
     
-    console.log(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}`);
+    console.log(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Pontos já registrados no banco de dados.`);
     
-    // Incrementar games_played quando completa um nível
-    await updateGamesPlayed();
+    // games_played agora é incrementado automaticamente no useGameLogic quando o nível é completado
   };
 
   const handleAdvanceLevel = () => {
