@@ -31,10 +31,27 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   const { user } = useAuth();
   const [hasParticipated, setHasParticipated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [timeRemaining, setTimeRemaining] = useState('');
 
   useEffect(() => {
     checkParticipation();
   }, [user, competition.id]);
+
+  // Timer em tempo real
+  useEffect(() => {
+    const updateTimer = () => {
+      const remaining = formatTimeRemaining(competition.end_date);
+      setTimeRemaining(remaining);
+    };
+
+    // Atualiza imediatamente
+    updateTimer();
+
+    // Atualiza a cada segundo
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [competition.end_date]);
 
   const checkParticipation = async () => {
     if (!user) {
@@ -216,7 +233,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             <div className="text-center">
               <span className="text-xs text-slate-600 block">Tempo restante</span>
               <span className={`text-sm font-bold ${getTimeColor(competition.end_date)}`}>
-                {formatTimeRemaining(competition.end_date)}
+                {timeRemaining}
               </span>
             </div>
           </div>
