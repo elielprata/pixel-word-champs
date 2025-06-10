@@ -550,6 +550,7 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string | null
+          group_name: string | null
           id: string
           position: number | null
           position_range: string | null
@@ -561,6 +562,7 @@ export type Database = {
         Insert: {
           active?: boolean
           created_at?: string | null
+          group_name?: string | null
           id?: string
           position?: number | null
           position_range?: string | null
@@ -572,6 +574,7 @@ export type Database = {
         Update: {
           active?: boolean
           created_at?: string | null
+          group_name?: string | null
           id?: string
           position?: number | null
           position_range?: string | null
