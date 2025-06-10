@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 type PaymentStatus = 'pending' | 'paid' | 'not_eligible';
@@ -32,48 +31,52 @@ export class RankingUpdateService {
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       const weekStart = new Date(today.setDate(diff));
-      weekStart.setHours(0, 0, 0, 0); // Garantir início do dia
+      weekStart.setHours(0, 0, 0, 0);
       const weekStartStr = weekStart.toISOString().split('T')[0];
       
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
-      weekEnd.setHours(23, 59, 59, 999); // Garantir fim do dia
+      weekEnd.setHours(23, 59, 59, 999);
       const weekEndStr = weekEnd.toISOString().split('T')[0];
 
       console.log('📅 Semana atual:', weekStartStr, 'até', weekEndStr);
 
-      // Primeiro, verificar se existem rankings para esta semana
-      const { data: existingRankings, error: checkError } = await supabase
+      // SOLUÇÃO: Deletar TODOS os registros da semana de uma vez, sem condições adicionais
+      console.log('🗑️ Deletando TODOS os rankings da semana atual...');
+      
+      const { error: deleteError, count: deletedCount } = await supabase
         .from('weekly_rankings')
-        .select('id, user_id')
+        .delete({ count: 'exact' })
         .eq('week_start', weekStartStr);
 
+      if (deleteError) {
+        console.error('❌ Erro ao deletar rankings da semana:', deleteError);
+        throw deleteError;
+      }
+
+      console.log('🗑️ Rankings deletados:', deletedCount || 0);
+
+      // Aguardar para garantir que a transação foi processada
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Verificação final para garantir que não há registros
+      const { data: remainingRecords, error: checkError } = await supabase
+        .from('weekly_rankings')
+        .select('id')
+        .eq('week_start', weekStartStr)
+        .limit(1);
+
       if (checkError) {
-        console.error('❌ Erro ao verificar rankings existentes:', checkError);
+        console.error('❌ Erro na verificação final:', checkError);
         throw checkError;
       }
 
-      console.log('🔍 Rankings existentes encontrados:', existingRankings?.length || 0);
-
-      // Deletar TODOS os rankings da semana atual (sem filtro adicional)
-      if (existingRankings && existingRankings.length > 0) {
-        const { error: deleteError } = await supabase
-          .from('weekly_rankings')
-          .delete()
-          .eq('week_start', weekStartStr);
-
-        if (deleteError) {
-          console.error('❌ Erro ao deletar rankings antigos:', deleteError);
-          throw deleteError;
-        }
-
-        console.log('🗑️ Rankings antigos deletados:', existingRankings.length);
-      } else {
-        console.log('ℹ️ Nenhum ranking existente para deletar');
+      if (remainingRecords && remainingRecords.length > 0) {
+        console.error('❌ ERRO CRÍTICO: Ainda existem registros após delete!');
+        throw new Error('Falha ao limpar rankings existentes');
       }
 
-      // Aguardar um pouco para garantir que o delete foi processado
-      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('✅ Verificação: Nenhum registro restante da semana');
 
       // Criar novos rankings
       const rankingEntries = profiles.map((profile, index) => {
@@ -107,39 +110,7 @@ export class RankingUpdateService {
         };
       });
 
-      console.log('📝 Preparando para inserir', rankingEntries.length, 'entradas de ranking');
-
-      // Verificar novamente se não há duplicatas antes de inserir
-      const { data: finalCheck, error: finalCheckError } = await supabase
-        .from('weekly_rankings')
-        .select('user_id')
-        .eq('week_start', weekStartStr);
-
-      if (finalCheckError) {
-        console.error('❌ Erro na verificação final:', finalCheckError);
-        throw finalCheckError;
-      }
-
-      if (finalCheck && finalCheck.length > 0) {
-        console.warn('⚠️ Ainda existem rankings para esta semana após delete. Tentando delete forçado...');
-        
-        // Delete forçado com condições mais específicas
-        const { error: forceDeleteError } = await supabase
-          .from('weekly_rankings')
-          .delete()
-          .gte('week_start', weekStartStr)
-          .lte('week_start', weekStartStr);
-
-        if (forceDeleteError) {
-          console.error('❌ Erro no delete forçado:', forceDeleteError);
-          throw forceDeleteError;
-        }
-
-        console.log('🗑️ Delete forçado executado');
-        
-        // Aguardar mais tempo após delete forçado
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
+      console.log('📝 Inserindo', rankingEntries.length, 'novos rankings...');
 
       // Inserir novos rankings
       const { data: insertedData, error: insertError } = await supabase
@@ -149,17 +120,19 @@ export class RankingUpdateService {
 
       if (insertError) {
         console.error('❌ Erro ao inserir novos rankings:', insertError);
-        console.error('📊 Dados que estavam sendo inseridos:', rankingEntries);
+        console.error('📊 Dados sendo inseridos:', rankingEntries);
         throw insertError;
       }
 
-      console.log('✅ Ranking semanal atualizado com sucesso');
+      console.log('✅ Ranking semanal atualizado com sucesso!');
       console.log('📊 Registros inseridos:', insertedData?.length || 0);
       
       // Log detalhado dos rankings criados
-      rankingEntries.forEach((entry, index) => {
-        console.log(`#${entry.position} - User ${entry.user_id.substring(0, 8)} - ${entry.score} pontos - R$ ${entry.prize}`);
-      });
+      if (insertedData) {
+        insertedData.forEach((entry: any) => {
+          console.log(`#${entry.position} - User ${entry.user_id.substring(0, 8)} - ${entry.score} pontos - R$ ${entry.prize}`);
+        });
+      }
 
     } catch (error) {
       console.error('❌ Erro na atualização do ranking semanal:', error);
