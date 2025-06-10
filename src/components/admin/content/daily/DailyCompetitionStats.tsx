@@ -3,29 +3,50 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, Clock, Target } from 'lucide-react';
 
-export const DailyCompetitionStats = () => {
+interface DailyCompetition {
+  id: string;
+  title: string;
+  description: string;
+  theme: string;
+  start_date: string;
+  end_date: string;
+  max_participants: number;
+  status: string;
+  created_at: string;
+}
+
+interface DailyCompetitionStatsProps {
+  competitions: DailyCompetition[];
+}
+
+export const DailyCompetitionStats: React.FC<DailyCompetitionStatsProps> = ({ competitions }) => {
+  // Calculate real stats from competitions data
+  const activeCompetitions = competitions.filter(comp => comp.status === 'active').length;
+  const totalParticipants = competitions.reduce((sum, comp) => sum + (comp.max_participants || 0), 0);
+  const averageParticipants = competitions.length > 0 ? Math.round(totalParticipants / competitions.length) : 0;
+  
   const stats = [
     {
       title: "Competições Ativas",
-      value: "3",
+      value: activeCompetitions.toString(),
       icon: Trophy,
       color: "text-yellow-600"
     },
     {
-      title: "Participantes Total",
-      value: "247",
+      title: "Participantes Médio",
+      value: averageParticipants.toString(),
       icon: Users,
       color: "text-blue-600"
     },
     {
-      title: "Tempo Médio",
-      value: "8min",
+      title: "Total Competições",
+      value: competitions.length.toString(),
       icon: Clock,
       color: "text-green-600"
     },
     {
-      title: "Taxa de Conclusão",
-      value: "89%",
+      title: "Taxa de Atividade",
+      value: competitions.length > 0 ? `${Math.round((activeCompetitions / competitions.length) * 100)}%` : "0%",
       icon: Target,
       color: "text-purple-600"
     }
