@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGamePointsConfig } from './useGamePointsConfig';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FoundWord {
   word: string;
@@ -56,18 +57,57 @@ export const useGameLogic = (
     }
   }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete, level, isLevelCompleted]);
 
-  const addFoundWord = (word: string, positions: Position[]) => {
+  const updateUserScore = async (points: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Buscar pontuação atual do usuário
+      const { data: profile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('total_score')
+        .eq('id', user.id)
+        .single();
+
+      if (fetchError) {
+        console.error('Erro ao buscar perfil:', fetchError);
+        return;
+      }
+
+      const currentScore = profile?.total_score || 0;
+      const newScore = currentScore + points;
+
+      // Atualizar pontuação no perfil
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          total_score: newScore,
+          games_played: (profile?.games_played || 0) + (points > 0 ? 0 : 0) // Só incrementa games_played quando necessário
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Erro ao atualizar pontuação:', updateError);
+      } else {
+        console.log(`✅ Pontuação atualizada: +${points} pontos (total: ${newScore})`);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar pontuação do usuário:', error);
+    }
+  };
+
+  const addFoundWord = async (word: string, positions: Position[]) => {
     const points = getPointsForWord(word);
     const newFoundWord = { word, positions: [...positions], points };
     
-    console.log(`Palavra encontrada: ${word} = ${points} pontos (usando configuração do painel admin)`);
+    console.log(`Palavra encontrada: ${word} = ${points} pontos`);
     
     setFoundWords(prev => [...prev, newFoundWord]);
     setPermanentlyMarkedCells(prev => [...prev, ...positions]);
     
-    // Só contabiliza pontos se o nível for completado
-    // Por agora, chamamos onWordFound para feedback visual, mas a pontuação final só conta quando completar
-    onWordFound(word, 0); // Não adiciona pontos até completar o nível
+    // Registrar pontos imediatamente quando a palavra é encontrada
+    await updateUserScore(points);
+    onWordFound(word, points);
   };
 
   const isCellPermanentlyMarked = (row: number, col: number) => {
