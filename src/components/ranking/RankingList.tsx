@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Trophy, Crown, Medal, Award, Coins, Users, Zap } from 'lucide-react';
+import { Star, Trophy, Crown, Medal, Award, Coins, Users, Zap, ChevronDown } from 'lucide-react';
 
 interface RankingPlayer {
   position: number;
@@ -22,6 +23,8 @@ interface RankingListProps {
 }
 
 const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetition, getPrizeAmount }: RankingListProps) => {
+  const [displayLimit, setDisplayLimit] = useState(30);
+  
   const getRankIcon = (position: number) => {
     switch (position) {
       case 1: return <Crown className="w-7 h-7 text-yellow-500" />;
@@ -65,8 +68,23 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
         </Badge>
       );
     }
+    if (position <= 30) {
+      return (
+        <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 font-semibold">
+          <Star className="w-3 h-3 mr-1" />
+          Top 30
+        </Badge>
+      );
+    }
     return null;
   };
+
+  const handleLoadMore = () => {
+    setDisplayLimit(prev => Math.min(prev + 30, 100));
+  };
+
+  const displayedRanking = weeklyRanking.slice(0, displayLimit);
+  const canLoadMore = displayLimit < weeklyRanking.length && displayLimit < 100;
 
   return (
     <Card className="shadow-2xl border-0 overflow-hidden">
@@ -77,7 +95,9 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
           </div>
           Classificação Atual
         </CardTitle>
-        <p className="text-gray-600 text-lg">Melhores jogadores da semana</p>
+        <p className="text-gray-600 text-lg">
+          Exibindo {displayedRanking.length} de {Math.min(weeklyRanking.length, 100)} melhores jogadores
+        </p>
       </CardHeader>
       
       <CardContent className="p-0">
@@ -90,65 +110,86 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
             <p className="text-lg">Seja o primeiro a pontuar esta semana!</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
-            {weeklyRanking.slice(0, 50).map((player) => {
-              const isCurrentUser = user?.id === player.user_id;
-              const prizeAmount = getPrizeAmount(player.position);
-              
-              return (
-                <div 
-                  key={player.user_id} 
-                  className={`
-                    flex items-center gap-6 p-6 transition-all duration-300
-                    ${getRankStyle(player.position, isCurrentUser)}
-                  `}
-                >
-                  {/* Position & Avatar */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-14 h-14">
-                      {getRankIcon(player.position)}
+          <>
+            <div className="divide-y divide-gray-100">
+              {displayedRanking.map((player) => {
+                const isCurrentUser = user?.id === player.user_id;
+                const prizeAmount = getPrizeAmount(player.position);
+                
+                return (
+                  <div 
+                    key={player.user_id} 
+                    className={`
+                      flex items-center gap-6 p-6 transition-all duration-300
+                      ${getRankStyle(player.position, isCurrentUser)}
+                    `}
+                  >
+                    {/* Position & Avatar */}
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-14 h-14">
+                        {getRankIcon(player.position)}
+                      </div>
+                      
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                        {player.username?.charAt(0).toUpperCase() || 'U'}
+                      </div>
                     </div>
                     
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                      {player.username?.charAt(0).toUpperCase() || 'U'}
-                    </div>
-                  </div>
-                  
-                  {/* User Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <p className={`text-xl font-bold ${isCurrentUser ? 'text-purple-900' : 'text-gray-900'}`}>
-                        {isCurrentUser ? 'Você' : player.username}
-                      </p>
-                      {getPositionBadge(player.position)}
-                    </div>
-                    <div className="flex items-center gap-4 text-gray-600">
-                      <span className="font-semibold">#{player.position}</span>
-                      <span>•</span>
-                      <span className="font-semibold">{player.score.toLocaleString()} pontos</span>
-                    </div>
-                  </div>
-                  
-                  {/* Score & Prize */}
-                  <div className="text-right">
-                    <div className={`text-2xl font-bold mb-1 ${isCurrentUser ? 'text-purple-600' : 'text-gray-800'}`}>
-                      {player.score.toLocaleString()}
-                    </div>
-                    {prizeAmount > 0 && (
-                      <div className="bg-green-100 text-green-700 px-3 py-1 rounded-lg flex items-center gap-2 font-semibold">
-                        <Coins className="w-4 h-4" />
-                        R$ {prizeAmount.toFixed(2)}
+                    {/* User Info */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <p className={`text-xl font-bold ${isCurrentUser ? 'text-purple-900' : 'text-gray-900'}`}>
+                          {isCurrentUser ? 'Você' : player.username}
+                        </p>
+                        {getPositionBadge(player.position)}
                       </div>
-                    )}
+                      <div className="flex items-center gap-4 text-gray-600">
+                        <span className="font-semibold">#{player.position}</span>
+                        <span>•</span>
+                        <span className="font-semibold">{player.score.toLocaleString()} pontos</span>
+                      </div>
+                    </div>
+                    
+                    {/* Score & Prize */}
+                    <div className="text-right">
+                      <div className={`text-2xl font-bold mb-1 ${isCurrentUser ? 'text-purple-600' : 'text-gray-800'}`}>
+                        {player.score.toLocaleString()}
+                      </div>
+                      {prizeAmount > 0 && (
+                        <div className="bg-green-100 text-green-700 px-3 py-1 rounded-lg flex items-center gap-2 font-semibold">
+                          <Coins className="w-4 h-4" />
+                          R$ {prizeAmount.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+
+            {/* Load More Button */}
+            {canLoadMore && (
+              <div className="p-6 bg-gradient-to-r from-gray-50 to-slate-50 border-t-2">
+                <div className="text-center">
+                  <Button 
+                    onClick={handleLoadMore}
+                    variant="outline"
+                    className="bg-white hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all duration-300 px-8 py-3 text-lg font-semibold shadow-lg"
+                  >
+                    <ChevronDown className="w-5 h-5 mr-2" />
+                    Ver mais jogadores ({Math.min(30, weeklyRanking.length - displayLimit)} restantes)
+                  </Button>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Mostrando {displayLimit} de {Math.min(weeklyRanking.length, 100)} posições
+                  </p>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Footer Stats */}
-        {weeklyRanking.length > 0 && (
+        {weeklyRanking.length > 0 && !canLoadMore && (
           <div className="p-8 bg-gradient-to-r from-gray-50 to-slate-50 border-t-2">
             <div className="flex items-center justify-center gap-12 text-gray-600">
               <div className="flex items-center gap-3">
