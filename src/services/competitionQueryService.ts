@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { getBrasiliaTime, convertToBrasiliaTime } from '@/utils/brasiliaTime';
+import { getBrasiliaTime, isCompetitionActiveInBrasilia } from '@/utils/brasiliaTime';
 
 export class CompetitionQueryService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
@@ -50,18 +50,12 @@ export class CompetitionQueryService {
         const startDate = new Date(comp.start_date);
         const endDate = new Date(comp.end_date);
         
-        // Converter para horário de Brasília
-        const startBrasilia = convertToBrasiliaTime(startDate);
-        const endBrasilia = convertToBrasiliaTime(endDate);
-        
         console.log(`🔍 Verificando "${comp.title}":`);
         console.log('  📅 Início UTC:', startDate.toISOString());
         console.log('  📅 Fim UTC:', endDate.toISOString());
-        console.log('  📅 Início Brasília:', startBrasilia.toISOString());
-        console.log('  📅 Fim Brasília:', endBrasilia.toISOString());
         console.log('  🕐 Agora Brasília:', brasiliaNow.toISOString());
         
-        const isActive = brasiliaNow >= startBrasilia && brasiliaNow <= endBrasilia;
+        const isActive = isCompetitionActiveInBrasilia(startDate, endDate);
         console.log('  ✅ Ativo:', isActive);
         
         return isActive;
@@ -84,7 +78,7 @@ export class CompetitionQueryService {
         .from('competition_participations')
         .select(`
           *,
-          profiles:user_id (
+          profiles!inner (
             id,
             username,
             avatar_url
