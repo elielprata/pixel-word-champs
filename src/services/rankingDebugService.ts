@@ -50,10 +50,27 @@ export const rankingDebugService = {
         }
       });
 
+      // Análise de inconsistências
+      const inconsistencies = weeklyRanking?.filter(ranking => {
+        const profile = profiles?.find(p => p.id === ranking.user_id);
+        return profile && ranking.score !== profile.total_score;
+      }) || [];
+
+      console.log(`📈 Resumo da análise:`);
+      console.log(`- Total de perfis: ${profiles?.length || 0}`);
+      console.log(`- Total no ranking: ${weeklyRanking?.length || 0}`);
+      console.log(`- Inconsistências encontradas: ${inconsistencies.length}`);
+
       return {
         profiles: profiles || [],
         weeklyRanking: weeklyRanking || [],
-        weekStart: weekStartStr
+        weekStart: weekStartStr,
+        inconsistencies: inconsistencies.length,
+        summary: {
+          totalProfiles: profiles?.length || 0,
+          totalInRanking: weeklyRanking?.length || 0,
+          inconsistenciesFound: inconsistencies.length
+        }
       };
     } catch (error) {
       console.error('❌ Erro na verificação de consistência:', error);
@@ -80,6 +97,27 @@ export const rankingDebugService = {
       
     } catch (error) {
       console.error('❌ Erro ao forçar atualização:', error);
+      throw error;
+    }
+  },
+
+  async testFunctionDirectly() {
+    try {
+      console.log('🧪 Testando função update_weekly_ranking diretamente...');
+      
+      const { data, error } = await supabase.rpc('update_weekly_ranking');
+      
+      if (error) {
+        console.error('❌ Erro no teste da função:', error);
+        return { success: false, error };
+      }
+      
+      console.log('✅ Função executada sem erros!');
+      return { success: true, data };
+      
+    } catch (error) {
+      console.error('❌ Erro no teste:', error);
+      return { success: false, error };
     }
   }
 };
