@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Crown, Medal, Award, Coins, Trophy, Star } from 'lucide-react';
+import { Crown, Medal, Award, Coins } from 'lucide-react';
 
 interface WeeklyCompetition {
   id: string;
@@ -22,44 +22,31 @@ const PrizeDistribution = ({ weeklyCompetition }: PrizeDistributionProps) => {
 
   const prizeData = [
     {
-      positions: '1º',
-      icon: <Crown className="w-6 h-6 text-yellow-400" />,
-      percentage: 25,
-      amount: weeklyCompetition.prize_pool * 0.25,
+      position: '1º Lugar',
+      icon: <Crown className="w-8 h-8 text-yellow-400" />,
+      percentage: 50,
+      amount: weeklyCompetition.prize_pool * 0.50,
       gradient: 'from-yellow-400 to-yellow-600',
-      winners: 1
+      bgGradient: 'from-yellow-50 to-yellow-100',
+      borderColor: 'border-yellow-200'
     },
     {
-      positions: '2º-3º',
-      icon: <Medal className="w-6 h-6 text-gray-400" />,
-      percentage: 20,
-      amount: weeklyCompetition.prize_pool * 0.20,
+      position: '2º Lugar',
+      icon: <Medal className="w-8 h-8 text-gray-400" />,
+      percentage: 30,
+      amount: weeklyCompetition.prize_pool * 0.30,
       gradient: 'from-gray-400 to-gray-600',
-      winners: 2
+      bgGradient: 'from-gray-50 to-gray-100',
+      borderColor: 'border-gray-200'
     },
     {
-      positions: '4º-10º',
-      icon: <Award className="w-6 h-6 text-orange-400" />,
-      percentage: 25,
-      amount: weeklyCompetition.prize_pool * 0.25,
-      gradient: 'from-orange-400 to-orange-600',
-      winners: 7
-    },
-    {
-      positions: '11º-50º',
-      icon: <Star className="w-6 h-6 text-purple-400" />,
+      position: '3º Lugar',
+      icon: <Award className="w-8 h-8 text-orange-400" />,
       percentage: 20,
       amount: weeklyCompetition.prize_pool * 0.20,
-      gradient: 'from-purple-400 to-purple-600',
-      winners: 40
-    },
-    {
-      positions: '51º-100º',
-      icon: <Trophy className="w-6 h-6 text-blue-400" />,
-      percentage: 10,
-      amount: weeklyCompetition.prize_pool * 0.10,
-      gradient: 'from-blue-400 to-blue-600',
-      winners: 50
+      gradient: 'from-orange-400 to-orange-600',
+      bgGradient: 'from-orange-50 to-orange-100',
+      borderColor: 'border-orange-200'
     }
   ];
 
@@ -81,39 +68,32 @@ const PrizeDistribution = ({ weeklyCompetition }: PrizeDistributionProps) => {
           <p className="text-blue-100 text-sm">{weeklyCompetition.title}</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {prizeData.map((prize, index) => (
             <div 
               key={index}
-              className="text-center p-3 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20"
+              className="text-center p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20"
             >
-              <div className="flex justify-center mb-2">
+              <div className="flex justify-center mb-3">
                 {prize.icon}
               </div>
-              <div className="text-xs text-blue-100 mb-1 font-medium">
-                {prize.positions}
+              <div className="text-lg font-bold mb-1">
+                R$ {prize.amount.toFixed(2)}
               </div>
-              <div className="text-sm font-bold mb-1">
-                R$ {(prize.amount / prize.winners).toFixed(2)}
+              <div className="text-xs text-blue-100 mb-1">
+                {prize.position}
               </div>
-              <div className="text-xs text-yellow-300">
-                cada
-              </div>
-              <div className="text-xs text-blue-200 mt-1">
-                {prize.winners} {prize.winners === 1 ? 'ganhador' : 'ganhadores'}
+              <div className="text-xs text-yellow-300 font-medium">
+                {prize.percentage}% do prêmio
               </div>
             </div>
           ))}
         </div>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-blue-200 mb-2">
-            <span className="font-semibold text-yellow-300">100 posições premiadas</span> • Valores pagos via PIX
+          <p className="text-xs text-blue-200">
+            Valores pagos via PIX • Top 10 recebem prêmios
           </p>
-          <div className="flex items-center justify-center gap-4 text-xs text-blue-100">
-            <span>🏆 Total: {prizeData.reduce((acc, p) => acc + p.winners, 0)} ganhadores</span>
-            <span>💰 {weeklyCompetition.prize_pool.toFixed(0)}% distribuído</span>
-          </div>
         </div>
       </CardContent>
     </Card>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -129,14 +130,12 @@ const RankingScreen = () => {
     if (!weeklyCompetition) return 0;
     const prizePool = weeklyCompetition.prize_pool;
     
-    // Nova distribuição para até 100 ganhadores
-    if (position === 1) return prizePool * 0.25; // 25% para o 1º lugar
-    if (position <= 3) return (prizePool * 0.20) / 2; // 20% dividido entre 2º e 3º
-    if (position <= 10) return (prizePool * 0.25) / 7; // 25% dividido entre 4º-10º
-    if (position <= 50) return (prizePool * 0.20) / 40; // 20% dividido entre 11º-50º
-    if (position <= 100) return (prizePool * 0.10) / 50; // 10% dividido entre 51º-100º
-    
-    return 0;
+    switch (position) {
+      case 1: return prizePool * 0.50;
+      case 2: return prizePool * 0.30;
+      case 3: return prizePool * 0.20;
+      default: return 0;
+    }
   };
 
   if (isLoading) {
