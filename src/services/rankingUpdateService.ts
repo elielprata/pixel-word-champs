@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 type PaymentStatus = 'pending' | 'paid' | 'not_eligible';
@@ -42,59 +41,42 @@ export class RankingUpdateService {
 
       console.log('📅 Semana atual:', weekStartStr, 'até', weekEndStr);
 
-      // Primeiro, verificar se há registros para esta semana
-      const { data: existingRecords, error: checkExistingError } = await supabase
+      // SOLUÇÃO: Deletar TODOS os registros da semana de uma vez, sem condições adicionais
+      console.log('🗑️ Deletando TODOS os rankings da semana atual...');
+      
+      const { error: deleteError, count: deletedCount } = await supabase
         .from('weekly_rankings')
-        .select('id, user_id')
+        .delete({ count: 'exact' })
         .eq('week_start', weekStartStr);
 
-      if (checkExistingError) {
-        console.error('❌ Erro ao verificar registros existentes:', checkExistingError);
-        throw checkExistingError;
+      if (deleteError) {
+        console.error('❌ Erro ao deletar rankings da semana:', deleteError);
+        throw deleteError;
       }
 
-      console.log('📋 Registros existentes para esta semana:', existingRecords?.length || 0);
+      console.log('🗑️ Rankings deletados:', deletedCount || 0);
 
-      if (existingRecords && existingRecords.length > 0) {
-        console.log('🗑️ Deletando registros existentes da semana...');
-        
-        // Deletar cada registro individualmente para garantir que são removidos
-        for (const record of existingRecords) {
-          const { error: deleteError } = await supabase
-            .from('weekly_rankings')
-            .delete()
-            .eq('id', record.id);
+      // Aguardar para garantir que a transação foi processada
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-          if (deleteError) {
-            console.error('❌ Erro ao deletar registro individual:', deleteError);
-            throw deleteError;
-          }
-        }
+      // Verificação final para garantir que não há registros
+      const { data: remainingRecords, error: checkError } = await supabase
+        .from('weekly_rankings')
+        .select('id')
+        .eq('week_start', weekStartStr)
+        .limit(1);
 
-        console.log('✅ Todos os registros existentes foram deletados');
-
-        // Aguardar para garantir que a transação foi processada
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Verificação final para garantir que não há registros
-        const { data: finalCheck, error: finalCheckError } = await supabase
-          .from('weekly_rankings')
-          .select('id')
-          .eq('week_start', weekStartStr);
-
-        if (finalCheckError) {
-          console.error('❌ Erro na verificação final:', finalCheckError);
-          throw finalCheckError;
-        }
-
-        if (finalCheck && finalCheck.length > 0) {
-          console.error('❌ ERRO CRÍTICO: Ainda existem', finalCheck.length, 'registros após delete!');
-          console.error('📊 Registros restantes:', finalCheck);
-          throw new Error(`Falha ao limpar rankings existentes. ${finalCheck.length} registros ainda existem.`);
-        }
-
-        console.log('✅ Verificação confirmada: Nenhum registro restante da semana');
+      if (checkError) {
+        console.error('❌ Erro na verificação final:', checkError);
+        throw checkError;
       }
+
+      if (remainingRecords && remainingRecords.length > 0) {
+        console.error('❌ ERRO CRÍTICO: Ainda existem registros após delete!');
+        throw new Error('Falha ao limpar rankings existentes');
+      }
+
+      console.log('✅ Verificação: Nenhum registro restante da semana');
 
       // Criar novos rankings
       const rankingEntries = profiles.map((profile, index) => {
@@ -130,26 +112,27 @@ export class RankingUpdateService {
 
       console.log('📝 Inserindo', rankingEntries.length, 'novos rankings...');
 
-      // Inserir novos rankings um por vez para evitar conflitos
-      for (const entry of rankingEntries) {
-        const { error: insertError } = await supabase
-          .from('weekly_rankings')
-          .insert(entry);
+      // Inserir novos rankings
+      const { data: insertedData, error: insertError } = await supabase
+        .from('weekly_rankings')
+        .insert(rankingEntries)
+        .select();
 
-        if (insertError) {
-          console.error('❌ Erro ao inserir ranking individual:', insertError);
-          console.error('📊 Dados do registro:', entry);
-          throw insertError;
-        }
+      if (insertError) {
+        console.error('❌ Erro ao inserir novos rankings:', insertError);
+        console.error('📊 Dados sendo inseridos:', rankingEntries);
+        throw insertError;
       }
 
       console.log('✅ Ranking semanal atualizado com sucesso!');
-      console.log('📊 Registros inseridos:', rankingEntries.length);
+      console.log('📊 Registros inseridos:', insertedData?.length || 0);
       
       // Log detalhado dos rankings criados
-      rankingEntries.forEach((entry) => {
-        console.log(`#${entry.position} - User ${entry.user_id.substring(0, 8)} - ${entry.score} pontos - R$ ${entry.prize}`);
-      });
+      if (insertedData) {
+        insertedData.forEach((entry: any) => {
+          console.log(`#${entry.position} - User ${entry.user_id.substring(0, 8)} - ${entry.score} pontos - R$ ${entry.prize}`);
+        });
+      }
 
     } catch (error) {
       console.error('❌ Erro na atualização do ranking semanal:', error);
