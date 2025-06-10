@@ -67,7 +67,7 @@ class DailyCompetitionCoreService {
           user_id,
           total_score,
           completed_at,
-          profiles:user_id (
+          profiles!game_sessions_user_id_fkey (
             username,
             avatar_url
           )
