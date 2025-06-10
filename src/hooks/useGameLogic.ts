@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Position, WordFound, GameConfig } from '@/types';
-import { gameService } from '@/services/gameService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,30 +21,72 @@ export const useGameLogic = ({ config, onLevelComplete, onGameComplete }: UseGam
   const [gameSessionId, setGameSessionId] = useState<string | null>(null);
   const sessionRef = useRef<string | null>(null);
 
+  // Função simples para gerar tabuleiro
+  const generateSimpleBoard = (size = 10): string[][] => {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const board: string[][] = [];
+    
+    for (let i = 0; i < size; i++) {
+      board[i] = [];
+      for (let j = 0; j < size; j++) {
+        board[i][j] = letters[Math.floor(Math.random() * letters.length)];
+      }
+    }
+    
+    return board;
+  };
+
   const initializeGame = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       console.log('🎮 Inicializando jogo para nível:', config.level);
 
-      const gameData = await gameService.generateBoard(config.level, config.competitionId);
+      // Gerar tabuleiro simples
+      const newBoard = generateSimpleBoard(10);
       
-      if (!gameData.success || !gameData.data) {
-        throw new Error(gameData.error || 'Erro ao gerar tabuleiro');
-      }
+      // Buscar palavras do nível
+      const { data: levelWordsData, error: wordsError } = await supabase
+        .from('level_words')
+        .select('word')
+        .eq('level', config.level)
+        .eq('is_active', true)
+        .limit(5);
 
-      const { board: newBoard, words, sessionId } = gameData.data;
+      if (wordsError) throw wordsError;
+
+      const words = levelWordsData?.map(w => w.word.toUpperCase()) || [];
+      
+      // Criar sessão de jogo
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('game_sessions')
+          .insert({
+            user_id: user.id,
+            level: config.level,
+            board: newBoard,
+            words_found: [],
+            total_score: 0,
+            time_elapsed: 0,
+            is_completed: false
+          })
+          .select()
+          .single();
+
+        if (sessionError) throw sessionError;
+        
+        setGameSessionId(sessionData.id);
+        sessionRef.current = sessionData.id;
+      }
       
       setBoard(newBoard);
       setWordsToFind(words);
       setWordsFound([]);
       setCurrentScore(0);
-      setGameSessionId(sessionId);
-      sessionRef.current = sessionId;
 
       console.log('✅ Jogo inicializado com sucesso');
       console.log('📋 Palavras para encontrar:', words.length);
-      console.log('🆔 Session ID:', sessionId);
       
     } catch (error) {
       console.error('❌ Erro ao inicializar jogo:', error);
@@ -69,14 +110,11 @@ export const useGameLogic = ({ config, onLevelComplete, onGameComplete }: UseGam
     try {
       console.log('🔍 Tentando encontrar palavra nas posições:', positions);
       
-      const result = await gameService.validateWord(
-        sessionRef.current,
-        positions,
-        board
-      );
-
-      if (result.success && result.data) {
-        const { word, points } = result.data;
+      // Validação simples da palavra
+      const word = positions.map(pos => board[pos.row][pos.col]).join('');
+      
+      if (wordsToFind.includes(word) && !wordsFound.some(fw => fw.word === word)) {
+        const points = word.length * 10;
         
         const newWordFound: WordFound = {
           word,
@@ -104,7 +142,7 @@ export const useGameLogic = ({ config, onLevelComplete, onGameComplete }: UseGam
       console.error('❌ Erro ao validar palavra:', error);
       return false;
     }
-  }, [board, toast]);
+  }, [board, wordsToFind, wordsFound, toast]);
 
   const completeLevel = useCallback(async (timeElapsed: number) => {
     if (!sessionRef.current) {
@@ -115,23 +153,23 @@ export const useGameLogic = ({ config, onLevelComplete, onGameComplete }: UseGam
     try {
       console.log('🏁 Completando nível com sessão:', sessionRef.current);
       
-      const result = await gameService.completeSession(
-        sessionRef.current,
-        currentScore,
-        timeElapsed,
-        wordsFound
-      );
+      // Atualizar sessão como completada
+      const { error } = await supabase
+        .from('game_sessions')
+        .update({
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+          total_score: currentScore,
+          time_elapsed: timeElapsed
+        })
+        .eq('id', sessionRef.current);
 
-      if (result.success) {
-        console.log('✅ Sessão completada com sucesso');
-        
-        // Não chamamos mais update_weekly_ranking pois foi removido
-        console.log('📊 Pontuação final:', currentScore);
-        
-        onLevelComplete?.(currentScore, timeElapsed);
-      } else {
-        throw new Error(result.error || 'Erro ao completar sessão');
-      }
+      if (error) throw error;
+
+      console.log('✅ Sessão completada com sucesso');
+      console.log('📊 Pontuação final:', currentScore);
+      
+      onLevelComplete?.(currentScore, timeElapsed);
     } catch (error) {
       console.error('❌ Erro ao completar nível:', error);
       toast({

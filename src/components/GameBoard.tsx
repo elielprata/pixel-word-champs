@@ -11,6 +11,7 @@ import { useWordValidation } from '@/hooks/useWordValidation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useGameInteractions } from '@/hooks/useGameInteractions';
 import { type Position } from '@/utils/boardUtils';
+import { useState } from 'react';
 
 interface GameBoardProps {
   level: number;
@@ -35,7 +36,14 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  // Usar palavras do banco de dados através do useBoard
+  // Estados locais do jogo
+  const [foundWords, setFoundWords] = useState<Array<{word: string, points: number, positions: Position[]}>>([]);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [showGameOver, setShowGameOver] = useState(false);
+  const [showLevelComplete, setShowLevelComplete] = useState(false);
+  const [hintHighlightedCells, setHintHighlightedCells] = useState<Position[]>([]);
+
+  // Hooks existentes
   const { boardData, size, levelWords } = useBoard(level);
   const { 
     selectedCells, 
@@ -47,24 +55,53 @@ const GameBoard = ({
   } = useBoardInteraction();
   const { isValidWordDirection } = useWordValidation();
 
+  // Hook simplificado do jogo
   const {
-    foundWords,
-    hintsUsed,
-    showGameOver,
-    showLevelComplete,
-    isLevelCompleted,
-    setHintsUsed,
-    setShowGameOver,
-    setHintHighlightedCells,
-    addFoundWord,
-    isCellPermanentlyMarked,
-    isCellHintHighlighted,
-    closeGameOver
-  } = useGameLogic(level, timeLeft, levelWords, onWordFound, (levelScore) => {
-    // Só contabiliza pontos quando o nível é completado
-    console.log(`Nível ${level} completado! Contabilizando ${levelScore} pontos no ranking.`);
-    onLevelComplete(levelScore);
-  });
+    board,
+    wordsToFind,
+    wordsFound,
+    currentScore,
+    isLoading,
+    error,
+    isGameComplete,
+    findWord
+  } = useGameLogic({
+    level,
+    competitionId: undefined
+  }, onLevelComplete);
+
+  // Verificar se o nível foi completado
+  const isLevelCompleted = foundWords.length === levelWords.length;
+
+  // Função para adicionar palavra encontrada
+  const addFoundWord = (word: string, positions: Position[]) => {
+    const points = word.length * 10; // Pontuação simples
+    const newWord = { word, points, positions };
+    setFoundWords(prev => [...prev, newWord]);
+    onWordFound(word, points);
+    
+    // Verificar se completou o nível
+    if (foundWords.length + 1 === levelWords.length) {
+      setShowLevelComplete(true);
+    }
+  };
+
+  // Verificar se uma célula está permanentemente marcada
+  const isCellPermanentlyMarked = (row: number, col: number) => {
+    return foundWords.some(fw => 
+      fw.positions.some(pos => pos.row === row && pos.col === col)
+    );
+  };
+
+  // Verificar se uma célula está destacada por dica
+  const isCellHintHighlighted = (row: number, col: number) => {
+    return hintHighlightedCells.some(pos => pos.row === row && pos.col === col);
+  };
+
+  // Fechar modal de game over
+  const closeGameOver = () => {
+    setShowGameOver(false);
+  };
 
   const { useHint, handleRevive, handleGoHome } = useGameInteractions(
     foundWords,

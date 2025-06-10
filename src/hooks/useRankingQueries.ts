@@ -1,57 +1,41 @@
 
-import { useState, useEffect } from 'react';
-import { rankingApi } from '@/api/rankingApi';
+import { useState } from 'react';
 import { RankingPlayer } from '@/types';
-import { rankingService } from '@/services/rankingService';
+import { rankingQueryService } from '@/services/rankingQueryService';
 
 export const useRankingQueries = () => {
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
   const [historicalCompetitions, setHistoricalCompetitions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadWeeklyRanking = async () => {
     try {
-      console.log('🔄 Carregando ranking semanal...');
-      
-      try {
-        await rankingService.updateWeeklyRanking();
-        console.log('✅ Ranking semanal atualizado com sucesso');
-      } catch (updateError) {
-        console.warn('⚠️ Erro ao atualizar ranking semanal, continuando com dados existentes:', updateError);
-      }
-
-      const weekly = await rankingApi.getWeeklyRanking();
-      console.log('📊 Ranking semanal carregado:', weekly.length);
-      setWeeklyRanking(weekly);
+      const ranking = await rankingQueryService.getWeeklyRanking();
+      setWeeklyRanking(ranking);
     } catch (err) {
-      console.error('❌ Erro ao carregar ranking semanal:', err);
-      throw err;
+      console.error('Erro ao carregar ranking semanal:', err);
+      setError('Erro ao carregar ranking semanal');
     }
   };
 
   const loadHistoricalRanking = async (userId: string) => {
     try {
-      console.log('🔄 Carregando histórico de competições...');
-      
-      const historical = await rankingApi.getHistoricalRanking(userId);
-      console.log('📊 Histórico carregado:', historical.length);
-      setHistoricalCompetitions(historical);
+      const competitions = await rankingQueryService.getHistoricalCompetitions(userId);
+      setHistoricalCompetitions(competitions);
     } catch (err) {
-      console.error('❌ Erro ao carregar histórico:', err);
-      throw err;
+      console.error('Erro ao carregar histórico:', err);
+      setError('Erro ao carregar histórico');
     }
   };
 
   return {
-    dailyRanking: weeklyRanking, // Retorna ranking semanal no lugar do diário
     weeklyRanking,
     historicalCompetitions,
     isLoading,
     error,
     setIsLoading,
     setError,
-    loadDailyRanking: loadWeeklyRanking, // Aponta para o ranking semanal
     loadWeeklyRanking,
     loadHistoricalRanking
   };
