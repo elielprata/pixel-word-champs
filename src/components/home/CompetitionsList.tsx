@@ -25,6 +25,8 @@ interface CompetitionsListProps {
 }
 
 const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: CompetitionsListProps) => {
+  console.log('🎮 CompetitionsList recebeu:', competitions.length, 'competições');
+  
   return (
     <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
       <CardHeader className="pb-3">
@@ -33,7 +35,7 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
             <div className="p-1.5 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg">
               <Trophy className="w-4 h-4 text-white" />
             </div>
-            Competições Ativas ({competitions.length})
+            Competições Disponíveis ({competitions.length})
           </CardTitle>
           <Button onClick={onRefresh} variant="ghost" size="sm" className="h-8 w-8 p-0">
             <RefreshCw className="w-4 h-4" />
@@ -46,13 +48,16 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
           <EmptyCompetitionsState onRefresh={onRefresh} />
         ) : (
           <div className="space-y-3">
-            {competitions.map((competition) => (
-              <CompetitionCard
-                key={competition.id}
-                competition={competition}
-                onStartChallenge={onStartChallenge}
-              />
-            ))}
+            {competitions.map((competition) => {
+              console.log('🎯 Renderizando competição:', competition.title, 'Status:', competition.status);
+              return (
+                <CompetitionCard
+                  key={competition.id}
+                  competition={competition}
+                  onStartChallenge={onStartChallenge}
+                />
+              );
+            })}
           </div>
         )}
       </CardContent>

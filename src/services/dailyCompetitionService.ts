@@ -6,7 +6,29 @@ import { dailyCompetitionFinalizationService } from './dailyCompetition/dailyCom
 
 class DailyCompetitionService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
-    return dailyCompetitionCoreService.getActiveDailyCompetitions();
+    console.log('🔍 DailyCompetitionService: Buscando competições ativas...');
+    
+    const response = await dailyCompetitionCoreService.getActiveDailyCompetitions();
+    
+    if (response.success) {
+      console.log('✅ DailyCompetitionService: Encontradas', response.data.length, 'competições');
+      
+      // Log detalhado de cada competição
+      response.data.forEach((comp, index) => {
+        console.log(`📝 Competição ${index + 1}:`, {
+          id: comp.id,
+          title: comp.title,
+          status: comp.status,
+          competition_type: comp.competition_type,
+          start_date: comp.start_date,
+          end_date: comp.end_date
+        });
+      });
+    } else {
+      console.error('❌ DailyCompetitionService: Erro ao buscar competições:', response.error);
+    }
+    
+    return response;
   }
 
   async joinCompetitionAutomatically(sessionId: string): Promise<void> {
