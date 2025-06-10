@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -161,102 +160,100 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-      <div className="max-w-md mx-auto p-4 pb-20">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">Seu Perfil</h1>
-          <p className="text-sm text-gray-600">Estatísticas e progressão</p>
-        </div>
+    <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-1">Seu Perfil</h1>
+        <p className="text-sm text-gray-600">Estatísticas e progressão</p>
+      </div>
 
-        {/* Card principal do jogador */}
-        <Card className={`mb-4 bg-gradient-to-r ${playerLevel.color} text-white border-0 shadow-lg`}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <AvatarUpload
-                  currentAvatar={currentAvatar || undefined}
-                  fallback={getAvatarFallback()}
-                  onAvatarUpdate={handleAvatarUpdate}
-                  size="lg"
-                />
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
-                  <LevelIcon className="w-4 h-4 text-gray-700" />
-                </div>
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-lg font-bold">{user?.username || 'Jogador'}</h2>
-                  <Badge className="bg-white/20 text-white text-xs">
-                    Nível {playerLevel.level}
-                  </Badge>
-                </div>
-                <p className="text-sm opacity-90 mb-2">{playerLevel.title}</p>
-                
-                {/* Barra de progresso para próximo nível */}
-                {playerLevel.level < 10 && (
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs opacity-90">
-                      <span>{nextLevel.current} / {nextLevel.next} XP</span>
-                      <span>Nível {playerLevel.level + 1}</span>
-                    </div>
-                    <div className="bg-white/20 rounded-full h-2">
-                      <div 
-                        className="bg-white rounded-full h-2 transition-all duration-500"
-                        style={{ width: `${nextLevel.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
+      {/* Card principal do jogador */}
+      <Card className={`mb-4 bg-gradient-to-r ${playerLevel.color} text-white border-0 shadow-lg`}>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <AvatarUpload
+                currentAvatar={currentAvatar || undefined}
+                fallback={getAvatarFallback()}
+                onAvatarUpdate={handleAvatarUpdate}
+                size="lg"
+              />
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
+                <LevelIcon className="w-4 h-4 text-gray-700" />
               </div>
             </div>
-          </CardContent>
-        </Card>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-lg font-bold">{user?.username || 'Jogador'}</h2>
+                <Badge className="bg-white/20 text-white text-xs">
+                  Nível {playerLevel.level}
+                </Badge>
+              </div>
+              <p className="text-sm opacity-90 mb-2">{playerLevel.title}</p>
+              
+              {/* Barra de progresso para próximo nível */}
+              {playerLevel.level < 10 && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs opacity-90">
+                    <span>{nextLevel.current} / {nextLevel.next} XP</span>
+                    <span>Nível {playerLevel.level + 1}</span>
+                  </div>
+                  <div className="bg-white/20 rounded-full h-2">
+                    <div 
+                      className="bg-white rounded-full h-2 transition-all duration-500"
+                      style={{ width: `${nextLevel.progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Estatísticas compactas */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          {stats.map((stat, index) => (
-            <Card key={index} className="border-0 shadow-sm bg-white/70 backdrop-blur-sm">
-              <CardContent className="p-3 text-center">
-                <div className={`w-10 h-10 ${stat.bgColor} rounded-full flex items-center justify-center mx-auto mb-2`}>
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                </div>
-                <p className="text-lg font-bold text-gray-900">{stat.value}</p>
-                <p className="text-xs text-gray-600">{stat.label}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Menu de ações */}
-        <Card className="shadow-sm bg-white/70 backdrop-blur-sm border-0">
-          <CardContent className="p-0">
-            {menuItems.map((item, index) => (
-              <button
-                key={index}
-                onClick={item.action}
-                className={`w-full flex items-center gap-3 p-4 text-left hover:bg-white/50 transition-colors border-b last:border-b-0 ${
-                  item.danger ? 'hover:bg-red-50/50' : ''
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  item.danger ? 'bg-red-50' : 'bg-gray-50'
-                }`}>
-                  <item.icon className={`w-5 h-5 ${item.danger ? 'text-red-600' : item.color}`} />
-                </div>
-                <div className="flex-1">
-                  <p className={`font-medium ${item.danger ? 'text-red-600' : 'text-gray-900'}`}>
-                    {item.label}
-                  </p>
-                  <p className="text-xs text-gray-500">{item.description}</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </button>
-            ))}
-          </CardContent>
-        </Card>
+      {/* Estatísticas compactas */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {stats.map((stat, index) => (
+          <Card key={index} className="border-0 shadow-sm">
+            <CardContent className="p-3 text-center">
+              <div className={`w-10 h-10 ${stat.bgColor} rounded-full flex items-center justify-center mx-auto mb-2`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
+              <p className="text-lg font-bold text-gray-900">{stat.value}</p>
+              <p className="text-xs text-gray-600">{stat.label}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      {/* Menu de ações */}
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          {menuItems.map((item, index) => (
+            <button
+              key={index}
+              onClick={item.action}
+              className={`w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors border-b last:border-b-0 ${
+                item.danger ? 'hover:bg-red-50' : ''
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                item.danger ? 'bg-red-50' : 'bg-gray-50'
+              }`}>
+                <item.icon className={`w-5 h-5 ${item.danger ? 'text-red-600' : item.color}`} />
+              </div>
+              <div className="flex-1">
+                <p className={`font-medium ${item.danger ? 'text-red-600' : 'text-gray-900'}`}>
+                  {item.label}
+                </p>
+                <p className="text-xs text-gray-500">{item.description}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 };
