@@ -1,5 +1,5 @@
 
-import { getBrasiliaTime } from './brasiliaTime';
+import { getBrasiliaTime, isCompetitionActiveInBrasilia } from './brasiliaTime';
 
 /**
  * Utilitários para verificação de tempo das competições
@@ -11,8 +11,8 @@ export const adjustCompetitionEndTime = (startDate: Date): Date => {
 };
 
 export const isCompetitionActive = (startDate: Date, endDate: Date): boolean => {
-  const now = new Date();
-  return now >= startDate && now <= endDate;
+  // Usar a nova função que considera o fuso horário de Brasília
+  return isCompetitionActiveInBrasilia(startDate, endDate);
 };
 
 export const logCompetitionVerification = (comp: any, isActive: boolean, now: Date) => {

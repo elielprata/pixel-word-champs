@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getBrasiliaTime } from '@/utils/brasiliaTime';
-import { adjustCompetitionEndTime, isCompetitionActive, logCompetitionVerification } from '@/utils/competitionTimeUtils';
+import { getBrasiliaTime, isCompetitionActiveInBrasilia } from '@/utils/brasiliaTime';
+import { adjustCompetitionEndTime, logCompetitionVerification } from '@/utils/competitionTimeUtils';
 
 export class CompetitionTimeService {
   async adjustCompetitionTimes(competitions: any[]): Promise<void> {
@@ -36,15 +36,26 @@ export class CompetitionTimeService {
     const activeCompetitions = competitions.filter(comp => {
       const startDate = new Date(comp.start_date);
       const endDate = new Date(comp.end_date);
-      const now = new Date();
+      const brasiliaNow = getBrasiliaTime();
       
-      const active = isCompetitionActive(startDate, endDate);
-      logCompetitionVerification(comp, active, now);
+      // Usar a nova função que considera o fuso horário de Brasília
+      const active = isCompetitionActiveInBrasilia(startDate, endDate);
+      
+      console.log(`🔍 Verificando competição "${comp.title}":`, {
+        id: comp.id,
+        start: startDate.toISOString(),
+        end: endDate.toISOString(),
+        now: brasiliaNow.toISOString(),
+        isActive: active,
+        startTime: startDate.getTime(),
+        endTime: endDate.getTime(),
+        currentTime: brasiliaNow.getTime()
+      });
       
       return active;
     });
     
-    console.log('✅ Competições ativas após filtro de data:', activeCompetitions.length);
+    console.log('✅ Competições ativas após filtro de data (Brasília):', activeCompetitions.length);
     
     if (activeCompetitions.length > 0) {
       activeCompetitions.forEach((comp, index) => {
@@ -66,21 +77,29 @@ export class CompetitionTimeService {
   }
 
   private logDebugInfo(competitions: any[]): void {
-    console.log('📅 Nenhuma competição ativa encontrada no período atual');
+    console.log('📅 Nenhuma competição ativa encontrada no período atual (horário de Brasília)');
     
     if (competitions.length > 0) {
       console.log('🔍 Debug - Todas as competições challenge encontradas:');
+      const brasiliaNow = getBrasiliaTime();
+      
       competitions.forEach(comp => {
         const startDate = new Date(comp.start_date);
         const endDate = new Date(comp.end_date);
-        const now = new Date();
         
         console.log(`- ${comp.title}:`);
-        console.log(`  Início: ${startDate.toISOString()}`);
-        console.log(`  Fim: ${endDate.toISOString()}`);
-        console.log(`  Agora: ${now.toISOString()}`);
-        console.log(`  Timestamps - Start: ${startDate.getTime()}, End: ${endDate.getTime()}, Current: ${now.getTime()}`);
-        console.log(`  Começou: ${now >= startDate}, Não terminou: ${now <= endDate}`);
+        console.log(`  Início UTC: ${startDate.toISOString()}`);
+        console.log(`  Fim UTC: ${endDate.toISOString()}`);
+        console.log(`  Agora Brasília: ${brasiliaNow.toISOString()}`);
+        console.log(`  Timestamps - Start: ${startDate.getTime()}, End: ${endDate.getTime()}, Current: ${brasiliaNow.getTime()}`);
+        
+        // Verificar no fuso horário de Brasília
+        const startDateBrasilia = new Date(startDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+        const endDateBrasilia = new Date(endDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+        
+        console.log(`  Início Brasília: ${startDateBrasilia.toISOString()}`);
+        console.log(`  Fim Brasília: ${endDateBrasilia.toISOString()}`);
+        console.log(`  Começou (Brasília): ${brasiliaNow >= startDateBrasilia}, Não terminou (Brasília): ${brasiliaNow <= endDateBrasilia}`);
       });
     }
   }
