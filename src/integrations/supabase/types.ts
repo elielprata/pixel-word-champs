@@ -160,7 +160,6 @@ export type Database = {
           created_at: string | null
           id: string
           payment_date: string | null
-          payment_status: Database["public"]["Enums"]["payment_status"] | null
           prize: number | null
           user_id: string | null
           user_position: number | null
@@ -171,7 +170,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           payment_date?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           prize?: number | null
           user_id?: string | null
           user_position?: number | null
@@ -182,7 +180,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           payment_date?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           prize?: number | null
           user_id?: string | null
           user_position?: number | null
@@ -742,7 +739,6 @@ export type Database = {
           created_at: string
           id: string
           payment_date: string | null
-          payment_status: Database["public"]["Enums"]["payment_status"] | null
           position: number
           prize: number | null
           score: number
@@ -754,7 +750,6 @@ export type Database = {
           created_at?: string
           id?: string
           payment_date?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           position: number
           prize?: number | null
           score?: number
@@ -766,7 +761,6 @@ export type Database = {
           created_at?: string
           id?: string
           payment_date?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           position?: number
           prize?: number | null
           score?: number
@@ -870,7 +864,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       competition_type: "daily" | "weekly" | "challenge"
-      payment_status: "pending" | "paid" | "not_eligible"
+      payment_status: "pending" | "paid" | "failed" | "not_eligible"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -988,7 +982,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       competition_type: ["daily", "weekly", "challenge"],
-      payment_status: ["pending", "paid", "not_eligible"],
+      payment_status: ["pending", "paid", "failed", "not_eligible"],
     },
   },
 } as const

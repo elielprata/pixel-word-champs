@@ -10,12 +10,17 @@ const RankingDebugPanel = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [lastResult, setLastResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCheckConsistency = async () => {
     setIsChecking(true);
+    setError(null);
     try {
       const result = await rankingDebugService.checkDataConsistency();
       setLastResult(result);
+    } catch (err) {
+      setError('Erro ao verificar consistência');
+      console.error('Erro:', err);
     } finally {
       setIsChecking(false);
     }
@@ -23,6 +28,7 @@ const RankingDebugPanel = () => {
 
   const handleForceUpdate = async () => {
     setIsUpdating(true);
+    setError(null);
     try {
       await rankingDebugService.forceRankingUpdate();
       // Verificar consistência após atualização
@@ -30,6 +36,9 @@ const RankingDebugPanel = () => {
         const result = await rankingDebugService.checkDataConsistency();
         setLastResult(result);
       }, 1500);
+    } catch (err: any) {
+      setError(`Erro ao atualizar ranking: ${err.message || 'Erro desconhecido'}`);
+      console.error('Erro:', err);
     } finally {
       setIsUpdating(false);
     }
@@ -37,9 +46,16 @@ const RankingDebugPanel = () => {
 
   const handleTestFunction = async () => {
     setIsTesting(true);
+    setError(null);
     try {
       const result = await rankingDebugService.testFunctionDirectly();
       console.log('🧪 Resultado do teste:', result);
+      if (!result.success) {
+        setError(`Erro no teste: ${result.error?.message || 'Erro desconhecido'}`);
+      }
+    } catch (err: any) {
+      setError(`Erro no teste: ${err.message || 'Erro desconhecido'}`);
+      console.error('Erro:', err);
     } finally {
       setIsTesting(false);
     }
@@ -58,6 +74,12 @@ const RankingDebugPanel = () => {
         <p className="text-sm text-yellow-700">
           Ferramentas para diagnóstico e correção de problemas no ranking
         </p>
+        
+        {error && (
+          <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded text-sm">
+            <strong>Erro:</strong> {error}
+          </div>
+        )}
         
         {lastResult && (
           <div className="bg-white p-3 rounded border border-yellow-200">
