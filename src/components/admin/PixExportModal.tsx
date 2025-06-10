@@ -12,24 +12,12 @@ interface PixExportModalProps {
 }
 
 export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModalProps) => {
-  const {
-    startDate,
-    endDate,
-    isFiltered,
-    isLoading,
-    displayWinners,
-    setStartDate,
-    setEndDate,
-    handleFilter,
-    handleMarkAsPaid,
-    handleMarkAllAsPaid,
-    handleClearFilter
-  } = usePixExportModal(open, prizeLevel);
+  const pixExportData = usePixExportModal();
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
       if (!newOpen) {
-        handleClearFilter();
+        pixExportData.handleClearFilter();
       }
       onOpenChange(newOpen);
     }}>
@@ -42,18 +30,18 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
         </DialogHeader>
 
         <PixModalContent
-          startDate={startDate}
-          endDate={endDate}
-          isFiltered={isFiltered}
-          displayWinners={displayWinners}
-          isLoading={isLoading}
+          startDate={pixExportData.startDate}
+          endDate={pixExportData.endDate}
+          isFiltered={pixExportData.isFiltered}
+          displayWinners={pixExportData.displayWinners}
+          isLoading={pixExportData.isLoading}
           prizeLevel={prizeLevel}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
-          onFilter={handleFilter}
-          onClear={handleClearFilter}
-          onMarkAsPaid={handleMarkAsPaid}
-          onMarkAllAsPaid={handleMarkAllAsPaid}
+          onStartDateChange={pixExportData.setStartDate}
+          onEndDateChange={pixExportData.setEndDate}
+          onFilter={pixExportData.handleFilter}
+          onClear={pixExportData.handleClearFilter}
+          onMarkAsPaid={pixExportData.handleMarkAsPaid}
+          onMarkAllAsPaid={pixExportData.handleMarkAllAsPaid}
         />
       </DialogContent>
     </Dialog>

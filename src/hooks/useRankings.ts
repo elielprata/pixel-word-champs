@@ -61,10 +61,23 @@ export const useRankings = () => {
     loadWeeklyRanking();
   }, []);
 
+  // Dados simplificados para compatibilidade
+  const weeklyCompetitions: any[] = [];
+  const activeWeeklyCompetition = null;
+  const dailyRanking = weeklyRanking; // Usar mesmo ranking
+  const totalPlayers = weeklyRanking.length;
+
   return {
     weeklyRanking,
     loading,
     refreshRanking,
-    loadWeeklyRanking
+    loadWeeklyRanking,
+    // Propriedades para compatibilidade com componentes existentes
+    weeklyCompetitions,
+    activeWeeklyCompetition,
+    isLoading: loading,
+    refreshData: refreshRanking,
+    dailyRanking,
+    totalPlayers
   };
 };

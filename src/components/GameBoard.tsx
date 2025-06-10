@@ -8,7 +8,6 @@ import GameModals from './game/GameModals';
 import { useBoard } from '@/hooks/useBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
 import { useWordValidation } from '@/hooks/useWordValidation';
-import { useGameLogic } from '@/hooks/useGameLogic';
 import { useGameInteractions } from '@/hooks/useGameInteractions';
 import { type Position } from '@/utils/boardUtils';
 import { useState } from 'react';
@@ -54,21 +53,6 @@ const GameBoard = ({
     isCellSelected 
   } = useBoardInteraction();
   const { isValidWordDirection } = useWordValidation();
-
-  // Hook simplificado do jogo
-  const {
-    board,
-    wordsToFind,
-    wordsFound,
-    currentScore,
-    isLoading,
-    error,
-    isGameComplete,
-    findWord
-  } = useGameLogic({
-    level,
-    competitionId: undefined
-  }, onLevelComplete);
 
   // Verificar se o nível foi completado
   const isLevelCompleted = foundWords.length === levelWords.length;

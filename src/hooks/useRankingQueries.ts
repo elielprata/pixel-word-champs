@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { RankingPlayer } from '@/types';
-import { rankingQueryService } from '@/services/rankingQueryService';
 
 export const useRankingQueries = () => {
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
@@ -11,8 +10,8 @@ export const useRankingQueries = () => {
 
   const loadWeeklyRanking = async () => {
     try {
-      const ranking = await rankingQueryService.getWeeklyRanking();
-      setWeeklyRanking(ranking);
+      console.log('📊 Sistema de ranking simplificado - carregando ranking vazio');
+      setWeeklyRanking([]);
     } catch (err) {
       console.error('Erro ao carregar ranking semanal:', err);
       setError('Erro ao carregar ranking semanal');
@@ -21,8 +20,8 @@ export const useRankingQueries = () => {
 
   const loadHistoricalRanking = async (userId: string) => {
     try {
-      const competitions = await rankingQueryService.getHistoricalCompetitions(userId);
-      setHistoricalCompetitions(competitions);
+      console.log('📊 Sistema de ranking simplificado - histórico vazio');
+      setHistoricalCompetitions([]);
     } catch (err) {
       console.error('Erro ao carregar histórico:', err);
       setError('Erro ao carregar histórico');

@@ -46,22 +46,22 @@ export const useUserStats = () => {
 
       if (profileError) throw profileError;
 
-      // Buscar posição no ranking semanal atual
-      const today = new Date();
-      const dayOfWeek = today.getDay();
-      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-      const weekStart = new Date(today.setDate(diff));
-      const weekStartStr = weekStart.toISOString().split('T')[0];
+      // Buscar posição atual no ranking geral baseado na pontuação total
+      const { data: allProfiles, error: rankingError } = await supabase
+        .from('profiles')
+        .select('id, total_score')
+        .order('total_score', { ascending: false });
 
-      const { data: weeklyRanking, error: weeklyError } = await supabase
-        .from('weekly_rankings')
-        .select('position')
-        .eq('user_id', user.id)
-        .eq('week_start', weekStartStr)
-        .maybeSingle();
+      if (rankingError) {
+        console.warn('Erro ao buscar ranking geral:', rankingError);
+      }
 
-      if (weeklyError && weeklyError.code !== 'PGRST116') {
-        console.warn('Erro ao buscar ranking semanal:', weeklyError);
+      let currentPosition = null;
+      if (allProfiles) {
+        const userRankIndex = allProfiles.findIndex(p => p.id === user.id);
+        if (userRankIndex !== -1) {
+          currentPosition = userRankIndex + 1;
+        }
       }
 
       // Calcular sequência de vitórias baseada em jogos completados recentemente
@@ -99,7 +99,7 @@ export const useUserStats = () => {
       }
 
       const userStats = {
-        position: weeklyRanking?.position || null,
+        position: currentPosition,
         totalScore: profile?.total_score || 0,
         gamesPlayed: profile?.games_played || 0,
         winStreak: streak,
