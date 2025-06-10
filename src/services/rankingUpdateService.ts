@@ -32,26 +32,48 @@ export class RankingUpdateService {
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       const weekStart = new Date(today.setDate(diff));
+      weekStart.setHours(0, 0, 0, 0); // Garantir início do dia
       const weekStartStr = weekStart.toISOString().split('T')[0];
       
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999); // Garantir fim do dia
       const weekEndStr = weekEnd.toISOString().split('T')[0];
 
       console.log('📅 Semana atual:', weekStartStr, 'até', weekEndStr);
 
-      // Deletar rankings da semana atual
-      const { error: deleteError } = await supabase
+      // Primeiro, verificar se existem rankings para esta semana
+      const { data: existingRankings, error: checkError } = await supabase
         .from('weekly_rankings')
-        .delete()
+        .select('id, user_id')
         .eq('week_start', weekStartStr);
 
-      if (deleteError) {
-        console.error('❌ Erro ao deletar rankings antigos:', deleteError);
-        throw deleteError;
+      if (checkError) {
+        console.error('❌ Erro ao verificar rankings existentes:', checkError);
+        throw checkError;
       }
 
-      console.log('🗑️ Rankings antigos deletados');
+      console.log('🔍 Rankings existentes encontrados:', existingRankings?.length || 0);
+
+      // Deletar TODOS os rankings da semana atual (sem filtro adicional)
+      if (existingRankings && existingRankings.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('weekly_rankings')
+          .delete()
+          .eq('week_start', weekStartStr);
+
+        if (deleteError) {
+          console.error('❌ Erro ao deletar rankings antigos:', deleteError);
+          throw deleteError;
+        }
+
+        console.log('🗑️ Rankings antigos deletados:', existingRankings.length);
+      } else {
+        console.log('ℹ️ Nenhum ranking existente para deletar');
+      }
+
+      // Aguardar um pouco para garantir que o delete foi processado
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Criar novos rankings
       const rankingEntries = profiles.map((profile, index) => {
@@ -85,19 +107,54 @@ export class RankingUpdateService {
         };
       });
 
-      console.log('📝 Criando', rankingEntries.length, 'entradas de ranking');
+      console.log('📝 Preparando para inserir', rankingEntries.length, 'entradas de ranking');
+
+      // Verificar novamente se não há duplicatas antes de inserir
+      const { data: finalCheck, error: finalCheckError } = await supabase
+        .from('weekly_rankings')
+        .select('user_id')
+        .eq('week_start', weekStartStr);
+
+      if (finalCheckError) {
+        console.error('❌ Erro na verificação final:', finalCheckError);
+        throw finalCheckError;
+      }
+
+      if (finalCheck && finalCheck.length > 0) {
+        console.warn('⚠️ Ainda existem rankings para esta semana após delete. Tentando delete forçado...');
+        
+        // Delete forçado com condições mais específicas
+        const { error: forceDeleteError } = await supabase
+          .from('weekly_rankings')
+          .delete()
+          .gte('week_start', weekStartStr)
+          .lte('week_start', weekStartStr);
+
+        if (forceDeleteError) {
+          console.error('❌ Erro no delete forçado:', forceDeleteError);
+          throw forceDeleteError;
+        }
+
+        console.log('🗑️ Delete forçado executado');
+        
+        // Aguardar mais tempo após delete forçado
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
 
       // Inserir novos rankings
-      const { error: insertError } = await supabase
+      const { data: insertedData, error: insertError } = await supabase
         .from('weekly_rankings')
-        .insert(rankingEntries);
+        .insert(rankingEntries)
+        .select();
 
       if (insertError) {
         console.error('❌ Erro ao inserir novos rankings:', insertError);
+        console.error('📊 Dados que estavam sendo inseridos:', rankingEntries);
         throw insertError;
       }
 
       console.log('✅ Ranking semanal atualizado com sucesso');
+      console.log('📊 Registros inseridos:', insertedData?.length || 0);
       
       // Log detalhado dos rankings criados
       rankingEntries.forEach((entry, index) => {
