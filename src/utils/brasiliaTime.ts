@@ -1,12 +1,16 @@
 
+import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
+
 /**
  * Utilitários para trabalhar com horário de Brasília (UTC-3)
  */
 
+const BRASILIA_TIMEZONE = 'America/Sao_Paulo';
+
 export const getBrasiliaTime = (): Date => {
-  // Criar uma data no fuso horário de Brasília usando Intl API
+  // Obter o horário atual no fuso de Brasília
   const now = new Date();
-  const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+  const brasiliaTime = toZonedTime(now, BRASILIA_TIMEZONE);
   
   console.log('🕐 Horário UTC:', now.toISOString());
   console.log('🇧🇷 Horário Brasília calculado:', brasiliaTime.toISOString());
@@ -15,7 +19,13 @@ export const getBrasiliaTime = (): Date => {
 };
 
 export const convertToBrasiliaTime = (date: Date): Date => {
-  return new Date(date.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+  // Converter uma data UTC para o horário de Brasília
+  return toZonedTime(date, BRASILIA_TIMEZONE);
+};
+
+export const convertFromBrasiliaTime = (date: Date): Date => {
+  // Converter uma data de Brasília para UTC
+  return fromZonedTime(date, BRASILIA_TIMEZONE);
 };
 
 export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): boolean => {
@@ -90,4 +100,9 @@ export const getEndOfDayInBrasilia = (date: Date): Date => {
   const brasiliaDate = convertToBrasiliaTime(date);
   brasiliaDate.setHours(23, 59, 59, 999);
   return brasiliaDate;
+};
+
+// Função para formatar data no horário de Brasília
+export const formatBrasiliaTime = (date: Date, format: string = 'yyyy-MM-dd HH:mm:ss'): string => {
+  return formatInTimeZone(date, BRASILIA_TIMEZONE, format);
 };
