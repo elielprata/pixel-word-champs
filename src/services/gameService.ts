@@ -16,7 +16,7 @@ class GameService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      const board = this.generateSimpleBoard(config.boardSize || 10);
+      const board = this.generateBoard(config.boardSize || 10);
 
       const { data, error } = await supabase
         .from('game_sessions')
@@ -188,7 +188,7 @@ class GameService {
     return true;
   }
 
-  private generateSimpleBoard(size: number): string[][] {
+  private generateBoard(size: number): string[][] {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const board: string[][] = [];
     

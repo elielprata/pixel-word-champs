@@ -12,27 +12,24 @@ interface PixExportModalProps {
 }
 
 export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModalProps) => {
-  const pixExportData = usePixExportModal();
-
-  // Convert Winner[] to PaymentRecord[] format for the modal
-  const paymentRecords = pixExportData.displayWinners.map(winner => ({
-    id: winner.id,
-    user_id: winner.user_id,
-    username: winner.username,
-    position: winner.position,
-    score: winner.score,
-    prize_amount: winner.prize_amount,
-    pix_key: winner.pix_key,
-    pix_holder_name: winner.pix_holder_name,
-    payment_status: winner.payment_status as 'pending' | 'paid' | 'cancelled',
-    created_at: new Date().toISOString(), // Add missing property
-    ranking_type: 'weekly' as const // Add missing property
-  }));
+  const {
+    startDate,
+    endDate,
+    isFiltered,
+    isLoading,
+    displayWinners,
+    setStartDate,
+    setEndDate,
+    handleFilter,
+    handleMarkAsPaid,
+    handleMarkAllAsPaid,
+    handleClearFilter
+  } = usePixExportModal(open, prizeLevel);
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
       if (!newOpen) {
-        pixExportData.handleClearFilter();
+        handleClearFilter();
       }
       onOpenChange(newOpen);
     }}>
@@ -45,18 +42,18 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
         </DialogHeader>
 
         <PixModalContent
-          startDate={pixExportData.startDate}
-          endDate={pixExportData.endDate}
-          isFiltered={pixExportData.isFiltered}
-          displayWinners={paymentRecords}
-          isLoading={pixExportData.isLoading}
+          startDate={startDate}
+          endDate={endDate}
+          isFiltered={isFiltered}
+          displayWinners={displayWinners}
+          isLoading={isLoading}
           prizeLevel={prizeLevel}
-          onStartDateChange={pixExportData.setStartDate}
-          onEndDateChange={pixExportData.setEndDate}
-          onFilter={pixExportData.handleFilter}
-          onClear={pixExportData.handleClearFilter}
-          onMarkAsPaid={pixExportData.handleMarkAsPaid}
-          onMarkAllAsPaid={pixExportData.handleMarkAllAsPaid}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          onFilter={handleFilter}
+          onClear={handleClearFilter}
+          onMarkAsPaid={handleMarkAsPaid}
+          onMarkAllAsPaid={handleMarkAllAsPaid}
         />
       </DialogContent>
     </Dialog>

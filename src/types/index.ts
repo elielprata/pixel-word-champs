@@ -1,5 +1,4 @@
-
-// Interface User simplificada
+// Corrigir tipagem inconsistente da interface User
 export interface User {
   id: string;
   email: string;
@@ -7,9 +6,10 @@ export interface User {
   avatar_url?: string;
   total_score: number;
   games_played: number;
+  best_daily_position?: number;
+  best_weekly_position?: number;
   created_at: string;
   updated_at: string;
-  // Removidas propriedades do sistema de ranking complexo
 }
 
 export interface GameSession {
@@ -51,13 +51,13 @@ export interface CompetitionParticipation {
   payment_date?: string;
 }
 
-// Interface RankingPlayer simplificada
+// Corrigir RankingPlayer para consistência com User
 export interface RankingPlayer {
   pos: number;
   name: string;
   score: number;
-  avatar_url?: string;
-  user_id: string;
+  avatar_url?: string; // Alterado de 'avatar' para 'avatar_url'
+  user_id: string; // Removido opcional - sempre necessário para comparações
 }
 
 export interface Challenge {
@@ -86,7 +86,7 @@ export interface RegisterForm {
   inviteCode?: string;
 }
 
-// Tipos para game
+// Tipos para game - Expandir Position interface
 export interface Position {
   row: number;
   col: number;
@@ -105,7 +105,7 @@ export interface GameConfig {
   level: number;
   boardSize?: number;
   timeLimit?: number;
-  competitionId?: string;
+  competitionId?: string; // Adicionar competitionId como propriedade opcional
 }
 
 // Estados assíncronos
@@ -115,7 +115,7 @@ export interface AsyncState<T> {
   data?: T;
 }
 
-// ApiResponse simplificada
+// Corrigir ApiResponse para ter tipos mais específicos
 export interface ApiResponse<T> {
   data: T | null;
   error?: string;

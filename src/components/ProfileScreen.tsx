@@ -1,212 +1,282 @@
-
-import React from 'react';
-import { ArrowLeft, Trophy, Target, Calendar, Award, Flame, Star } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import PlayerAvatar from '@/components/ui/PlayerAvatar';
-import ScoreDisplay from '@/components/ui/ScoreDisplay';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { User, Trophy, Calendar, Settings, HelpCircle, LogOut, Award, ChevronRight, Star, Zap, Target, Crown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserStats } from '@/hooks/useUserStats';
-import { useAppNavigation } from '@/hooks/useAppNavigation';
+import { useNavigate } from 'react-router-dom';
+import AvatarUpload from '@/components/ui/AvatarUpload';
 
-const ProfileScreen = () => {
-  const { user } = useAuth();
-  const { stats, isLoading } = useUserStats();
-  const { navigateToScreen } = useAppNavigation();
+interface ProfileScreenProps {
+  onNavigateToSettings?: () => void;
+  onNavigateToHelp?: () => void;
+  onNavigateToAchievements?: () => void;
+}
 
-  const goHome = () => {
-    navigateToScreen('home');
+const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAchievements }: ProfileScreenProps) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url);
+
+  const getPlayerLevel = () => {
+    const score = user?.total_score || 0;
+    if (score >= 10000) return { level: 10, title: "Lenda", icon: Crown, color: "from-yellow-400 to-orange-500" };
+    if (score >= 5000) return { level: 9, title: "Mestre", icon: Trophy, color: "from-purple-500 to-pink-500" };
+    if (score >= 2500) return { level: 8, title: "Expert", icon: Star, color: "from-blue-500 to-cyan-500" };
+    if (score >= 1000) return { level: 7, title: "Avançado", icon: Target, color: "from-green-500 to-emerald-500" };
+    if (score >= 500) return { level: 6, title: "Experiente", icon: Zap, color: "from-indigo-500 to-purple-500" };
+    if (score >= 250) return { level: 5, title: "Veterano", icon: Award, color: "from-orange-500 to-red-500" };
+    if (score >= 100) return { level: 4, title: "Competente", icon: Trophy, color: "from-teal-500 to-blue-500" };
+    if (score >= 50) return { level: 3, title: "Intermediário", icon: Star, color: "from-purple-400 to-pink-400" };
+    if (score >= 25) return { level: 2, title: "Iniciante", icon: Target, color: "from-green-400 to-blue-400" };
+    return { level: 1, title: "Novato", icon: User, color: "from-gray-400 to-gray-500" };
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-gray-600">Usuário não encontrado</p>
-          <Button onClick={goHome} className="mt-4">
-            Voltar ao Início
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const getNextLevelProgress = () => {
+    const score = user?.total_score || 0;
+    const thresholds = [0, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+    const currentLevel = getPlayerLevel().level;
+    
+    if (currentLevel >= 10) return { current: score, next: score, progress: 100 };
+    
+    const currentThreshold = thresholds[currentLevel - 1];
+    const nextThreshold = thresholds[currentLevel];
+    const progress = ((score - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
+    
+    return { 
+      current: score - currentThreshold, 
+      next: nextThreshold - currentThreshold, 
+      progress: Math.min(progress, 100) 
+    };
+  };
 
-  const achievements = [
-    {
-      id: 1,
-      title: "Primeiro Jogo",
-      description: "Complete seu primeiro jogo",
-      icon: Target,
-      completed: stats.gamesPlayed > 0,
-      progress: stats.gamesPlayed > 0 ? 100 : 0
-    },
-    {
-      id: 2,
-      title: "Pontuador",
-      description: "Alcance 1000 pontos",
-      icon: Star,
-      completed: stats.totalScore >= 1000,
-      progress: Math.min((stats.totalScore / 1000) * 100, 100)
-    },
-    {
-      id: 3,
-      title: "Veterano",
-      description: "Jogue 10 partidas",
+  const playerLevel = getPlayerLevel();
+  const nextLevel = getNextLevelProgress();
+  const LevelIcon = playerLevel.icon;
+
+  const stats = [
+    { 
+      label: 'Jogos', 
+      value: user?.games_played?.toString() || '0', 
       icon: Calendar,
-      completed: stats.gamesPlayed >= 10,
-      progress: Math.min((stats.gamesPlayed / 10) * 100, 100)
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50'
     },
-    {
-      id: 4,
-      title: "Sequência",
-      description: "Mantenha uma sequência de 3 dias",
-      icon: Flame,
-      completed: stats.winStreak >= 3,
-      progress: Math.min((stats.winStreak / 3) * 100, 100)
-    }
+    { 
+      label: 'Melhor Posição', 
+      value: user?.best_daily_position ? `#${user.best_daily_position}` : '-', 
+      icon: Trophy,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50'
+    },
+    { 
+      label: 'Pontos', 
+      value: user?.total_score?.toLocaleString() || '0', 
+      icon: Star,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50'
+    },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
+  const handleSettings = () => {
+    if (onNavigateToSettings) {
+      onNavigateToSettings();
+    } else {
+      console.log('Navegando para configurações...');
+    }
+  };
+
+  const handleHelp = () => {
+    if (onNavigateToHelp) {
+      onNavigateToHelp();
+    } else {
+      console.log('Navegando para ajuda...');
+    }
+  };
+
+  const handleAchievements = () => {
+    // Função desabilitada - não faz nada
+    return;
+  };
+
+  const handleLogout = async () => {
+    try {
+      console.log('🚪 Iniciando logout...');
+      await logout();
+      console.log('✅ Logout realizado com sucesso, redirecionando para auth');
+      navigate('/auth');
+    } catch (error) {
+      console.error('❌ Erro ao fazer logout:', error);
+    }
+  };
+
+  const menuItems = [
+    { 
+      label: 'Conquistas (em breve)', 
+      icon: Award, 
+      action: handleAchievements,
+      description: 'Veja seus troféus',
+      color: 'text-gray-400',
+      disabled: true
+    },
+    { 
+      label: 'Configurações', 
+      icon: Settings, 
+      action: handleSettings,
+      description: 'Personalize sua conta',
+      color: 'text-gray-600'
+    },
+    { 
+      label: 'Ajuda', 
+      icon: HelpCircle, 
+      action: handleHelp,
+      description: 'Suporte e dúvidas',
+      color: 'text-blue-600'
+    },
+    { 
+      label: 'Sair', 
+      icon: LogOut, 
+      action: handleLogout, 
+      danger: true,
+      description: 'Encerrar sessão',
+      color: 'text-red-600'
+    },
+  ];
+
+  const getAvatarFallback = () => {
+    if (user?.username && user.username.length > 0) {
+      return user.username.charAt(0).toUpperCase();
+    }
+    if (user?.email && user.email.length > 0) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    setCurrentAvatar(newAvatarUrl);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
+    <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
       {/* Header */}
-      <div className="relative bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative px-4 py-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={goHome}
-              className="text-white hover:bg-white/20"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
-            <h1 className="text-2xl font-bold">Meu Perfil</h1>
-          </div>
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-1">Seu Perfil</h1>
+        <p className="text-sm text-gray-600">Estatísticas e progressão</p>
+      </div>
 
+      {/* Card principal do jogador */}
+      <Card className={`mb-4 bg-gradient-to-r ${playerLevel.color} text-white border-0 shadow-lg`}>
+        <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <PlayerAvatar 
-              src={user.avatar_url} 
-              alt={user.username}
-              fallback={user.username.substring(0, 2).toUpperCase()}
-              size="lg"
-            />
+            <div className="relative">
+              <AvatarUpload
+                currentAvatar={currentAvatar || undefined}
+                fallback={getAvatarFallback()}
+                onAvatarUpdate={handleAvatarUpdate}
+                size="lg"
+              />
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
+                <LevelIcon className="w-4 h-4 text-gray-700" />
+              </div>
+            </div>
+            
             <div className="flex-1">
-              <h2 className="text-xl font-bold">{user.username}</h2>
-              <p className="text-purple-100">{user.email}</p>
-              {stats.position && (
-                <Badge variant="secondary" className="mt-2 bg-white/20 text-white border-white/30">
-                  #{stats.position} no Ranking
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-lg font-bold">{user?.username || 'Jogador'}</h2>
+                <Badge className="bg-white/20 text-white text-xs">
+                  Nível {playerLevel.level}
                 </Badge>
+              </div>
+              <p className="text-sm opacity-90 mb-2">{playerLevel.title}</p>
+              
+              {/* Barra de progresso para próximo nível */}
+              {playerLevel.level < 10 && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs opacity-90">
+                    <span>{nextLevel.current} / {nextLevel.next} XP</span>
+                    <span>Nível {playerLevel.level + 1}</span>
+                  </div>
+                  <div className="bg-white/20 rounded-full h-2">
+                    <div 
+                      className="bg-white rounded-full h-2 transition-all duration-500"
+                      style={{ width: `${nextLevel.progress}%` }}
+                    />
+                  </div>
+                </div>
               )}
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="px-4 py-6 space-y-6">
-        {/* Estatísticas Principais */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="bg-white/80 backdrop-blur border-0 shadow-sm">
-            <CardContent className="p-4 text-center">
-              <ScoreDisplay score={stats.totalScore} size="lg" />
-              <p className="text-sm text-gray-600 mt-1">Pontuação Total</p>
+      {/* Estatísticas compactas */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {stats.map((stat, index) => (
+          <Card key={index} className="border-0 shadow-sm">
+            <CardContent className="p-3 text-center">
+              <div className={`w-10 h-10 ${stat.bgColor} rounded-full flex items-center justify-center mx-auto mb-2`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
+              <p className="text-lg font-bold text-gray-900">{stat.value}</p>
+              <p className="text-xs text-gray-600">{stat.label}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-white/80 backdrop-blur border-0 shadow-sm">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.gamesPlayed}</div>
-              <p className="text-sm text-gray-600">Jogos Completos</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Estatísticas Detalhadas */}
-        <Card className="bg-white/80 backdrop-blur border-0 shadow-sm">
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-600" />
-              Estatísticas Detalhadas
-            </h3>
-            
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Posição Atual</span>
-                <span className="font-medium">
-                  {stats.position ? `#${stats.position}` : 'Não classificado'}
-                </span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Melhor Posição</span>
-                <span className="font-medium">
-                  {stats.bestWeeklyPosition ? `#${stats.bestWeeklyPosition}` : 'Nenhuma'}
-                </span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Sequência Atual</span>
-                <span className="font-medium flex items-center gap-1">
-                  <Flame className="h-4 w-4 text-orange-500" />
-                  {stats.winStreak} dias
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Conquistas */}
-        <Card className="bg-white/80 backdrop-blur border-0 shadow-sm">
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Award className="h-5 w-5 text-purple-600" />
-              Conquistas
-            </h3>
-            
-            <div className="space-y-3">
-              {achievements.map((achievement) => {
-                const Icon = achievement.icon;
-                return (
-                  <div key={achievement.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                    <div className={`p-2 rounded-full ${
-                      achievement.completed 
-                        ? 'bg-green-100 text-green-600' 
-                        : 'bg-gray-100 text-gray-400'
-                    }`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-sm">{achievement.title}</h4>
-                      <p className="text-xs text-gray-600">{achievement.description}</p>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                        <div 
-                          className="bg-purple-600 h-1.5 rounded-full transition-all"
-                          style={{ width: `${achievement.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    {achievement.completed && (
-                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                        Completo
-                      </Badge>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        ))}
       </div>
+
+      {/* Menu de ações */}
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          {menuItems.map((item, index) => (
+            <button
+              key={index}
+              onClick={item.disabled ? undefined : item.action}
+              disabled={item.disabled}
+              className={`w-full flex items-center gap-3 p-4 text-left transition-colors border-b last:border-b-0 ${
+                item.disabled 
+                  ? 'cursor-not-allowed bg-gray-50' 
+                  : item.danger 
+                    ? 'hover:bg-red-50' 
+                    : 'hover:bg-gray-50'
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                item.disabled 
+                  ? 'bg-gray-100' 
+                  : item.danger 
+                    ? 'bg-red-50' 
+                    : 'bg-gray-50'
+              }`}>
+                <item.icon className={`w-5 h-5 ${
+                  item.disabled 
+                    ? 'text-gray-400' 
+                    : item.danger 
+                      ? 'text-red-600' 
+                      : item.color
+                }`} />
+              </div>
+              <div className="flex-1">
+                <p className={`font-medium ${
+                  item.disabled 
+                    ? 'text-gray-400' 
+                    : item.danger 
+                      ? 'text-red-600' 
+                      : 'text-gray-900'
+                }`}>
+                  {item.label}
+                </p>
+                <p className={`text-xs ${item.disabled ? 'text-gray-300' : 'text-gray-500'}`}>
+                  {item.description}
+                </p>
+              </div>
+              {!item.disabled && (
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              )}
+            </button>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 };

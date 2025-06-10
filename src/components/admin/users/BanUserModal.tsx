@@ -43,7 +43,8 @@ export const BanUserModal = ({ isOpen, onClose, user }: BanUserModalProps) => {
       
       banUser({
         userId: user.id,
-        reason: banReason.trim()
+        reason: banReason.trim(),
+        adminPassword
       });
       onClose();
     }

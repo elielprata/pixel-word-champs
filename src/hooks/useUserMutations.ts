@@ -1,290 +1,253 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from './use-toast';
 
 export const useUserMutations = () => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const updateProfile = useMutation({
-    mutationFn: async ({ userId, username, email }: { userId: string; username: string; email: string }) => {
-      console.log('🔄 Atualizando perfil do usuário:', { userId, username, email });
+  const validateAdminPassword = async (password: string) => {
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser.user) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    console.log('🔐 Validando senha do admin:', currentUser.user.email);
+
+    // Validar senha usando signInWithPassword
+    const { error } = await supabase.auth.signInWithPassword({
+      email: currentUser.user.email!,
+      password: password
+    });
+
+    if (error) {
+      console.error('❌ Erro na validação da senha:', error);
+      throw new Error('Senha de administrador incorreta');
+    }
+
+    console.log('✅ Senha validada com sucesso');
+    return true;
+  };
+
+  const banUserMutation = useMutation({
+    mutationFn: async ({ userId, reason, adminPassword }: { userId: string; reason: string; adminPassword: string }) => {
+      console.log('🔐 Iniciando banimento do usuário:', userId);
       
-      // Atualizar perfil na tabela profiles
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ username })
-        .eq('id', userId);
+      // Validar senha real do admin
+      await validateAdminPassword(adminPassword);
 
-      if (profileError) {
-        console.error('❌ Erro ao atualizar perfil:', profileError);
-        throw profileError;
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error('Usuário não autenticado');
       }
 
-      console.log('✅ Perfil atualizado com sucesso');
-      return { success: true };
+      console.log('✅ Senha validada, banindo usuário...');
+
+      // Banir usuário específico
+      const { error: banError } = await supabase
+        .from('profiles')
+        .update({
+          is_banned: true,
+          banned_at: new Date().toISOString(),
+          banned_by: currentUser.user.id,
+          ban_reason: reason
+        })
+        .eq('id', userId);
+
+      if (banError) {
+        console.error('❌ Erro ao banir usuário:', banError);
+        throw banError;
+      }
+
+      console.log('✅ Usuário banido com sucesso');
+
+      // Registrar ação administrativa
+      const { error: logError } = await supabase
+        .from('admin_actions')
+        .insert({
+          admin_id: currentUser.user.id,
+          target_user_id: userId,
+          action_type: 'ban_user',
+          details: { reason }
+        });
+
+      if (logError) {
+        console.warn('⚠️ Erro ao registrar log:', logError);
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['userData'] });
+      console.log('🎉 Banimento concluído com sucesso');
       toast({
-        title: "Sucesso",
-        description: "Perfil atualizado com sucesso!",
+        title: "Usuário banido",
+        description: "O usuário foi banido com sucesso.",
       });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
-    onError: (error) => {
-      console.error('❌ Erro na mutação de atualização:', error);
+    onError: (error: any) => {
+      console.error('❌ Erro no banimento:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao atualizar perfil do usuário",
+        title: "Erro ao banir usuário",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const updateUserRole = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: 'admin' | 'user' }) => {
-      console.log('🔄 Atualizando role do usuário:', { userId, role });
+  const deleteUserMutation = useMutation({
+    mutationFn: async ({ userId, adminPassword }: { userId: string; adminPassword: string }) => {
+      console.log('🔐 Iniciando exclusão do usuário:', userId);
       
-      // Remover roles existentes
+      // Validar senha real do admin primeiro
+      await validateAdminPassword(adminPassword);
+
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log('✅ Senha validada, excluindo usuário...');
+
+      // Verificar se não é o próprio admin tentando se deletar
+      if (currentUser.user.id === userId) {
+        throw new Error('Você não pode excluir sua própria conta');
+      }
+
+      // Registrar ação antes de deletar
+      try {
+        const { error: logError } = await supabase
+          .from('admin_actions')
+          .insert({
+            admin_id: currentUser.user.id,
+            target_user_id: userId,
+            action_type: 'delete_user',
+            details: { timestamp: new Date().toISOString() }
+          });
+
+        if (logError) {
+          console.warn('⚠️ Erro ao registrar log:', logError);
+        }
+      } catch (logError) {
+        console.warn('⚠️ Erro ao registrar ação:', logError);
+      }
+
+      // Deletar dados relacionados primeiro (se necessário)
+      try {
+        // Deletar sessões de jogo
+        await supabase
+          .from('game_sessions')
+          .delete()
+          .eq('user_id', userId);
+
+        // Deletar rankings semanais
+        await supabase
+          .from('weekly_rankings')
+          .delete()
+          .eq('user_id', userId);
+
+        // Deletar roles
+        await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', userId);
+
+        console.log('✅ Dados relacionados removidos');
+      } catch (cleanupError) {
+        console.warn('⚠️ Erro na limpeza de dados relacionados:', cleanupError);
+      }
+
+      // Deletar perfil do usuário (isso também vai deletar o usuário do auth via trigger/cascade)
       const { error: deleteError } = await supabase
-        .from('user_roles')
+        .from('profiles')
         .delete()
-        .eq('user_id', userId);
+        .eq('id', userId);
 
       if (deleteError) {
-        console.error('❌ Erro ao remover roles existentes:', deleteError);
-        throw deleteError;
+        console.error('❌ Erro ao excluir usuário:', deleteError);
+        throw new Error(`Erro ao excluir usuário: ${deleteError.message}`);
       }
 
-      // Adicionar nova role
-      const { error: insertError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: userId, role });
-
-      if (insertError) {
-        console.error('❌ Erro ao inserir nova role:', insertError);
-        throw insertError;
-      }
-
-      console.log('✅ Role atualizada com sucesso');
-      return { success: true };
+      console.log('✅ Usuário excluído com sucesso');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['userData'] });
+      console.log('🎉 Exclusão concluída com sucesso');
       toast({
-        title: "Sucesso",
-        description: "Permissões atualizadas com sucesso!",
+        title: "Usuário excluído",
+        description: "O usuário foi excluído permanentemente do sistema.",
       });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
-    onError: (error) => {
-      console.error('❌ Erro na mutação de role:', error);
+    onError: (error: any) => {
+      console.error('❌ Erro na exclusão:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao atualizar permissões do usuário",
+        title: "Erro ao excluir usuário",
+        description: error.message || 'Erro desconhecido',
         variant: "destructive",
       });
     },
   });
 
-  const updatePassword = useMutation({
-    mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
-      console.log('🔄 Atualizando senha do usuário:', userId);
-      
-      const response = await fetch('/api/admin/update-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar senha');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Sucesso",
-        description: "Senha atualizada com sucesso!",
-      });
-    },
-    onError: (error) => {
-      console.error('❌ Erro na mutação de senha:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar senha do usuário",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const banUser = useMutation({
-    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
-      console.log('🔄 Banindo usuário:', { userId, reason });
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          banned_at: new Date().toISOString(),
-          ban_reason: reason 
-        })
-        .eq('id', userId);
-
-      if (error) throw error;
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast({
-        title: "Sucesso",
-        description: "Usuário banido com sucesso!",
-      });
-    },
-    onError: (error) => {
-      console.error('❌ Erro ao banir usuário:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao banir usuário",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const unbanUser = useMutation({
+  const unbanUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      console.log('🔄 Removendo ban do usuário:', userId);
+      console.log('🔓 Iniciando desbanimento do usuário:', userId);
       
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Desbanir usuário específico
       const { error } = await supabase
         .from('profiles')
-        .update({ 
+        .update({
+          is_banned: false,
           banned_at: null,
-          ban_reason: null 
+          banned_by: null,
+          ban_reason: null
         })
         .eq('id', userId);
 
-      if (error) throw error;
-      return { success: true };
+      if (error) {
+        console.error('❌ Erro ao desbanir usuário:', error);
+        throw error;
+      }
+
+      console.log('✅ Usuário desbanido com sucesso');
+
+      // Registrar ação
+      await supabase
+        .from('admin_actions')
+        .insert({
+          admin_id: currentUser.user.id,
+          target_user_id: userId,
+          action_type: 'unban_user',
+          details: {}
+        });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      console.log('🎉 Desbanimento concluído com sucesso');
       toast({
-        title: "Sucesso",
-        description: "Ban removido com sucesso!",
+        title: "Usuário desbanido",
+        description: "O usuário foi desbanido com sucesso.",
       });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
-    onError: (error) => {
-      console.error('❌ Erro ao remover ban:', error);
+    onError: (error: any) => {
+      console.error('❌ Erro no desbanimento:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao remover ban do usuário",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteUser = useMutation({
-    mutationFn: async (userId: string) => {
-      console.log('🔄 Deletando usuário:', userId);
-      
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (error) throw error;
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast({
-        title: "Sucesso",
-        description: "Usuário deletado com sucesso!",
-      });
-    },
-    onError: (error) => {
-      console.error('❌ Erro ao deletar usuário:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao deletar usuário",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const resetUserScores = useMutation({
-    mutationFn: async (password: string) => {
-      console.log('🔄 Resetando pontuações de todos os usuários...');
-      
-      // Verificar senha do admin
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
-
-      // Verificar se é admin
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (!roles) throw new Error('Usuário não é administrador');
-
-      // Tentar fazer login com a senha fornecida para validar
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: user.email!,
-        password: password
-      });
-
-      if (authError) throw new Error('Senha incorreta');
-
-      // Resetar pontuações
-      const { error: resetError } = await supabase
-        .from('profiles')
-        .update({ 
-          total_score: 0,
-          games_played: 0,
-          best_weekly_position: null
-        })
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Atualizar todos os perfis
-
-      if (resetError) throw resetError;
-
-      console.log('✅ Pontuações resetadas com sucesso');
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast({
-        title: "Sucesso",
-        description: "Pontuações resetadas com sucesso!",
-      });
-    },
-    onError: (error) => {
-      console.error('❌ Erro ao resetar pontuações:', error);
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao resetar pontuações",
+        title: "Erro ao desbanir usuário",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
   return {
-    updateProfile,
-    updateUserRole,
-    updatePassword,
-    banUser: banUser.mutate,
-    unbanUser: unbanUser.mutate,
-    deleteUser: deleteUser.mutate,
-    resetUserScores,
-    // Loading states
-    isBanningUser: banUser.isPending,
-    isUnbanningUser: unbanUser.isPending,
-    isDeletingUser: deleteUser.isPending
+    banUser: banUserMutation.mutate,
+    deleteUser: deleteUserMutation.mutate,
+    unbanUser: unbanUserMutation.mutate,
+    isBanningUser: banUserMutation.isPending,
+    isDeletingUser: deleteUserMutation.isPending,
+    isUnbanningUser: unbanUserMutation.isPending,
   };
 };

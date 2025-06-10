@@ -1,215 +1,165 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Position, WordFound, GameConfig } from '@/types';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
+import { type Position } from '@/utils/boardUtils';
+import { useGamePointsConfig } from './useGamePointsConfig';
 import { supabase } from '@/integrations/supabase/client';
 
-interface UseGameLogicProps {
-  config: GameConfig;
-  onLevelComplete?: (score: number, timeElapsed: number) => void;
-  onGameComplete?: (totalScore: number) => void;
+interface FoundWord {
+  word: string;
+  positions: Position[];
+  points: number;
 }
 
-export const useGameLogic = ({ config, onLevelComplete, onGameComplete }: UseGameLogicProps) => {
-  const { toast } = useToast();
-  const [board, setBoard] = useState<string[][]>([]);
-  const [wordsToFind, setWordsToFind] = useState<string[]>([]);
-  const [wordsFound, setWordsFound] = useState<WordFound[]>([]);
-  const [currentScore, setCurrentScore] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [gameSessionId, setGameSessionId] = useState<string | null>(null);
-  const sessionRef = useRef<string | null>(null);
+export const useGameLogic = (
+  level: number,
+  timeLeft: number,
+  levelWords: string[],
+  onWordFound: (word: string, points: number) => void,
+  onLevelComplete: (levelScore: number) => void
+) => {
+  const [foundWords, setFoundWords] = useState<FoundWord[]>([]);
+  const [permanentlyMarkedCells, setPermanentlyMarkedCells] = useState<Position[]>([]);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [showGameOver, setShowGameOver] = useState(false);
+  const [showLevelComplete, setShowLevelComplete] = useState(false);
+  const [hintHighlightedCells, setHintHighlightedCells] = useState<Position[]>([]);
+  const [isLevelCompleted, setIsLevelCompleted] = useState(false);
+  
+  const { getPointsForWord } = useGamePointsConfig();
 
-  // Função simples para gerar tabuleiro
-  const generateSimpleBoard = (size = 10): string[][] => {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const board: string[][] = [];
-    
-    for (let i = 0; i < size; i++) {
-      board[i] = [];
-      for (let j = 0; j < size; j++) {
-        board[i][j] = letters[Math.floor(Math.random() * letters.length)];
-      }
+  // Reset state when level changes
+  useEffect(() => {
+    console.log(`Resetting game state for level ${level}`);
+    setFoundWords([]);
+    setPermanentlyMarkedCells([]);
+    setHintsUsed(0);
+    setShowLevelComplete(false);
+    setShowGameOver(false);
+    setHintHighlightedCells([]);
+    setIsLevelCompleted(false);
+  }, [level]);
+
+  // Detecta quando o tempo acaba
+  useEffect(() => {
+    if (timeLeft === 0 && !showGameOver) {
+      setShowGameOver(true);
     }
-    
-    return board;
+  }, [timeLeft, showGameOver]);
+
+  // Verifica se completou o nível e AGORA registra os pontos
+  useEffect(() => {
+    if (foundWords.length === 5 && !showLevelComplete && !isLevelCompleted) {
+      const levelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
+      console.log(`Level ${level} completed with score ${levelScore} - NOW registering points in database`);
+      
+      setShowLevelComplete(true);
+      setIsLevelCompleted(true);
+      
+      // Só agora registra os pontos no banco de dados
+      updateUserScore(levelScore);
+      onLevelComplete(levelScore);
+    }
+  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete, level, isLevelCompleted]);
+
+  const updateUserScore = async (points: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.warn('⚠️ Usuário não autenticado, não é possível atualizar pontuação');
+        return;
+      }
+
+      console.log(`🔄 Registrando pontuação do nível completado para usuário ${user.id}: +${points} pontos`);
+
+      // Buscar pontuação atual do usuário
+      const { data: profile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('total_score, games_played')
+        .eq('id', user.id)
+        .single();
+
+      if (fetchError) {
+        console.error('❌ Erro ao buscar perfil:', fetchError);
+        return;
+      }
+
+      const currentScore = profile?.total_score || 0;
+      const newScore = currentScore + points;
+
+      // Atualizar pontuação no perfil
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          total_score: newScore,
+          games_played: (profile?.games_played || 0) + 1 // Incrementa games_played quando completa nível
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar pontuação:', updateError);
+        throw updateError;
+      }
+
+      console.log(`✅ Pontuação do nível completado registrada: ${currentScore} → ${newScore} (+${points})`);
+
+      // Forçar atualização do ranking semanal
+      try {
+        const { error: rankingError } = await supabase.rpc('update_weekly_ranking');
+        if (rankingError) {
+          console.warn('⚠️ Erro ao atualizar ranking semanal:', rankingError);
+        } else {
+          console.log('✅ Ranking semanal atualizado após completar nível');
+        }
+      } catch (rankingUpdateError) {
+        console.warn('⚠️ Erro ao forçar atualização do ranking:', rankingUpdateError);
+      }
+
+    } catch (error) {
+      console.error('❌ Erro ao atualizar pontuação do usuário:', error);
+    }
   };
 
-  const initializeGame = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      console.log('🎮 Inicializando jogo para nível:', config.level);
+  const addFoundWord = async (word: string, positions: Position[]) => {
+    const points = getPointsForWord(word);
+    const newFoundWord = { word, positions: [...positions], points };
+    
+    console.log(`📝 Palavra encontrada: "${word}" = ${points} pontos (acumulando para registrar quando nível completar)`);
+    
+    setFoundWords(prev => [...prev, newFoundWord]);
+    setPermanentlyMarkedCells(prev => [...prev, ...positions]);
+    
+    // NÃO registra pontos aqui - apenas chama callback para UI
+    onWordFound(word, points);
+  };
 
-      // Gerar tabuleiro simples
-      const newBoard = generateSimpleBoard(10);
-      
-      // Buscar palavras do nível
-      const { data: levelWordsData, error: wordsError } = await supabase
-        .from('level_words')
-        .select('word')
-        .eq('level', config.level)
-        .eq('is_active', true)
-        .limit(5);
+  const isCellPermanentlyMarked = (row: number, col: number) => {
+    return permanentlyMarkedCells.some(pos => pos.row === row && pos.col === col);
+  };
 
-      if (wordsError) throw wordsError;
+  const isCellHintHighlighted = (row: number, col: number) => {
+    return hintHighlightedCells.some(pos => pos.row === row && pos.col === col);
+  };
 
-      const words = levelWordsData?.map(w => w.word.toUpperCase()) || [];
-      
-      // Criar sessão de jogo
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: sessionData, error: sessionError } = await supabase
-          .from('game_sessions')
-          .insert({
-            user_id: user.id,
-            level: config.level,
-            board: newBoard,
-            words_found: [],
-            total_score: 0,
-            time_elapsed: 0,
-            is_completed: false
-          })
-          .select()
-          .single();
-
-        if (sessionError) throw sessionError;
-        
-        setGameSessionId(sessionData.id);
-        sessionRef.current = sessionData.id;
-      }
-      
-      setBoard(newBoard);
-      setWordsToFind(words);
-      setWordsFound([]);
-      setCurrentScore(0);
-
-      console.log('✅ Jogo inicializado com sucesso');
-      console.log('📋 Palavras para encontrar:', words.length);
-      
-    } catch (error) {
-      console.error('❌ Erro ao inicializar jogo:', error);
-      setError(error instanceof Error ? error.message : 'Erro desconhecido');
-      toast({
-        title: "Erro",
-        description: "Não foi possível inicializar o jogo. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [config.level, config.competitionId, toast]);
-
-  const findWord = useCallback(async (positions: Position[]): Promise<boolean> => {
-    if (!sessionRef.current) {
-      console.error('❌ Session ID não encontrado');
-      return false;
-    }
-
-    try {
-      console.log('🔍 Tentando encontrar palavra nas posições:', positions);
-      
-      // Validação simples da palavra
-      const word = positions.map(pos => board[pos.row][pos.col]).join('');
-      
-      if (wordsToFind.includes(word) && !wordsFound.some(fw => fw.word === word)) {
-        const points = word.length * 10;
-        
-        const newWordFound: WordFound = {
-          word,
-          points,
-          positions,
-          foundAt: new Date().toISOString()
-        };
-
-        setWordsFound(prev => [...prev, newWordFound]);
-        setCurrentScore(prev => prev + points);
-
-        console.log('✅ Palavra encontrada:', word, 'Pontos:', points);
-        
-        toast({
-          title: "Palavra encontrada!",
-          description: `${word} (+${points} pontos)`,
-        });
-
-        return true;
-      } else {
-        console.log('❌ Palavra não encontrada ou inválida');
-        return false;
-      }
-    } catch (error) {
-      console.error('❌ Erro ao validar palavra:', error);
-      return false;
-    }
-  }, [board, wordsToFind, wordsFound, toast]);
-
-  const completeLevel = useCallback(async (timeElapsed: number) => {
-    if (!sessionRef.current) {
-      console.error('❌ Session ID não encontrado para completar nível');
-      return;
-    }
-
-    try {
-      console.log('🏁 Completando nível com sessão:', sessionRef.current);
-      
-      // Atualizar sessão como completada
-      const { error } = await supabase
-        .from('game_sessions')
-        .update({
-          is_completed: true,
-          completed_at: new Date().toISOString(),
-          total_score: currentScore,
-          time_elapsed: timeElapsed
-        })
-        .eq('id', sessionRef.current);
-
-      if (error) throw error;
-
-      console.log('✅ Sessão completada com sucesso');
-      console.log('📊 Pontuação final:', currentScore);
-      
-      onLevelComplete?.(currentScore, timeElapsed);
-    } catch (error) {
-      console.error('❌ Erro ao completar nível:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar progresso do jogo.",
-        variant: "destructive",
-      });
-    }
-  }, [currentScore, wordsFound, onLevelComplete, toast]);
-
-  const resetGame = useCallback(() => {
-    setBoard([]);
-    setWordsToFind([]);
-    setWordsFound([]);
-    setCurrentScore(0);
-    setError(null);
-    setGameSessionId(null);
-    sessionRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    initializeGame();
-  }, [initializeGame]);
-
-  const isGameComplete = wordsToFind.length > 0 && wordsFound.length === wordsToFind.length;
-  const progress = wordsToFind.length > 0 ? (wordsFound.length / wordsToFind.length) * 100 : 0;
+  // Função para fechar o modal do Game Over (usado no revive)
+  const closeGameOver = () => {
+    setShowGameOver(false);
+  };
 
   return {
-    board,
-    wordsToFind,
-    wordsFound,
-    currentScore,
-    isLoading,
-    error,
-    gameSessionId,
-    isGameComplete,
-    progress,
-    findWord,
-    completeLevel,
-    resetGame,
-    initializeGame
+    foundWords,
+    permanentlyMarkedCells,
+    hintsUsed,
+    showGameOver,
+    showLevelComplete,
+    hintHighlightedCells,
+    isLevelCompleted,
+    setHintsUsed,
+    setShowGameOver,
+    setShowLevelComplete,
+    setHintHighlightedCells,
+    addFoundWord,
+    isCellPermanentlyMarked,
+    isCellHintHighlighted,
+    closeGameOver
   };
 };

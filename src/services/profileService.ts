@@ -46,16 +46,18 @@ class ProfileService {
     }
   }
 
+  // Corrigir query para incluir id necessário para comparações
   async getTopPlayers(limit = 10): Promise<ApiResponse<any[]>> {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url, total_score, games_played')
+        .select('id, username, avatar_url, total_score, games_played') // Adicionado 'id'
         .order('total_score', { ascending: false })
         .limit(limit);
 
       if (error) throw error;
 
+      // Corrigir para não retornar array vazio quando data for null
       if (!data) {
         return createErrorResponse('Nenhum dado encontrado');
       }

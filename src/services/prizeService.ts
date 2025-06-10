@@ -3,65 +3,45 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface PrizeConfiguration {
   id: string;
-  type: 'individual' | 'group';
-  prize_amount: number;
+  type: string;
   position?: number;
   position_range?: string;
+  prize_amount: number;
+  group_name?: string;
   total_winners: number;
   active: boolean;
 }
 
-export interface ServiceResult {
-  success: boolean;
-  error?: string;
-}
-
-class PrizeService {
+export const prizeService = {
   async getPrizeConfigurations(): Promise<PrizeConfiguration[]> {
     try {
-      console.log('⚠️ Sistema de prêmios simplificado - retornando configurações vazias');
-      
-      // Como o sistema de ranking complexo foi removido, 
-      // retornamos configurações padrão vazias
-      return [];
-    } catch (error) {
-      console.error('Erro ao buscar configurações de prêmio:', error);
-      throw error;
-    }
-  }
+      const { data, error } = await supabase
+        .from('prize_configurations')
+        .select('*')
+        .order('position', { ascending: true });
 
-  async updatePrizeConfiguration(id: string, updates: Partial<PrizeConfiguration>): Promise<ServiceResult> {
-    try {
-      console.log('⚠️ Sistema de prêmios simplificado');
-      // Função desabilitada no sistema simplificado
-      return { success: false, error: 'Sistema de prêmios foi simplificado' };
+      if (error) throw error;
+      return data || [];
     } catch (error) {
-      console.error('Erro ao atualizar configuração de prêmio:', error);
+      console.error('Error fetching prize configurations:', error);
+      return [];
+    }
+  },
+
+  async updatePrizeConfiguration(id: string, updates: Partial<PrizeConfiguration>) {
+    try {
+      const { data, error } = await supabase
+        .from('prize_configurations')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error updating prize configuration:', error);
       return { success: false, error: 'Erro ao atualizar configuração de prêmio' };
     }
   }
-
-  async createPrizeConfiguration(config: Omit<PrizeConfiguration, 'id'>): Promise<PrizeConfiguration> {
-    try {
-      console.log('⚠️ Sistema de prêmios simplificado');
-      // Função desabilitada no sistema simplificado
-      throw new Error('Sistema de prêmios foi simplificado');
-    } catch (error) {
-      console.error('Erro ao criar configuração de prêmio:', error);
-      throw error;
-    }
-  }
-
-  async deletePrizeConfiguration(id: string): Promise<ServiceResult> {
-    try {
-      console.log('⚠️ Sistema de prêmios simplificado');
-      // Função desabilitada no sistema simplificado
-      return { success: false, error: 'Sistema de prêmios foi simplificado' };
-    } catch (error) {
-      console.error('Erro ao deletar configuração de prêmio:', error);
-      return { success: false, error: 'Erro ao deletar configuração de prêmio' };
-    }
-  }
-}
-
-export const prizeService = new PrizeService();
+};
