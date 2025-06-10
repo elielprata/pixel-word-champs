@@ -1,4 +1,3 @@
-
 import { toZonedTime, fromZonedTime, format } from 'date-fns-tz';
 
 /**
@@ -13,8 +12,8 @@ export const getBrasiliaTime = (): Date => {
   const now = new Date();
   const brasiliaTime = toZonedTime(now, BRASILIA_TIMEZONE);
   
-  console.log('🕐 Horário UTC:', now.toISOString());
-  console.log('🇧🇷 Horário Brasília:', brasiliaTime.toISOString());
+  console.log('🕐 Horário UTC original:', now.toISOString());
+  console.log('🇧🇷 Horário Brasília convertido:', brasiliaTime.toISOString());
   
   return brasiliaTime;
 };
@@ -31,6 +30,23 @@ export const utcToBrasilia = (utcDate: Date): Date => {
  */
 export const brasiliaToUtc = (brasiliaDate: Date): Date => {
   return fromZonedTime(brasiliaDate, BRASILIA_TIMEZONE);
+};
+
+/**
+ * Obtém o horário atual em UTC baseado no horário de Brasília
+ */
+export const getCurrentUtcFromBrasilia = (): Date => {
+  const now = new Date();
+  const brasiliaTime = toZonedTime(now, BRASILIA_TIMEZONE);
+  const utcTime = fromZonedTime(brasiliaTime, BRASILIA_TIMEZONE);
+  
+  console.log('🔄 Debug conversão:', {
+    original: now.toISOString(),
+    brasilia: brasiliaTime.toISOString(),
+    backToUtc: utcTime.toISOString()
+  });
+  
+  return utcTime;
 };
 
 /**

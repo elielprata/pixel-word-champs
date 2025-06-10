@@ -8,7 +8,6 @@ import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { getBrasiliaTime, brasiliaToUtc } from '@/utils/brasiliaTime';
 
 interface Competition {
   id: string;
@@ -57,20 +56,21 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const formatTimeRemaining = (endDate: string) => {
-    // Get current time in Brasilia and convert to UTC for comparison
-    const brasiliaTime = getBrasiliaTime();
-    const brasiliaTimeInUtc = brasiliaToUtc(brasiliaTime);
+    // Obter horário atual em UTC
+    const nowUtc = new Date();
     
-    // endDate is already in UTC from database
+    // A data de fim já vem em UTC do banco
     const endUtc = new Date(endDate);
-    const diff = endUtc.getTime() - brasiliaTimeInUtc.getTime();
     
-    console.log('🕐 Comparação de tempo:', {
-      brasiliaTime: brasiliaTime.toISOString(),
-      brasiliaTimeInUtc: brasiliaTimeInUtc.toISOString(),
+    // Calcular diferença diretamente em UTC
+    const diff = endUtc.getTime() - nowUtc.getTime();
+    
+    console.log('🕐 Comparação de tempo (UTC):', {
+      nowUtc: nowUtc.toISOString(),
       endUtc: endUtc.toISOString(),
       diff: diff,
-      diffInHours: diff / (1000 * 60 * 60)
+      diffInHours: diff / (1000 * 60 * 60),
+      diffInMinutes: diff / (1000 * 60)
     });
     
     if (diff <= 0) return 'Finalizada';
@@ -85,13 +85,14 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const getTimeColor = (endDate: string) => {
-    // Get current time in Brasilia and convert to UTC for comparison
-    const brasiliaTime = getBrasiliaTime();
-    const brasiliaTimeInUtc = brasiliaToUtc(brasiliaTime);
+    // Obter horário atual em UTC
+    const nowUtc = new Date();
     
-    // endDate is already in UTC from database
+    // A data de fim já vem em UTC do banco
     const endUtc = new Date(endDate);
-    const diff = endUtc.getTime() - brasiliaTimeInUtc.getTime();
+    
+    // Calcular diferença diretamente em UTC
+    const diff = endUtc.getTime() - nowUtc.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     
     if (hours <= 1) return 'text-red-600';
