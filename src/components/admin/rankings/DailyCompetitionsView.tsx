@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Calendar, Trophy } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
@@ -7,7 +8,6 @@ import { EditCompetitionModal } from './EditCompetitionModal';
 import { CompetitionTimeInfo } from './daily/CompetitionTimeInfo';
 import { DailyCompetitionCard } from './daily/DailyCompetitionCard';
 import { DailyCompetitionsEmpty } from './daily/DailyCompetitionsEmpty';
-import { DailyRankingModal } from './daily/DailyRankingModal';
 
 interface DailyCompetition {
   id: string;
@@ -38,7 +38,6 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCompetition, setEditingCompetition] = useState<DailyCompetition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDailyRankingOpen, setIsDailyRankingOpen] = useState(false);
 
   // Filtrar apenas competições diárias ativas (excluir finalizadas e canceladas)
   const activeCompetitions = competitions.filter(comp => 
@@ -126,14 +125,6 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
             <Calendar className="h-5 w-5 text-blue-600" />
             Competições Diárias Ativas ({activeCompetitions.length})
           </h3>
-          
-          <Button
-            onClick={() => setIsDailyRankingOpen(true)}
-            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
-          >
-            <Trophy className="h-4 w-4 mr-2" />
-            Ranking Diário
-          </Button>
         </div>
         
         <div className="grid gap-4">
@@ -155,12 +146,6 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
         onOpenChange={setIsEditModalOpen}
         competition={editingCompetition}
         onCompetitionUpdated={handleCompetitionUpdated}
-      />
-
-      {/* Modal do Ranking Diário */}
-      <DailyRankingModal
-        open={isDailyRankingOpen}
-        onOpenChange={setIsDailyRankingOpen}
       />
     </div>
   );
