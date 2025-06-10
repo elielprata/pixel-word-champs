@@ -123,6 +123,99 @@ export const useUserMutations = () => {
     },
   });
 
+  const banUser = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      console.log('🔄 Banindo usuário:', { userId, reason });
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          banned_at: new Date().toISOString(),
+          ban_reason: reason 
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({
+        title: "Sucesso",
+        description: "Usuário banido com sucesso!",
+      });
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao banir usuário:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao banir usuário",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unbanUser = useMutation({
+    mutationFn: async (userId: string) => {
+      console.log('🔄 Removendo ban do usuário:', userId);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          banned_at: null,
+          ban_reason: null 
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({
+        title: "Sucesso",
+        description: "Ban removido com sucesso!",
+      });
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao remover ban:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover ban do usuário",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteUser = useMutation({
+    mutationFn: async (userId: string) => {
+      console.log('🔄 Deletando usuário:', userId);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({
+        title: "Sucesso",
+        description: "Usuário deletado com sucesso!",
+      });
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao deletar usuário:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao deletar usuário",
+        variant: "destructive",
+      });
+    },
+  });
+
   const resetUserScores = useMutation({
     mutationFn: async (password: string) => {
       console.log('🔄 Resetando pontuações de todos os usuários...');
@@ -155,7 +248,6 @@ export const useUserMutations = () => {
         .update({ 
           total_score: 0,
           games_played: 0,
-          best_daily_position: null,
           best_weekly_position: null
         })
         .neq('id', '00000000-0000-0000-0000-000000000000'); // Atualizar todos os perfis
@@ -186,6 +278,13 @@ export const useUserMutations = () => {
     updateProfile,
     updateUserRole,
     updatePassword,
-    resetUserScores
+    banUser,
+    unbanUser,
+    deleteUser,
+    resetUserScores,
+    // Loading states
+    isBanningUser: banUser.isPending,
+    isUnbanningUser: unbanUser.isPending,
+    isDeletingUser: deleteUser.isPending
   };
 };

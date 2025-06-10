@@ -1,71 +1,92 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-interface RankingExportData {
+export interface RankingExportData {
   position: number;
   username: string;
   score: number;
-  date: string;
-  type: 'weekly';
+  email?: string;
+  created_at: string;
 }
 
-export const rankingExportService = {
-  async exportWeeklyRankings(): Promise<RankingExportData[]> {
+class RankingExportService {
+  async exportWeeklyRanking(startDate?: string, endDate?: string): Promise<RankingExportData[]> {
     try {
-      // Calcular início e fim da semana atual (segunda a domingo)
-      const today = new Date();
-      const dayOfWeek = today.getDay();
-      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-      const weekStart = new Date(today.setDate(diff));
-      const weekStartStr = weekStart.toISOString().split('T')[0];
+      console.log('📊 Exportando ranking semanal simplificado...');
+      
+      // Buscar diretamente da tabela profiles com pontuação
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, username, total_score, created_at')
+        .order('total_score', { ascending: false })
+        .limit(100);
 
-      const { data, error } = await supabase
-        .from('weekly_rankings')
-        .select(`
-          position,
-          score,
-          week_start,
-          profiles!inner(username)
-        `)
-        .eq('week_start', weekStartStr)
-        .order('position', { ascending: true });
+      if (error) {
+        console.error('❌ Erro ao buscar profiles:', error);
+        throw error;
+      }
 
-      if (error) throw error;
+      if (!profiles) {
+        return [];
+      }
 
-      return (data || []).map(item => ({
-        position: item.position,
-        username: item.profiles?.username || 'Usuário',
-        score: item.score,
-        date: item.week_start,
-        type: 'weekly' as const
+      // Transformar em formato de exportação
+      const rankingData = profiles.map((profile, index) => ({
+        position: index + 1,
+        username: profile.username,
+        score: profile.total_score,
+        created_at: profile.created_at
       }));
+
+      console.log('✅ Ranking exportado com sucesso:', rankingData.length, 'jogadores');
+      return rankingData;
     } catch (error) {
-      console.error('Error exporting weekly rankings:', error);
-      return [];
+      console.error('❌ Erro ao exportar ranking:', error);
+      throw error;
     }
-  },
-
-  exportToCSV(data: RankingExportData[], filename: string): void {
-    const headers = ['Posição', 'Usuário', 'Pontuação', 'Data', 'Tipo'];
-    const csvContent = [
-      headers.join(','),
-      ...data.map(row => [
-        row.position,
-        `"${row.username}"`,
-        row.score,
-        row.date,
-        'Semanal'
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }
-};
+
+  async exportDailyRanking(startDate?: string, endDate?: string): Promise<RankingExportData[]> {
+    try {
+      console.log('📊 Exportando ranking diário (usando mesmo que semanal)...');
+      
+      // Para o sistema simplificado, usar mesmo ranking
+      return this.exportWeeklyRanking(startDate, endDate);
+    } catch (error) {
+      console.error('❌ Erro ao exportar ranking diário:', error);
+      throw error;
+    }
+  }
+
+  generateCSV(data: RankingExportData[]): string {
+    if (data.length === 0) {
+      return 'Posição,Username,Pontuação,Data\n';
+    }
+
+    const headers = 'Posição,Username,Pontuação,Data\n';
+    const rows = data.map(row => {
+      const date = new Date(row.created_at).toLocaleDateString('pt-BR');
+      return `${row.position},"${row.username}",${row.score},"${date}"`;
+    }).join('\n');
+
+    return headers + rows;
+  }
+
+  downloadCSV(data: RankingExportData[], filename: string): void {
+    const csv = this.generateCSV(data);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+}
+
+export const rankingExportService = new RankingExportService();

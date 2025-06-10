@@ -4,8 +4,8 @@ import { ArrowLeft, Trophy, Target, Calendar, Award, Flame, Star } from 'lucide-
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PlayerAvatar } from '@/components/ui/PlayerAvatar';
-import { ScoreDisplay } from '@/components/ui/ScoreDisplay';
+import PlayerAvatar from '@/components/ui/PlayerAvatar';
+import ScoreDisplay from '@/components/ui/ScoreDisplay';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
@@ -13,7 +13,11 @@ import { useAppNavigation } from '@/hooks/useAppNavigation';
 const ProfileScreen = () => {
   const { user } = useAuth();
   const { stats, isLoading } = useUserStats();
-  const { goHome } = useAppNavigation();
+  const { navigateToScreen } = useAppNavigation();
+
+  const goHome = () => {
+    navigateToScreen('home');
+  };
 
   if (!user) {
     return (
@@ -93,6 +97,7 @@ const ProfileScreen = () => {
             <PlayerAvatar 
               src={user.avatar_url} 
               alt={user.username}
+              fallback={user.username.substring(0, 2).toUpperCase()}
               size="lg"
             />
             <div className="flex-1">
@@ -143,7 +148,7 @@ const ProfileScreen = () => {
               </div>
               
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Melhor Posição Semanal</span>
+                <span className="text-gray-600">Melhor Posição</span>
                 <span className="font-medium">
                   {stats.bestWeeklyPosition ? `#${stats.bestWeeklyPosition}` : 'Nenhuma'}
                 </span>
