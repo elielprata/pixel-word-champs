@@ -59,10 +59,10 @@ const InviteScreen = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <Card className="text-center p-8 max-w-md w-full">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+        <Card className="text-center p-8 max-w-md w-full shadow-lg border-0">
           <CardContent>
-            <h2 className="text-xl font-semibold mb-4">Faça login para convidar amigos</h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Faça login para convidar amigos</h2>
             <p className="text-gray-600">Você precisa estar logado para acessar o sistema de convites.</p>
           </CardContent>
         </Card>
@@ -72,11 +72,11 @@ const InviteScreen = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <Card className="text-center p-8 max-w-md w-full">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+        <Card className="text-center p-8 max-w-md w-full shadow-lg border-0">
           <CardContent className="flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin mr-2" />
-            <span>Carregando dados de convites...</span>
+            <Loader2 className="w-8 h-8 animate-spin mr-2 text-purple-600" />
+            <span className="text-gray-700">Carregando dados de convites...</span>
           </CardContent>
         </Card>
       </div>
@@ -85,8 +85,8 @@ const InviteScreen = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <Card className="text-center p-8 max-w-md w-full">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+        <Card className="text-center p-8 max-w-md w-full shadow-lg border-0">
           <CardContent>
             <h2 className="text-xl font-semibold mb-4 text-red-600">Erro ao carregar</h2>
             <p className="text-gray-600">{error}</p>
@@ -97,11 +97,11 @@ const InviteScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       <div className="max-w-md mx-auto p-4 pb-20">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl mb-4 animate-bounce-in">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl mb-4">
             <Gift className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Convide & Ganhe</h1>
@@ -110,19 +110,19 @@ const InviteScreen = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <Card className="text-center border-0 bg-white/80 backdrop-blur-sm shadow-sm">
+          <Card className="text-center border-0 bg-white/70 backdrop-blur-sm shadow-sm">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-purple-600">{stats.totalPoints}</div>
               <div className="text-xs text-gray-600 mt-1">Pontos Ganhos</div>
             </CardContent>
           </Card>
-          <Card className="text-center border-0 bg-white/80 backdrop-blur-sm shadow-sm">
+          <Card className="text-center border-0 bg-white/70 backdrop-blur-sm shadow-sm">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-blue-600">{stats.activeFriends}</div>
               <div className="text-xs text-gray-600 mt-1">Amigos Ativos</div>
             </CardContent>
           </Card>
-          <Card className="text-center border-0 bg-white/80 backdrop-blur-sm shadow-sm">
+          <Card className="text-center border-0 bg-white/70 backdrop-blur-sm shadow-sm">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-green-600">{stats.totalInvites}</div>
               <div className="text-xs text-gray-600 mt-1">Total Convites</div>
@@ -131,7 +131,7 @@ const InviteScreen = () => {
         </div>
 
         {/* Progress to Next Reward */}
-        <Card className="mb-6 border-0 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-sm">
+        <Card className="mb-6 border-0 bg-white/70 backdrop-blur-sm shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -186,7 +186,7 @@ const InviteScreen = () => {
         )}
 
         {/* How it Works */}
-        <Card className="mb-6 border-0 bg-white/80 backdrop-blur-sm shadow-sm">
+        <Card className="mb-6 border-0 bg-white/70 backdrop-blur-sm shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg text-gray-800">Como Funciona</CardTitle>
           </CardHeader>
@@ -207,7 +207,7 @@ const InviteScreen = () => {
         </Card>
 
         {/* Friends List */}
-        <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-sm">
+        <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
               <Users className="w-5 h-5" />
@@ -218,7 +218,7 @@ const InviteScreen = () => {
             {invitedFriends.length > 0 ? (
               <div className="space-y-3">
                 {invitedFriends.map((friend, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div key={index} className="flex items-center justify-between p-3 bg-white/50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full flex items-center justify-center text-white font-semibold">
                         {friend.avatar_url ? (
