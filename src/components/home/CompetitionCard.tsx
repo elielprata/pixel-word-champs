@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
+import { utcToBrasilia, brasiliaToUtc, formatBrasiliaTime } from '@/utils/brasiliaTime';
 
 interface Competition {
   id: string;
@@ -56,18 +56,31 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const formatTimeRemaining = (endDate: string) => {
-    // Obter horário atual em UTC
-    const nowUtc = new Date();
+    // Obter horário atual de Brasília
+    const now = new Date();
     
-    // A data de fim já vem em UTC do banco
+    // Converter a data de fim UTC para horário de Brasília
     const endUtc = new Date(endDate);
+    const endBrasilia = utcToBrasilia(endUtc);
     
-    // Calcular diferença diretamente em UTC
-    const diff = endUtc.getTime() - nowUtc.getTime();
+    // Se a data de fim for 23:59:59 de um dia, ela representa o final daquele dia em Brasília
+    // Precisamos ajustar para que seja realmente 23:59:59 de Brasília em UTC
+    const adjustedEndBrasilia = new Date(endBrasilia);
+    adjustedEndBrasilia.setHours(23, 59, 59, 999);
     
-    console.log('🕐 Comparação de tempo (UTC):', {
-      nowUtc: nowUtc.toISOString(),
-      endUtc: endUtc.toISOString(),
+    // Converter de volta para UTC para comparação
+    const adjustedEndUtc = brasiliaToUtc(adjustedEndBrasilia);
+    
+    // Calcular diferença
+    const diff = adjustedEndUtc.getTime() - now.getTime();
+    
+    console.log('🕐 Comparação de tempo (Brasília):', {
+      nowUtc: now.toISOString(),
+      nowBrasilia: formatBrasiliaTime(now),
+      endOriginalUtc: endUtc.toISOString(),
+      endBrasilia: formatBrasiliaTime(endBrasilia),
+      endAdjustedBrasilia: formatBrasiliaTime(adjustedEndBrasilia),
+      endAdjustedUtc: adjustedEndUtc.toISOString(),
       diff: diff,
       diffInHours: diff / (1000 * 60 * 60),
       diffInMinutes: diff / (1000 * 60)
@@ -85,14 +98,22 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const getTimeColor = (endDate: string) => {
-    // Obter horário atual em UTC
-    const nowUtc = new Date();
+    // Obter horário atual de Brasília
+    const now = new Date();
     
-    // A data de fim já vem em UTC do banco
+    // Converter a data de fim UTC para horário de Brasília
     const endUtc = new Date(endDate);
+    const endBrasilia = utcToBrasilia(endUtc);
     
-    // Calcular diferença diretamente em UTC
-    const diff = endUtc.getTime() - nowUtc.getTime();
+    // Ajustar para 23:59:59 de Brasília
+    const adjustedEndBrasilia = new Date(endBrasilia);
+    adjustedEndBrasilia.setHours(23, 59, 59, 999);
+    
+    // Converter de volta para UTC para comparação
+    const adjustedEndUtc = brasiliaToUtc(adjustedEndBrasilia);
+    
+    // Calcular diferença
+    const diff = adjustedEndUtc.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     
     if (hours <= 1) return 'text-red-600';
