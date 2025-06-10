@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { getBrasiliaTime, utcToBrasilia } from '@/utils/brasiliaTime';
+import { getBrasiliaTime, brasiliaToUtc } from '@/utils/brasiliaTime';
 
 interface Competition {
   id: string;
@@ -56,9 +57,21 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const formatTimeRemaining = (endDate: string) => {
+    // Get current time in Brasilia and convert to UTC for comparison
     const brasiliaTime = getBrasiliaTime();
-    const end = utcToBrasilia(new Date(endDate));
-    const diff = end.getTime() - brasiliaTime.getTime();
+    const brasiliaTimeInUtc = brasiliaToUtc(brasiliaTime);
+    
+    // endDate is already in UTC from database
+    const endUtc = new Date(endDate);
+    const diff = endUtc.getTime() - brasiliaTimeInUtc.getTime();
+    
+    console.log('🕐 Comparação de tempo:', {
+      brasiliaTime: brasiliaTime.toISOString(),
+      brasiliaTimeInUtc: brasiliaTimeInUtc.toISOString(),
+      endUtc: endUtc.toISOString(),
+      diff: diff,
+      diffInHours: diff / (1000 * 60 * 60)
+    });
     
     if (diff <= 0) return 'Finalizada';
     
@@ -72,9 +85,13 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   const getTimeColor = (endDate: string) => {
+    // Get current time in Brasilia and convert to UTC for comparison
     const brasiliaTime = getBrasiliaTime();
-    const end = utcToBrasilia(new Date(endDate));
-    const diff = end.getTime() - brasiliaTime.getTime();
+    const brasiliaTimeInUtc = brasiliaToUtc(brasiliaTime);
+    
+    // endDate is already in UTC from database
+    const endUtc = new Date(endDate);
+    const diff = endUtc.getTime() - brasiliaTimeInUtc.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     
     if (hours <= 1) return 'text-red-600';
