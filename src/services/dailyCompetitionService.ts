@@ -3,6 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { getBrasiliaTime } from '@/utils/brasiliaTime';
 import { adjustCompetitionEndTime, isCompetitionActive, logCompetitionVerification } from '@/utils/competitionTimeUtils';
+import { competitionQueryService } from './competitionQueryService';
+import { competitionFinalizationService } from './competitionFinalizationService';
+import { competitionAutoParticipationService } from './competitionAutoParticipationService';
+import { competitionParticipationService } from './competitionParticipationService';
 
 class DailyCompetitionService {
   async getActiveDailyCompetitions(): Promise<{ success: boolean; data: any[]; error?: string }> {
@@ -136,6 +140,33 @@ class DailyCompetitionService {
       console.error('❌ Erro ao criar competição diária:', error);
       return createErrorResponse(handleServiceError(error, 'DAILY_COMPETITION_CREATE'));
     }
+  }
+
+  // Métodos delegados para outros serviços
+  async getDailyCompetitionRanking(competitionId: string): Promise<{ success: boolean; data: any[]; error?: string }> {
+    return competitionQueryService.getDailyCompetitionRanking(competitionId);
+  }
+
+  async finalizeDailyCompetition(competitionId: string): Promise<void> {
+    return competitionFinalizationService.finalizeDailyCompetition(competitionId);
+  }
+
+  async joinCompetitionAutomatically(sessionId: string): Promise<void> {
+    const activeCompetitionsResponse = await this.getActiveDailyCompetitions();
+    if (activeCompetitionsResponse.success) {
+      return competitionAutoParticipationService.joinCompetitionAutomatically(
+        sessionId, 
+        activeCompetitionsResponse.data
+      );
+    }
+  }
+
+  async updateParticipationScore(sessionId: string, totalScore: number): Promise<void> {
+    return competitionAutoParticipationService.updateParticipationScore(sessionId, totalScore);
+  }
+
+  async checkUserParticipation(userId: string, competitionId: string): Promise<boolean> {
+    return competitionParticipationService.checkUserParticipation(userId, competitionId);
   }
 }
 
