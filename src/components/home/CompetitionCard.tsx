@@ -1,14 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { utcToBrasilia, brasiliaToUtc, formatBrasiliaTime } from '@/utils/brasiliaTime';
-import { getCompetitionTheme, getCategoryEmoji } from '@/utils/competitionThemes';
+import { getCompetitionTheme, getCategoryEmoji, getCategoryDescription, getCategoryTexture } from '@/utils/competitionThemes';
 
 interface Competition {
   id: string;
@@ -33,10 +35,13 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   const [hasParticipated, setHasParticipated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState('');
+  const [timeProgress, setTimeProgress] = useState(100);
 
   // Obter tema baseado na categoria/theme da competição
   const theme = getCompetitionTheme(competition.theme);
   const categoryEmoji = getCategoryEmoji(competition.theme);
+  const categoryDescription = getCategoryDescription(competition.theme);
+  const categoryTexture = getCategoryTexture(competition.theme);
 
   useEffect(() => {
     checkParticipation();
@@ -44,8 +49,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
 
   useEffect(() => {
     const updateTimer = () => {
-      const remaining = formatTimeRemaining(competition.end_date);
+      const { remaining, progress } = formatTimeRemaining(competition.end_date);
       setTimeRemaining(remaining);
+      setTimeProgress(progress);
     };
 
     updateTimer();
@@ -81,46 +87,41 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
     const adjustedEndUtc = brasiliaToUtc(adjustedEndBrasilia);
     const diff = adjustedEndUtc.getTime() - now.getTime();
     
-    console.log('🕐 Comparação de tempo (Brasília):', {
-      nowUtc: now.toISOString(),
-      nowBrasilia: formatBrasiliaTime(now),
-      endOriginalUtc: endUtc.toISOString(),
-      endBrasilia: formatBrasiliaTime(endBrasilia),
-      endAdjustedBrasilia: formatBrasiliaTime(adjustedEndBrasilia),
-      endAdjustedUtc: adjustedEndUtc.toISOString(),
-      diff: diff,
-      diffInHours: diff / (1000 * 60 * 60),
-      diffInMinutes: diff / (1000 * 60)
-    });
+    // Calcular progresso (assumindo 24h total)
+    const totalTime = 24 * 60 * 60 * 1000; // 24 horas em ms
+    const progress = Math.max(0, Math.min(100, (diff / totalTime) * 100));
     
-    if (diff <= 0) return 'Finalizada';
+    if (diff <= 0) return { remaining: 'Finalizada', progress: 0 };
     
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
     
     if (hours > 0) {
-      return `${hours}h ${minutes}m ${seconds}s`;
+      return { remaining: `${hours}h ${minutes}m`, progress };
     }
     if (minutes > 0) {
-      return `${minutes}m ${seconds}s`;
+      return { remaining: `${minutes}m ${seconds}s`, progress };
     }
-    return `${seconds}s`;
+    return { remaining: `${seconds}s`, progress };
   };
 
-  const getTimeColor = (endDate: string) => {
-    const now = new Date();
-    const endUtc = new Date(endDate);
-    const endBrasilia = utcToBrasilia(endUtc);
-    const adjustedEndBrasilia = new Date(endBrasilia);
-    adjustedEndBrasilia.setHours(23, 59, 59, 999);
-    const adjustedEndUtc = brasiliaToUtc(adjustedEndBrasilia);
-    const diff = adjustedEndUtc.getTime() - now.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    
-    if (hours <= 1) return theme.timeColors.urgent;
-    if (hours <= 6) return theme.timeColors.warning;
-    return theme.timeColors.safe;
+  const getUrgencyColor = (progress: number) => {
+    if (progress <= 10) return 'text-red-600 bg-red-100';
+    if (progress <= 30) return 'text-orange-600 bg-orange-100';
+    return 'text-emerald-600 bg-emerald-100';
+  };
+
+  const getProgressColor = (progress: number) => {
+    if (progress <= 10) return 'bg-red-500';
+    if (progress <= 30) return 'bg-orange-500';
+    return 'bg-emerald-500';
+  };
+
+  const getCardGradient = (progress: number) => {
+    if (progress <= 10) return 'from-red-50 via-red-25 to-white';
+    if (progress <= 30) return 'from-orange-50 via-orange-25 to-white';
+    return theme.gradient;
   };
 
   const handleStartGame = async () => {
@@ -181,12 +182,22 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   };
 
   return (
-    <Card className={`group relative overflow-hidden bg-gradient-to-br ${theme.gradient} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-32`}>
-      {/* Decorative grid pattern - themed */}
+    <Card className={`group relative overflow-hidden bg-gradient-to-br ${getCardGradient(timeProgress)} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-36`}>
+      {/* Textura temática de fundo */}
+      <div className="absolute inset-0 opacity-5">
+        <div 
+          className="w-full h-full bg-repeat"
+          style={{
+            backgroundImage: categoryTexture,
+            backgroundSize: '40px 40px'
+          }}
+        ></div>
+      </div>
+
+      {/* Padrão decorativo adicional */}
       <div className="absolute inset-0 opacity-10">
         <div className="w-full h-full" style={{
-          backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 15px, ${theme.bgPattern} 15px, ${theme.bgPattern} 16px),
-                           repeating-linear-gradient(0deg, transparent, transparent 15px, ${theme.bgPattern} 15px, ${theme.bgPattern} 16px)`
+          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, ${theme.bgPattern} 10px, ${theme.bgPattern} 11px)`
         }}></div>
       </div>
       
@@ -198,20 +209,70 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
               {competition.title}
             </h3>
             
+            {/* Categoria com mini-preview visual */}
             {competition.theme && (
-              <Badge className={`bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} to-${theme.decorativeElements.primary.replace('bg-', '')} text-white border-0 text-xs px-2 py-0.5 shadow-md`}>
-                {categoryEmoji} {competition.theme}
-              </Badge>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge className={`bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} to-${theme.decorativeElements.primary.replace('bg-', '')} text-white border-0 text-xs px-2 py-0.5 shadow-md flex items-center gap-1`}>
+                  <span className="text-xs">{categoryEmoji}</span>
+                  <span className="font-medium">{competition.theme}</span>
+                </Badge>
+              </div>
             )}
+
+            {/* Descrição temática */}
+            <p className="text-xs text-slate-600 italic leading-tight">
+              {categoryDescription}
+            </p>
           </div>
 
-          {/* Timer */}
-          <div className="flex items-center gap-1 bg-slate-50 rounded-md px-2 py-1">
-            <Clock className={`w-3 h-3 ${getTimeColor(competition.end_date)}`} />
-            <span className={`text-xs font-bold ${getTimeColor(competition.end_date)}`}>
+          {/* Timer com círculo progressivo */}
+          <div className="flex flex-col items-center gap-1">
+            <div className={`relative w-12 h-12 rounded-full ${getUrgencyColor(timeProgress)} flex items-center justify-center shadow-sm`}>
+              {/* Círculo de progresso */}
+              <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-gray-200"
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  className={timeProgress <= 10 ? 'text-red-500' : timeProgress <= 30 ? 'text-orange-500' : 'text-emerald-500'}
+                  strokeDasharray={`${timeProgress}, 100`}
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <Clock className="w-4 h-4 relative z-10" />
+            </div>
+            <span className={`text-xs font-bold ${timeProgress <= 10 ? 'text-red-600' : timeProgress <= 30 ? 'text-orange-600' : 'text-emerald-600'}`}>
               {timeRemaining}
             </span>
           </div>
+        </div>
+
+        {/* Barra de progresso de tempo */}
+        <div className="mb-2">
+          <Progress 
+            value={timeProgress} 
+            className="h-1 bg-gray-200"
+            style={{
+              background: 'rgb(229 231 235)'
+            }}
+          />
+          <style jsx>{`
+            .progress-indicator {
+              background: ${timeProgress <= 10 ? '#ef4444' : timeProgress <= 30 ? '#f97316' : '#10b981'};
+            }
+          `}</style>
         </div>
 
         {/* Button section */}
@@ -229,7 +290,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
         </Button>
       </CardContent>
       
-      {/* Corner decoration - themed */}
+      {/* Corner decorations - themed */}
       <div className={`absolute top-1 right-1 w-2 h-2 ${theme.decorativeElements.primary} rounded-full opacity-60`}></div>
       <div className={`absolute bottom-1 left-1 w-1.5 h-1.5 ${theme.decorativeElements.secondary} rounded-full opacity-60`}></div>
     </Card>
