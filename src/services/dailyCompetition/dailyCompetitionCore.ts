@@ -6,9 +6,9 @@ import { createSuccessResponse, createErrorResponse, handleServiceError } from '
 export class DailyCompetitionCoreService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
     try {
-      console.log('🔍 Buscando competições diárias ativas vinculadas a competições semanais...');
+      console.log('🔍 Buscando TODAS as competições diárias ativas...');
 
-      // Buscar competições diárias que estão vinculadas a uma competição semanal ativa
+      // Buscar todas as competições diárias ativas, independente de vinculação semanal
       const { data, error } = await supabase
         .from('custom_competitions')
         .select(`
@@ -22,8 +22,7 @@ export class DailyCompetitionCoreService {
           )
         `)
         .eq('competition_type', 'challenge')
-        .eq('status', 'active')
-        .not('weekly_tournament_id', 'is', null);
+        .eq('status', 'active');
 
       if (error) {
         console.error('❌ Erro na consulta SQL:', error);
@@ -35,14 +34,23 @@ export class DailyCompetitionCoreService {
         return createSuccessResponse([]);
       }
 
-      // Filtrar apenas competições vinculadas a torneios semanais ativos
-      const validCompetitions = data.filter(comp => 
-        comp.weekly_competition && 
-        comp.weekly_competition.status === 'active'
-      );
+      console.log(`✅ Total de competições diárias ativas encontradas: ${data.length}`);
+      
+      // Log detalhado de cada competição encontrada
+      data.forEach((comp, index) => {
+        console.log(`📋 Competição ${index + 1}:`, {
+          id: comp.id,
+          title: comp.title,
+          status: comp.status,
+          start_date: comp.start_date,
+          end_date: comp.end_date,
+          hasWeeklyLink: !!comp.weekly_tournament_id,
+          weeklyStatus: comp.weekly_competition?.status || 'N/A'
+        });
+      });
 
-      console.log(`✅ Competições diárias vinculadas encontradas: ${validCompetitions.length}`);
-      return createSuccessResponse(validCompetitions);
+      // Retornar todas as competições ativas (não filtrar por vinculação semanal)
+      return createSuccessResponse(data);
     } catch (error) {
       console.error('❌ Erro ao buscar competições diárias ativas:', error);
       return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_DAILY_COMPETITIONS'));
