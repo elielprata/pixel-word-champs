@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -146,7 +145,13 @@ export class CustomCompetitionCoreService {
       } else {
         // Validar dados diretos do formulário e aplicar padronização
         if (data.competition_type === 'challenge') {
-          const validatedData = validateDailyCompetitionData(data);
+          const validatedData = validateDailyCompetitionData({
+            title: data.title,
+            description: data.description,
+            theme: data.theme || 'Geral',
+            start_date: data.start_date,
+            competition_type: 'challenge'
+          });
           competitionData = {
             ...validatedData,
             max_participants: data.max_participants,
@@ -157,7 +162,15 @@ export class CustomCompetitionCoreService {
           };
           console.log('✅ Competição diária - PODE coexistir com qualquer outra competição');
         } else {
-          const validatedData = validateWeeklyCompetitionData(data);
+          const validatedData = validateWeeklyCompetitionData({
+            title: data.title,
+            description: data.description,
+            start_date: data.start_date,
+            end_date: data.end_date,
+            prize_pool: data.prize_pool,
+            max_participants: data.max_participants,
+            competition_type: 'tournament'
+          });
           
           console.log('🔍 Verificando sobreposição para tournament direto...');
           const hasOverlap = await this.checkWeeklyCompetitionOverlap(validatedData.start_date, validatedData.end_date);
@@ -232,3 +245,5 @@ export class CustomCompetitionCoreService {
 }
 
 export const customCompetitionCoreService = new CustomCompetitionCoreService();
+
+undefined
