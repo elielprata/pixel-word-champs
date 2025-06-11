@@ -60,6 +60,70 @@ export class WordPlacer {
     return positions;
   }
 
+  // Nova função para tentar colocar palavra priorizando o centro
+  tryPlaceWordCentered(word: string): boolean {
+    console.log(`🎯 Tentando colocar palavra "${word}" no centro do tabuleiro...`);
+    
+    // Calcular área central (terço médio do tabuleiro)
+    const centerStart = Math.floor(this.size * 0.33);
+    const centerEnd = Math.floor(this.size * 0.67);
+    
+    // Gerar posições centrais ordenadas por proximidade ao centro absoluto
+    const centerPositions = this.generateCenteredPositions(centerStart, centerEnd);
+    
+    // Tentar colocar a palavra nas posições centrais primeiro
+    for (const { row, col } of centerPositions) {
+      // Tentar horizontalmente
+      if (col + word.length <= this.size) {
+        if (this.canPlaceWord(word, row, col, 'horizontal')) {
+          this.placeWord(word, row, col, 'horizontal');
+          console.log(`✅ "${word}" colocada horizontalmente no centro em (${row}, ${col})`);
+          return true;
+        }
+      }
+      
+      // Tentar verticalmente
+      if (row + word.length <= this.size) {
+        if (this.canPlaceWord(word, row, col, 'vertical')) {
+          this.placeWord(word, row, col, 'vertical');
+          console.log(`✅ "${word}" colocada verticalmente no centro em (${row}, ${col})`);
+          return true;
+        }
+      }
+      
+      // Tentar diagonalmente
+      if (row + word.length <= this.size && col + word.length <= this.size) {
+        if (this.canPlaceWord(word, row, col, 'diagonal')) {
+          this.placeWord(word, row, col, 'diagonal');
+          console.log(`✅ "${word}" colocada diagonalmente no centro em (${row}, ${col})`);
+          return true;
+        }
+      }
+    }
+    
+    console.log(`⚠️ Não foi possível colocar "${word}" no centro, tentando em toda área...`);
+    return false;
+  }
+
+  // Gerar posições ordenadas por proximidade ao centro
+  private generateCenteredPositions(centerStart: number, centerEnd: number): Array<{row: number, col: number}> {
+    const positions: Array<{row: number, col: number, distance: number}> = [];
+    const absoluteCenter = Math.floor(this.size / 2);
+    
+    for (let row = centerStart; row <= centerEnd; row++) {
+      for (let col = centerStart; col <= centerEnd; col++) {
+        // Calcular distância ao centro absoluto
+        const distance = Math.sqrt(Math.pow(row - absoluteCenter, 2) + Math.pow(col - absoluteCenter, 2));
+        positions.push({ row, col, distance });
+      }
+    }
+    
+    // Ordenar por distância ao centro (mais próximo primeiro)
+    return positions
+      .sort((a, b) => a.distance - b.distance)
+      .map(({ row, col }) => ({ row, col }));
+  }
+
   private getWordPositions(word: string, startRow: number, startCol: number, direction: 'horizontal' | 'vertical' | 'diagonal'): Position[] {
     const positions: Position[] = [];
     

@@ -43,13 +43,13 @@ export class BoardGenerator {
       console.log(`🔄 Usando ${validWords.length}/${words.length} palavras válidas:`, validWords);
     }
     
-    return this.generateGuaranteedBoard(size, validWords);
+    return this.generateCenteredBoard(size, validWords);
   }
 
-  private static generateGuaranteedBoard(size: number, words: string[]): WordPlacementResult {
+  private static generateCenteredBoard(size: number, words: string[]): WordPlacementResult {
     const wordPlacer = new WordPlacer(size);
     
-    console.log('🛡️ Método garantido: colocando palavras uma por uma...');
+    console.log('🎯 Método centrado: priorizando colocação no centro do tabuleiro...');
     
     // Ordenar palavras por tamanho (maiores primeiro para melhor colocação)
     const sortedWords = [...words].sort((a, b) => b.length - a.length);
@@ -61,45 +61,51 @@ export class BoardGenerator {
       
       console.log(`🎯 Tentando colocar palavra "${word}" (${word.length} letras)...`);
       
-      // Tentar todas as posições possíveis até conseguir colocar
-      for (let row = 0; row < size && !placed; row++) {
-        for (let col = 0; col < size && !placed; col++) {
-          // Tentar horizontalmente
-          if (col + word.length <= size) {
-            if (wordPlacer.canPlaceWord(word, row, col, 'horizontal')) {
-              wordPlacer.placeWord(word, row, col, 'horizontal');
-              placed = true;
-              placedCount++;
-              console.log(`✅ "${word}" colocada horizontalmente em (${row}, ${col})`);
-              continue;
+      // Primeiro, tentar colocar no centro
+      placed = wordPlacer.tryPlaceWordCentered(word);
+      
+      // Se não conseguiu no centro, tentar em todas as posições (fallback)
+      if (!placed) {
+        console.log(`🔄 Tentando colocação tradicional para "${word}"...`);
+        
+        for (let row = 0; row < size && !placed; row++) {
+          for (let col = 0; col < size && !placed; col++) {
+            // Tentar horizontalmente
+            if (col + word.length <= size) {
+              if (wordPlacer.canPlaceWord(word, row, col, 'horizontal')) {
+                wordPlacer.placeWord(word, row, col, 'horizontal');
+                placed = true;
+                console.log(`✅ "${word}" colocada horizontalmente (fallback) em (${row}, ${col})`);
+                continue;
+              }
             }
-          }
-          
-          // Tentar verticalmente
-          if (row + word.length <= size) {
-            if (wordPlacer.canPlaceWord(word, row, col, 'vertical')) {
-              wordPlacer.placeWord(word, row, col, 'vertical');
-              placed = true;
-              placedCount++;
-              console.log(`✅ "${word}" colocada verticalmente em (${row}, ${col})`);
-              continue;
+            
+            // Tentar verticalmente
+            if (row + word.length <= size) {
+              if (wordPlacer.canPlaceWord(word, row, col, 'vertical')) {
+                wordPlacer.placeWord(word, row, col, 'vertical');
+                placed = true;
+                console.log(`✅ "${word}" colocada verticalmente (fallback) em (${row}, ${col})`);
+                continue;
+              }
             }
-          }
-          
-          // Tentar diagonalmente
-          if (row + word.length <= size && col + word.length <= size) {
-            if (wordPlacer.canPlaceWord(word, row, col, 'diagonal')) {
-              wordPlacer.placeWord(word, row, col, 'diagonal');
-              placed = true;
-              placedCount++;
-              console.log(`✅ "${word}" colocada diagonalmente em (${row}, ${col})`);
-              continue;
+            
+            // Tentar diagonalmente
+            if (row + word.length <= size && col + word.length <= size) {
+              if (wordPlacer.canPlaceWord(word, row, col, 'diagonal')) {
+                wordPlacer.placeWord(word, row, col, 'diagonal');
+                placed = true;
+                console.log(`✅ "${word}" colocada diagonalmente (fallback) em (${row}, ${col})`);
+                continue;
+              }
             }
           }
         }
       }
       
-      if (!placed) {
+      if (placed) {
+        placedCount++;
+      } else {
         console.warn(`⚠️ Não foi possível colocar "${word}" no tabuleiro ${size}x${size}`);
       }
     }
