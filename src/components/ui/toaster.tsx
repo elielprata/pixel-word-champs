@@ -15,19 +15,11 @@ export function Toaster() {
   return (
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
-        // Não renderizar toasts vazios ou com conteúdo em branco
-        const hasTitle = title && title.toString().trim() !== '';
-        const hasDescription = description && description.toString().trim() !== '';
-        
-        if (!hasTitle && !hasDescription) {
-          return null;
-        }
-        
         return (
           <Toast key={id} {...props}>
             <div className="grid gap-1">
-              {hasTitle && <ToastTitle>{title}</ToastTitle>}
-              {hasDescription && (
+              {title && <ToastTitle>{title}</ToastTitle>}
+              {description && (
                 <ToastDescription>{description}</ToastDescription>
               )}
             </div>

@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -139,7 +140,20 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+function toast({ title, description, ...props }: Toast) {
+  // Filtrar toasts vazios antes de adicionar
+  const hasTitle = title && title.toString().trim() !== '';
+  const hasDescription = description && description.toString().trim() !== '';
+  
+  // Não adicionar toast se não tiver conteúdo válido
+  if (!hasTitle && !hasDescription) {
+    return {
+      id: '',
+      dismiss: () => {},
+      update: () => {}
+    }
+  }
+
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -152,6 +166,8 @@ function toast({ ...props }: Toast) {
   dispatch({
     type: "ADD_TOAST",
     toast: {
+      title,
+      description,
       ...props,
       id,
       open: true,
