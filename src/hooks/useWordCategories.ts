@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
@@ -91,77 +91,11 @@ export const useWordCategories = () => {
     },
   });
 
-  const updateCategory = useMutation({
-    mutationFn: async ({ id, name, description }: { id: string; name: string; description?: string }) => {
-      const { data, error } = await supabase
-        .from('word_categories')
-        .update({
-          name: name.toLowerCase(),
-          description: description || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Sucesso!",
-        description: "Categoria atualizada com sucesso",
-      });
-      queryClient.invalidateQueries({ queryKey: ['wordCategories'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar categoria",
-        variant: "destructive",
-      });
-      console.error('❌ Erro ao atualizar categoria:', error);
-    },
-  });
-
-  const deleteCategory = useMutation({
-    mutationFn: async ({ id, password }: { id: string; password: string }) => {
-      // Aqui você pode adicionar validação da senha se necessário
-      // Por exemplo, verificar se a senha está correta antes de prosseguir
-      
-      const { error } = await supabase
-        .from('word_categories')
-        .update({ is_active: false })
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Sucesso!",
-        description: "Categoria removida com sucesso",
-      });
-      queryClient.invalidateQueries({ queryKey: ['wordCategories'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: "Erro ao remover categoria",
-        variant: "destructive",
-      });
-      console.error('❌ Erro ao remover categoria:', error);
-    },
-  });
-
   return {
     categories,
     isLoading,
     createCategory: createCategory.mutate,
-    updateCategory: updateCategory.mutate,
-    deleteCategory: (id: string, password: string) => deleteCategory.mutate({ id, password }),
     isCreating: createCategory.isPending,
-    isUpdating: updateCategory.isPending,
-    isDeleting: deleteCategory.isPending,
   };
 };
 

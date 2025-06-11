@@ -78,7 +78,6 @@ export const useWordSelection = (level: number) => {
 
         // Selecionar palavras seguindo a distribuição desejada
         const selectedWords: string[] = [];
-        const usedCategories = new Set<string>();
 
         // Tentar seguir a distribuição ideal
         for (const [difficulty, count] of Object.entries(DIFFICULTY_DISTRIBUTION)) {
@@ -86,24 +85,13 @@ export const useWordSelection = (level: number) => {
           console.log(`🎲 Selecionando ${count} palavras de dificuldade ${difficulty} (${availableWords.length} disponíveis)`);
           
           for (let i = 0; i < count && selectedWords.length < 5; i++) {
-            // Priorizar palavras de categorias diferentes
-            let candidateWords = availableWords.filter(w => 
-              !selectedWords.includes(w.word) && 
-              !usedCategories.has(w.category || 'geral')
-            );
-            
-            // Se não há palavras de categorias diferentes, usar qualquer palavra disponível
-            if (candidateWords.length === 0) {
-              candidateWords = availableWords.filter(w => !selectedWords.includes(w.word));
-            }
+            // Selecionar palavras aleatoriamente sem restrição de categoria
+            const candidateWords = availableWords.filter(w => !selectedWords.includes(w.word));
             
             if (candidateWords.length > 0) {
               const randomWord = candidateWords[Math.floor(Math.random() * candidateWords.length)];
               selectedWords.push(randomWord.word.toUpperCase());
-              if (randomWord.category) {
-                usedCategories.add(randomWord.category);
-              }
-              console.log(`✅ Selecionada: ${randomWord.word} (${difficulty}, categoria: ${randomWord.category || 'geral'})`);
+              console.log(`✅ Selecionada: ${randomWord.word} (${difficulty})`);
             }
           }
         }
@@ -115,7 +103,7 @@ export const useWordSelection = (level: number) => {
           
           const randomWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
           selectedWords.push(randomWord.word.toUpperCase());
-          console.log(`🔄 Completando com: ${randomWord.word} (categoria: ${randomWord.category || 'geral'})`);
+          console.log(`🔄 Completando com: ${randomWord.word}`);
         }
 
         console.log(`✅ Selecionadas ${selectedWords.length} palavras para nível ${level}:`, selectedWords);
