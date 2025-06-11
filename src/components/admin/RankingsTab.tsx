@@ -4,11 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Calendar, Users, TrendingUp, Activity, Settings, Plus, History } from 'lucide-react';
+import { Trophy, Calendar, Users, TrendingUp, Activity, Plus, History } from 'lucide-react';
 import { RankingHeader } from './rankings/RankingHeader';
 import { RankingMetrics } from './rankings/RankingMetrics';
 import { RankingInfoCard } from './rankings/RankingInfoCard';
-import { PrizeConfigModal } from './rankings/PrizeConfigModal';
 import { CreateCompetitionModal } from './rankings/CreateCompetitionModal';
 import { CompetitionHistory } from './rankings/CompetitionHistory';
 import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
@@ -17,7 +16,6 @@ import { useRankings } from '@/hooks/useRankings';
 import { useCompetitions } from '@/hooks/useCompetitions';
 
 export const RankingsTab = () => {
-  const [isPrizeConfigOpen, setIsPrizeConfigOpen] = useState(false);
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
   
   const {
@@ -71,14 +69,6 @@ export const RankingsTab = () => {
               <Activity className="h-5 w-5 text-slate-600" />
               <h2 className="text-lg font-semibold text-slate-900">Métricas das Competições</h2>
             </div>
-            <Button 
-              variant="outline" 
-              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200" 
-              onClick={() => setIsPrizeConfigOpen(true)}
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Configuração de Prêmios
-            </Button>
           </div>
           <RankingMetrics />
         </div>
@@ -183,8 +173,6 @@ export const RankingsTab = () => {
         </div>
 
         {/* Modals */}
-        <PrizeConfigModal open={isPrizeConfigOpen} onOpenChange={setIsPrizeConfigOpen} />
-        
         <CreateCompetitionModal 
           open={isCreateCompetitionOpen} 
           onOpenChange={setIsCreateCompetitionOpen} 

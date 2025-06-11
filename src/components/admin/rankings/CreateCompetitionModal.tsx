@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCompetitions } from "@/hooks/useCompetitions";
 import { prizeService } from '@/services/prizeService';
 import { customCompetitionService, CustomCompetitionData } from '@/services/customCompetitionService';
+import { usePaymentData } from '@/hooks/usePaymentData';
 import { CompetitionTypeSection } from './competition-form/CompetitionTypeSection';
 import { BasicInfoSection } from './competition-form/BasicInfoSection';
 import { CategorySection } from './competition-form/CategorySection';
@@ -14,6 +15,9 @@ import { WeeklyTournamentSection } from './competition-form/WeeklyTournamentSect
 import { ParticipantsSection } from './competition-form/ParticipantsSection';
 import { ScheduleSection } from './competition-form/ScheduleSection';
 import { PrizeSection } from './competition-form/PrizeSection';
+import { IndividualPrizesSection } from '../payments/IndividualPrizesSection';
+import { GroupPrizesSection } from '../payments/GroupPrizesSection';
+import { PaymentStatsCards } from '../payments/PaymentStatsCards';
 
 interface CreateCompetitionModalProps {
   open: boolean;
@@ -37,6 +41,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
   const [totalPrizePool, setTotalPrizePool] = useState(0);
   const { toast } = useToast();
   const { customCompetitions, refetch } = useCompetitions();
+  const paymentData = usePaymentData();
 
   const weeklyTournaments = customCompetitions.filter(comp => 
     comp.competition_type === 'tournament' && 
@@ -147,7 +152,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold flex items-center gap-2">
             <Trophy className="h-4 w-4 text-amber-600" />
@@ -211,7 +216,56 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
           />
 
           {isPrizeEnabled && (
-            <PrizeSection totalPrizePool={totalPrizePool} />
+            <>
+              <PrizeSection totalPrizePool={totalPrizePool} />
+              
+              {/* Prize Configuration Section */}
+              <div className="space-y-4 border-t border-slate-200 pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
+                  <h3 className="text-sm font-medium text-slate-700">Configuração Detalhada de Prêmios</h3>
+                </div>
+
+                {paymentData.isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Stats Cards */}
+                    <PaymentStatsCards 
+                      totalPrize={paymentData.calculateTotalPrize()}
+                      totalWinners={paymentData.calculateTotalWinners()}
+                      individualPrizes={paymentData.individualPrizes}
+                      groupPrizes={paymentData.groupPrizes}
+                    />
+
+                    {/* Individual Prizes */}
+                    <IndividualPrizesSection 
+                      individualPrizes={paymentData.individualPrizes}
+                      editingRow={paymentData.editingRow}
+                      editIndividualValue={paymentData.editIndividualValue}
+                      setEditIndividualValue={paymentData.setEditIndividualValue}
+                      onEditIndividual={paymentData.handleEditIndividual}
+                      onSaveIndividual={paymentData.handleSaveIndividual}
+                      onCancel={paymentData.handleCancel}
+                    />
+
+                    {/* Group Prizes */}
+                    <GroupPrizesSection 
+                      groupPrizes={paymentData.groupPrizes}
+                      editingGroup={paymentData.editingGroup}
+                      editGroupPrize={paymentData.editGroupPrize}
+                      setEditGroupPrize={paymentData.setEditGroupPrize}
+                      onEditGroup={paymentData.handleEditGroup}
+                      onSaveGroup={paymentData.handleSaveGroup}
+                      onToggleGroup={paymentData.handleToggleGroup}
+                      onCancel={paymentData.handleCancel}
+                    />
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
           <div className="flex gap-2 pt-4 border-t border-slate-200">
