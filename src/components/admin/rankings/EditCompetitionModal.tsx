@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
+import { CompetitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {
   id: string;
@@ -72,12 +73,19 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
       const endDateWithTime = new Date(formData.endDate);
       endDateWithTime.setHours(23, 59, 59, 999);
 
+      // Calcular o status correto baseado nas novas datas
+      const correctStatus = CompetitionStatusService.calculateCorrectStatus(
+        startDateWithTime.toISOString(),
+        endDateWithTime.toISOString()
+      );
+
       const updateData = {
         title: formData.title,
         description: formData.description,
         start_date: startDateWithTime.toISOString(),
         end_date: endDateWithTime.toISOString(),
-        max_participants: 999999, // Set high number for unlimited participation
+        status: correctStatus, // Atualizar o status baseado nas novas datas
+        max_participants: 999999,
         competition_type: 'tournament'
       };
 

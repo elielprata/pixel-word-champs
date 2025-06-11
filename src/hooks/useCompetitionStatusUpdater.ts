@@ -8,8 +8,10 @@ export const useCompetitionStatusUpdater = (competitions: any[]) => {
       try {
         console.log('🔄 Verificando status das competições...');
         
-        // Atualizar status de todas as competições
-        await CompetitionStatusService.updateAllCompetitionsStatus();
+        // Atualizar status de competições específicas se necessário
+        for (const competition of competitions) {
+          await CompetitionStatusService.updateSingleCompetitionStatus(competition.id);
+        }
         
         console.log('✅ Status das competições atualizados');
       } catch (error) {
@@ -17,11 +19,13 @@ export const useCompetitionStatusUpdater = (competitions: any[]) => {
       }
     };
 
-    // Verificar status imediatamente quando o componente monta
-    updateCompetitionStatuses();
+    // Verificar status imediatamente quando o componente monta ou a lista muda
+    if (competitions.length > 0) {
+      updateCompetitionStatuses();
+    }
 
-    // Verificar status a cada 5 minutos
-    const interval = setInterval(updateCompetitionStatuses, 5 * 60 * 1000);
+    // Verificar status a cada 2 minutos para atualizações em tempo real
+    const interval = setInterval(updateCompetitionStatuses, 2 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [competitions]);
