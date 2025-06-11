@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -72,7 +71,18 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
 }) => {
   const currentData = isEditing ? competition : newCompetition;
   
-  if (!currentData) return null;
+  console.log('🔍 DailyCompetitionForm Debug:', {
+    isOpen,
+    isEditing,
+    startTime,
+    onStartTimeChange: !!onStartTimeChange,
+    currentData: currentData?.title || 'sem dados'
+  });
+  
+  if (!currentData) {
+    console.log('❌ currentData é null, não renderizando');
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -163,13 +173,27 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
             />
           </div>
           
-          {/* Seção do horário - só aparece na criação */}
-          {!isEditing && (
-            <TimePickerSection
-              selectedTime={startTime}
-              onTimeChange={onStartTimeChange || (() => {})}
-            />
-          )}
+          {/* DEBUG: Seção do horário - SEMPRE VISÍVEL PARA TESTE */}
+          <div className="border-2 border-red-500 p-4 rounded">
+            <p className="text-red-600 font-bold mb-2">DEBUG - Esta seção deveria aparecer apenas na criação:</p>
+            <p>isEditing: {isEditing ? 'true' : 'false'}</p>
+            <p>onStartTimeChange: {onStartTimeChange ? 'existe' : 'undefined'}</p>
+            <p>startTime: {startTime}</p>
+            
+            {!isEditing ? (
+              <div className="mt-2">
+                <p className="text-green-600">✅ Condição passou - renderizando TimePickerSection</p>
+                <TimePickerSection
+                  selectedTime={startTime}
+                  onTimeChange={onStartTimeChange || (() => {
+                    console.log('⚠️ onStartTimeChange fallback chamado');
+                  })}
+                />
+              </div>
+            ) : (
+              <p className="text-orange-600">⚠️ Está editando - TimePickerSection não deveria aparecer</p>
+            )}
+          </div>
           
           {!isEditing && (
             <div>
@@ -181,6 +205,7 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
               />
             </div>
           )}
+          
           <Button onClick={onSubmit} className="w-full">
             {isEditing ? 'Salvar Alterações' : 'Criar Competição Diária'}
           </Button>

@@ -12,6 +12,8 @@ export const TimePickerSection: React.FC<TimePickerSectionProps> = ({
   selectedTime,
   onTimeChange
 }) => {
+  console.log('⏰ TimePickerSection renderizado:', { selectedTime });
+  
   // Gerar opções de horário de 00:00 até 23:30 em intervalos de 30 minutos
   const timeOptions = [];
   for (let hour = 0; hour < 24; hour++) {
@@ -22,9 +24,13 @@ export const TimePickerSection: React.FC<TimePickerSectionProps> = ({
   }
 
   return (
-    <div>
+    <div className="border border-blue-300 p-3 rounded bg-blue-50">
       <Label>Horário de Início</Label>
-      <Select value={selectedTime} onValueChange={onTimeChange}>
+      <p className="text-xs text-blue-600 mb-2">DEBUG: TimePickerSection está funcionando!</p>
+      <Select value={selectedTime} onValueChange={(time) => {
+        console.log('⏰ Horário selecionado no TimePickerSection:', time);
+        onTimeChange(time);
+      }}>
         <SelectTrigger>
           <SelectValue placeholder="Selecione o horário" />
         </SelectTrigger>
