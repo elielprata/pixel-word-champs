@@ -14,8 +14,8 @@ interface BaseCompetition {
   max_participants: number;
   total_participants: number;
   competition_type?: string;
-  theme?: string; // Para competições diárias
-  rules?: any; // Para competições diárias
+  theme?: string;
+  rules?: any;
 }
 
 interface EditCompetitionModalProps {
@@ -42,39 +42,37 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     onOpenChange(false);
   };
 
-  // Determinar o tipo de competição para o título correto
   const getCompetitionTypeTitle = () => {
     if (!competition) return "Editar Competição";
     
-    // Se tem theme, é diária
     if ('theme' in competition) {
       return "Editar Competição Diária";
     }
     
-    // Se tem competition_type, usar esse campo
     if (competition.competition_type === 'challenge') {
       return "Editar Competição Diária";
     } else if (competition.competition_type === 'tournament') {
       return "Editar Competição Semanal";
     }
     
-    // Fallback: tentar detectar pelo padrão de datas
     const startDate = new Date(competition.start_date);
     const endDate = new Date(competition.end_date);
     const diffInDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     
-    // Se a duração é de 1 dia ou menos, provavelmente é diária
     if (diffInDays <= 1) {
       return "Editar Competição Diária";
     }
     
-    // Caso contrário, assumir que é semanal
     return "Editar Competição Semanal";
   };
 
+  // Determinar se precisa de modal maior para configuração de prêmios
+  const isDailyCompetition = competition?.theme || competition?.competition_type === 'challenge';
+  const modalSize = isDailyCompetition ? "max-w-2xl" : "max-w-6xl";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className={`${modalSize} max-h-[90vh] overflow-y-auto`}>
         <DialogHeader>
           <DialogTitle>{getCompetitionTypeTitle()}</DialogTitle>
         </DialogHeader>

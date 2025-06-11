@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { CompetitionEditActions } from './CompetitionEditActions';
+import { PrizeConfigurationSection } from '../competition-form/PrizeConfigurationSection';
+import { usePaymentData } from '@/hooks/usePaymentData';
 
 interface BaseCompetition {
   id: string;
@@ -36,6 +38,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const paymentData = usePaymentData();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -60,7 +63,6 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         title: competition.title,
         description: competition.description || '',
         theme: competition.theme || '',
-        // IMPORTANTE: Preservar as datas exatas da competição original
         start_date: competition.start_date,
         end_date: competition.end_date,
         prize_pool: competition.prize_pool || 0,
@@ -84,7 +86,6 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         newDescription: formData.description
       });
 
-      // Determinar o tipo de competição
       const competitionType = competition.theme ? 'challenge' : 
                              competition.competition_type === 'challenge' ? 'challenge' : 'tournament';
 
@@ -92,7 +93,6 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         title: formData.title,
         description: formData.description,
         competition_type: competitionType,
-        // PRESERVAR as datas originais sem alteração
         start_date: formData.start_date,
         end_date: formData.end_date,
         prize_pool: formData.prize_pool,
@@ -129,12 +129,11 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
 
   if (!competition) return null;
 
-  // Determinar se é competição diária
   const isDailyCompetition = competition.theme || competition.competition_type === 'challenge';
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
         <div>
           <Label htmlFor="title">Título</Label>
           <Input
@@ -167,7 +166,6 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
           </div>
         )}
 
-        {/* Exibir informações das datas como read-only para competições diárias */}
         {isDailyCompetition && (
           <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
             <Label className="text-sm font-medium text-blue-800">Período da Competição</Label>
@@ -184,7 +182,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         {!isDailyCompetition && (
           <>
             <div>
-              <Label htmlFor="prize_pool">Premiação (R$)</Label>
+              <Label htmlFor="prize_pool">Premiação Total (R$)</Label>
               <Input
                 id="prize_pool"
                 type="number"
@@ -208,6 +206,10 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
           </>
         )}
       </div>
+
+      {!isDailyCompetition && (
+        <PrizeConfigurationSection paymentData={paymentData} />
+      )}
 
       <CompetitionEditActions
         isLoading={isLoading}
