@@ -12,9 +12,9 @@ export interface PlacedWord {
 }
 
 export const getBoardSize = (level: number): number => {
-  // Cada nível aumenta o tamanho do tabuleiro em 1
-  // Nível 1: 5x5, Nível 2: 6x6, Nível 3: 7x7, etc.
-  return Math.min(4 + level, 12); // Máximo de 12x12 para não ficar muito grande
+  // Nível 1: 10x10, Nível 2: 11x11, Nível 3: 12x12, etc.
+  // Tamanho = 9 + level
+  return 9 + level;
 };
 
 export const getLevelWords = (level: number): string[] => {
@@ -31,7 +31,10 @@ export const getCellSize = (boardSize: number): number => {
   if (boardSize <= 9) return 24;
   if (boardSize <= 10) return 22;
   if (boardSize <= 11) return 20;
-  return 18;
+  if (boardSize <= 12) return 18;
+  if (boardSize <= 14) return 16;
+  if (boardSize <= 16) return 14;
+  return 12; // Para tabuleiros muito grandes
 };
 
 // Esta função agora será substituída pelo hook useGamePointsConfig
