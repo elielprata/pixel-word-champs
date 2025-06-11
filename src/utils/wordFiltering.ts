@@ -27,7 +27,7 @@ export const filterAvailableWords = (
   );
 };
 
-// Separar palavras por dificuldade
+// Separar palavras por dificuldade (baseado apenas na classificação manual)
 export const categorizeWordsByDifficulty = (
   words: Array<{ word: string; difficulty: string }>
 ) => {

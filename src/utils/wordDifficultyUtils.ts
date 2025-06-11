@@ -1,5 +1,5 @@
 
-// Configurações de distribuição por dificuldade
+// Configurações de distribuição por dificuldade - sem relação com tamanho
 export const DIFFICULTY_DISTRIBUTION = {
   expert: 0.3,  // 30%
   hard: 0.3,    // 30%

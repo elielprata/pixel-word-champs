@@ -1,5 +1,5 @@
 
-// Distribuição desejada por dificuldade
+// Distribuição desejada por dificuldade (sem relação com tamanho)
 export const DIFFICULTY_DISTRIBUTION = {
   easy: 2,    // 2 palavras fáceis
   medium: 1,  // 1 palavra média
