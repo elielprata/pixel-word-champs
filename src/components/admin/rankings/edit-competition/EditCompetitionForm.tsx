@@ -45,6 +45,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
     theme: '',
     start_date: '',
     end_date: '',
+    prize_pool: 0,
     max_participants: 0
   });
 
@@ -64,6 +65,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         theme: competition.theme || '',
         start_date: competition.start_date,
         end_date: competition.end_date,
+        prize_pool: competition.prize_pool || 0,
         max_participants: competition.max_participants || 0
       });
     }
@@ -93,6 +95,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         competition_type: competitionType,
         start_date: formData.start_date,
         end_date: formData.end_date,
+        prize_pool: formData.prize_pool,
         max_participants: formData.max_participants,
         ...(competition.theme && { theme: formData.theme })
       };
@@ -177,16 +180,30 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         )}
 
         {!isDailyCompetition && (
-          <div>
-            <Label htmlFor="max_participants">Máximo de Participantes</Label>
-            <Input
-              id="max_participants"
-              type="number"
-              value={formData.max_participants}
-              onChange={(e) => setFormData(prev => ({ ...prev, max_participants: Number(e.target.value) }))}
-              min="0"
-            />
-          </div>
+          <>
+            <div>
+              <Label htmlFor="prize_pool">Premiação Total (R$)</Label>
+              <Input
+                id="prize_pool"
+                type="number"
+                value={formData.prize_pool}
+                onChange={(e) => setFormData(prev => ({ ...prev, prize_pool: Number(e.target.value) }))}
+                min="0"
+                step="0.01"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="max_participants">Máximo de Participantes</Label>
+              <Input
+                id="max_participants"
+                type="number"
+                value={formData.max_participants}
+                onChange={(e) => setFormData(prev => ({ ...prev, max_participants: Number(e.target.value) }))}
+                min="0"
+              />
+            </div>
+          </>
         )}
       </div>
 
