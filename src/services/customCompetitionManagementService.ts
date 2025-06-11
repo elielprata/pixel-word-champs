@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -71,40 +70,6 @@ export class CustomCompetitionManagementService {
     }
   }
 
-  /**
-   * Verifica se as datas realmente mudaram comparando com os dados originais
-   */
-  private async checkIfDatesChanged(competitionId: string, newStartDate: string, newEndDate: string): Promise<boolean> {
-    try {
-      const { data: currentCompetition, error } = await supabase
-        .from('custom_competitions')
-        .select('start_date, end_date')
-        .eq('id', competitionId)
-        .single();
-
-      if (error) throw error;
-
-      const currentStart = new Date(currentCompetition.start_date).toISOString();
-      const currentEnd = new Date(currentCompetition.end_date).toISOString();
-      const newStart = new Date(newStartDate).toISOString();
-      const newEnd = new Date(newEndDate).toISOString();
-
-      const datesChanged = currentStart !== newStart || currentEnd !== newEnd;
-      console.log('📅 Verificação de mudança de datas:', {
-        currentStart,
-        currentEnd,
-        newStart,
-        newEnd,
-        datesChanged
-      });
-
-      return datesChanged;
-    } catch (error) {
-      console.error('❌ Erro ao verificar mudanças de data:', error);
-      return true; // Em caso de erro, assumir que mudou para ser conservativo
-    }
-  }
-
   async getCompetitionById(competitionId: string): Promise<ApiResponse<any>> {
     try {
       console.log('🔍 Buscando competição por ID:', competitionId);
@@ -129,38 +94,17 @@ export class CustomCompetitionManagementService {
     try {
       console.log('🔧 Atualizando competição:', competitionId, data);
       
-      // NOVA LÓGICA: Verificar sobreposição APENAS se:
-      // 1. É uma competição semanal (tournament)
-      // 2. As datas start_date E end_date estão sendo fornecidas nos dados de atualização
-      // 3. As datas realmente mudaram em relação ao estado atual
-      const isUpdatingDates = data.start_date && data.end_date;
-      const isTournament = data.competition_type === 'tournament';
-      
-      if (isTournament && isUpdatingDates) {
-        console.log('📅 Detectada atualização de datas em competição semanal, verificando se as datas mudaram...');
-        
-        const datesChanged = await this.checkIfDatesChanged(competitionId, data.start_date, data.end_date);
-        
-        if (datesChanged) {
-          console.log('📅 Datas foram alteradas, verificando sobreposição...');
-          const hasOverlap = await this.checkDateOverlapForUpdate(
-            competitionId,
-            data.start_date,
-            data.end_date
-          );
+      // Validar sobreposição apenas para competições semanais (tournaments) quando as datas são alteradas
+      if (data.competition_type === 'tournament' && data.start_date && data.end_date) {
+        const hasOverlap = await this.checkDateOverlapForUpdate(
+          competitionId,
+          data.start_date,
+          data.end_date
+        );
 
-          if (hasOverlap) {
-            throw new Error('As datas desta competição se sobrepõem a uma já existente. Por favor, escolha um período posterior.');
-          }
-        } else {
-          console.log('📅 Datas não foram alteradas, pulando verificação de sobreposição');
+        if (hasOverlap) {
+          throw new Error('As datas desta competição se sobrepõem a uma já existente. Por favor, escolha um período posterior.');
         }
-      } else {
-        console.log('📅 Não é necessário verificar sobreposição:', { 
-          isTournament, 
-          isUpdatingDates,
-          reason: !isTournament ? 'Não é tournament' : 'Não está atualizando datas'
-        });
       }
       
       const { data: competition, error } = await supabase
