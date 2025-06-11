@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Save } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +15,8 @@ interface WordScoringEntry {
   wordSize: number;
   points: number;
   setting_key: string;
+  isRange?: boolean;
+  rangeEnd?: number;
 }
 
 interface WordScoringConfigProps {
@@ -27,12 +31,14 @@ interface WordScoringConfigProps {
   onUpdate: (key: string, value: string) => void;
   onSave: () => void;
   saving: boolean;
-  onRefresh: () => void; // Nova prop para atualizar configurações
+  onRefresh: () => void;
 }
 
 export const WordScoringConfig = ({ settings, onUpdate, onSave, saving, onRefresh }: WordScoringConfigProps) => {
   const [newWordSize, setNewWordSize] = useState<string>('');
+  const [newWordSizeEnd, setNewWordSizeEnd] = useState<string>('');
   const [newPoints, setNewPoints] = useState<string>('');
+  const [sizeType, setSizeType] = useState<'single' | 'range'>('single');
   const { toast } = useToast();
 
   // Extrair todas as configurações de pontuação (incluindo as por tamanho de palavra e outras)
@@ -41,32 +47,50 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving, onRefres
   // Separar configurações por tamanho de palavra das outras configurações de pontuação
   const wordSizeSettings = allScoringSettings.filter(setting => 
     setting.setting_key.startsWith('points_per_') && 
-    (setting.setting_key.includes('_letter_word') || setting.setting_key === 'points_per_expert_word')
+    (setting.setting_key.includes('_letter_word') || setting.setting_key === 'points_per_expert_word' || setting.setting_key.includes('_to_'))
   );
   
   const otherScoringSettings = allScoringSettings.filter(setting => 
     !(setting.setting_key.startsWith('points_per_') && 
-      (setting.setting_key.includes('_letter_word') || setting.setting_key === 'points_per_expert_word'))
+      (setting.setting_key.includes('_letter_word') || setting.setting_key === 'points_per_expert_word' || setting.setting_key.includes('_to_')))
   );
 
   const scoringEntries: WordScoringEntry[] = wordSizeSettings
     .map(setting => {
+      // Verificar se é uma faixa (contém "_to_")
+      if (setting.setting_key.includes('_to_')) {
+        const rangeMatch = setting.setting_key.match(/points_per_(\d+)_to_(\d+)_letter_word/);
+        if (rangeMatch) {
+          return {
+            id: setting.id,
+            wordSize: parseInt(rangeMatch[1]),
+            rangeEnd: parseInt(rangeMatch[2]),
+            points: parseInt(setting.setting_value),
+            setting_key: setting.setting_key,
+            isRange: true
+          };
+        }
+      }
+      
+      // Configuração de tamanho único
       const match = setting.setting_key.match(/points_per_(\d+|expert)_/);
       const wordSize = match?.[1] === 'expert' ? 8 : parseInt(match?.[1] || '0');
       return {
         id: setting.id,
         wordSize,
         points: parseInt(setting.setting_value),
-        setting_key: setting.setting_key
+        setting_key: setting.setting_key,
+        isRange: false
       };
     })
     .sort((a, b) => a.wordSize - b.wordSize);
 
   const handleAddNew = async () => {
-    const wordSize = parseInt(newWordSize);
+    const startSize = parseInt(newWordSize);
+    const endSize = sizeType === 'range' ? parseInt(newWordSizeEnd) : null;
     const points = parseInt(newPoints);
 
-    if (!wordSize || wordSize < 1 || !points || points < 0) {
+    if (!startSize || startSize < 1 || !points || points < 0) {
       toast({
         title: "Erro",
         description: "Tamanho da palavra deve ser maior que 0 e pontuação não pode ser negativa",
@@ -75,18 +99,46 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving, onRefres
       return;
     }
 
-    // Verificar se já existe configuração para este tamanho
-    const existingEntry = scoringEntries.find(entry => entry.wordSize === wordSize);
+    if (sizeType === 'range') {
+      if (!endSize || endSize <= startSize) {
+        toast({
+          title: "Erro",
+          description: "O tamanho final deve ser maior que o inicial",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    // Gerar a chave da configuração
+    let setting_key: string;
+    let description: string;
+    
+    if (sizeType === 'range' && endSize) {
+      setting_key = `points_per_${startSize}_to_${endSize}_letter_word`;
+      description = `Pontos por palavra de ${startSize} a ${endSize} letras`;
+    } else {
+      setting_key = `points_per_${startSize}_letter_word`;
+      description = `Pontos por palavra de ${startSize} letras`;
+    }
+
+    // Verificar se já existe configuração similar
+    const existingEntry = scoringEntries.find(entry => {
+      if (sizeType === 'range' && endSize) {
+        return entry.setting_key === setting_key;
+      } else {
+        return entry.wordSize === startSize && !entry.isRange;
+      }
+    });
+    
     if (existingEntry) {
       toast({
         title: "Erro",
-        description: `Já existe configuração para palavras de ${wordSize} letras`,
+        description: `Já existe configuração para este tamanho de palavra`,
         variant: "destructive"
       });
       return;
     }
-
-    const setting_key = `points_per_${wordSize}_letter_word`;
     
     try {
       // Inserir nova configuração no banco
@@ -96,7 +148,7 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving, onRefres
           setting_key,
           setting_value: points.toString(),
           setting_type: 'number',
-          description: `Pontos por palavra de ${wordSize} letras`,
+          description,
           category: 'scoring'
         });
 
@@ -108,7 +160,9 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving, onRefres
       });
 
       setNewWordSize('');
+      setNewWordSizeEnd('');
       setNewPoints('');
+      setSizeType('single');
       
       // Atualizar configurações sem recarregar a página
       onRefresh();
@@ -154,6 +208,13 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving, onRefres
     onUpdate(setting.setting_key, newValue);
   };
 
+  const formatWordSizeDisplay = (entry: WordScoringEntry) => {
+    if (entry.isRange && entry.rangeEnd) {
+      return `${entry.wordSize} a ${entry.rangeEnd} letras`;
+    }
+    return entry.wordSize === 8 ? '8+ letras' : `${entry.wordSize} letras`;
+  };
+
   return (
     <Card className="border-2 bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
       <CardHeader className="pb-4">
@@ -174,8 +235,8 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving, onRefres
             <div key={entry.id} className="bg-white/70 rounded-lg p-4 border border-white/50">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="text-sm font-medium text-slate-600 min-w-[80px]">
-                    {entry.wordSize === 8 ? '8+ letras' : `${entry.wordSize} letras`}
+                  <div className="text-sm font-medium text-slate-600 min-w-[120px]">
+                    {formatWordSizeDisplay(entry)}
                   </div>
                   <div className="flex-1">
                     <Input
@@ -229,43 +290,81 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving, onRefres
         <div className="space-y-4">
           <h4 className="font-medium text-slate-700">Adicionar Nova Configuração por Tamanho</h4>
           <div className="bg-white/70 rounded-lg p-4 border border-white/50">
-            <div className="flex items-end gap-4">
-              <div className="flex-1">
-                <Label htmlFor="wordSize" className="text-sm font-medium text-slate-600">
-                  Tamanho da Palavra
+            <div className="space-y-4">
+              {/* Tipo de configuração */}
+              <div>
+                <Label className="text-sm font-medium text-slate-600 mb-2 block">
+                  Tipo de Configuração
                 </Label>
-                <Input
-                  id="wordSize"
-                  type="number"
-                  value={newWordSize}
-                  onChange={(e) => setNewWordSize(e.target.value)}
-                  placeholder="Ex: 6"
-                  className="bg-white border-slate-200"
-                  min="1"
-                />
+                <Select value={sizeType} onValueChange={(value: 'single' | 'range') => setSizeType(value)}>
+                  <SelectTrigger className="bg-white border-slate-200">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">Tamanho único (ex: 4 letras)</SelectItem>
+                    <SelectItem value="range">Faixa de tamanhos (ex: 3 a 5 letras)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex-1">
-                <Label htmlFor="points" className="text-sm font-medium text-slate-600">
-                  Pontuação
-                </Label>
-                <Input
-                  id="points"
-                  type="number"
-                  value={newPoints}
-                  onChange={(e) => setNewPoints(e.target.value)}
-                  placeholder="Ex: 40"
-                  className="bg-white border-slate-200"
-                  min="0"
-                />
+
+              {/* Campos de entrada */}
+              <div className="flex items-end gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="wordSize" className="text-sm font-medium text-slate-600">
+                    {sizeType === 'range' ? 'Tamanho Inicial' : 'Tamanho da Palavra'}
+                  </Label>
+                  <Input
+                    id="wordSize"
+                    type="number"
+                    value={newWordSize}
+                    onChange={(e) => setNewWordSize(e.target.value)}
+                    placeholder="Ex: 3"
+                    className="bg-white border-slate-200"
+                    min="1"
+                  />
+                </div>
+                
+                {sizeType === 'range' && (
+                  <div className="flex-1">
+                    <Label htmlFor="wordSizeEnd" className="text-sm font-medium text-slate-600">
+                      Tamanho Final
+                    </Label>
+                    <Input
+                      id="wordSizeEnd"
+                      type="number"
+                      value={newWordSizeEnd}
+                      onChange={(e) => setNewWordSizeEnd(e.target.value)}
+                      placeholder="Ex: 5"
+                      className="bg-white border-slate-200"
+                      min="1"
+                    />
+                  </div>
+                )}
+                
+                <div className="flex-1">
+                  <Label htmlFor="points" className="text-sm font-medium text-slate-600">
+                    Pontuação
+                  </Label>
+                  <Input
+                    id="points"
+                    type="number"
+                    value={newPoints}
+                    onChange={(e) => setNewPoints(e.target.value)}
+                    placeholder="Ex: 40"
+                    className="bg-white border-slate-200"
+                    min="0"
+                  />
+                </div>
+                
+                <Button
+                  onClick={handleAddNew}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={!newWordSize || !newPoints || (sizeType === 'range' && !newWordSizeEnd)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar
+                </Button>
               </div>
-              <Button
-                onClick={handleAddNew}
-                className="bg-blue-600 hover:bg-blue-700"
-                disabled={!newWordSize || !newPoints}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar
-              </Button>
             </div>
           </div>
         </div>
