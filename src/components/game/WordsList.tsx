@@ -33,22 +33,22 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
   const hiddenWords = new Set([sortedByPoints[0]?.word, sortedByPoints[1]?.word]);
 
   return (
-    <div className="p-2">
-      {/* Header ultra compacto */}
-      <div className="flex items-center justify-between mb-2">
+    <div className="p-1.5 space-y-1.5">
+      {/* Header compacto */}
+      <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-1">
-          <Target className="w-3 h-3 text-indigo-600" />
-          <span className="text-xs font-semibold text-slate-700">Palavras</span>
+          <Target className="w-3 h-3 text-primary" />
+          <span className="text-xs font-semibold text-foreground">Palavras</span>
         </div>
-        <div className="flex items-center gap-0.5">
-          <span className="text-xs font-bold text-indigo-600">{foundWords.length}</span>
-          <span className="text-xs text-slate-400">/</span>
-          <span className="text-xs text-slate-500">{levelWords.length}</span>
+        <div className="px-1.5 py-0.5 bg-muted rounded-full">
+          <span className="text-xs font-bold text-primary">{foundWords.length}</span>
+          <span className="text-xs text-muted-foreground mx-0.5">/</span>
+          <span className="text-xs text-muted-foreground">{levelWords.length}</span>
         </div>
       </div>
       
-      {/* Grid de palavras em 2 colunas - mais compacto */}
-      <div className="grid grid-cols-2 gap-1">
+      {/* Grid de palavras otimizado */}
+      <div className="grid grid-cols-1 gap-1">
         {levelWords.map((word, index) => {
           const foundWordIndex = foundWords.findIndex(fw => fw.word === word);
           const isFound = foundWordIndex !== -1;
@@ -59,24 +59,24 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
             <div 
               key={index}
               className={`
-                relative px-2 py-1.5 rounded-md transition-all duration-200 text-center
+                relative flex items-center justify-between px-2 py-1 rounded-md transition-all duration-200
                 ${isFound 
-                  ? `bg-gradient-to-r ${getWordColor(foundWordIndex)} text-white shadow-sm` 
+                  ? `bg-gradient-to-r ${getWordColor(foundWordIndex)} text-primary-foreground shadow-sm` 
                   : isHidden
-                    ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white border border-purple-300'
-                    : 'bg-slate-100 text-slate-600 border border-slate-200'
+                    ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-primary-foreground'
+                    : 'bg-muted border border-border text-muted-foreground'
                 }
               `}
             >
-              {/* Palavra ou placeholder para palavras ocultas */}
-              <div className="flex items-center justify-center gap-1">
+              {/* Palavra e ícone */}
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
                 {isFound && (
-                  <CheckCircle className="w-2.5 h-2.5 text-white/90" />
+                  <CheckCircle className="w-3 h-3 text-primary-foreground/90 flex-shrink-0" />
                 )}
                 {isHidden && !isFound && (
-                  <Lock className="w-2.5 h-2.5 text-white/90" />
+                  <Lock className="w-3 h-3 text-primary-foreground/90 flex-shrink-0" />
                 )}
-                <span className="text-xs font-medium">
+                <span className="text-xs font-medium truncate">
                   {isHidden && !isFound 
                     ? `${word.length} letras` 
                     : word
@@ -84,38 +84,29 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
                 </span>
               </div>
               
-              {/* Pontos (só se encontrada) - mais compacto */}
-              {isFound && foundWord && (
-                <div className="text-[10px] text-white/80 mt-0.5">
-                  +{foundWord.points}pts
-                </div>
-              )}
-              
-              {/* Indicador especial para palavras ocultas não encontradas */}
-              {isHidden && !isFound && (
-                <div className="text-[10px] text-white/80 mt-0.5">
-                  Extra
-                </div>
-              )}
-              
-              {/* Indicador visual se encontrada - menor */}
-              {isFound && (
-                <div className="absolute top-0.5 right-0.5">
-                  <div className="w-1 h-1 bg-white/60 rounded-full"></div>
-                </div>
-              )}
+              {/* Pontos ou indicador */}
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {isFound && foundWord && (
+                  <span className="text-[10px] font-semibold text-primary-foreground/90 bg-black/10 px-1 py-0.5 rounded">
+                    +{foundWord.points}
+                  </span>
+                )}
+                {isHidden && !isFound && (
+                  <span className="text-[10px] font-semibold text-primary-foreground/90 bg-black/10 px-1 py-0.5 rounded">
+                    Extra
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
       
-      {/* Status de conclusão - mais compacto */}
+      {/* Status de conclusão compacto */}
       {foundWords.length === levelWords.length && (
-        <div className="mt-2 px-2 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-md text-center">
-          <div className="flex items-center justify-center gap-1">
-            <Star className="w-3 h-3" />
-            <span className="text-xs font-semibold">Completo!</span>
-          </div>
+        <div className="flex items-center justify-center gap-1 px-2 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-primary-foreground rounded-md">
+          <Star className="w-3 h-3" />
+          <span className="text-xs font-semibold">Nível Completo!</span>
         </div>
       )}
     </div>
