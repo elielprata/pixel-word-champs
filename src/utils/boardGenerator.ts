@@ -92,7 +92,7 @@ export class BoardGenerator {
             }
             
             // Tentar diagonalmente
-            if (row + word.length <= size && col + word.length <= this.size) {
+            if (row + word.length <= size && col + word.length <= size) {
               if (wordPlacer.canPlaceWord(word, row, col, 'diagonal')) {
                 wordPlacer.placeWord(word, row, col, 'diagonal');
                 placed = true;
