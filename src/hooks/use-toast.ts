@@ -1,4 +1,3 @@
-
 import * as React from "react"
 
 import type {
@@ -141,12 +140,13 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ title, description, ...props }: Toast) {
-  // Filtrar toasts vazios antes de adicionar
+  // Filtrar toasts completamente vazios
   const hasTitle = title && title.toString().trim() !== '';
   const hasDescription = description && description.toString().trim() !== '';
   
   // Não adicionar toast se não tiver conteúdo válido
   if (!hasTitle && !hasDescription) {
+    console.log('Toast bloqueado: sem conteúdo válido');
     return {
       id: '',
       dismiss: () => {},
