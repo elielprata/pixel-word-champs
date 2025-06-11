@@ -59,7 +59,6 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
             onEditIndividual={paymentData.handleEditIndividual}
             onSaveIndividual={paymentData.handleSaveIndividual}
             onCancel={paymentData.handleCancel}
-            onExportPix={handleExportPix}
           />
 
           {/* Group Prizes */}

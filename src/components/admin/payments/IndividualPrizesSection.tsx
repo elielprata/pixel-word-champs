@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trophy, Download, Edit, Save, X } from 'lucide-react';
+import { Trophy, Edit, Save, X } from 'lucide-react';
 
 interface IndividualPrize {
   position: number;
@@ -18,7 +18,6 @@ interface IndividualPrizesSectionProps {
   onEditIndividual: (position: number) => void;
   onSaveIndividual: (position: number) => void;
   onCancel: () => void;
-  onExportPix: (prizeLevel: string) => void;
 }
 
 const formatCurrency = (value: number): string => {
@@ -37,31 +36,19 @@ export const IndividualPrizesSection = ({
   setEditIndividualValue,
   onEditIndividual,
   onSaveIndividual,
-  onCancel,
-  onExportPix
+  onCancel
 }: IndividualPrizesSectionProps) => {
   return (
     <Card className="shadow-sm border-slate-200">
       <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-yellow-100 p-2 rounded-lg">
-              <Trophy className="h-5 w-5 text-yellow-600" />
-            </div>
-            <div>
-              <CardTitle className="text-lg text-slate-800">Premiação do Pódio</CardTitle>
-              <p className="text-sm text-slate-600">Configure os prêmios para as 3 primeiras colocações</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="bg-yellow-100 p-2 rounded-lg">
+            <Trophy className="h-5 w-5 text-yellow-600" />
           </div>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => onExportPix('1º ao 3º lugar')}
-            className="border-blue-200 text-blue-700 hover:bg-blue-50"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar PIX
-          </Button>
+          <div>
+            <CardTitle className="text-lg text-slate-800">Premiação do Pódio</CardTitle>
+            <p className="text-sm text-slate-600">Configure os prêmios para as 3 primeiras colocações</p>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-6">

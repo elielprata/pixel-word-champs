@@ -71,7 +71,6 @@ export const PaymentsTab = () => {
         onEditIndividual={handleEditIndividual}
         onSaveIndividual={handleSaveIndividual}
         onCancel={handleCancel}
-        onExportPix={handleExportPix}
       />
 
       <GroupPrizesSection
