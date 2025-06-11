@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,7 @@ export const DailyCompetitionsManagement = () => {
     fetchCompetitions();
   }, []);
 
-  // Função para garantir que a data de fim seja sempre 23:59:59.999 do mesmo dia em Brasília
+  // CORRIGIDO: Usar as funções padronizadas de data
   const ensureEndOfDay = (dateString: string): string => {
     if (!dateString) return '';
     
@@ -58,7 +57,6 @@ export const DailyCompetitionsManagement = () => {
     return endOfDay.toISOString();
   };
 
-  // Função para definir o início do dia como 00:00:00.000 em Brasília
   const ensureStartOfDay = (dateString: string): string => {
     if (!dateString) return '';
     
@@ -123,17 +121,17 @@ export const DailyCompetitionsManagement = () => {
 
   const addCompetition = async () => {
     try {
-      // SEMPRE garantir padrão: 00:00:00 às 23:59:59 do mesmo dia
+      // CORRIGIDO: Usar as funções padronizadas para garantir consistência
       const adjustedCompetition = {
         ...newCompetition,
         start_date: ensureStartOfDay(newCompetition.start_date),
-        end_date: ensureEndOfDay(newCompetition.start_date), // Usar start_date para garantir mesmo dia
+        end_date: ensureEndOfDay(newCompetition.start_date), // Garantir mesmo dia
         competition_type: 'challenge',
-        status: 'scheduled', // Deixar que o sistema calcule o status correto baseado no horário
-        max_participants: 0 // Participação livre - sem limite
+        status: 'scheduled', // Status será calculado automaticamente
+        max_participants: 0 // Participação livre
       };
 
-      console.log('🎯 Criando competição diária com PADRÃO OBRIGATÓRIO (00:00:00 às 23:59:59):', {
+      console.log('🎯 Criando competição diária com padrão corrigido:', {
         start: formatBrasiliaTime(new Date(adjustedCompetition.start_date)),
         end: formatBrasiliaTime(new Date(adjustedCompetition.end_date)),
         max_participants: 'ILIMITADO'
@@ -156,7 +154,7 @@ export const DailyCompetitionsManagement = () => {
         theme: '',
         start_date: '',
         end_date: '',
-        max_participants: 0 // Sem limite
+        max_participants: 0
       });
       setIsAddModalOpen(false);
       fetchCompetitions();
@@ -174,18 +172,18 @@ export const DailyCompetitionsManagement = () => {
     if (!editingCompetition) return;
 
     try {
-      // Para competições diárias, SEMPRE garantir padrão obrigatório
+      // CORRIGIDO: Usar as funções padronizadas
       const updateData = {
         title: editingCompetition.title,
         description: editingCompetition.description,
         theme: editingCompetition.theme,
         start_date: ensureStartOfDay(editingCompetition.start_date),
-        end_date: ensureEndOfDay(editingCompetition.start_date), // Garantir 23:59:59 do mesmo dia
+        end_date: ensureEndOfDay(editingCompetition.start_date), // Garantir mesmo dia
         max_participants: 0, // Forçar participação livre
-        status: 'scheduled' // Deixar que o sistema calcule automaticamente
+        status: 'scheduled' // Status será calculado automaticamente
       };
 
-      console.log('🔧 Atualizando competição diária com PADRÃO OBRIGATÓRIO (00:00:00 às 23:59:59):', {
+      console.log('🔧 Atualizando competição diária com padrão corrigido:', {
         start: formatBrasiliaTime(new Date(updateData.start_date)),
         end: formatBrasiliaTime(new Date(updateData.end_date)),
         max_participants: 'ILIMITADO'

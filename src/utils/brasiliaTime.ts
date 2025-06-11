@@ -1,3 +1,4 @@
+
 import { toZonedTime, fromZonedTime, format } from 'date-fns-tz';
 
 /**
@@ -9,13 +10,7 @@ export const BRASILIA_TIMEZONE = 'America/Sao_Paulo';
  * Obtém a data/hora atual no fuso horário de Brasília
  */
 export const getBrasiliaTime = (): Date => {
-  const now = new Date();
-  const brasiliaTime = toZonedTime(now, BRASILIA_TIMEZONE);
-  
-  console.log('🕐 Horário UTC original:', now.toISOString());
-  console.log('🇧🇷 Horário Brasília convertido:', brasiliaTime.toISOString());
-  
-  return brasiliaTime;
+  return toZonedTime(new Date(), BRASILIA_TIMEZONE);
 };
 
 /**
@@ -33,27 +28,56 @@ export const brasiliaToUtc = (brasiliaDate: Date): Date => {
 };
 
 /**
- * Obtém o horário atual em UTC baseado no horário de Brasília
- */
-export const getCurrentUtcFromBrasilia = (): Date => {
-  const now = new Date();
-  const brasiliaTime = toZonedTime(now, BRASILIA_TIMEZONE);
-  const utcTime = fromZonedTime(brasiliaTime, BRASILIA_TIMEZONE);
-  
-  console.log('🔄 Debug conversão:', {
-    original: now.toISOString(),
-    brasilia: brasiliaTime.toISOString(),
-    backToUtc: utcTime.toISOString()
-  });
-  
-  return utcTime;
-};
-
-/**
  * Formata uma data no fuso horário de Brasília
  */
 export const formatBrasiliaTime = (date: Date, formatString: string = 'yyyy-MM-dd HH:mm:ss'): string => {
   return format(toZonedTime(date, BRASILIA_TIMEZONE), formatString, { timeZone: BRASILIA_TIMEZONE });
+};
+
+/**
+ * Cria uma data para o início do dia em Brasília (00:00:00) e retorna em UTC
+ * CORRIGIDO: Garantir que a data resultante seja UTC equivalente ao horário de Brasília
+ */
+export const createBrasiliaStartOfDay = (date: Date): Date => {
+  // Obter a data no fuso de Brasília
+  const brasiliaDate = toZonedTime(date, BRASILIA_TIMEZONE);
+  
+  // Definir como início do dia (00:00:00)
+  brasiliaDate.setHours(0, 0, 0, 0);
+  
+  // Converter de volta para UTC
+  const utcDate = fromZonedTime(brasiliaDate, BRASILIA_TIMEZONE);
+  
+  console.log('🌅 Criando início do dia:', {
+    original: formatBrasiliaTime(date),
+    brasiliaStartOfDay: formatBrasiliaTime(brasiliaDate),
+    utcEquivalent: utcDate.toISOString()
+  });
+  
+  return utcDate;
+};
+
+/**
+ * Cria uma data para o final do dia em Brasília (23:59:59.999) e retorna em UTC
+ * CORRIGIDO: Garantir que a data resultante seja UTC equivalente ao horário de Brasília
+ */
+export const createBrasiliaEndOfDay = (date: Date): Date => {
+  // Obter a data no fuso de Brasília
+  const brasiliaDate = toZonedTime(date, BRASILIA_TIMEZONE);
+  
+  // Definir como final do dia (23:59:59.999)
+  brasiliaDate.setHours(23, 59, 59, 999);
+  
+  // Converter de volta para UTC
+  const utcDate = fromZonedTime(brasiliaDate, BRASILIA_TIMEZONE);
+  
+  console.log('🌆 Criando fim do dia:', {
+    original: formatBrasiliaTime(date),
+    brasiliaEndOfDay: formatBrasiliaTime(brasiliaDate),
+    utcEquivalent: utcDate.toISOString()
+  });
+  
+  return utcDate;
 };
 
 /**
@@ -64,13 +88,14 @@ export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): bo
   const brasiliaEnd = utcToBrasilia(endDate);
   const brasiliaNow = getBrasiliaTime();
   
-  console.log('🔍 Verificando período ativo (Brasília):');
-  console.log('  📅 Início:', formatBrasiliaTime(brasiliaStart));
-  console.log('  📅 Fim:', formatBrasiliaTime(brasiliaEnd));
-  console.log('  🕐 Agora:', formatBrasiliaTime(brasiliaNow));
+  console.log('🔍 Verificando período ativo (Brasília):', {
+    start: formatBrasiliaTime(brasiliaStart),
+    end: formatBrasiliaTime(brasiliaEnd),
+    now: formatBrasiliaTime(brasiliaNow)
+  });
   
   const isActive = brasiliaNow >= brasiliaStart && brasiliaNow <= brasiliaEnd;
-  console.log('  ✅ Ativo:', isActive);
+  console.log('✅ Ativo:', isActive);
   
   return isActive;
 };
@@ -82,44 +107,14 @@ export const isBrasiliaDateInFuture = (date: Date): boolean => {
   const brasiliaNow = getBrasiliaTime();
   const brasiliaDate = utcToBrasilia(date);
   
-  console.log('🔍 Verificando se data é futura (Brasília):');
-  console.log('  📅 Data:', formatBrasiliaTime(brasiliaDate));
-  console.log('  🕐 Agora:', formatBrasiliaTime(brasiliaNow));
-  
   const isFuture = brasiliaDate > brasiliaNow;
-  console.log('  ➡️ É futura:', isFuture);
+  console.log('🔍 Verificando se data é futura:', {
+    date: formatBrasiliaTime(brasiliaDate),
+    now: formatBrasiliaTime(brasiliaNow),
+    isFuture
+  });
   
   return isFuture;
-};
-
-/**
- * Cria uma data para o início do dia em Brasília (00:00:00)
- * CORRIGIDO: Garante que a comparação seja feita no fuso horário correto
- */
-export const createBrasiliaStartOfDay = (date: Date): Date => {
-  // Converter a data para o fuso de Brasília primeiro
-  const brasiliaDate = toZonedTime(date, BRASILIA_TIMEZONE);
-  brasiliaDate.setHours(0, 0, 0, 0);
-  
-  console.log('🌅 Início do dia em Brasília:', formatBrasiliaTime(brasiliaDate));
-  
-  // Retornar a data já no fuso de Brasília
-  return brasiliaDate;
-};
-
-/**
- * Cria uma data para o final do dia em Brasília (23:59:59.999)
- * CORRIGIDO: Garante que a comparação seja feita no fuso horário correto
- */
-export const createBrasiliaEndOfDay = (date: Date): Date => {
-  // Converter a data para o fuso de Brasília primeiro
-  const brasiliaDate = toZonedTime(date, BRASILIA_TIMEZONE);
-  brasiliaDate.setHours(23, 59, 59, 999);
-  
-  console.log('🌆 Fim do dia em Brasília:', formatBrasiliaTime(brasiliaDate));
-  
-  // Retornar a data já no fuso de Brasília
-  return brasiliaDate;
 };
 
 /**
@@ -134,4 +129,72 @@ export const getBrasiliaDateOnly = (): string => {
  */
 export const isoToBrasilia = (isoString: string): Date => {
   return utcToBrasilia(new Date(isoString));
+};
+
+/**
+ * NOVA FUNÇÃO: Calcula o status correto de uma competição diária baseado no horário de Brasília
+ * Esta é a única função que deve ser usada para competições diárias
+ */
+export const calculateDailyCompetitionStatus = (competitionDate: string): string => {
+  const nowBrasilia = getBrasiliaTime();
+  const competitionDay = new Date(competitionDate);
+  
+  // Criar início e fim do dia da competição em UTC (baseado no horário de Brasília)
+  const dayStartUtc = createBrasiliaStartOfDay(competitionDay);
+  const dayEndUtc = createBrasiliaEndOfDay(competitionDay);
+  
+  // Converter para horário de Brasília para comparação
+  const dayStartBrasilia = utcToBrasilia(dayStartUtc);
+  const dayEndBrasilia = utcToBrasilia(dayEndUtc);
+  
+  console.log('🔍 Calculando status da competição diária:', {
+    competitionDate,
+    nowBrasilia: formatBrasiliaTime(nowBrasilia),
+    dayStartBrasilia: formatBrasiliaTime(dayStartBrasilia),
+    dayEndBrasilia: formatBrasiliaTime(dayEndBrasilia),
+    isBeforeStart: nowBrasilia < dayStartBrasilia,
+    isAfterEnd: nowBrasilia > dayEndBrasilia,
+    isActive: nowBrasilia >= dayStartBrasilia && nowBrasilia <= dayEndBrasilia
+  });
+  
+  // Regras de status em horário de Brasília:
+  if (nowBrasilia < dayStartBrasilia) {
+    console.log('⏳ Competição diária: AGUARDANDO INÍCIO');
+    return 'scheduled';
+  } else if (nowBrasilia >= dayStartBrasilia && nowBrasilia <= dayEndBrasilia) {
+    console.log('✅ Competição diária: ATIVA');
+    return 'active';
+  } else {
+    console.log('🏁 Competição diária: FINALIZADA');
+    return 'completed';
+  }
+};
+
+/**
+ * NOVA FUNÇÃO: Calcula o status correto de uma competição semanal baseado em UTC
+ */
+export const calculateWeeklyCompetitionStatus = (startDate: string, endDate: string): string => {
+  const now = new Date();
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  console.log('🔍 Calculando status da competição semanal:', {
+    now: now.toISOString(),
+    start: start.toISOString(),
+    end: end.toISOString(),
+    isBeforeStart: now < start,
+    isAfterEnd: now > end,
+    isActive: now >= start && now <= end
+  });
+  
+  if (now < start) {
+    console.log('⏳ Competição semanal: AGUARDANDO INÍCIO');
+    return 'scheduled';
+  } else if (now >= start && now <= end) {
+    console.log('✅ Competição semanal: ATIVA');
+    return 'active';
+  } else {
+    console.log('🏁 Competição semanal: FINALIZADA');
+    return 'completed';
+  }
 };
