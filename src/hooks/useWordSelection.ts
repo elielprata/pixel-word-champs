@@ -23,8 +23,8 @@ export const useWordSelection = (level: number) => {
           .from('level_words')
           .select('word, difficulty, category')
           .eq('is_active', true)
-          .lte('length(word)', maxWordLength) // Filtrar por tamanho da palavra
-          .gte('length(word)', 3); // Mínimo 3 letras
+          .lte('char_length(word)', maxWordLength) // Usar char_length em vez de length
+          .gte('char_length(word)', 3); // Mínimo 3 letras
 
         if (error) {
           console.error('❌ Erro ao buscar palavras:', error);
