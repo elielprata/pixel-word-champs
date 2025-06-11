@@ -20,7 +20,7 @@ export const WordsListTableContent = ({ words }: WordsListTableContentProps) => 
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[250px] font-semibold">Palavra</TableHead>
+          <TableHead className="w-[350px] font-semibold">Palavra</TableHead>
           <TableHead className="w-[200px] font-semibold">Categoria</TableHead>
           <TableHead className="font-semibold">Data de Criação</TableHead>
         </TableRow>
