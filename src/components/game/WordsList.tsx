@@ -18,14 +18,15 @@ interface WordsListProps {
 const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => {
   const { getPointsForWord } = useGamePointsConfig();
 
-  // Identificar as 2 palavras com maior pontuação
+  // Identificar apenas a palavra com maior pontuação
   const wordsWithPoints = levelWords.map(word => ({
     word,
     points: getPointsForWord(word)
   }));
   
   const sortedByPoints = [...wordsWithPoints].sort((a, b) => b.points - a.points);
-  const hiddenWords = new Set([sortedByPoints[0]?.word, sortedByPoints[1]?.word]);
+  // Apenas a primeira palavra (maior pontuação) é oculta
+  const hiddenWords = new Set([sortedByPoints[0]?.word]);
 
   return (
     <div className="p-1.5 space-y-1.5">

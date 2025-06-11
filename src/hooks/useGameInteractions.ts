@@ -24,7 +24,7 @@ export const useGameInteractions = (
 ) => {
   const { getPointsForWord } = useGamePointsConfig();
 
-  // Identificar as 2 palavras com maior pontuação (palavras ocultas)
+  // Identificar apenas a palavra com maior pontuação (palavra oculta)
   const getHiddenWords = () => {
     const wordsWithPoints = levelWords.map(word => ({
       word,
@@ -32,7 +32,8 @@ export const useGameInteractions = (
     }));
     
     const sortedByPoints = [...wordsWithPoints].sort((a, b) => b.points - a.points);
-    return new Set([sortedByPoints[0]?.word, sortedByPoints[1]?.word]);
+    // Retornar apenas a primeira palavra (maior pontuação)
+    return new Set([sortedByPoints[0]?.word]);
   };
 
   const useHint = () => {
@@ -40,12 +41,12 @@ export const useGameInteractions = (
     
     const hiddenWords = getHiddenWords();
     
-    // Filtrar palavras restantes, excluindo as palavras ocultas
+    // Filtrar palavras restantes, excluindo a palavra oculta
     const remainingWords = levelWords.filter(word => 
       !foundWords.some(fw => fw.word === word) && !hiddenWords.has(word)
     );
     
-    // Verificar se só restam palavras ocultas
+    // Verificar se só resta a palavra oculta
     const allRemainingWords = levelWords.filter(word => 
       !foundWords.some(fw => fw.word === word)
     );
@@ -55,7 +56,7 @@ export const useGameInteractions = (
     if (onlyHiddenWordsLeft && allRemainingWords.length > 0) {
       toast({
         title: "Dica não disponível",
-        description: "As dicas não podem ser usadas nas palavras de Desafio Extra. Tente encontrá-las por conta própria!",
+        description: "A dica não pode ser usada na palavra de Desafio Extra. Tente encontrá-la por conta própria!",
         variant: "destructive"
       });
       return;
@@ -64,7 +65,7 @@ export const useGameInteractions = (
     if (remainingWords.length > 0) {
       setHintsUsed(prev => prev + 1);
       
-      // Encontrar a primeira palavra não encontrada (excluindo ocultas) e destacar suas posições
+      // Encontrar a primeira palavra não encontrada (excluindo oculta) e destacar suas posições
       const hintWord = remainingWords[0];
       const wordPlacement = boardData.placedWords.find(pw => pw.word === hintWord);
       
@@ -81,7 +82,7 @@ export const useGameInteractions = (
     } else {
       toast({
         title: "Dica não disponível",
-        description: "As dicas não podem ser usadas nas palavras de Desafio Extra. Tente encontrá-las por conta própria!",
+        description: "A dica não pode ser usada na palavra de Desafio Extra. Tente encontrá-la por conta própria!",
         variant: "destructive"
       });
     }
