@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Trophy, Clock } from 'lucide-react';
 import { CompetitionActions } from './CompetitionActions';
+import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 
 interface DailyCompetition {
   id: string;
@@ -32,6 +32,9 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
   onDelete,
   isDeleting
 }) => {
+  // Adicionar hook para atualização automática de status
+  useCompetitionStatusUpdater([competition]);
+
   const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
     const date = new Date(dateString);
     const dateFormatted = date.toLocaleDateString('pt-BR', {

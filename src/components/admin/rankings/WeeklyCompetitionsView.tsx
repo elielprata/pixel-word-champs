@@ -8,6 +8,7 @@ import { customCompetitionService } from '@/services/customCompetitionService';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { WeeklyRankingModal } from './WeeklyRankingModal';
 import { useNavigate } from 'react-router-dom';
+import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 
 interface WeeklyCompetition {
   id: string;
@@ -34,6 +35,9 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   isLoading,
   onRefresh
 }) => {
+  // Adicionar hook para atualização automática de status
+  useCompetitionStatusUpdater(competitions);
+
   const { toast } = useToast();
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);

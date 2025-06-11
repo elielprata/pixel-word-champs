@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { EditCompetitionModal } from './EditCompetitionModal';
 import { CompetitionTimeInfo } from './daily/CompetitionTimeInfo';
 import { DailyCompetitionCard } from './daily/DailyCompetitionCard';
 import { DailyCompetitionsEmpty } from './daily/DailyCompetitionsEmpty';
+import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 
 interface DailyCompetition {
   id: string;
@@ -34,6 +34,9 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
   isLoading,
   onRefresh
 }) => {
+  // Adicionar hook para atualização automática de status de todas as competições
+  useCompetitionStatusUpdater(competitions);
+
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCompetition, setEditingCompetition] = useState<DailyCompetition | null>(null);
