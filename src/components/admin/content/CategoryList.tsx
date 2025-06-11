@@ -15,7 +15,7 @@ interface CategoryListProps {
   isUpdating: boolean;
   isDeleting: boolean;
   onUpdateCategory: (data: { id: string; name: string; description: string }) => void;
-  onDeleteCategory: (id: string, password: string) => void;
+  onDeleteCategory: (data: { id: string; password: string }) => void;
 }
 
 export const CategoryList = ({ 
@@ -40,6 +40,10 @@ export const CategoryList = ({
     setEditingId(null);
   };
 
+  const handleDelete = (id: string, password: string) => {
+    onDeleteCategory({ id, password });
+  };
+
   return (
     <div className="grid gap-4">
       <h3 className="text-lg font-semibold text-slate-900">Categorias Existentes</h3>
@@ -62,7 +66,7 @@ export const CategoryList = ({
               isDeleting={isDeleting}
               onEdit={handleEdit}
               onUpdate={handleUpdate}
-              onDelete={onDeleteCategory}
+              onDelete={handleDelete}
               onCancelEdit={handleCancelEdit}
             />
           ))}
