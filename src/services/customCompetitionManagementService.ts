@@ -96,8 +96,27 @@ export class CustomCompetitionManagementService {
     try {
       console.log('🔧 Atualizando competição:', competitionId, data);
       
+      // PRIMEIRO: Buscar a competição atual para verificar seu tipo
+      const { data: currentCompetition, error: fetchError } = await supabase
+        .from('custom_competitions')
+        .select('competition_type')
+        .eq('id', competitionId)
+        .single();
+
+      if (fetchError) {
+        console.error('❌ Erro ao buscar competição atual:', fetchError);
+        throw fetchError;
+      }
+
+      console.log('📋 Tipo da competição atual:', currentCompetition.competition_type);
+
+      // Determinar o tipo final da competição (priorizar o valor passado em data, senão usar o atual)
+      const finalCompetitionType = data.competition_type || currentCompetition.competition_type;
+      
+      console.log('🎯 Tipo final da competição:', finalCompetitionType);
+
       // Validar sobreposição APENAS para competições semanais (tournaments) quando as datas são alteradas
-      if (data.competition_type === 'tournament' && data.start_date && data.end_date) {
+      if (finalCompetitionType === 'tournament' && data.start_date && data.end_date) {
         console.log('🔍 Verificando sobreposição para competição semanal...');
         const hasOverlap = await this.checkWeeklyCompetitionOverlapForUpdate(
           competitionId,
@@ -106,12 +125,15 @@ export class CustomCompetitionManagementService {
         );
 
         if (hasOverlap) {
+          console.log('❌ Sobreposição detectada - rejeitando atualização');
           throw new Error('As datas desta competição semanal se sobrepõem a uma competição semanal já existente. Por favor, escolha um período diferente.');
         }
-      } else if (data.competition_type === 'challenge') {
+      } else if (finalCompetitionType === 'challenge') {
         console.log('✅ Competição diária - PODE coexistir com qualquer outra competição');
       } else if (!data.start_date || !data.end_date) {
         console.log('✅ Datas não alteradas - ignorando verificação de sobreposição');
+      } else {
+        console.log('✅ Tipo de competição não requer validação de sobreposição:', finalCompetitionType);
       }
       
       const { data: competition, error } = await supabase
