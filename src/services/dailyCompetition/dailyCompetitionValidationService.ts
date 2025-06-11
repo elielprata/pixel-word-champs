@@ -20,12 +20,12 @@ export class DailyCompetitionValidationService {
       // Inserir no banco - o trigger garantirá 23:59:59
       const { data, error } = await supabase
         .from('custom_competitions')
-        .insert([{
+        .insert({
           ...validatedData,
           status: 'draft',
           max_participants: formData.max_participants || null,
           created_by: (await supabase.auth.getUser()).data.user?.id
-        }])
+        })
         .select()
         .single();
 

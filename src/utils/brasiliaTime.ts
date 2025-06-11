@@ -1,4 +1,3 @@
-
 import { toZonedTime, fromZonedTime, format } from 'date-fns-tz';
 
 /**
@@ -78,6 +77,13 @@ export const createBrasiliaEndOfDay = (date: Date): Date => {
   });
   
   return utcDate;
+};
+
+/**
+ * NOVA FUNÇÃO: Garante que uma data termine às 23:59:59 no horário de Brasília
+ */
+export const ensureEndOfDay = (date: Date): Date => {
+  return createBrasiliaEndOfDay(date);
 };
 
 /**
