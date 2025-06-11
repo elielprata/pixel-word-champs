@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +6,7 @@ import { Trophy, Calendar, Users, Crown, Clock, Edit, Trash2, MapPin } from 'luc
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { EditCompetitionModal } from './EditCompetitionModal';
+import { WeeklyRankingModal } from './WeeklyRankingModal';
 import { useNavigate } from 'react-router-dom';
 
 interface WeeklyCompetition {
@@ -39,6 +39,8 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCompetition, setEditingCompetition] = useState<WeeklyCompetition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
+  const [selectedCompetitionId, setSelectedCompetitionId] = useState<string>('');
 
   const activeCompetitions = competitions.filter(comp => 
     comp.status !== 'completed' && comp.status !== 'cancelled'
@@ -81,8 +83,9 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   };
 
   const handleViewRanking = (competition: WeeklyCompetition) => {
-    console.log('👁️ Navegando para ranking da competição semanal:', competition.id);
-    navigate(`/admin/weekly-competition/${competition.id}/ranking`);
+    console.log('👁️ Abrindo modal de ranking da competição semanal:', competition.id);
+    setSelectedCompetitionId(competition.id);
+    setIsRankingModalOpen(true);
   };
 
   const handleEdit = (competition: WeeklyCompetition) => {
@@ -361,6 +364,12 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         onOpenChange={setIsEditModalOpen}
         competition={editingCompetition}
         onCompetitionUpdated={handleCompetitionUpdated}
+      />
+
+      <WeeklyRankingModal
+        open={isRankingModalOpen}
+        onOpenChange={setIsRankingModalOpen}
+        competitionId={selectedCompetitionId}
       />
     </div>
   );
