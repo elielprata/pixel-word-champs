@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -211,7 +212,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             </div>
 
             <div className="bg-white/70 backdrop-blur-sm rounded-md px-2 py-1 border border-slate-200/50">
-              <p className="text-xs text-slate-700 leading-relaxed font-medium break-words whitespace-normal">
+              <p className="text-xs text-slate-700 leading-relaxed font-medium">
                 {competition.description}
               </p>
             </div>
