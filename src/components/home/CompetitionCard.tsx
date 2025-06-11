@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -211,8 +210,8 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
               <div className="w-8 h-0.5 bg-gradient-to-r from-purple-500 to-transparent rounded-full"></div>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-sm rounded-md px-2 py-1.5 border border-slate-200/50 max-h-16 overflow-y-auto">
-              <p className="text-xs text-slate-700 leading-relaxed font-medium break-words whitespace-normal word-break break-all">
+            <div className="bg-white/70 backdrop-blur-sm rounded-md px-2 py-1 border border-slate-200/50">
+              <p className="text-xs text-slate-700 leading-relaxed font-medium break-words whitespace-normal">
                 {competition.description}
               </p>
             </div>
