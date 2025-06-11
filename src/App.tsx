@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -27,19 +28,19 @@ const queryClient = new QueryClient();
 function App({}: AppProps) {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [challengeId, setChallengeId] = useState<string | null>(null);
-  const [challengeCategory, setChallengeCategory] = useState<string | undefined>(undefined); // Adicionando estado para categoria
+  const [challengeCategory, setChallengeCategory] = useState<string | undefined>(undefined);
   const [challengeRankingId, setChallengeRankingId] = useState<number | null>(null);
 
   const handleStartChallenge = (id: string, category?: string) => {
     console.log(`🎯 App - Iniciando challenge ${id} com categoria: ${category || 'sem categoria'}`);
     setChallengeId(id);
-    setChallengeCategory(category); // Armazenando a categoria
+    setChallengeCategory(category);
     setCurrentScreen('challenge');
   };
 
   const handleBackFromChallenge = () => {
     setChallengeId(null);
-    setChallengeCategory(undefined); // Limpando a categoria
+    setChallengeCategory(undefined);
     setCurrentScreen('home');
   };
 
@@ -78,7 +79,7 @@ function App({}: AppProps) {
         return challengeId ? (
           <ChallengeScreen
             challengeId={challengeId}
-            category={challengeCategory} // Passando a categoria
+            category={challengeCategory}
             onBack={handleBackFromChallenge}
           />
         ) : null;
@@ -107,7 +108,7 @@ function App({}: AppProps) {
                   <Route path="/admin/*" element={
                     <AdminRoute>
                       <AdminPanel />
-                    </AdminPanel>
+                    </AdminRoute>
                   } />
                   <Route path="/" element={
                     <ProtectedRoute>
