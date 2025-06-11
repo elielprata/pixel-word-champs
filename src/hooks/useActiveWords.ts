@@ -34,17 +34,24 @@ export const useActiveWords = () => {
       // Aqui você pode adicionar validação da senha se necessário
       // Por exemplo, verificar se a senha está correta antes de prosseguir
       
+      console.log('🗑️ Excluindo todas as palavras ativas permanentemente...');
+      
       const { error } = await supabase
         .from('level_words')
-        .update({ is_active: false })
+        .delete()
         .eq('is_active', true);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao excluir palavras:', error);
+        throw error;
+      }
+      
+      console.log('✅ Todas as palavras ativas foram excluídas permanentemente');
     },
     onSuccess: () => {
       toast({
         title: "Sucesso!",
-        description: "Todas as palavras foram excluídas com sucesso",
+        description: "Todas as palavras foram excluídas permanentemente",
       });
       queryClient.invalidateQueries({ queryKey: ['activeWords'] });
     },
