@@ -18,26 +18,10 @@ interface GameSettingItemProps {
 }
 
 export const GameSettingItem = ({ setting, onUpdate }: GameSettingItemProps) => {
-  // Função para formatar a descrição baseada na chave
-  const getFormattedDescription = () => {
-    switch (setting.setting_key) {
-      case 'points_per_3_letter_word':
-        return 'Pontos por palavra de 3 letras';
-      case 'points_per_4_letter_word':
-        return 'Pontos por palavra de 4 letras';
-      case 'points_per_5_letter_word':
-        return 'Pontos por palavra de 5 letras';
-      case 'points_per_expert_word':
-        return 'Pontos por palavra expert (8+ letras)';
-      default:
-        return setting.description;
-    }
-  };
-
   return (
     <div className="bg-white/70 rounded-lg p-4 border border-white/50">
       <Label className="text-sm font-semibold text-slate-700 mb-2 block">
-        {getFormattedDescription()}
+        {setting.description}
       </Label>
       <Input
         type={setting.setting_type === 'number' ? 'number' : 'text'}
@@ -45,7 +29,6 @@ export const GameSettingItem = ({ setting, onUpdate }: GameSettingItemProps) => 
         onChange={(e) => onUpdate(setting.setting_key, e.target.value)}
         className="bg-white border-slate-200"
         placeholder={`Valor para ${setting.setting_key}`}
-        min={setting.setting_type === 'number' ? '0' : undefined}
       />
       <p className="text-xs text-slate-500 mt-1">
         Chave: {setting.setting_key}

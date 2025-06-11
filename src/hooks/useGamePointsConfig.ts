@@ -36,14 +36,12 @@ export const useGamePointsConfig = () => {
 
         if (error) throw error;
 
-        if (data && data.length > 0) {
-          const configObj = data.reduce((acc, setting) => {
-            acc[setting.setting_key as keyof PointsConfig] = parseInt(setting.setting_value);
-            return acc;
-          }, {} as Partial<PointsConfig>);
+        const configObj = data.reduce((acc, setting) => {
+          acc[setting.setting_key as keyof PointsConfig] = parseInt(setting.setting_value);
+          return acc;
+        }, {} as Partial<PointsConfig>);
 
-          setConfig(prev => ({ ...prev, ...configObj }));
-        }
+        setConfig(prev => ({ ...prev, ...configObj }));
       } catch (error) {
         console.error('Erro ao carregar configurações de pontos:', error);
       } finally {
@@ -52,23 +50,6 @@ export const useGamePointsConfig = () => {
     };
 
     fetchConfig();
-
-    // Configurar listener para mudanças em tempo real
-    const subscription = supabase
-      .channel('game_settings_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'game_settings',
-        filter: 'setting_key=in.(points_per_3_letter_word,points_per_4_letter_word,points_per_5_letter_word,points_per_expert_word,revive_time_bonus)'
-      }, () => {
-        fetchConfig();
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const getPointsForWord = (word: string): number => {
@@ -76,10 +57,8 @@ export const useGamePointsConfig = () => {
     if (length === 3) return config.points_per_3_letter_word;
     if (length === 4) return config.points_per_4_letter_word;
     if (length === 5) return config.points_per_5_letter_word;
-    if (length >= 8) return config.points_per_expert_word;
-    
-    // Para palavras de 6-7 letras, usar valor intermediário
-    return Math.round((config.points_per_5_letter_word + config.points_per_expert_word) / 2);
+    if (length >= 6) return config.points_per_expert_word;
+    return 0;
   };
 
   return {
