@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -46,12 +47,17 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string>('');
 
+  // Filtrar apenas competições não finalizadas (ativas ou aguardando)
   const activeCompetitions = competitions.filter(comp => 
-    comp.status !== 'completed' && comp.status !== 'cancelled'
+    comp.status === 'active' || comp.status === 'scheduled'
   );
 
+  // Encontrar a competição realmente ativa (dentro do período)
+  const currentActiveCompetition = activeCompetitions.find(comp => comp.status === 'active');
+
+  // Outras competições (aguardando início)
   const otherActiveCompetitions = activeCompetitions.filter(comp => 
-    !activeCompetition || comp.id !== activeCompetition.id
+    comp.status === 'scheduled' || (comp.status === 'active' && comp.id !== currentActiveCompetition?.id)
   );
 
   const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
@@ -80,7 +86,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active': return 'Ativo';
-      case 'scheduled': return 'Agendado';
+      case 'scheduled': return 'Aguardando Início';
       case 'completed': return 'Finalizado';
       default: return 'Rascunho';
     }
@@ -162,7 +168,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
     return (
       <div className="text-center py-12 text-slate-500">
         <Trophy className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-        <p className="font-medium mb-2">Nenhuma competição semanal ativa</p>
+        <p className="font-medium mb-2">Nenhuma competição semanal ativa ou aguardando</p>
         <p className="text-sm">As competições semanais ativas aparecerão aqui quando criadas.</p>
         <p className="text-xs text-slate-400 mt-2">
           Competições finalizadas podem ser vistas na aba "Histórico"
@@ -184,7 +190,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         </div>
       </div>
 
-      {activeCompetition && activeCompetition.status !== 'completed' && (
+      {currentActiveCompetition && (
         <Card className="border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -193,14 +199,14 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                 Competição Ativa
               </CardTitle>
               <div className="flex items-center gap-2">
-                <Badge className={getStatusColor(activeCompetition.status)}>
-                  {getStatusText(activeCompetition.status)}
+                <Badge className={getStatusColor(currentActiveCompetition.status)}>
+                  {getStatusText(currentActiveCompetition.status)}
                 </Badge>
                 <div className="flex gap-1">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleViewRanking(activeCompetition)}
+                    onClick={() => handleViewRanking(currentActiveCompetition)}
                     className="h-8 w-8 p-0 hover:bg-green-50"
                     title="Ver ranking"
                   >
@@ -209,7 +215,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleEdit(activeCompetition)}
+                    onClick={() => handleEdit(currentActiveCompetition)}
                     className="h-8 w-8 p-0 hover:bg-blue-50"
                   >
                     <Edit className="h-3 w-3" />
@@ -217,11 +223,11 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDelete(activeCompetition)}
-                    disabled={deletingId === activeCompetition.id}
+                    onClick={() => handleDelete(currentActiveCompetition)}
+                    disabled={deletingId === currentActiveCompetition.id}
                     className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
                   >
-                    {deletingId === activeCompetition.id ? (
+                    {deletingId === currentActiveCompetition.id ? (
                       <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
                     ) : (
                       <Trash2 className="h-3 w-3" />
@@ -234,8 +240,8 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-lg text-green-800">{activeCompetition.title}</h3>
-                <p className="text-green-700 text-sm">{activeCompetition.description}</p>
+                <h3 className="font-semibold text-lg text-green-800">{currentActiveCompetition.title}</h3>
+                <p className="text-green-700 text-sm">{currentActiveCompetition.description}</p>
               </div>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -243,7 +249,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   <Calendar className="h-4 w-4 text-green-600" />
                   <div>
                     <p className="font-medium">Início</p>
-                    <p className="text-green-700">{formatDateTime(activeCompetition.start_date, false)}</p>
+                    <p className="text-green-700">{formatDateTime(currentActiveCompetition.start_date, false)}</p>
                   </div>
                 </div>
                 
@@ -251,7 +257,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   <Clock className="h-4 w-4 text-green-600" />
                   <div>
                     <p className="font-medium">Fim</p>
-                    <p className="text-green-700">{formatDateTime(activeCompetition.end_date, true)}</p>
+                    <p className="text-green-700">{formatDateTime(currentActiveCompetition.end_date, true)}</p>
                   </div>
                 </div>
                 
@@ -259,7 +265,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   <Trophy className="h-4 w-4 text-green-600" />
                   <div>
                     <p className="font-medium">Prêmio</p>
-                    <p className="text-green-700 font-semibold">R$ {activeCompetition.prize_pool.toFixed(2)}</p>
+                    <p className="text-green-700 font-semibold">R$ {currentActiveCompetition.prize_pool.toFixed(2)}</p>
                   </div>
                 </div>
                 
@@ -280,7 +286,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         <div>
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Trophy className="h-5 w-5 text-purple-600" />
-            Outras Competições Semanais Ativas
+            {currentActiveCompetition ? 'Outras Competições Semanais' : 'Competições Semanais Aguardando Início'}
           </h3>
           
           <div className="grid gap-4">
