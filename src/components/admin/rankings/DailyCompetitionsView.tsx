@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { Calendar } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { customCompetitionService } from '@/services/customCompetitionService';
+
+import React from 'react';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { CompetitionTimeInfo } from './daily/CompetitionTimeInfo';
-import { DailyCompetitionCard } from './daily/DailyCompetitionCard';
 import { DailyCompetitionsEmpty } from './daily/DailyCompetitionsEmpty';
+import { DailyCompetitionsContainer } from './daily/DailyCompetitionsContainer';
 import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
+import { useDailyCompetitionsLogic } from '@/hooks/useDailyCompetitionsLogic';
+import { useDailyCompetitionsActions } from '@/hooks/useDailyCompetitionsActions';
 
 interface DailyCompetition {
   id: string;
@@ -37,70 +36,13 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
   // Adicionar hook para atualização automática de status de todas as competições
   useCompetitionStatusUpdater(competitions);
 
-  const { toast } = useToast();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [editingCompetition, setEditingCompetition] = useState<DailyCompetition | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  // Filtrar apenas competições diárias ativas (excluir finalizadas e canceladas)
-  const activeCompetitions = competitions.filter(comp => 
-    comp.status !== 'completed' && comp.status !== 'cancelled'
-  );
-
-  const handleEdit = (competition: DailyCompetition) => {
-    console.log('🔧 Editando competição diária:', competition.id);
-    setEditingCompetition(competition);
-    setIsEditModalOpen(true);
-  };
-
-  const handleDelete = async (competition: DailyCompetition) => {
-    console.log('🗑️ Tentando excluir competição diária:', competition.id);
-    
-    const confirmDelete = window.confirm(`Tem certeza que deseja excluir a competição "${competition.title}"?`);
-    if (!confirmDelete) {
-      console.log('❌ Exclusão cancelada pelo usuário');
-      return;
-    }
-
-    setDeletingId(competition.id);
-    
-    try {
-      console.log('📤 Chamando serviço de exclusão...');
-      const response = await customCompetitionService.deleteCompetition(competition.id);
-      
-      if (response.success) {
-        console.log('✅ Competição excluída com sucesso');
-        toast({
-          title: "Competição excluída",
-          description: `A competição "${competition.title}" foi excluída com sucesso.`,
-        });
-        
-        if (onRefresh) {
-          console.log('🔄 Atualizando lista de competições...');
-          onRefresh();
-        }
-      } else {
-        console.error('❌ Erro no serviço:', response.error);
-        throw new Error(response.error || 'Erro ao excluir competição');
-      }
-    } catch (error) {
-      console.error('❌ Erro ao excluir competição:', error);
-      toast({
-        title: "Erro ao excluir",
-        description: error instanceof Error ? error.message : "Não foi possível excluir a competição. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const handleCompetitionUpdated = () => {
-    console.log('🔄 Competição diária atualizada, recarregando lista...');
-    if (onRefresh) {
-      onRefresh();
-    }
-  };
+  const { activeCompetitions } = useDailyCompetitionsLogic(competitions);
+  const {
+    editingCompetition,
+    isEditModalOpen,
+    setIsEditModalOpen,
+    handleCompetitionUpdated
+  } = useDailyCompetitionsActions();
 
   if (isLoading) {
     return (
@@ -121,34 +63,16 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
     <div className="space-y-6">
       <CompetitionTimeInfo />
 
-      {/* Lista de Competições Diárias Ativas */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-blue-600" />
-            Competições Diárias Ativas ({activeCompetitions.length})
-          </h3>
-        </div>
-        
-        <div className="grid gap-4">
-          {activeCompetitions.map((competition) => (
-            <DailyCompetitionCard
-              key={competition.id}
-              competition={competition}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              isDeleting={deletingId === competition.id}
-            />
-          ))}
-        </div>
-      </div>
+      <DailyCompetitionsContainer 
+        competitions={competitions}
+        onRefresh={onRefresh}
+      />
 
-      {/* Modal de Edição */}
       <EditCompetitionModal
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
         competition={editingCompetition}
-        onCompetitionUpdated={handleCompetitionUpdated}
+        onCompetitionUpdated={() => handleCompetitionUpdated(onRefresh)}
       />
     </div>
   );
