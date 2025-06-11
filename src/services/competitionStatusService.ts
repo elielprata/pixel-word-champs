@@ -24,10 +24,10 @@ export class CompetitionStatusService {
       console.log('✅ Competição está ATIVA');
       return 'active';
     } else if (now < start) {
-      console.log('📅 Competição está AGENDADA'); 
+      console.log('📅 Competição está AGUARDANDO (scheduled)'); 
       return 'scheduled';
     } else {
-      console.log('🏁 Competição está FINALIZADA');
+      console.log('🏁 Competição está FINALIZADA (completed)');
       return 'completed';
     }
   }
@@ -42,7 +42,7 @@ export class CompetitionStatusService {
       // Buscar dados da competição
       const { data: competition, error: fetchError } = await supabase
         .from('custom_competitions')
-        .select('id, start_date, end_date, status')
+        .select('id, start_date, end_date, status, title')
         .eq('id', competitionId)
         .single();
 
@@ -56,7 +56,7 @@ export class CompetitionStatusService {
       
       // Atualizar apenas se o status mudou
       if (competition.status !== correctStatus) {
-        console.log(`📝 Atualizando status de "${competition.status}" para "${correctStatus}"`);
+        console.log(`📝 Atualizando status da competição "${competition.title || 'Sem título'}" de "${competition.status}" para "${correctStatus}"`);
         
         const { error: updateError } = await supabase
           .from('custom_competitions')
@@ -114,6 +114,46 @@ export class CompetitionStatusService {
       console.log('✅ Atualização de status concluída');
     } catch (error) {
       console.error('❌ Erro ao atualizar status das competições:', error);
+    }
+  }
+
+  /**
+   * Retorna o texto amigável para cada status
+   */
+  static getStatusDisplayText(status: string): string {
+    switch (status) {
+      case 'active':
+        return 'Ativo';
+      case 'scheduled':
+        return 'Aguardando';
+      case 'completed':
+        return 'Finalizado';
+      case 'draft':
+        return 'Rascunho';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  }
+
+  /**
+   * Retorna as cores para cada status
+   */
+  static getStatusColors(status: string): string {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'completed':
+        return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'draft':
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-700 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   }
 }
