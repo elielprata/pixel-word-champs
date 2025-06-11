@@ -6,6 +6,28 @@ export class BoardGenerator {
   static generateSmartBoard(size: number, words: string[]): WordPlacementResult {
     console.log(`🚀 Iniciando geração do tabuleiro ${size}x${size} com palavras:`, words);
     
+    // Verificar se todas as palavras cabem no tabuleiro antes de tentar
+    const invalidWords = words.filter(word => word.length > size);
+    if (invalidWords.length > 0) {
+      console.error(`❌ ERRO: Palavras muito grandes para tabuleiro ${size}x${size}:`, invalidWords);
+      console.log(`📏 Tamanhos das palavras:`, words.map(w => `${w}(${w.length})`));
+      
+      // Filtrar palavras que cabem
+      const validWords = words.filter(word => word.length <= size);
+      console.log(`✅ Usando apenas palavras válidas:`, validWords);
+      
+      if (validWords.length === 0) {
+        console.error(`❌ CRÍTICO: Nenhuma palavra cabe no tabuleiro ${size}x${size}`);
+        // Retornar tabuleiro vazio como fallback
+        return {
+          board: Array(size).fill(null).map(() => Array(size).fill('')),
+          placedWords: []
+        };
+      }
+      
+      return this.generateGuaranteedBoard(size, validWords);
+    }
+    
     // Sempre usar método garantido para não falhar
     return this.generateGuaranteedBoard(size, words);
   }
@@ -21,6 +43,12 @@ export class BoardGenerator {
     for (let i = 0; i < sortedWords.length; i++) {
       const word = sortedWords[i];
       let placed = false;
+      
+      // Verificar se a palavra cabe no tabuleiro
+      if (word.length > size) {
+        console.error(`❌ Palavra "${word}" (${word.length} letras) não cabe no tabuleiro ${size}x${size}`);
+        continue;
+      }
       
       // Tentar todas as posições possíveis até conseguir colocar
       for (let row = 0; row < size && !placed; row++) {
@@ -58,24 +86,14 @@ export class BoardGenerator {
       }
       
       if (!placed) {
-        console.error(`❌ CRÍTICO: Não foi possível colocar "${word}" no tabuleiro ${size}x${size}`);
-        // Se uma palavra não couber, tentar com tabuleiro maior
-        if (size < 12) {
-          console.log(`🔄 Tentando com tabuleiro maior...`);
-          return this.generateGuaranteedBoard(size + 1, words);
-        }
+        console.warn(`⚠️ Não foi possível colocar "${word}" no tabuleiro ${size}x${size} (conflitos com outras palavras)`);
       }
     }
     
     const result = wordPlacer.getResult();
     this.fillEmptySpaces(result.board, size);
     
-    console.log(`🎯 Resultado final: ${result.placedWords.length}/${words.length} palavras colocadas`);
-    
-    // Verificar se todas as palavras foram colocadas
-    if (result.placedWords.length < words.length) {
-      console.error(`❌ ERRO CRÍTICO: Apenas ${result.placedWords.length}/${words.length} palavras foram colocadas!`);
-    }
+    console.log(`🎯 Resultado final: ${result.placedWords.length}/${words.length} palavras colocadas no tabuleiro ${size}x${size}`);
     
     return result;
   }
