@@ -18,15 +18,16 @@ interface CompetitionFormData {
 export class CustomCompetitionManagementService {
   /**
    * Verifica se há sobreposição de datas com competições semanais existentes (excluindo a atual)
+   * APENAS para competições semanais (tournaments)
    */
   private async checkDateOverlapForUpdate(competitionId: string, startDate: string, endDate: string): Promise<boolean> {
     try {
-      console.log('🔍 Verificando sobreposição de datas para atualização:', { competitionId, startDate, endDate });
+      console.log('🔍 Verificando sobreposição de datas para atualização de competição semanal:', { competitionId, startDate, endDate });
       
       const { data: existingCompetitions, error } = await supabase
         .from('custom_competitions')
         .select('id, title, start_date, end_date')
-        .eq('competition_type', 'tournament')
+        .eq('competition_type', 'tournament') // Apenas competições semanais
         .neq('status', 'completed')
         .neq('id', competitionId); // Excluir a competição atual
 
@@ -36,7 +37,7 @@ export class CustomCompetitionManagementService {
       }
 
       if (!existingCompetitions || existingCompetitions.length === 0) {
-        console.log('✅ Nenhuma competição existente encontrada');
+        console.log('✅ Nenhuma competição semanal existente encontrada');
         return false;
       }
 
@@ -53,7 +54,7 @@ export class CustomCompetitionManagementService {
         const hasOverlap = newStart <= existingEnd && newEnd >= existingStart;
 
         if (hasOverlap) {
-          console.log('❌ Sobreposição detectada com competição:', {
+          console.log('❌ Sobreposição detectada com competição semanal:', {
             existingTitle: competition.title,
             existingPeriod: `${existingStart.toISOString()} - ${existingEnd.toISOString()}`,
             newPeriod: `${newStart.toISOString()} - ${newEnd.toISOString()}`
@@ -94,8 +95,9 @@ export class CustomCompetitionManagementService {
     try {
       console.log('🔧 Atualizando competição:', competitionId, data);
       
-      // Validar sobreposição apenas para competições semanais (tournaments) quando as datas são alteradas
+      // Validar sobreposição APENAS para competições semanais (tournaments) quando as datas são alteradas
       if (data.competition_type === 'tournament' && data.start_date && data.end_date) {
+        console.log('🔍 Verificando sobreposição para competição semanal...');
         const hasOverlap = await this.checkDateOverlapForUpdate(
           competitionId,
           data.start_date,
@@ -103,8 +105,12 @@ export class CustomCompetitionManagementService {
         );
 
         if (hasOverlap) {
-          throw new Error('As datas desta competição se sobrepõem a uma já existente. Por favor, escolha um período posterior.');
+          throw new Error('As datas desta competição semanal se sobrepõem a uma já existente. Por favor, escolha um período posterior.');
         }
+      } else if (data.competition_type === 'challenge') {
+        console.log('✅ Competição diária - ignorando verificação de sobreposição');
+      } else if (!data.start_date || !data.end_date) {
+        console.log('✅ Datas não alteradas - ignorando verificação de sobreposição');
       }
       
       const { data: competition, error } = await supabase
