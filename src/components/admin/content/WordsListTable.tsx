@@ -46,11 +46,21 @@ export const WordsListTable = () => {
     });
   }, [words, searchTerm, selectedCategory]);
 
-  // Obter categorias únicas
-  const categories = useMemo(() => {
-    const uniqueCategories = Array.from(new Set(words.map(word => word.category || 'Sem categoria')));
-    return uniqueCategories.sort();
+  // Obter categorias únicas com contagem de palavras
+  const categoriesWithCount = useMemo(() => {
+    const categoryCount = words.reduce((acc, word) => {
+      const category = word.category || 'Sem categoria';
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.keys(categoryCount).sort().map(category => ({
+      name: category,
+      count: categoryCount[category]
+    }));
   }, [words]);
+
+  const categories = categoriesWithCount.map(cat => cat.name);
 
   // Calcular paginação
   const totalPages = Math.ceil(filteredWords.length / ITEMS_PER_PAGE);
@@ -79,7 +89,7 @@ export const WordsListTable = () => {
     );
   }
 
-  const hasFilters = searchTerm || selectedCategory !== 'all';
+  const hasFilters = Boolean(searchTerm || selectedCategory !== 'all');
 
   return (
     <div className="space-y-6">
@@ -99,6 +109,7 @@ export const WordsListTable = () => {
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
         categories={categories}
+        categoriesWithCount={categoriesWithCount}
       />
 
       <Card>

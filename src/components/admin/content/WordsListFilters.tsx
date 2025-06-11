@@ -5,12 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter } from 'lucide-react';
 
+interface CategoryWithCount {
+  name: string;
+  count: number;
+}
+
 interface WordsListFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   selectedCategory: string;
   onCategoryChange: (value: string) => void;
   categories: string[];
+  categoriesWithCount: CategoryWithCount[];
 }
 
 export const WordsListFilters = ({
@@ -18,7 +24,8 @@ export const WordsListFilters = ({
   onSearchChange,
   selectedCategory,
   onCategoryChange,
-  categories
+  categories,
+  categoriesWithCount
 }: WordsListFiltersProps) => {
   return (
     <Card>
@@ -42,9 +49,9 @@ export const WordsListFilters = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as categorias</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+                {categoriesWithCount.map(category => (
+                  <SelectItem key={category.name} value={category.name}>
+                    {category.name} ({category.count})
                   </SelectItem>
                 ))}
               </SelectContent>
