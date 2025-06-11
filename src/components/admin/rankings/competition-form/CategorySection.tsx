@@ -7,10 +7,11 @@ import { useWordCategories } from '@/hooks/useWordCategories';
 
 interface CategorySectionProps {
   category: string;
+  type: 'daily' | 'weekly';
   onCategoryChange: (category: string) => void;
 }
 
-export const CategorySection = ({ category, onCategoryChange }: CategorySectionProps) => {
+export const CategorySection = ({ category, type, onCategoryChange }: CategorySectionProps) => {
   const { categories, isLoading } = useWordCategories();
 
   return (

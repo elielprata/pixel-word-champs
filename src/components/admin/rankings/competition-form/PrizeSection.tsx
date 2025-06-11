@@ -5,10 +5,11 @@ import { DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PrizeSectionProps {
-  totalPrizePool: number;
+  prizePool: number;
+  onPrizePoolChange: (prizePool: number) => void;
 }
 
-export const PrizeSection = ({ totalPrizePool: propsPrizePool }: PrizeSectionProps) => {
+export const PrizeSection = ({ prizePool: propsPrizePool, onPrizePoolChange }: PrizeSectionProps) => {
   const [calculatedPrizePool, setCalculatedPrizePool] = useState(0);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export const PrizeSection = ({ totalPrizePool: propsPrizePool }: PrizeSectionPro
         }, 0);
 
         setCalculatedPrizePool(total);
+        onPrizePoolChange(total);
       } catch (error) {
         console.error('Erro ao calcular pool de prêmios:', error);
         setCalculatedPrizePool(propsPrizePool);
@@ -42,7 +44,7 @@ export const PrizeSection = ({ totalPrizePool: propsPrizePool }: PrizeSectionPro
     };
 
     calculatePrizePool();
-  }, [propsPrizePool]);
+  }, [propsPrizePool, onPrizePoolChange]);
 
   const displayPrizePool = calculatedPrizePool > 0 ? calculatedPrizePool : propsPrizePool;
 

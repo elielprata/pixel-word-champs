@@ -164,6 +164,7 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
 
       <FormActions
         isSubmitting={isSubmitting}
+        hasTitle={!!formData.title}
         onCancel={onClose}
       />
     </form>
