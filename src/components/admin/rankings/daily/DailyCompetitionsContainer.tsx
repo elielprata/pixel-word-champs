@@ -31,9 +31,16 @@ export const DailyCompetitionsContainer: React.FC<DailyCompetitionsContainerProp
   const { activeCompetitions } = useDailyCompetitionsLogic(competitions);
   const { deletingId, handleEdit, handleDelete } = useDailyCompetitionsActions();
 
+  const onEditCompetition = (competition: DailyCompetition) => {
+    console.log('📋 Container: onEditCompetition chamado para:', competition.id);
+    handleEdit(competition);
+  };
+
   const onDeleteCompetition = (competition: DailyCompetition) => {
     handleDelete(competition, onRefresh);
   };
+
+  console.log('🏢 Container: activeCompetitions:', activeCompetitions.length);
 
   return (
     <div>
@@ -49,7 +56,7 @@ export const DailyCompetitionsContainer: React.FC<DailyCompetitionsContainerProp
           <DailyCompetitionCard
             key={competition.id}
             competition={competition}
-            onEdit={handleEdit}
+            onEdit={onEditCompetition}
             onDelete={onDeleteCompetition}
             isDeleting={deletingId === competition.id}
           />

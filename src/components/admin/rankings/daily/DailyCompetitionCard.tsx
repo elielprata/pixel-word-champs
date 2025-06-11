@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,16 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
 }) => {
   // Adicionar hook para atualização automática de status
   useCompetitionStatusUpdater([competition]);
+
+  const handleEdit = () => {
+    console.log('🃏 Card: handleEdit chamado para competição:', competition.id);
+    onEdit(competition);
+  };
+
+  const handleDelete = () => {
+    console.log('🃏 Card: handleDelete chamado para competição:', competition.id);
+    onDelete(competition);
+  };
 
   const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
     const date = new Date(dateString);
@@ -106,8 +117,8 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
           
           <CompetitionActions
             competitionId={competition.id}
-            onEdit={() => onEdit(competition)}
-            onDelete={() => onDelete(competition)}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
             isDeleting={isDeleting}
           />
         </div>

@@ -24,9 +24,10 @@ export const useDailyCompetitionsActions = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleEdit = (competition: DailyCompetition) => {
-    console.log('🔧 Editando competição diária:', competition.id);
+    console.log('🔧 Hook: handleEdit chamado para competição:', competition.id);
     setEditingCompetition(competition);
     setIsEditModalOpen(true);
+    console.log('📝 Hook: Estados atualizados - editingCompetition:', competition.id, 'isEditModalOpen:', true);
   };
 
   const handleDelete = async (competition: DailyCompetition, onRefresh?: () => void) => {
@@ -72,7 +73,9 @@ export const useDailyCompetitionsActions = () => {
   };
 
   const handleCompetitionUpdated = (onRefresh?: () => void) => {
-    console.log('🔄 Competição diária atualizada, recarregando lista...');
+    console.log('🔄 Competição diária atualizada, fechando modal e recarregando lista...');
+    setIsEditModalOpen(false);
+    setEditingCompetition(null);
     if (onRefresh) {
       onRefresh();
     }

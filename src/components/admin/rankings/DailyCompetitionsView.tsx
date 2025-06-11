@@ -44,6 +44,12 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
     handleCompetitionUpdated
   } = useDailyCompetitionsActions();
 
+  console.log('🔍 DailyCompetitionsView - estados do modal:', {
+    editingCompetition: editingCompetition?.id,
+    isEditModalOpen,
+    activeCompetitions: activeCompetitions.length
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
