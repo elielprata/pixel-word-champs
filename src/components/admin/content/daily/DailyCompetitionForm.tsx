@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TimePickerSection } from './TimePickerSection';
 
 interface DailyCompetition {
   id: string;
@@ -36,8 +35,6 @@ interface DailyCompetitionFormProps {
   onSubmit: () => void;
   isEditing: boolean;
   handleStartDateChange: (value: string) => void;
-  startTime: string;
-  onStartTimeChange: (time: string) => void;
 }
 
 const themes = [
@@ -65,9 +62,7 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
   onNewCompetitionChange,
   onSubmit,
   isEditing,
-  handleStartDateChange,
-  startTime,
-  onStartTimeChange
+  handleStartDateChange
 }) => {
   const currentData = isEditing ? competition : newCompetition;
   
@@ -124,26 +119,49 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
               rows={3}
             />
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Data do Desafio</Label>
-              <Input 
-                type="date"
-                value={currentData.start_date.split('T')[0]}
-                onChange={(e) => handleStartDateChange(e.target.value)}
-              />
+          {isEditing && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Status</Label>
+                <Select 
+                  value={competition?.status || 'draft'} 
+                  onValueChange={(value) => onNewCompetitionChange({...competition, status: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Rascunho</SelectItem>
+                    <SelectItem value="scheduled">Agendado</SelectItem>
+                    <SelectItem value="active">Ativo</SelectItem>
+                    <SelectItem value="completed">Finalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Máx. Participantes</Label>
+                <Input 
+                  type="number"
+                  value={competition?.max_participants || 500}
+                  onChange={(e) => onNewCompetitionChange({...competition, max_participants: parseInt(e.target.value)})}
+                />
+              </div>
             </div>
-            <TimePickerSection
-              startTime={startTime}
-              onStartTimeChange={onStartTimeChange}
+          )}
+          <div>
+            <Label>Data {isEditing ? 'da Competição' : 'do Desafio'}</Label>
+            <Input 
+              type="date"
+              value={currentData.start_date.split('T')[0]}
+              onChange={(e) => isEditing 
+                ? handleStartDateChange(e.target.value)
+                : handleStartDateChange(e.target.value)
+              }
             />
+            <p className="text-xs text-green-600 mt-1 font-medium">
+              ✅ {isEditing ? 'Será automaticamente configurada' : 'Competição será ativa'} das 00:00:00 às 23:59:59{isEditing ? '' : ' desta data (PADRÃO)'}
+            </p>
           </div>
-          
-          <p className="text-xs text-green-600 mt-1 font-medium">
-            ✅ Competição será ativa das {startTime || '00:00'} às 23:59:59 desta data
-          </p>
-          
           {!isEditing && (
             <div>
               <Label>Máx. Participantes</Label>
@@ -154,7 +172,6 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
               />
             </div>
           )}
-          
           <Button onClick={onSubmit} className="w-full">
             {isEditing ? 'Salvar Alterações' : 'Criar Competição Diária'}
           </Button>
