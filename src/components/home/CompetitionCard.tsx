@@ -10,7 +10,7 @@ import { competitionParticipationService } from '@/services/competitionParticipa
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { utcToBrasilia, brasiliaToUtc, formatBrasiliaTime } from '@/utils/brasiliaTime';
-import { getCompetitionTheme, getCategoryEmoji, getCategoryDescription } from '@/utils/competitionThemes';
+import { getCompetitionTheme, getCategoryEmoji, getCategoryDescription, getCategoryTexture } from '@/utils/competitionThemes';
 
 interface Competition {
   id: string;
@@ -41,6 +41,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   const theme = getCompetitionTheme(competition.theme);
   const categoryEmoji = getCategoryEmoji(competition.theme);
   const categoryDescription = getCategoryDescription(competition.theme);
+  const categoryTexture = getCategoryTexture(competition.theme);
 
   useEffect(() => {
     checkParticipation();
@@ -111,6 +112,12 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
     return 'text-emerald-600 bg-emerald-100';
   };
 
+  const getProgressColor = (progress: number) => {
+    if (progress <= 10) return 'bg-red-500';
+    if (progress <= 30) return 'bg-orange-500';
+    return 'bg-emerald-500';
+  };
+
   const getCardGradient = (progress: number) => {
     if (progress <= 10) return 'from-red-50 via-red-25 to-white';
     if (progress <= 30) return 'from-orange-50 via-orange-25 to-white';
@@ -176,6 +183,24 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
 
   return (
     <Card className={`group relative overflow-hidden bg-gradient-to-br ${getCardGradient(timeProgress)} border-2 ${theme.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-36`}>
+      {/* Textura temática de fundo */}
+      <div className="absolute inset-0 opacity-5">
+        <div 
+          className="w-full h-full bg-repeat"
+          style={{
+            backgroundImage: categoryTexture,
+            backgroundSize: '40px 40px'
+          }}
+        ></div>
+      </div>
+
+      {/* Padrão decorativo adicional */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="w-full h-full" style={{
+          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, ${theme.bgPattern} 10px, ${theme.bgPattern} 11px)`
+        }}></div>
+      </div>
+      
       <CardContent className="relative p-2.5 h-full flex flex-col justify-between gap-1">
         {/* Header section */}
         <div className="flex justify-between items-start gap-2">
@@ -184,7 +209,7 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
               {competition.title}
             </h3>
             
-            {/* Categoria */}
+            {/* Categoria com mini-preview visual */}
             {competition.theme && (
               <div className="flex items-center gap-2 mb-1">
                 <Badge className={`bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} to-${theme.decorativeElements.primary.replace('bg-', '')} text-white border-0 text-xs px-2 py-0.5 shadow-md flex items-center gap-1`}>
@@ -194,16 +219,39 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
               </div>
             )}
 
-            {/* Descrição */}
+            {/* Descrição temática */}
             <p className="text-xs text-slate-600 italic leading-tight">
               {categoryDescription}
             </p>
           </div>
 
-          {/* Timer */}
+          {/* Timer com círculo progressivo */}
           <div className="flex flex-col items-center gap-1">
             <div className={`relative w-12 h-12 rounded-full ${getUrgencyColor(timeProgress)} flex items-center justify-center shadow-sm`}>
-              <Clock className="w-4 h-4" />
+              {/* Círculo de progresso */}
+              <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-gray-200"
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  className={timeProgress <= 10 ? 'text-red-500' : timeProgress <= 30 ? 'text-orange-500' : 'text-emerald-500'}
+                  strokeDasharray={`${timeProgress}, 100`}
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <Clock className="w-4 h-4 relative z-10" />
             </div>
             <span className={`text-xs font-bold ${timeProgress <= 10 ? 'text-red-600' : timeProgress <= 30 ? 'text-orange-600' : 'text-emerald-600'}`}>
               {timeRemaining}
@@ -217,6 +265,13 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             value={timeProgress} 
             className="h-1 bg-gray-200"
           />
+          <style>
+            {`
+              .progress-indicator {
+                background: ${timeProgress <= 10 ? '#ef4444' : timeProgress <= 30 ? '#f97316' : '#10b981'};
+              }
+            `}
+          </style>
         </div>
 
         {/* Button section */}
@@ -233,6 +288,10 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
           {getButtonText()}
         </Button>
       </CardContent>
+      
+      {/* Corner decorations - themed */}
+      <div className={`absolute top-1 right-1 w-2 h-2 ${theme.decorativeElements.primary} rounded-full opacity-60`}></div>
+      <div className={`absolute bottom-1 left-1 w-1.5 h-1.5 ${theme.decorativeElements.secondary} rounded-full opacity-60`}></div>
     </Card>
   );
 };
