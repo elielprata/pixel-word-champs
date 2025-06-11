@@ -19,27 +19,17 @@ export class CompetitionStatusService {
       endTime: end.getTime()
     });
     
-    // Verificar se a competição já terminou
-    if (now > end) {
-      console.log('🏁 Competição está FINALIZADA');
-      return 'completed';
-    }
-    
-    // Verificar se a competição está ativa (entre start e end)
+    // Verificar se estamos dentro do período da competição
     if (now >= start && now <= end) {
       console.log('✅ Competição está ATIVA');
       return 'active';
-    }
-    
-    // Se ainda não começou
-    if (now < start) {
+    } else if (now < start) {
       console.log('📅 Competição está AGENDADA'); 
       return 'scheduled';
+    } else {
+      console.log('🏁 Competição está FINALIZADA');
+      return 'completed';
     }
-    
-    // Fallback (não deveria chegar aqui)
-    console.log('❓ Status indefinido, definindo como agendada');
-    return 'scheduled';
   }
 
   /**
