@@ -19,7 +19,7 @@ export const ParticipantsSection = ({ maxParticipants, onMaxParticipantsChange }
         <Infinity className="h-4 w-4 text-green-600" />
         <div>
           <p className="text-sm font-semibold text-green-700">PARTICIPAÇÃO LIVRE</p>
-          <p className="text-xs text-green-600">Todos os usuários podem participar sem limite</p>
+          <p className="text-xs text-green-600">Todos os usuários podem participar</p>
         </div>
       </div>
     </div>

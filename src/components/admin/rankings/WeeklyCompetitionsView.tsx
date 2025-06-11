@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,25 +40,13 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const [editingCompetition, setEditingCompetition] = useState<WeeklyCompetition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Filtrar competições ativas (excluir finalizadas e canceladas)
   const activeCompetitions = competitions.filter(comp => 
     comp.status !== 'completed' && comp.status !== 'cancelled'
   );
 
-  // Filtrar a competição ativa da lista de outras competições para evitar duplicação
   const otherActiveCompetitions = activeCompetitions.filter(comp => 
     !activeCompetition || comp.id !== activeCompetition.id
   );
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
 
   const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
     const date = new Date(dateString);
@@ -177,7 +166,6 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Aviso sobre horário de Brasília */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
         <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
         <div className="text-sm text-blue-700">
@@ -189,7 +177,6 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         </div>
       </div>
 
-      {/* Competição Ativa em Destaque */}
       {activeCompetition && activeCompetition.status !== 'completed' && (
         <Card className="border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
           <CardHeader>
@@ -272,8 +259,8 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="h-4 w-4 text-green-600" />
                   <div>
-                    <p className="font-medium">Participantes</p>
-                    <p className="text-green-700">{activeCompetition.total_participants}/{activeCompetition.max_participants}</p>
+                    <p className="font-medium">Participação</p>
+                    <p className="text-green-700 font-semibold">Livre</p>
                   </div>
                 </div>
               </div>
@@ -282,7 +269,6 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         </Card>
       )}
 
-      {/* Lista de Outras Competições Ativas (excluindo a ativa e finalizadas) */}
       {otherActiveCompetitions.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
@@ -322,8 +308,8 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                         </div>
                         
                         <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3 text-slate-500" />
-                          <span>{competition.total_participants}/{competition.max_participants}</span>
+                          <Users className="h-3 w-3 text-green-600" />
+                          <span className="text-green-600 font-medium">Participação Livre</span>
                         </div>
                       </div>
                     </div>
@@ -370,7 +356,6 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         </div>
       )}
 
-      {/* Modal de Edição */}
       <EditCompetitionModal
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}

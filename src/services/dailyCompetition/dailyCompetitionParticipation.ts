@@ -11,7 +11,6 @@ export class DailyCompetitionParticipationService {
         return;
       }
 
-      // Buscar informações da sessão
       const { data: session, error: sessionError } = await supabase
         .from('game_sessions')
         .select('user_id, competition_id')
@@ -23,18 +22,15 @@ export class DailyCompetitionParticipationService {
         return;
       }
 
-      // Se a sessão já está vinculada a uma competição, não fazer nada
       if (session.competition_id) {
         console.log('✅ Sessão já vinculada à competição:', session.competition_id);
         return;
       }
 
-      // Pegar a primeira competição diária ativa (pode ser expandido para lógica mais complexa)
       const targetCompetition = competitions[0];
       
       console.log('🎯 Vinculando sessão à competição diária:', targetCompetition.id);
 
-      // Atualizar a sessão com o ID da competição
       const { error: updateError } = await supabase
         .from('game_sessions')
         .update({ competition_id: targetCompetition.id })
@@ -45,7 +41,6 @@ export class DailyCompetitionParticipationService {
         return;
       }
 
-      // Como não há ranking diário separado, criar participação diretamente na competição semanal
       if (targetCompetition.weekly_tournament_id) {
         await this.ensureWeeklyParticipation(session.user_id, targetCompetition.weekly_tournament_id);
       } else {
@@ -53,7 +48,7 @@ export class DailyCompetitionParticipationService {
         return;
       }
 
-      console.log('✅ Usuário inscrito automaticamente na competição semanal vinculada');
+      console.log('✅ Usuário inscrito automaticamente na competição semanal vinculada (PARTICIPAÇÃO LIVRE)');
     } catch (error) {
       console.error('❌ Erro ao inscrever automaticamente:', error);
     }
@@ -76,6 +71,7 @@ export class DailyCompetitionParticipationService {
       }
 
       if (!existingWeeklyParticipation) {
+        // Participação livre - sem verificação de limites
         const { error: insertWeeklyError } = await supabase
           .from('competition_participations')
           .insert({
@@ -89,7 +85,7 @@ export class DailyCompetitionParticipationService {
           return;
         }
 
-        console.log('✅ Participação criada na competição semanal - SEM LIMITE DE PARTICIPANTES');
+        console.log('✅ Participação criada na competição semanal - PARTICIPAÇÃO LIVRE');
       } else {
         console.log('✅ Usuário já participa da competição semanal');
       }
@@ -102,7 +98,6 @@ export class DailyCompetitionParticipationService {
     try {
       console.log('📊 Atualizando pontuação da sessão e transferindo diretamente para competição semanal...');
 
-      // Buscar informações da sessão
       const { data: session, error: sessionError } = await supabase
         .from('game_sessions')
         .select('user_id, competition_id, total_score')
@@ -117,7 +112,6 @@ export class DailyCompetitionParticipationService {
       const previousScore = session.total_score || 0;
       const scoreDifference = totalScore - previousScore;
 
-      // Atualizar pontuação da sessão
       const { error: updateSessionError } = await supabase
         .from('game_sessions')
         .update({ total_score: totalScore })
@@ -129,7 +123,6 @@ export class DailyCompetitionParticipationService {
       }
 
       if (session.competition_id && scoreDifference > 0) {
-        // Buscar informações da competição diária para obter o ID da competição semanal
         const { data: dailyCompetition, error: dailyCompError } = await supabase
           .from('custom_competitions')
           .select('weekly_tournament_id')
@@ -137,7 +130,6 @@ export class DailyCompetitionParticipationService {
           .single();
 
         if (!dailyCompError && dailyCompetition?.weekly_tournament_id) {
-          // Transferir pontos diretamente para a competição semanal (não há ranking diário)
           await this.updateCompetitionScore(
             dailyCompetition.weekly_tournament_id, 
             session.user_id, 
@@ -209,7 +201,7 @@ export class DailyCompetitionParticipationService {
 
   async createParticipation(userId: string, competitionId: string, score: number = 0): Promise<{ success: boolean; error?: string }> {
     try {
-      // Remover verificação de limite de participantes - participação livre
+      // Participação livre - sem verificação de limite de participantes
       const { error } = await supabase
         .from('competition_participations')
         .insert({
@@ -220,7 +212,7 @@ export class DailyCompetitionParticipationService {
 
       if (error) throw error;
 
-      console.log('✅ Participação criada - SEM LIMITE DE PARTICIPANTES');
+      console.log('✅ Participação criada - PARTICIPAÇÃO LIVRE');
       return { success: true };
     } catch (error) {
       console.error('❌ Erro ao criar participação:', error);
@@ -235,7 +227,6 @@ export class DailyCompetitionParticipationService {
     try {
       console.log('🔄 Atualizando rankings da competição:', competitionId);
 
-      // Buscar todas as participações e ordenar por pontuação
       const { data: participations, error: participationsError } = await supabase
         .from('competition_participations')
         .select('id, user_score')
@@ -247,7 +238,6 @@ export class DailyCompetitionParticipationService {
         return;
       }
 
-      // Atualizar posições
       const updates = (participations || []).map((participation, index) => ({
         id: participation.id,
         user_position: index + 1
@@ -264,7 +254,7 @@ export class DailyCompetitionParticipationService {
         }
       }
 
-      console.log('✅ Rankings atualizados para', updates.length, 'participantes - SEM LIMITES');
+      console.log('✅ Rankings atualizados para', updates.length, 'participantes - PARTICIPAÇÃO LIVRE');
     } catch (error) {
       console.error('❌ Erro ao atualizar rankings:', error);
     }

@@ -39,8 +39,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     title: '',
     description: '',
     startDate: '',
-    endDate: '',
-    maxParticipants: 0
+    endDate: ''
   });
 
   useEffect(() => {
@@ -48,7 +47,6 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
       const startDate = new Date(competition.start_date);
       const endDate = new Date(competition.end_date);
       
-      // Manter apenas a data, aplicar horários padrão
       const startDateFormatted = startDate.toISOString().split('T')[0];
       const endDateFormatted = endDate.toISOString().split('T')[0];
       
@@ -56,8 +54,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
         title: competition.title,
         description: competition.description,
         startDate: startDateFormatted,
-        endDate: endDateFormatted,
-        maxParticipants: competition.max_participants
+        endDate: endDateFormatted
       });
     }
   }, [competition]);
@@ -69,7 +66,6 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     setIsLoading(true);
 
     try {
-      // Aplicar horários padrão: início 00:00:00, fim 23:59:59
       const startDateWithTime = new Date(formData.startDate);
       startDateWithTime.setHours(0, 0, 0, 0);
       
@@ -81,7 +77,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
         description: formData.description,
         start_date: startDateWithTime.toISOString(),
         end_date: endDateWithTime.toISOString(),
-        max_participants: formData.maxParticipants,
+        max_participants: 999999, // Set high number for unlimited participation
         competition_type: 'tournament'
       };
 
@@ -166,15 +162,9 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="maxParticipants">Máximo de Participantes</Label>
-            <Input
-              id="maxParticipants"
-              type="number"
-              min="1"
-              value={formData.maxParticipants}
-              onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) || 0 })}
-            />
+          <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+            <p className="text-sm font-medium text-green-700">Participação Livre</p>
+            <p className="text-xs text-green-600">Todos os usuários podem participar sem restrições</p>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

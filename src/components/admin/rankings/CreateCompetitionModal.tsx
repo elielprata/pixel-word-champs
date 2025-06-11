@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
     category: 'geral' as string,
     weeklyTournamentId: 'none' as string,
     prizePool: 0,
-    maxParticipants: 1000,
+    maxParticipants: 999999, // Set very high for unlimited participation
     startDate: undefined as Date | undefined,
     endDate: undefined as Date | undefined
   });
@@ -37,13 +38,11 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
   const { toast } = useToast();
   const { customCompetitions, refetch } = useCompetitions();
 
-  // Filtrar competições customizadas semanais ativas para seleção
   const weeklyTournaments = customCompetitions.filter(comp => 
     comp.competition_type === 'tournament' && 
     (comp.status === 'active' || comp.status === 'scheduled')
   );
 
-  // Buscar configurações de prêmios ativas
   useEffect(() => {
     const fetchPrizeConfigurations = async () => {
       try {
@@ -52,13 +51,11 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
         
         let total = 0;
         
-        // Calcular total de prêmios individuais
         const individualPrizes = activeConfigurations.filter(config => config.type === 'individual');
         individualPrizes.forEach(config => {
           total += config.prize_amount;
         });
         
-        // Calcular total de prêmios em grupo
         const groupPrizes = activeConfigurations.filter(config => config.type === 'group');
         groupPrizes.forEach(config => {
           total += config.prize_amount * config.total_winners;
@@ -100,7 +97,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
         category: formData.category,
         weeklyTournamentId: formData.weeklyTournamentId !== 'none' ? formData.weeklyTournamentId : undefined,
         prizePool: formData.prizePool,
-        maxParticipants: formData.maxParticipants,
+        maxParticipants: formData.maxParticipants, // Will be very high number
         startDate: formData.startDate,
         endDate: formData.endDate
       };
@@ -113,15 +110,12 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
           description: `${formData.title} foi criada e está ativa.`,
         });
         
-        // Chamar callback para atualizar as competições na tela principal
         if (onCompetitionCreated) {
           onCompetitionCreated();
         }
         
-        // Recarregar dados do hook
         await refetch();
         
-        // Fechar modal e resetar form
         onOpenChange(false);
         setFormData({
           title: '',
@@ -130,7 +124,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
           category: 'geral',
           weeklyTournamentId: 'none',
           prizePool: totalPrizePool,
-          maxParticipants: 1000,
+          maxParticipants: 999999,
           startDate: undefined,
           endDate: undefined
         });
@@ -162,7 +156,6 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Seção: Configurações Básicas */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
@@ -182,14 +175,12 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
             />
           </div>
 
-          {/* Seção: Configurações Específicas */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
               <h3 className="text-sm font-medium text-slate-700">Configurações Específicas</h3>
             </div>
 
-            {/* Categoria (apenas para competições diárias) */}
             {formData.type === 'daily' && (
               <CategorySection 
                 category={formData.category}
@@ -197,7 +188,6 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
               />
             )}
 
-            {/* Atribuir a Torneio Semanal (apenas para diárias) */}
             {formData.type === 'daily' && (
               <WeeklyTournamentSection 
                 weeklyTournamentId={formData.weeklyTournamentId}
@@ -220,12 +210,10 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
             onEndDateChange={(endDate) => setFormData(prev => ({ ...prev, endDate }))}
           />
 
-          {/* Seção: Premiação */}
           {isPrizeEnabled && (
             <PrizeSection totalPrizePool={totalPrizePool} />
           )}
 
-          {/* Botões de Ação */}
           <div className="flex gap-2 pt-4 border-t border-slate-200">
             <Button
               type="button"

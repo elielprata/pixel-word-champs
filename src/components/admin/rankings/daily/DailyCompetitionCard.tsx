@@ -83,7 +83,7 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
             
             <p className="text-sm text-slate-600 mb-3">{competition.description}</p>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
                 <span>Início: {formatDateTime(competition.start_date, false)}</span>
@@ -95,13 +95,8 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
               </div>
               
               <div className="flex items-center gap-1">
-                <Trophy className="h-3 w-3 text-slate-400" />
-                <span className="text-slate-500">Sem premiação</span>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <Users className="h-3 w-3 text-slate-500" />
-                <span>Máx: {competition.max_participants}</span>
+                <Users className="h-3 w-3 text-green-600" />
+                <span className="text-green-600 font-medium">Participação Livre</span>
               </div>
             </div>
           </div>

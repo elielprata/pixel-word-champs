@@ -102,6 +102,7 @@ class CompetitionParticipationService {
 
   async createParticipation(userId: string, competitionId: string, score: number = 0): Promise<{ success: boolean; error?: string }> {
     try {
+      // Participação livre - sem verificação de limites
       const { error } = await supabase
         .from('competition_participations')
         .insert({
@@ -112,6 +113,7 @@ class CompetitionParticipationService {
 
       if (error) throw error;
 
+      console.log('✅ Participação criada - PARTICIPAÇÃO LIVRE');
       return { success: true };
     } catch (error) {
       return {
@@ -137,9 +139,7 @@ class CompetitionParticipationService {
 
   async updateCompetitionRankings(competitionId: string): Promise<void> {
     try {
-      // Esta função seria implementada para atualizar os rankings da competição
-      // Por agora, apenas um placeholder
-      console.log(`Updating rankings for competition ${competitionId}`);
+      console.log(`Updating rankings for competition ${competitionId} - PARTICIPAÇÃO LIVRE`);
     } catch (error) {
       console.error('Error updating competition rankings:', error);
       throw error;

@@ -64,7 +64,7 @@ export const useWeeklyCompetitionParticipation = (competitionId: string) => {
     if (!competitionId || !user?.id || isParticipating) return;
 
     try {
-      console.log('🎯 Inscrevendo usuário na competição (SEM LIMITE):', competitionId);
+      console.log('🎯 Inscrevendo usuário na competição (PARTICIPAÇÃO LIVRE):', competitionId);
 
       // Participação livre - sem verificação de limites
       const { data, error } = await supabase
