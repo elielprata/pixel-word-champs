@@ -16,7 +16,9 @@ export const useWordSelection = (level: number, category?: string) => {
         const boardSize = getBoardSize(level);
         const maxWordLength = Math.min(boardSize - 1, 8);
         
-        console.log(`🎯 Selecionando palavras para nível ${level} - Tabuleiro: ${boardSize}x${boardSize}, Máx palavra: ${maxWordLength} letras${category ? `, Categoria: ${category}` : ''}`);
+        console.log(`🎯 useWordSelection - Selecionando palavras para nível ${level}`);
+        console.log(`📏 Tabuleiro: ${boardSize}x${boardSize}, Máx palavra: ${maxWordLength} letras`);
+        console.log(`🏷️ Categoria filtrada: ${category || 'NENHUMA - todas as categorias'}`);
 
         // Construir query base
         let query = supabase
@@ -27,7 +29,9 @@ export const useWordSelection = (level: number, category?: string) => {
         // Filtrar por categoria se especificada
         if (category) {
           query = query.eq('category', category);
-          console.log(`🏷️ Filtrando palavras pela categoria: ${category}`);
+          console.log(`🔍 Aplicando filtro de categoria: ${category}`);
+        } else {
+          console.log(`🌐 Sem filtro de categoria - buscando todas as categorias`);
         }
 
         const { data: words, error } = await query;
@@ -39,12 +43,13 @@ export const useWordSelection = (level: number, category?: string) => {
         }
 
         if (!words || words.length === 0) {
-          console.log(`⚠️ Nenhuma palavra ativa encontrada${category ? ` para a categoria ${category}` : ''}`);
+          console.log(`⚠️ Nenhuma palavra ativa encontrada${category ? ` para a categoria "${category}"` : ''}`);
           setLevelWords([]);
           return;
         }
 
-        console.log(`📊 ${words.length} palavras ativas encontradas${category ? ` na categoria ${category}` : ''}`);
+        console.log(`📊 ${words.length} palavras ativas encontradas${category ? ` na categoria "${category}"` : ' (todas as categorias)'}`);
+        console.log(`🔍 Categorias encontradas:`, [...new Set(words.map(w => w.category))]);
 
         // Filtrar palavras por tamanho usando JavaScript
         const validWords = words.filter(w => 
@@ -52,12 +57,12 @@ export const useWordSelection = (level: number, category?: string) => {
         );
 
         if (validWords.length === 0) {
-          console.log(`⚠️ Nenhuma palavra encontrada que caiba no tabuleiro ${boardSize}x${boardSize}${category ? ` na categoria ${category}` : ''}`);
+          console.log(`⚠️ Nenhuma palavra encontrada que caiba no tabuleiro ${boardSize}x${boardSize}${category ? ` na categoria "${category}"` : ''}`);
           setLevelWords([]);
           return;
         }
 
-        console.log(`📏 ${validWords.length} palavras válidas para tabuleiro ${boardSize}x${boardSize}${category ? ` na categoria ${category}` : ''}`);
+        console.log(`📏 ${validWords.length} palavras válidas para tabuleiro ${boardSize}x${boardSize}${category ? ` na categoria "${category}"` : ''}`);
 
         // Filtrar palavras por dificuldade disponível
         const wordsByDifficulty = {
@@ -66,6 +71,13 @@ export const useWordSelection = (level: number, category?: string) => {
           hard: validWords.filter(w => w.difficulty === 'hard'),
           expert: validWords.filter(w => w.difficulty === 'expert')
         };
+
+        console.log(`📊 Distribuição por dificuldade:`, {
+          easy: wordsByDifficulty.easy.length,
+          medium: wordsByDifficulty.medium.length,
+          hard: wordsByDifficulty.hard.length,
+          expert: wordsByDifficulty.expert.length
+        });
 
         // Selecionar palavras seguindo a distribuição desejada
         const selectedWords: string[] = [];
@@ -76,6 +88,7 @@ export const useWordSelection = (level: number, category?: string) => {
           const availableWords = wordsByDifficulty[difficulty as keyof typeof wordsByDifficulty] || [];
           
           for (let i = 0; i < count && selectedWords.length < 5; i++) {
+            // Se há filtro de categoria, buscar qualquer palavra da categoria
             // Se não há filtro de categoria, buscar palavra de categoria diferente se possível
             const candidateWords = !category ? availableWords.filter(w => 
               !selectedWords.includes(w.word) && 
@@ -94,6 +107,7 @@ export const useWordSelection = (level: number, category?: string) => {
               if (!category) {
                 categories.add(randomWord.category);
               }
+              console.log(`✅ Palavra selecionada: "${randomWord.word}" (${randomWord.difficulty}, categoria: ${randomWord.category})`);
             }
           }
         }
@@ -105,10 +119,12 @@ export const useWordSelection = (level: number, category?: string) => {
           
           const randomWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
           selectedWords.push(randomWord.word);
+          console.log(`🔄 Palavra adicional selecionada: "${randomWord.word}" (${randomWord.difficulty}, categoria: ${randomWord.category})`);
         }
 
-        console.log(`✅ Selecionadas ${selectedWords.length} palavras para nível ${level}${category ? ` da categoria ${category}` : ''}:`, selectedWords);
-        console.log(`📏 Tamanhos das palavras:`, selectedWords.map(w => `${w}(${w.length})`));
+        console.log(`✅ FINAL - Selecionadas ${selectedWords.length} palavras para nível ${level}${category ? ` da categoria "${category}"` : ''}:`);
+        console.log(`📝 Palavras: ${selectedWords.join(', ')}`);
+        console.log(`📏 Tamanhos: ${selectedWords.map(w => `${w}(${w.length})`).join(', ')}`);
 
         // Registrar uso das palavras
         if (selectedWords.length > 0) {

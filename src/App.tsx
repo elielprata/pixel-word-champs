@@ -1,57 +1,134 @@
-
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from './pages/Index';
-import AdminPanel from './pages/AdminPanel';
-import NotFound from './pages/NotFound';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import AuthScreen from '@/components/auth/AuthScreen';
-import AuthProvider from '@/components/auth/AuthProvider';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from '@/components/auth/AuthProvider';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import AdminRoute from '@/components/auth/AdminRoute';
+import AuthScreen from '@/components/auth/AuthScreen';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import BottomNavigation from '@/components/BottomNavigation';
+import HomeScreen from '@/components/HomeScreen';
+import ChallengeScreen from '@/components/ChallengeScreen';
+import FullRankingScreen from '@/components/FullRankingScreen';
+import ProfileScreen from '@/components/ProfileScreen';
+import InviteScreen from '@/components/InviteScreen';
+import AdminPanel from '@/pages/AdminPanel';
+import NotFound from '@/pages/NotFound';
+import './App.css';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+type Screen = 'home' | 'challenge' | 'ranking' | 'profile' | 'invite' | 'challenge-ranking';
 
-function App() {
+interface AppProps {}
+
+const queryClient = new QueryClient();
+
+function App({}: AppProps) {
+  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [challengeCategory, setChallengeCategory] = useState<string | undefined>(undefined); // Adicionando estado para categoria
+  const [challengeRankingId, setChallengeRankingId] = useState<number | null>(null);
+
+  const handleStartChallenge = (id: string, category?: string) => {
+    console.log(`🎯 App - Iniciando challenge ${id} com categoria: ${category || 'sem categoria'}`);
+    setChallengeId(id);
+    setChallengeCategory(category); // Armazenando a categoria
+    setCurrentScreen('challenge');
+  };
+
+  const handleBackFromChallenge = () => {
+    setChallengeId(null);
+    setChallengeCategory(undefined); // Limpando a categoria
+    setCurrentScreen('home');
+  };
+
+  const handleViewFullRanking = () => {
+    setCurrentScreen('ranking');
+  };
+
+  const handleViewChallengeRanking = (id: number) => {
+    setChallengeRankingId(id);
+    setCurrentScreen('challenge-ranking');
+  };
+
+  const handleBackFromRanking = () => {
+    setCurrentScreen('home');
+  };
+
+  const handleGoToProfile = () => {
+    setCurrentScreen('profile');
+  };
+
+  const handleGoToInvite = () => {
+    setCurrentScreen('invite');
+  };
+
+  const renderCurrentScreen = () => {
+    switch (currentScreen) {
+      case 'home':
+        return (
+          <HomeScreen
+            onStartChallenge={handleStartChallenge}
+            onViewFullRanking={handleViewFullRanking}
+            onViewChallengeRanking={handleViewChallengeRanking}
+          />
+        );
+      case 'challenge':
+        return challengeId ? (
+          <ChallengeScreen
+            challengeId={challengeId}
+            category={challengeCategory} // Passando a categoria
+            onBack={handleBackFromChallenge}
+          />
+        ) : null;
+      case 'ranking':
+        return <FullRankingScreen onBack={handleBackFromRanking} />;
+      case 'profile':
+        return <ProfileScreen onBack={handleBackFromRanking} />;
+      case 'invite':
+        return <InviteScreen />;
+      case 'challenge-ranking':
+        return challengeRankingId ? <div>Ranking da Competição {challengeRankingId}</div> : null;
+      default:
+        return <HomeScreen onStartChallenge={handleStartChallenge} onViewFullRanking={handleViewFullRanking} onViewChallengeRanking={handleViewChallengeRanking} />;
+    }
+  };
+
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ErrorBoundary>
           <AuthProvider>
-            <div className="App">
-              <Routes>
-                <Route path="/auth" element={<AuthScreen />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin" element={
-                  <ProtectedRoute>
-                    <AdminPanel />
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-            </div>
+            <Router>
+              <div className="App min-h-screen bg-gray-50">
+                <Routes>
+                  <Route path="/auth" element={<AuthScreen />} />
+                  <Route path="/admin/*" element={
+                    <AdminRoute>
+                      <AdminPanel />
+                    </AdminPanel>
+                  } />
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <div className="pb-16">
+                        {renderCurrentScreen()}
+                      </div>
+                      <BottomNavigation 
+                        currentScreen={currentScreen} 
+                        onScreenChange={setCurrentScreen} 
+                      />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster />
+              </div>
+            </Router>
           </AuthProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+        </ErrorBoundary>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
