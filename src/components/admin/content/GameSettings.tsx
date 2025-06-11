@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useGameSettings } from "@/hooks/useGameSettings";
 import { GameSettingsHeader } from './GameSettingsHeader';
 import { GameSettingsCategory } from './GameSettingsCategory';
+import { WordScoringConfig } from './WordScoringConfig';
 
 export const GameSettings = () => {
   const {
@@ -25,7 +26,19 @@ export const GameSettings = () => {
     );
   }
 
-  const groupedSettings = settings.reduce((groups, setting) => {
+  // Separar configurações de pontuação das outras
+  const scoringSettings = settings.filter(setting => 
+    setting.category === 'scoring' && 
+    (setting.setting_key.startsWith('points_per_') && setting.setting_key.includes('_letter_word'))
+  );
+  
+  const otherSettings = settings.filter(setting => 
+    !(setting.category === 'scoring' && 
+      setting.setting_key.startsWith('points_per_') && 
+      setting.setting_key.includes('_letter_word'))
+  );
+
+  const groupedSettings = otherSettings.reduce((groups, setting) => {
     const category = setting.category;
     if (!groups[category]) {
       groups[category] = [];
@@ -41,7 +54,15 @@ export const GameSettings = () => {
         saving={saving}
       />
 
-      {/* Configurações agrupadas por categoria */}
+      {/* Sistema de Pontuação */}
+      <WordScoringConfig
+        settings={settings}
+        onUpdate={updateSetting}
+        onSave={saveSettings}
+        saving={saving}
+      />
+
+      {/* Outras configurações agrupadas por categoria */}
       {Object.entries(groupedSettings).map(([category, categorySettings]) => (
         <GameSettingsCategory
           key={category}
@@ -51,7 +72,7 @@ export const GameSettings = () => {
         />
       ))}
 
-      {Object.keys(groupedSettings).length === 0 && (
+      {Object.keys(groupedSettings).length === 0 && scoringSettings.length === 0 && (
         <Card>
           <CardContent className="p-8 text-center text-gray-500">
             <p>Nenhuma configuração encontrada</p>
