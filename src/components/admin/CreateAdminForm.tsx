@@ -1,59 +1,54 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, UserPlus, Mail, User, Key } from 'lucide-react';
+import { logger } from '@/utils/logger';
+
+const adminSchema = z.object({
+  email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
+  username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
+});
+
+type AdminFormData = z.infer<typeof adminSchema>;
 
 export const CreateAdminForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password || !username) {
-      toast({
-        title: "Erro",
-        description: "Todos os campos são obrigatórios",
-        variant: "destructive",
-      });
-      return;
+  
+  const form = useForm<AdminFormData>({
+    resolver: zodResolver(adminSchema),
+    defaultValues: {
+      email: '',
+      username: '',
+      password: ''
     }
+  });
 
-    if (password.length < 6) {
-      toast({
-        title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
+  const handleSubmit = async (data: AdminFormData) => {
     try {
-      console.log('🔧 Iniciando criação de usuário admin:', { email, username });
+      logger.log('🔧 Iniciando criação de usuário admin:', { email: data.email, username: data.username });
 
       // 1. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
         options: {
           data: {
-            username: username
+            username: data.username
           }
         }
       });
 
       if (authError) {
-        console.error('❌ Erro ao criar usuário:', authError);
+        logger.error('❌ Erro ao criar usuário:', authError);
         throw authError;
       }
 
@@ -61,7 +56,7 @@ export const CreateAdminForm = () => {
         throw new Error('Usuário não foi criado');
       }
 
-      console.log('✅ Usuário criado no Auth:', authData.user.id);
+      logger.log('✅ Usuário criado no Auth:', authData.user.id);
 
       // 2. Aguardar um momento para o trigger criar o perfil
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -75,28 +70,26 @@ export const CreateAdminForm = () => {
         });
 
       if (roleError) {
-        console.error('❌ Erro ao adicionar role admin:', roleError);
+        logger.error('❌ Erro ao adicionar role admin:', roleError);
         toast({
           title: "Aviso",
           description: "Usuário criado, mas erro ao definir como admin. Defina manualmente.",
           variant: "destructive",
         });
       } else {
-        console.log('✅ Role admin adicionada com sucesso');
+        logger.log('✅ Role admin adicionada com sucesso');
       }
 
       toast({
         title: "Sucesso!",
-        description: `Usuário admin ${email} criado com sucesso`,
+        description: `Usuário admin ${data.email} criado com sucesso`,
       });
 
       // Limpar formulário
-      setEmail('');
-      setPassword('');
-      setUsername('');
+      form.reset();
 
     } catch (error: any) {
-      console.error('❌ Erro geral:', error);
+      logger.error('❌ Erro geral:', error);
       
       let errorMessage = "Erro ao criar usuário admin";
       
@@ -113,8 +106,6 @@ export const CreateAdminForm = () => {
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -129,75 +120,96 @@ export const CreateAdminForm = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <Mail className="h-4 w-4 text-slate-500" />
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@exemplo.com"
-              disabled={isLoading}
-              className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-slate-500" />
+                    Email
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="admin@exemplo.com"
+                      type="email"
+                      disabled={form.formState.isSubmitting}
+                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="username" className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <User className="h-4 w-4 text-slate-500" />
-              Nome de Usuário
-            </Label>
-            <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="nomedousuario"
-              disabled={isLoading}
-              className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                    <User className="h-4 w-4 text-slate-500" />
+                    Nome de Usuário
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="nomedousuario"
+                      disabled={form.formState.isSubmitting}
+                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <Key className="h-4 w-4 text-slate-500" />
-              Senha
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              disabled={isLoading}
-              minLength={6}
-              className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                    <Key className="h-4 w-4 text-slate-500" />
+                    Senha
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="••••••••"
+                      type="password"
+                      disabled={form.formState.isSubmitting}
+                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm" 
-            disabled={isLoading}
-            size="lg"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Criando Administrador...
-              </>
-            ) : (
-              <>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Criar Administrador
-              </>
-            )}
-          </Button>
-        </form>
+            <Button 
+              type="submit" 
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm" 
+              disabled={form.formState.isSubmitting}
+              size="lg"
+            >
+              {form.formState.isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando Administrador...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Criar Administrador
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { prizeService, type PrizeConfiguration } from './prizeService';
+import { logger } from '@/utils/logger';
 
 interface ParticipantWithPrize {
   user_id: string;
@@ -15,13 +16,13 @@ interface ParticipantWithPrize {
 class DynamicPrizeService {
   async calculateDynamicPrizes(participants: Array<{user_id: string, user_score: number}>): Promise<ParticipantWithPrize[]> {
     try {
-      console.log('🏆 Calculando prêmios dinamicamente para', participants.length, 'participantes');
+      logger.log('🏆 Calculando prêmios dinamicamente para', participants.length, 'participantes');
 
       // Buscar configurações de prêmios
       const prizeConfigs = await prizeService.getPrizeConfigurations();
       const activePrizeConfigs = prizeConfigs.filter(config => config.active);
 
-      console.log('💰 Configurações de prêmios ativas:', activePrizeConfigs.length);
+      logger.log('💰 Configurações de prêmios ativas:', activePrizeConfigs.length);
 
       // Ordenar participantes por pontuação (maior para menor)
       const sortedParticipants = participants
@@ -42,7 +43,7 @@ class DynamicPrizeService {
         };
       });
 
-      console.log('🎯 Prêmios calculados:', {
+      logger.log('🎯 Prêmios calculados:', {
         totalParticipants: participantsWithPrizes.length,
         winnersCount: participantsWithPrizes.filter(p => p.prize > 0).length,
         totalPrizePool: participantsWithPrizes.reduce((sum, p) => sum + p.prize, 0)
@@ -50,7 +51,7 @@ class DynamicPrizeService {
 
       return participantsWithPrizes;
     } catch (error) {
-      console.error('❌ Erro ao calcular prêmios dinamicamente:', error);
+      logger.error('❌ Erro ao calcular prêmios dinamicamente:', error);
       // Fallback para o sistema antigo em caso de erro
       return this.calculateFallbackPrizes(participants);
     }
@@ -63,7 +64,7 @@ class DynamicPrizeService {
     );
 
     if (individualConfig) {
-      console.log(`💎 Posição ${position}: R$ ${individualConfig.prize_amount} (individual)`);
+      logger.log(`💎 Posição ${position}: R$ ${individualConfig.prize_amount} (individual)`);
       return individualConfig.prize_amount;
     }
 
@@ -76,7 +77,7 @@ class DynamicPrizeService {
     });
 
     if (groupConfig) {
-      console.log(`💎 Posição ${position}: R$ ${groupConfig.prize_amount} (grupo: ${groupConfig.position_range})`);
+      logger.log(`💎 Posição ${position}: R$ ${groupConfig.prize_amount} (grupo: ${groupConfig.position_range})`);
       return groupConfig.prize_amount;
     }
 
@@ -93,12 +94,12 @@ class DynamicPrizeService {
     }
     
     // Fallback se o formato estiver inválido
-    console.warn(`⚠️ Formato de range inválido: ${range}`);
+    logger.warn(`⚠️ Formato de range inválido: ${range}`);
     return { start: 0, end: 0 };
   }
 
   private calculateFallbackPrizes(participants: Array<{user_id: string, user_score: number}>): ParticipantWithPrize[] {
-    console.log('⚠️ Usando sistema de prêmios fallback (hardcoded)');
+    logger.log('⚠️ Usando sistema de prêmios fallback (hardcoded)');
     
     return participants
       .sort((a, b) => (b.user_score || 0) - (a.user_score || 0))
@@ -137,10 +138,10 @@ class DynamicPrizeService {
         }
       }
       
-      console.log('💰 Pool total de prêmios:', total);
+      logger.log('💰 Pool total de prêmios:', total);
       return total;
     } catch (error) {
-      console.error('❌ Erro ao calcular pool de prêmios:', error);
+      logger.error('❌ Erro ao calcular pool de prêmios:', error);
       return 0;
     }
   }

@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -8,10 +10,22 @@ import { useAuth } from '@/hooks/useAuth';
 import { RegisterForm as RegisterFormType } from '@/types';
 import { Loader2 } from 'lucide-react';
 
+const registerSchema = z.object({
+  username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
+  email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  confirmPassword: z.string().min(6, 'Confirmação de senha é obrigatória'),
+  inviteCode: z.string().optional()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não coincidem",
+  path: ["confirmPassword"],
+});
+
 const RegisterForm = () => {
   const { register, isLoading, error } = useAuth();
   
   const form = useForm<RegisterFormType>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       username: '',
       email: '',
@@ -22,22 +36,6 @@ const RegisterForm = () => {
   });
 
   const onSubmit = async (data: RegisterFormType) => {
-    if (data.password !== data.confirmPassword) {
-      form.setError('confirmPassword', {
-        type: 'manual',
-        message: 'As senhas não coincidem'
-      });
-      return;
-    }
-
-    if (data.password.length < 6) {
-      form.setError('password', {
-        type: 'manual',
-        message: 'A senha deve ter pelo menos 6 caracteres'
-      });
-      return;
-    }
-
     try {
       await register(data);
     } catch (err) {
@@ -60,7 +58,6 @@ const RegisterForm = () => {
         <FormField
           control={form.control}
           name="username"
-          rules={{ required: 'Nome de usuário é obrigatório' }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nome de usuário</FormLabel>
@@ -78,13 +75,6 @@ const RegisterForm = () => {
         <FormField
           control={form.control}
           name="email"
-          rules={{ 
-            required: 'Email é obrigatório',
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: 'Email inválido'
-            }
-          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
@@ -103,13 +93,6 @@ const RegisterForm = () => {
         <FormField
           control={form.control}
           name="password"
-          rules={{ 
-            required: 'Senha é obrigatória',
-            minLength: {
-              value: 6,
-              message: 'A senha deve ter pelo menos 6 caracteres'
-            }
-          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Senha</FormLabel>
@@ -128,7 +111,6 @@ const RegisterForm = () => {
         <FormField
           control={form.control}
           name="confirmPassword"
-          rules={{ required: 'Confirmação de senha é obrigatória' }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Confirmar senha</FormLabel>

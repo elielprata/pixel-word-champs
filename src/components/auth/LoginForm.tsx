@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -8,12 +10,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { LoginForm as LoginFormType } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { logger } from '@/utils/logger';
+
+const loginSchema = z.object({
+  email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
+});
 
 const LoginForm = () => {
   const { login, isLoading, error } = useAuth();
   const navigate = useNavigate();
   
   const form = useForm<LoginFormType>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: ''
@@ -22,14 +31,14 @@ const LoginForm = () => {
 
   const onSubmit = async (data: LoginFormType) => {
     try {
-      console.log('🔐 Tentando fazer login com:', data.email);
+      logger.log('🔐 Tentando fazer login com:', data.email);
       await login(data);
       
       // Redirecionar para home após login bem-sucedido
-      console.log('✅ Login realizado, redirecionando para home');
+      logger.log('✅ Login realizado, redirecionando para home');
       navigate('/');
     } catch (err) {
-      console.error('❌ Erro no login:', err);
+      logger.error('❌ Erro no login:', err);
     }
   };
 
@@ -39,13 +48,6 @@ const LoginForm = () => {
         <FormField
           control={form.control}
           name="email"
-          rules={{ 
-            required: 'Email é obrigatório',
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: 'Email inválido'
-            }
-          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
@@ -65,13 +67,6 @@ const LoginForm = () => {
         <FormField
           control={form.control}
           name="password"
-          rules={{ 
-            required: 'Senha é obrigatória',
-            minLength: {
-              value: 6,
-              message: 'A senha deve ter pelo menos 6 caracteres'
-            }
-          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Senha</FormLabel>

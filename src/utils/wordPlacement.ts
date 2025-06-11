@@ -1,5 +1,6 @@
 
 import { type Position, type PlacedWord } from '@/utils/boardUtils';
+import { logger } from '@/utils/logger';
 
 export interface WordPlacementResult {
   board: string[][];
@@ -56,13 +57,13 @@ export class WordPlacer {
       positions
     });
     
-    console.log(`📍 Palavra "${word}" colocada em ${direction} (${startRow}, ${startCol})`);
+    logger.log(`📍 Palavra "${word}" colocada em ${direction} (${startRow}, ${startCol})`);
     return positions;
   }
 
   // Nova função para tentar colocar palavra priorizando o centro
   tryPlaceWordCentered(word: string): boolean {
-    console.log(`🎯 Tentando colocar palavra "${word}" no centro do tabuleiro...`);
+    logger.log(`🎯 Tentando colocar palavra "${word}" no centro do tabuleiro...`);
     
     // Calcular área central (terço médio do tabuleiro)
     const centerStart = Math.floor(this.size * 0.33);
@@ -77,7 +78,7 @@ export class WordPlacer {
       if (col + word.length <= this.size) {
         if (this.canPlaceWord(word, row, col, 'horizontal')) {
           this.placeWord(word, row, col, 'horizontal');
-          console.log(`✅ "${word}" colocada horizontalmente no centro em (${row}, ${col})`);
+          logger.log(`✅ "${word}" colocada horizontalmente no centro em (${row}, ${col})`);
           return true;
         }
       }
@@ -86,7 +87,7 @@ export class WordPlacer {
       if (row + word.length <= this.size) {
         if (this.canPlaceWord(word, row, col, 'vertical')) {
           this.placeWord(word, row, col, 'vertical');
-          console.log(`✅ "${word}" colocada verticalmente no centro em (${row}, ${col})`);
+          logger.log(`✅ "${word}" colocada verticalmente no centro em (${row}, ${col})`);
           return true;
         }
       }
@@ -95,13 +96,13 @@ export class WordPlacer {
       if (row + word.length <= this.size && col + word.length <= this.size) {
         if (this.canPlaceWord(word, row, col, 'diagonal')) {
           this.placeWord(word, row, col, 'diagonal');
-          console.log(`✅ "${word}" colocada diagonalmente no centro em (${row}, ${col})`);
+          logger.log(`✅ "${word}" colocada diagonalmente no centro em (${row}, ${col})`);
           return true;
         }
       }
     }
     
-    console.log(`⚠️ Não foi possível colocar "${word}" no centro, tentando em toda área...`);
+    logger.log(`⚠️ Não foi possível colocar "${word}" no centro, tentando em toda área...`);
     return false;
   }
 

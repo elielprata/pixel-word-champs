@@ -1,30 +1,31 @@
 
 import { WordPlacer, type WordPlacementResult } from './wordPlacement';
 import { type Position } from '@/utils/boardUtils';
+import { logger } from '@/utils/logger';
 
 export class BoardGenerator {
   static generateSmartBoard(size: number, words: string[]): WordPlacementResult {
-    console.log(`🚀 Iniciando geração do tabuleiro ${size}x${size} com palavras:`, words);
+    logger.log(`🚀 Iniciando geração do tabuleiro ${size}x${size} com palavras:`, words);
     
     // Validar palavras antes de tentar colocar no tabuleiro
     const validWords = words.filter(word => {
       if (!word || typeof word !== 'string') {
-        console.warn(`⚠️ Palavra inválida (não é string):`, word);
+        logger.warn(`⚠️ Palavra inválida (não é string):`, word);
         return false;
       }
       
       if (word.length > size) {
-        console.warn(`⚠️ Palavra "${word}" (${word.length} letras) muito grande para tabuleiro ${size}x${size}`);
+        logger.warn(`⚠️ Palavra "${word}" (${word.length} letras) muito grande para tabuleiro ${size}x${size}`);
         return false;
       }
       
       if (word.length < 3) {
-        console.warn(`⚠️ Palavra "${word}" muito pequena (mínimo 3 letras)`);
+        logger.warn(`⚠️ Palavra "${word}" muito pequena (mínimo 3 letras)`);
         return false;
       }
       
       if (!/^[A-Z]+$/.test(word)) {
-        console.warn(`⚠️ Palavra "${word}" contém caracteres inválidos`);
+        logger.warn(`⚠️ Palavra "${word}" contém caracteres inválidos`);
         return false;
       }
       
@@ -32,7 +33,7 @@ export class BoardGenerator {
     });
     
     if (validWords.length === 0) {
-      console.error(`❌ CRÍTICO: Nenhuma palavra válida para tabuleiro ${size}x${size}`);
+      logger.error(`❌ CRÍTICO: Nenhuma palavra válida para tabuleiro ${size}x${size}`);
       return {
         board: Array(size).fill(null).map(() => Array(size).fill('')),
         placedWords: []
@@ -40,7 +41,7 @@ export class BoardGenerator {
     }
     
     if (validWords.length !== words.length) {
-      console.log(`🔄 Usando ${validWords.length}/${words.length} palavras válidas:`, validWords);
+      logger.log(`🔄 Usando ${validWords.length}/${words.length} palavras válidas:`, validWords);
     }
     
     return this.generateCenteredBoard(size, validWords);
@@ -49,7 +50,7 @@ export class BoardGenerator {
   private static generateCenteredBoard(size: number, words: string[]): WordPlacementResult {
     const wordPlacer = new WordPlacer(size);
     
-    console.log('🎯 Método centrado: priorizando colocação no centro do tabuleiro...');
+    logger.log('🎯 Método centrado: priorizando colocação no centro do tabuleiro...');
     
     // Ordenar palavras por tamanho (maiores primeiro para melhor colocação)
     const sortedWords = [...words].sort((a, b) => b.length - a.length);
@@ -59,14 +60,14 @@ export class BoardGenerator {
       const word = sortedWords[i].toUpperCase();
       let placed = false;
       
-      console.log(`🎯 Tentando colocar palavra "${word}" (${word.length} letras)...`);
+      logger.log(`🎯 Tentando colocar palavra "${word}" (${word.length} letras)...`);
       
       // Primeiro, tentar colocar no centro
       placed = wordPlacer.tryPlaceWordCentered(word);
       
       // Se não conseguiu no centro, tentar em todas as posições (fallback)
       if (!placed) {
-        console.log(`🔄 Tentando colocação tradicional para "${word}"...`);
+        logger.log(`🔄 Tentando colocação tradicional para "${word}"...`);
         
         for (let row = 0; row < size && !placed; row++) {
           for (let col = 0; col < size && !placed; col++) {
@@ -75,7 +76,7 @@ export class BoardGenerator {
               if (wordPlacer.canPlaceWord(word, row, col, 'horizontal')) {
                 wordPlacer.placeWord(word, row, col, 'horizontal');
                 placed = true;
-                console.log(`✅ "${word}" colocada horizontalmente (fallback) em (${row}, ${col})`);
+                logger.log(`✅ "${word}" colocada horizontalmente (fallback) em (${row}, ${col})`);
                 continue;
               }
             }
@@ -85,17 +86,17 @@ export class BoardGenerator {
               if (wordPlacer.canPlaceWord(word, row, col, 'vertical')) {
                 wordPlacer.placeWord(word, row, col, 'vertical');
                 placed = true;
-                console.log(`✅ "${word}" colocada verticalmente (fallback) em (${row}, ${col})`);
+                logger.log(`✅ "${word}" colocada verticalmente (fallback) em (${row}, ${col})`);
                 continue;
               }
             }
             
             // Tentar diagonalmente
-            if (row + word.length <= size && col + word.length <= size) {
+            if (row + word.length <= size && col + word.length <= this.size) {
               if (wordPlacer.canPlaceWord(word, row, col, 'diagonal')) {
                 wordPlacer.placeWord(word, row, col, 'diagonal');
                 placed = true;
-                console.log(`✅ "${word}" colocada diagonalmente (fallback) em (${row}, ${col})`);
+                logger.log(`✅ "${word}" colocada diagonalmente (fallback) em (${row}, ${col})`);
                 continue;
               }
             }
@@ -106,15 +107,15 @@ export class BoardGenerator {
       if (placed) {
         placedCount++;
       } else {
-        console.warn(`⚠️ Não foi possível colocar "${word}" no tabuleiro ${size}x${size}`);
+        logger.warn(`⚠️ Não foi possível colocar "${word}" no tabuleiro ${size}x${size}`);
       }
     }
     
     const result = wordPlacer.getResult();
     this.fillEmptySpaces(result.board, size);
     
-    console.log(`🎯 Resultado final: ${placedCount}/${words.length} palavras colocadas no tabuleiro ${size}x${size}`);
-    console.log(`📝 Palavras colocadas:`, result.placedWords.map(pw => pw.word));
+    logger.log(`🎯 Resultado final: ${placedCount}/${words.length} palavras colocadas no tabuleiro ${size}x${size}`);
+    logger.log(`📝 Palavras colocadas:`, result.placedWords.map(pw => pw.word));
     
     // Validar que as palavras no tabuleiro correspondem às palavras solicitadas
     const placedWordsSet = new Set(result.placedWords.map(pw => pw.word));
@@ -122,13 +123,13 @@ export class BoardGenerator {
     
     for (const requestedWord of requestedWordsSet) {
       if (!placedWordsSet.has(requestedWord)) {
-        console.error(`❌ ERRO: Palavra solicitada "${requestedWord}" não foi colocada no tabuleiro!`);
+        logger.error(`❌ ERRO: Palavra solicitada "${requestedWord}" não foi colocada no tabuleiro!`);
       }
     }
     
     for (const placedWord of placedWordsSet) {
       if (!requestedWordsSet.has(placedWord)) {
-        console.error(`❌ ERRO: Palavra "${placedWord}" foi colocada mas não estava na lista solicitada!`);
+        logger.error(`❌ ERRO: Palavra "${placedWord}" foi colocada mas não estava na lista solicitada!`);
       }
     }
     
@@ -148,6 +149,6 @@ export class BoardGenerator {
       }
     }
     
-    console.log(`🔤 Preenchidas ${filledCount} células vazias com letras aleatórias`);
+    logger.log(`🔤 Preenchidas ${filledCount} células vazias com letras aleatórias`);
   }
 }

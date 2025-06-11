@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { competitionHistoryService } from './competitionHistoryService';
 import { dynamicPrizeService } from './dynamicPrizeService';
+import { logger } from '@/utils/logger';
 
 class WeeklyCompetitionFinalizationService {
   async finalizeWeeklyCompetition(competitionId: string): Promise<void> {
     try {
-      console.log('🏁 Iniciando finalização da competição semanal:', competitionId);
+      logger.log('🏁 Iniciando finalização da competição semanal:', competitionId);
 
       // 1. Buscar dados da competição
       const { data: competition, error: compError } = await supabase
@@ -37,11 +38,11 @@ class WeeklyCompetitionFinalizationService {
       }
 
       if (!participations || participations.length === 0) {
-        console.log('⚠️ Nenhuma participação encontrada para finalizar');
+        logger.log('⚠️ Nenhuma participação encontrada para finalizar');
         return;
       }
 
-      console.log(`📊 Finalizando competição com ${participations.length} participantes`);
+      logger.log(`📊 Finalizando competição com ${participations.length} participantes`);
 
       // 3. Calcular prêmios dinamicamente baseado nas configurações
       const participantsData = participations.map(p => ({
@@ -51,7 +52,7 @@ class WeeklyCompetitionFinalizationService {
 
       const participantsWithPrizes = await dynamicPrizeService.calculateDynamicPrizes(participantsData);
 
-      console.log('🎯 Prêmios calculados dinamicamente:', {
+      logger.log('🎯 Prêmios calculados dinamicamente:', {
         totalParticipants: participantsWithPrizes.length,
         winnersCount: participantsWithPrizes.filter(p => p.prize > 0).length,
         totalPrizePool: participantsWithPrizes.reduce((sum, p) => sum + p.prize, 0)
@@ -96,7 +97,7 @@ class WeeklyCompetitionFinalizationService {
       }
 
       // 7. Zerar pontuações de todos os participantes para próxima competição
-      console.log('🔄 Zerando pontuações dos participantes...');
+      logger.log('🔄 Zerando pontuações dos participantes...');
       
       const userIds = participations.map(p => p.user_id);
       
@@ -106,10 +107,10 @@ class WeeklyCompetitionFinalizationService {
         .in('id', userIds);
 
       if (resetError) {
-        console.error('❌ Erro ao zerar pontuações:', resetError);
+        logger.error('❌ Erro ao zerar pontuações:', resetError);
         // Não falhar a finalização por causa disso, apenas logar
       } else {
-        console.log('✅ Pontuações dos participantes zeradas com sucesso');
+        logger.log('✅ Pontuações dos participantes zeradas com sucesso');
       }
 
       // 8. Marcar competição como finalizada
@@ -121,21 +122,21 @@ class WeeklyCompetitionFinalizationService {
         })
         .eq('id', competitionId);
 
-      console.log('✅ Competição semanal finalizada com sucesso');
-      console.log(`📈 Histórico salvo para ${participations.length} participantes`);
-      console.log(`💰 Total de prêmios distribuídos: R$ ${participantsWithPrizes.reduce((sum, p) => sum + p.prize, 0)}`);
-      console.log(`🏆 Ganhadores: ${participantsWithPrizes.filter(p => p.prize > 0).length}`);
-      console.log('🔄 Participantes prontos para nova competição');
+      logger.log('✅ Competição semanal finalizada com sucesso');
+      logger.log(`📈 Histórico salvo para ${participations.length} participantes`);
+      logger.log(`💰 Total de prêmios distribuídos: R$ ${participantsWithPrizes.reduce((sum, p) => sum + p.prize, 0)}`);
+      logger.log(`🏆 Ganhadores: ${participantsWithPrizes.filter(p => p.prize > 0).length}`);
+      logger.log('🔄 Participantes prontos para nova competição');
 
     } catch (error) {
-      console.error('❌ Erro ao finalizar competição semanal:', error);
+      logger.error('❌ Erro ao finalizar competição semanal:', error);
       throw error;
     }
   }
 
   async resetUserScoresForNewCompetition(userIds: string[]): Promise<void> {
     try {
-      console.log('🔄 Zerando pontuações para nova competição...');
+      logger.log('🔄 Zerando pontuações para nova competição...');
 
       const { error } = await supabase
         .from('profiles')
@@ -143,13 +144,13 @@ class WeeklyCompetitionFinalizationService {
         .in('id', userIds);
 
       if (error) {
-        console.error('❌ Erro ao zerar pontuações:', error);
+        logger.error('❌ Erro ao zerar pontuações:', error);
         throw error;
       }
 
-      console.log(`✅ Pontuações zeradas para ${userIds.length} usuários`);
+      logger.log(`✅ Pontuações zeradas para ${userIds.length} usuários`);
     } catch (error) {
-      console.error('❌ Erro no reset de pontuações:', error);
+      logger.error('❌ Erro no reset de pontuações:', error);
       throw error;
     }
   }

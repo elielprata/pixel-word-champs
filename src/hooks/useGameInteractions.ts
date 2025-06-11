@@ -2,6 +2,7 @@
 import { type Position } from '@/utils/boardUtils';
 import { toast } from '@/hooks/use-toast';
 import { useGamePointsConfig } from './useGamePointsConfig';
+import { logger } from '@/utils/logger';
 
 interface FoundWord {
   word: string;
@@ -76,7 +77,7 @@ export const useGameInteractions = (
         }, 3000);
       }
       
-      console.log(`Dica: Procure por "${hintWord}"`);
+      logger.log(`Dica: Procure por "${hintWord}"`);
     } else {
       toast({
         title: "Dica não disponível",
@@ -94,7 +95,7 @@ export const useGameInteractions = (
     setShowGameOver(false);
     
     // Adicionar 30 segundos (isso seria feito no componente pai)
-    console.log('Revive ativado! +30 segundos');
+    logger.log('Revive ativado! +30 segundos');
   };
 
   const handleGoHome = () => {
