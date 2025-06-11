@@ -35,9 +35,21 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving }: WordSc
   const [newPoints, setNewPoints] = useState<string>('');
   const { toast } = useToast();
 
-  // Extrair configurações de pontuação existentes
-  const scoringEntries: WordScoringEntry[] = settings
-    .filter(setting => setting.setting_key.startsWith('points_per_') && setting.setting_key.includes('_letter_word'))
+  // Extrair todas as configurações de pontuação (incluindo as por tamanho de palavra e outras)
+  const allScoringSettings = settings.filter(setting => setting.category === 'scoring');
+  
+  // Separar configurações por tamanho de palavra das outras configurações de pontuação
+  const wordSizeSettings = allScoringSettings.filter(setting => 
+    setting.setting_key.startsWith('points_per_') && 
+    (setting.setting_key.includes('_letter_word') || setting.setting_key === 'points_per_expert_word')
+  );
+  
+  const otherScoringSettings = allScoringSettings.filter(setting => 
+    !(setting.setting_key.startsWith('points_per_') && 
+      (setting.setting_key.includes('_letter_word') || setting.setting_key === 'points_per_expert_word'))
+  );
+
+  const scoringEntries: WordScoringEntry[] = wordSizeSettings
     .map(setting => {
       const match = setting.setting_key.match(/points_per_(\d+|expert)_/);
       const wordSize = match?.[1] === 'expert' ? 8 : parseInt(match?.[1] || '0');
@@ -138,27 +150,31 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving }: WordSc
     onUpdate(entry.setting_key, newPoints);
   };
 
+  const handleOtherSettingChange = (setting: any, newValue: string) => {
+    onUpdate(setting.setting_key, newValue);
+  };
+
   return (
     <Card className="border-2 bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg text-slate-800">
-            Sistema de Pontuação por Tamanho
+            Sistema de Pontuação
           </CardTitle>
           <Badge variant="outline" className="bg-white/50">
-            {scoringEntries.length} configurações
+            {allScoringSettings.length} configurações
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Lista de configurações existentes */}
+        {/* Configurações por tamanho de palavra */}
         <div className="space-y-4">
-          <h4 className="font-medium text-slate-700">Configurações Atuais</h4>
+          <h4 className="font-medium text-slate-700">Pontuação por Tamanho da Palavra</h4>
           {scoringEntries.map((entry) => (
             <div key={entry.id} className="bg-white/70 rounded-lg p-4 border border-white/50">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="text-sm font-medium text-slate-600">
+                  <div className="text-sm font-medium text-slate-600 min-w-[80px]">
                     {entry.wordSize === 8 ? '8+ letras' : `${entry.wordSize} letras`}
                   </div>
                   <div className="flex-1">
@@ -185,9 +201,33 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving }: WordSc
           ))}
         </div>
 
-        {/* Adicionar nova configuração */}
+        {/* Outras configurações de pontuação */}
+        {otherScoringSettings.length > 0 && (
+          <div className="space-y-4">
+            <h4 className="font-medium text-slate-700">Outras Configurações de Pontuação</h4>
+            {otherScoringSettings.map((setting) => (
+              <div key={setting.id} className="bg-white/70 rounded-lg p-4 border border-white/50">
+                <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                  {setting.description}
+                </Label>
+                <Input
+                  type={setting.setting_type === 'number' ? 'number' : 'text'}
+                  value={setting.setting_value}
+                  onChange={(e) => handleOtherSettingChange(setting, e.target.value)}
+                  className="bg-white border-slate-200"
+                  placeholder={`Valor para ${setting.setting_key}`}
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Chave: {setting.setting_key}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Adicionar nova configuração por tamanho */}
         <div className="space-y-4">
-          <h4 className="font-medium text-slate-700">Adicionar Nova Configuração</h4>
+          <h4 className="font-medium text-slate-700">Adicionar Nova Configuração por Tamanho</h4>
           <div className="bg-white/70 rounded-lg p-4 border border-white/50">
             <div className="flex items-end gap-4">
               <div className="flex-1">

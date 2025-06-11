@@ -26,16 +26,11 @@ export const GameSettings = () => {
     );
   }
 
-  // Separar configurações de pontuação das outras
-  const scoringSettings = settings.filter(setting => 
-    setting.category === 'scoring' && 
-    (setting.setting_key.startsWith('points_per_') && setting.setting_key.includes('_letter_word'))
-  );
-  
+  // Filtrar apenas configurações que não são de pontuação por tamanho
   const otherSettings = settings.filter(setting => 
     !(setting.category === 'scoring' && 
-      setting.setting_key.startsWith('points_per_') && 
-      setting.setting_key.includes('_letter_word'))
+      (setting.setting_key.startsWith('points_per_') && 
+       (setting.setting_key.includes('_letter_word') || setting.setting_key === 'points_per_expert_word')))
   );
 
   const groupedSettings = otherSettings.reduce((groups, setting) => {
@@ -54,7 +49,7 @@ export const GameSettings = () => {
         saving={saving}
       />
 
-      {/* Sistema de Pontuação */}
+      {/* Sistema de Pontuação Unificado */}
       <WordScoringConfig
         settings={settings}
         onUpdate={updateSetting}
@@ -72,7 +67,7 @@ export const GameSettings = () => {
         />
       ))}
 
-      {Object.keys(groupedSettings).length === 0 && scoringSettings.length === 0 && (
+      {Object.keys(groupedSettings).length === 0 && (
         <Card>
           <CardContent className="p-8 text-center text-gray-500">
             <p>Nenhuma configuração encontrada</p>
