@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -198,5 +199,3 @@ export class CustomCompetitionCoreService {
 }
 
 export const customCompetitionCoreService = new CustomCompetitionCoreService();
-
-}
