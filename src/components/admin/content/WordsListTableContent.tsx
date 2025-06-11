@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { FolderOpen } from 'lucide-react';
 
 interface Word {
@@ -17,33 +16,12 @@ interface WordsListTableContentProps {
 }
 
 export const WordsListTableContent = ({ words }: WordsListTableContentProps) => {
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-50 text-green-700 border-green-200';
-      case 'medium': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'hard': return 'bg-orange-50 text-orange-700 border-orange-200';
-      case 'expert': return 'bg-red-50 text-red-700 border-red-200';
-      default: return 'bg-gray-50 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getDifficultyLabel = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'Fácil';
-      case 'medium': return 'Médio';
-      case 'hard': return 'Difícil';
-      case 'expert': return 'Expert';
-      default: return difficulty;
-    }
-  };
-
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead className="w-[250px] font-semibold">Palavra</TableHead>
           <TableHead className="w-[200px] font-semibold">Categoria</TableHead>
-          <TableHead className="w-[120px] font-semibold">Dificuldade</TableHead>
           <TableHead className="font-semibold">Data de Criação</TableHead>
         </TableRow>
       </TableHeader>
@@ -62,14 +40,6 @@ export const WordsListTableContent = ({ words }: WordsListTableContentProps) => 
                   {word.category || 'Sem categoria'}
                 </span>
               </div>
-            </TableCell>
-            <TableCell>
-              <Badge 
-                variant="outline" 
-                className={`${getDifficultyColor(word.difficulty)} font-medium`}
-              >
-                {getDifficultyLabel(word.difficulty)}
-              </Badge>
             </TableCell>
             <TableCell>
               <span className="text-sm text-muted-foreground">
