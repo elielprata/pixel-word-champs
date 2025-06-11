@@ -47,10 +47,11 @@ export const ActiveCompetitionCard = ({
   };
 
   // Usar o serviço centralizado para calcular o status
-  const actualStatus = CompetitionStatusService.calculateCorrectStatus(
-    competition.start_date, 
-    competition.end_date
-  );
+  const actualStatus = CompetitionStatusService.calculateCorrectStatus({
+    start_date: competition.start_date,
+    end_date: competition.end_date,
+    competition_type: 'tournament'
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {

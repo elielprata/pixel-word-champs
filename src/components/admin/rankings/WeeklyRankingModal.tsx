@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,7 +89,11 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
 
   // Usar o serviço centralizado para verificar se a competição está ativa
   const isCompetitionActive = (startDate: string, endDate: string): boolean => {
-    const status = CompetitionStatusService.calculateCorrectStatus(startDate, endDate);
+    const status = CompetitionStatusService.calculateCorrectStatus({
+      start_date: startDate,
+      end_date: endDate,
+      competition_type: 'tournament'
+    });
     return status === 'active';
   };
 

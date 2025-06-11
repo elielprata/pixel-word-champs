@@ -48,10 +48,11 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
 
   // Usar o serviço centralizado para calcular o status de cada competição
   const calculateActualStatus = (competition: WeeklyCompetition) => {
-    return CompetitionStatusService.calculateCorrectStatus(
-      competition.start_date, 
-      competition.end_date
-    );
+    return CompetitionStatusService.calculateCorrectStatus({
+      start_date: competition.start_date,
+      end_date: competition.end_date,
+      competition_type: 'tournament'
+    });
   };
 
   // Filtrar apenas competições não finalizadas (ativas ou aguardando)

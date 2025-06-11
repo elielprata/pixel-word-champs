@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,10 +77,11 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
       });
 
       // Calcular o status correto baseado nas novas datas
-      const correctStatus = CompetitionStatusService.calculateCorrectStatus(
-        startDateWithTime.toISOString(),
-        endDateWithTime.toISOString()
-      );
+      const correctStatus = CompetitionStatusService.calculateCorrectStatus({
+        start_date: startDateWithTime.toISOString(),
+        end_date: endDateWithTime.toISOString(),
+        competition_type: competition.competition_type || 'tournament'
+      });
 
       console.log('🔄 Status calculado para as novas datas:', correctStatus);
 
