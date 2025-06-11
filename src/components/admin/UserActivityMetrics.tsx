@@ -20,6 +20,7 @@ const useUserActivity = () => {
 
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
 
       const { data: sessions, error } = await supabase
         .from('game_sessions')
@@ -31,13 +32,14 @@ const useUserActivity = () => {
         throw error;
       }
 
-      // Agrupar por dia
+      // Agrupar por dia com usuários únicos
       const dailyActivity: { [key: string]: { sessions: number; users: Set<string> } } = {};
       const last7Days = [];
 
       for (let i = 6; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
         const dateStr = date.toISOString().split('T')[0];
         const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' });
         last7Days.push({ dateStr, dayName });
@@ -45,7 +47,10 @@ const useUserActivity = () => {
       }
 
       sessions?.forEach(session => {
-        const dateStr = session.started_at.split('T')[0];
+        const sessionDate = new Date(session.started_at);
+        sessionDate.setHours(0, 0, 0, 0);
+        const dateStr = sessionDate.toISOString().split('T')[0];
+        
         if (dailyActivity[dateStr]) {
           dailyActivity[dateStr].sessions++;
           dailyActivity[dateStr].users.add(session.user_id);
@@ -58,7 +63,7 @@ const useUserActivity = () => {
         activeUsers: dailyActivity[dateStr].users.size
       }));
 
-      console.log('📊 Dados de atividade:', result);
+      console.log('📊 Dados de atividade corrigidos:', result);
       return result;
     },
     retry: 2,
@@ -106,7 +111,7 @@ export const UserActivityMetrics = () => {
   }
 
   const totalSessions = activityData?.reduce((sum, day) => sum + day.sessions, 0) || 0;
-  const totalActiveUsers = activityData?.reduce((sum, day) => sum + day.activeUsers, 0) || 0;
+  const totalUniqueActiveUsers = activityData?.reduce((sum, day) => sum + day.activeUsers, 0) || 0;
 
   return (
     <Card className="border-slate-200 shadow-lg">
@@ -120,6 +125,9 @@ export const UserActivityMetrics = () => {
             <div className="text-sm text-slate-600">7 dias</div>
             <div className="text-lg font-bold text-green-600">
               {totalSessions} sessões
+            </div>
+            <div className="text-sm text-slate-500">
+              {totalUniqueActiveUsers} usuários únicos
             </div>
           </div>
         </div>
@@ -141,7 +149,7 @@ export const UserActivityMetrics = () => {
               <Tooltip 
                 formatter={(value, name) => [
                   value, 
-                  name === 'sessions' ? 'Sessões' : 'Usuários Ativos'
+                  name === 'sessions' ? 'Sessões' : 'Usuários Ativos Únicos'
                 ]}
               />
               <Bar 
