@@ -2,6 +2,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { validateWeeklyCompetitionData } from '@/utils/weeklyCompetitionValidation';
+import { validateDailyCompetitionData } from '@/utils/dailyCompetitionValidation';
 
 interface CompetitionFormData {
   title: string;
@@ -95,51 +97,82 @@ export class CustomCompetitionCoreService {
       let competitionData: any;
       
       if ('type' in data) {
-        // Validar sobreposição APENAS para competições semanais
-        if (data.type === 'weekly' && data.startDate && data.endDate) {
+        // Validar dados baseado no tipo e aplicar padronização de horários
+        let validatedData: any;
+        
+        if (data.type === 'daily') {
+          validatedData = validateDailyCompetitionData({
+            title: data.title,
+            description: data.description,
+            theme: data.category || 'Geral',
+            start_date: data.startDate?.toISOString() || new Date().toISOString(),
+            competition_type: 'challenge'
+          });
+          console.log('✅ Competição diária - PODE coexistir com qualquer outra competição');
+        } else {
+          validatedData = validateWeeklyCompetitionData({
+            title: data.title,
+            description: data.description,
+            start_date: data.startDate?.toISOString() || new Date().toISOString(),
+            end_date: data.endDate?.toISOString() || new Date().toISOString(),
+            prize_pool: data.prizePool,
+            max_participants: data.maxParticipants,
+            competition_type: 'tournament'
+          });
+          
           console.log('🔍 Verificando sobreposição para competição semanal...');
           const hasOverlap = await this.checkWeeklyCompetitionOverlap(
-            data.startDate.toISOString(),
-            data.endDate.toISOString()
+            validatedData.start_date,
+            validatedData.end_date
           );
 
           if (hasOverlap) {
             throw new Error('As datas desta competição semanal se sobrepõem a uma competição semanal já existente. Por favor, escolha um período diferente.');
           }
-        } else if (data.type === 'daily') {
-          console.log('✅ Competição diária - PODE coexistir com qualquer outra competição');
         }
 
         competitionData = {
-          title: data.title,
-          description: data.description,
-          competition_type: data.type === 'daily' ? 'challenge' : 'tournament',
-          start_date: data.startDate?.toISOString() || new Date().toISOString(),
-          end_date: data.endDate?.toISOString() || new Date().toISOString(),
-          max_participants: data.maxParticipants,
-          prize_pool: data.prizePool,
-          theme: data.category,
+          title: validatedData.title,
+          description: validatedData.description,
+          competition_type: validatedData.competition_type,
+          start_date: validatedData.start_date,
+          end_date: validatedData.end_date,
+          max_participants: validatedData.max_participants || data.maxParticipants,
+          prize_pool: validatedData.prize_pool || data.prizePool,
+          theme: validatedData.theme || data.category,
           created_by: user.user.id,
-          status: 'active'
+          status: data.type === 'daily' ? 'active' : 'scheduled'
         };
       } else {
-        // Validar sobreposição APENAS se for tournament (competição semanal)
-        if (data.competition_type === 'tournament') {
+        // Validar dados diretos do formulário e aplicar padronização
+        if (data.competition_type === 'challenge') {
+          const validatedData = validateDailyCompetitionData(data);
+          competitionData = {
+            ...validatedData,
+            max_participants: data.max_participants,
+            prize_pool: data.prize_pool,
+            rules: data.rules,
+            created_by: user.user.id,
+            status: data.status || 'active'
+          };
+          console.log('✅ Competição diária - PODE coexistir com qualquer outra competição');
+        } else {
+          const validatedData = validateWeeklyCompetitionData(data);
+          
           console.log('🔍 Verificando sobreposição para tournament direto...');
-          const hasOverlap = await this.checkWeeklyCompetitionOverlap(data.start_date, data.end_date);
+          const hasOverlap = await this.checkWeeklyCompetitionOverlap(validatedData.start_date, validatedData.end_date);
 
           if (hasOverlap) {
             throw new Error('As datas desta competição semanal se sobrepõem a uma competição semanal já existente. Por favor, escolha um período diferente.');
           }
-        } else {
-          console.log('✅ Competição não-tournament - PODE coexistir com qualquer outra competição');
+          
+          competitionData = {
+            ...validatedData,
+            rules: data.rules,
+            created_by: user.user.id,
+            status: data.status || 'scheduled'
+          };
         }
-
-        competitionData = {
-          ...data,
-          created_by: user.user.id,
-          status: data.status || 'draft'
-        };
       }
 
       const { data: competition, error } = await supabase

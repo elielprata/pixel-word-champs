@@ -2,6 +2,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { validateWeeklyCompetitionData } from '@/utils/weeklyCompetitionValidation';
+import { validateDailyCompetitionData } from '@/utils/dailyCompetitionValidation';
 
 interface CompetitionFormData {
   title: string;
@@ -96,28 +98,37 @@ export class CustomCompetitionManagementService {
     try {
       console.log('🔧 Atualizando competição:', competitionId, data);
       
-      // Validar sobreposição APENAS para competições semanais (tournaments) quando as datas são alteradas
+      // Aplicar validação baseada no tipo de competição
+      let updateData: any = data;
+      
       if (data.competition_type === 'tournament' && data.start_date && data.end_date) {
-        console.log('🔍 Verificando sobreposição para competição semanal...');
+        console.log('🔍 Validando e padronizando competição semanal...');
+        const validatedData = validateWeeklyCompetitionData(data);
+        
         const hasOverlap = await this.checkWeeklyCompetitionOverlapForUpdate(
           competitionId,
-          data.start_date,
-          data.end_date
+          validatedData.start_date,
+          validatedData.end_date
         );
 
         if (hasOverlap) {
           throw new Error('As datas desta competição semanal se sobrepõem a uma competição semanal já existente. Por favor, escolha um período diferente.');
         }
-      } else if (data.competition_type === 'challenge') {
+        
+        updateData = validatedData;
+      } else if (data.competition_type === 'challenge' && data.start_date) {
+        console.log('🔍 Validando e padronizando competição diária...');
+        const validatedData = validateDailyCompetitionData(data);
+        updateData = validatedData;
         console.log('✅ Competição diária - PODE coexistir com qualquer outra competição');
       } else if (!data.start_date || !data.end_date) {
-        console.log('✅ Datas não alteradas - ignorando verificação de sobreposição');
+        console.log('✅ Datas não alteradas - ignorando validação de horários');
       }
       
       const { data: competition, error } = await supabase
         .from('custom_competitions')
         .update({
-          ...data,
+          ...updateData,
           updated_at: new Date().toISOString()
         })
         .eq('id', competitionId)
