@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Trophy, DollarSign } from 'lucide-react';
+import { Calendar, Clock, Trophy, Users } from 'lucide-react';
 import { WeeklyCompetitionActions } from './WeeklyCompetitionActions';
-import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
+import { CompetitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {
   id: string;
@@ -26,36 +25,33 @@ interface WeeklyCompetitionCardProps {
   deletingId: string | null;
 }
 
-export const WeeklyCompetitionCard: React.FC<WeeklyCompetitionCardProps> = ({
+export const WeeklyCompetitionCard = ({
   competition,
   onViewRanking,
   onEdit,
   onDelete,
   deletingId
-}) => {
-  // Adicionar hook para atualização automática de status
-  useCompetitionStatusUpdater([competition]);
-
-  console.log('🃏 WeeklyCard: Props recebidas para competição:', {
-    id: competition.id,
-    title: competition.title,
-    hasOnEdit: !!onEdit,
-    hasOnDelete: !!onDelete,
-    hasOnViewRanking: !!onViewRanking,
-    deletingId
-  });
-
-  const formatDateTime = (dateString: string) => {
+}: WeeklyCompetitionCardProps) => {
+  const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
+    const dateFormatted = date.toLocaleDateString('pt-BR', {
       timeZone: 'America/Sao_Paulo',
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric'
     });
+    
+    const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
+    
+    return `${dateFormatted}, ${timeFormatted}`;
   };
+
+  // Usar o serviço centralizado para calcular o status
+  const actualStatus = CompetitionStatusService.calculateCorrectStatus({
+    start_date: competition.start_date,
+    end_date: competition.end_date,
+    competition_type: 'tournament'
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -69,7 +65,7 @@ export const WeeklyCompetitionCard: React.FC<WeeklyCompetitionCardProps> = ({
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active': return 'Ativo';
-      case 'scheduled': return 'Agendado';
+      case 'scheduled': return 'Aguardando Início';
       case 'completed': return 'Finalizado';
       default: return 'Rascunho';
     }
@@ -82,8 +78,8 @@ export const WeeklyCompetitionCard: React.FC<WeeklyCompetitionCardProps> = ({
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h4 className="font-semibold text-slate-800">{competition.title}</h4>
-              <Badge className={getStatusColor(competition.status)}>
-                {getStatusText(competition.status)}
+              <Badge className={getStatusColor(actualStatus)}>
+                {getStatusText(actualStatus)}
               </Badge>
             </div>
             
@@ -92,25 +88,22 @@ export const WeeklyCompetitionCard: React.FC<WeeklyCompetitionCardProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Início: {formatDateTime(competition.start_date)}</span>
+                <span>{formatDateTime(competition.start_date, false)}</span>
               </div>
               
               <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Fim: {formatDateTime(competition.end_date)}</span>
+                <Clock className="h-3 w-3 text-slate-500" />
+                <span>{formatDateTime(competition.end_date, true)}</span>
               </div>
               
               <div className="flex items-center gap-1">
-                <DollarSign className="h-3 w-3 text-green-600" />
-                <span className="text-green-600 font-medium">R$ {competition.prize_pool.toFixed(2)}</span>
+                <Trophy className="h-3 w-3 text-yellow-600" />
+                <span className="font-semibold">R$ {competition.prize_pool.toFixed(2)}</span>
               </div>
               
               <div className="flex items-center gap-1">
-                <Users className="h-3 w-3 text-blue-600" />
-                <span>
-                  {competition.total_participants || 0}
-                  {competition.max_participants > 0 && ` / ${competition.max_participants}`}
-                </span>
+                <Users className="h-3 w-3 text-green-600" />
+                <span className="text-green-600 font-medium">Participação Livre</span>
               </div>
             </div>
           </div>
@@ -121,6 +114,8 @@ export const WeeklyCompetitionCard: React.FC<WeeklyCompetitionCardProps> = ({
             onEdit={onEdit}
             onDelete={onDelete}
             deletingId={deletingId}
+            className="ml-4"
+            size="default"
           />
         </div>
       </CardContent>
