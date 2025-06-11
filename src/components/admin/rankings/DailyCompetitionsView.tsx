@@ -46,9 +46,16 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
 
   console.log('🔍 DailyCompetitionsView - estados do modal:', {
     editingCompetition: editingCompetition?.id,
+    editingCompetitionTitle: editingCompetition?.title,
     isEditModalOpen,
     activeCompetitions: activeCompetitions.length
   });
+
+  // Função para lidar com a abertura do modal
+  const handleModalOpenChange = (open: boolean) => {
+    console.log('🔍 DailyCompetitionsView - Mudança de estado do modal:', open);
+    setIsEditModalOpen(open);
+  };
 
   if (isLoading) {
     return (
@@ -76,7 +83,7 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
 
       <EditCompetitionModal
         open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
+        onOpenChange={handleModalOpenChange}
         competition={editingCompetition}
         onCompetitionUpdated={() => handleCompetitionUpdated(onRefresh)}
       />

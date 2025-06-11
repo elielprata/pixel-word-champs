@@ -3,7 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EditCompetitionForm } from './edit-competition/EditCompetitionForm';
 
-interface WeeklyCompetition {
+interface BaseCompetition {
   id: string;
   title: string;
   description: string;
@@ -14,12 +14,14 @@ interface WeeklyCompetition {
   max_participants: number;
   total_participants: number;
   competition_type?: string;
+  theme?: string; // Para competições diárias
+  rules?: any; // Para competições diárias
 }
 
 interface EditCompetitionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  competition: WeeklyCompetition | null;
+  competition: BaseCompetition | null;
   onCompetitionUpdated?: () => void;
 }
 
@@ -29,11 +31,25 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
   competition,
   onCompetitionUpdated
 }) => {
-  const handleClose = () => onOpenChange(false);
+  console.log('🎭 EditCompetitionModal - Props recebidas:', {
+    open,
+    competition: competition?.id,
+    competitionTitle: competition?.title
+  });
+
+  const handleClose = () => {
+    console.log('🎭 EditCompetitionModal - Fechando modal');
+    onOpenChange(false);
+  };
 
   // Determinar o tipo de competição para o título correto
   const getCompetitionTypeTitle = () => {
     if (!competition) return "Editar Competição";
+    
+    // Se tem theme, é diária
+    if ('theme' in competition) {
+      return "Editar Competição Diária";
+    }
     
     // Se tem competition_type, usar esse campo
     if (competition.competition_type === 'challenge') {
