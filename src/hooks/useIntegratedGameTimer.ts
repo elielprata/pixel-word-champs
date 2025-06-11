@@ -12,7 +12,7 @@ export const useIntegratedGameTimer = (isGameStarted: boolean) => {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [timerConfig, setTimerConfig] = useState<TimerConfig>({
     initialTime: 180, // fallback padrão
-    reviveTimeBonus: 30
+    reviveTimeBonus: 30 // fallback padrão de 30 segundos
   });
   const { config, loading } = useGamePointsConfig();
 
@@ -41,17 +41,22 @@ export const useIntegratedGameTimer = (isGameStarted: boolean) => {
           console.log('⚠️ Configuração base_time_limit não encontrada, usando padrão de 180s');
         }
 
+        // Garantir que o revive_time_bonus tenha um valor válido
+        const reviveTimeBonus = config?.revive_time_bonus || 30;
+        console.log(`🔄 Revive time bonus configurado: ${reviveTimeBonus} segundos`);
+
         setTimerConfig({
           initialTime,
-          reviveTimeBonus: config.revive_time_bonus
+          reviveTimeBonus
         });
         setTimeRemaining(initialTime);
       } catch (error) {
         console.error('Erro ao buscar configuração de timer:', error);
         // Usar valores padrão em caso de erro
+        const fallbackReviveBonus = config?.revive_time_bonus || 30;
         setTimerConfig({
           initialTime: 180,
-          reviveTimeBonus: config.revive_time_bonus
+          reviveTimeBonus: fallbackReviveBonus
         });
         setTimeRemaining(180);
       }
@@ -80,8 +85,9 @@ export const useIntegratedGameTimer = (isGameStarted: boolean) => {
   }, [isGameStarted, timeRemaining]);
 
   const extendTime = useCallback(() => {
-    console.log(`Adicionando ${timerConfig.reviveTimeBonus} segundos ao tempo restante`);
-    setTimeRemaining(prev => prev + timerConfig.reviveTimeBonus);
+    const bonusTime = timerConfig.reviveTimeBonus;
+    console.log(`⏰ Adicionando ${bonusTime} segundos ao tempo restante`);
+    setTimeRemaining(prev => prev + bonusTime);
     return true;
   }, [timerConfig.reviveTimeBonus]);
 
