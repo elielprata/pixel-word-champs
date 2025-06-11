@@ -18,6 +18,7 @@ interface WeeklyCompetition {
   prize_pool: number;
   max_participants: number;
   total_participants: number;
+  competition_type?: string;
 }
 
 interface EditCompetitionFormProps {
@@ -72,7 +73,8 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         startDateInput: formData.startDate,
         endDateInput: formData.endDate,
         startDateProcessed: startDateWithTime.toISOString(),
-        endDateProcessed: endDateWithTime.toISOString()
+        endDateProcessed: endDateWithTime.toISOString(),
+        competitionType: competition.competition_type
       });
 
       // Calcular o status correto baseado nas novas datas
@@ -90,7 +92,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         end_date: endDateWithTime.toISOString(),
         status: correctStatus,
         max_participants: 999999,
-        competition_type: 'tournament'
+        competition_type: competition.competition_type || 'tournament' // Preservar o tipo original
       };
 
       console.log('📤 Dados que serão enviados para atualização:', updateData);
