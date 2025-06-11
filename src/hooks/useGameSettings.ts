@@ -23,7 +23,7 @@ export const useGameSettings = () => {
       const { data, error } = await supabase
         .from('game_settings')
         .select('*')
-        .in('category', ['scoring', 'gameplay']) // Removido 'prizes'
+        .in('category', ['scoring', 'gameplay'])
         .order('category', { ascending: true })
         .order('setting_key', { ascending: true });
 
@@ -38,6 +38,11 @@ export const useGameSettings = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const refetchSettings = async () => {
+    setLoading(true);
+    await fetchSettings();
   };
 
   const updateSetting = (key: string, value: string) => {
@@ -84,6 +89,7 @@ export const useGameSettings = () => {
     loading,
     saving,
     updateSetting,
-    saveSettings
+    saveSettings,
+    refetchSettings
   };
 };

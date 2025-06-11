@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,9 +27,10 @@ interface WordScoringConfigProps {
   onUpdate: (key: string, value: string) => void;
   onSave: () => void;
   saving: boolean;
+  onRefresh: () => void; // Nova prop para atualizar configurações
 }
 
-export const WordScoringConfig = ({ settings, onUpdate, onSave, saving }: WordScoringConfigProps) => {
+export const WordScoringConfig = ({ settings, onUpdate, onSave, saving, onRefresh }: WordScoringConfigProps) => {
   const [newWordSize, setNewWordSize] = useState<string>('');
   const [newPoints, setNewPoints] = useState<string>('');
   const { toast } = useToast();
@@ -110,8 +110,8 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving }: WordSc
       setNewWordSize('');
       setNewPoints('');
       
-      // Forçar recarregamento das configurações
-      window.location.reload();
+      // Atualizar configurações sem recarregar a página
+      onRefresh();
     } catch (error) {
       toast({
         title: "Erro",
@@ -135,8 +135,8 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving }: WordSc
         description: "Configuração removida com sucesso"
       });
 
-      // Forçar recarregamento das configurações
-      window.location.reload();
+      // Atualizar configurações sem recarregar a página
+      onRefresh();
     } catch (error) {
       toast({
         title: "Erro",

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useGameSettings } from "@/hooks/useGameSettings";
@@ -12,7 +11,8 @@ export const GameSettings = () => {
     loading,
     saving,
     updateSetting,
-    saveSettings
+    saveSettings,
+    refetchSettings
   } = useGameSettings();
 
   if (loading) {
@@ -55,6 +55,7 @@ export const GameSettings = () => {
         onUpdate={updateSetting}
         onSave={saveSettings}
         saving={saving}
+        onRefresh={refetchSettings}
       />
 
       {/* Outras configurações agrupadas por categoria */}
