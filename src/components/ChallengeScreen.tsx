@@ -9,9 +9,10 @@ import { competitionParticipationService } from '@/services/competitionParticipa
 interface ChallengeScreenProps {
   challengeId: string;
   onBack: () => void;
+  category?: string; // Nova prop para categoria
 }
 
-const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
+const ChallengeScreen = ({ challengeId, onBack, category }: ChallengeScreenProps) => {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
   const [gameSession, setGameSession] = useState<any>(null);
@@ -172,6 +173,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
         onStopGame={handleStopGame}
         canRevive={true}
         onRevive={handleRevive}
+        category={category}
       />
     </div>
   );

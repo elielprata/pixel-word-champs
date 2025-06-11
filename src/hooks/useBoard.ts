@@ -9,21 +9,21 @@ interface BoardData {
   placedWords: PlacedWord[];
 }
 
-export const useBoard = (level: number) => {
+export const useBoard = (level: number, category?: string) => {
   const [boardData, setBoardData] = useState<BoardData>({ board: [], placedWords: [] });
-  const { levelWords } = useWordSelection(level);
+  const { levelWords } = useWordSelection(level, category);
   const { generateBoard } = useBoardGeneration();
 
-  // Regenerate board when level or words change
+  // Regenerate board when level, words, or category change
   useEffect(() => {
     if (levelWords.length > 0) {
       const size = getBoardSize(level);
-      console.log('🎯 Gerando tabuleiro com palavras:', levelWords);
+      console.log(`🎯 Gerando tabuleiro com palavras${category ? ` da categoria ${category}` : ''}:`, levelWords);
       const newBoardData = generateBoard(size, levelWords);
       console.log('🎲 Tabuleiro gerado:', newBoardData);
       setBoardData(newBoardData);
     }
-  }, [level, levelWords, generateBoard]);
+  }, [level, levelWords, generateBoard, category]);
 
   const size = getBoardSize(level);
 

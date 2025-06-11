@@ -21,6 +21,7 @@ interface GameBoardProps {
   onStopGame: () => void;
   canRevive?: boolean;
   onRevive?: () => void;
+  category?: string; // Nova prop para categoria
 }
 
 const GameBoard = ({ 
@@ -32,10 +33,13 @@ const GameBoard = ({
   onAdvanceLevel, 
   onStopGame,
   canRevive = true,
-  onRevive
+  onRevive,
+  category // Nova prop
 }: GameBoardProps) => {
+  // Usar palavras do banco de dados através do useBoard com filtro de categoria
+  const { boardData, size, levelWords } = useBoard(level, category);
+  
   // Usar palavras do banco de dados através do useBoard
-  const { boardData, size, levelWords } = useBoard(level);
   const { 
     selectedCells, 
     isSelecting, 
