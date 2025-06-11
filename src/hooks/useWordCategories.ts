@@ -91,11 +91,88 @@ export const useWordCategories = () => {
     },
   });
 
+  const updateCategory = useMutation({
+    mutationFn: async ({ id, name, description }: { id: string; name: string; description: string }) => {
+      const { data, error } = await supabase
+        .from('word_categories')
+        .update({
+          name: name.toLowerCase().trim(),
+          description: description || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sucesso!",
+        description: "Categoria atualizada com sucesso",
+      });
+      queryClient.invalidateQueries({ queryKey: ['wordCategories'] });
+    },
+    onError: (error: any) => {
+      console.error('❌ Erro ao atualizar categoria:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar categoria",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteCategory = useMutation({
+    mutationFn: async ({ id, password }: { id: string; password: string }) => {
+      // Verificar senha (simplificado - em produção seria mais seguro)
+      if (password !== 'admin123') {
+        throw new Error('Senha incorreta');
+      }
+
+      const { data, error } = await supabase
+        .from('word_categories')
+        .update({ is_active: false })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sucesso!",
+        description: "Categoria removida com sucesso",
+      });
+      queryClient.invalidateQueries({ queryKey: ['wordCategories'] });
+    },
+    onError: (error: any) => {
+      console.error('❌ Erro ao remover categoria:', error);
+      
+      let errorMessage = "Erro ao remover categoria";
+      if (error.message && error.message.includes('Senha incorreta')) {
+        errorMessage = error.message;
+      }
+      
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     categories,
     isLoading,
     createCategory: createCategory.mutate,
     isCreating: createCategory.isPending,
+    updateCategory: updateCategory.mutate,
+    isUpdating: updateCategory.isPending,
+    deleteCategory: deleteCategory.mutate,
+    isDeleting: deleteCategory.isPending,
   };
 };
 
