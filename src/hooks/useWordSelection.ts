@@ -18,13 +18,11 @@ export const useWordSelection = (level: number) => {
         
         console.log(`🎯 Selecionando palavras para nível ${level} - Tabuleiro: ${boardSize}x${boardSize}, Máx palavra: ${maxWordLength} letras`);
 
-        // Buscar palavras ativas que cabem no tabuleiro
-        const { data: words, error } = await supabase
+        // Buscar todas as palavras ativas primeiro
+        const { data: allWords, error } = await supabase
           .from('level_words')
           .select('word, difficulty, category')
-          .eq('is_active', true)
-          .lte('char_length(word)', maxWordLength) // Usar char_length em vez de length
-          .gte('char_length(word)', 3); // Mínimo 3 letras
+          .eq('is_active', true);
 
         if (error) {
           console.error('❌ Erro ao buscar palavras:', error);
@@ -32,7 +30,18 @@ export const useWordSelection = (level: number) => {
           return;
         }
 
-        if (!words || words.length === 0) {
+        if (!allWords || allWords.length === 0) {
+          console.log('⚠️ Nenhuma palavra encontrada no banco de dados');
+          setLevelWords([]);
+          return;
+        }
+
+        // Filtrar palavras que cabem no tabuleiro usando JavaScript
+        const words = allWords.filter(w => 
+          w.word.length <= maxWordLength && w.word.length >= 3
+        );
+
+        if (words.length === 0) {
           console.log('⚠️ Nenhuma palavra encontrada que caiba no tabuleiro');
           setLevelWords([]);
           return;
