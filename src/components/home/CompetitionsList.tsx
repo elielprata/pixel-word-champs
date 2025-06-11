@@ -1,5 +1,8 @@
 
 import React from 'react';
+import { Trophy, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CompetitionCard from './CompetitionCard';
 import EmptyCompetitionsState from './EmptyCompetitionsState';
 
@@ -8,7 +11,6 @@ interface Competition {
   title: string;
   description: string;
   theme: string;
-  category?: string;
   start_date: string;
   end_date: string;
   status: string;
@@ -23,31 +25,38 @@ interface CompetitionsListProps {
 }
 
 const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: CompetitionsListProps) => {
-  console.log('🎯 CompetitionsList - Competições recebidas:', competitions.map(c => ({
-    id: c.id,
-    title: c.title,
-    category: c.category || 'sem categoria'
-  })));
-
-  if (competitions.length === 0) {
-    return <EmptyCompetitionsState onRefresh={onRefresh} />;
-  }
-
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-gray-800">Competições Ativas</h2>
-        <span className="text-sm text-gray-500">{competitions.length} disponível(is)</span>
-      </div>
-      
-      {competitions.map((competition) => (
-        <CompetitionCard
-          key={competition.id}
-          competition={competition}
-          onStartChallenge={onStartChallenge}
-        />
-      ))}
-    </div>
+    <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2 text-slate-800">
+            <div className="p-1.5 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg">
+              <Trophy className="w-4 h-4 text-white" />
+            </div>
+            Competições Ativas ({competitions.length})
+          </CardTitle>
+          <Button onClick={onRefresh} variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-3 pt-0">
+        {competitions.length === 0 ? (
+          <EmptyCompetitionsState onRefresh={onRefresh} />
+        ) : (
+          <div className="space-y-3">
+            {competitions.map((competition) => (
+              <CompetitionCard
+                key={competition.id}
+                competition={competition}
+                onStartChallenge={onStartChallenge}
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

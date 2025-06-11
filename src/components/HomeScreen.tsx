@@ -14,7 +14,6 @@ interface Competition {
   title: string;
   description: string;
   theme: string;
-  category?: string; // Adicionando categoria
   start_date: string;
   end_date: string;
   status: string;
@@ -23,7 +22,7 @@ interface Competition {
 }
 
 interface HomeScreenProps {
-  onStartChallenge: (challengeId: string, category?: string) => void; // Adicionando categoria como parâmetro
+  onStartChallenge: (challengeId: string) => void;
   onViewFullRanking: () => void;
   onViewChallengeRanking: (challengeId: number) => void;
 }
@@ -83,13 +82,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
 
         <CompetitionsList
           competitions={competitions}
-          onStartChallenge={(challengeId) => {
-            // Encontrar a competição e sua categoria
-            const competition = competitions.find(c => c.id === challengeId);
-            const category = competition?.category;
-            console.log(`🏷️ Iniciando competição ${challengeId} com categoria: ${category || 'sem categoria'}`);
-            onStartChallenge(challengeId, category);
-          }}
+          onStartChallenge={onStartChallenge}
           onRefresh={loadCompetitions}
         />
       </div>

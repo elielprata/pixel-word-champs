@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -31,7 +30,6 @@ export const useRankings = () => {
   const [weeklyCompetitions, setWeeklyCompetitions] = useState<WeeklyCompetition[]>([]);
   const [activeWeeklyCompetition, setActiveWeeklyCompetition] = useState<WeeklyCompetition | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [totalPlayers, setTotalPlayers] = useState(0);
 
   const fetchWeeklyRankings = async () => {
@@ -89,7 +87,6 @@ export const useRankings = () => {
       setWeeklyRanking(rankings);
     } catch (error) {
       console.error('❌ Erro ao carregar ranking semanal:', error);
-      setError('Erro ao carregar ranking semanal');
       toast({
         title: "Erro ao carregar ranking semanal",
         description: "Não foi possível carregar os dados do ranking.",
@@ -137,7 +134,6 @@ export const useRankings = () => {
       }
     } catch (error) {
       console.error('❌ Erro ao carregar competições semanais:', error);
-      setError('Erro ao carregar competições semanais');
     }
   };
 
@@ -154,13 +150,11 @@ export const useRankings = () => {
       setTotalPlayers(count || 0);
     } catch (error) {
       console.error('❌ Erro ao buscar total de jogadores:', error);
-      setError('Erro ao buscar total de jogadores');
     }
   };
 
   const refreshData = async () => {
     setIsLoading(true);
-    setError(null);
     await Promise.all([
       fetchWeeklyRankings(),
       fetchWeeklyCompetitions(),
@@ -180,7 +174,6 @@ export const useRankings = () => {
     activeWeeklyCompetition,
     totalPlayers,
     isLoading,
-    error,
     refreshData
   };
 };
