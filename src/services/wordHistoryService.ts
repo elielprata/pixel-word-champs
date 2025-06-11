@@ -55,7 +55,7 @@ class WordHistoryService {
         used_at: new Date().toISOString()
       }));
 
-      // Inserir no histórico (criar tabela se necessário via migration)
+      // Inserir no histórico
       const { error: insertError } = await supabase
         .from('user_word_history')
         .insert(usageRecords);

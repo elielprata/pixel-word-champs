@@ -792,6 +792,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_word_history: {
+        Row: {
+          category: string
+          competition_id: string | null
+          created_at: string
+          id: string
+          level: number
+          used_at: string
+          user_id: string
+          word: string
+        }
+        Insert: {
+          category?: string
+          competition_id?: string | null
+          created_at?: string
+          id?: string
+          level?: number
+          used_at?: string
+          user_id: string
+          word: string
+        }
+        Update: {
+          category?: string
+          competition_id?: string | null
+          created_at?: string
+          id?: string
+          level?: number
+          used_at?: string
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
+      }
       weekly_rankings: {
         Row: {
           created_at: string | null
