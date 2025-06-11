@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -113,11 +114,8 @@ export const DailyCompetitionsManagement = () => {
       
       setCompetitions(mappedCompetitions);
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as competições diárias",
-        variant: "destructive"
-      });
+      console.error('Erro ao carregar competições:', error);
+      // Removido toast de erro aqui
     } finally {
       setLoading(false);
     }
@@ -149,7 +147,7 @@ export const DailyCompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição diária criada (PADRÃO: 00:00:00 às 23:59:59 com participação livre)"
+        description: "Competição diária criada com sucesso"
       });
 
       setNewCompetition({
@@ -163,6 +161,7 @@ export const DailyCompetitionsManagement = () => {
       setIsAddModalOpen(false);
       fetchCompetitions();
     } catch (error) {
+      console.error('Erro ao criar competição:', error);
       toast({
         title: "Erro",
         description: "Não foi possível criar a competição diária",
@@ -201,12 +200,13 @@ export const DailyCompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição diária atualizada (PADRÃO: 00:00:00 às 23:59:59 com participação livre)"
+        description: "Competição diária atualizada com sucesso"
       });
 
       setEditingCompetition(null);
       fetchCompetitions();
     } catch (error) {
+      console.error('Erro ao atualizar competição:', error);
       toast({
         title: "Erro",
         description: "Não foi possível atualizar a competição diária",
@@ -231,6 +231,7 @@ export const DailyCompetitionsManagement = () => {
 
       fetchCompetitions();
     } catch (error) {
+      console.error('Erro ao deletar competição:', error);
       toast({
         title: "Erro",
         description: "Não foi possível remover a competição diária",
