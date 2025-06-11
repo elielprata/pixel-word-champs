@@ -27,23 +27,15 @@ export class CompetitionStatusService {
       console.log('⏳ Competição está AGUARDANDO INÍCIO');
       return 'scheduled';
     } 
-    // Verificar se estamos dentro do período da competição (incluindo margem de tolerância)
+    // Verificar se estamos dentro do período da competição
     else if (now >= start && now <= end) {
       console.log('✅ Competição está ATIVA');
       return 'active';
     } 
-    // Para competições diárias, adicionar uma margem de tolerância de 5 minutos
-    // antes de finalizar automaticamente
+    // Competição já terminou
     else {
-      const marginEnd = new Date(end.getTime() + (5 * 60 * 1000)); // 5 minutos após o fim
-      
-      if (now <= marginEnd) {
-        console.log('⚠️ Competição dentro da margem de tolerância - mantendo ATIVA');
-        return 'active';
-      } else {
-        console.log('🏁 Competição está FINALIZADA');
-        return 'completed';
-      }
+      console.log('🏁 Competição está FINALIZADA');
+      return 'completed';
     }
   }
 
@@ -57,7 +49,7 @@ export class CompetitionStatusService {
       // Buscar dados da competição
       const { data: competition, error: fetchError } = await supabase
         .from('custom_competitions')
-        .select('id, start_date, end_date, status, competition_type')
+        .select('id, start_date, end_date, status')
         .eq('id', competitionId)
         .single();
 
@@ -71,7 +63,7 @@ export class CompetitionStatusService {
       
       // Atualizar apenas se o status mudou
       if (competition.status !== correctStatus) {
-        console.log(`📝 Atualizando status de "${competition.status}" para "${correctStatus}" (tipo: ${competition.competition_type})`);
+        console.log(`📝 Atualizando status de "${competition.status}" para "${correctStatus}"`);
         
         const { error: updateError } = await supabase
           .from('custom_competitions')
@@ -129,32 +121,6 @@ export class CompetitionStatusService {
       console.log('✅ Atualização de status concluída');
     } catch (error) {
       console.error('❌ Erro ao atualizar status das competições:', error);
-    }
-  }
-
-  /**
-   * Força uma competição específica para status ativo
-   * (usado para correções manuais de competições diárias)
-   */
-  static async forceCompetitionActive(competitionId: string): Promise<void> {
-    try {
-      console.log('🔧 Forçando competição para status ativo:', competitionId);
-      
-      const { error } = await supabase
-        .from('custom_competitions')
-        .update({ 
-          status: 'active',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', competitionId);
-
-      if (error) {
-        console.error('❌ Erro ao forçar status ativo:', error);
-      } else {
-        console.log('✅ Competição forçada para ativo com sucesso');
-      }
-    } catch (error) {
-      console.error('❌ Erro ao forçar status ativo:', error);
     }
   }
 }
