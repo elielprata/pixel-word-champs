@@ -13,14 +13,6 @@ export const getMinWordLength = (boardSize: number): number => {
   return 3;                       // Sempre pelo menos 3 letras
 };
 
-// Mapeamento de dificuldades por tamanho de palavra
-export const getDifficultyByLength = (length: number): string => {
-  if (length === 3) return 'easy';
-  if (length === 4) return 'medium';
-  if (length >= 5 && length <= 6) return 'hard';
-  return 'expert';
-};
-
 // Filtrar palavras que cabem no tabuleiro e ainda não foram usadas
 export const filterAvailableWords = (
   allWords: Array<{ word: string; difficulty: string }>,
@@ -40,22 +32,11 @@ export const categorizeWordsByDifficulty = (
   words: Array<{ word: string; difficulty: string }>
 ) => {
   const wordsByDifficulty = {
-    easy: words.filter(w => w.difficulty === 'easy' || w.word.length === 3),
-    medium: words.filter(w => w.difficulty === 'medium' || w.word.length === 4),
-    hard: words.filter(w => w.difficulty === 'hard' || (w.word.length >= 5 && w.word.length <= 6)),
-    expert: words.filter(w => w.difficulty === 'expert' || w.word.length >= 7)
+    easy: words.filter(w => w.difficulty === 'easy'),
+    medium: words.filter(w => w.difficulty === 'medium'),
+    hard: words.filter(w => w.difficulty === 'hard'),
+    expert: words.filter(w => w.difficulty === 'expert')
   };
-
-  // Se não houver palavras com dificuldade definida, categorizar por tamanho
-  if (Object.values(wordsByDifficulty).every(arr => arr.length === 0)) {
-    console.log('🔄 Categorizando palavras por tamanho...');
-    words.forEach(word => {
-      const difficulty = getDifficultyByLength(word.word.length);
-      if (wordsByDifficulty[difficulty as keyof typeof wordsByDifficulty]) {
-        wordsByDifficulty[difficulty as keyof typeof wordsByDifficulty].push(word);
-      }
-    });
-  }
 
   return wordsByDifficulty;
 };

@@ -62,20 +62,6 @@ export const useWordSelection = (level: number) => {
           expert: validWords.filter(w => w.difficulty === 'expert')
         };
 
-        // Se não há palavras categorizadas por dificuldade, categorizar por tamanho
-        if (Object.values(wordsByDifficulty).every(arr => arr.length === 0)) {
-          console.log('🔄 Categorizando palavras por tamanho...');
-          validWords.forEach(word => {
-            let difficulty = 'medium';
-            if (word.word.length === 3) difficulty = 'easy';
-            else if (word.word.length === 4) difficulty = 'medium';
-            else if (word.word.length >= 5 && word.word.length <= 6) difficulty = 'hard';
-            else if (word.word.length >= 7) difficulty = 'expert';
-            
-            wordsByDifficulty[difficulty as keyof typeof wordsByDifficulty].push(word);
-          });
-        }
-
         // Selecionar palavras seguindo a distribuição desejada
         const selectedWords: string[] = [];
 
