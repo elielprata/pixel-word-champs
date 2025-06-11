@@ -28,15 +28,29 @@ export class CompetitionStatusService {
       isActive: now >= dayStart && now <= dayEnd
     });
     
-    // Regras específicas para competições diárias:
+    // CORREÇÃO: Usar horário de Brasília para comparação
+    const nowBrasilia = getBrasiliaTime();
+    const dayStartBrasilia = new Date(competitionDay);
+    dayStartBrasilia.setHours(0, 0, 0, 0);
+    
+    const dayEndBrasilia = new Date(competitionDay);
+    dayEndBrasilia.setHours(23, 59, 59, 999);
+    
+    console.log('🇧🇷 Comparação em horário de Brasília:', {
+      nowBrasilia: formatBrasiliaTime(nowBrasilia),
+      dayStartBrasilia: formatBrasiliaTime(dayStartBrasilia),
+      dayEndBrasilia: formatBrasiliaTime(dayEndBrasilia),
+    });
+    
+    // Regras específicas para competições diárias em horário de Brasília:
     
     // Status: Aguardando - Quando a data/hora atual for anterior a 00:00:00 do dia da competição
-    if (now < dayStart) {
+    if (nowBrasilia < dayStartBrasilia) {
       console.log('⏳ Competição diária está AGUARDANDO INÍCIO (antes de 00:00:00)');
       return 'scheduled';
     } 
     // Status: Ativa - Quando a data/hora atual estiver entre 00:00:00 e 23:59:59 do mesmo dia
-    else if (now >= dayStart && now <= dayEnd) {
+    else if (nowBrasilia >= dayStartBrasilia && nowBrasilia <= dayEndBrasilia) {
       console.log('✅ Competição diária está ATIVA (00:00:00 às 23:59:59)');
       return 'active';
     } 

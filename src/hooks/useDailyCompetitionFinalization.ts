@@ -28,20 +28,25 @@ export const useDailyCompetitionFinalization = () => {
         if (dailyCompetitions && dailyCompetitions.length > 0) {
           console.log(`📋 Encontradas ${dailyCompetitions.length} competições diárias para verificar`);
           
-          // Verificar e atualizar status de cada competição diária
+          // CORREÇÃO: Verificar e atualizar status de cada competição diária
           for (const competition of dailyCompetitions) {
             console.log(`🔍 Verificando competição diária: ${competition.title}`);
             
             // Calcular status correto baseado nas regras de competição diária
             const correctStatus = CompetitionStatusService.calculateDailyCompetitionStatus(competition.start_date);
             
+            console.log(`📊 Status atual: "${competition.status}" | Status correto: "${correctStatus}"`);
+            
+            // Atualizar status se necessário
+            if (competition.status !== correctStatus) {
+              console.log(`🔄 Atualizando status de "${competition.status}" para "${correctStatus}"`);
+              await CompetitionStatusService.updateSingleCompetitionStatus(competition.id);
+            }
+            
             // Se a competição foi finalizada, executar finalização
             if (competition.status === 'active' && correctStatus === 'completed') {
               console.log(`🏁 Finalizando competição diária: ${competition.title}`);
               await dailyCompetitionService.finalizeDailyCompetition(competition.id);
-            } else {
-              // Apenas atualizar status se necessário
-              await CompetitionStatusService.updateSingleCompetitionStatus(competition.id);
             }
           }
         } else {
@@ -55,8 +60,8 @@ export const useDailyCompetitionFinalization = () => {
     // Verificar imediatamente
     checkExpiredCompetitions();
 
-    // Verificar a cada 5 minutos para manter status atualizados
-    const interval = setInterval(checkExpiredCompetitions, 5 * 60 * 1000);
+    // Verificar a cada 2 minutos para manter status atualizados (reduzido de 5 para 2 minutos para correção mais rápida)
+    const interval = setInterval(checkExpiredCompetitions, 2 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);

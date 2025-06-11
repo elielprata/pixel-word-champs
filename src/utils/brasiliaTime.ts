@@ -94,20 +94,32 @@ export const isBrasiliaDateInFuture = (date: Date): boolean => {
 
 /**
  * Cria uma data para o início do dia em Brasília (00:00:00)
+ * CORRIGIDO: Garante que a comparação seja feita no fuso horário correto
  */
 export const createBrasiliaStartOfDay = (date: Date): Date => {
-  const brasiliaDate = utcToBrasilia(date);
+  // Converter a data para o fuso de Brasília primeiro
+  const brasiliaDate = toZonedTime(date, BRASILIA_TIMEZONE);
   brasiliaDate.setHours(0, 0, 0, 0);
-  return brasiliaToUtc(brasiliaDate);
+  
+  console.log('🌅 Início do dia em Brasília:', formatBrasiliaTime(brasiliaDate));
+  
+  // Retornar a data já no fuso de Brasília
+  return brasiliaDate;
 };
 
 /**
  * Cria uma data para o final do dia em Brasília (23:59:59.999)
+ * CORRIGIDO: Garante que a comparação seja feita no fuso horário correto
  */
 export const createBrasiliaEndOfDay = (date: Date): Date => {
-  const brasiliaDate = utcToBrasilia(date);
+  // Converter a data para o fuso de Brasília primeiro
+  const brasiliaDate = toZonedTime(date, BRASILIA_TIMEZONE);
   brasiliaDate.setHours(23, 59, 59, 999);
-  return brasiliaToUtc(brasiliaDate);
+  
+  console.log('🌆 Fim do dia em Brasília:', formatBrasiliaTime(brasiliaDate));
+  
+  // Retornar a data já no fuso de Brasília
+  return brasiliaDate;
 };
 
 /**
