@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Activity, BookOpen, Folder } from 'lucide-react';
 import { useRealGameMetrics } from '@/hooks/useRealGameMetrics';
-import { WordsCount } from '../WordsCount';
 
 export const GameContentTabMetrics = () => {
   const { metrics, isLoading } = useRealGameMetrics();
@@ -31,9 +30,6 @@ export const GameContentTabMetrics = () => {
           <h2 className="text-lg font-semibold text-slate-900">Métricas do Sistema</h2>
         </div>
       </div>
-      
-      {/* Componente de contagem detalhada */}
-      <WordsCount />
       
       <div className="grid grid-cols-2 gap-4">
         {quickStats.map((stat, index) => (
