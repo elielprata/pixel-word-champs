@@ -9,6 +9,13 @@ interface ParticipantsSectionProps {
 }
 
 export const ParticipantsSection = ({ maxParticipants, onMaxParticipantsChange }: ParticipantsSectionProps) => {
+  // Sempre definindo como 0 (ilimitado) e ignorando as mudanças
+  React.useEffect(() => {
+    if (maxParticipants !== 0) {
+      onMaxParticipantsChange(0);
+    }
+  }, [maxParticipants, onMaxParticipantsChange]);
+
   return (
     <div className="space-y-2">
       <Label htmlFor="maxParticipants" className="flex items-center gap-2 text-sm font-medium">
