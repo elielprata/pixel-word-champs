@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getDifficultyFromLength } from '@/utils/wordDifficultyUtils';
 
 export const saveWordsToDatabase = async (
   words: string[], 
@@ -85,12 +84,12 @@ export const saveWordsToDatabase = async (
     return { words: [], count: 0 };
   }
 
-  // Preparar palavras para inserção com validação extra
+  // Preparar palavras para inserção - sem definir dificuldade automaticamente
   const wordsToInsert = uniqueNewWords.map(word => {
     const wordData = {
       word: word,
       category: categoryName,
-      difficulty: getDifficultyFromLength(word.length),
+      difficulty: 'medium', // Dificuldade padrão, será definida manualmente
       level: 1,
       is_active: true
     };
