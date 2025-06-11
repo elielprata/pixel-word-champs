@@ -89,7 +89,16 @@ export class CustomCompetitionManagementService {
       const newStart = new Date(newStartDate).toISOString();
       const newEnd = new Date(newEndDate).toISOString();
 
-      return currentStart !== newStart || currentEnd !== newEnd;
+      const datesChanged = currentStart !== newStart || currentEnd !== newEnd;
+      console.log('📅 Verificação de mudança de datas:', {
+        currentStart,
+        currentEnd,
+        newStart,
+        newEnd,
+        datesChanged
+      });
+
+      return datesChanged;
     } catch (error) {
       console.error('❌ Erro ao verificar mudanças de data:', error);
       return true; // Em caso de erro, assumir que mudou para ser conservativo
@@ -120,9 +129,16 @@ export class CustomCompetitionManagementService {
     try {
       console.log('🔧 Atualizando competição:', competitionId, data);
       
-      // Verificar sobreposição apenas para competições semanais (tournaments) 
-      // E SOMENTE quando as datas realmente mudaram
-      if (data.competition_type === 'tournament' && data.start_date && data.end_date) {
+      // NOVA LÓGICA: Verificar sobreposição APENAS se:
+      // 1. É uma competição semanal (tournament)
+      // 2. As datas start_date E end_date estão sendo fornecidas nos dados de atualização
+      // 3. As datas realmente mudaram em relação ao estado atual
+      const isUpdatingDates = data.start_date && data.end_date;
+      const isTournament = data.competition_type === 'tournament';
+      
+      if (isTournament && isUpdatingDates) {
+        console.log('📅 Detectada atualização de datas em competição semanal, verificando se as datas mudaram...');
+        
         const datesChanged = await this.checkIfDatesChanged(competitionId, data.start_date, data.end_date);
         
         if (datesChanged) {
@@ -139,6 +155,12 @@ export class CustomCompetitionManagementService {
         } else {
           console.log('📅 Datas não foram alteradas, pulando verificação de sobreposição');
         }
+      } else {
+        console.log('📅 Não é necessário verificar sobreposição:', { 
+          isTournament, 
+          isUpdatingDates,
+          reason: !isTournament ? 'Não é tournament' : 'Não está atualizando datas'
+        });
       }
       
       const { data: competition, error } = await supabase
