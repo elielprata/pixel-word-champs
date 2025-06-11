@@ -18,13 +18,11 @@ export const useWordSelection = (level: number) => {
         
         console.log(`🎯 Selecionando palavras para nível ${level} - Tabuleiro: ${boardSize}x${boardSize}, Máx palavra: ${maxWordLength} letras`);
 
-        // Buscar palavras ativas que cabem no tabuleiro
+        // Buscar palavras ativas (removendo char_length que não existe)
         const { data: words, error } = await supabase
           .from('level_words')
           .select('word, difficulty, category')
-          .eq('is_active', true)
-          .lte('char_length(word)', maxWordLength) // Usar char_length em vez de length
-          .gte('char_length(word)', 3); // Mínimo 3 letras
+          .eq('is_active', true);
 
         if (error) {
           console.error('❌ Erro ao buscar palavras:', error);
@@ -33,19 +31,32 @@ export const useWordSelection = (level: number) => {
         }
 
         if (!words || words.length === 0) {
-          console.log('⚠️ Nenhuma palavra encontrada que caiba no tabuleiro');
+          console.log('⚠️ Nenhuma palavra ativa encontrada no banco');
           setLevelWords([]);
           return;
         }
 
-        console.log(`📊 ${words.length} palavras disponíveis para tabuleiro ${boardSize}x${boardSize}`);
+        console.log(`📊 ${words.length} palavras ativas encontradas`);
+
+        // Filtrar palavras por tamanho usando JavaScript (já que char_length não existe)
+        const validWords = words.filter(w => 
+          w.word.length >= 3 && w.word.length <= maxWordLength
+        );
+
+        if (validWords.length === 0) {
+          console.log(`⚠️ Nenhuma palavra encontrada que caiba no tabuleiro ${boardSize}x${boardSize}`);
+          setLevelWords([]);
+          return;
+        }
+
+        console.log(`📏 ${validWords.length} palavras válidas para tabuleiro ${boardSize}x${boardSize}`);
 
         // Filtrar palavras por dificuldade disponível
         const wordsByDifficulty = {
-          easy: words.filter(w => w.difficulty === 'easy'),
-          medium: words.filter(w => w.difficulty === 'medium'),
-          hard: words.filter(w => w.difficulty === 'hard'),
-          expert: words.filter(w => w.difficulty === 'expert')
+          easy: validWords.filter(w => w.difficulty === 'easy'),
+          medium: validWords.filter(w => w.difficulty === 'medium'),
+          hard: validWords.filter(w => w.difficulty === 'hard'),
+          expert: validWords.filter(w => w.difficulty === 'expert')
         };
 
         // Selecionar palavras seguindo a distribuição desejada
@@ -78,8 +89,8 @@ export const useWordSelection = (level: number) => {
         }
 
         // Se não conseguiu 5 palavras, completar com quaisquer palavras disponíveis
-        while (selectedWords.length < 5 && selectedWords.length < words.length) {
-          const remainingWords = words.filter(w => !selectedWords.includes(w.word));
+        while (selectedWords.length < 5 && selectedWords.length < validWords.length) {
+          const remainingWords = validWords.filter(w => !selectedWords.includes(w.word));
           if (remainingWords.length === 0) break;
           
           const randomWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
