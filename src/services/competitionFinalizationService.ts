@@ -2,16 +2,17 @@
 import { supabase } from '@/integrations/supabase/client';
 import { competitionParticipationService } from './competitionParticipationService';
 import { dailyCompetitionFinalizationService } from './dailyCompetition/dailyCompetitionFinalization';
+import { weeklyCompetitionFinalizationService } from './weeklyCompetitionFinalizationService';
 
 /**
- * Serviço para finalização de competições - nova dinâmica sem ranking diário
+ * Serviço para finalização de competições com nova regra de histórico
  */
 class CompetitionFinalizationService {
   async finalizeDailyCompetition(competitionId: string): Promise<void> {
     try {
       console.log('🏁 Finalizando competição diária (nova dinâmica - pontos já na semanal)...');
 
-      // Usar o novo serviço específico para competições diárias
+      // Usar o serviço específico para competições diárias
       await dailyCompetitionFinalizationService.finalizeDailyCompetition(competitionId);
       
       console.log('✅ Competição diária finalizada com sucesso');
@@ -22,19 +23,10 @@ class CompetitionFinalizationService {
 
   async finalizeWeeklyCompetition(competitionId: string): Promise<void> {
     try {
-      console.log('🏁 Finalizando competição semanal...');
+      console.log('🏁 Finalizando competição semanal com nova regra de histórico...');
 
-      // Atualizar rankings finais da competição semanal
-      await competitionParticipationService.updateCompetitionRankings(competitionId);
-
-      // Finalizar a competição semanal
-      await supabase
-        .from('custom_competitions')
-        .update({ 
-          status: 'completed',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', competitionId);
+      // Usar o novo serviço com regras de finalização automática
+      await weeklyCompetitionFinalizationService.finalizeWeeklyCompetition(competitionId);
 
       // Buscar e finalizar todas as competições diárias vinculadas
       const { data: linkedDailyCompetitions, error: linkedError } = await supabase
@@ -50,7 +42,7 @@ class CompetitionFinalizationService {
         console.log(`✅ ${linkedDailyCompetitions.length} competições diárias vinculadas finalizadas`);
       }
 
-      console.log('✅ Competição semanal finalizada com sucesso');
+      console.log('✅ Competição semanal finalizada com histórico salvo e pontuações zeradas');
     } catch (error) {
       console.error('❌ Erro ao finalizar competição semanal:', error);
     }

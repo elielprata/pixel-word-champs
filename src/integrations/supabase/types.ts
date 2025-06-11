@@ -154,6 +154,54 @@ export type Database = {
         }
         Relationships: []
       }
+      competition_history: {
+        Row: {
+          competition_end_date: string
+          competition_id: string
+          competition_start_date: string
+          competition_title: string
+          competition_type: string
+          created_at: string
+          final_position: number
+          final_score: number
+          finalized_at: string
+          id: string
+          prize_earned: number | null
+          total_participants: number
+          user_id: string
+        }
+        Insert: {
+          competition_end_date: string
+          competition_id: string
+          competition_start_date: string
+          competition_title: string
+          competition_type: string
+          created_at?: string
+          final_position: number
+          final_score?: number
+          finalized_at?: string
+          id?: string
+          prize_earned?: number | null
+          total_participants?: number
+          user_id: string
+        }
+        Update: {
+          competition_end_date?: string
+          competition_id?: string
+          competition_start_date?: string
+          competition_title?: string
+          competition_type?: string
+          created_at?: string
+          final_position?: number
+          final_score?: number
+          finalized_at?: string
+          id?: string
+          prize_earned?: number | null
+          total_participants?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       competition_participations: {
         Row: {
           competition_id: string | null
