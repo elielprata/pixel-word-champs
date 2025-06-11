@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,8 +38,7 @@ export const DailyCompetitionsManagement = () => {
     theme: '',
     start_date: '',
     end_date: '',
-    max_participants: 0, // Sem limite - valor 0 significa ilimitado
-    start_time: '00:00' // Adicionar campo de horário
+    max_participants: 0 // Sem limite - valor 0 significa ilimitado
   });
   const { toast } = useToast();
 
@@ -70,32 +70,8 @@ export const DailyCompetitionsManagement = () => {
     return startOfDay.toISOString();
   };
 
-  // Função para combinar data e horário em Brasília
-  const combineDateTime = (dateString: string, timeString: string = '00:00'): string => {
-    if (!dateString) return '';
-    
-    // Criar data local com o horário especificado
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const date = new Date(dateString + 'T00:00:00');
-    date.setHours(hours, minutes, 0, 0);
-    
-    // Converter para horário de Brasília (UTC-3)
-    const brasiliaOffset = -3; // Brasília é UTC-3
-    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
-    const brasiliaTime = new Date(utcTime + (brasiliaOffset * 3600000));
-    
-    console.log('📅 Combinando data e horário (Brasília):', {
-      date: dateString,
-      time: timeString,
-      result: brasiliaTime.toISOString()
-    });
-    
-    return brasiliaTime.toISOString();
-  };
-
   const handleStartDateChange = (value: string) => {
-    const startTime = newCompetition.start_time || '00:00';
-    const adjustedStartDate = combineDateTime(value, startTime);
+    const adjustedStartDate = ensureStartOfDay(value);
     const adjustedEndDate = ensureEndOfDay(value);
     
     if (editingCompetition) {
@@ -150,24 +126,19 @@ export const DailyCompetitionsManagement = () => {
 
   const addCompetition = async () => {
     try {
-      // Combinar data e horário para o início
-      const startTime = newCompetition.start_time || '00:00';
-      const adjustedStartDate = combineDateTime(newCompetition.start_date, startTime);
-      const adjustedEndDate = ensureEndOfDay(newCompetition.start_date);
-
+      // SEMPRE garantir que termine às 23:59:59.999 do mesmo dia
       const adjustedCompetition = {
         ...newCompetition,
-        start_date: adjustedStartDate,
-        end_date: adjustedEndDate,
+        start_date: ensureStartOfDay(newCompetition.start_date),
+        end_date: ensureEndOfDay(newCompetition.start_date), // Usar start_date para garantir mesmo dia
         competition_type: 'challenge',
-        status: 'active',
-        max_participants: 0
+        status: 'active', // Ativar automaticamente
+        max_participants: 0 // Participação livre - sem limite
       };
 
-      console.log('🎯 Criando competição diária com horário personalizado:', {
+      console.log('🎯 Criando competição diária com participação LIVRE:', {
         start: adjustedCompetition.start_date,
         end: adjustedCompetition.end_date,
-        start_time: startTime,
         max_participants: 'ILIMITADO'
       });
 
@@ -179,7 +150,7 @@ export const DailyCompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: `Competição diária criada das ${startTime} às 23:59:59 (PARTICIPAÇÃO LIVRE)`
+        description: "Competição diária criada com PARTICIPAÇÃO LIVRE (00:00:00 às 23:59:59)"
       });
 
       setNewCompetition({
@@ -188,8 +159,7 @@ export const DailyCompetitionsManagement = () => {
         theme: '',
         start_date: '',
         end_date: '',
-        max_participants: 0,
-        start_time: '00:00'
+        max_participants: 0 // Sem limite
       });
       setIsAddModalOpen(false);
       fetchCompetitions();
