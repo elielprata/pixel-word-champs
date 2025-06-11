@@ -7,18 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
-import { RefreshCw, Search, Filter, Trash2, Database, FolderOpen } from 'lucide-react';
+import { RefreshCw, Search, Filter, Database, FolderOpen } from 'lucide-react';
 import { useActiveWords } from '@/hooks/useActiveWords';
-import { DeleteAllWordsModal } from './DeleteAllWordsModal';
 
 const ITEMS_PER_PAGE = 10;
 
 export const WordsListTable = () => {
-  const { words, isLoading, refetch, deleteAllWords, isDeletingAll } = useActiveWords();
+  const { words, isLoading, refetch } = useActiveWords();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
 
   // Filtrar palavras baseado na busca e categoria
   const filteredWords = useMemo(() => {
@@ -64,11 +62,6 @@ export const WordsListTable = () => {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory]);
-
-  const handleDeleteAll = (password: string) => {
-    deleteAllWords(password);
-    setShowDeleteAllModal(false);
-  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -121,17 +114,6 @@ export const WordsListTable = () => {
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
           </Button>
-          {words.length > 0 && (
-            <Button 
-              onClick={() => setShowDeleteAllModal(true)} 
-              variant="destructive" 
-              size="sm"
-              disabled={isDeletingAll}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Excluir Todas
-            </Button>
-          )}
         </div>
       </div>
 
@@ -305,14 +287,6 @@ export const WordsListTable = () => {
           )}
         </CardContent>
       </Card>
-
-      <DeleteAllWordsModal
-        isOpen={showDeleteAllModal}
-        onClose={() => setShowDeleteAllModal(false)}
-        onConfirm={handleDeleteAll}
-        isDeleting={isDeletingAll}
-        totalWords={words.length}
-      />
     </div>
   );
 };
