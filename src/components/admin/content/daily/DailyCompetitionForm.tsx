@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TimePickerSection } from './TimePickerSection';
 
 interface DailyCompetition {
   id: string;
@@ -30,11 +31,14 @@ interface DailyCompetitionFormProps {
     start_date: string;
     end_date: string;
     max_participants: number;
+    start_time?: string;
   };
   onNewCompetitionChange: (competition: any) => void;
   onSubmit: () => void;
   isEditing: boolean;
   handleStartDateChange: (value: string) => void;
+  startTime?: string;
+  onStartTimeChange?: (time: string) => void;
 }
 
 const themes = [
@@ -62,7 +66,9 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
   onNewCompetitionChange,
   onSubmit,
   isEditing,
-  handleStartDateChange
+  handleStartDateChange,
+  startTime = '00:00',
+  onStartTimeChange
 }) => {
   const currentData = isEditing ? competition : newCompetition;
   
@@ -158,10 +164,13 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
                 : handleStartDateChange(e.target.value)
               }
             />
-            <p className="text-xs text-green-600 mt-1 font-medium">
-              ✅ {isEditing ? 'Será automaticamente configurada' : 'Competição será ativa'} das 00:00:00 às 23:59:59{isEditing ? '' : ' desta data (PADRÃO)'}
-            </p>
           </div>
+          {!isEditing && onStartTimeChange && (
+            <TimePickerSection
+              selectedTime={startTime}
+              onTimeChange={onStartTimeChange}
+            />
+          )}
           {!isEditing && (
             <div>
               <Label>Máx. Participantes</Label>
