@@ -65,6 +65,10 @@ function App({}: AppProps) {
     setCurrentScreen('invite');
   };
 
+  const handleTabChange = (tab: string) => {
+    setCurrentScreen(tab as Screen);
+  };
+
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'home':
@@ -117,7 +121,7 @@ function App({}: AppProps) {
                       </div>
                       <BottomNavigation 
                         activeTab={currentScreen} 
-                        onTabChange={setCurrentScreen} 
+                        onTabChange={handleTabChange} 
                       />
                     </ProtectedRoute>
                   } />
