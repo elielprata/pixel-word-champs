@@ -159,18 +159,18 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
             <Input 
               type="date"
               value={currentData.start_date.split('T')[0]}
-              onChange={(e) => isEditing 
-                ? handleStartDateChange(e.target.value)
-                : handleStartDateChange(e.target.value)
-              }
+              onChange={(e) => handleStartDateChange(e.target.value)}
             />
           </div>
-          {!isEditing && onStartTimeChange && (
+          
+          {/* Seção do horário - só aparece na criação */}
+          {!isEditing && (
             <TimePickerSection
               selectedTime={startTime}
-              onTimeChange={onStartTimeChange}
+              onTimeChange={onStartTimeChange || (() => {})}
             />
           )}
+          
           {!isEditing && (
             <div>
               <Label>Máx. Participantes</Label>

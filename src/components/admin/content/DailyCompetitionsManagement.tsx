@@ -94,6 +94,7 @@ export const DailyCompetitionsManagement = () => {
   };
 
   const handleStartTimeChange = (time: string) => {
+    console.log('🕐 Horário selecionado:', time);
     setStartTime(time);
     
     // Se já tem uma data selecionada, atualizar o horário de início
