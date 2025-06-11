@@ -13,7 +13,7 @@ export const TimePickerSection: React.FC<TimePickerSectionProps> = ({
   onStartTimeChange
 }) => {
   return (
-    <div className="space-y-1">
+    <div>
       <Label className="text-sm">Hora de Início</Label>
       <Input
         type="time"
@@ -21,7 +21,7 @@ export const TimePickerSection: React.FC<TimePickerSectionProps> = ({
         onChange={(e) => onStartTimeChange(e.target.value)}
         className="w-full"
       />
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-500 mt-1">
         A competição terminará automaticamente às 23:59:59 do mesmo dia
       </p>
     </div>

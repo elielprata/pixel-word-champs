@@ -134,16 +134,14 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
                 onChange={(e) => handleStartDateChange(e.target.value)}
               />
             </div>
-            {!isEditing && (
-              <TimePickerSection
-                startTime={startTime}
-                onStartTimeChange={onStartTimeChange}
-              />
-            )}
+            <TimePickerSection
+              startTime={startTime}
+              onStartTimeChange={onStartTimeChange}
+            />
           </div>
           
           <p className="text-xs text-green-600 mt-1 font-medium">
-            ✅ Competição será ativa das {!isEditing ? startTime || '00:00:00' : '00:00:00'} às 23:59:59 desta data
+            ✅ Competição será ativa das {startTime || '00:00'} às 23:59:59 desta data
           </p>
           
           {!isEditing && (
