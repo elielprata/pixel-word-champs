@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Trophy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +9,7 @@ import { WeeklyCompetitionHeader } from './weekly/WeeklyCompetitionHeader';
 import { ActiveCompetitionCard } from './weekly/ActiveCompetitionCard';
 import { WeeklyCompetitionCard } from './weekly/WeeklyCompetitionCard';
 import { WeeklyCompetitionsEmpty } from './weekly/WeeklyCompetitionsEmpty';
+import { CompetitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {
   id: string;
@@ -46,19 +46,12 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string>('');
 
-  // Calculate the actual status for each competition based on current date
+  // Usar o serviço centralizado para calcular o status de cada competição
   const calculateActualStatus = (competition: WeeklyCompetition) => {
-    const now = new Date();
-    const start = new Date(competition.start_date);
-    const end = new Date(competition.end_date);
-    
-    if (now < start) {
-      return 'scheduled';
-    } else if (now >= start && now <= end) {
-      return 'active';
-    } else {
-      return 'completed';
-    }
+    return CompetitionStatusService.calculateCorrectStatus(
+      competition.start_date, 
+      competition.end_date
+    );
   };
 
   // Filtrar apenas competições não finalizadas (ativas ou aguardando)

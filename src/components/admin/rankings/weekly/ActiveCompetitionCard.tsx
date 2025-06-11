@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Trophy, Users, Crown } from 'lucide-react';
 import { WeeklyCompetitionActions } from './WeeklyCompetitionActions';
+import { CompetitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {
   id: string;
@@ -46,22 +46,11 @@ export const ActiveCompetitionCard = ({
     return `${dateFormatted}, ${timeFormatted}`;
   };
 
-  // Calculate the actual status based on current date
-  const calculateActualStatus = () => {
-    const now = new Date();
-    const start = new Date(competition.start_date);
-    const end = new Date(competition.end_date);
-    
-    if (now < start) {
-      return 'scheduled';
-    } else if (now >= start && now <= end) {
-      return 'active';
-    } else {
-      return 'completed';
-    }
-  };
-
-  const actualStatus = calculateActualStatus();
+  // Usar o serviço centralizado para calcular o status
+  const actualStatus = CompetitionStatusService.calculateCorrectStatus(
+    competition.start_date, 
+    competition.end_date
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {

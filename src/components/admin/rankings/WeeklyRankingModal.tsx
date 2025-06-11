@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Trophy, Users, Calendar, Medal, Crown } from 'lucide-react';
 import PlayerAvatar from '@/components/ui/PlayerAvatar';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { CompetitionStatusService } from '@/services/competitionStatusService';
 import {
   Table,
   TableBody,
@@ -86,12 +88,10 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
     }
   }, [open, competitionId]);
 
-  // Verificar se a competição está ativa
+  // Usar o serviço centralizado para verificar se a competição está ativa
   const isCompetitionActive = (startDate: string, endDate: string): boolean => {
-    const now = new Date();
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    return now >= start && now <= end;
+    const status = CompetitionStatusService.calculateCorrectStatus(startDate, endDate);
+    return status === 'active';
   };
 
   const loadCompetitionData = async () => {
@@ -115,7 +115,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
 
       console.log('✅ Competição carregada:', competitionData);
 
-      // Verificar se a competição está ativa
+      // Verificar se a competição está ativa usando o serviço centralizado
       const isActive = isCompetitionActive(competitionData.start_date, competitionData.end_date);
       
       if (!isActive) {
