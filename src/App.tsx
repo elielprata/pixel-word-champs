@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -105,31 +105,29 @@ function App({}: AppProps) {
       <TooltipProvider>
         <ErrorBoundary>
           <AuthProvider>
-            <Router>
-              <div className="App min-h-screen bg-gray-50">
-                <Routes>
-                  <Route path="/auth" element={<AuthScreen />} />
-                  <Route path="/admin/*" element={
-                    <AdminRoute>
-                      <AdminPanel />
-                    </AdminRoute>
-                  } />
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <div className="pb-16">
-                        {renderCurrentScreen()}
-                      </div>
-                      <BottomNavigation 
-                        activeTab={currentScreen} 
-                        onTabChange={handleTabChange} 
-                      />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <Toaster />
-              </div>
-            </Router>
+            <div className="App min-h-screen bg-gray-50">
+              <Routes>
+                <Route path="/auth" element={<AuthScreen />} />
+                <Route path="/admin/*" element={
+                  <AdminRoute>
+                    <AdminPanel />
+                  </AdminRoute>
+                } />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <div className="pb-16">
+                      {renderCurrentScreen()}
+                    </div>
+                    <BottomNavigation 
+                      activeTab={currentScreen} 
+                      onTabChange={handleTabChange} 
+                    />
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+            </div>
           </AuthProvider>
         </ErrorBoundary>
       </TooltipProvider>
