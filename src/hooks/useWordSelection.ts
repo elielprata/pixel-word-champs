@@ -91,7 +91,7 @@ export const useWordSelection = (level: number) => {
 
         // Registrar uso das palavras
         if (selectedWords.length > 0) {
-          await wordHistoryService.recordWordUsage(selectedWords);
+          await wordHistoryService.recordWordsUsage('system', selectedWords, level);
         }
 
         setLevelWords(selectedWords);
