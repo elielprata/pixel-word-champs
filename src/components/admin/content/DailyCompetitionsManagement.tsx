@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +31,7 @@ export const DailyCompetitionsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<DailyCompetition | null>(null);
+  const [startTime, setStartTime] = useState('00:00');
   const [newCompetition, setNewCompetition] = useState({
     title: '',
     description: '',
@@ -58,20 +58,24 @@ export const DailyCompetitionsManagement = () => {
     return endOfDay.toISOString();
   };
 
-  // Função para definir o início do dia como 00:00:00.000 em Brasília
-  const ensureStartOfDay = (dateString: string): string => {
+  // Função para definir o início do dia com horário personalizado em Brasília
+  const ensureStartWithTime = (dateString: string, timeString: string): string => {
     if (!dateString) return '';
     
     const date = new Date(dateString);
-    const startOfDay = createBrasiliaStartOfDay(date);
+    const [hours, minutes] = timeString.split(':').map(Number);
     
-    console.log('📅 Ajustando início do dia (Brasília):', formatBrasiliaTime(startOfDay));
+    // Criar data com horário específico em Brasília
+    const startOfDay = createBrasiliaStartOfDay(date);
+    startOfDay.setUTCHours(hours + 3, minutes, 0, 0); // +3 para compensar o fuso de Brasília
+    
+    console.log('📅 Ajustando início com horário personalizado (Brasília):', formatBrasiliaTime(startOfDay));
     
     return startOfDay.toISOString();
   };
 
   const handleStartDateChange = (value: string) => {
-    const adjustedStartDate = ensureStartOfDay(value);
+    const adjustedStartDate = ensureStartWithTime(value, startTime);
     const adjustedEndDate = ensureEndOfDay(value);
     
     if (editingCompetition) {
@@ -85,6 +89,19 @@ export const DailyCompetitionsManagement = () => {
         ...newCompetition, 
         start_date: adjustedStartDate,
         end_date: adjustedEndDate
+      });
+    }
+  };
+
+  const handleStartTimeChange = (time: string) => {
+    setStartTime(time);
+    // Se já existe uma data selecionada, atualizar o horário
+    if (newCompetition.start_date) {
+      const dateOnly = newCompetition.start_date.split('T')[0];
+      const adjustedStartDate = ensureStartWithTime(dateOnly, time);
+      setNewCompetition({
+        ...newCompetition,
+        start_date: adjustedStartDate
       });
     }
   };
@@ -129,16 +146,17 @@ export const DailyCompetitionsManagement = () => {
       // SEMPRE garantir que termine às 23:59:59.999 do mesmo dia
       const adjustedCompetition = {
         ...newCompetition,
-        start_date: ensureStartOfDay(newCompetition.start_date),
-        end_date: ensureEndOfDay(newCompetition.start_date), // Usar start_date para garantir mesmo dia
+        start_date: ensureStartWithTime(newCompetition.start_date.split('T')[0], startTime),
+        end_date: ensureEndOfDay(newCompetition.start_date.split('T')[0]), // Usar start_date para garantir mesmo dia
         competition_type: 'challenge',
         status: 'active', // Ativar automaticamente
         max_participants: 0 // Participação livre - sem limite
       };
 
-      console.log('🎯 Criando competição diária com participação LIVRE:', {
+      console.log('🎯 Criando competição diária com horário personalizado:', {
         start: adjustedCompetition.start_date,
         end: adjustedCompetition.end_date,
+        startTime: startTime,
         max_participants: 'ILIMITADO'
       });
 
@@ -150,7 +168,7 @@ export const DailyCompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição diária criada com PARTICIPAÇÃO LIVRE (00:00:00 às 23:59:59)"
+        description: `Competição diária criada com PARTICIPAÇÃO LIVRE (${startTime} às 23:59:59)`
       });
 
       setNewCompetition({
@@ -161,6 +179,7 @@ export const DailyCompetitionsManagement = () => {
         end_date: '',
         max_participants: 0 // Sem limite
       });
+      setStartTime('00:00');
       setIsAddModalOpen(false);
       fetchCompetitions();
     } catch (error) {
@@ -181,8 +200,8 @@ export const DailyCompetitionsManagement = () => {
         title: editingCompetition.title,
         description: editingCompetition.description,
         theme: editingCompetition.theme,
-        start_date: ensureStartOfDay(editingCompetition.start_date),
-        end_date: ensureEndOfDay(editingCompetition.start_date), // Garantir 23:59:59 do mesmo dia
+        start_date: editingCompetition.start_date,
+        end_date: ensureEndOfDay(editingCompetition.start_date.split('T')[0]), // Garantir 23:59:59 do mesmo dia
         max_participants: 0, // Forçar participação livre
         status: editingCompetition.status
       };
@@ -202,7 +221,7 @@ export const DailyCompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição diária atualizada (PARTICIPAÇÃO LIVRE: 00:00:00 às 23:59:59)"
+        description: "Competição diária atualizada (PARTICIPAÇÃO LIVRE: até 23:59:59)"
       });
 
       setEditingCompetition(null);
@@ -258,7 +277,7 @@ export const DailyCompetitionsManagement = () => {
             </p>
             <div className="mt-2 flex items-center gap-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
               <Clock className="h-3 w-3" />
-              ✅ PADRÃO: Todas as competições duram 00:00:00 às 23:59:59 do mesmo dia
+              ✅ PADRÃO: Todas as competições terminam às 23:59:59 do mesmo dia
             </div>
             <div className="mt-1 flex items-center gap-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
               <Users className="h-3 w-3" />
@@ -302,6 +321,8 @@ export const DailyCompetitionsManagement = () => {
           onSubmit={addCompetition}
           isEditing={false}
           handleStartDateChange={handleStartDateChange}
+          startTime={startTime}
+          onStartTimeChange={handleStartTimeChange}
         />
 
         <DailyCompetitionForm
@@ -313,6 +334,8 @@ export const DailyCompetitionsManagement = () => {
           onSubmit={updateCompetition}
           isEditing={true}
           handleStartDateChange={handleStartDateChange}
+          startTime={startTime}
+          onStartTimeChange={handleStartTimeChange}
         />
       </CardContent>
     </Card>

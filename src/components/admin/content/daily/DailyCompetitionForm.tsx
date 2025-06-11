@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TimePickerSection } from './TimePickerSection';
 
 interface DailyCompetition {
   id: string;
@@ -35,6 +35,8 @@ interface DailyCompetitionFormProps {
   onSubmit: () => void;
   isEditing: boolean;
   handleStartDateChange: (value: string) => void;
+  startTime: string;
+  onStartTimeChange: (time: string) => void;
 }
 
 const themes = [
@@ -62,7 +64,9 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
   onNewCompetitionChange,
   onSubmit,
   isEditing,
-  handleStartDateChange
+  handleStartDateChange,
+  startTime,
+  onStartTimeChange
 }) => {
   const currentData = isEditing ? competition : newCompetition;
   
@@ -148,20 +152,28 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
               </div>
             </div>
           )}
-          <div>
-            <Label>Data {isEditing ? 'da Competição' : 'do Desafio'}</Label>
-            <Input 
-              type="date"
-              value={currentData.start_date.split('T')[0]}
-              onChange={(e) => isEditing 
-                ? handleStartDateChange(e.target.value)
-                : handleStartDateChange(e.target.value)
-              }
-            />
-            <p className="text-xs text-green-600 mt-1 font-medium">
-              ✅ {isEditing ? 'Será automaticamente configurada' : 'Competição será ativa'} das 00:00:00 às 23:59:59{isEditing ? '' : ' desta data (PADRÃO)'}
-            </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Data {isEditing ? 'da Competição' : 'do Desafio'}</Label>
+              <Input 
+                type="date"
+                value={currentData.start_date.split('T')[0]}
+                onChange={(e) => isEditing 
+                  ? handleStartDateChange(e.target.value)
+                  : handleStartDateChange(e.target.value)
+                }
+              />
+            </div>
+            {!isEditing && (
+              <TimePickerSection
+                startTime={startTime}
+                onStartTimeChange={onStartTimeChange}
+              />
+            )}
           </div>
+          <p className="text-xs text-green-600 mt-1 font-medium">
+            ✅ {isEditing ? 'Será automaticamente configurada' : 'Competição será ativa'} das {!isEditing ? startTime || '00:00:00' : '00:00:00'} às 23:59:59{isEditing ? '' : ' desta data (PADRÃO)'}
+          </p>
           {!isEditing && (
             <div>
               <Label>Máx. Participantes</Label>
