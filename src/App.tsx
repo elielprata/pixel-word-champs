@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from '@/components/auth/AuthProvider';
+import AuthProvider from '@/components/auth/AuthProvider';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRoute from '@/components/auth/AdminRoute';
 import AuthScreen from '@/components/auth/AuthScreen';
@@ -86,7 +86,7 @@ function App({}: AppProps) {
       case 'ranking':
         return <FullRankingScreen onBack={handleBackFromRanking} />;
       case 'profile':
-        return <ProfileScreen onBack={handleBackFromRanking} />;
+        return <ProfileScreen />;
       case 'invite':
         return <InviteScreen />;
       case 'challenge-ranking':
@@ -116,8 +116,8 @@ function App({}: AppProps) {
                         {renderCurrentScreen()}
                       </div>
                       <BottomNavigation 
-                        currentScreen={currentScreen} 
-                        onScreenChange={setCurrentScreen} 
+                        activeTab={currentScreen} 
+                        onTabChange={setCurrentScreen} 
                       />
                     </ProtectedRoute>
                   } />
