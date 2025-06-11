@@ -4,8 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, History as HistoryIcon } from 'lucide-react';
+import { Eye, History as HistoryIcon, Download } from 'lucide-react';
 import { CompetitionDetailsModal } from './CompetitionDetailsModal';
+import { exportToCSV } from '@/utils/csvExport';
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
 interface CompetitionHistoryItem {
   id: string;
@@ -26,8 +29,10 @@ interface CompetitionTableProps {
 }
 
 export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions, onReload }) => {
+  const { toast } = useToast();
   const [selectedCompetition, setSelectedCompetition] = useState<CompetitionHistoryItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -71,6 +76,71 @@ export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedCompetition(null);
+  };
+
+  const handleExportWinners = async (competition: CompetitionHistoryItem) => {
+    setExportingId(competition.id);
+    
+    try {
+      console.log('📊 Exportando ganhadores da competição:', competition.id);
+
+      // Buscar participações da competição com prêmios
+      const { data: participations, error: participationsError } = await supabase
+        .from('competition_participations')
+        .select(`
+          user_position,
+          user_score,
+          prize,
+          profiles!inner(username)
+        `)
+        .eq('competition_id', competition.id)
+        .gt('prize', 0)
+        .order('user_position', { ascending: true });
+
+      if (participationsError) {
+        console.error('❌ Erro ao buscar participações:', participationsError);
+        throw participationsError;
+      }
+
+      if (!participations || participations.length === 0) {
+        toast({
+          title: "Nenhum ganhador encontrado",
+          description: "Esta competição não possui ganhadores com prêmios.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Converter dados para o formato de exportação
+      const winners = participations.map(participation => ({
+        id: `${competition.id}-${participation.user_position}`,
+        username: participation.profiles?.username || 'Usuário',
+        position: participation.user_position || 0,
+        pixKey: '',
+        holderName: '',
+        consolidatedDate: formatDate(competition.end_date),
+        prize: Number(participation.prize) || 0,
+        paymentStatus: 'pending' as const
+      }));
+
+      // Exportar para CSV
+      exportToCSV(winners, `${competition.title}_ganhadores`);
+
+      toast({
+        title: "Exportação concluída",
+        description: `${winners.length} ganhadores exportados com sucesso.`,
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao exportar ganhadores:', error);
+      toast({
+        title: "Erro na exportação",
+        description: "Não foi possível exportar os dados dos ganhadores.",
+        variant: "destructive",
+      });
+    } finally {
+      setExportingId(null);
+    }
   };
 
   return (
@@ -140,15 +210,31 @@ export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions
                       R$ {competition.prize_pool.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                        onClick={() => handleViewCompetition(competition)}
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        Ver
-                      </Button>
+                      <div className="flex gap-2 justify-center">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                          onClick={() => handleViewCompetition(competition)}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          Ver
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          onClick={() => handleExportWinners(competition)}
+                          disabled={exportingId === competition.id}
+                        >
+                          {exportingId === competition.id ? (
+                            <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full mr-1" />
+                          ) : (
+                            <Download className="h-3 w-3 mr-1" />
+                          )}
+                          Exportar
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
