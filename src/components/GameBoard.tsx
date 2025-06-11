@@ -195,5 +195,3 @@ const GameBoard = ({
 };
 
 export default GameBoard;
-
-</edits_to_apply>
