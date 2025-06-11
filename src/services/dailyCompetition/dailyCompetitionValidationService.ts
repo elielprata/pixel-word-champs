@@ -17,14 +17,21 @@ export class DailyCompetitionValidationService {
       
       console.log('✅ Service: Dados validados e corrigidos:', validatedData);
       
+      // Obter o usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // Inserir no banco - o trigger garantirá 23:59:59
       const { data, error } = await supabase
         .from('custom_competitions')
         .insert({
-          ...validatedData,
-          status: 'draft',
+          title: validatedData.title,
+          description: validatedData.description,
+          theme: validatedData.theme,
+          start_date: validatedData.start_date,
+          end_date: validatedData.end_date, // Obrigatório e sempre fornecido pela validação
+          competition_type: validatedData.competition_type,
           max_participants: formData.max_participants || null,
-          created_by: (await supabase.auth.getUser()).data.user?.id
+          created_by: user?.id
         })
         .select()
         .single();
