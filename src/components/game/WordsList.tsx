@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { CheckCircle, Star, Target, Lock } from 'lucide-react';
+import { useGamePointsConfig } from '@/hooks/useGamePointsConfig';
 
 interface FoundWord {
   word: string;
@@ -15,18 +16,12 @@ interface WordsListProps {
 }
 
 const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => {
-  // Calcular pontuação de cada palavra para identificar as 2 maiores
-  const getWordPoints = (word: string) => {
-    // Pontuação baseada no tamanho da palavra (mesmo cálculo do useGamePointsConfig)
-    const basePoints = word.length * 10;
-    const bonusPoints = Math.max(0, (word.length - 4) * 5);
-    return basePoints + bonusPoints;
-  };
+  const { getPointsForWord } = useGamePointsConfig();
 
   // Identificar as 2 palavras com maior pontuação
   const wordsWithPoints = levelWords.map(word => ({
     word,
-    points: getWordPoints(word)
+    points: getPointsForWord(word)
   }));
   
   const sortedByPoints = [...wordsWithPoints].sort((a, b) => b.points - a.points);

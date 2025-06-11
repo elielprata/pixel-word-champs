@@ -1,7 +1,7 @@
 
-
 import { type Position } from '@/utils/boardUtils';
 import { toast } from '@/hooks/use-toast';
+import { useGamePointsConfig } from './useGamePointsConfig';
 
 interface FoundWord {
   word: string;
@@ -21,18 +21,13 @@ export const useGameInteractions = (
   setShowGameOver: (value: boolean) => void,
   onTimeUp: () => void
 ) => {
-  // Função para calcular pontuação de uma palavra
-  const getWordPoints = (word: string) => {
-    const basePoints = word.length * 10;
-    const bonusPoints = Math.max(0, (word.length - 4) * 5);
-    return basePoints + bonusPoints;
-  };
+  const { getPointsForWord } = useGamePointsConfig();
 
   // Identificar as 2 palavras com maior pontuação (palavras ocultas)
   const getHiddenWords = () => {
     const wordsWithPoints = levelWords.map(word => ({
       word,
-      points: getWordPoints(word)
+      points: getPointsForWord(word)
     }));
     
     const sortedByPoints = [...wordsWithPoints].sort((a, b) => b.points - a.points);
@@ -112,4 +107,3 @@ export const useGameInteractions = (
     handleGoHome
   };
 };
-

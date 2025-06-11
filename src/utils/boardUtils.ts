@@ -1,3 +1,4 @@
+
 export interface Position {
   row: number;
   col: number;
@@ -43,10 +44,12 @@ export const getCellSize = (boardSize: number): number => {
   return 8; // Para tabuleiros ainda maiores (se necessário)
 };
 
-// Esta função agora será substituída pelo hook useGamePointsConfig
-// Mantida apenas para compatibilidade
+// Esta função está DEPRECADA - use useGamePointsConfig hook em vez disso
 export const getPointsForWord = (word: string): number => {
-  console.warn('getPointsForWord deprecated - use useGamePointsConfig hook instead');
+  console.warn('⚠️ getPointsForWord deprecated - use useGamePointsConfig hook instead');
+  console.warn('⚠️ Esta função não deve mais ser usada. Use o hook useGamePointsConfig para pontuação baseada no banco de dados.');
+  
+  // Valores de fallback apenas para compatibilidade
   const length = word.length;
   if (length === 3) return 10;
   if (length === 4) return 20;
