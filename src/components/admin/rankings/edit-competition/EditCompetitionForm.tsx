@@ -44,9 +44,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
     description: '',
     theme: '',
     start_date: '',
-    end_date: '',
-    prize_pool: 0,
-    max_participants: 0
+    end_date: ''
   });
 
   useEffect(() => {
@@ -64,9 +62,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         description: competition.description || '',
         theme: competition.theme || '',
         start_date: competition.start_date,
-        end_date: competition.end_date,
-        prize_pool: competition.prize_pool || 0,
-        max_participants: competition.max_participants || 0
+        end_date: competition.end_date
       });
     }
   }, [competition]);
@@ -89,14 +85,16 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
       const competitionType = competition.theme ? 'challenge' : 
                              competition.competition_type === 'challenge' ? 'challenge' : 'tournament';
 
+      // Calcular premiação total automaticamente
+      const totalPrizePool = paymentData.calculateTotalPrize();
+
       const updateData = {
         title: formData.title,
         description: formData.description,
         competition_type: competitionType,
         start_date: formData.start_date,
         end_date: formData.end_date,
-        prize_pool: formData.prize_pool,
-        max_participants: formData.max_participants,
+        prize_pool: totalPrizePool,
         ...(competition.theme && { theme: formData.theme })
       };
 
@@ -180,30 +178,16 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         )}
 
         {!isDailyCompetition && (
-          <>
-            <div>
-              <Label htmlFor="prize_pool">Premiação Total (R$)</Label>
-              <Input
-                id="prize_pool"
-                type="number"
-                value={formData.prize_pool}
-                onChange={(e) => setFormData(prev => ({ ...prev, prize_pool: Number(e.target.value) }))}
-                min="0"
-                step="0.01"
-              />
+          <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+            <Label className="text-sm font-medium text-green-800">Configurações Automáticas</Label>
+            <div className="text-sm text-green-700 mt-1 space-y-1">
+              <p>💰 Premiação Total: R$ {paymentData.calculateTotalPrize().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p>🎯 Participação: Livre (todos os usuários podem participar)</p>
+              <p className="text-xs text-green-600 mt-1">
+                💡 A premiação é calculada automaticamente com base na configuração de prêmios abaixo
+              </p>
             </div>
-
-            <div>
-              <Label htmlFor="max_participants">Máximo de Participantes</Label>
-              <Input
-                id="max_participants"
-                type="number"
-                value={formData.max_participants}
-                onChange={(e) => setFormData(prev => ({ ...prev, max_participants: Number(e.target.value) }))}
-                min="0"
-              />
-            </div>
-          </>
+          </div>
         )}
       </div>
 
