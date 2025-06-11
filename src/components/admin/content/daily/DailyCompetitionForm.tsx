@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TimePickerSection } from './TimePickerSection';
 
 interface DailyCompetition {
   id: string;
@@ -30,14 +30,11 @@ interface DailyCompetitionFormProps {
     start_date: string;
     end_date: string;
     max_participants: number;
-    start_time?: string;
   };
   onNewCompetitionChange: (competition: any) => void;
   onSubmit: () => void;
   isEditing: boolean;
   handleStartDateChange: (value: string) => void;
-  startTime?: string;
-  onStartTimeChange?: (time: string) => void;
 }
 
 const themes = [
@@ -65,24 +62,11 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
   onNewCompetitionChange,
   onSubmit,
   isEditing,
-  handleStartDateChange,
-  startTime = '00:00',
-  onStartTimeChange
+  handleStartDateChange
 }) => {
   const currentData = isEditing ? competition : newCompetition;
   
-  console.log('🔍 DailyCompetitionForm Debug:', {
-    isOpen,
-    isEditing,
-    startTime,
-    onStartTimeChange: !!onStartTimeChange,
-    currentData: currentData?.title || 'sem dados'
-  });
-  
-  if (!currentData) {
-    console.log('❌ currentData é null, não renderizando');
-    return null;
-  }
+  if (!currentData) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -169,32 +153,15 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
             <Input 
               type="date"
               value={currentData.start_date.split('T')[0]}
-              onChange={(e) => handleStartDateChange(e.target.value)}
+              onChange={(e) => isEditing 
+                ? handleStartDateChange(e.target.value)
+                : handleStartDateChange(e.target.value)
+              }
             />
+            <p className="text-xs text-green-600 mt-1 font-medium">
+              ✅ {isEditing ? 'Será automaticamente configurada' : 'Competição será ativa'} das 00:00:00 às 23:59:59{isEditing ? '' : ' desta data (PADRÃO)'}
+            </p>
           </div>
-          
-          {/* DEBUG: Seção do horário - SEMPRE VISÍVEL PARA TESTE */}
-          <div className="border-2 border-red-500 p-4 rounded">
-            <p className="text-red-600 font-bold mb-2">DEBUG - Esta seção deveria aparecer apenas na criação:</p>
-            <p>isEditing: {isEditing ? 'true' : 'false'}</p>
-            <p>onStartTimeChange: {onStartTimeChange ? 'existe' : 'undefined'}</p>
-            <p>startTime: {startTime}</p>
-            
-            {!isEditing ? (
-              <div className="mt-2">
-                <p className="text-green-600">✅ Condição passou - renderizando TimePickerSection</p>
-                <TimePickerSection
-                  selectedTime={startTime}
-                  onTimeChange={onStartTimeChange || (() => {
-                    console.log('⚠️ onStartTimeChange fallback chamado');
-                  })}
-                />
-              </div>
-            ) : (
-              <p className="text-orange-600">⚠️ Está editando - TimePickerSection não deveria aparecer</p>
-            )}
-          </div>
-          
           {!isEditing && (
             <div>
               <Label>Máx. Participantes</Label>
@@ -205,7 +172,6 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
               />
             </div>
           )}
-          
           <Button onClick={onSubmit} className="w-full">
             {isEditing ? 'Salvar Alterações' : 'Criar Competição Diária'}
           </Button>
