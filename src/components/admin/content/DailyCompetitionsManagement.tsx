@@ -50,28 +50,25 @@ export const DailyCompetitionsManagement = () => {
   const ensureEndOfDay = (dateString: string): string => {
     if (!dateString) return '';
     
-    const date = new Date(dateString);
-    const endOfDay = createBrasiliaEndOfDay(date);
+    const [year, month, day] = dateString.split('-').map(Number);
     
-    console.log('📅 Ajustando fim do dia (Brasília):', formatBrasiliaTime(endOfDay));
+    // Criar data em UTC ajustando para o fuso de Brasília (UTC-3) às 23:59:59
+    const date = new Date(year, month - 1, day, 23 + 3, 59, 59, 999);
     
-    return endOfDay.toISOString();
+    return date.toISOString();
   };
 
   // Função para definir o início do dia com horário personalizado em Brasília
   const ensureStartWithTime = (dateString: string, timeString: string): string => {
     if (!dateString) return '';
     
-    const date = new Date(dateString);
+    const [year, month, day] = dateString.split('-').map(Number);
     const [hours, minutes] = timeString.split(':').map(Number);
     
-    // Criar data com horário específico em Brasília
-    const startOfDay = createBrasiliaStartOfDay(date);
-    startOfDay.setUTCHours(hours + 3, minutes, 0, 0); // +3 para compensar o fuso de Brasília
+    // Criar data em UTC ajustando para o fuso de Brasília (UTC-3)
+    const date = new Date(year, month - 1, day, hours + 3, minutes, 0, 0);
     
-    console.log('📅 Ajustando início com horário personalizado (Brasília):', formatBrasiliaTime(startOfDay));
-    
-    return startOfDay.toISOString();
+    return date.toISOString();
   };
 
   const handleStartDateChange = (value: string) => {

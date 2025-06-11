@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -123,45 +124,14 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
               rows={3}
             />
           </div>
-          {isEditing && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Status</Label>
-                <Select 
-                  value={competition?.status || 'draft'} 
-                  onValueChange={(value) => onNewCompetitionChange({...competition, status: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Rascunho</SelectItem>
-                    <SelectItem value="scheduled">Agendado</SelectItem>
-                    <SelectItem value="active">Ativo</SelectItem>
-                    <SelectItem value="completed">Finalizado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Máx. Participantes</Label>
-                <Input 
-                  type="number"
-                  value={competition?.max_participants || 500}
-                  onChange={(e) => onNewCompetitionChange({...competition, max_participants: parseInt(e.target.value)})}
-                />
-              </div>
-            </div>
-          )}
+          
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Data {isEditing ? 'da Competição' : 'do Desafio'}</Label>
+              <Label>Data do Desafio</Label>
               <Input 
                 type="date"
                 value={currentData.start_date.split('T')[0]}
-                onChange={(e) => isEditing 
-                  ? handleStartDateChange(e.target.value)
-                  : handleStartDateChange(e.target.value)
-                }
+                onChange={(e) => handleStartDateChange(e.target.value)}
               />
             </div>
             {!isEditing && (
@@ -171,9 +141,11 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
               />
             )}
           </div>
+          
           <p className="text-xs text-green-600 mt-1 font-medium">
-            ✅ {isEditing ? 'Será automaticamente configurada' : 'Competição será ativa'} das {!isEditing ? startTime || '00:00:00' : '00:00:00'} às 23:59:59{isEditing ? '' : ' desta data (PADRÃO)'}
+            ✅ Competição será ativa das {!isEditing ? startTime || '00:00:00' : '00:00:00'} às 23:59:59 desta data
           </p>
+          
           {!isEditing && (
             <div>
               <Label>Máx. Participantes</Label>
@@ -184,6 +156,7 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
               />
             </div>
           )}
+          
           <Button onClick={onSubmit} className="w-full">
             {isEditing ? 'Salvar Alterações' : 'Criar Competição Diária'}
           </Button>
