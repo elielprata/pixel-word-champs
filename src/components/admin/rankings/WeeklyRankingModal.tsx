@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +49,17 @@ interface CompetitionInfo {
   total_participants: number;
 }
 
+interface PrizeConfig {
+  id: string;
+  type: string;
+  position?: number;
+  position_range?: string;
+  prize_amount: number;
+  group_name?: string;
+  total_winners: number;
+  active: boolean;
+}
+
 interface WeeklyRankingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -65,6 +77,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
   
   const [ranking, setRanking] = useState<RankingParticipant[]>([]);
   const [competition, setCompetition] = useState<CompetitionInfo | null>(null);
+  const [prizeConfigs, setPrizeConfigs] = useState<PrizeConfig[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -94,6 +107,21 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       }
 
       console.log('✅ Competição carregada:', competitionData);
+
+      // Buscar configurações de prêmio do banco de dados
+      const { data: prizeData, error: prizeError } = await supabase
+        .from('prize_configurations')
+        .select('*')
+        .eq('active', true)
+        .order('position', { ascending: true });
+
+      if (prizeError) {
+        console.error('❌ Erro ao carregar configurações de prêmio:', prizeError);
+        throw prizeError;
+      }
+
+      console.log('💰 Configurações de prêmio carregadas:', prizeData);
+      setPrizeConfigs(prizeData || []);
 
       // Buscar ranking semanal diretamente dos perfis (mesma lógica da home page)
       const { data: profilesData, error: profilesError } = await supabase
@@ -182,16 +210,24 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
   };
 
   const getPrizeAmount = (position: number) => {
-    if (!competition) return 0;
+    // Buscar prêmio para posição individual primeiro
+    const individualPrize = prizeConfigs.find(config => 
+      config.type === 'individual' && config.position === position
+    );
     
-    const prizePool = competition.prize_pool;
-    
-    switch (position) {
-      case 1: return prizePool * 0.50;
-      case 2: return prizePool * 0.30;
-      case 3: return prizePool * 0.20;
-      default: return 0;
+    if (individualPrize) {
+      return individualPrize.prize_amount;
     }
+
+    // Buscar prêmio em grupo se não encontrou individual
+    const groupPrize = prizeConfigs.find(config => {
+      if (config.type !== 'group' || !config.position_range) return false;
+      
+      const [start, end] = config.position_range.split('-').map(Number);
+      return position >= start && position <= end;
+    });
+
+    return groupPrize ? groupPrize.prize_amount : 0;
   };
 
   // Paginação
