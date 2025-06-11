@@ -3,7 +3,6 @@ import React from 'react';
 import { Calendar } from 'lucide-react';
 import { DailyCompetitionCard } from './DailyCompetitionCard';
 import { useDailyCompetitionsLogic } from '@/hooks/useDailyCompetitionsLogic';
-import { useDailyCompetitionsActions } from '@/hooks/useDailyCompetitionsActions';
 
 interface DailyCompetition {
   id: string;
@@ -22,25 +21,26 @@ interface DailyCompetition {
 interface DailyCompetitionsContainerProps {
   competitions: DailyCompetition[];
   onRefresh?: () => void;
+  onEdit: (competition: DailyCompetition) => void;
+  onDelete: (competition: DailyCompetition) => void;
+  deletingId: string | null;
 }
 
 export const DailyCompetitionsContainer: React.FC<DailyCompetitionsContainerProps> = ({
   competitions,
-  onRefresh
+  onRefresh,
+  onEdit,
+  onDelete,
+  deletingId
 }) => {
   const { activeCompetitions } = useDailyCompetitionsLogic(competitions);
-  const { deletingId, handleEdit, handleDelete } = useDailyCompetitionsActions();
 
-  const onEditCompetition = (competition: DailyCompetition) => {
-    console.log('📋 Container: onEditCompetition chamado para:', competition.id);
-    handleEdit(competition);
-  };
-
-  const onDeleteCompetition = (competition: DailyCompetition) => {
-    handleDelete(competition, onRefresh);
-  };
-
-  console.log('🏢 Container: activeCompetitions:', activeCompetitions.length);
+  console.log('🏢 Container: Recebendo props para ações:', {
+    activeCompetitions: activeCompetitions.length,
+    hasOnEdit: !!onEdit,
+    hasOnDelete: !!onDelete,
+    deletingId
+  });
 
   return (
     <div>
@@ -56,8 +56,8 @@ export const DailyCompetitionsContainer: React.FC<DailyCompetitionsContainerProp
           <DailyCompetitionCard
             key={competition.id}
             competition={competition}
-            onEdit={onEditCompetition}
-            onDelete={onDeleteCompetition}
+            onEdit={onEdit}
+            onDelete={onDelete}
             isDeleting={deletingId === competition.id}
           />
         ))}

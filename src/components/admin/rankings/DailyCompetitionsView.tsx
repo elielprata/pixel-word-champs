@@ -41,15 +41,31 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
     editingCompetition,
     isEditModalOpen,
     setIsEditModalOpen,
+    deletingId,
+    handleEdit,
+    handleDelete,
     handleCompetitionUpdated
   } = useDailyCompetitionsActions();
 
-  console.log('🔍 DailyCompetitionsView - estados do modal:', {
+  console.log('🔍 DailyCompetitionsView - Estados centralizados:', {
     editingCompetition: editingCompetition?.id,
     editingCompetitionTitle: editingCompetition?.title,
     isEditModalOpen,
-    activeCompetitions: activeCompetitions.length
+    activeCompetitions: activeCompetitions.length,
+    deletingId
   });
+
+  // Função para lidar com edição
+  const onEditCompetition = (competition: DailyCompetition) => {
+    console.log('📝 DailyCompetitionsView - Editando competição:', competition.id);
+    handleEdit(competition);
+  };
+
+  // Função para lidar com exclusão
+  const onDeleteCompetition = (competition: DailyCompetition) => {
+    console.log('🗑️ DailyCompetitionsView - Excluindo competição:', competition.id);
+    handleDelete(competition, onRefresh);
+  };
 
   // Função para lidar com a abertura do modal
   const handleModalOpenChange = (open: boolean) => {
@@ -79,6 +95,9 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
       <DailyCompetitionsContainer 
         competitions={competitions}
         onRefresh={onRefresh}
+        onEdit={onEditCompetition}
+        onDelete={onDeleteCompetition}
+        deletingId={deletingId}
       />
 
       <EditCompetitionModal

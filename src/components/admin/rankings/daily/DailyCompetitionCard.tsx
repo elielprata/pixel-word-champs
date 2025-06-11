@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,12 +36,12 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
   useCompetitionStatusUpdater([competition]);
 
   const handleEdit = () => {
-    console.log('🃏 Card: handleEdit chamado para competição:', competition.id);
+    console.log('🃏 Card: handleEdit executado para competição:', competition.id);
     onEdit(competition);
   };
 
   const handleDelete = () => {
-    console.log('🃏 Card: handleDelete chamado para competição:', competition.id);
+    console.log('🃏 Card: handleDelete executado para competição:', competition.id);
     onDelete(competition);
   };
 
