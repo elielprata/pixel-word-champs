@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
-import { Users, Info } from 'lucide-react';
 
 interface WeeklyCompetition {
   id: string;
@@ -41,7 +40,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     description: '',
     startDate: '',
     endDate: '',
-    maxParticipants: 0 // Valor 0 = ilimitado
+    maxParticipants: 0
   });
 
   useEffect(() => {
@@ -58,7 +57,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
         description: competition.description,
         startDate: startDateFormatted,
         endDate: endDateFormatted,
-        maxParticipants: 0 // Forçar participação livre
+        maxParticipants: competition.max_participants
       });
     }
   }, [competition]);
@@ -82,7 +81,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
         description: formData.description,
         start_date: startDateWithTime.toISOString(),
         end_date: endDateWithTime.toISOString(),
-        max_participants: 0, // Forçar participação livre para todos
+        max_participants: formData.maxParticipants,
         competition_type: 'tournament'
       };
 
@@ -91,7 +90,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
       if (response.success) {
         toast({
           title: "Competição atualizada",
-          description: "As alterações foram salvas com sucesso. Participação livre para todos!",
+          description: "As alterações foram salvas com sucesso.",
         });
         
         onOpenChange(false);
@@ -117,18 +116,10 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Editar Competição</DialogTitle>
+          <DialogTitle>Editar Competição Semanal</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
-            <Users className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-700">
-              <p className="font-medium">🎉 PARTICIPAÇÃO LIVRE:</p>
-              <p>Todos os usuários podem participar sem limite de vagas!</p>
-            </div>
-          </div>
-
           <div>
             <Label htmlFor="title">Título</Label>
             <Input
@@ -176,17 +167,14 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
           </div>
 
           <div>
-            <Label className="flex items-center gap-2">
-              Participantes
-              <Info className="h-4 w-4 text-blue-500" />
-            </Label>
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md flex items-center gap-2">
-              <Users className="h-4 w-4 text-green-600" />
-              <div>
-                <p className="text-sm font-semibold text-green-700">PARTICIPAÇÃO LIVRE</p>
-                <p className="text-xs text-green-600">Todos os usuários podem participar sem limite</p>
-              </div>
-            </div>
+            <Label htmlFor="maxParticipants">Máximo de Participantes</Label>
+            <Input
+              id="maxParticipants"
+              type="number"
+              min="1"
+              value={formData.maxParticipants}
+              onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) || 0 })}
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

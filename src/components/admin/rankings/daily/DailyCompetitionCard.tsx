@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Trophy, Users, Edit, Trash2 } from 'lucide-react';
-import { formatDateTimeRange } from '@/utils/formatters';
+import { Calendar, Users, Trophy, Clock } from 'lucide-react';
+import { CompetitionActions } from './CompetitionActions';
 
 interface DailyCompetition {
   id: string;
@@ -17,111 +16,102 @@ interface DailyCompetition {
   max_participants: number;
   total_participants: number;
   theme: string;
+  rules: any;
 }
 
 interface DailyCompetitionCardProps {
   competition: DailyCompetition;
   onEdit: (competition: DailyCompetition) => void;
   onDelete: (competition: DailyCompetition) => void;
-  isDeleting?: boolean;
+  isDeleting: boolean;
 }
 
 export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
   competition,
   onEdit,
   onDelete,
-  isDeleting = false
+  isDeleting
 }) => {
+  const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
+    const date = new Date(dateString);
+    const dateFormatted = date.toLocaleDateString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
+    
+    return `${dateFormatted}, ${timeFormatted}`;
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-700 border-green-200';
       case 'scheduled': return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'completed': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
-  const getFormattedDate = (date: string) => {
-    return new Date(date).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active': return 'Ativo';
+      case 'scheduled': return 'Agendado';
+      case 'completed': return 'Finalizado';
+      default: return 'Rascunho';
+    }
   };
 
   return (
-    <Card className="overflow-hidden border-slate-200 hover:border-slate-300 transition-colors">
-      <CardContent className="p-0">
-        <div className="flex flex-col md:flex-row">
-          {/* Título e Status */}
-          <div className="p-4 md:p-5 flex-grow border-b md:border-b-0 md:border-r border-slate-200">
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="text-lg font-semibold text-slate-900">{competition.title}</h3>
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h4 className="font-semibold text-slate-800">{competition.title}</h4>
               <Badge className={getStatusColor(competition.status)}>
-                {competition.status === 'active' ? 'Ativo' : 
-                 competition.status === 'scheduled' ? 'Agendado' :
-                 competition.status === 'completed' ? 'Finalizado' : 'Cancelado'}
+                {getStatusText(competition.status)}
               </Badge>
+              {competition.theme && (
+                <Badge variant="outline" className="text-xs">
+                  {competition.theme}
+                </Badge>
+              )}
             </div>
             
-            {competition.description && (
-              <p className="text-sm text-slate-600 mb-3">{competition.description}</p>
-            )}
+            <p className="text-sm text-slate-600 mb-3">{competition.description}</p>
             
-            {/* Tema */}
-            {competition.theme && (
-              <Badge variant="outline" className="mb-3 bg-yellow-50 text-yellow-700 border-yellow-200">
-                {competition.theme}
-              </Badge>
-            )}
-            
-            <div className="space-y-2">
-              {/* Período */}
-              <div className="flex items-center gap-2 text-xs text-slate-600">
-                <Calendar className="h-3 w-3" />
-                <span>{formatDateTimeRange(competition.start_date, competition.end_date)}</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-slate-500" />
+                <span>Início: {formatDateTime(competition.start_date, false)}</span>
               </div>
               
-              {/* Participantes */}
-              <div className="flex items-center gap-2 text-xs text-green-600">
-                <Users className="h-3 w-3" />
-                <span>PARTICIPAÇÃO LIVRE (sem limite de participantes)</span>
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3 text-slate-500" />
+                <span>Fim: {formatDateTime(competition.end_date, true)}</span>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Trophy className="h-3 w-3 text-slate-400" />
+                <span className="text-slate-500">Sem premiação</span>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3 text-slate-500" />
+                <span>Máx: {competition.max_participants}</span>
               </div>
             </div>
           </div>
           
-          {/* Ações */}
-          <div className="bg-slate-50 p-4 md:p-5 flex flex-row md:flex-col items-center justify-between md:justify-center gap-4 min-w-[200px]">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full"
-              onClick={() => onEdit(competition)}
-            >
-              <Edit className="h-3 w-3 mr-2" />
-              Editar
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-              onClick={() => onDelete(competition)}
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <>
-                  <div className="h-3 w-3 border-t-2 border-red-600 rounded-full animate-spin mr-2" />
-                  Excluindo...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="h-3 w-3 mr-2" />
-                  Excluir
-                </>
-              )}
-            </Button>
-          </div>
+          <CompetitionActions
+            competitionId={competition.id}
+            onEdit={() => onEdit(competition)}
+            onDelete={() => onDelete(competition)}
+            isDeleting={isDeleting}
+          />
         </div>
       </CardContent>
     </Card>
