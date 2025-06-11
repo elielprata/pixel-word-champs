@@ -1,19 +1,8 @@
-
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { dailyCompetitionValidationService } from '@/services/dailyCompetition/dailyCompetitionValidationService';
 import { useDailyCompetitionValidation } from '@/hooks/useDailyCompetitionValidation';
-
-interface DailyCompetition {
-  id: string;
-  title: string;
-  description: string;
-  theme: string;
-  start_date: string;
-  end_date: string;
-  max_participants: number;
-  status: string;
-}
+import { DailyCompetition } from '@/types/dailyCompetition';
 
 export const useDailyCompetitionForm = (onSuccess?: () => void) => {
   const { toast } = useToast();

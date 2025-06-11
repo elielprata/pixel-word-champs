@@ -2,18 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-interface DailyCompetition {
-  id: string;
-  title: string;
-  description: string;
-  theme: string;
-  start_date: string;
-  end_date: string;
-  max_participants: number;
-  status: string;
-  created_at: string;
-}
+import { DailyCompetition } from '@/types/dailyCompetition';
 
 export const useDailyCompetitionsManagement = () => {
   const [competitions, setCompetitions] = useState<DailyCompetition[]>([]);
