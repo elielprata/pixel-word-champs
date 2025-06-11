@@ -89,7 +89,7 @@ export class DailyCompetitionParticipationService {
           return;
         }
 
-        console.log('✅ Participação criada na competição semanal');
+        console.log('✅ Participação criada na competição semanal - SEM LIMITE DE PARTICIPANTES');
       } else {
         console.log('✅ Usuário já participa da competição semanal');
       }
@@ -207,6 +207,30 @@ export class DailyCompetitionParticipationService {
     }
   }
 
+  async createParticipation(userId: string, competitionId: string, score: number = 0): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Remover verificação de limite de participantes - participação livre
+      const { error } = await supabase
+        .from('competition_participations')
+        .insert({
+          user_id: userId,
+          competition_id: competitionId,
+          user_score: score
+        });
+
+      if (error) throw error;
+
+      console.log('✅ Participação criada - SEM LIMITE DE PARTICIPANTES');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erro ao criar participação:', error);
+      return {
+        success: false,
+        error: 'Erro ao criar participação'
+      };
+    }
+  }
+
   async updateCompetitionRankings(competitionId: string): Promise<void> {
     try {
       console.log('🔄 Atualizando rankings da competição:', competitionId);
@@ -240,7 +264,7 @@ export class DailyCompetitionParticipationService {
         }
       }
 
-      console.log('✅ Rankings atualizados para', updates.length, 'participantes');
+      console.log('✅ Rankings atualizados para', updates.length, 'participantes - SEM LIMITES');
     } catch (error) {
       console.error('❌ Erro ao atualizar rankings:', error);
     }

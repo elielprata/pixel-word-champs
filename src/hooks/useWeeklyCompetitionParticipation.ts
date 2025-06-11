@@ -64,8 +64,9 @@ export const useWeeklyCompetitionParticipation = (competitionId: string) => {
     if (!competitionId || !user?.id || isParticipating) return;
 
     try {
-      console.log('🎯 Inscrevendo usuário na competição:', competitionId);
+      console.log('🎯 Inscrevendo usuário na competição (SEM LIMITE):', competitionId);
 
+      // Participação livre - sem verificação de limites
       const { data, error } = await supabase
         .from('competition_participations')
         .insert({
@@ -81,13 +82,13 @@ export const useWeeklyCompetitionParticipation = (competitionId: string) => {
         throw error;
       }
 
-      console.log('✅ Inscrição realizada com sucesso:', data);
+      console.log('✅ Inscrição realizada com sucesso (PARTICIPAÇÃO LIVRE):', data);
       setParticipation(data);
       setIsParticipating(true);
 
       toast({
         title: "Inscrição realizada!",
-        description: "Você foi inscrito na competição semanal com sucesso.",
+        description: "Você foi inscrito na competição semanal com sucesso. Participação é livre para todos!",
       });
 
       return data;

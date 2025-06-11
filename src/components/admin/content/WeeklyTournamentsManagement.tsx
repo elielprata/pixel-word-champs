@@ -36,7 +36,7 @@ export const WeeklyTournamentsManagement = () => {
     description: '',
     start_date: '',
     end_date: '',
-    max_participants: 1000
+    max_participants: 0 // Sem limite - valor 0 significa ilimitado
   });
   const { toast } = useToast();
   const { calculateTotalPrize } = usePaymentData();
@@ -99,15 +99,17 @@ export const WeeklyTournamentsManagement = () => {
         start_date: startDateWithTime.toISOString(),
         end_date: endDateWithTime.toISOString(),
         prize_pool: currentPrizePool,
-        max_participants: newTournament.max_participants
+        max_participants: 0 // Participação livre - sem limite
       };
+
+      console.log('🏆 Criando torneio semanal com PARTICIPAÇÃO LIVRE:', competitionData);
 
       const result = await customCompetitionService.createCompetition(competitionData);
 
       if (result.success) {
         toast({
           title: "Sucesso",
-          description: "Torneio semanal criado com sucesso"
+          description: "Torneio semanal criado com PARTICIPAÇÃO LIVRE para todos os usuários!"
         });
 
         setNewTournament({
@@ -115,7 +117,7 @@ export const WeeklyTournamentsManagement = () => {
           description: '',
           start_date: '',
           end_date: '',
-          max_participants: 1000
+          max_participants: 0
         });
         setIsAddModalOpen(false);
         fetchTournaments();
@@ -155,10 +157,12 @@ export const WeeklyTournamentsManagement = () => {
         title: editingTournament.title,
         description: editingTournament.description,
         competition_type: 'tournament',
-        max_participants: editingTournament.max_participants,
+        max_participants: 0, // Forçar participação livre
         start_date: startDateWithTime.toISOString(),
         end_date: endDateWithTime.toISOString()
       };
+
+      console.log('🔧 Atualizando torneio semanal com PARTICIPAÇÃO LIVRE:', updateData);
 
       const result = await customCompetitionService.updateCompetition(editingTournament.id, updateData);
 
@@ -168,7 +172,8 @@ export const WeeklyTournamentsManagement = () => {
           .from('custom_competitions')
           .update({
             status: editingTournament.status,
-            prize_pool: currentPrizePool
+            prize_pool: currentPrizePool,
+            max_participants: 0 // Garantir participação livre
           })
           .eq('id', editingTournament.id);
 
@@ -176,7 +181,7 @@ export const WeeklyTournamentsManagement = () => {
 
         toast({
           title: "Sucesso",
-          description: "Torneio semanal atualizado com sucesso"
+          description: "Torneio semanal atualizado com PARTICIPAÇÃO LIVRE!"
         });
 
         setEditingTournament(null);
@@ -257,6 +262,10 @@ export const WeeklyTournamentsManagement = () => {
             <p className="text-sm text-slate-600">
               Gerencie torneios semanais de grande escala
             </p>
+            <div className="mt-2 flex items-center gap-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+              <Users className="h-3 w-3" />
+              🎉 PARTICIPAÇÃO LIVRE: Todos podem participar sem limites!
+            </div>
           </div>
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
@@ -271,10 +280,10 @@ export const WeeklyTournamentsManagement = () => {
               </DialogHeader>
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <Users className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-blue-700">
-                    <p className="font-medium">Regra Importante:</p>
-                    <p>Não é possível criar torneios com as mesmas datas de início e fim de um torneio existente.</p>
+                    <p className="font-medium">🎉 PARTICIPAÇÃO LIVRE:</p>
+                    <p>Todos os usuários podem participar sem limite de vagas!</p>
                     <p className="mt-1 text-xs">Horários automáticos: Início 00:00:00 | Fim 23:59:59 (Brasília)</p>
                   </div>
                 </div>
@@ -333,16 +342,19 @@ export const WeeklyTournamentsManagement = () => {
                     </div>
                   </div>
                   <div>
-                    <Label>Máx. Participantes</Label>
-                    <Input 
-                      type="number"
-                      value={newTournament.max_participants}
-                      onChange={(e) => setNewTournament({...newTournament, max_participants: parseInt(e.target.value)})}
-                    />
+                    <Label>Participantes</Label>
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                      <p className="text-lg font-semibold text-green-700">
+                        ILIMITADO
+                      </p>
+                      <p className="text-xs text-green-600">
+                        Participação livre para todos
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <Button onClick={addTournament} className="w-full">
-                  Criar Torneio Semanal
+                  Criar Torneio Semanal (Participação Livre)
                 </Button>
               </div>
             </DialogContent>
@@ -390,10 +402,8 @@ export const WeeklyTournamentsManagement = () => {
                   <Users className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-blue-600 font-medium">Agendados</p>
-                  <p className="text-2xl font-bold text-blue-700">
-                    {tournaments.filter(t => t.status === 'scheduled').length}
-                  </p>
+                  <p className="text-sm text-blue-600 font-medium">Participação</p>
+                  <p className="text-lg font-bold text-blue-700">LIVRE</p>
                 </div>
               </div>
             </CardContent>
@@ -427,6 +437,7 @@ export const WeeklyTournamentsManagement = () => {
                 <TableHead className="font-semibold">Início</TableHead>
                 <TableHead className="font-semibold">Fim</TableHead>
                 <TableHead className="font-semibold">Prêmio</TableHead>
+                <TableHead className="font-semibold">Participação</TableHead>
                 <TableHead className="font-semibold text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -450,6 +461,11 @@ export const WeeklyTournamentsManagement = () => {
                   <TableCell className="text-sm">{formatDate(tournament.start_date)}</TableCell>
                   <TableCell className="text-sm">{formatDate(tournament.end_date)}</TableCell>
                   <TableCell className="font-semibold">R$ {tournament.prize_pool.toFixed(2)}</TableCell>
+                  <TableCell>
+                    <Badge className="bg-green-50 text-green-700 border-green-200">
+                      LIVRE
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-center">
                     <div className="flex gap-2 justify-center">
                       <Button
@@ -479,7 +495,7 @@ export const WeeklyTournamentsManagement = () => {
           <div className="text-center py-8 text-gray-500">
             <Trophy className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p>Nenhum torneio semanal criado ainda</p>
-            <p className="text-sm">Crie seu primeiro torneio semanal</p>
+            <p className="text-sm">Crie seu primeiro torneio semanal com participação livre</p>
           </div>
         )}
 
@@ -492,10 +508,10 @@ export const WeeklyTournamentsManagement = () => {
               </DialogHeader>
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <Users className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-blue-700">
-                    <p className="font-medium">Regra Importante:</p>
-                    <p>Não é possível alterar para datas que já existem em outro torneio.</p>
+                    <p className="font-medium">🎉 PARTICIPAÇÃO LIVRE:</p>
+                    <p>Participação sem limites para todos os usuários!</p>
                     <p className="mt-1 text-xs">Horários automáticos: Início 00:00:00 | Fim 23:59:59 (Brasília)</p>
                   </div>
                 </div>
@@ -535,12 +551,15 @@ export const WeeklyTournamentsManagement = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label>Máx. Participantes</Label>
-                    <Input 
-                      type="number"
-                      value={editingTournament.max_participants}
-                      onChange={(e) => setEditingTournament({...editingTournament, max_participants: parseInt(e.target.value)})}
-                    />
+                    <Label>Participantes</Label>
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                      <p className="text-lg font-semibold text-green-700">
+                        ILIMITADO
+                      </p>
+                      <p className="text-xs text-green-600">
+                        Participação livre para todos
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -574,12 +593,12 @@ export const WeeklyTournamentsManagement = () => {
                       R$ {currentPrizePool.toFixed(2)}
                     </p>
                     <p className="text-xs text-blue-600">
-                      Será atualizado automaticamente baseado nas configurações de premiação
+                      Baseado nas configurações de premiação
                     </p>
                   </div>
                 </div>
                 <Button onClick={updateTournament} className="w-full">
-                  Salvar Alterações
+                  Atualizar Torneio Semanal (Participação Livre)
                 </Button>
               </div>
             </DialogContent>

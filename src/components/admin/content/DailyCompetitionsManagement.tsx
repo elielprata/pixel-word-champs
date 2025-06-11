@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Target, Clock } from 'lucide-react';
+import { Plus, Target, Clock, Users } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyCompetitionFinalization } from "@/hooks/useDailyCompetitionFinalization";
@@ -37,7 +38,7 @@ export const DailyCompetitionsManagement = () => {
     theme: '',
     start_date: '',
     end_date: '',
-    max_participants: 500
+    max_participants: 0 // Sem limite - valor 0 significa ilimitado
   });
   const { toast } = useToast();
 
@@ -106,7 +107,7 @@ export const DailyCompetitionsManagement = () => {
         theme: comp.theme || 'Geral',
         start_date: comp.start_date,
         end_date: comp.end_date,
-        max_participants: comp.max_participants || 500,
+        max_participants: comp.max_participants || 0, // 0 = ilimitado
         status: comp.status || 'draft',
         created_at: comp.created_at
       }));
@@ -131,12 +132,14 @@ export const DailyCompetitionsManagement = () => {
         start_date: ensureStartOfDay(newCompetition.start_date),
         end_date: ensureEndOfDay(newCompetition.start_date), // Usar start_date para garantir mesmo dia
         competition_type: 'challenge',
-        status: 'active' // Ativar automaticamente
+        status: 'active', // Ativar automaticamente
+        max_participants: 0 // Participação livre - sem limite
       };
 
-      console.log('🎯 Criando competição diária com horários padronizados:', {
+      console.log('🎯 Criando competição diária com participação LIVRE:', {
         start: adjustedCompetition.start_date,
-        end: adjustedCompetition.end_date
+        end: adjustedCompetition.end_date,
+        max_participants: 'ILIMITADO'
       });
 
       const { error } = await supabase
@@ -147,7 +150,7 @@ export const DailyCompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição diária criada (00:00:00 às 23:59:59 do mesmo dia)"
+        description: "Competição diária criada com PARTICIPAÇÃO LIVRE (00:00:00 às 23:59:59)"
       });
 
       setNewCompetition({
@@ -156,7 +159,7 @@ export const DailyCompetitionsManagement = () => {
         theme: '',
         start_date: '',
         end_date: '',
-        max_participants: 500
+        max_participants: 0 // Sem limite
       });
       setIsAddModalOpen(false);
       fetchCompetitions();
@@ -180,13 +183,14 @@ export const DailyCompetitionsManagement = () => {
         theme: editingCompetition.theme,
         start_date: ensureStartOfDay(editingCompetition.start_date),
         end_date: ensureEndOfDay(editingCompetition.start_date), // Garantir 23:59:59 do mesmo dia
-        max_participants: editingCompetition.max_participants,
+        max_participants: 0, // Forçar participação livre
         status: editingCompetition.status
       };
 
-      console.log('🔧 Atualizando competição diária com horários padronizados:', {
+      console.log('🔧 Atualizando competição diária com PARTICIPAÇÃO LIVRE:', {
         start: updateData.start_date,
-        end: updateData.end_date
+        end: updateData.end_date,
+        max_participants: 'ILIMITADO'
       });
 
       const { error } = await supabase
@@ -198,7 +202,7 @@ export const DailyCompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição diária atualizada (horário padronizado: 00:00:00 às 23:59:59)"
+        description: "Competição diária atualizada (PARTICIPAÇÃO LIVRE: 00:00:00 às 23:59:59)"
       });
 
       setEditingCompetition(null);
@@ -255,6 +259,10 @@ export const DailyCompetitionsManagement = () => {
             <div className="mt-2 flex items-center gap-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
               <Clock className="h-3 w-3" />
               ✅ PADRÃO: Todas as competições duram 00:00:00 às 23:59:59 do mesmo dia
+            </div>
+            <div className="mt-1 flex items-center gap-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+              <Users className="h-3 w-3" />
+              🎉 PARTICIPAÇÃO LIVRE: Sem limite de participantes!
             </div>
             <div className="mt-1 flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
               <Target className="h-3 w-3" />
