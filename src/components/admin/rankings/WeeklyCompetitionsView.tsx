@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
-import { Trophy } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import { customCompetitionService } from '@/services/customCompetitionService';
+
+import React from 'react';
+import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { WeeklyRankingModal } from './WeeklyRankingModal';
-import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 import { WeeklyCompetitionHeader } from './weekly/WeeklyCompetitionHeader';
-import { ActiveCompetitionCard } from './weekly/ActiveCompetitionCard';
-import { WeeklyCompetitionCard } from './weekly/WeeklyCompetitionCard';
 import { WeeklyCompetitionsEmpty } from './weekly/WeeklyCompetitionsEmpty';
-import { CompetitionStatusService } from '@/services/competitionStatusService';
+import { WeeklyCompetitionsContainer } from './weekly/WeeklyCompetitionsContainer';
+import { useWeeklyCompetitionsActions } from '@/hooks/useWeeklyCompetitionsActions';
+import { useWeeklyCompetitionsLogic } from '@/hooks/useWeeklyCompetitionsLogic';
 
 interface WeeklyCompetition {
   id: string;
@@ -39,100 +37,17 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   // Adicionar hook para atualização automática de status
   useCompetitionStatusUpdater(competitions);
 
-  const { toast } = useToast();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [editingCompetition, setEditingCompetition] = useState<WeeklyCompetition | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
-  const [selectedCompetitionId, setSelectedCompetitionId] = useState<string>('');
-
-  // Usar o serviço centralizado para calcular o status de cada competição
-  const calculateActualStatus = (competition: WeeklyCompetition) => {
-    return CompetitionStatusService.calculateCorrectStatus({
-      start_date: competition.start_date,
-      end_date: competition.end_date,
-      competition_type: 'tournament'
-    });
-  };
-
-  // Filtrar apenas competições não finalizadas (ativas ou aguardando)
-  const activeCompetitions = competitions.filter(comp => {
-    const actualStatus = calculateActualStatus(comp);
-    return actualStatus === 'active' || actualStatus === 'scheduled';
-  });
-
-  // Encontrar a competição realmente ativa (dentro do período)
-  const currentActiveCompetition = activeCompetitions.find(comp => {
-    const actualStatus = calculateActualStatus(comp);
-    return actualStatus === 'active';
-  });
-
-  // Outras competições (aguardando início)
-  const otherActiveCompetitions = activeCompetitions.filter(comp => {
-    const actualStatus = calculateActualStatus(comp);
-    return actualStatus === 'scheduled' || (actualStatus === 'active' && comp.id !== currentActiveCompetition?.id);
-  });
-
-  const handleViewRanking = (competition: WeeklyCompetition) => {
-    console.log('👁️ Abrindo modal de ranking da competição semanal:', competition.id);
-    setSelectedCompetitionId(competition.id);
-    setIsRankingModalOpen(true);
-  };
-
-  const handleEdit = (competition: WeeklyCompetition) => {
-    console.log('🔧 Editando competição:', competition.id);
-    setEditingCompetition(competition);
-    setIsEditModalOpen(true);
-  };
-
-  const handleDelete = async (competition: WeeklyCompetition) => {
-    console.log('🗑️ Tentando excluir competição:', competition.id);
-    
-    const confirmDelete = window.confirm(`Tem certeza que deseja excluir a competição "${competition.title}"?`);
-    if (!confirmDelete) {
-      console.log('❌ Exclusão cancelada pelo usuário');
-      return;
-    }
-
-    setDeletingId(competition.id);
-    
-    try {
-      console.log('📤 Chamando serviço de exclusão...');
-      const response = await customCompetitionService.deleteCompetition(competition.id);
-      
-      if (response.success) {
-        console.log('✅ Competição excluída com sucesso');
-        toast({
-          title: "Competição excluída",
-          description: `A competição "${competition.title}" foi excluída com sucesso.`,
-        });
-        
-        if (onRefresh) {
-          console.log('🔄 Atualizando lista de competições...');
-          onRefresh();
-        }
-      } else {
-        console.error('❌ Erro no serviço:', response.error);
-        throw new Error(response.error || 'Erro ao excluir competição');
-      }
-    } catch (error) {
-      console.error('❌ Erro ao excluir competição:', error);
-      toast({
-        title: "Erro ao excluir",
-        description: error instanceof Error ? error.message : "Não foi possível excluir a competição. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const handleCompetitionUpdated = () => {
-    console.log('🔄 Competição atualizada, recarregando lista...');
-    if (onRefresh) {
-      onRefresh();
-    }
-  };
+  const { activeCompetitions } = useWeeklyCompetitionsLogic(competitions);
+  
+  const {
+    editingCompetition,
+    isEditModalOpen,
+    setIsEditModalOpen,
+    isRankingModalOpen,
+    setIsRankingModalOpen,
+    selectedCompetitionId,
+    handleCompetitionUpdated
+  } = useWeeklyCompetitionsActions();
 
   if (isLoading) {
     return (
@@ -153,43 +68,16 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
     <div className="space-y-6">
       <WeeklyCompetitionHeader />
 
-      {currentActiveCompetition && (
-        <ActiveCompetitionCard
-          competition={currentActiveCompetition}
-          onViewRanking={handleViewRanking}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          deletingId={deletingId}
-        />
-      )}
-
-      {otherActiveCompetitions.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-purple-600" />
-            {currentActiveCompetition ? 'Outras Competições Semanais' : 'Competições Semanais Aguardando Início'}
-          </h3>
-          
-          <div className="grid gap-4">
-            {otherActiveCompetitions.map((competition) => (
-              <WeeklyCompetitionCard
-                key={competition.id}
-                competition={competition}
-                onViewRanking={handleViewRanking}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                deletingId={deletingId}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      <WeeklyCompetitionsContainer 
+        competitions={competitions}
+        onRefresh={onRefresh}
+      />
 
       <EditCompetitionModal
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
         competition={editingCompetition}
-        onCompetitionUpdated={handleCompetitionUpdated}
+        onCompetitionUpdated={() => handleCompetitionUpdated(onRefresh)}
       />
 
       <WeeklyRankingModal
