@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,54 +110,34 @@ export default function WeeklyCompetitionRanking() {
 
       setCompetition(competitionInfo);
 
-      // Carregar participações da competição
+      // Carregar participações da competição ordenadas por pontuação (maior para menor)
       const { data: participationsData, error: participationsError } = await supabase
         .from('competition_participations')
-        .select('user_id, user_score, user_position, created_at')
+        .select('user_id, user_score, user_position, created_at, profiles:user_id(username, avatar_url)')
         .eq('competition_id', competitionId)
-        .not('user_position', 'is', null)
-        .order('user_position', { ascending: true });
+        .order('user_score', { ascending: false });
 
       if (participationsError) {
         console.error('❌ Erro ao carregar participações:', participationsError);
         throw participationsError;
       }
 
-      // Buscar dados dos perfis separadamente
-      const userIds = (participationsData || []).map(p => p.user_id);
-      
-      if (userIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', userIds);
-
-        if (profilesError) {
-          console.error('❌ Erro ao carregar perfis:', profilesError);
-          throw profilesError;
-        }
-
-        // Combinar dados de participação com perfis
-        const rankingParticipants: RankingParticipant[] = (participationsData || []).map(participation => {
-          const profile = profilesData?.find(p => p.id === participation.user_id);
-          
-          return {
-            user_position: participation.user_position || 0,
+      // Processar e formatar os dados para exibição
+      const rankingParticipants: RankingParticipant[] = participationsData
+        ? participationsData.map((participation, index) => ({
+            user_position: index + 1, // Posição baseada na ordenação por pontuação
             user_score: participation.user_score || 0,
             user_id: participation.user_id || '',
             created_at: participation.created_at || '',
-            profiles: profile ? {
-              username: profile.username || 'Usuário',
-              avatar_url: profile.avatar_url
-            } : null
-          };
-        });
+            profiles: participation.profiles
+          }))
+        : [];
 
-        setRanking(rankingParticipants);
-        console.log('📊 Ranking carregado:', rankingParticipants.length, 'participantes');
-      } else {
-        setRanking([]);
-      }
+      console.log('📊 Ranking carregado:', rankingParticipants.length, 'participantes');
+      setRanking(rankingParticipants);
+
+      // Atualizar as posições no banco de dados
+      await updateParticipantPositions(competitionId, rankingParticipants);
 
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);
@@ -167,6 +148,25 @@ export default function WeeklyCompetitionRanking() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Função para atualizar as posições dos participantes no banco de dados
+  const updateParticipantPositions = async (competitionId: string, participants: RankingParticipant[]) => {
+    try {
+      console.log('🔄 Atualizando posições dos participantes...');
+      
+      for (const participant of participants) {
+        await supabase
+          .from('competition_participations')
+          .update({ user_position: participant.user_position })
+          .eq('competition_id', competitionId)
+          .eq('user_id', participant.user_id);
+      }
+      
+      console.log('✅ Posições atualizadas com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao atualizar posições:', error);
     }
   };
 
@@ -330,7 +330,7 @@ export default function WeeklyCompetitionRanking() {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Users className="h-4 w-4" />
-                  <span>Participantes: {competition.total_participants}/{competition.max_participants}</span>
+                  <span>Participantes: {competition.total_participants}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Trophy className="h-4 w-4" />
