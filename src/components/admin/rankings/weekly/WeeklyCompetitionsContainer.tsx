@@ -4,7 +4,6 @@ import { Trophy } from 'lucide-react';
 import { ActiveCompetitionCard } from './ActiveCompetitionCard';
 import { WeeklyCompetitionCard } from './WeeklyCompetitionCard';
 import { useWeeklyCompetitionsLogic } from '@/hooks/useWeeklyCompetitionsLogic';
-import { useWeeklyCompetitionsActions } from '@/hooks/useWeeklyCompetitionsActions';
 
 interface WeeklyCompetition {
   id: string;
@@ -20,11 +19,15 @@ interface WeeklyCompetition {
 
 interface WeeklyCompetitionsContainerProps {
   competitions: WeeklyCompetition[];
+  onViewRanking: (competition: WeeklyCompetition) => void;
+  onEdit: (competition: WeeklyCompetition) => void;
   onRefresh?: () => void;
 }
 
 export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerProps> = ({
   competitions,
+  onViewRanking,
+  onEdit,
   onRefresh
 }) => {
   const {
@@ -33,11 +36,6 @@ export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerPr
     deletingId,
     handleDelete
   } = useWeeklyCompetitionsLogic(competitions);
-
-  const {
-    handleViewRanking,
-    handleEdit
-  } = useWeeklyCompetitionsActions();
 
   const onDeleteCompetition = (competition: WeeklyCompetition) => {
     handleDelete(competition, onRefresh);
@@ -48,8 +46,8 @@ export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerPr
       {currentActiveCompetition && (
         <ActiveCompetitionCard
           competition={currentActiveCompetition}
-          onViewRanking={handleViewRanking}
-          onEdit={handleEdit}
+          onViewRanking={onViewRanking}
+          onEdit={onEdit}
           onDelete={onDeleteCompetition}
           deletingId={deletingId}
         />
@@ -67,8 +65,8 @@ export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerPr
               <WeeklyCompetitionCard
                 key={competition.id}
                 competition={competition}
-                onViewRanking={handleViewRanking}
-                onEdit={handleEdit}
+                onViewRanking={onViewRanking}
+                onEdit={onEdit}
                 onDelete={onDeleteCompetition}
                 deletingId={deletingId}
               />

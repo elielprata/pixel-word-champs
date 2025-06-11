@@ -46,6 +46,8 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
     isRankingModalOpen,
     setIsRankingModalOpen,
     selectedCompetitionId,
+    handleViewRanking,
+    handleEdit,
     handleCompetitionUpdated
   } = useWeeklyCompetitionsActions();
 
@@ -70,6 +72,8 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
 
       <WeeklyCompetitionsContainer 
         competitions={competitions}
+        onViewRanking={handleViewRanking}
+        onEdit={handleEdit}
         onRefresh={onRefresh}
       />
 
