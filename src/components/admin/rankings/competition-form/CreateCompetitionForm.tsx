@@ -1,18 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { useCompetitions } from "@/hooks/useCompetitions";
-import { prizeService } from '@/services/prizeService';
-import { customCompetitionService, CustomCompetitionData } from '@/services/customCompetitionService';
-import { usePaymentData } from '@/hooks/usePaymentData';
-import { CompetitionTypeSection } from './CompetitionTypeSection';
+import { customCompetitionService } from '@/services/customCompetitionService';
 import { BasicInfoSection } from './BasicInfoSection';
+import { CompetitionTypeSection } from './CompetitionTypeSection';
 import { CategorySection } from './CategorySection';
-import { WeeklyTournamentSection } from './WeeklyTournamentSection';
-import { ParticipantsSection } from './ParticipantsSection';
 import { ScheduleSection } from './ScheduleSection';
+import { ParticipantsSection } from './ParticipantsSection';
 import { PrizeSection } from './PrizeSection';
-import { PrizeConfigurationSection } from './PrizeConfigurationSection';
 import { FormActions } from './FormActions';
 
 interface CreateCompetitionFormProps {
@@ -21,63 +16,46 @@ interface CreateCompetitionFormProps {
 }
 
 export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateCompetitionFormProps) => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     type: 'weekly' as 'daily' | 'weekly',
-    category: 'geral' as string,
-    weeklyTournamentId: 'none' as string,
-    prizePool: 0,
+    category: '',
     maxParticipants: 999999,
+    prizePool: 185,
     startDate: undefined as Date | undefined,
-    endDate: undefined as Date | undefined
+    endDate: undefined as Date | undefined,
+    startTime: '00:00',
+    endTime: '23:59'
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [totalPrizePool, setTotalPrizePool] = useState(0);
-  const { toast } = useToast();
-  const { customCompetitions, refetch } = useCompetitions();
-  const paymentData = usePaymentData();
 
-  const weeklyTournaments = customCompetitions.filter(comp => 
-    comp.competition_type === 'tournament' && 
-    (comp.status === 'active' || comp.status === 'scheduled')
-  );
-
-  useEffect(() => {
-    const fetchPrizeConfigurations = async () => {
-      try {
-        const configurations = await prizeService.getPrizeConfigurations();
-        const activeConfigurations = configurations.filter(config => config.active);
-        
-        let total = 0;
-        
-        const individualPrizes = activeConfigurations.filter(config => config.type === 'individual');
-        individualPrizes.forEach(config => {
-          total += config.prize_amount;
-        });
-        
-        const groupPrizes = activeConfigurations.filter(config => config.type === 'group');
-        groupPrizes.forEach(config => {
-          total += config.prize_amount * config.total_winners;
-        });
-        
-        setTotalPrizePool(total);
-        setFormData(prev => ({ ...prev, prizePool: total }));
-      } catch (error) {
-        console.error('Error fetching prize configurations:', error);
-      }
-    };
-
-    fetchPrizeConfigurations();
-  }, []);
+  const createDateTimeFromDateAndTime = (date: Date, time: string): Date => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const dateTime = new Date(date);
+    dateTime.setUTCHours(hours, minutes, 0, 0);
+    return dateTime;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title.trim()) {
+    if (!formData.startDate) {
       toast({
-        title: "Erro",
-        description: "O título é obrigatório.",
+        title: "Erro de validação",
+        description: "Por favor, selecione a data de início",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.type === 'weekly' && !formData.endDate) {
+      toast({
+        title: "Erro de validação", 
+        description: "Por favor, selecione a data de fim para competições semanais",
         variant: "destructive"
       });
       return;
@@ -86,54 +64,55 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 Iniciando criação da competição...');
-      
-      const competitionData: CustomCompetitionData = {
+      let startDateTime = createDateTimeFromDateAndTime(formData.startDate, formData.startTime);
+      let endDateTime: Date;
+
+      if (formData.type === 'daily') {
+        // Para competições diárias, sempre terminar às 23:59:59 do mesmo dia
+        endDateTime = new Date(formData.startDate);
+        endDateTime.setUTCHours(23, 59, 59, 999);
+      } else {
+        // Para competições semanais, usar a data e hora especificadas
+        endDateTime = createDateTimeFromDateAndTime(formData.endDate!, formData.endTime);
+      }
+
+      console.log('📅 Criando competição com horários:', {
+        start: startDateTime.toISOString(),
+        end: endDateTime.toISOString(),
+        type: formData.type
+      });
+
+      const competitionData = {
         title: formData.title,
         description: formData.description,
         type: formData.type,
         category: formData.category,
-        weeklyTournamentId: formData.weeklyTournamentId !== 'none' ? formData.weeklyTournamentId : undefined,
-        prizePool: formData.prizePool,
         maxParticipants: formData.maxParticipants,
-        startDate: formData.startDate,
-        endDate: formData.endDate
+        prizePool: formData.prizePool,
+        startDate: startDateTime,
+        endDate: endDateTime
       };
 
-      const result = await customCompetitionService.createCompetition(competitionData);
-      
-      if (result.success) {
+      const response = await customCompetitionService.createCompetition(competitionData);
+
+      if (response.success) {
         toast({
-          title: "Competição criada com sucesso!",
-          description: `${formData.title} foi criada e está ativa.`,
+          title: "Competição criada",
+          description: `A competição "${formData.title}" foi criada com sucesso.`
         });
         
+        onClose();
         if (onCompetitionCreated) {
           onCompetitionCreated();
         }
-        
-        await refetch();
-        
-        onClose();
-        setFormData({
-          title: '',
-          description: '',
-          type: 'weekly',
-          category: 'geral',
-          weeklyTournamentId: 'none',
-          prizePool: totalPrizePool,
-          maxParticipants: 999999,
-          startDate: undefined,
-          endDate: undefined
-        });
       } else {
-        throw new Error(result.error || 'Erro ao criar competição');
+        throw new Error(response.error || 'Erro ao criar competição');
       }
     } catch (error) {
-      console.error('❌ Erro ao criar competição:', error);
+      console.error('Erro ao criar competição:', error);
       toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível criar a competição.",
+        title: "Erro ao criar competição",
+        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado",
         variant: "destructive"
       });
     } finally {
@@ -141,74 +120,50 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
     }
   };
 
-  const isPrizeEnabled = formData.type === 'weekly';
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
-          <h3 className="text-sm font-medium text-slate-700">Configurações Básicas</h3>
-        </div>
-
-        <CompetitionTypeSection 
-          type={formData.type}
-          onTypeChange={(type) => setFormData(prev => ({ ...prev, type }))}
-        />
-
-        <BasicInfoSection 
-          title={formData.title}
-          description={formData.description}
-          onTitleChange={(title) => setFormData(prev => ({ ...prev, title }))}
-          onDescriptionChange={(description) => setFormData(prev => ({ ...prev, description }))}
-        />
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-          <h3 className="text-sm font-medium text-slate-700">Configurações Específicas</h3>
-        </div>
-
-        {formData.type === 'daily' && (
-          <CategorySection 
-            category={formData.category}
-            onCategoryChange={(category) => setFormData(prev => ({ ...prev, category }))}
-          />
-        )}
-
-        {formData.type === 'daily' && (
-          <WeeklyTournamentSection 
-            weeklyTournamentId={formData.weeklyTournamentId}
-            weeklyTournaments={weeklyTournaments}
-            onTournamentChange={(weeklyTournamentId) => setFormData(prev => ({ ...prev, weeklyTournamentId }))}
-          />
-        )}
-
-        <ParticipantsSection 
-          maxParticipants={formData.maxParticipants}
-          onMaxParticipantsChange={(maxParticipants) => setFormData(prev => ({ ...prev, maxParticipants }))}
-        />
-      </div>
-
-      <ScheduleSection 
-        startDate={formData.startDate}
-        endDate={formData.endDate}
-        type={formData.type}
-        onStartDateChange={(startDate) => setFormData(prev => ({ ...prev, startDate }))}
-        onEndDateChange={(endDate) => setFormData(prev => ({ ...prev, endDate }))}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <BasicInfoSection
+        title={formData.title}
+        description={formData.description}
+        onTitleChange={(title) => setFormData({ ...formData, title })}
+        onDescriptionChange={(description) => setFormData({ ...formData, description })}
       />
 
-      {isPrizeEnabled && (
-        <>
-          <PrizeSection totalPrizePool={totalPrizePool} />
-          <PrizeConfigurationSection paymentData={paymentData} />
-        </>
-      )}
+      <CompetitionTypeSection
+        type={formData.type}
+        onTypeChange={(type) => setFormData({ ...formData, type })}
+      />
 
-      <FormActions 
+      <CategorySection
+        category={formData.category}
+        type={formData.type}
+        onCategoryChange={(category) => setFormData({ ...formData, category })}
+      />
+
+      <ScheduleSection
+        startDate={formData.startDate}
+        endDate={formData.endDate}
+        startTime={formData.startTime}
+        endTime={formData.endTime}
+        type={formData.type}
+        onStartDateChange={(startDate) => setFormData({ ...formData, startDate })}
+        onEndDateChange={(endDate) => setFormData({ ...formData, endDate })}
+        onStartTimeChange={(startTime) => setFormData({ ...formData, startTime })}
+        onEndTimeChange={(endTime) => setFormData({ ...formData, endTime })}
+      />
+
+      <ParticipantsSection
+        maxParticipants={formData.maxParticipants}
+        onMaxParticipantsChange={(maxParticipants) => setFormData({ ...formData, maxParticipants })}
+      />
+
+      <PrizeSection
+        prizePool={formData.prizePool}
+        onPrizePoolChange={(prizePool) => setFormData({ ...formData, prizePool })}
+      />
+
+      <FormActions
         isSubmitting={isSubmitting}
-        hasTitle={!!formData.title}
         onCancel={onClose}
       />
     </form>

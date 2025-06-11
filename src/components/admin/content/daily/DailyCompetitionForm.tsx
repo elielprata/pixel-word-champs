@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TimePickerSection } from '../../rankings/competition-form/TimePickerSection';
 
 interface DailyCompetition {
   id: string;
@@ -29,12 +30,14 @@ interface DailyCompetitionFormProps {
     theme: string;
     start_date: string;
     end_date: string;
+    start_time: string;
     max_participants: number;
   };
   onNewCompetitionChange: (competition: any) => void;
   onSubmit: () => void;
   isEditing: boolean;
   handleStartDateChange: (value: string) => void;
+  handleStartTimeChange: (value: string) => void;
 }
 
 const themes = [
@@ -62,11 +65,23 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
   onNewCompetitionChange,
   onSubmit,
   isEditing,
-  handleStartDateChange
+  handleStartDateChange,
+  handleStartTimeChange
 }) => {
   const currentData = isEditing ? competition : newCompetition;
   
   if (!currentData) return null;
+
+  const getTimeFromDate = (dateString: string): string => {
+    if (!dateString) return '00:00';
+    const date = new Date(dateString);
+    return `${date.getUTCHours().toString().padStart(2, '0')}:${date.getUTCMinutes().toString().padStart(2, '0')}`;
+  };
+
+  const getDateFromDateTime = (dateString: string): string => {
+    if (!dateString) return '';
+    return dateString.split('T')[0];
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -142,24 +157,32 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
                 <Label>Máx. Participantes</Label>
                 <Input 
                   type="number"
-                  value={competition?.max_participants || 500}
+                  value={competition?.max_participants || 0}
                   onChange={(e) => onNewCompetitionChange({...competition, max_participants: parseInt(e.target.value)})}
+                  disabled
+                  className="bg-gray-100"
                 />
+                <p className="text-xs text-green-600 mt-1">Participação livre (ilimitado)</p>
               </div>
             </div>
           )}
           <div>
-            <Label>Data {isEditing ? 'da Competição' : 'do Desafio'}</Label>
+            <Label>Data da Competição</Label>
             <Input 
               type="date"
-              value={currentData.start_date.split('T')[0]}
-              onChange={(e) => isEditing 
-                ? handleStartDateChange(e.target.value)
-                : handleStartDateChange(e.target.value)
-              }
+              value={getDateFromDateTime(currentData.start_date)}
+              onChange={(e) => handleStartDateChange(e.target.value)}
+            />
+          </div>
+          <div>
+            <TimePickerSection
+              label="Horário de Início"
+              value={isEditing ? getTimeFromDate(currentData.start_date) : (newCompetition.start_time || '00:00')}
+              onChange={handleStartTimeChange}
+              defaultTime="00:00"
             />
             <p className="text-xs text-green-600 mt-1 font-medium">
-              ✅ {isEditing ? 'Será automaticamente configurada' : 'Competição será ativa'} das 00:00:00 às 23:59:59{isEditing ? '' : ' desta data (PADRÃO)'}
+              ✅ Competição será ativa do horário escolhido até 23:59:59 do mesmo dia
             </p>
           </div>
           {!isEditing && (
@@ -167,9 +190,11 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
               <Label>Máx. Participantes</Label>
               <Input 
                 type="number"
-                value={newCompetition.max_participants}
-                onChange={(e) => onNewCompetitionChange({...newCompetition, max_participants: parseInt(e.target.value)})}
+                value={0}
+                disabled
+                className="bg-gray-100"
               />
+              <p className="text-xs text-green-600 mt-1">Participação livre (ilimitado)</p>
             </div>
           )}
           <Button onClick={onSubmit} className="w-full">
