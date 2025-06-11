@@ -8,9 +8,7 @@ export class CompetitionStatusService {
   static calculateCorrectStatus(startDate: string, endDate: string): string {
     const now = new Date();
     const start = new Date(startDate);
-    // Para o fim, consideramos até 23:59:59 do dia
     const end = new Date(endDate);
-    end.setUTCHours(23, 59, 59, 999);
     
     console.log('🔍 Calculando status da competição:', {
       now: now.toISOString(),
@@ -29,7 +27,7 @@ export class CompetitionStatusService {
       console.log('⏳ Competição está AGUARDANDO INÍCIO');
       return 'scheduled';
     } 
-    // Verificar se estamos dentro do período da competição (até 23:59:59 do dia final)
+    // Verificar se estamos dentro do período da competição
     else if (now >= start && now <= end) {
       console.log('✅ Competição está ATIVA');
       return 'active';

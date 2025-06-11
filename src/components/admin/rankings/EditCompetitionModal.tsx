@@ -67,11 +67,16 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     setIsLoading(true);
 
     try {
-      const startDateWithTime = new Date(formData.startDate);
-      startDateWithTime.setHours(0, 0, 0, 0);
-      
-      const endDateWithTime = new Date(formData.endDate);
-      endDateWithTime.setHours(23, 59, 59, 999);
+      // Criar datas em UTC para evitar problemas de fuso horário
+      const startDateWithTime = new Date(formData.startDate + 'T00:00:00.000Z');
+      const endDateWithTime = new Date(formData.endDate + 'T23:59:59.999Z');
+
+      console.log('📅 Processando datas no modal:', {
+        startDateInput: formData.startDate,
+        endDateInput: formData.endDate,
+        startDateProcessed: startDateWithTime.toISOString(),
+        endDateProcessed: endDateWithTime.toISOString()
+      });
 
       // Calcular o status correto baseado nas novas datas
       const correctStatus = CompetitionStatusService.calculateCorrectStatus(
@@ -79,15 +84,19 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
         endDateWithTime.toISOString()
       );
 
+      console.log('🔄 Status calculado para as novas datas:', correctStatus);
+
       const updateData = {
         title: formData.title,
         description: formData.description,
         start_date: startDateWithTime.toISOString(),
         end_date: endDateWithTime.toISOString(),
-        status: correctStatus, // Atualizar o status baseado nas novas datas
+        status: correctStatus,
         max_participants: 999999,
         competition_type: 'tournament'
       };
+
+      console.log('📤 Dados que serão enviados para atualização:', updateData);
 
       const response = await customCompetitionService.updateCompetition(competition.id, updateData);
 
@@ -154,7 +163,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                 required
               />
-              <p className="text-xs text-slate-500 mt-1">Horário: 00:00:00 (Brasília)</p>
+              <p className="text-xs text-slate-500 mt-1">Horário: 00:00:00 (UTC)</p>
             </div>
 
             <div>
@@ -166,7 +175,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                 required
               />
-              <p className="text-xs text-slate-500 mt-1">Horário: 23:59:59 (Brasília)</p>
+              <p className="text-xs text-slate-500 mt-1">Horário: 23:59:59 (UTC)</p>
             </div>
           </div>
 
