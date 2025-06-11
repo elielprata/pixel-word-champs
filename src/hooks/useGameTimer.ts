@@ -11,7 +11,7 @@ export const useGameTimer = (initialTime: number, isGameStarted: boolean) => {
     setTimeRemaining(initialTime);
   }, [initialTime]);
 
-  // Timer countdown
+  // Timer countdown - removido log repetitivo
   useEffect(() => {
     if (isGameStarted && timeRemaining > 0) {
       const timer = setInterval(() => {

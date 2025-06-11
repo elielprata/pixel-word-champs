@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { getBoardSize, type PlacedWord, validateBoardContainsWords } from '@/utils/boardUtils';
 import { useWordSelection } from './useWordSelection';
 import { useBoardGeneration } from './useBoardGeneration';
+import { logger } from '@/utils/logger';
 
 interface BoardData {
   board: string[][];
@@ -19,17 +20,17 @@ export const useBoard = (level: number) => {
     if (levelWords.length > 0 && !isLoading) {
       const size = getBoardSize(level);
       
-      console.log(`🎯 Gerando tabuleiro ${size}x${size} para nível ${level} com palavras:`, levelWords);
+      logger.log(`🎯 Gerando tabuleiro ${size}x${size} para nível ${level} com palavras:`, levelWords);
       
       // Validar que todas as palavras cabem no tabuleiro
       const invalidWords = levelWords.filter(word => word.length > size);
       if (invalidWords.length > 0) {
-        console.error(`❌ ERRO: Palavras muito grandes para o tabuleiro ${size}x${size}:`, invalidWords);
+        logger.error(`❌ ERRO: Palavras muito grandes para o tabuleiro ${size}x${size}:`, invalidWords);
         const validWords = levelWords.filter(word => word.length <= size);
         if (validWords.length > 0) {
           const newBoardData = generateBoard(size, validWords);
           setBoardData(newBoardData);
-          console.log(`🎲 Tabuleiro gerado com ${validWords.length} palavras válidas`);
+          logger.log(`🎲 Tabuleiro gerado com ${validWords.length} palavras válidas`);
         }
         return;
       }
@@ -41,11 +42,11 @@ export const useBoard = (level: number) => {
       // Validar que o tabuleiro contém todas as palavras solicitadas
       const isValid = validateBoardContainsWords(newBoardData.board, levelWords);
       if (!isValid) {
-        console.error(`❌ VALIDAÇÃO FALHOU: Tabuleiro não contém todas as palavras solicitadas!`);
-        console.log('📝 Palavras solicitadas:', levelWords);
-        console.log('📝 Palavras colocadas:', newBoardData.placedWords.map(pw => pw.word));
+        logger.error(`❌ VALIDAÇÃO FALHOU: Tabuleiro não contém todas as palavras solicitadas!`);
+        logger.log('📝 Palavras solicitadas:', levelWords);
+        logger.log('📝 Palavras colocadas:', newBoardData.placedWords.map(pw => pw.word));
       } else {
-        console.log(`✅ Validação OK: Tabuleiro contém todas as ${levelWords.length} palavras solicitadas`);
+        logger.log(`✅ Validação OK: Tabuleiro contém todas as ${levelWords.length} palavras solicitadas`);
       }
     }
   }, [level, levelWords, isLoading, generateBoard]);

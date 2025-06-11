@@ -48,48 +48,39 @@ export const useGamePointsConfig = () => {
   const getPointsForWord = (word: string): number => {
     const length = word.length;
     
-    logger.log(`🔢 Calculando pontos para palavra "${word}" (${length} letras)`);
+    // Removido log repetitivo - apenas calcula pontos sem logging
     
     // Verificar as faixas de pontuação do banco de dados
     if (length >= 3 && length <= 5 && config['points_per_3_to_5_letter_word']) {
-      logger.log(`✅ Palavra ${word} (${length} letras) = ${config['points_per_3_to_5_letter_word']} pontos (faixa 3-5)`);
       return config['points_per_3_to_5_letter_word'];
     }
     
     if (length >= 6 && length <= 8 && config['points_per_6_to_8_letter_word']) {
-      logger.log(`✅ Palavra ${word} (${length} letras) = ${config['points_per_6_to_8_letter_word']} pontos (faixa 6-8)`);
       return config['points_per_6_to_8_letter_word'];
     }
     
     if (length >= 8 && length <= 10 && config['points_per_8_to_10_letter_word']) {
-      logger.log(`✅ Palavra ${word} (${length} letras) = ${config['points_per_8_to_10_letter_word']} pontos (faixa 8-10)`);
       return config['points_per_8_to_10_letter_word'];
     }
     
     if (length >= 11 && length <= 20 && config['points_per_11_to_20_letter_word']) {
-      logger.log(`✅ Palavra ${word} (${length} letras) = ${config['points_per_11_to_20_letter_word']} pontos (faixa 11-20)`);
       return config['points_per_11_to_20_letter_word'];
     }
     
     // Fallback para valores padrão se não houver configuração específica
     if (length >= 3 && length <= 5) {
-      logger.log(`⚠️ Palavra ${word} (${length} letras) = 30 pontos (fallback 3-5)`);
       return 30;
     }
     if (length >= 6 && length <= 8) {
-      logger.log(`⚠️ Palavra ${word} (${length} letras) = 60 pontos (fallback 6-8)`);
       return 60;
     }
     if (length >= 9 && length <= 10) {
-      logger.log(`⚠️ Palavra ${word} (${length} letras) = 100 pontos (fallback 9-10)`);
       return 100;
     }
     if (length >= 11) {
-      logger.log(`⚠️ Palavra ${word} (${length} letras) = 150 pontos (fallback 11+)`);
       return 150;
     }
     
-    logger.log(`❌ Palavra ${word} (${length} letras) = 0 pontos (inválida)`);
     return 0;
   };
 
