@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,7 +52,7 @@ export const DailyCompetitionsManagement = () => {
     const date = new Date(dateString);
     const endOfDay = createBrasiliaEndOfDay(date);
     
-    console.log('📅 Ajustando fim do dia (Brasília):', formatBrasiliaTime(endOfDay));
+    console.log('📅 Ajustando fim do dia (Brasília - 23:59:59.999):', formatBrasiliaTime(endOfDay));
     
     return endOfDay.toISOString();
   };
@@ -65,7 +64,7 @@ export const DailyCompetitionsManagement = () => {
     const date = new Date(dateString);
     const startOfDay = createBrasiliaStartOfDay(date);
     
-    console.log('📅 Ajustando início do dia (Brasília):', formatBrasiliaTime(startOfDay));
+    console.log('📅 Ajustando início do dia (Brasília - 00:00:00.000):', formatBrasiliaTime(startOfDay));
     
     return startOfDay.toISOString();
   };
@@ -126,19 +125,19 @@ export const DailyCompetitionsManagement = () => {
 
   const addCompetition = async () => {
     try {
-      // SEMPRE garantir que termine às 23:59:59.999 do mesmo dia
+      // SEMPRE garantir padrão: 00:00:00 às 23:59:59 do mesmo dia
       const adjustedCompetition = {
         ...newCompetition,
         start_date: ensureStartOfDay(newCompetition.start_date),
         end_date: ensureEndOfDay(newCompetition.start_date), // Usar start_date para garantir mesmo dia
         competition_type: 'challenge',
-        status: 'active', // Ativar automaticamente
+        status: 'scheduled', // Deixar que o sistema calcule o status correto baseado no horário
         max_participants: 0 // Participação livre - sem limite
       };
 
-      console.log('🎯 Criando competição diária com participação LIVRE:', {
-        start: adjustedCompetition.start_date,
-        end: adjustedCompetition.end_date,
+      console.log('🎯 Criando competição diária com PADRÃO OBRIGATÓRIO (00:00:00 às 23:59:59):', {
+        start: formatBrasiliaTime(new Date(adjustedCompetition.start_date)),
+        end: formatBrasiliaTime(new Date(adjustedCompetition.end_date)),
         max_participants: 'ILIMITADO'
       });
 
@@ -150,7 +149,7 @@ export const DailyCompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição diária criada com PARTICIPAÇÃO LIVRE (00:00:00 às 23:59:59)"
+        description: "Competição diária criada (PADRÃO: 00:00:00 às 23:59:59 com participação livre)"
       });
 
       setNewCompetition({
@@ -176,7 +175,7 @@ export const DailyCompetitionsManagement = () => {
     if (!editingCompetition) return;
 
     try {
-      // Para competições diárias, SEMPRE garantir que seja o dia completo
+      // Para competições diárias, SEMPRE garantir padrão obrigatório
       const updateData = {
         title: editingCompetition.title,
         description: editingCompetition.description,
@@ -184,12 +183,12 @@ export const DailyCompetitionsManagement = () => {
         start_date: ensureStartOfDay(editingCompetition.start_date),
         end_date: ensureEndOfDay(editingCompetition.start_date), // Garantir 23:59:59 do mesmo dia
         max_participants: 0, // Forçar participação livre
-        status: editingCompetition.status
+        status: 'scheduled' // Deixar que o sistema calcule automaticamente
       };
 
-      console.log('🔧 Atualizando competição diária com PARTICIPAÇÃO LIVRE:', {
-        start: updateData.start_date,
-        end: updateData.end_date,
+      console.log('🔧 Atualizando competição diária com PADRÃO OBRIGATÓRIO (00:00:00 às 23:59:59):', {
+        start: formatBrasiliaTime(new Date(updateData.start_date)),
+        end: formatBrasiliaTime(new Date(updateData.end_date)),
         max_participants: 'ILIMITADO'
       });
 
@@ -202,7 +201,7 @@ export const DailyCompetitionsManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Competição diária atualizada (PARTICIPAÇÃO LIVRE: 00:00:00 às 23:59:59)"
+        description: "Competição diária atualizada (PADRÃO: 00:00:00 às 23:59:59 com participação livre)"
       });
 
       setEditingCompetition(null);
