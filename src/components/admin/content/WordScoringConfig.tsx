@@ -110,7 +110,7 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving }: WordSc
       setNewWordSize('');
       setNewPoints('');
       
-      // Recarregar a página para mostrar a nova configuração
+      // Forçar recarregamento das configurações
       window.location.reload();
     } catch (error) {
       toast({
@@ -135,7 +135,7 @@ export const WordScoringConfig = ({ settings, onUpdate, onSave, saving }: WordSc
         description: "Configuração removida com sucesso"
       });
 
-      // Recarregar a página para remover a configuração
+      // Forçar recarregamento das configurações
       window.location.reload();
     } catch (error) {
       toast({
