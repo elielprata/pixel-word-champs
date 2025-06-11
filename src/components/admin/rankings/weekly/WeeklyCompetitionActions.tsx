@@ -40,26 +40,29 @@ export const WeeklyCompetitionActions = ({
   const handleViewRanking = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🏆 Clicando em Ver Ranking para competição:', competition.id);
+    console.log('🏆 WeeklyActions: Clicando em Ver Ranking para competição:', competition.id);
     onViewRanking(competition);
+    console.log('🏆 WeeklyActions: onViewRanking executado');
   };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('✏️ Clicando em Editar para competição:', competition.id);
+    console.log('✏️ WeeklyActions: Clicando em Editar para competição:', competition.id);
     onEdit(competition);
+    console.log('✏️ WeeklyActions: onEdit executado');
   };
 
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🗑️ Clicando em Excluir para competição:', competition.id);
+    console.log('🗑️ WeeklyActions: Clicando em Excluir para competição:', competition.id);
     onDelete(competition);
+    console.log('🗑️ WeeklyActions: onDelete executado');
   };
 
   return (
-    <div className={`flex gap-2 ${className}`}>
+    <div className={`flex gap-2 ml-4 ${className}`}>
       <Button
         variant="outline"
         size="sm"

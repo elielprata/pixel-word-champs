@@ -1,10 +1,8 @@
 
 import React from 'react';
-import { Trophy } from 'lucide-react';
-import { ActiveCompetitionCard } from './ActiveCompetitionCard';
+import { Calendar } from 'lucide-react';
 import { WeeklyCompetitionCard } from './WeeklyCompetitionCard';
 import { useWeeklyCompetitionsLogic } from '@/hooks/useWeeklyCompetitionsLogic';
-import { useWeeklyCompetitionsActions } from '@/hooks/useWeeklyCompetitionsActions';
 
 interface WeeklyCompetition {
   id: string;
@@ -21,61 +19,51 @@ interface WeeklyCompetition {
 interface WeeklyCompetitionsContainerProps {
   competitions: WeeklyCompetition[];
   onRefresh?: () => void;
+  onViewRanking: (competition: WeeklyCompetition) => void;
+  onEdit: (competition: WeeklyCompetition) => void;
+  onDelete: (competition: WeeklyCompetition) => void;
+  deletingId: string | null;
 }
 
 export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerProps> = ({
   competitions,
-  onRefresh
+  onRefresh,
+  onViewRanking,
+  onEdit,
+  onDelete,
+  deletingId
 }) => {
-  const {
-    currentActiveCompetition,
-    otherActiveCompetitions,
-    deletingId,
-    handleDelete
-  } = useWeeklyCompetitionsLogic(competitions);
+  const { activeCompetitions } = useWeeklyCompetitionsLogic(competitions);
 
-  const {
-    handleViewRanking,
-    handleEdit
-  } = useWeeklyCompetitionsActions();
-
-  const onDeleteCompetition = (competition: WeeklyCompetition) => {
-    handleDelete(competition, onRefresh);
-  };
+  console.log('🏢 WeeklyContainer: Recebendo props para ações:', {
+    activeCompetitions: activeCompetitions.length,
+    hasOnEdit: !!onEdit,
+    hasOnDelete: !!onDelete,
+    hasOnViewRanking: !!onViewRanking,
+    deletingId
+  });
 
   return (
-    <>
-      {currentActiveCompetition && (
-        <ActiveCompetitionCard
-          competition={currentActiveCompetition}
-          onViewRanking={handleViewRanking}
-          onEdit={handleEdit}
-          onDelete={onDeleteCompetition}
-          deletingId={deletingId}
-        />
-      )}
-
-      {otherActiveCompetitions.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-purple-600" />
-            {currentActiveCompetition ? 'Outras Competições Semanais' : 'Competições Semanais Aguardando Início'}
-          </h3>
-          
-          <div className="grid gap-4">
-            {otherActiveCompetitions.map((competition) => (
-              <WeeklyCompetitionCard
-                key={competition.id}
-                competition={competition}
-                onViewRanking={handleViewRanking}
-                onEdit={handleEdit}
-                onDelete={onDeleteCompetition}
-                deletingId={deletingId}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </>
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+          <Calendar className="h-5 w-5 text-purple-600" />
+          Competições Semanais Ativas ({activeCompetitions.length})
+        </h3>
+      </div>
+      
+      <div className="grid gap-4">
+        {activeCompetitions.map((competition) => (
+          <WeeklyCompetitionCard
+            key={competition.id}
+            competition={competition}
+            onViewRanking={onViewRanking}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            deletingId={deletingId}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
