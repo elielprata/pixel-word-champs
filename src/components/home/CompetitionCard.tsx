@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -208,9 +207,9 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
               {competition.title}
             </h3>
 
-            {/* Descrição temática */}
+            {/* Descrição da competição */}
             <p className="text-xs text-slate-600 italic leading-tight">
-              {categoryDescription}
+              {competition.description}
             </p>
           </div>
 
