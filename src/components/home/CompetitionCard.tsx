@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -201,20 +202,24 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
       
       <CardContent className="relative p-2.5 h-full flex flex-col justify-between gap-1">
         {/* Header section */}
-        <div className="flex justify-between items-start gap-2">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-800 text-sm leading-tight truncate mb-1">
-              {competition.title}
-            </h3>
+        <div className="flex justify-between items-start gap-3">
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <div>
+              <h3 className="font-bold text-slate-800 text-sm leading-tight mb-0.5">
+                {competition.title}
+              </h3>
+              <div className="w-8 h-0.5 bg-gradient-to-r from-purple-500 to-transparent rounded-full"></div>
+            </div>
 
-            {/* Descrição da competição */}
-            <p className="text-xs text-slate-600 italic leading-tight">
-              {competition.description}
-            </p>
+            <div className="bg-white/70 backdrop-blur-sm rounded-md px-2 py-1 border border-slate-200/50">
+              <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                {competition.description}
+              </p>
+            </div>
           </div>
 
           {/* Timer com círculo progressivo */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-1 flex-shrink-0">
             <div className={`relative w-12 h-12 rounded-full ${getUrgencyColor(timeProgress)} flex items-center justify-center shadow-sm`}>
               {/* Círculo de progresso */}
               <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 36 36">
