@@ -87,6 +87,14 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
     }
   }, [open, competitionId]);
 
+  // Verificar se a competição está ativa
+  const isCompetitionActive = (startDate: string, endDate: string): boolean => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return now >= start && now <= end;
+  };
+
   const loadCompetitionData = async () => {
     if (!competitionId) return;
 
@@ -108,6 +116,42 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
 
       console.log('✅ Competição carregada:', competitionData);
 
+      // Verificar se a competição está ativa
+      const isActive = isCompetitionActive(competitionData.start_date, competitionData.end_date);
+      
+      if (!isActive) {
+        console.log('⏳ Competição não está ativa, não carregando ranking');
+        
+        const competitionInfo: CompetitionInfo = {
+          id: competitionData.id,
+          title: competitionData.title,
+          description: competitionData.description || '',
+          start_date: competitionData.start_date,
+          end_date: competitionData.end_date,
+          status: competitionData.status,
+          theme: competitionData.theme,
+          max_participants: competitionData.max_participants || 0,
+          prize_pool: Number(competitionData.prize_pool) || 0,
+          total_participants: 0
+        };
+
+        setCompetition(competitionInfo);
+        setRanking([]);
+        
+        // Buscar configurações de prêmio mesmo se não ativa
+        const { data: prizeData, error: prizeError } = await supabase
+          .from('prize_configurations')
+          .select('*')
+          .eq('active', true)
+          .order('position', { ascending: true });
+
+        if (!prizeError) {
+          setPrizeConfigs(prizeData || []);
+        }
+
+        return;
+      }
+
       // Buscar configurações de prêmio do banco de dados
       const { data: prizeData, error: prizeError } = await supabase
         .from('prize_configurations')
@@ -123,16 +167,25 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       console.log('💰 Configurações de prêmio carregadas:', prizeData);
       setPrizeConfigs(prizeData || []);
 
-      // Buscar ranking semanal diretamente dos perfis (mesma lógica da home page)
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url, total_score')
-        .gt('total_score', 0)
-        .order('total_score', { ascending: false });
+      // Buscar ranking específico da competição ativa
+      const { data: participationData, error: participationError } = await supabase
+        .from('competition_participations')
+        .select(`
+          user_id,
+          user_score,
+          user_position,
+          created_at,
+          profiles!inner (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('competition_id', competitionId)
+        .order('user_score', { ascending: false });
 
-      if (profilesError) {
-        console.error('❌ Erro ao carregar ranking:', profilesError);
-        throw profilesError;
+      if (participationError) {
+        console.error('❌ Erro ao carregar ranking da competição:', participationError);
+        throw participationError;
       }
 
       const competitionInfo: CompetitionInfo = {
@@ -145,24 +198,24 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
         theme: competitionData.theme,
         max_participants: competitionData.max_participants || 0,
         prize_pool: Number(competitionData.prize_pool) || 0,
-        total_participants: profilesData?.length || 0
+        total_participants: participationData?.length || 0
       };
 
       setCompetition(competitionInfo);
 
-      // Mapear dados dos perfis para o formato do ranking
-      const rankingParticipants: RankingParticipant[] = (profilesData || []).map((profile, index) => ({
-        user_position: index + 1,
-        user_score: profile.total_score || 0,
-        user_id: profile.id || '',
-        created_at: new Date().toISOString(),
+      // Mapear dados das participações para o formato do ranking
+      const rankingParticipants: RankingParticipant[] = (participationData || []).map((participation, index) => ({
+        user_position: index + 1, // Recalcular posição baseada na ordenação
+        user_score: participation.user_score || 0,
+        user_id: participation.user_id || '',
+        created_at: participation.created_at || new Date().toISOString(),
         profiles: {
-          username: profile.username || 'Usuário',
-          avatar_url: profile.avatar_url
+          username: participation.profiles?.username || 'Usuário',
+          avatar_url: participation.profiles?.avatar_url
         }
       }));
 
-      console.log('📊 Ranking carregado:', rankingParticipants.length, 'participantes');
+      console.log('📊 Ranking da competição carregado:', rankingParticipants.length, 'participantes');
       setRanking(rankingParticipants);
 
     } catch (error) {
@@ -269,12 +322,12 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
                     </div>
                     <div className="text-right">
                       <Badge className={
-                        competition.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' :
-                        competition.status === 'completed' ? 'bg-purple-100 text-purple-700 border-purple-200' :
-                        'bg-blue-100 text-blue-700 border-blue-200'
+                        isCompetitionActive(competition.start_date, competition.end_date) ? 'bg-green-100 text-green-700 border-green-200' :
+                        new Date() < new Date(competition.start_date) ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                        'bg-purple-100 text-purple-700 border-purple-200'
                       }>
-                        {competition.status === 'active' ? 'Ativo' : 
-                         competition.status === 'completed' ? 'Finalizado' : 'Agendado'}
+                        {isCompetitionActive(competition.start_date, competition.end_date) ? 'Ativo' : 
+                         new Date() < new Date(competition.start_date) ? 'Aguardando Início' : 'Finalizado'}
                       </Badge>
                     </div>
                   </div>
@@ -310,11 +363,25 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {ranking.length === 0 ? (
+                {!competition || !isCompetitionActive(competition.start_date, competition.end_date) ? (
+                  <div className="text-center py-12 text-slate-500">
+                    <Trophy className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <p className="font-medium mb-2">
+                      {!competition ? 'Carregando competição...' : 
+                       new Date() < new Date(competition.start_date) ? 'Competição ainda não iniciou' : 
+                       'Competição finalizada'}
+                    </p>
+                    <p className="text-sm">
+                      {!competition ? 'Aguarde...' : 
+                       new Date() < new Date(competition.start_date) ? 'O ranking aparecerá quando a competição estiver ativa.' : 
+                       'Esta competição já foi finalizada.'}
+                    </p>
+                  </div>
+                ) : ranking.length === 0 ? (
                   <div className="text-center py-12 text-slate-500">
                     <Trophy className="h-12 w-12 mx-auto mb-4 text-slate-300" />
                     <p className="font-medium mb-2">Nenhum participante ainda</p>
-                    <p className="text-sm">Os participantes aparecerão aqui conforme participarem do torneio.</p>
+                    <p className="text-sm">Os participantes aparecerão aqui conforme participarem da competição.</p>
                   </div>
                 ) : (
                   <>
