@@ -46,6 +46,23 @@ export const ActiveCompetitionCard = ({
     return `${dateFormatted}, ${timeFormatted}`;
   };
 
+  // Calculate the actual status based on current date
+  const calculateActualStatus = () => {
+    const now = new Date();
+    const start = new Date(competition.start_date);
+    const end = new Date(competition.end_date);
+    
+    if (now < start) {
+      return 'scheduled';
+    } else if (now >= start && now <= end) {
+      return 'active';
+    } else {
+      return 'completed';
+    }
+  };
+
+  const actualStatus = calculateActualStatus();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-700 border-green-200';
@@ -70,11 +87,11 @@ export const ActiveCompetitionCard = ({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Crown className="h-5 w-5 text-green-600" />
-            Competição Ativa
+            {actualStatus === 'active' ? 'Competição Ativa' : 'Próxima Competição'}
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Badge className={getStatusColor(competition.status)}>
-              {getStatusText(competition.status)}
+            <Badge className={getStatusColor(actualStatus)}>
+              {getStatusText(actualStatus)}
             </Badge>
             <WeeklyCompetitionActions
               competition={competition}

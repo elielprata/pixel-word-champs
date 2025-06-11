@@ -46,18 +46,38 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string>('');
 
+  // Calculate the actual status for each competition based on current date
+  const calculateActualStatus = (competition: WeeklyCompetition) => {
+    const now = new Date();
+    const start = new Date(competition.start_date);
+    const end = new Date(competition.end_date);
+    
+    if (now < start) {
+      return 'scheduled';
+    } else if (now >= start && now <= end) {
+      return 'active';
+    } else {
+      return 'completed';
+    }
+  };
+
   // Filtrar apenas competições não finalizadas (ativas ou aguardando)
-  const activeCompetitions = competitions.filter(comp => 
-    comp.status === 'active' || comp.status === 'scheduled'
-  );
+  const activeCompetitions = competitions.filter(comp => {
+    const actualStatus = calculateActualStatus(comp);
+    return actualStatus === 'active' || actualStatus === 'scheduled';
+  });
 
   // Encontrar a competição realmente ativa (dentro do período)
-  const currentActiveCompetition = activeCompetitions.find(comp => comp.status === 'active');
+  const currentActiveCompetition = activeCompetitions.find(comp => {
+    const actualStatus = calculateActualStatus(comp);
+    return actualStatus === 'active';
+  });
 
   // Outras competições (aguardando início)
-  const otherActiveCompetitions = activeCompetitions.filter(comp => 
-    comp.status === 'scheduled' || (comp.status === 'active' && comp.id !== currentActiveCompetition?.id)
-  );
+  const otherActiveCompetitions = activeCompetitions.filter(comp => {
+    const actualStatus = calculateActualStatus(comp);
+    return actualStatus === 'scheduled' || (actualStatus === 'active' && comp.id !== currentActiveCompetition?.id);
+  });
 
   const handleViewRanking = (competition: WeeklyCompetition) => {
     console.log('👁️ Abrindo modal de ranking da competição semanal:', competition.id);
