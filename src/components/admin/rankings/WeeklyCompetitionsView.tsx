@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -46,12 +47,17 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string>('');
 
+  // Filtrar apenas competições que não estão finalizadas
   const activeCompetitions = competitions.filter(comp => 
     comp.status !== 'completed' && comp.status !== 'cancelled'
   );
 
+  // Encontrar a competição realmente ativa (status 'active')
+  const realActiveCompetition = activeCompetitions.find(comp => comp.status === 'active');
+
+  // Outras competições não finalizadas (agendadas ou em rascunho)
   const otherActiveCompetitions = activeCompetitions.filter(comp => 
-    !activeCompetition || comp.id !== activeCompetition.id
+    comp.status !== 'active'
   );
 
   const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
@@ -80,7 +86,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active': return 'Ativo';
-      case 'scheduled': return 'Agendado';
+      case 'scheduled': return 'Aguardando';
       case 'completed': return 'Finalizado';
       default: return 'Rascunho';
     }
@@ -184,7 +190,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         </div>
       </div>
 
-      {activeCompetition && activeCompetition.status !== 'completed' && (
+      {realActiveCompetition && (
         <Card className="border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -193,14 +199,14 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                 Competição Ativa
               </CardTitle>
               <div className="flex items-center gap-2">
-                <Badge className={getStatusColor(activeCompetition.status)}>
-                  {getStatusText(activeCompetition.status)}
+                <Badge className={getStatusColor(realActiveCompetition.status)}>
+                  {getStatusText(realActiveCompetition.status)}
                 </Badge>
                 <div className="flex gap-1">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleViewRanking(activeCompetition)}
+                    onClick={() => handleViewRanking(realActiveCompetition)}
                     className="h-8 w-8 p-0 hover:bg-green-50"
                     title="Ver ranking"
                   >
@@ -209,7 +215,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleEdit(activeCompetition)}
+                    onClick={() => handleEdit(realActiveCompetition)}
                     className="h-8 w-8 p-0 hover:bg-blue-50"
                   >
                     <Edit className="h-3 w-3" />
@@ -217,11 +223,11 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDelete(activeCompetition)}
-                    disabled={deletingId === activeCompetition.id}
+                    onClick={() => handleDelete(realActiveCompetition)}
+                    disabled={deletingId === realActiveCompetition.id}
                     className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
                   >
-                    {deletingId === activeCompetition.id ? (
+                    {deletingId === realActiveCompetition.id ? (
                       <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
                     ) : (
                       <Trash2 className="h-3 w-3" />
@@ -234,8 +240,8 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-lg text-green-800">{activeCompetition.title}</h3>
-                <p className="text-green-700 text-sm">{activeCompetition.description}</p>
+                <h3 className="font-semibold text-lg text-green-800">{realActiveCompetition.title}</h3>
+                <p className="text-green-700 text-sm">{realActiveCompetition.description}</p>
               </div>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -243,7 +249,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   <Calendar className="h-4 w-4 text-green-600" />
                   <div>
                     <p className="font-medium">Início</p>
-                    <p className="text-green-700">{formatDateTime(activeCompetition.start_date, false)}</p>
+                    <p className="text-green-700">{formatDateTime(realActiveCompetition.start_date, false)}</p>
                   </div>
                 </div>
                 
@@ -251,7 +257,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   <Clock className="h-4 w-4 text-green-600" />
                   <div>
                     <p className="font-medium">Fim</p>
-                    <p className="text-green-700">{formatDateTime(activeCompetition.end_date, true)}</p>
+                    <p className="text-green-700">{formatDateTime(realActiveCompetition.end_date, true)}</p>
                   </div>
                 </div>
                 
@@ -259,7 +265,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
                   <Trophy className="h-4 w-4 text-green-600" />
                   <div>
                     <p className="font-medium">Prêmio</p>
-                    <p className="text-green-700 font-semibold">R$ {activeCompetition.prize_pool.toFixed(2)}</p>
+                    <p className="text-green-700 font-semibold">R$ {realActiveCompetition.prize_pool.toFixed(2)}</p>
                   </div>
                 </div>
                 
@@ -280,7 +286,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         <div>
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Trophy className="h-5 w-5 text-purple-600" />
-            Outras Competições Semanais Ativas
+            Outras Competições Semanais
           </h3>
           
           <div className="grid gap-4">
