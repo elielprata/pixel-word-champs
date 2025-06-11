@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { competitionHistoryService } from './competitionHistoryService';
+import { dynamicPrizeService } from './dynamicPrizeService';
 
 class WeeklyCompetitionFinalizationService {
   async finalizeWeeklyCompetition(competitionId: string): Promise<void> {
@@ -42,54 +43,59 @@ class WeeklyCompetitionFinalizationService {
 
       console.log(`📊 Finalizando competição com ${participations.length} participantes`);
 
-      // 3. Calcular prêmios baseado nas posições
-      const participationsWithPrizes = participations.map((participation, index) => {
-        const position = index + 1;
-        let prize = 0;
+      // 3. Calcular prêmios dinamicamente baseado nas configurações
+      const participantsData = participations.map(p => ({
+        user_id: p.user_id,
+        user_score: p.user_score || 0
+      }));
 
-        // Distribuição de prêmios padrão
-        if (position === 1) prize = 100;
-        else if (position === 2) prize = 50;
-        else if (position === 3) prize = 25;
-        else if (position <= 10) prize = 10;
+      const participantsWithPrizes = await dynamicPrizeService.calculateDynamicPrizes(participantsData);
 
+      console.log('🎯 Prêmios calculados dinamicamente:', {
+        totalParticipants: participantsWithPrizes.length,
+        winnersCount: participantsWithPrizes.filter(p => p.prize > 0).length,
+        totalPrizePool: participantsWithPrizes.reduce((sum, p) => sum + p.prize, 0)
+      });
+
+      // 4. Mapear dados para o histórico
+      const historyData = participantsWithPrizes.map(participant => {
+        const originalParticipation = participations.find(p => p.user_id === participant.user_id);
+        
         return {
-          ...participation,
-          final_position: position,
-          prize_earned: prize
+          competitionId: competition.id,
+          competitionTitle: competition.title,
+          competitionType: competition.competition_type,
+          userId: participant.user_id,
+          finalScore: participant.score,
+          finalPosition: participant.position,
+          totalParticipants: participations.length,
+          prizeEarned: participant.prize,
+          competitionStartDate: competition.start_date,
+          competitionEndDate: competition.end_date
         };
       });
 
-      // 4. Salvar no histórico da competição
-      const historyData = participationsWithPrizes.map(participation => ({
-        competitionId: competition.id,
-        competitionTitle: competition.title,
-        competitionType: competition.competition_type,
-        userId: participation.user_id,
-        finalScore: participation.user_score || 0,
-        finalPosition: participation.final_position,
-        totalParticipants: participations.length,
-        prizeEarned: participation.prize_earned,
-        competitionStartDate: competition.start_date,
-        competitionEndDate: competition.end_date
-      }));
-
+      // 5. Salvar no histórico da competição
       await competitionHistoryService.saveCompetitionHistory(historyData);
 
-      // 5. Atualizar prêmios nas participações atuais
-      for (const participation of participationsWithPrizes) {
-        if (participation.prize_earned > 0) {
-          await supabase
-            .from('competition_participations')
-            .update({ 
-              prize: participation.prize_earned,
-              user_position: participation.final_position
-            })
-            .eq('id', participation.id);
+      // 6. Atualizar prêmios nas participações atuais
+      for (const participant of participantsWithPrizes) {
+        if (participant.prize > 0) {
+          const originalParticipation = participations.find(p => p.user_id === participant.user_id);
+          
+          if (originalParticipation) {
+            await supabase
+              .from('competition_participations')
+              .update({ 
+                prize: participant.prize,
+                user_position: participant.position
+              })
+              .eq('id', originalParticipation.id);
+          }
         }
       }
 
-      // 6. Zerar pontuações de todos os participantes para próxima competição
+      // 7. Zerar pontuações de todos os participantes para próxima competição
       console.log('🔄 Zerando pontuações dos participantes...');
       
       const userIds = participations.map(p => p.user_id);
@@ -106,7 +112,7 @@ class WeeklyCompetitionFinalizationService {
         console.log('✅ Pontuações dos participantes zeradas com sucesso');
       }
 
-      // 7. Marcar competição como finalizada
+      // 8. Marcar competição como finalizada
       await supabase
         .from('custom_competitions')
         .update({ 
@@ -117,6 +123,8 @@ class WeeklyCompetitionFinalizationService {
 
       console.log('✅ Competição semanal finalizada com sucesso');
       console.log(`📈 Histórico salvo para ${participations.length} participantes`);
+      console.log(`💰 Total de prêmios distribuídos: R$ ${participantsWithPrizes.reduce((sum, p) => sum + p.prize, 0)}`);
+      console.log(`🏆 Ganhadores: ${participantsWithPrizes.filter(p => p.prize > 0).length}`);
       console.log('🔄 Participantes prontos para nova competição');
 
     } catch (error) {
