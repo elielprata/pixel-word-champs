@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
@@ -208,16 +207,6 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
             <h3 className="font-bold text-slate-800 text-sm leading-tight truncate mb-1">
               {competition.title}
             </h3>
-            
-            {/* Categoria com mini-preview visual */}
-            {competition.theme && (
-              <div className="flex items-center gap-2 mb-1">
-                <Badge className={`bg-gradient-to-r ${theme.gradient.replace('from-', 'from-').replace('via-', 'to-').split(' to-')[0]} to-${theme.decorativeElements.primary.replace('bg-', '')} text-white border-0 text-xs px-2 py-0.5 shadow-md flex items-center gap-1`}>
-                  <span className="text-xs">{categoryEmoji}</span>
-                  <span className="font-medium">{competition.theme}</span>
-                </Badge>
-              </div>
-            )}
 
             {/* Descrição temática */}
             <p className="text-xs text-slate-600 italic leading-tight">
