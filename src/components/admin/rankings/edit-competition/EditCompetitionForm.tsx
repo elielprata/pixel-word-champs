@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
-import { CompetitionStatusService } from '@/services/competitionStatusService';
 import { CompetitionEditActions } from './CompetitionEditActions';
 
-interface WeeklyCompetition {
+interface BaseCompetition {
   id: string;
   title: string;
   description: string;
@@ -18,10 +19,12 @@ interface WeeklyCompetition {
   max_participants: number;
   total_participants: number;
   competition_type?: string;
+  theme?: string;
+  rules?: any;
 }
 
 interface EditCompetitionFormProps {
-  competition: WeeklyCompetition | null;
+  competition: BaseCompetition | null;
   onClose: () => void;
   onCompetitionUpdated?: () => void;
 }
@@ -36,23 +39,32 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    startDate: '',
-    endDate: ''
+    theme: '',
+    start_date: '',
+    end_date: '',
+    prize_pool: 0,
+    max_participants: 0
   });
 
   useEffect(() => {
     if (competition) {
-      const startDate = new Date(competition.start_date);
-      const endDate = new Date(competition.end_date);
-      
-      const startDateFormatted = startDate.toISOString().split('T')[0];
-      const endDateFormatted = endDate.toISOString().split('T')[0];
-      
+      console.log('📝 Carregando dados da competição para edição:', {
+        id: competition.id,
+        title: competition.title,
+        originalStartDate: competition.start_date,
+        originalEndDate: competition.end_date,
+        originalStatus: competition.status
+      });
+
       setFormData({
         title: competition.title,
-        description: competition.description,
-        startDate: startDateFormatted,
-        endDate: endDateFormatted
+        description: competition.description || '',
+        theme: competition.theme || '',
+        // IMPORTANTE: Preservar as datas exatas da competição original
+        start_date: competition.start_date,
+        end_date: competition.end_date,
+        prize_pool: competition.prize_pool || 0,
+        max_participants: competition.max_participants || 0
       });
     }
   }, [competition]);
@@ -62,122 +74,142 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
     if (!competition) return;
 
     setIsLoading(true);
-
+    
     try {
-      // Criar datas em UTC para evitar problemas de fuso horário
-      const startDateWithTime = new Date(formData.startDate + 'T00:00:00.000Z');
-      const endDateWithTime = new Date(formData.endDate + 'T23:59:59.999Z');
-
-      console.log('📅 Processando datas no modal:', {
-        startDateInput: formData.startDate,
-        endDateInput: formData.endDate,
-        startDateProcessed: startDateWithTime.toISOString(),
-        endDateProcessed: endDateWithTime.toISOString(),
-        competitionType: competition.competition_type
+      console.log('💾 Salvando alterações da competição:', {
+        id: competition.id,
+        preservedStartDate: formData.start_date,
+        preservedEndDate: formData.end_date,
+        newTitle: formData.title,
+        newDescription: formData.description
       });
 
-      // Calcular o status correto baseado nas novas datas
-      const correctStatus = CompetitionStatusService.calculateCorrectStatus({
-        start_date: startDateWithTime.toISOString(),
-        end_date: endDateWithTime.toISOString(),
-        competition_type: competition.competition_type || 'tournament'
-      });
-
-      console.log('🔄 Status calculado para as novas datas:', correctStatus);
+      // Determinar o tipo de competição
+      const competitionType = competition.theme ? 'challenge' : 
+                             competition.competition_type === 'challenge' ? 'challenge' : 'tournament';
 
       const updateData = {
         title: formData.title,
         description: formData.description,
-        start_date: startDateWithTime.toISOString(),
-        end_date: endDateWithTime.toISOString(),
-        status: correctStatus,
-        max_participants: 999999,
-        competition_type: competition.competition_type || 'tournament' // Preservar o tipo original
+        competition_type: competitionType,
+        // PRESERVAR as datas originais sem alteração
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        prize_pool: formData.prize_pool,
+        max_participants: formData.max_participants,
+        ...(competition.theme && { theme: formData.theme })
       };
-
-      console.log('📤 Dados que serão enviados para atualização:', updateData);
 
       const response = await customCompetitionService.updateCompetition(competition.id, updateData);
 
       if (response.success) {
         toast({
-          title: "Competição atualizada",
-          description: "As alterações foram salvas com sucesso.",
+          title: "Sucesso",
+          description: "Competição atualizada com sucesso"
         });
         
-        onClose();
         if (onCompetitionUpdated) {
           onCompetitionUpdated();
         }
+        onClose();
       } else {
         throw new Error(response.error || 'Erro ao atualizar competição');
       }
     } catch (error) {
-      console.error('Erro ao atualizar competição:', error);
+      console.error('❌ Erro ao atualizar competição:', error);
       toast({
-        title: "Erro ao atualizar",
-        description: error instanceof Error ? error.message : "Não foi possível atualizar a competição.",
-        variant: "destructive",
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Não foi possível atualizar a competição",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (!competition) return null;
+
+  // Determinar se é competição diária
+  const isDailyCompetition = competition.theme || competition.competition_type === 'challenge';
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="title">Título</Label>
-        <Input
-          id="title"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          required
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="description">Descrição</Label>
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          rows={3}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-3">
         <div>
-          <Label htmlFor="startDate">Data de Início</Label>
+          <Label htmlFor="title">Título</Label>
           <Input
-            id="startDate"
-            type="date"
-            value={formData.startDate}
-            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+            id="title"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             required
           />
-          <p className="text-xs text-slate-500 mt-1">Horário: 00:00:00 (UTC)</p>
         </div>
 
         <div>
-          <Label htmlFor="endDate">Data de Fim</Label>
-          <Input
-            id="endDate"
-            type="date"
-            value={formData.endDate}
-            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-            required
+          <Label htmlFor="description">Descrição</Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            rows={3}
           />
-          <p className="text-xs text-slate-500 mt-1">Horário: 23:59:59 (UTC)</p>
         </div>
+
+        {isDailyCompetition && (
+          <div>
+            <Label htmlFor="theme">Tema</Label>
+            <Input
+              id="theme"
+              value={formData.theme}
+              onChange={(e) => setFormData(prev => ({ ...prev, theme: e.target.value }))}
+              placeholder="Ex: Natureza, Tecnologia, Esportes..."
+            />
+          </div>
+        )}
+
+        {/* Exibir informações das datas como read-only para competições diárias */}
+        {isDailyCompetition && (
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <Label className="text-sm font-medium text-blue-800">Período da Competição</Label>
+            <div className="text-sm text-blue-700 mt-1">
+              <p>Data: {new Date(formData.start_date).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p>
+              <p>Horário: 00:00 às 23:59 (Horário de Brasília)</p>
+              <p className="text-xs text-blue-600 mt-1">
+                💡 As datas das competições diárias não podem ser alteradas durante a edição
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!isDailyCompetition && (
+          <>
+            <div>
+              <Label htmlFor="prize_pool">Premiação (R$)</Label>
+              <Input
+                id="prize_pool"
+                type="number"
+                value={formData.prize_pool}
+                onChange={(e) => setFormData(prev => ({ ...prev, prize_pool: Number(e.target.value) }))}
+                min="0"
+                step="0.01"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="max_participants">Máximo de Participantes</Label>
+              <Input
+                id="max_participants"
+                type="number"
+                value={formData.max_participants}
+                onChange={(e) => setFormData(prev => ({ ...prev, max_participants: Number(e.target.value) }))}
+                min="0"
+              />
+            </div>
+          </>
+        )}
       </div>
 
-      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-        <p className="text-sm font-medium text-green-700">Participação Livre</p>
-        <p className="text-xs text-green-600">Todos os usuários podem participar sem restrições</p>
-      </div>
-
-      <CompetitionEditActions 
+      <CompetitionEditActions
         isLoading={isLoading}
         onCancel={onClose}
       />

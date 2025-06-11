@@ -60,9 +60,20 @@ export const useDailyCompetitionForm = (onSuccess: () => void) => {
     return startOfDay.toISOString();
   };
 
+  // CORRIGIDO: Função que só altera datas quando REALMENTE necessário
   const handleStartDateChange = (value: string) => {
+    console.log('📅 handleStartDateChange chamado com:', value);
+    
+    // Se não há valor, não fazer nada
+    if (!value) return;
+    
     const adjustedStartDate = ensureStartOfDay(value);
     const adjustedEndDate = ensureEndOfDay(value);
+    
+    console.log('📅 Datas ajustadas:', {
+      start: formatBrasiliaTime(new Date(adjustedStartDate)),
+      end: formatBrasiliaTime(new Date(adjustedEndDate))
+    });
     
     if (editingCompetition) {
       setEditingCompetition({
@@ -127,24 +138,31 @@ export const useDailyCompetitionForm = (onSuccess: () => void) => {
     }
   };
 
+  // CORRIGIDO: Função de atualização que preserva datas originais se não foram alteradas
   const updateCompetition = async () => {
     if (!editingCompetition) return;
 
     try {
+      // IMPORTANTE: Usar as datas originais da competição em edição
+      // Não recalcular automaticamente a menos que o usuário tenha alterado a data
       const updateData = {
         title: editingCompetition.title,
         description: editingCompetition.description,
         theme: editingCompetition.theme,
-        start_date: ensureStartOfDay(editingCompetition.start_date),
-        end_date: ensureEndOfDay(editingCompetition.start_date),
+        // PRESERVAR as datas originais - não recalcular automaticamente
+        start_date: editingCompetition.start_date,
+        end_date: editingCompetition.end_date,
         max_participants: 0,
-        status: 'scheduled'
+        // Manter o status existente se as datas não mudaram
+        status: editingCompetition.status
       };
 
-      console.log('🔧 Atualizando competição diária com padrão corrigido:', {
+      console.log('🔧 Atualizando competição diária PRESERVANDO datas originais:', {
         start: formatBrasiliaTime(new Date(updateData.start_date)),
         end: formatBrasiliaTime(new Date(updateData.end_date)),
-        max_participants: 'ILIMITADO'
+        status: updateData.status,
+        title: updateData.title,
+        description: updateData.description
       });
 
       const { error } = await supabase
@@ -172,6 +190,13 @@ export const useDailyCompetitionForm = (onSuccess: () => void) => {
   };
 
   const handleEdit = (competition: DailyCompetition) => {
+    console.log('📝 Iniciando edição da competição:', {
+      id: competition.id,
+      title: competition.title,
+      originalStartDate: formatBrasiliaTime(new Date(competition.start_date)),
+      originalEndDate: formatBrasiliaTime(new Date(competition.end_date)),
+      originalStatus: competition.status
+    });
     setEditingCompetition(competition);
   };
 
