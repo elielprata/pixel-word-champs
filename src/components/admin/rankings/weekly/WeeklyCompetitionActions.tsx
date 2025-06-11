@@ -37,33 +37,57 @@ export const WeeklyCompetitionActions = ({
   const buttonSize = size === 'sm' ? 'h-8 w-8 p-0' : 'h-7 w-7 p-0';
   const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-3 w-3';
 
+  const handleViewRanking = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🏆 Clicando em Ver Ranking para competição:', competition.id);
+    onViewRanking(competition);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('✏️ Clicando em Editar para competição:', competition.id);
+    onEdit(competition);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🗑️ Clicando em Excluir para competição:', competition.id);
+    onDelete(competition);
+  };
+
   return (
     <div className={`flex gap-2 ${className}`}>
       <Button
         variant="outline"
         size="sm"
-        onClick={() => onViewRanking(competition)}
+        onClick={handleViewRanking}
         className={`${buttonSize} hover:bg-green-50`}
         title="Ver ranking"
+        type="button"
       >
         <Trophy className={iconSize} />
       </Button>
       <Button
         variant="outline"
         size="sm"
-        onClick={() => onEdit(competition)}
+        onClick={handleEdit}
         className={`${buttonSize} hover:bg-blue-50`}
         title="Editar competição"
+        type="button"
       >
         <Edit className={iconSize} />
       </Button>
       <Button
         variant="outline"
         size="sm"
-        onClick={() => onDelete(competition)}
+        onClick={handleDelete}
         disabled={deletingId === competition.id}
         className={`${buttonSize} hover:bg-red-50 hover:text-red-600`}
         title="Excluir competição"
+        type="button"
       >
         {deletingId === competition.id ? (
           <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
