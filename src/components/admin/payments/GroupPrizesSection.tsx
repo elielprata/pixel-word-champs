@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Users, Edit, Save, X, Download } from 'lucide-react';
+import { Users, Edit, Save, X } from 'lucide-react';
 import { GroupPrize } from '@/types/payment';
 
 interface GroupPrizesSectionProps {
@@ -17,7 +17,6 @@ interface GroupPrizesSectionProps {
   onSaveGroup: () => void;
   onToggleGroup: (groupId: string) => void;
   onCancel: () => void;
-  onExportPix: (prizeLevel: string) => void;
 }
 
 const formatCurrency = (value: number): string => {
@@ -37,8 +36,7 @@ export const GroupPrizesSection = ({
   onEditGroup,
   onSaveGroup,
   onToggleGroup,
-  onCancel,
-  onExportPix
+  onCancel
 }: GroupPrizesSectionProps) => {
   return (
     <Card className="shadow-sm border-slate-200">
@@ -129,27 +127,15 @@ export const GroupPrizesSection = ({
                         </Button>
                       </>
                     ) : (
-                      <>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => onEditGroup(group)}
-                          className="h-8 w-8 p-0"
-                          disabled={!group.active}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => onExportPix(group.name)}
-                          className="h-8 w-8 p-0 border-blue-200 text-blue-700 hover:bg-blue-50"
-                          disabled={!group.active}
-                          title="Exportar PIX"
-                        >
-                          <Download className="h-3 w-3" />
-                        </Button>
-                      </>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => onEditGroup(group)}
+                        className="h-8 w-8 p-0"
+                        disabled={!group.active}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
                     )}
                   </div>
                 </div>

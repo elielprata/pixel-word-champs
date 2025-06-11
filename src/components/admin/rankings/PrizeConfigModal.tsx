@@ -14,11 +14,6 @@ interface PrizeConfigModalProps {
 export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) => {
   const paymentData = usePaymentData();
 
-  const handleExportPix = (prizeLevel: string) => {
-    console.log('Exporting PIX for:', prizeLevel);
-    // TODO: Implement PIX export functionality
-  };
-
   if (paymentData.isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -71,7 +66,6 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
             onSaveGroup={paymentData.handleSaveGroup}
             onToggleGroup={paymentData.handleToggleGroup}
             onCancel={paymentData.handleCancel}
-            onExportPix={handleExportPix}
           />
         </div>
       </DialogContent>
