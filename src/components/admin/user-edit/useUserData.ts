@@ -19,8 +19,6 @@ export const useUserData = (userId: string, isOpen: boolean) => {
         throw rolesError;
       }
 
-      console.log('📋 Roles encontrados:', rolesData);
-
       // Buscar dados do perfil
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -32,34 +30,36 @@ export const useUserData = (userId: string, isOpen: boolean) => {
         console.error('❌ Erro ao buscar perfil:', profileError);
       }
 
-      // Determinar email final
+      // Buscar email real usando a função do banco
       let finalEmail = 'Email não disponível';
-      
       try {
-        // Tentar buscar através do auth se for o usuário atual
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const { data: usersData, error: usersError } = await supabase.rpc('get_users_with_real_emails');
         
-        if (user && user.id === userId && user.email) {
-          finalEmail = user.email;
-        } else {
-          // Fallback: usar username como base
-          if (profileData?.username) {
+        if (!usersError && usersData) {
+          const userData = usersData.find(user => user.id === userId);
+          if (userData && userData.email) {
+            finalEmail = userData.email;
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Erro ao buscar email real:', error);
+        
+        // Fallback: tentar buscar através do auth se for o usuário atual
+        try {
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          
+          if (user && user.id === userId && user.email) {
+            finalEmail = user.email;
+          } else if (profileData?.username) {
+            // Último fallback: usar username como base
             if (profileData.username.includes('@')) {
               finalEmail = profileData.username;
             } else {
               finalEmail = `${profileData.username}@sistema.local`;
             }
           }
-        }
-      } catch (error) {
-        console.log('⚠️ Erro ao determinar email:', error);
-        // Usar fallback baseado no username
-        if (profileData?.username) {
-          if (profileData.username.includes('@')) {
-            finalEmail = profileData.username;
-          } else {
-            finalEmail = `${profileData.username}@sistema.local`;
-          }
+        } catch (fallbackError) {
+          console.log('⚠️ Erro no fallback:', fallbackError);
         }
       }
 

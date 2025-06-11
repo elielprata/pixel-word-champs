@@ -940,6 +940,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_users_with_real_emails: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          username: string
+          email: string
+          total_score: number
+          games_played: number
+          is_banned: boolean
+          banned_at: string
+          banned_by: string
+          ban_reason: string
+          created_at: string
+          roles: string[]
+        }[]
+      }
       has_role: {
         Args: {
           _user_id: string

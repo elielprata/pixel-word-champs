@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface AllUsersData {
   id: string;
   username: string;
-  email?: string;
+  email: string;
   total_score: number;
   games_played: number;
   is_banned: boolean;
@@ -20,76 +20,37 @@ export const useUsersQuery = () => {
   return useQuery({
     queryKey: ['allUsers'],
     queryFn: async (): Promise<AllUsersData[]> => {
-      console.log('🔍 Buscando todos os usuários...');
+      console.log('🔍 Buscando todos os usuários com emails reais...');
       
-      // Buscar profiles com dados básicos
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Usar a nova função que retorna emails reais
+      const { data, error } = await supabase.rpc('get_users_with_real_emails');
 
-      if (profilesError) {
-        console.error('❌ Erro ao buscar profiles:', profilesError);
-        throw profilesError;
+      if (error) {
+        console.error('❌ Erro ao buscar usuários:', error);
+        throw error;
       }
 
-      if (!profiles || profiles.length === 0) {
+      if (!data || data.length === 0) {
         return [];
       }
 
-      // Buscar roles para todos os usuários
-      const userIds = profiles.map(p => p.id);
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', userIds);
-
-      if (rolesError) {
-        console.warn('⚠️ Erro ao buscar roles:', rolesError);
-      }
-
-      // Buscar o usuário atual para comparação
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-
-      // Mapear dados
-      const users: AllUsersData[] = profiles.map(profile => {
-        const userRoles = roles?.filter(r => r.user_id === profile.id).map(r => r.role) || ['user'];
-        
-        // Determinar email
-        let email = 'Email não disponível';
-        
-        // Se for o usuário atual logado, usar o email real
-        if (currentUser && currentUser.id === profile.id) {
-          email = currentUser.email || 'Email não disponível';
-        }
-        // Fallback inteligente baseado no username
-        else {
-          if (profile.username) {
-            if (profile.username.includes('@')) {
-              email = profile.username;
-            } else {
-              email = `${profile.username}@sistema.local`;
-            }
-          }
-        }
-        
-        return {
-          id: profile.id,
-          username: profile.username || 'Usuário',
-          email: email,
-          total_score: profile.total_score || 0,
-          games_played: profile.games_played || 0,
-          is_banned: profile.is_banned || false,
-          banned_at: profile.banned_at,
-          banned_by: profile.banned_by,
-          ban_reason: profile.ban_reason,
-          created_at: profile.created_at,
-          roles: userRoles
-        };
-      });
+      // Converter os dados para o formato esperado
+      const users: AllUsersData[] = data.map(user => ({
+        id: user.id,
+        username: user.username || 'Usuário',
+        email: user.email, // Agora vem diretamente da função com o email real
+        total_score: user.total_score || 0,
+        games_played: user.games_played || 0,
+        is_banned: user.is_banned || false,
+        banned_at: user.banned_at,
+        banned_by: user.banned_by,
+        ban_reason: user.ban_reason,
+        created_at: user.created_at,
+        roles: user.roles || ['user']
+      }));
 
       console.log('👥 Total de usuários encontrados:', users.length);
-      console.log('📧 Exemplo de emails processados:', users.slice(0, 2).map(u => ({ username: u.username, email: u.email })));
+      console.log('📧 Exemplos de emails processados:', users.slice(0, 2).map(u => ({ username: u.username, email: u.email })));
       
       return users;
     },
