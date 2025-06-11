@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -167,26 +166,59 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       console.log('💰 Configurações de prêmio carregadas:', prizeData);
       setPrizeConfigs(prizeData || []);
 
-      // Buscar ranking específico da competição ativa
+      // Buscar participações da competição
       const { data: participationData, error: participationError } = await supabase
         .from('competition_participations')
-        .select(`
-          user_id,
-          user_score,
-          user_position,
-          created_at,
-          profiles!inner (
-            username,
-            avatar_url
-          )
-        `)
+        .select('user_id, user_score, user_position, created_at')
         .eq('competition_id', competitionId)
         .order('user_score', { ascending: false });
 
       if (participationError) {
-        console.error('❌ Erro ao carregar ranking da competição:', participationError);
+        console.error('❌ Erro ao carregar participações da competição:', participationError);
         throw participationError;
       }
+
+      console.log('📊 Participações carregadas:', participationData?.length || 0);
+
+      // Se não há participações, definir competição sem ranking
+      if (!participationData || participationData.length === 0) {
+        const competitionInfo: CompetitionInfo = {
+          id: competitionData.id,
+          title: competitionData.title,
+          description: competitionData.description || '',
+          start_date: competitionData.start_date,
+          end_date: competitionData.end_date,
+          status: competitionData.status,
+          theme: competitionData.theme,
+          max_participants: competitionData.max_participants || 0,
+          prize_pool: Number(competitionData.prize_pool) || 0,
+          total_participants: 0
+        };
+
+        setCompetition(competitionInfo);
+        setRanking([]);
+        return;
+      }
+
+      // Buscar perfis dos usuários participantes
+      const userIds = participationData.map(p => p.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('❌ Erro ao carregar perfis:', profilesError);
+        throw profilesError;
+      }
+
+      console.log('👥 Perfis carregados:', profilesData?.length || 0);
+
+      // Criar mapa de perfis para lookup rápido
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
 
       const competitionInfo: CompetitionInfo = {
         id: competitionData.id,
@@ -198,22 +230,25 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
         theme: competitionData.theme,
         max_participants: competitionData.max_participants || 0,
         prize_pool: Number(competitionData.prize_pool) || 0,
-        total_participants: participationData?.length || 0
+        total_participants: participationData.length
       };
 
       setCompetition(competitionInfo);
 
       // Mapear dados das participações para o formato do ranking
-      const rankingParticipants: RankingParticipant[] = (participationData || []).map((participation, index) => ({
-        user_position: index + 1, // Recalcular posição baseada na ordenação
-        user_score: participation.user_score || 0,
-        user_id: participation.user_id || '',
-        created_at: participation.created_at || new Date().toISOString(),
-        profiles: {
-          username: participation.profiles?.username || 'Usuário',
-          avatar_url: participation.profiles?.avatar_url
-        }
-      }));
+      const rankingParticipants: RankingParticipant[] = participationData.map((participation, index) => {
+        const profile = profilesMap.get(participation.user_id);
+        return {
+          user_position: index + 1, // Recalcular posição baseada na ordenação
+          user_score: participation.user_score || 0,
+          user_id: participation.user_id || '',
+          created_at: participation.created_at || new Date().toISOString(),
+          profiles: profile ? {
+            username: profile.username || 'Usuário',
+            avatar_url: profile.avatar_url
+          } : null
+        };
+      });
 
       console.log('📊 Ranking da competição carregado:', rankingParticipants.length, 'participantes');
       setRanking(rankingParticipants);
