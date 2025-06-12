@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +7,7 @@ interface AdminRouteProps {
   children: React.ReactNode;
 }
 
-export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
+const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const { user, isLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isCheckingRole, setIsCheckingRole] = useState(true);
@@ -80,3 +81,5 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
 
   return <>{children}</>;
 };
+
+export default AdminRoute;
