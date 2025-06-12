@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export const useUserData = (userId: string) => {
   const [userData, setUserData] = useState<any>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -38,7 +39,13 @@ export const useUserData = (userId: string) => {
         console.warn('⚠️ Erro ao buscar roles:', rolesError);
       }
 
-      const roles = rolesData?.map(r => r.role) || ['user'];
+      // Filter and validate roles data
+      const validRolesData = (rolesData || []).filter((item: any) => 
+        item && typeof item === 'object' && !('error' in item) && 'role' in item
+      );
+
+      const roles = validRolesData.map(r => r.role) || ['user'];
+      setUserRoles(roles);
       
       const combinedData = {
         ...profileData,
@@ -68,6 +75,7 @@ export const useUserData = (userId: string) => {
 
   return {
     userData,
+    userRoles,
     isLoading,
     refetch: loadUserData
   };

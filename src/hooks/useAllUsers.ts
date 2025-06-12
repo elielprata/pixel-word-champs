@@ -9,7 +9,7 @@ export const useAllUsers = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: usersList = [], isLoading, refetch } = useUsersQuery();
-  const { banUser, deleteUser, unbanUser, isBanning, isDeletingUser: isDeleting, isUnbanning } = useUserMutations();
+  const { banUser, deleteUser, unbanUser, isBanning, isDeleting, isUnbanning } = useUserMutations();
 
   const validateAdminPassword = async (password: string) => {
     const { data: currentUser } = await supabase.auth.getUser();

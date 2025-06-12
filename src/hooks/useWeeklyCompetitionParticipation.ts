@@ -35,8 +35,8 @@ export const useWeeklyCompetitionParticipation = (competitionId: string) => {
       const { data, error } = await supabase
         .from('competition_participations')
         .select('*')
-        .eq('competition_id', competitionId)
-        .eq('user_id', user.id)
+        .eq('competition_id', competitionId as any)
+        .eq('user_id', user.id as any)
         .maybeSingle();
 
       if (error) {
@@ -44,9 +44,9 @@ export const useWeeklyCompetitionParticipation = (competitionId: string) => {
         throw error;
       }
 
-      if (data) {
+      if (data && typeof data === 'object' && !('error' in data)) {
         console.log('✅ Usuário já participando:', data);
-        setParticipation(data);
+        setParticipation(data as ParticipationData);
         setIsParticipating(true);
       } else {
         console.log('ℹ️ Usuário não está participando ainda');
@@ -73,7 +73,7 @@ export const useWeeklyCompetitionParticipation = (competitionId: string) => {
           competition_id: competitionId,
           user_id: user.id,
           user_score: 0
-        })
+        } as any)
         .select()
         .single();
 
@@ -112,8 +112,8 @@ export const useWeeklyCompetitionParticipation = (competitionId: string) => {
 
       const { data, error } = await supabase
         .from('competition_participations')
-        .update({ user_score: newScore })
-        .eq('id', participation.id)
+        .update({ user_score: newScore } as any)
+        .eq('id', participation.id as any)
         .select()
         .single();
 

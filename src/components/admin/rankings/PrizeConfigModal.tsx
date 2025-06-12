@@ -62,9 +62,9 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
             editingGroup={paymentData.editingGroup}
             editGroupPrize={paymentData.editGroupPrize}
             setEditGroupPrize={paymentData.setEditGroupPrize}
-            onEditGroup={(group) => paymentData.handleEditGroup(group.id)}
-            onSaveGroup={() => paymentData.handleSaveGroup(paymentData.editingGroup || '')}
-            onToggleGroup={(group) => paymentData.handleToggleGroup(group.id)}
+            onEditGroup={paymentData.handleEditGroup}
+            onSaveGroup={paymentData.handleSaveGroup}
+            onToggleGroup={paymentData.handleToggleGroup}
             onCancel={paymentData.handleCancel}
           />
         </div>
