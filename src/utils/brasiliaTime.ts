@@ -80,6 +80,41 @@ export const formatDateForBrasilia = (dateString: string): string => {
 };
 
 /**
+ * Alias para formatDateForBrasilia (compatibilidade)
+ */
+export const formatDateForDisplay = (dateString: string): string => {
+  return formatDateForBrasilia(dateString);
+};
+
+/**
+ * Formata data e hora para exibição completa
+ */
+export const formatDateTimeForDisplay = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    
+    const formatted = date.toLocaleDateString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    console.log('📅 [formatDateTimeForDisplay] Data/hora formatada:', {
+      input: dateString,
+      output: formatted
+    });
+    
+    return formatted;
+  } catch (error) {
+    console.error('❌ [formatDateTimeForDisplay] Erro ao formatar data/hora:', error);
+    return dateString;
+  }
+};
+
+/**
  * Verifica se uma data está no passado (Brasília)
  */
 export const isDateInPast = (dateString: string): boolean => {
