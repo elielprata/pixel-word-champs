@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -105,7 +104,7 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
           user_position: participation.user_position || 0,
           user_score: participation.user_score || 0,
           prize: participation.prize || 0,
-          profiles: profile ? {
+          profiles: profile && typeof profile === 'object' && !('error' in profile) ? {
             username: profile.username || 'Usuário',
             avatar_url: profile.avatar_url
           } : null

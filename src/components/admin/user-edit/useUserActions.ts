@@ -1,225 +1,148 @@
+
 import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-export const useUserActions = (userId: string, username: string, onUserUpdated: () => void) => {
-  const { toast } = useToast();
+export const useUserActions = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const { toast } = useToast();
 
-  const updateUserRole = async (newRole: 'admin' | 'user') => {
+  const deleteUserRole = async (userId: string, role: string) => {
     try {
       setIsLoading(true);
-      console.log(`🔄 Atualizando role para ${newRole} do usuário:`, userId);
-
-      // Verificar roles atuais antes de modificar
-      const { data: currentRoles, error: fetchError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
-
-      if (fetchError) {
-        console.error('❌ Erro ao buscar roles atuais:', fetchError);
-        throw fetchError;
-      }
-
-      console.log('📋 Roles atuais:', currentRoles);
-
-      // Primeiro, remover todos os roles existentes
-      const { error: deleteError } = await supabase
+      
+      const { error } = await supabase
         .from('user_roles')
         .delete()
-        .eq('user_id', userId);
+        .eq('user_id', userId as any)
+        .eq('role', role);
 
-      if (deleteError) {
-        console.error('❌ Erro ao remover roles existentes:', deleteError);
-        throw deleteError;
-      }
-
-      console.log('✅ Roles existentes removidos');
-
-      // Depois, adicionar o novo role
-      const { error: insertError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: userId,
-          role: newRole
-        });
-
-      if (insertError) {
-        console.error('❌ Erro ao adicionar novo role:', insertError);
-        throw insertError;
-      }
-
-      console.log('✅ Novo role adicionado:', newRole);
+      if (error) throw error;
 
       toast({
-        title: "Sucesso!",
-        description: `Permissão atualizada para ${newRole === 'admin' ? 'Administrador' : 'Usuário'} para ${username}`,
+        title: "Sucesso",
+        description: `Role ${role} removido com sucesso.`,
       });
 
-      // Aguardar um pouco antes de atualizar para garantir que a transação foi commitada
-      setTimeout(() => {
-        onUserUpdated();
-      }, 500);
-
-    } catch (error: any) {
-      console.error('❌ Erro completo:', error);
+      return true;
+    } catch (error) {
+      console.error('Erro ao remover role:', error);
       toast({
         title: "Erro",
-        description: `Erro ao atualizar permissão: ${error.message || 'Erro desconhecido'}`,
+        description: "Não foi possível remover o role.",
         variant: "destructive",
       });
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updateUserProfile = async (newUsername: string, newEmail: string) => {
-    if (!newUsername.trim()) {
-      toast({
-        title: "Erro",
-        description: "O nome de usuário não pode estar vazio",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const addUserRole = async (userId: string, role: 'admin' | 'user') => {
     try {
-      setIsUpdatingProfile(true);
-      console.log('🔄 Atualizando perfil do usuário:', userId);
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({ 
+          user_id: userId as any, 
+          role: role as any 
+        });
 
-      // Preparar dados para atualização - apenas username por enquanto
-      const updateData: any = { 
-        username: newUsername.trim()
-      };
-
-      // Atualizar dados na tabela profiles
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', userId);
-
-      if (profileError) {
-        console.error('❌ Erro ao atualizar perfil:', profileError);
-        throw profileError;
-      }
-
-      console.log('✅ Perfil atualizado com sucesso');
-
-      // Tentar atualizar email via Edge Function se disponível e for um email real
-      if (newEmail && newEmail !== 'Email não disponível' && newEmail.includes('@') && !newEmail.endsWith('@sistema.local')) {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            const { data, error } = await supabase.functions.invoke('admin-update-email', {
-              body: {
-                targetUserId: userId,
-                newEmail: newEmail.trim()
-              }
-            });
-
-            if (error) {
-              console.warn('⚠️ Erro ao atualizar email no auth:', error);
-            } else {
-              console.log('✅ Email atualizado no auth com sucesso');
-            }
-          }
-        } catch (emailError) {
-          console.warn('⚠️ Não foi possível atualizar email no auth:', emailError);
-        }
-      }
+      if (error) throw error;
 
       toast({
-        title: "Sucesso!",
-        description: `Perfil atualizado para ${newUsername}`,
+        title: "Sucesso",
+        description: `Role ${role} adicionado com sucesso.`,
       });
 
-      setTimeout(() => {
-        onUserUpdated();
-      }, 500);
-
-    } catch (error: any) {
-      console.error('❌ Erro ao atualizar perfil:', error);
+      return true;
+    } catch (error) {
+      console.error('Erro ao adicionar role:', error);
       toast({
         title: "Erro",
-        description: `Erro ao atualizar perfil: ${error.message || 'Erro desconhecido'}`,
+        description: "Não foi possível adicionar o role.",
         variant: "destructive",
       });
+      return false;
     } finally {
-      setIsUpdatingProfile(false);
+      setIsLoading(false);
     }
   };
 
-  const updatePassword = async (newPassword: string) => {
-    if (!newPassword || newPassword.length < 6) {
-      toast({
-        title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const banUser = async (userId: string, reason: string) => {
     try {
-      setIsChangingPassword(true);
-      console.log('🔐 Atualizando senha do usuário via Edge Function:', userId);
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          is_banned: true,
+          banned_at: new Date().toISOString(),
+          ban_reason: reason,
+        })
+        .eq('id', userId);
 
-      // Get current session to send auth header
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      // Call the Edge Function
-      const { data, error } = await supabase.functions.invoke('admin-update-password', {
-        body: {
-          targetUserId: userId,
-          newPassword: newPassword,
-          username: username
-        }
-      });
-
-      if (error) {
-        console.error('❌ Erro da Edge Function:', error);
-        throw error;
-      }
-
-      if (!data.success) {
-        throw new Error(data.error || 'Erro desconhecido');
-      }
-
-      console.log('✅ Senha atualizada com sucesso:', data.message);
+      if (error) throw error;
 
       toast({
-        title: "Sucesso!",
-        description: `Senha atualizada para ${username}`,
+        title: "Sucesso",
+        description: "Usuário banido com sucesso.",
       });
 
-      // Aguardar um pouco antes de atualizar para garantir que a transação foi commitada
-      setTimeout(() => {
-        onUserUpdated();
-      }, 500);
-
-    } catch (error: any) {
-      console.error('❌ Erro ao atualizar senha:', error);
+      return true;
+    } catch (error) {
+      console.error('Erro ao banir usuário:', error);
       toast({
         title: "Erro",
-        description: `Erro ao atualizar senha: ${error.message || 'Erro desconhecido'}`,
+        description: "Não foi possível banir o usuário.",
         variant: "destructive",
       });
+      return false;
     } finally {
-      setIsChangingPassword(false);
+      setIsLoading(false);
+    }
+  };
+
+  const unbanUser = async (userId: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          is_banned: false,
+          banned_at: null,
+          ban_reason: null,
+        })
+        .eq('id', userId as any);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Usuário desbanido com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao desbanir usuário:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível desbanir o usuário.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return {
-    updateUserRole,
-    updateUserProfile,
-    updatePassword,
+    deleteUserRole,
+    addUserRole,
+    banUser,
+    unbanUser,
     isLoading,
-    isChangingPassword,
-    isUpdatingProfile,
   };
 };

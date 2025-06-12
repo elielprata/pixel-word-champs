@@ -1,82 +1,126 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useUserData = (userId: string, isOpen: boolean) => {
-  return useQuery({
-    queryKey: ['userData', userId],
-    queryFn: async () => {
-      console.log('🔍 Buscando dados completos do usuário:', userId);
-      
-      // Buscar roles atuais
-      const { data: rolesData, error: rolesError } = await supabase
+export const useUserData = (userId: string) => {
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [userData, setUserData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchUserRoles = async () => {
+    try {
+      const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId);
+        .eq('user_id', userId as any);
 
-      if (rolesError) {
-        console.error('❌ Erro ao buscar roles:', rolesError);
-        throw rolesError;
-      }
+      if (error) throw error;
 
-      // Buscar dados do perfil
-      const { data: profileData, error: profileError } = await supabase
+      const validRoles = (data || [])
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item))
+        .map((item: any) => item.role);
+      
+      setUserRoles(validRoles);
+    } catch (error) {
+      console.error('Erro ao buscar roles do usuário:', error);
+    }
+  };
+
+  const fetchUserData = async () => {
+    try {
+      const { data, error } = await supabase
         .from('profiles')
-        .select('username')
-        .eq('id', userId)
+        .select('*')
+        .eq('id', userId as any)
         .single();
 
-      if (profileError) {
-        console.error('❌ Erro ao buscar perfil:', profileError);
-      }
+      if (error) throw error;
 
-      // Buscar email real usando a função do banco
-      let finalEmail = 'Email não disponível';
-      try {
-        const { data: usersData, error: usersError } = await supabase.rpc('get_users_with_real_emails');
-        
-        if (!usersError && usersData) {
-          const userData = usersData.find(user => user.id === userId);
-          if (userData && userData.email) {
-            finalEmail = userData.email;
-          }
-        }
-      } catch (error) {
-        console.log('⚠️ Erro ao buscar email real:', error);
-        
-        // Fallback: tentar buscar através do auth se for o usuário atual
-        try {
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-          
-          if (user && user.id === userId && user.email) {
-            finalEmail = user.email;
-          } else if (profileData?.username) {
-            // Último fallback: usar username como base
-            if (profileData.username.includes('@')) {
-              finalEmail = profileData.username;
-            } else {
-              finalEmail = `${profileData.username}@sistema.local`;
-            }
-          }
-        } catch (fallbackError) {
-          console.log('⚠️ Erro no fallback:', fallbackError);
-        }
+      // Validar dados do usuário
+      if (data && typeof data === 'object' && !('error' in data)) {
+        setUserData(data);
       }
+    } catch (error) {
+      console.error('Erro ao buscar dados do usuário:', error);
+    }
+  };
 
-      console.log('📋 Dados encontrados:', { 
-        roles: rolesData, 
-        email: finalEmail, 
-        profile: profileData 
-      });
+  const fetchAllUsersData = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_users_with_real_emails');
       
-      return {
-        roles: rolesData?.map(r => r.role) || [],
-        email: finalEmail,
-        username: profileData?.username || 'Username não disponível'
-      };
-    },
-    enabled: isOpen && !!userId,
-    retry: 2,
-    retryDelay: 1000,
-  });
+      if (error) throw error;
+
+      // Validar e filtrar dados
+      const validUsers = Array.isArray(data) ? data.filter((user: any) => 
+        user && typeof user === 'object' && !('error' in user)
+      ) : [];
+
+      const currentUser = validUsers.find((user: any) => user.id === userId);
+      
+      if (currentUser) {
+        setUserData({
+          id: currentUser.id,
+          username: currentUser.username || 'Usuário',
+          email: currentUser.email || 'Email não disponível',
+          total_score: currentUser.total_score || 0,
+          games_played: currentUser.games_played || 0,
+          is_banned: currentUser.is_banned || false,
+          banned_at: currentUser.banned_at,
+          banned_by: currentUser.banned_by,
+          ban_reason: currentUser.ban_reason,
+          created_at: currentUser.created_at,
+        });
+
+        // Extrair roles do array
+        const roles = Array.isArray(currentUser.roles) ? currentUser.roles : [];
+        setUserRoles(roles);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados completos do usuário:', error);
+      // Fallback para métodos separados
+      await fetchUserData();
+      await fetchUserRoles();
+    }
+  };
+
+  const fetchUserRolesSeparately = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId as any);
+
+      if (error) throw error;
+
+      const validRoles = (data || [])
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item) && item.role)
+        .map((item: any) => item.role);
+      
+      setUserRoles(validRoles);
+    } catch (error) {
+      console.error('Erro ao buscar roles:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      setIsLoading(true);
+      fetchAllUsersData().finally(() => setIsLoading(false));
+    }
+  }, [userId]);
+
+  const refetch = () => {
+    if (userId) {
+      setIsLoading(true);
+      fetchAllUsersData().finally(() => setIsLoading(false));
+    }
+  };
+
+  return {
+    userRoles,
+    userData,
+    isLoading,
+    refetch,
+  };
 };
