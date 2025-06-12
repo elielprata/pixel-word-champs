@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,8 +18,6 @@ interface CompetitionHistoryItem {
   end_date: string;
   status: string;
   prize_pool: number;
-  max_participants: number;
-  total_participants: number;
   created_at: string;
 }
 
@@ -170,7 +169,6 @@ export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions
                   <TableHead className="font-semibold">Tipo</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="font-semibold">Período</TableHead>
-                  <TableHead className="font-semibold">Participantes</TableHead>
                   <TableHead className="font-semibold">Prêmio</TableHead>
                   <TableHead className="font-semibold text-center">Ações</TableHead>
                 </TableRow>
@@ -205,14 +203,6 @@ export const CompetitionTable: React.FC<CompetitionTableProps> = ({ competitions
                       <div>
                         <p>{formatDate(competition.start_date)} -</p>
                         <p>{formatDate(competition.end_date)}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-center">
-                        <p className="font-semibold">{competition.total_participants}</p>
-                        {competition.max_participants > 0 && (
-                          <p className="text-xs text-slate-500">/ {competition.max_participants}</p>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell className="font-semibold text-green-600">
