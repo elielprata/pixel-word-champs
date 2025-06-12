@@ -62,9 +62,6 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
               <h3 className="font-bold text-base text-foreground leading-tight group-hover:text-primary transition-colors duration-300">
                 {competition.title}
               </h3>
-              <p className="text-muted-foreground text-xs animate-fade-in">
-                🎮 Desafio Épico
-              </p>
             </div>
           </div>
           
