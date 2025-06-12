@@ -4,6 +4,7 @@ import { useAuthStateCore } from './useAuthStateCore';
 import { useAuthRefs } from './useAuthRefs';
 import { validateSession, getSessionId, shouldProcessSession } from '@/utils/sessionValidation';
 import { processUserAuthentication } from '@/utils/authProcessor';
+import { logger } from '@/utils/logger';
 
 export const useSessionProcessor = (
   authState: ReturnType<typeof useAuthStateCore>,
@@ -30,7 +31,7 @@ export const useSessionProcessor = (
     }
 
     if (!validateSession(session)) {
-      console.log('Nenhuma sessão encontrada');
+      logger.debug('Nenhuma sessão encontrada', undefined, 'SESSION_PROCESSOR');
       setIsAuthenticated(false);
       setUser(null);
       setIsLoading(false);

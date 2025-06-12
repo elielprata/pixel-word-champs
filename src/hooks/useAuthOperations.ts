@@ -1,87 +1,122 @@
 
-import { LoginForm, RegisterForm } from '@/types';
+import { useCallback } from 'react';
 import { authService } from '@/services/authService';
+import { LoginForm, RegisterForm } from '@/types';
 import { useAuthStateCore } from './useAuthStateCore';
 import { useAuthRefs } from './useAuthRefs';
+import { logger } from '@/utils/logger';
 
 export const useAuthOperations = (
   authState: ReturnType<typeof useAuthStateCore>,
   authRefs: ReturnType<typeof useAuthRefs>
 ) => {
-  const { 
-    setUser, 
-    setIsAuthenticated, 
-    setIsLoading, 
-    setError
+  const {
+    setUser,
+    setIsAuthenticated,
+    setIsLoading,
+    setError,
   } = authState;
 
-  const { lastProcessedSessionRef } = authRefs;
+  const { isMountedRef } = authRefs;
 
-  const login = async (credentials: LoginForm) => {
+  const login = useCallback(async (credentials: LoginForm) => {
+    if (!isMountedRef.current) return;
+    
     setIsLoading(true);
-    setError(undefined);
+    setError('');
 
     try {
+      logger.info('Iniciando processo de login', { email: credentials.email }, 'AUTH_OPERATIONS');
+      
       const response = await authService.login(credentials);
+      
+      if (!isMountedRef.current) return;
+
       if (response.success && response.data) {
         setUser(response.data.user);
         setIsAuthenticated(true);
-        setError(undefined);
+        setError('');
+        logger.info('Login realizado com sucesso', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
       } else {
-        setError(response.error || 'Erro no login');
+        const errorMessage = response.error || 'Erro no login';
+        setError(errorMessage);
         setIsAuthenticated(false);
         setUser(null);
+        logger.error('Falha no login', { error: errorMessage }, 'AUTH_OPERATIONS');
       }
-    } catch (err) {
-      console.error('Erro no login:', err);
-      setError('Erro inesperado no login');
+    } catch (error: any) {
+      if (!isMountedRef.current) return;
+      
+      const errorMessage = error.message || 'Erro de conexão';
+      setError(errorMessage);
       setIsAuthenticated(false);
       setUser(null);
+      logger.error('Erro durante login', { error: errorMessage }, 'AUTH_OPERATIONS');
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [setUser, setIsAuthenticated, setIsLoading, setError, isMountedRef]);
 
-  const register = async (userData: RegisterForm) => {
+  const register = useCallback(async (userData: RegisterForm) => {
+    if (!isMountedRef.current) return;
+    
     setIsLoading(true);
-    setError(undefined);
+    setError('');
 
     try {
+      logger.info('Iniciando processo de registro', { email: userData.email, username: userData.username }, 'AUTH_OPERATIONS');
+      
       const response = await authService.register(userData);
+      
+      if (!isMountedRef.current) return;
+
       if (response.success && response.data) {
         setUser(response.data.user);
         setIsAuthenticated(true);
-        setError(undefined);
+        setError('');
+        logger.info('Registro realizado com sucesso', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
       } else {
-        setError(response.error || 'Erro no registro');
+        const errorMessage = response.error || 'Erro no registro';
+        setError(errorMessage);
         setIsAuthenticated(false);
         setUser(null);
+        logger.error('Falha no registro', { error: errorMessage }, 'AUTH_OPERATIONS');
       }
-    } catch (err) {
-      console.error('Erro no registro:', err);
-      setError('Erro inesperado no registro');
+    } catch (error: any) {
+      if (!isMountedRef.current) return;
+      
+      const errorMessage = error.message || 'Erro de conexão';
+      setError(errorMessage);
       setIsAuthenticated(false);
       setUser(null);
+      logger.error('Erro durante registro', { error: errorMessage }, 'AUTH_OPERATIONS');
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [setUser, setIsAuthenticated, setIsLoading, setError, isMountedRef]);
 
-  const logout = async () => {
-    setIsLoading(true);
+  const logout = useCallback(async () => {
     try {
+      logger.info('Iniciando logout', undefined, 'AUTH_OPERATIONS');
       await authService.logout();
-      setUser(null);
-      setIsAuthenticated(false);
-      setError(undefined);
-      lastProcessedSessionRef.current = null;
-    } catch (err) {
-      console.error('Erro no logout:', err);
-      setError('Erro no logout');
-    } finally {
-      setIsLoading(false);
+      
+      if (isMountedRef.current) {
+        setUser(null);
+        setIsAuthenticated(false);
+        setError('');
+        logger.info('Logout realizado com sucesso', undefined, 'AUTH_OPERATIONS');
+      }
+    } catch (error: any) {
+      logger.error('Erro durante logout', { error: error.message }, 'AUTH_OPERATIONS');
+      if (isMountedRef.current) {
+        setError('Erro ao fazer logout');
+      }
     }
-  };
+  }, [setUser, setIsAuthenticated, setError, isMountedRef]);
 
   return {
     login,

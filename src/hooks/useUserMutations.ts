@@ -14,20 +14,20 @@ export const useUserMutations = () => {
       throw new Error('Usuário não autenticado');
     }
 
-    logger.log('🔐 Validando credenciais do admin:', currentUser.user.email);
+    logger.debug('Validando credenciais do admin', { userId: currentUser.user.id }, 'USER_MUTATIONS');
 
     // Validação básica da senha (sem re-autenticação)
     if (!password || password.length < 6) {
       throw new Error('Senha de administrador inválida');
     }
 
-    logger.log('✅ Credenciais validadas com sucesso');
+    logger.debug('Credenciais validadas com sucesso', undefined, 'USER_MUTATIONS');
     return true;
   };
 
   const banUserMutation = useMutation({
     mutationFn: async ({ userId, reason, adminPassword }: { userId: string; reason: string; adminPassword: string }) => {
-      logger.log('🔐 Iniciando banimento do usuário:', userId);
+      logger.info('Iniciando banimento do usuário', { targetUserId: userId }, 'USER_MUTATIONS');
       
       // Validar credenciais do admin
       await validateAdminCredentials(adminPassword);
@@ -37,7 +37,7 @@ export const useUserMutations = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      logger.log('✅ Credenciais validadas, banindo usuário...');
+      logger.debug('Credenciais validadas, banindo usuário...', undefined, 'USER_MUTATIONS');
 
       // Banir usuário específico
       const { error: banError } = await supabase
@@ -51,11 +51,11 @@ export const useUserMutations = () => {
         .eq('id', userId);
 
       if (banError) {
-        logger.error('❌ Erro ao banir usuário:', banError);
+        logger.error('Erro ao banir usuário', { error: banError.message }, 'USER_MUTATIONS');
         throw banError;
       }
 
-      logger.log('✅ Usuário banido com sucesso');
+      logger.info('Usuário banido com sucesso', { targetUserId: userId }, 'USER_MUTATIONS');
 
       // Registrar ação administrativa
       const { error: logError } = await supabase
@@ -68,11 +68,11 @@ export const useUserMutations = () => {
         });
 
       if (logError) {
-        logger.warn('⚠️ Erro ao registrar log:', logError);
+        logger.warn('Erro ao registrar log de ação administrativa', { error: logError.message }, 'USER_MUTATIONS');
       }
     },
     onSuccess: () => {
-      logger.log('🎉 Banimento concluído com sucesso');
+      logger.info('Banimento concluído com sucesso', undefined, 'USER_MUTATIONS');
       toast({
         title: "Usuário banido",
         description: "O usuário foi banido com sucesso.",
@@ -80,7 +80,7 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
-      logger.error('❌ Erro no banimento:', error);
+      logger.error('Erro no banimento', { error: error.message }, 'USER_MUTATIONS');
       toast({
         title: "Erro ao banir usuário",
         description: error.message,
@@ -91,7 +91,7 @@ export const useUserMutations = () => {
 
   const deleteUserMutation = useMutation({
     mutationFn: async ({ userId, adminPassword }: { userId: string; adminPassword: string }) => {
-      logger.log('🔐 Iniciando exclusão do usuário:', userId);
+      logger.info('Iniciando exclusão do usuário', { targetUserId: userId }, 'USER_MUTATIONS');
       
       // Validar credenciais do admin
       await validateAdminCredentials(adminPassword);
@@ -101,7 +101,7 @@ export const useUserMutations = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      logger.log('✅ Credenciais validadas, excluindo usuário...');
+      logger.debug('Credenciais validadas, excluindo usuário...', undefined, 'USER_MUTATIONS');
 
       // Verificar se não é o próprio admin tentando se deletar
       if (currentUser.user.id === userId) {
@@ -120,10 +120,10 @@ export const useUserMutations = () => {
           });
 
         if (logError) {
-          logger.warn('⚠️ Erro ao registrar log:', logError);
+          logger.warn('Erro ao registrar log de ação administrativa', { error: logError.message }, 'USER_MUTATIONS');
         }
       } catch (logError) {
-        logger.warn('⚠️ Erro ao registrar ação:', logError);
+        logger.warn('Erro ao registrar ação administrativa', { error: logError }, 'USER_MUTATIONS');
       }
 
       // Deletar dados relacionados primeiro (se necessário)
@@ -146,9 +146,9 @@ export const useUserMutations = () => {
           .delete()
           .eq('user_id', userId);
 
-        logger.log('✅ Dados relacionados removidos');
+        logger.debug('Dados relacionados removidos', undefined, 'USER_MUTATIONS');
       } catch (cleanupError) {
-        logger.warn('⚠️ Erro na limpeza de dados relacionados:', cleanupError);
+        logger.warn('Erro na limpeza de dados relacionados', { error: cleanupError }, 'USER_MUTATIONS');
       }
 
       // Deletar perfil do usuário (isso também vai deletar o usuário do auth via trigger/cascade)
@@ -158,14 +158,14 @@ export const useUserMutations = () => {
         .eq('id', userId);
 
       if (deleteError) {
-        logger.error('❌ Erro ao excluir usuário:', deleteError);
+        logger.error('Erro ao excluir usuário', { error: deleteError.message }, 'USER_MUTATIONS');
         throw new Error(`Erro ao excluir usuário: ${deleteError.message}`);
       }
 
-      logger.log('✅ Usuário excluído com sucesso');
+      logger.info('Usuário excluído com sucesso', { targetUserId: userId }, 'USER_MUTATIONS');
     },
     onSuccess: () => {
-      logger.log('🎉 Exclusão concluída com sucesso');
+      logger.info('Exclusão concluída com sucesso', undefined, 'USER_MUTATIONS');
       toast({
         title: "Usuário excluído",
         description: "O usuário foi excluído permanentemente do sistema.",
@@ -173,7 +173,7 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
-      logger.error('❌ Erro na exclusão:', error);
+      logger.error('Erro na exclusão', { error: error.message }, 'USER_MUTATIONS');
       toast({
         title: "Erro ao excluir usuário",
         description: error.message || 'Erro desconhecido',
@@ -184,7 +184,7 @@ export const useUserMutations = () => {
 
   const unbanUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      logger.log('🔓 Iniciando desbanimento do usuário:', userId);
+      logger.info('Iniciando desbanimento do usuário', { targetUserId: userId }, 'USER_MUTATIONS');
       
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
@@ -203,11 +203,11 @@ export const useUserMutations = () => {
         .eq('id', userId);
 
       if (error) {
-        logger.error('❌ Erro ao desbanir usuário:', error);
+        logger.error('Erro ao desbanir usuário', { error: error.message }, 'USER_MUTATIONS');
         throw error;
       }
 
-      logger.log('✅ Usuário desbanido com sucesso');
+      logger.info('Usuário desbanido com sucesso', { targetUserId: userId }, 'USER_MUTATIONS');
 
       // Registrar ação
       await supabase
@@ -220,7 +220,7 @@ export const useUserMutations = () => {
         });
     },
     onSuccess: () => {
-      logger.log('🎉 Desbanimento concluído com sucesso');
+      logger.info('Desbanimento concluído com sucesso', undefined, 'USER_MUTATIONS');
       toast({
         title: "Usuário desbanido",
         description: "O usuário foi desbanido com sucesso.",
@@ -228,7 +228,7 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
-      logger.error('❌ Erro no desbanimento:', error);
+      logger.error('Erro no desbanimento', { error: error.message }, 'USER_MUTATIONS');
       toast({
         title: "Erro ao desbanir usuário",
         description: error.message,
