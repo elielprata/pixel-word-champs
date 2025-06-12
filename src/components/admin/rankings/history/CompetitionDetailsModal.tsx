@@ -62,7 +62,7 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
       const { data: participations, error: participationsError } = await supabase
         .from('competition_participations')
         .select('user_id, user_position, user_score, prize')
-        .eq('competition_id', competition.id)
+        .eq('competition_id', competition.id as any)
         .order('user_position', { ascending: true });
 
       if (participationsError) {
@@ -76,8 +76,12 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
         return;
       }
 
+      // Filtrar e validar dados das participações
+      const validParticipations = participations
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item) && item.user_id);
+
       // Buscar perfis dos participantes
-      const userIds = participations.map(p => p.user_id);
+      const userIds = validParticipations.map((p: any) => p.user_id);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
@@ -88,9 +92,13 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
         throw profilesError;
       }
 
+      // Filtrar e validar perfis
+      const validProfiles = (profiles || [])
+        .filter((profile: any) => profile && typeof profile === 'object' && !('error' in profile));
+
       // Combinar dados
-      const rankingData: RankingParticipant[] = participations.map(participation => {
-        const profile = profiles?.find(p => p.id === participation.user_id);
+      const rankingData: RankingParticipant[] = validParticipations.map((participation: any) => {
+        const profile = validProfiles.find((p: any) => p.id === participation.user_id);
         
         return {
           user_id: participation.user_id,

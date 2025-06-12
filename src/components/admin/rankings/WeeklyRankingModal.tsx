@@ -118,27 +118,28 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
 
       console.log('✅ Competição carregada:', competitionData);
 
-      // Verificar se os dados são válidos
-      if (!competitionData || 'error' in competitionData) {
+      // Verificar se os dados são válidos e usar type assertion
+      const validCompetitionData = competitionData as any;
+      if (!validCompetitionData || 'error' in validCompetitionData) {
         throw new Error('Dados da competição não encontrados');
       }
 
       // Verificar se a competição está ativa usando o serviço centralizado
-      const isActive = isCompetitionActive(competitionData.start_date, competitionData.end_date);
+      const isActive = isCompetitionActive(validCompetitionData.start_date, validCompetitionData.end_date);
       
       if (!isActive) {
         console.log('⏳ Competição não está ativa, não carregando ranking');
         
         const competitionInfo: CompetitionInfo = {
-          id: competitionData.id,
-          title: competitionData.title,
-          description: competitionData.description || '',
-          start_date: competitionData.start_date,
-          end_date: competitionData.end_date,
-          status: competitionData.status,
-          theme: competitionData.theme,
-          max_participants: competitionData.max_participants || 0,
-          prize_pool: Number(competitionData.prize_pool) || 0,
+          id: validCompetitionData.id,
+          title: validCompetitionData.title,
+          description: validCompetitionData.description || '',
+          start_date: validCompetitionData.start_date,
+          end_date: validCompetitionData.end_date,
+          status: validCompetitionData.status,
+          theme: validCompetitionData.theme,
+          max_participants: validCompetitionData.max_participants || 0,
+          prize_pool: Number(validCompetitionData.prize_pool) || 0,
           total_participants: 0
         };
 
@@ -216,15 +217,15 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       // Se não há participações, definir competição sem ranking
       if (!participationData || participationData.length === 0) {
         const competitionInfo: CompetitionInfo = {
-          id: competitionData.id,
-          title: competitionData.title,
-          description: competitionData.description || '',
-          start_date: competitionData.start_date,
-          end_date: competitionData.end_date,
-          status: competitionData.status,
-          theme: competitionData.theme,
-          max_participants: competitionData.max_participants || 0,
-          prize_pool: Number(competitionData.prize_pool) || 0,
+          id: validCompetitionData.id,
+          title: validCompetitionData.title,
+          description: validCompetitionData.description || '',
+          start_date: validCompetitionData.start_date,
+          end_date: validCompetitionData.end_date,
+          status: validCompetitionData.status,
+          theme: validCompetitionData.theme,
+          max_participants: validCompetitionData.max_participants || 0,
+          prize_pool: Number(validCompetitionData.prize_pool) || 0,
           total_participants: 0
         };
 
@@ -252,20 +253,22 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
 
       // Criar mapa de perfis para lookup rápido
       const profilesMap = new Map();
-      profilesData?.forEach(profile => {
-        profilesMap.set(profile.id, profile);
-      });
+      (profilesData || [])
+        .filter((profile: any) => profile && typeof profile === 'object' && !('error' in profile))
+        .forEach((profile: any) => {
+          profilesMap.set(profile.id, profile);
+        });
 
       const competitionInfo: CompetitionInfo = {
-        id: competitionData.id,
-        title: competitionData.title,
-        description: competitionData.description || '',
-        start_date: competitionData.start_date,
-        end_date: competitionData.end_date,
-        status: competitionData.status,
-        theme: competitionData.theme,
-        max_participants: competitionData.max_participants || 0,
-        prize_pool: Number(competitionData.prize_pool) || 0,
+        id: validCompetitionData.id,
+        title: validCompetitionData.title,
+        description: validCompetitionData.description || '',
+        start_date: validCompetitionData.start_date,
+        end_date: validCompetitionData.end_date,
+        status: validCompetitionData.status,
+        theme: validCompetitionData.theme,
+        max_participants: validCompetitionData.max_participants || 0,
+        prize_pool: Number(validCompetitionData.prize_pool) || 0,
         total_participants: participationData.length
       };
 
