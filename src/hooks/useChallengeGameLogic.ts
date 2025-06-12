@@ -27,7 +27,17 @@ export const useChallengeGameLogic = (challengeId: string) => {
       
       console.log('🎮 Inicializando sessão de jogo para competição:', challengeId);
       
-      // Validar se a competição existe antes de criar a sessão
+      // Primeiro, descobrir em qual tabela a competição existe
+      const competitionTable = await competitionValidationService.getCompetitionTable(challengeId);
+      console.log('🔍 Tabela da competição:', competitionTable);
+      
+      if (!competitionTable) {
+        console.error('❌ Competição não encontrada em nenhuma tabela:', challengeId);
+        setError('Competição não encontrada. Verifique se o ID está correto.');
+        return;
+      }
+      
+      // Validar se a competição está ativa
       const competitionValidation = await competitionValidationService.validateCompetition(challengeId);
       
       if (!competitionValidation.success) {
@@ -47,13 +57,7 @@ export const useChallengeGameLogic = (challengeId: string) => {
 
       if (!sessionResponse.success) {
         console.error('❌ Erro ao criar sessão:', sessionResponse.error);
-        
-        // Detectar erro específico de foreign key para fornecer mensagem mais clara
-        if (sessionResponse.error?.includes('foreign key constraint')) {
-          setError('A competição selecionada não está mais disponível. Tente novamente ou escolha outra competição.');
-        } else {
-          setError(sessionResponse.error || 'Erro ao criar sessão de jogo');
-        }
+        setError(sessionResponse.error || 'Erro ao criar sessão de jogo');
         return;
       }
 

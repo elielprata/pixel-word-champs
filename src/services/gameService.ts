@@ -9,6 +9,7 @@ import {
 } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { dailyCompetitionService } from './dailyCompetitionService';
+import { competitionValidationService } from './competitionValidationService';
 
 class GameService {
   async createGameSession(config: GameConfig): Promise<ApiResponse<GameSession>> {
@@ -21,7 +22,7 @@ class GameService {
 
       const board = this.generateBoard(config.boardSize || 10);
 
-      const sessionData = {
+      let sessionData: any = {
         user_id: user.id,
         level: config.level,
         board: board,
@@ -29,8 +30,29 @@ class GameService {
         total_score: 0,
         time_elapsed: 0,
         is_completed: false,
-        ...(config.competitionId && { competition_id: config.competitionId })
       };
+
+      // Se tem competition_id, verificar em qual tabela ela existe
+      if (config.competitionId) {
+        const competitionTable = await competitionValidationService.getCompetitionTable(config.competitionId);
+        
+        if (competitionTable === 'competitions') {
+          // Se existe na tabela competitions, pode usar normalmente
+          sessionData.competition_id = config.competitionId;
+          console.log('✅ Competição encontrada em "competitions", usando competition_id');
+        } else if (competitionTable === 'custom_competitions') {
+          // Se existe apenas em custom_competitions, não definir competition_id para evitar foreign key error
+          // Mas salvar o ID em outro campo ou no board para referência
+          console.log('⚠️ Competição encontrada em "custom_competitions", criando sessão sem foreign key');
+          sessionData.board = { 
+            ...board, 
+            _custom_competition_id: config.competitionId 
+          };
+        } else {
+          console.error('❌ Competição não encontrada em nenhuma tabela');
+          return createErrorResponse('Competição não encontrada');
+        }
+      }
 
       console.log('💾 Inserindo sessão no banco:', sessionData);
 
@@ -196,10 +218,18 @@ class GameService {
   }
 
   private mapGameSession(data: any): GameSession {
+    // Extrair custom_competition_id do board se existir
+    let customCompetitionId = null;
+    if (data.board && typeof data.board === 'object' && data.board._custom_competition_id) {
+      customCompetitionId = data.board._custom_competition_id;
+      // Remover do board para não interferir no jogo
+      delete data.board._custom_competition_id;
+    }
+
     return {
       id: data.id,
       user_id: data.user_id,
-      competition_id: data.competition_id,
+      competition_id: data.competition_id || customCompetitionId,
       level: data.level,
       board: data.board as string[][],
       words_found: this.parseWordsFound(data.words_found),
