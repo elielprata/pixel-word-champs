@@ -1,198 +1,97 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { CompetitionStatusService } from '@/services/competitionStatusService';
-
-interface RankingPlayer {
-  pos: number;
-  name: string;
-  score: number;
-  avatar: string;
-  trend: string;
-  user_id: string;
-}
-
-interface WeeklyCompetition {
-  id: string;
-  title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  prize_pool: number;
-  max_participants: number;
-  total_participants: number;
-}
+import { RankingPlayer } from '@/types';
 
 export const useRankings = () => {
-  const { toast } = useToast();
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
-  const [weeklyCompetitions, setWeeklyCompetitions] = useState<WeeklyCompetition[]>([]);
-  const [activeWeeklyCompetition, setActiveWeeklyCompetition] = useState<WeeklyCompetition | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [totalPlayers, setTotalPlayers] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchWeeklyRankings = async () => {
+  const loadWeeklyRanking = async () => {
     try {
-      console.log('📊 Buscando ranking semanal...');
+      setIsLoading(true);
+      setError(null);
+
+      console.log('🔄 Carregando ranking semanal...');
       
-      // Calcular início da semana atual (segunda-feira)
+      // Calcular a semana atual
       const today = new Date();
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       const weekStart = new Date(today.setDate(diff));
       const weekStartStr = weekStart.toISOString().split('T')[0];
 
-      // Buscar dados do ranking semanal
-      const { data: rankingData, error: rankingError } = await supabase
+      // Buscar rankings da semana atual
+      const { data: rankingsData, error: rankingsError } = await supabase
         .from('weekly_rankings')
         .select('position, total_score, user_id')
         .eq('week_start', weekStartStr as any)
-        .order('position', { ascending: true })
-        .limit(10);
+        .order('position', { ascending: true });
 
-      if (rankingError) throw rankingError;
+      if (rankingsError) {
+        console.error('❌ Erro ao buscar rankings:', rankingsError);
+        throw rankingsError;
+      }
 
-      if (!rankingData || rankingData.length === 0) {
-        console.log('📊 Nenhum ranking semanal encontrado');
+      if (!rankingsData || rankingsData.length === 0) {
+        console.log('ℹ️ Nenhum ranking encontrado para esta semana');
         setWeeklyRanking([]);
         return;
       }
 
-      // Filter and validate ranking data
-      const validRankingData = rankingData.filter((item: any) => 
-        item && typeof item === 'object' && !('error' in item) && 
-        'user_id' in item && 'position' in item && 'total_score' in item
-      );
+      // Buscar dados dos usuários
+      const userIds = rankingsData
+        .filter((item): item is any => item && typeof item === 'object' && !('error' in item))
+        .map((ranking: any) => ranking.user_id);
 
-      // Buscar perfis dos usuários separadamente
-      const userIds = validRankingData.map(item => item.user_id);
-      const { data: profilesData, error: profilesError } = await supabase
+      const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
         .in('id', userIds);
 
-      if (profilesError) {
-        console.warn('⚠️ Erro ao buscar perfis:', profilesError);
+      if (usersError) {
+        console.error('❌ Erro ao buscar perfis dos usuários:', usersError);
+        throw usersError;
       }
 
-      // Filter and validate profiles data
-      const validProfilesData = (profilesData || []).filter((item: any) => 
-        item && typeof item === 'object' && !('error' in item) && 
-        'id' in item && 'username' in item
-      );
+      // Combinar dados de ranking com dados de usuários
+      const ranking: RankingPlayer[] = rankingsData
+        .filter((item): item is any => item && typeof item === 'object' && !('error' in item))
+        .map((rankingItem: any) => {
+          const user = (usersData || [])
+            .filter((item): item is any => item && typeof item === 'object' && !('error' in item))
+            .find((u: any) => u.id === rankingItem.user_id);
+          
+          return {
+            position: rankingItem.position,
+            username: user?.username || 'Usuário Desconhecido',
+            score: rankingItem.total_score,
+            avatar_url: user?.avatar_url,
+            user_id: rankingItem.user_id
+          };
+        })
+        .sort((a, b) => a.position - b.position);
 
-      // Combinar dados do ranking com perfis
-      const rankings = validRankingData.map((item) => {
-        const profile = validProfilesData.find(p => p.id === item.user_id);
-        return {
-          pos: item.position,
-          name: profile?.username || 'Usuário',
-          score: item.total_score,
-          avatar: profile?.username?.substring(0, 2).toUpperCase() || 'U',
-          trend: '',
-          user_id: item.user_id
-        };
-      });
+      console.log('✅ Ranking semanal carregado:', ranking.length, 'jogadores');
+      setWeeklyRanking(ranking);
 
-      console.log('📊 Ranking semanal carregado:', rankings.length, 'jogadores');
-      setWeeklyRanking(rankings);
-    } catch (error) {
-      console.error('❌ Erro ao carregar ranking semanal:', error);
-      toast({
-        title: "Erro ao carregar ranking semanal",
-        description: "Não foi possível carregar os dados do ranking.",
-        variant: "destructive",
-      });
+    } catch (err) {
+      console.error('❌ Erro ao carregar ranking semanal:', err);
+      setError('Erro ao carregar ranking semanal');
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const fetchWeeklyCompetitions = async () => {
-    try {
-      console.log('🏆 Buscando competições semanais...');
-      
-      const { data, error } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .eq('competition_type', 'tournament' as any)
-        .in('status', ['active', 'scheduled', 'completed'] as any)
-        .order('start_date', { ascending: false });
-
-      if (error) throw error;
-
-      // Filter and validate data
-      const validData = (data || []).filter((item: any) => 
-        item && typeof item === 'object' && !('error' in item) && 
-        'id' in item && 'title' in item && 'status' in item
-      );
-
-      const competitions = validData.map((comp: any) => ({
-        id: comp.id,
-        title: comp.title,
-        description: comp.description || '',
-        start_date: comp.start_date,
-        end_date: comp.end_date,
-        status: comp.status,
-        prize_pool: Number(comp.prize_pool) || 0,
-        max_participants: comp.max_participants || 0,
-        total_participants: 0 // TODO: calcular participantes reais
-      }));
-
-      console.log('🏆 Competições semanais carregadas:', competitions.length);
-      setWeeklyCompetitions(competitions);
-
-      // Definir competição ativa (deve haver apenas uma com status 'active')
-      const active = competitions.find(comp => comp.status === 'active');
-      setActiveWeeklyCompetition(active || null);
-      
-      if (active) {
-        console.log('👑 Competição ativa encontrada:', active.title);
-      } else {
-        console.log('📅 Nenhuma competição ativa no momento');
-      }
-    } catch (error) {
-      console.error('❌ Erro ao carregar competições semanais:', error);
-    }
-  };
-
-  const fetchTotalPlayers = async () => {
-    try {
-      const { count, error } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .gt('total_score', 0);
-
-      if (error) throw error;
-      
-      console.log('📊 Total de jogadores ativos:', count);
-      setTotalPlayers(count || 0);
-    } catch (error) {
-      console.error('❌ Erro ao buscar total de jogadores:', error);
-    }
-  };
-
-  const refreshData = async () => {
-    setIsLoading(true);
-    await Promise.all([
-      fetchWeeklyRankings(),
-      fetchWeeklyCompetitions(),
-      fetchTotalPlayers()
-    ]);
-    setIsLoading(false);
   };
 
   useEffect(() => {
-    refreshData();
+    loadWeeklyRanking();
   }, []);
 
   return {
-    dailyRanking: weeklyRanking, // Retorna ranking semanal no lugar do diário
     weeklyRanking,
-    weeklyCompetitions,
-    activeWeeklyCompetition,
-    totalPlayers,
     isLoading,
-    refreshData
+    error,
+    refetch: loadWeeklyRanking
   };
 };

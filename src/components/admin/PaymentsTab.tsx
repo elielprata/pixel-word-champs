@@ -44,8 +44,8 @@ export const PaymentsTab = () => {
     );
   }
 
-  const handleEditGroupWrapper = (groupId: string) => {
-    handleEditGroup(groupId);
+  const handleEditGroupWrapper = (group: GroupPrize) => {
+    handleEditGroup(group.id);
   };
 
   const handleSaveGroupWrapper = () => {
@@ -54,8 +54,8 @@ export const PaymentsTab = () => {
     }
   };
 
-  const handleToggleGroupWrapper = (groupId: string) => {
-    handleToggleGroup(groupId);
+  const handleToggleGroupWrapper = (group: GroupPrize) => {
+    handleToggleGroup(group.id);
   };
 
   return (

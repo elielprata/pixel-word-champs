@@ -30,8 +30,8 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
     );
   }
 
-  const handleEditGroupWrapper = (groupId: string) => {
-    paymentData.handleEditGroup(groupId);
+  const handleEditGroupWrapper = (group: GroupPrize) => {
+    paymentData.handleEditGroup(group.id);
   };
 
   const handleSaveGroupWrapper = () => {
@@ -40,8 +40,8 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
     }
   };
 
-  const handleToggleGroupWrapper = (groupId: string) => {
-    paymentData.handleToggleGroup(groupId);
+  const handleToggleGroupWrapper = (group: GroupPrize) => {
+    paymentData.handleToggleGroup(group.id);
   };
 
   return (
