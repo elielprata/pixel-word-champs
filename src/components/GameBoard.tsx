@@ -36,7 +36,11 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('Renderizando GameBoard', { level, timeLeft, canRevive }, 'GAME_BOARD');
+  logger.debug('Renderizando GameBoard', { 
+    level, 
+    timeLeft, 
+    canRevive 
+  }, 'GAME_BOARD');
 
   // Usar palavras do banco de dados através do useBoard
   const { boardData, size, levelWords } = useBoard(level);
@@ -65,7 +69,11 @@ const GameBoard = ({
     closeGameOver
   } = useGameLogic(level, timeLeft, levelWords, onWordFound, (levelScore) => {
     // Só contabiliza pontos quando o nível é completado
-    logger.info('Nível completado', { level, levelScore }, 'GAME_BOARD');
+    logger.info('Nível completado', { 
+      level, 
+      levelScore,
+      foundWordsCount: foundWords.length 
+    }, 'GAME_BOARD');
     onLevelComplete(levelScore);
   });
 
@@ -91,8 +99,21 @@ const GameBoard = ({
       if (levelWords.includes(word) && 
           !foundWords.some(fw => fw.word === word) && 
           isValidWordDirection(finalSelection)) {
-        logger.info('Palavra encontrada', { word, level }, 'GAME_BOARD');
+        logger.info('Palavra encontrada', { 
+          word, 
+          level,
+          wordLength: word.length,
+          selectionLength: finalSelection.length 
+        }, 'GAME_BOARD');
         addFoundWord(word, finalSelection);
+      } else {
+        logger.debug('Palavra inválida tentada', { 
+          word,
+          level,
+          isInWordList: levelWords.includes(word),
+          alreadyFound: foundWords.some(fw => fw.word === word),
+          validDirection: isValidWordDirection(finalSelection)
+        }, 'GAME_BOARD');
       }
     }
   };
@@ -103,10 +124,23 @@ const GameBoard = ({
 
   const handleReviveClick = () => {
     if (onRevive) {
-      logger.info('Iniciando processo de revive', { level }, 'GAME_BOARD');
+      logger.info('Revive ativado', { 
+        level,
+        timeLeft,
+        foundWordsCount: foundWords.length 
+      }, 'GAME_BOARD');
       onRevive();
       closeGameOver();
     }
+  };
+
+  const handleUseHintClick = () => {
+    logger.info('Dica utilizada', { 
+      level,
+      hintsUsed: hintsUsed + 1,
+      timeLeft 
+    }, 'GAME_BOARD');
+    useHint();
   };
 
   // Função para obter a cor específica de uma palavra encontrada
@@ -152,7 +186,7 @@ const GameBoard = ({
             timeLeft={timeLeft}
             hintsUsed={hintsUsed}
             levelScore={currentLevelScore}
-            onUseHint={useHint}
+            onUseHint={handleUseHintClick}
           />
         </div>
 

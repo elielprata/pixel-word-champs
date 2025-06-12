@@ -9,10 +9,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingState from './home/LoadingState';
+import { logger } from '@/utils/logger';
 
 const InviteScreen = () => {
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const {
     inviteCode,
     invitedFriends,
@@ -25,6 +26,11 @@ const InviteScreen = () => {
     if (!inviteCode) return;
     
     navigator.clipboard.writeText(inviteCode);
+    logger.info('Código de convite copiado', { 
+      userId: user?.id,
+      inviteCode: inviteCode?.substring(0, 4) + '***' // Log parcial por segurança
+    }, 'INVITE_SCREEN');
+    
     toast({
       title: "Código copiado!",
       description: "Compartilhe com seus amigos para ganhar recompensas.",
@@ -52,6 +58,11 @@ const InviteScreen = () => {
   }
 
   if (error) {
+    logger.error('Erro na tela de convites', { 
+      error,
+      userId: user?.id 
+    }, 'INVITE_SCREEN');
+    
     return (
       <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen flex items-center justify-center">
         <Card className="text-center p-8">
@@ -63,6 +74,13 @@ const InviteScreen = () => {
       </div>
     );
   }
+
+  logger.debug('Tela de convites renderizada', { 
+    userId: user?.id,
+    statsTotal: stats.totalPoints,
+    activeFriends: stats.activeFriends,
+    hasInviteCode: !!inviteCode
+  }, 'INVITE_SCREEN');
 
   return (
     <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen">

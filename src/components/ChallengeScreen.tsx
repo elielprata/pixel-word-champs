@@ -33,7 +33,11 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(isGameStarted);
 
   const handleStopGame = async () => {
-    logger.info('Usuário escolheu parar o jogo', { challengeId, currentLevel }, 'CHALLENGE_SCREEN');
+    logger.info('Usuário parou o jogo', { 
+      challengeId, 
+      currentLevel,
+      totalScore 
+    }, 'CHALLENGE_SCREEN');
     await markParticipationAsCompleted();
     onBack();
   };
@@ -41,29 +45,44 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const handleRevive = () => {
     const success = extendTime();
     if (success) {
-      logger.info('Revive ativado com sucesso', { challengeId, currentLevel }, 'CHALLENGE_SCREEN');
+      logger.info('Revive ativado', { 
+        challengeId, 
+        currentLevel,
+        timeRemaining 
+      }, 'CHALLENGE_SCREEN');
     } else {
-      logger.warn('Falha ao ativar revive', { challengeId, currentLevel }, 'CHALLENGE_SCREEN');
+      logger.warn('Falha ao ativar revive', { 
+        challengeId, 
+        currentLevel 
+      }, 'CHALLENGE_SCREEN');
     }
   };
 
   const handleCompleteGame = async () => {
-    logger.info('Finalizando jogo após completar todos os níveis', { 
+    logger.info('Jogo finalizado', { 
       challengeId, 
       totalScore, 
-      currentLevel 
+      currentLevel,
+      gameCompleted: true
     }, 'CHALLENGE_SCREEN');
     await markParticipationAsCompleted();
     onBack();
   };
 
   const handleBackToMenu = () => {
-    logger.info('Voltando ao menu principal', { challengeId }, 'CHALLENGE_SCREEN');
+    logger.info('Retorno ao menu principal', { 
+      challengeId,
+      currentLevel,
+      totalScore 
+    }, 'CHALLENGE_SCREEN');
     onBack();
   };
 
   const handleAdvanceLevelWithReset = () => {
-    logger.debug('Avançando nível com reset de timer', { currentLevel }, 'CHALLENGE_SCREEN');
+    logger.debug('Avançando nível com reset', { 
+      currentLevel,
+      nextLevel: currentLevel + 1 
+    }, 'CHALLENGE_SCREEN');
     handleAdvanceLevel();
     resetTimer();
   };

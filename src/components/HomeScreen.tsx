@@ -9,6 +9,7 @@ import UserStatsCard from './home/UserStatsCard';
 import CompetitionsList from './home/CompetitionsList';
 import LoadingState from './home/LoadingState';
 import ErrorState from './home/ErrorState';
+import { logger } from '@/utils/logger';
 
 interface HomeScreenProps {
   onStartChallenge: (challengeId: string) => void;
@@ -27,12 +28,17 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
       setIsLoading(true);
       setError(null);
       
-      console.log('🎯 Carregando apenas competições diárias ativas...');
+      logger.info('Carregando competições diárias', { 
+        userId: user?.id 
+      }, 'HOME_SCREEN');
 
       const response = await dailyCompetitionService.getActiveDailyCompetitions();
       
       if (response.success && response.data) {
-        console.log(`✅ ${response.data.length} competições diárias encontradas`);
+        logger.info('Competições carregadas', { 
+          count: response.data.length,
+          userId: user?.id 
+        }, 'HOME_SCREEN');
         
         // Mapear os dados para a interface Competition - APENAS competições diárias
         const mappedCompetitions: Competition[] = response.data
@@ -55,14 +61,21 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
           }));
         
         setCompetitions(mappedCompetitions);
-        console.log('📊 Competições diárias carregadas para o menu inicial:', mappedCompetitions.length);
+        logger.debug('Competições mapeadas', { 
+          mappedCount: mappedCompetitions.length 
+        }, 'HOME_SCREEN');
       } else {
-        console.error('❌ Erro ao buscar competições:', response.error);
+        logger.error('Erro ao buscar competições', { 
+          error: response.error 
+        }, 'HOME_SCREEN');
         setError(response.error || 'Erro ao carregar competições');
       }
 
     } catch (err) {
-      console.error('❌ Erro ao carregar competições:', err);
+      logger.error('Erro ao carregar competições', { 
+        error: err,
+        userId: user?.id 
+      }, 'HOME_SCREEN');
       setError('Erro ao carregar competições');
     } finally {
       setIsLoading(false);
