@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Clock, Trophy, Target, Zap, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Clock, Trophy, Target, Zap, CheckCircle, Users, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

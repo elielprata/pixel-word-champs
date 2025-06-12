@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, Crown, Trophy, Target, Settings, HelpCircle, Star, Edit2, Camera } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { profileService } from '@/services/profileService';
 import { avatarService } from '@/services/avatarService';
 import { useToast } from '@/hooks/use-toast';
-import ProfileEditModal from '@/components/ProfileEditModal';
 import { logger } from '@/utils/logger';
 
 interface ProfileScreenProps {
@@ -184,13 +184,6 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
           </div>
         </CardContent>
       </Card>
-
-      <ProfileEditModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onUpdate={handleProfileUpdate}
-        profile={profile}
-      />
     </div>
   );
 };

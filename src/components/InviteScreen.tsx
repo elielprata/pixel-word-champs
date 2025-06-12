@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Share2, Users, Gift, Copy, Check, UserPlus, Trophy } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +31,7 @@ const InviteScreen = () => {
   const [copied, setCopied] = useState(false);
   const [inputCode, setInputCode] = useState('');
   const [isUsing, setIsUsing] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadInviteData = async () => {
@@ -43,17 +45,17 @@ const InviteScreen = () => {
           inviteService.getInviteStats()
         ]);
 
-        if (codeResponse.success) {
+        if (codeResponse.success && codeResponse.data) {
           setInviteCode(codeResponse.data.code);
           logger.debug('Código de convite carregado', { codePrefix: codeResponse.data.code.substring(0, 5) }, 'INVITE_SCREEN');
         }
 
-        if (friendsResponse.success) {
-          setInvitedFriends(friendsResponse.data || []);
-          logger.debug('Amigos convidados carregados', { count: friendsResponse.data?.length || 0 }, 'INVITE_SCREEN');
+        if (friendsResponse.success && Array.isArray(friendsResponse.data)) {
+          setInvitedFriends(friendsResponse.data);
+          logger.debug('Amigos convidados carregados', { count: friendsResponse.data.length }, 'INVITE_SCREEN');
         }
 
-        if (statsResponse.success) {
+        if (statsResponse.success && statsResponse.data) {
           setInviteStats(statsResponse.data);
           logger.debug('Estatísticas de convites carregadas', { stats: statsResponse.data }, 'INVITE_SCREEN');
         }
@@ -256,7 +258,7 @@ const InviteScreen = () => {
                           <tr key={friend.name} className="border-b border-gray-200">
                             <td className="py-2">{friend.name}</td>
                             <td className="py-2">
-                              <Badge variant={friend.status === 'Ativo' ? 'success' : 'secondary'}>
+                              <Badge variant={friend.status === 'Ativo' ? 'default' : 'secondary'}>
                                 {friend.status}
                               </Badge>
                             </td>
