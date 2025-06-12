@@ -8,7 +8,7 @@ export const useDailyCompetitionValidation = () => {
 
   const validateAndPrepareData = useCallback((formData: any) => {
     try {
-      console.log('🔍 Hook: Validando dados do formulário:', formData);
+      console.log('🔍 Hook: Validando dados da competição diária:', formData);
       
       // Aplicar validação e correção automática
       const validatedData = validateDailyCompetitionData(formData);
@@ -17,14 +17,14 @@ export const useDailyCompetitionValidation = () => {
       
       // Informar ao usuário sobre a correção automática
       toast({
-        title: "Horário Ajustado Automaticamente",
-        description: "Competições diárias sempre terminam às 23:59:59 do dia selecionado.",
+        title: "Horários Ajustados Automaticamente",
+        description: "Competições diárias sempre começam às 00:00:00 e terminam às 23:59:59 do mesmo dia.",
         duration: 3000,
       });
       
       return validatedData;
     } catch (error) {
-      console.error('❌ Hook: Erro na validação:', error);
+      console.error('❌ Hook: Erro na validação diária:', error);
       
       toast({
         title: "Erro na Validação",
@@ -36,7 +36,7 @@ export const useDailyCompetitionValidation = () => {
     }
   }, [toast]);
 
-  const checkExistingCompetition = useCallback((competition: any) => {
+  const checkExistingDailyCompetition = useCallback((competition: any) => {
     if (competition?.competition_type === 'challenge') {
       const isValid = isDailyCompetitionTimeValid(competition.start_date, competition.end_date);
       
@@ -45,7 +45,7 @@ export const useDailyCompetitionValidation = () => {
         
         toast({
           title: "Horário Inconsistente Detectado",
-          description: "Esta competição será automaticamente corrigida para terminar às 23:59:59.",
+          description: "Esta competição será automaticamente corrigida para começar às 00:00:00 e terminar às 23:59:59.",
           variant: "destructive",
         });
       }
@@ -58,6 +58,6 @@ export const useDailyCompetitionValidation = () => {
 
   return {
     validateAndPrepareData,
-    checkExistingCompetition
+    checkExistingDailyCompetition
   };
 };
