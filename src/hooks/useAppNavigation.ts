@@ -1,16 +1,16 @@
 
 import { useState } from 'react';
-import { logger } from '@/utils/logger';
 
-interface NavigationState {
+export interface NavigationState {
   activeTab: string;
-  activeChallenge: string | number | null;
+  activeChallenge: string | null;
   showFullRanking: boolean;
-  challengeRankingId: string | null;
+  challengeRankingId: number | null;
   showSettings: boolean;
   showHelp: boolean;
   showAchievements: boolean;
   showGameRules: boolean;
+  pendingChallengeId: string | null;
 }
 
 export const useAppNavigation = () => {
@@ -23,140 +23,85 @@ export const useAppNavigation = () => {
     showHelp: false,
     showAchievements: false,
     showGameRules: false,
+    pendingChallengeId: null,
   });
 
   const setActiveTab = (tab: string) => {
-    logger.debug('Mudança de aba', { from: navigationState.activeTab, to: tab }, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      activeTab: tab,
-      showFullRanking: false,
-      challengeRankingId: null,
-      showSettings: false,
-      showHelp: false,
-      showAchievements: false,
-      showGameRules: false,
-    }));
+    setNavigationState(prev => ({ ...prev, activeTab: tab }));
   };
 
-  const handleStartChallenge = (challengeId: string | number) => {
-    logger.info('Iniciando desafio via navegação', { challengeId: String(challengeId) }, 'APP_NAVIGATION');
+  const handleStartChallenge = (challengeId: string) => {
     setNavigationState(prev => ({ 
       ...prev, 
-      activeChallenge: challengeId,
-      showGameRules: false,
+      showGameRules: true,
+      pendingChallengeId: challengeId,
+      activeTab: 'home'
     }));
   };
 
   const handleStartGameFromRules = () => {
-    logger.debug('Iniciando jogo das regras', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
+    setNavigationState(prev => ({
+      ...prev,
       showGameRules: false,
-      activeChallenge: 'daily',
+      activeChallenge: prev.pendingChallengeId,
+      pendingChallengeId: null
     }));
   };
 
   const handleBackFromRules = () => {
-    logger.debug('Voltando das regras do jogo', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
+    setNavigationState(prev => ({
+      ...prev,
       showGameRules: false,
+      pendingChallengeId: null
     }));
   };
 
   const handleBackToHome = () => {
-    logger.debug('Voltando para home', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
+    setNavigationState(prev => ({
+      ...prev,
       activeChallenge: null,
-      showFullRanking: false,
-      challengeRankingId: null,
-      showSettings: false,
-      showHelp: false,
-      showAchievements: false,
-      showGameRules: false,
+      activeTab: 'home'
     }));
   };
 
   const handleViewFullRanking = () => {
-    logger.debug('Visualizando ranking completo', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      showFullRanking: true,
-    }));
+    setNavigationState(prev => ({ ...prev, showFullRanking: true }));
   };
 
   const handleBackFromFullRanking = () => {
-    logger.debug('Voltando do ranking completo', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      showFullRanking: false,
-    }));
+    setNavigationState(prev => ({ ...prev, showFullRanking: false }));
   };
 
-  const handleViewChallengeRanking = (challengeId: string) => {
-    logger.debug('Visualizando ranking do desafio', { challengeId }, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      challengeRankingId: challengeId,
-    }));
+  const handleViewChallengeRanking = (challengeId: number) => {
+    setNavigationState(prev => ({ ...prev, challengeRankingId: challengeId }));
   };
 
   const handleBackFromChallengeRanking = () => {
-    logger.debug('Voltando do ranking do desafio', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      challengeRankingId: null,
-    }));
+    setNavigationState(prev => ({ ...prev, challengeRankingId: null }));
   };
 
   const handleNavigateToSettings = () => {
-    logger.debug('Navegando para configurações', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      showSettings: true,
-    }));
+    setNavigationState(prev => ({ ...prev, showSettings: true }));
   };
 
   const handleBackFromSettings = () => {
-    logger.debug('Voltando das configurações', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      showSettings: false,
-    }));
+    setNavigationState(prev => ({ ...prev, showSettings: false }));
   };
 
   const handleNavigateToHelp = () => {
-    logger.debug('Navegando para ajuda', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      showHelp: true,
-    }));
+    setNavigationState(prev => ({ ...prev, showHelp: true }));
   };
 
   const handleBackFromHelp = () => {
-    logger.debug('Voltando da ajuda', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      showHelp: false,
-    }));
+    setNavigationState(prev => ({ ...prev, showHelp: false }));
   };
 
   const handleNavigateToAchievements = () => {
-    logger.debug('Navegando para conquistas', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      showAchievements: true,
-    }));
+    setNavigationState(prev => ({ ...prev, showAchievements: true }));
   };
 
   const handleBackFromAchievements = () => {
-    logger.debug('Voltando das conquistas', undefined, 'APP_NAVIGATION');
-    setNavigationState(prev => ({ 
-      ...prev, 
-      showAchievements: false,
-    }));
+    setNavigationState(prev => ({ ...prev, showAchievements: false }));
   };
 
   return {
