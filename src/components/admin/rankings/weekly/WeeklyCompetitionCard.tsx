@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,10 +33,12 @@ export const WeeklyCompetitionCard = ({
   onDelete,
   deletingId
 }: WeeklyCompetitionCardProps) => {
+  // Fixed date formatting to preserve the exact date from database
   const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
-    const date = new Date(dateString);
+    // Parse the date as UTC and format directly without timezone conversion
+    const date = new Date(dateString + 'Z'); // Ensure UTC parsing
+    
     const dateFormatted = date.toLocaleDateString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
