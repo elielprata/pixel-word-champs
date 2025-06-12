@@ -23,12 +23,25 @@ export const useGameSettings = () => {
       const { data, error } = await supabase
         .from('game_settings')
         .select('*')
-        .in('category', ['scoring', 'gameplay'])
+        .in('category', ['scoring', 'gameplay'] as any)
         .order('category', { ascending: true })
         .order('setting_key', { ascending: true });
 
       if (error) throw error;
-      setSettings(data || []);
+      
+      // Filter and validate data
+      const validSettings = (data || [])
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item))
+        .map((item: any) => ({
+          id: item.id || '',
+          setting_key: item.setting_key || '',
+          setting_value: item.setting_value || '',
+          setting_type: item.setting_type || 'string',
+          description: item.description || '',
+          category: item.category || 'general'
+        })) as GameSetting[];
+        
+      setSettings(validSettings);
     } catch (error) {
       toast({
         title: "Erro",
@@ -59,8 +72,8 @@ export const useGameSettings = () => {
       const promises = settings.map(setting => 
         supabase
           .from('game_settings')
-          .update({ setting_value: setting.setting_value })
-          .eq('id', setting.id)
+          .update({ setting_value: setting.setting_value } as any)
+          .eq('id', setting.id as any)
       );
 
       await Promise.all(promises);

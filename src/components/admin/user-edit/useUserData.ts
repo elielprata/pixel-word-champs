@@ -51,8 +51,8 @@ export const useUserData = (userId: string) => {
       
       if (error) throw error;
 
-      // Validar e filtrar dados - verificar se data não é null
-      const validUsers = Array.isArray(data) && data ? data.filter((user: any) => 
+      // Validar e filtrar dados - verificar se data não é null e é array
+      const validUsers = (Array.isArray(data) && data !== null) ? data.filter((user: any) => 
         user && typeof user === 'object' && !('error' in user)
       ) : [];
 

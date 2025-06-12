@@ -17,14 +17,18 @@ export const useGamePointsConfig = () => {
         const { data, error } = await supabase
           .from('game_settings')
           .select('setting_key, setting_value')
-          .eq('category', 'scoring');
+          .eq('category', 'scoring' as any);
 
         if (error) throw error;
 
-        const configObj = data.reduce((acc, setting) => {
-          acc[setting.setting_key] = parseInt(setting.setting_value);
-          return acc;
-        }, {} as PointsConfig);
+        const configObj = (data || [])
+          .filter((setting: any) => setting && typeof setting === 'object' && !('error' in setting))
+          .reduce((acc, setting: any) => {
+            if (setting.setting_key && setting.setting_value) {
+              acc[setting.setting_key] = parseInt(setting.setting_value);
+            }
+            return acc;
+          }, {} as PointsConfig);
 
         logger.log('🎯 Configurações de pontuação carregadas:', configObj);
         setConfig(configObj);
