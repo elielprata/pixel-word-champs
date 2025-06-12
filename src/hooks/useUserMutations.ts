@@ -114,12 +114,16 @@ export const useUserMutations = () => {
         throw new Error('Você não pode excluir sua própria conta');
       }
 
-      // Buscar dados do usuário para logs
-      const { data: userProfile } = await supabase
+      // Buscar dados do usuário para logs - CORRIGIDO: apenas username da tabela profiles
+      const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('username, email')
+        .select('username')
         .eq('id', userId)
         .single();
+
+      if (profileError) {
+        logger.warn('Erro ao buscar perfil do usuário para log', { error: profileError.message }, 'USER_MUTATIONS');
+      }
 
       // Registrar ação ANTES de deletar
       try {
@@ -131,7 +135,7 @@ export const useUserMutations = () => {
             action_type: 'delete_user',
             details: { 
               timestamp: new Date().toISOString(),
-              username: userProfile?.username || 'Desconhecido'
+              username: userProfile?.username || 'Usuário não encontrado'
             }
           });
 
