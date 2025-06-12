@@ -11,7 +11,7 @@ interface TimerConfig {
 export const useIntegratedGameTimer = (isGameStarted: boolean) => {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [timerConfig, setTimerConfig] = useState<TimerConfig>({
-    initialTime: 180, // fallback padrão
+    initialTime: 60, // fallback alterado para 60 segundos
     reviveTimeBonus: 30 // fallback padrão de 30 segundos
   });
   const { config, loading } = useGamePointsConfig();
@@ -29,16 +29,16 @@ export const useIntegratedGameTimer = (isGameStarted: boolean) => {
 
         if (error) throw error;
 
-        let initialTime = 180; // fallback
+        let initialTime = 60; // fallback alterado para 60 segundos
         
         // Procurar pela configuração base_time_limit
         const timerSetting = timerSettings?.find(s => s.setting_key === 'base_time_limit');
         
         if (timerSetting) {
-          initialTime = parseInt(timerSetting.setting_value) || 180;
+          initialTime = parseInt(timerSetting.setting_value) || 60;
           console.log(`⏰ Tempo inicial configurado: ${initialTime} segundos (base_time_limit)`);
         } else {
-          console.log('⚠️ Configuração base_time_limit não encontrada, usando padrão de 180s');
+          console.log('⚠️ Configuração base_time_limit não encontrada, usando padrão de 60s');
         }
 
         // Garantir que o revive_time_bonus tenha um valor válido
@@ -55,10 +55,10 @@ export const useIntegratedGameTimer = (isGameStarted: boolean) => {
         // Usar valores padrão em caso de erro
         const fallbackReviveBonus = config?.revive_time_bonus || 30;
         setTimerConfig({
-          initialTime: 180,
+          initialTime: 60, // fallback alterado para 60 segundos
           reviveTimeBonus: fallbackReviveBonus
         });
-        setTimeRemaining(180);
+        setTimeRemaining(60); // fallback alterado para 60 segundos
       }
     };
 
