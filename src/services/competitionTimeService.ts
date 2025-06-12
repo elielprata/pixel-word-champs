@@ -1,88 +1,69 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getBrasiliaTime } from '@/utils/brasiliaTime';
-import { adjustCompetitionEndTime, isCompetitionActive, logCompetitionVerification } from '@/utils/competitionTimeUtils';
+import { getCurrentDateISO, calculateCompetitionStatus } from '@/utils/brasiliaTime';
 
-export class CompetitionTimeService {
-  async adjustCompetitionTimes(competitions: any[]): Promise<void> {
-    for (const comp of competitions) {
-      const endDate = new Date(comp.end_date);
-      const startDate = new Date(comp.start_date);
+class CompetitionTimeService {
+  /**
+   * Atualiza o status das competições baseado no horário atual (VERSÃO SIMPLIFICADA)
+   */
+  async updateCompetitionStatuses() {
+    try {
+      console.log('🔄 Atualizando status das competições (SISTEMA SIMPLIFICADO)...');
       
-      if (endDate.getUTCHours() !== 23 || endDate.getUTCMinutes() !== 59 || endDate.getUTCSeconds() !== 59) {
-        console.log(`🔧 Ajustando horário de fim da competição "${comp.title}" para 23:59:59`);
+      const now = getCurrentDateISO();
+      
+      // Buscar todas as competições que podem precisar de atualização
+      const { data: competitions, error } = await supabase
+        .from('competitions')
+        .select('id, title, start_date, end_date, status')
+        .neq('status', 'completed');
+
+      if (error) {
+        console.error('❌ Erro ao buscar competições:', error);
+        return;
+      }
+
+      if (!competitions?.length) {
+        console.log('ℹ️ Nenhuma competição para atualizar');
+        return;
+      }
+
+      // Atualizar status de cada competição
+      for (const competition of competitions) {
+        const currentStatus = calculateCompetitionStatus(competition.start_date, competition.end_date);
         
-        const correctedEndDate = adjustCompetitionEndTime(startDate);
-        
-        const { error: updateError } = await supabase
-          .from('custom_competitions')
-          .update({ 
-            end_date: correctedEndDate.toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', comp.id);
-        
-        if (updateError) {
-          console.error('❌ Erro ao atualizar competição:', updateError);
-        } else {
-          console.log('✅ Competição atualizada com sucesso');
-          comp.end_date = correctedEndDate.toISOString();
+        if (currentStatus !== competition.status) {
+          console.log(`🔄 Atualizando status da competição ${competition.title}: ${competition.status} → ${currentStatus}`);
+          
+          await supabase
+            .from('competitions')
+            .update({ status: currentStatus })
+            .eq('id', competition.id);
         }
       }
+
+      console.log('✅ Status das competições atualizados (SISTEMA SIMPLIFICADO)');
+    } catch (error) {
+      console.error('❌ Erro ao atualizar status das competições:', error);
     }
   }
 
-  filterActiveCompetitions(competitions: any[]): any[] {
-    const activeCompetitions = competitions.filter(comp => {
-      const startDate = new Date(comp.start_date);
-      const endDate = new Date(comp.end_date);
-      const now = new Date();
-      
-      const active = isCompetitionActive(startDate, endDate);
-      logCompetitionVerification(comp, active, now);
-      
-      return active;
-    });
-    
-    console.log('✅ Competições ativas após filtro de data:', activeCompetitions.length);
-    
-    if (activeCompetitions.length > 0) {
-      activeCompetitions.forEach((comp, index) => {
-        console.log(`🎯 Competição ativa ${index + 1}:`, {
-          id: comp.id,
-          title: comp.title,
-          description: comp.description,
-          theme: comp.theme,
-          start_date: comp.start_date,
-          end_date: comp.end_date,
-          max_participants: comp.max_participants
-        });
-      });
-    } else {
-      this.logDebugInfo(competitions);
-    }
-    
-    return activeCompetitions;
+  /**
+   * Verifica se uma competição está ativa no momento (VERSÃO SIMPLIFICADA)
+   */
+  isCompetitionActive(startDate: string, endDate: string): boolean {
+    const status = calculateCompetitionStatus(startDate, endDate);
+    return status === 'active';
   }
 
-  private logDebugInfo(competitions: any[]): void {
-    console.log('📅 Nenhuma competição ativa encontrada no período atual');
-    
-    if (competitions.length > 0) {
-      console.log('🔍 Debug - Todas as competições challenge encontradas:');
-      competitions.forEach(comp => {
-        const startDate = new Date(comp.start_date);
-        const endDate = new Date(comp.end_date);
-        const now = new Date();
-        
-        console.log(`- ${comp.title}:`);
-        console.log(`  Início: ${startDate.toISOString()}`);
-        console.log(`  Fim: ${endDate.toISOString()}`);
-        console.log(`  Agora: ${now.toISOString()}`);
-        console.log(`  Timestamps - Start: ${startDate.getTime()}, End: ${endDate.getTime()}, Current: ${now.getTime()}`);
-        console.log(`  Começou: ${now >= startDate}, Não terminou: ${now <= endDate}`);
-      });
-    }
+  /**
+   * Obtém o tempo restante para uma competição em segundos (VERSÃO SIMPLIFICADA)
+   */
+  getTimeRemaining(endDate: string): number {
+    const now = new Date();
+    const end = new Date(endDate);
+    const diffMs = end.getTime() - now.getTime();
+    return Math.max(0, Math.floor(diffMs / 1000));
   }
 }
 
