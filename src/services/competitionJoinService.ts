@@ -2,12 +2,18 @@
 import { supabase } from '@/integrations/supabase/client';
 import { CompetitionParticipation, ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { logger } from '@/utils/logger';
 
 export class CompetitionJoinService {
   async joinCompetition(competitionId: string): Promise<ApiResponse<CompetitionParticipation>> {
     try {
+      logger.info('Tentativa de participar em competição', { competitionId }, 'COMPETITION_JOIN_SERVICE');
+      
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) {
+        logger.error('Usuário não autenticado ao tentar participar', { competitionId }, 'COMPETITION_JOIN_SERVICE');
+        throw new Error('Usuário não autenticado');
+      }
 
       const { data, error } = await supabase
         .from('competition_participations')
@@ -32,14 +38,18 @@ export class CompetitionJoinService {
         payment_date: data.payment_date || undefined
       };
 
+      logger.info('Participação criada com sucesso', { competitionId, userId: user.id }, 'COMPETITION_JOIN_SERVICE');
       return createSuccessResponse(participation);
     } catch (error) {
+      logger.error('Erro ao participar de competição', { competitionId, error }, 'COMPETITION_JOIN_SERVICE');
       return createErrorResponse(handleServiceError(error, 'COMPETITION_JOIN'));
     }
   }
 
   async getCompetitionRanking(competitionId: string): Promise<ApiResponse<any[]>> {
     try {
+      logger.debug('Buscando ranking da competição', { competitionId }, 'COMPETITION_JOIN_SERVICE');
+      
       const { data, error } = await supabase
         .from('competition_participations')
         .select(`
@@ -56,8 +66,10 @@ export class CompetitionJoinService {
 
       if (error) throw error;
 
+      logger.debug('Ranking da competição carregado', { competitionId, count: data?.length || 0 }, 'COMPETITION_JOIN_SERVICE');
       return createSuccessResponse(data || []);
     } catch (error) {
+      logger.error('Erro ao buscar ranking da competição', { competitionId, error }, 'COMPETITION_JOIN_SERVICE');
       return createErrorResponse(handleServiceError(error, 'COMPETITION_RANKING'));
     }
   }

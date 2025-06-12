@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { validateWeeklyCompetitionData } from '@/utils/weeklyCompetitionValidation';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { ApiResponse } from '@/types';
+import { logger } from '@/utils/logger';
 
 export class WeeklyCompetitionValidationService {
   /**
@@ -10,12 +11,12 @@ export class WeeklyCompetitionValidationService {
    */
   async createWeeklyCompetition(formData: any): Promise<ApiResponse<any>> {
     try {
-      console.log('🔍 Service: Criando competição semanal com validação:', formData);
+      logger.info('Criando competição semanal com validação', { title: formData.title }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
       
       // OBRIGATÓRIO: Validar e corrigir dados antes de salvar
       const validatedData = validateWeeklyCompetitionData(formData);
       
-      console.log('✅ Service: Dados validados e corrigidos:', validatedData);
+      logger.debug('Dados validados e corrigidos para competição semanal', { validatedData }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
       
       // Obter o usuário atual
       const { data: { user } } = await supabase.auth.getUser();
@@ -38,14 +39,14 @@ export class WeeklyCompetitionValidationService {
         .single();
 
       if (error) {
-        console.error('❌ Service: Erro ao criar competição semanal:', error);
+        logger.error('Erro ao criar competição semanal', { error }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
         throw error;
       }
 
-      console.log('🎉 Service: Competição semanal criada com sucesso:', data);
+      logger.info('Competição semanal criada com sucesso', { competitionId: data.id }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
       return createSuccessResponse(data);
     } catch (error) {
-      console.error('❌ Service: Erro na criação semanal:', error);
+      logger.error('Erro na criação de competição semanal', { error }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
       return createErrorResponse(handleServiceError(error, 'CREATE_WEEKLY_COMPETITION'));
     }
   }
@@ -55,12 +56,12 @@ export class WeeklyCompetitionValidationService {
    */
   async updateWeeklyCompetition(competitionId: string, formData: any): Promise<ApiResponse<any>> {
     try {
-      console.log('🔍 Service: Atualizando competição semanal:', { competitionId, formData });
+      logger.info('Atualizando competição semanal', { competitionId, title: formData.title }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
       
       // OBRIGATÓRIO: Validar e corrigir dados antes de atualizar
       const validatedData = validateWeeklyCompetitionData(formData);
       
-      console.log('✅ Service: Dados validados para atualização semanal:', validatedData);
+      logger.debug('Dados validados para atualização semanal', { competitionId, validatedData }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
       
       // Atualizar no banco - o trigger garantirá horários padronizados
       const { data, error } = await supabase
@@ -80,18 +81,20 @@ export class WeeklyCompetitionValidationService {
         .single();
 
       if (error) {
-        console.error('❌ Service: Erro ao atualizar competição semanal:', error);
+        logger.error('Erro ao atualizar competição semanal', { competitionId, error }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
         throw error;
       }
 
       if (!data) {
-        throw new Error('Competição não encontrada ou não é uma competição semanal');
+        const errorMsg = 'Competição não encontrada ou não é uma competição semanal';
+        logger.error(errorMsg, { competitionId }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
+        throw new Error(errorMsg);
       }
 
-      console.log('🎉 Service: Competição semanal atualizada com sucesso:', data);
+      logger.info('Competição semanal atualizada com sucesso', { competitionId }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
       return createSuccessResponse(data);
     } catch (error) {
-      console.error('❌ Service: Erro na atualização semanal:', error);
+      logger.error('Erro na atualização de competição semanal', { competitionId, error }, 'WEEKLY_COMPETITION_VALIDATION_SERVICE');
       return createErrorResponse(handleServiceError(error, 'UPDATE_WEEKLY_COMPETITION'));
     }
   }

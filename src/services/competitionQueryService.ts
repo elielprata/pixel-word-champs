@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { logger } from '@/utils/logger';
 
 export class CompetitionQueryService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
     try {
-      console.log('🔍 Buscando competições diárias ativas no banco...');
+      logger.debug('Buscando competições diárias ativas no banco', undefined, 'COMPETITION_QUERY_SERVICE');
 
       const { data, error } = await supabase
         .from('custom_competitions')
@@ -14,35 +15,32 @@ export class CompetitionQueryService {
         .eq('competition_type', 'challenge')
         .eq('status', 'active');
 
-      console.log('📊 Resposta bruta do banco:', { data, error });
+      logger.debug('Resposta da consulta de competições diárias', { data, error }, 'COMPETITION_QUERY_SERVICE');
 
       if (error) {
-        console.error('❌ Erro na consulta SQL:', error);
+        logger.error('Erro na consulta SQL de competições diárias', { error }, 'COMPETITION_QUERY_SERVICE');
         throw error;
       }
 
       if (!data) {
-        console.log('⚠️ Nenhum dado retornado do banco');
+        logger.warn('Nenhum dado retornado da consulta de competições diárias', undefined, 'COMPETITION_QUERY_SERVICE');
         return createSuccessResponse([]);
       }
 
-      console.log(`📊 Total de competições challenge ativas encontradas: ${data.length}`);
-      
-      // Retornar diretamente os dados do backend, sem filtros adicionais
-      console.log(`✅ Competições retornadas: ${data.length}`);
+      logger.info('Competições diárias ativas encontradas', { count: data.length }, 'COMPETITION_QUERY_SERVICE');
       return createSuccessResponse(data);
     } catch (error) {
-      console.error('❌ Erro ao buscar competições diárias ativas:', error);
+      logger.error('Erro ao buscar competições diárias ativas', { error }, 'COMPETITION_QUERY_SERVICE');
       return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_DAILY_COMPETITIONS'));
     }
   }
 
   async getDailyCompetitionRanking(competitionId: string): Promise<ApiResponse<any[]>> {
     try {
-      console.log('📊 Buscando ranking da competição diária:', competitionId);
+      logger.debug('Buscando ranking da competição diária', { competitionId }, 'COMPETITION_QUERY_SERVICE');
       
       if (!competitionId) {
-        console.error('❌ ID da competição não fornecido');
+        logger.error('ID da competição não fornecido para ranking', undefined, 'COMPETITION_QUERY_SERVICE');
         return createErrorResponse('ID da competição é obrigatório');
       }
 
@@ -56,12 +54,12 @@ export class CompetitionQueryService {
         .limit(100);
 
       if (participationsError) {
-        console.error('❌ Erro ao buscar participações:', participationsError);
+        logger.error('Erro ao buscar participações para ranking', { competitionId, error: participationsError }, 'COMPETITION_QUERY_SERVICE');
         throw participationsError;
       }
 
       if (!participations || participations.length === 0) {
-        console.log('📊 Nenhuma participação encontrada para a competição');
+        logger.warn('Nenhuma participação encontrada para ranking', { competitionId }, 'COMPETITION_QUERY_SERVICE');
         return createSuccessResponse([]);
       }
 
@@ -73,7 +71,7 @@ export class CompetitionQueryService {
         .in('id', userIds);
 
       if (profilesError) {
-        console.error('❌ Erro ao buscar perfis:', profilesError);
+        logger.error('Erro ao buscar perfis para ranking', { competitionId, error: profilesError }, 'COMPETITION_QUERY_SERVICE');
         throw profilesError;
       }
 
@@ -89,10 +87,10 @@ export class CompetitionQueryService {
         };
       });
 
-      console.log('✅ Ranking da competição diária carregado:', rankingData.length);
+      logger.info('Ranking da competição diária carregado', { competitionId, count: rankingData.length }, 'COMPETITION_QUERY_SERVICE');
       return createSuccessResponse(rankingData);
     } catch (error) {
-      console.error('❌ Erro ao carregar ranking:', error);
+      logger.error('Erro ao carregar ranking da competição diária', { competitionId, error }, 'COMPETITION_QUERY_SERVICE');
       return createErrorResponse(handleServiceError(error, 'GET_DAILY_COMPETITION_RANKING'));
     }
   }

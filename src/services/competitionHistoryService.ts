@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface CompetitionHistoryData {
   competitionId: string;
@@ -17,7 +18,7 @@ interface CompetitionHistoryData {
 class CompetitionHistoryService {
   async saveCompetitionHistory(historyData: CompetitionHistoryData[]): Promise<void> {
     try {
-      console.log('💾 Salvando histórico da competição para', historyData.length, 'participantes');
+      logger.info('Salvando histórico de competições', { count: historyData.length }, 'COMPETITION_HISTORY_SERVICE');
 
       const historyRecords = historyData.map(data => ({
         competition_id: data.competitionId,
@@ -38,19 +39,21 @@ class CompetitionHistoryService {
         .insert(historyRecords);
 
       if (error) {
-        console.error('❌ Erro ao salvar histórico:', error);
+        logger.error('Erro ao salvar histórico de competições', { error }, 'COMPETITION_HISTORY_SERVICE');
         throw error;
       }
 
-      console.log('✅ Histórico da competição salvo com sucesso');
+      logger.info('Histórico de competições salvo com sucesso', { count: historyRecords.length }, 'COMPETITION_HISTORY_SERVICE');
     } catch (error) {
-      console.error('❌ Erro no serviço de histórico:', error);
+      logger.error('Erro no serviço de histórico de competições', { error }, 'COMPETITION_HISTORY_SERVICE');
       throw error;
     }
   }
 
   async getCompetitionHistory(competitionId?: string, userId?: string): Promise<any[]> {
     try {
+      logger.debug('Buscando histórico de competições', { competitionId, userId }, 'COMPETITION_HISTORY_SERVICE');
+      
       let query = supabase
         .from('competition_history')
         .select('*')
@@ -67,26 +70,29 @@ class CompetitionHistoryService {
       const { data, error } = await query;
 
       if (error) {
-        console.error('❌ Erro ao buscar histórico:', error);
+        logger.error('Erro ao buscar histórico de competições', { error }, 'COMPETITION_HISTORY_SERVICE');
         throw error;
       }
 
+      logger.debug('Histórico de competições carregado', { count: data?.length || 0 }, 'COMPETITION_HISTORY_SERVICE');
       return data || [];
     } catch (error) {
-      console.error('❌ Erro ao buscar histórico de competições:', error);
+      logger.error('Erro ao buscar histórico de competições', { error }, 'COMPETITION_HISTORY_SERVICE');
       return [];
     }
   }
 
   async getUserCompetitionStats(userId: string): Promise<any> {
     try {
+      logger.debug('Buscando estatísticas de competições do usuário', { userId }, 'COMPETITION_HISTORY_SERVICE');
+      
       const { data, error } = await supabase
         .from('competition_history')
         .select('*')
         .eq('user_id', userId);
 
       if (error) {
-        console.error('❌ Erro ao buscar estatísticas do usuário:', error);
+        logger.error('Erro ao buscar estatísticas do usuário', { userId, error }, 'COMPETITION_HISTORY_SERVICE');
         return null;
       }
 
@@ -97,14 +103,17 @@ class CompetitionHistoryService {
         ? Math.min(...competitions.map(comp => comp.final_position))
         : null;
 
-      return {
+      const stats = {
         totalCompetitions,
         totalPrizes,
         bestPosition,
         competitions
       };
+
+      logger.debug('Estatísticas do usuário calculadas', { userId, stats }, 'COMPETITION_HISTORY_SERVICE');
+      return stats;
     } catch (error) {
-      console.error('❌ Erro ao calcular estatísticas:', error);
+      logger.error('Erro ao calcular estatísticas do usuário', { userId, error }, 'COMPETITION_HISTORY_SERVICE');
       return null;
     }
   }

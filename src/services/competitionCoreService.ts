@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Competition, ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { logger } from '@/utils/logger';
 
 export class CompetitionCoreService {
   async getActiveCompetitions(): Promise<ApiResponse<Competition[]>> {
     try {
-      console.log('🔍 Buscando competições ativas na tabela custom_competitions...');
+      logger.debug('Buscando competições ativas na tabela custom_competitions', undefined, 'COMPETITION_CORE_SERVICE');
 
       const { data, error } = await supabase
         .from('custom_competitions')
@@ -16,7 +17,7 @@ export class CompetitionCoreService {
 
       if (error) throw error;
 
-      console.log(`📊 Competições ativas encontradas: ${data?.length || 0}`);
+      logger.info('Competições ativas encontradas', { count: data?.length || 0 }, 'COMPETITION_CORE_SERVICE');
 
       const competitions = data?.map(comp => ({
         id: comp.id,
@@ -35,18 +36,18 @@ export class CompetitionCoreService {
         updated_at: comp.updated_at || ''
       })) || [];
 
-      console.log('✅ Competições mapeadas com sucesso:', competitions.length);
-      console.log('📅 Preservando datas originais das competições mapeadas');
+      logger.debug('Competições mapeadas com sucesso', { count: competitions.length }, 'COMPETITION_CORE_SERVICE');
+      logger.debug('Preservando datas originais das competições mapeadas', undefined, 'COMPETITION_CORE_SERVICE');
       return createSuccessResponse(competitions);
     } catch (error) {
-      console.error('❌ Erro ao buscar competições ativas:', error);
+      logger.error('Erro ao buscar competições ativas', { error }, 'COMPETITION_CORE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'COMPETITION_GET_ACTIVE'));
     }
   }
 
   async getDailyCompetition(): Promise<ApiResponse<Competition>> {
     try {
-      console.log('🔍 Buscando competição diária ativa...');
+      logger.debug('Buscando competição diária ativa', undefined, 'COMPETITION_CORE_SERVICE');
 
       const { data, error } = await supabase
         .from('custom_competitions')
@@ -73,17 +74,17 @@ export class CompetitionCoreService {
         updated_at: data.updated_at || ''
       };
 
-      console.log('✅ Competição diária encontrada:', competition.title);
+      logger.info('Competição diária encontrada', { title: competition.title }, 'COMPETITION_CORE_SERVICE');
       return createSuccessResponse(competition);
     } catch (error) {
-      console.error('❌ Erro ao buscar competição diária:', error);
+      logger.error('Erro ao buscar competição diária', { error }, 'COMPETITION_CORE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'COMPETITION_GET_DAILY'));
     }
   }
 
   async getWeeklyCompetition(): Promise<ApiResponse<Competition>> {
     try {
-      console.log('🔍 Buscando competição semanal ativa...');
+      logger.debug('Buscando competição semanal ativa', undefined, 'COMPETITION_CORE_SERVICE');
 
       const { data, error } = await supabase
         .from('custom_competitions')
@@ -110,10 +111,10 @@ export class CompetitionCoreService {
         updated_at: data.updated_at || ''
       };
 
-      console.log('✅ Competição semanal encontrada:', competition.title);
+      logger.info('Competição semanal encontrada', { title: competition.title }, 'COMPETITION_CORE_SERVICE');
       return createSuccessResponse(competition);
     } catch (error) {
-      console.error('❌ Erro ao buscar competição semanal:', error);
+      logger.error('Erro ao buscar competição semanal', { error }, 'COMPETITION_CORE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'COMPETITION_GET_WEEKLY'));
     }
   }

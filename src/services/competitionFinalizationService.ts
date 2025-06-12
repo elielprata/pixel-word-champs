@@ -8,19 +8,19 @@ import { logger } from '@/utils/logger';
 class CompetitionFinalizationService {
   async finalizeDailyCompetition(competitionId: string): Promise<void> {
     try {
-      logger.debug('Finalizando competição diária', { competitionId });
+      logger.info('Iniciando finalização de competição diária', { competitionId }, 'COMPETITION_FINALIZATION_SERVICE');
 
       await dailyCompetitionFinalizationService.finalizeDailyCompetition(competitionId);
       
-      logger.debug('Competição diária finalizada com sucesso', { competitionId });
+      logger.info('Competição diária finalizada com sucesso', { competitionId }, 'COMPETITION_FINALIZATION_SERVICE');
     } catch (error) {
-      logger.error('Erro ao finalizar competição diária', { competitionId, error });
+      logger.error('Erro ao finalizar competição diária', { competitionId, error }, 'COMPETITION_FINALIZATION_SERVICE');
     }
   }
 
   async finalizeWeeklyCompetition(competitionId: string): Promise<void> {
     try {
-      logger.debug('Finalizando competição semanal', { competitionId });
+      logger.info('Iniciando finalização de competição semanal', { competitionId }, 'COMPETITION_FINALIZATION_SERVICE');
 
       await weeklyCompetitionFinalizationService.finalizeWeeklyCompetition(competitionId);
 
@@ -34,15 +34,15 @@ class CompetitionFinalizationService {
         for (const dailyComp of linkedDailyCompetitions) {
           await this.finalizeDailyCompetition(dailyComp.id);
         }
-        logger.debug('Competições diárias vinculadas finalizadas', { 
+        logger.info('Competições diárias vinculadas finalizadas', { 
           competitionId, 
           count: linkedDailyCompetitions.length 
-        });
+        }, 'COMPETITION_FINALIZATION_SERVICE');
       }
 
-      logger.debug('Competição semanal finalizada com sucesso', { competitionId });
+      logger.info('Competição semanal finalizada com sucesso', { competitionId }, 'COMPETITION_FINALIZATION_SERVICE');
     } catch (error) {
-      logger.error('Erro ao finalizar competição semanal', { competitionId, error });
+      logger.error('Erro ao finalizar competição semanal', { competitionId, error }, 'COMPETITION_FINALIZATION_SERVICE');
     }
   }
 }

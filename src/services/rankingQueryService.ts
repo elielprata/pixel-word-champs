@@ -1,11 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { RankingPlayer } from '@/types';
+import { logger } from '@/utils/logger';
 
 export class RankingQueryService {
   async getWeeklyRanking(): Promise<RankingPlayer[]> {
     try {
-      console.log('📊 Buscando ranking semanal diretamente dos perfis...');
+      logger.debug('Buscando ranking semanal dos perfis', undefined, 'RANKING_QUERY_SERVICE');
       
       const { data, error } = await supabase
         .from('profiles')
@@ -15,7 +16,7 @@ export class RankingQueryService {
         .limit(100);
 
       if (error) {
-        console.error('❌ Erro ao buscar ranking:', error);
+        logger.error('Erro ao buscar ranking semanal', { error }, 'RANKING_QUERY_SERVICE');
         throw error;
       }
 
@@ -27,17 +28,17 @@ export class RankingQueryService {
         user_id: profile.id
       })) || [];
 
-      console.log('✅ Ranking carregado:', rankings.length, 'jogadores');
+      logger.info('Ranking semanal carregado', { count: rankings.length }, 'RANKING_QUERY_SERVICE');
       return rankings;
     } catch (error) {
-      console.error('❌ Erro ao buscar ranking:', error);
+      logger.error('Erro ao buscar ranking semanal', { error }, 'RANKING_QUERY_SERVICE');
       return [];
     }
   }
 
   async getHistoricalRanking(userId: string): Promise<any[]> {
     try {
-      console.log('📊 Buscando histórico simplificado para usuário:', userId);
+      logger.debug('Buscando histórico simplificado do usuário', { userId }, 'RANKING_QUERY_SERVICE');
       
       // Para histórico, vamos retornar um mock simplificado baseado na pontuação atual
       const { data: profile, error } = await supabase
@@ -47,7 +48,7 @@ export class RankingQueryService {
         .single();
 
       if (error || !profile) {
-        console.log('⚠️ Perfil não encontrado');
+        logger.warn('Perfil não encontrado para histórico', { userId, error }, 'RANKING_QUERY_SERVICE');
         return [];
       }
 
@@ -75,16 +76,18 @@ export class RankingQueryService {
         });
       }
 
-      console.log('✅ Histórico simplificado gerado:', historical.length, 'entradas');
+      logger.info('Histórico simplificado gerado', { userId, count: historical.length }, 'RANKING_QUERY_SERVICE');
       return historical;
     } catch (error) {
-      console.error('❌ Erro ao gerar histórico:', error);
+      logger.error('Erro ao gerar histórico simplificado', { userId, error }, 'RANKING_QUERY_SERVICE');
       return [];
     }
   }
 
   async getUserPosition(userId: string): Promise<number | null> {
     try {
+      logger.debug('Buscando posição do usuário no ranking', { userId }, 'RANKING_QUERY_SERVICE');
+      
       // Buscar todos os perfis ordenados por pontuação
       const { data, error } = await supabase
         .from('profiles')
@@ -93,15 +96,18 @@ export class RankingQueryService {
         .order('total_score', { ascending: false });
 
       if (error) {
-        console.error('❌ Erro ao buscar posição do usuário:', error);
+        logger.error('Erro ao buscar posição do usuário', { userId, error }, 'RANKING_QUERY_SERVICE');
         return null;
       }
 
       // Encontrar a posição do usuário
       const userIndex = data?.findIndex(profile => profile.id === userId);
-      return userIndex !== -1 ? (userIndex || 0) + 1 : null;
+      const position = userIndex !== -1 ? (userIndex || 0) + 1 : null;
+      
+      logger.debug('Posição do usuário encontrada', { userId, position }, 'RANKING_QUERY_SERVICE');
+      return position;
     } catch (error) {
-      console.error('❌ Erro ao buscar posição do usuário:', error);
+      logger.error('Erro ao buscar posição do usuário', { userId, error }, 'RANKING_QUERY_SERVICE');
       return null;
     }
   }

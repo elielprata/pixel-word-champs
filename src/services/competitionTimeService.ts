@@ -9,7 +9,7 @@ class CompetitionTimeService {
    */
   async updateCompetitionStatuses() {
     try {
-      logger.debug('Iniciando atualização de status das competições');
+      logger.debug('Iniciando atualização de status das competições', undefined, 'COMPETITION_TIME_SERVICE');
       
       const now = getCurrentDateISO();
       
@@ -19,12 +19,12 @@ class CompetitionTimeService {
         .neq('status', 'completed');
 
       if (error) {
-        structuredLog('error', 'Erro ao buscar competições para atualização', error);
+        logger.error('Erro ao buscar competições para atualização', { error }, 'COMPETITION_TIME_SERVICE');
         return;
       }
 
       if (!competitions?.length) {
-        logger.debug('Nenhuma competição para atualizar');
+        logger.debug('Nenhuma competição para atualizar', undefined, 'COMPETITION_TIME_SERVICE');
         return;
       }
 
@@ -43,20 +43,27 @@ class CompetitionTimeService {
             .eq('id', competition.id);
 
           if (updateError) {
-            structuredLog('error', `Erro ao atualizar competição ${competition.id}`, updateError);
+            logger.error('Erro ao atualizar status da competição', { 
+              competitionId: competition.id, 
+              error: updateError 
+            }, 'COMPETITION_TIME_SERVICE');
           } else {
-            logger.debug(`Competição atualizada: ${competition.title} -> ${currentStatus}`);
+            logger.debug('Status da competição atualizado', { 
+              title: competition.title, 
+              oldStatus: competition.status,
+              newStatus: currentStatus 
+            }, 'COMPETITION_TIME_SERVICE');
             updatedCount++;
           }
         }
       }
 
-      structuredLog('info', 'Atualização de competições concluída', {
+      logger.info('Atualização de status de competições concluída', {
         totalCompetitions: competitions.length,
         updated: updatedCount
-      });
+      }, 'COMPETITION_TIME_SERVICE');
     } catch (error) {
-      structuredLog('error', 'Erro crítico na atualização de competições', error);
+      logger.error('Erro crítico na atualização de competições', { error }, 'COMPETITION_TIME_SERVICE');
     }
   }
 
@@ -65,7 +72,9 @@ class CompetitionTimeService {
    */
   isCompetitionActive(startDate: string, endDate: string): boolean {
     const status = calculateCompetitionStatus(startDate, endDate);
-    return status === 'active';
+    const isActive = status === 'active';
+    logger.debug('Verificação de status de competição', { startDate, endDate, status, isActive }, 'COMPETITION_TIME_SERVICE');
+    return isActive;
   }
 
   /**
@@ -75,7 +84,9 @@ class CompetitionTimeService {
     const now = new Date();
     const end = new Date(endDate);
     const diffMs = end.getTime() - now.getTime();
-    return Math.max(0, Math.floor(diffMs / 1000));
+    const timeRemaining = Math.max(0, Math.floor(diffMs / 1000));
+    logger.debug('Tempo restante calculado', { endDate, timeRemaining }, 'COMPETITION_TIME_SERVICE');
+    return timeRemaining;
   }
 
   /**
@@ -83,6 +94,8 @@ class CompetitionTimeService {
    */
   async forceUpdateCompetitionStatus(competitionId: string): Promise<boolean> {
     try {
+      logger.debug('Forçando atualização de competição específica', { competitionId }, 'COMPETITION_TIME_SERVICE');
+      
       const { data: competition, error: fetchError } = await supabase
         .from('custom_competitions')
         .select('id, title, start_date, end_date, status')
@@ -90,7 +103,10 @@ class CompetitionTimeService {
         .single();
 
       if (fetchError || !competition) {
-        structuredLog('error', 'Competição não encontrada para atualização forçada', { competitionId, error: fetchError });
+        logger.error('Competição não encontrada para atualização forçada', { 
+          competitionId, 
+          error: fetchError 
+        }, 'COMPETITION_TIME_SERVICE');
         return false;
       }
 
@@ -106,17 +122,22 @@ class CompetitionTimeService {
           .eq('id', competitionId);
 
         if (updateError) {
-          structuredLog('error', 'Erro na atualização forçada', updateError);
+          logger.error('Erro na atualização forçada', { competitionId, error: updateError }, 'COMPETITION_TIME_SERVICE');
           return false;
         }
 
-        logger.debug(`Atualização forçada: ${competition.status} → ${correctStatus}`);
+        logger.info('Atualização forçada realizada', { 
+          competitionId,
+          oldStatus: competition.status,
+          newStatus: correctStatus 
+        }, 'COMPETITION_TIME_SERVICE');
         return true;
       }
 
+      logger.debug('Competição já está com status correto', { competitionId, status: competition.status }, 'COMPETITION_TIME_SERVICE');
       return true;
     } catch (error) {
-      structuredLog('error', 'Erro na atualização forçada', error);
+      logger.error('Erro na atualização forçada', { competitionId, error }, 'COMPETITION_TIME_SERVICE');
       return false;
     }
   }

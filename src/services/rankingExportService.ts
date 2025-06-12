@@ -1,4 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface RankingExportData {
   position: number;
@@ -11,6 +13,8 @@ interface RankingExportData {
 export const rankingExportService = {
   async exportWeeklyRankings(): Promise<RankingExportData[]> {
     try {
+      logger.debug('Iniciando exportação de rankings semanais', undefined, 'RANKING_EXPORT_SERVICE');
+      
       // Calcular início e fim da semana atual (segunda a domingo)
       const today = new Date();
       const dayOfWeek = today.getDay();
@@ -28,6 +32,7 @@ export const rankingExportService = {
       if (error) throw error;
 
       if (!rankingData || rankingData.length === 0) {
+        logger.warn('Nenhum dado de ranking encontrado para exportação', { weekStartStr }, 'RANKING_EXPORT_SERVICE');
         return [];
       }
 
@@ -39,11 +44,11 @@ export const rankingExportService = {
         .in('id', userIds);
 
       if (profilesError) {
-        console.warn('⚠️ Erro ao buscar perfis:', profilesError);
+        logger.warn('Erro ao buscar perfis para exportação', { error: profilesError }, 'RANKING_EXPORT_SERVICE');
       }
 
       // Combinar dados do ranking com perfis
-      return rankingData.map(item => {
+      const exportData = rankingData.map(item => {
         const profile = profilesData?.find(p => p.id === item.user_id);
         return {
           position: item.position,
@@ -53,33 +58,44 @@ export const rankingExportService = {
           type: 'weekly' as const
         };
       });
+
+      logger.info('Exportação de rankings concluída', { count: exportData.length }, 'RANKING_EXPORT_SERVICE');
+      return exportData;
     } catch (error) {
-      console.error('Error exporting weekly rankings:', error);
+      logger.error('Erro na exportação de rankings', { error }, 'RANKING_EXPORT_SERVICE');
       return [];
     }
   },
 
   exportToCSV(data: RankingExportData[], filename: string): void {
-    const headers = ['Posição', 'Usuário', 'Pontuação', 'Data', 'Tipo'];
-    const csvContent = [
-      headers.join(','),
-      ...data.map(row => [
-        row.position,
-        `"${row.username}"`,
-        row.score,
-        row.date,
-        'Semanal'
-      ].join(','))
-    ].join('\n');
+    try {
+      logger.debug('Iniciando exportação CSV', { filename, recordCount: data.length }, 'RANKING_EXPORT_SERVICE');
+      
+      const headers = ['Posição', 'Usuário', 'Pontuação', 'Data', 'Tipo'];
+      const csvContent = [
+        headers.join(','),
+        ...data.map(row => [
+          row.position,
+          `"${row.username}"`,
+          row.score,
+          row.date,
+          'Semanal'
+        ].join(','))
+      ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      logger.info('Arquivo CSV exportado com sucesso', { filename }, 'RANKING_EXPORT_SERVICE');
+    } catch (error) {
+      logger.error('Erro ao exportar CSV', { filename, error }, 'RANKING_EXPORT_SERVICE');
+    }
   }
 };

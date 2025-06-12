@@ -4,6 +4,7 @@ import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { isDailyCompetitionTimeValid } from '@/utils/dailyCompetitionValidation';
 import { isWeeklyCompetitionTimeValid } from '@/utils/weeklyCompetitionValidation';
+import { logger } from '@/utils/logger';
 
 export class CompetitionTimeValidationService {
   /**
@@ -11,7 +12,7 @@ export class CompetitionTimeValidationService {
    */
   async validateAllCompetitionTimes(): Promise<ApiResponse<any>> {
     try {
-      console.log('🔍 Verificando horários de todas as competições...');
+      logger.debug('Verificando horários de todas as competições', undefined, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
       const { data: competitions, error } = await supabase
         .from('custom_competitions')
@@ -46,11 +47,11 @@ export class CompetitionTimeValidationService {
         }
       }
 
-      console.log('📊 Resultado da validação:', results);
+      logger.info('Resultado da validação de horários', results, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
       return createSuccessResponse(results);
     } catch (error) {
-      console.error('❌ Erro na validação de horários:', error);
+      logger.error('Erro na validação de horários', { error }, 'COMPETITION_TIME_VALIDATION_SERVICE');
       return createErrorResponse(handleServiceError(error, 'VALIDATE_COMPETITION_TIMES'));
     }
   }
@@ -60,7 +61,7 @@ export class CompetitionTimeValidationService {
    */
   async forceTimeCorrection(competitionId: string): Promise<ApiResponse<any>> {
     try {
-      console.log('🔧 Forçando correção de horário para competição:', competitionId);
+      logger.info('Forçando correção de horário para competição', { competitionId }, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
       // Buscar a competição atual
       const { data: competition, error: fetchError } = await supabase
@@ -83,11 +84,11 @@ export class CompetitionTimeValidationService {
 
       if (updateError) throw updateError;
 
-      console.log('✅ Competição corrigida pelo trigger:', updatedCompetition);
+      logger.info('Competição corrigida pelo trigger', { competitionId, updatedCompetition }, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
       return createSuccessResponse(updatedCompetition);
     } catch (error) {
-      console.error('❌ Erro ao forçar correção:', error);
+      logger.error('Erro ao forçar correção', { competitionId, error }, 'COMPETITION_TIME_VALIDATION_SERVICE');
       return createErrorResponse(handleServiceError(error, 'FORCE_TIME_CORRECTION'));
     }
   }
@@ -97,7 +98,7 @@ export class CompetitionTimeValidationService {
    */
   async fixAllInconsistentTimes(): Promise<ApiResponse<any>> {
     try {
-      console.log('🔧 Corrigindo todas as competições com horários inconsistentes...');
+      logger.info('Corrigindo todas as competições com horários inconsistentes', undefined, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
       const validationResult = await this.validateAllCompetitionTimes();
       
@@ -120,14 +121,17 @@ export class CompetitionTimeValidationService {
         });
       }
 
-      console.log('📊 Resultados das correções:', correctionResults);
+      logger.info('Resultados das correções de horários', { 
+        totalCorrected: correctionResults.length, 
+        results: correctionResults 
+      }, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
       return createSuccessResponse({
         totalCorrected: correctionResults.length,
         results: correctionResults
       });
     } catch (error) {
-      console.error('❌ Erro ao corrigir horários:', error);
+      logger.error('Erro ao corrigir horários inconsistentes', { error }, 'COMPETITION_TIME_VALIDATION_SERVICE');
       return createErrorResponse(handleServiceError(error, 'FIX_ALL_INCONSISTENT_TIMES'));
     }
   }
