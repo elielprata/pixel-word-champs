@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Trophy, Star } from 'lucide-react';
@@ -44,7 +43,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
       });
 
       if (!sessionResponse.success) {
-        throw new Error(sessionResponse.error?.message || 'Erro ao criar sessão de jogo');
+        throw new Error(sessionResponse.error || 'Erro ao criar sessão de jogo');
       }
 
       const session = sessionResponse.data;
