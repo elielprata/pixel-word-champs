@@ -81,24 +81,6 @@ Deno.serve(async (req) => {
       .eq('id', userId)
       .single()
 
-    // Registrar ação administrativa ANTES de deletar
-    const { error: logError } = await supabase
-      .from('admin_actions')
-      .insert({
-        admin_id: adminId,
-        target_user_id: userId,
-        action_type: 'delete_user',
-        details: { 
-          timestamp: new Date().toISOString(),
-          username: userProfile?.username || 'Usuário não encontrado'
-        }
-      })
-
-    if (logError) {
-      console.warn('⚠️ Erro ao registrar log:', logError.message)
-    }
-
-    // Deletar dados relacionados EM ORDEM
     console.log('🧹 Iniciando limpeza de dados relacionados')
 
     // 1. Histórico de palavras
@@ -146,9 +128,31 @@ Deno.serve(async (req) => {
     // 12. Roles do usuário
     await supabase.from('user_roles').delete().eq('user_id', userId)
 
+    // 13. CRITICAL: Deletar registros de admin_actions que referenciam este usuário
+    // tanto como admin quanto como target_user
+    await supabase.from('admin_actions').delete().eq('admin_id', userId)
+    await supabase.from('admin_actions').delete().eq('target_user_id', userId)
+
     console.log('✅ Limpeza de dados relacionados concluída')
 
-    // 13. Deletar o perfil do usuário
+    // 14. Registrar ação administrativa ANTES de deletar (agora é seguro)
+    const { error: logError } = await supabase
+      .from('admin_actions')
+      .insert({
+        admin_id: adminId,
+        target_user_id: userId,
+        action_type: 'delete_user',
+        details: { 
+          timestamp: new Date().toISOString(),
+          username: userProfile?.username || 'Usuário não encontrado'
+        }
+      })
+
+    if (logError) {
+      console.warn('⚠️ Erro ao registrar log:', logError.message)
+    }
+
+    // 15. Deletar o perfil do usuário
     const { error: deleteProfileError } = await supabase
       .from('profiles')
       .delete()
@@ -160,7 +164,7 @@ Deno.serve(async (req) => {
 
     console.log('✅ Perfil do usuário excluído')
 
-    // 14. Deletar o usuário do auth system com service_role
+    // 16. Deletar o usuário do auth system com service_role
     const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId)
     
     if (deleteAuthError) {
