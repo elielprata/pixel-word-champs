@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Competition, CompetitionParticipation, ApiResponse } from '@/types';
+import { Competition, ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 
 export class CompetitionCoreService {
@@ -24,11 +24,13 @@ export class CompetitionCoreService {
               comp.competition_type === 'tournament' ? 'weekly' as const : 'challenge' as const,
         title: comp.title,
         description: comp.description || '',
-        week_start: comp.start_date ? new Date(comp.start_date).toISOString().split('T')[0] : '',
-        week_end: comp.end_date ? new Date(comp.end_date).toISOString().split('T')[0] : '',
-        is_active: comp.status === 'active',
-        total_participants: 0, // Será calculado conforme necessário
+        start_date: comp.start_date,
+        end_date: comp.end_date,
+        status: comp.status,
         prize_pool: Number(comp.prize_pool) || 0,
+        total_participants: 0, // Será calculado conforme necessário
+        max_participants: comp.max_participants || 1000,
+        is_active: comp.status === 'active',
         created_at: comp.created_at || '',
         updated_at: comp.updated_at || ''
       })) || [];
@@ -60,10 +62,12 @@ export class CompetitionCoreService {
         type: 'daily',
         title: data.title,
         description: data.description || '',
-        week_start: data.start_date ? new Date(data.start_date).toISOString().split('T')[0] : '',
-        week_end: data.end_date ? new Date(data.end_date).toISOString().split('T')[0] : '',
+        start_date: data.start_date,
+        end_date: data.end_date,
+        status: data.status,
         is_active: data.status === 'active',
         total_participants: 0,
+        max_participants: data.max_participants || 1000,
         prize_pool: Number(data.prize_pool) || 0,
         created_at: data.created_at || '',
         updated_at: data.updated_at || ''
@@ -95,10 +99,12 @@ export class CompetitionCoreService {
         type: 'weekly',
         title: data.title,
         description: data.description || '',
-        week_start: data.start_date ? new Date(data.start_date).toISOString().split('T')[0] : '',
-        week_end: data.end_date ? new Date(data.end_date).toISOString().split('T')[0] : '',
+        start_date: data.start_date,
+        end_date: data.end_date,
+        status: data.status,
         is_active: data.status === 'active',
         total_participants: 0,
+        max_participants: data.max_participants || 1000,
         prize_pool: Number(data.prize_pool) || 0,
         created_at: data.created_at || '',
         updated_at: data.updated_at || ''
