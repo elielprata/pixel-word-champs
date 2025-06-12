@@ -22,7 +22,7 @@ export const useWordCategories = () => {
       const { data, error } = await supabase
         .from('word_categories')
         .select('*')
-        .eq('is_active', true)
+        .eq('is_active', true as any)
         .order('name');
 
       if (error) throw error;
@@ -59,7 +59,7 @@ export const useWordCategories = () => {
         .insert([{
           name: name,
           description: description,
-          is_active: true
+          is_active: true as any
         }])
         .select()
         .single();
@@ -100,8 +100,8 @@ export const useWordCategories = () => {
     try {
       const { data, error } = await supabase
         .from('word_categories')
-        .update(updates)
-        .eq('id', id)
+        .update(updates as any)
+        .eq('id', id as any)
         .select()
         .single();
 
@@ -144,7 +144,7 @@ export const useWordCategories = () => {
       const { error } = await supabase
         .from('word_categories')
         .delete()
-        .eq('id', id);
+        .eq('id', id as any);
 
       if (error) throw error;
 

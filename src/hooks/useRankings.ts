@@ -64,7 +64,9 @@ export const useRankings = () => {
             .find((u: any) => u.id === rankingItem.user_id);
           
           return {
+            pos: rankingItem.position,
             position: rankingItem.position,
+            name: user?.username || 'Usuário Desconhecido',
             username: user?.username || 'Usuário Desconhecido',
             score: rankingItem.total_score,
             avatar_url: user?.avatar_url,

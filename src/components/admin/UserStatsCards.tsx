@@ -5,7 +5,7 @@ import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2, Activity } fr
 import { useRealUserStats } from '@/hooks/useRealUserStats';
 
 export const UserStatsCards = () => {
-  const { data: stats, isLoading, refetch } = useRealUserStats();
+  const { stats, isLoading, refetch } = useRealUserStats();
 
   if (isLoading || !stats) {
     return (

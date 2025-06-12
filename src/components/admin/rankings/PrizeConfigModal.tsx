@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePaymentData } from '@/hooks/usePaymentData';
@@ -30,8 +29,8 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
     );
   }
 
-  const handleEditGroupWrapper = (group: GroupPrize) => {
-    paymentData.handleEditGroup(group.id);
+  const handleEditGroupWrapper = (groupId: string) => {
+    paymentData.handleEditGroup(groupId);
   };
 
   const handleSaveGroupWrapper = () => {
@@ -40,8 +39,8 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
     }
   };
 
-  const handleToggleGroupWrapper = (group: GroupPrize) => {
-    paymentData.handleToggleGroup(group.id);
+  const handleToggleGroupWrapper = (groupId: string) => {
+    paymentData.handleToggleGroup(groupId);
   };
 
   return (

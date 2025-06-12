@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { usePaymentData } from '@/hooks/usePaymentData';
 import { PaymentHeader } from './payments/PaymentHeader';
@@ -44,8 +43,8 @@ export const PaymentsTab = () => {
     );
   }
 
-  const handleEditGroupWrapper = (group: GroupPrize) => {
-    handleEditGroup(group.id);
+  const handleEditGroupWrapper = (groupId: string) => {
+    handleEditGroup(groupId);
   };
 
   const handleSaveGroupWrapper = () => {
@@ -54,8 +53,8 @@ export const PaymentsTab = () => {
     }
   };
 
-  const handleToggleGroupWrapper = (group: GroupPrize) => {
-    handleToggleGroup(group.id);
+  const handleToggleGroupWrapper = (groupId: string) => {
+    handleToggleGroup(groupId);
   };
 
   return (
