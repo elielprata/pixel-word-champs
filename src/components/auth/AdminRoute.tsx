@@ -1,83 +1,112 @@
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/utils/logger';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AdminRouteProps {
   children: React.ReactNode;
 }
 
 const AdminRoute = ({ children }: AdminRouteProps) => {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
-  const { data: isAdmin, isLoading: roleLoading } = useQuery({
+  console.log('=== ADMIN ROUTE DEBUG ===');
+  console.log('User object:', user);
+  console.log('User ID:', user?.id);
+  console.log('User email:', user?.email);
+  console.log('Is authenticated:', isAuthenticated);
+
+  const { data: isAdmin, isLoading, error } = useQuery({
     queryKey: ['userRole', user?.id],
     queryFn: async () => {
-      if (!user?.id) return false;
-      
-      logger.debug('Verificando permissões de admin', { userId: user.id }, 'ADMIN_ROUTE');
-      
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (error) {
-        logger.warn('Erro ao verificar role de admin', { 
-          error: error.message,
-          userId: user.id 
-        }, 'ADMIN_ROUTE');
+      if (!user?.id) {
+        console.log('❌ Sem user ID para verificar role');
         return false;
       }
-
-      const hasAdminRole = !!data;
-      logger.info('Verificação de admin concluída', { 
-        userId: user.id,
-        hasAdminRole 
-      }, 'ADMIN_ROUTE');
       
-      return hasAdminRole;
+      console.log('🔍 Verificando role de admin para user ID:', user.id);
+      
+      // Primeiro, vamos verificar se o usuário existe na tabela user_roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      console.log('📋 Roles do usuário:', userRoles);
+      console.log('❌ Erro ao buscar roles:', rolesError);
+      
+      // Agora vamos usar a função has_role
+      const { data, error } = await supabase
+        .rpc('has_role', { 
+          _user_id: user.id, 
+          _role: 'admin' 
+        });
+      
+      console.log('🎯 Resultado da função has_role:', data);
+      console.log('❌ Erro da função has_role:', error);
+      
+      if (error) {
+        console.error('Erro ao verificar role de admin:', error);
+        return false;
+      }
+      
+      console.log('✅ É admin?', data);
+      return data;
     },
     enabled: !!user?.id && isAuthenticated,
   });
 
-  // Loading states
-  if (authLoading || roleLoading) {
-    logger.debug('AdminRoute carregando', { authLoading, roleLoading }, 'ADMIN_ROUTE');
+  console.log('🔐 Resultado final - isAdmin:', isAdmin);
+  console.log('⏳ Carregando:', isLoading);
+  console.log('❌ Erro da query:', error);
+
+  if (!isAuthenticated) {
+    console.log('🚫 Usuário não autenticado - redirecionando');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-b-2 border-purple-600 rounded-full mx-auto mb-4"></div>
-          <p className="text-slate-600">Verificando permissões...</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Negado</h1>
+          <p className="text-gray-600 mb-4">Você precisa estar logado para acessar esta área.</p>
+          <a href="/" className="text-purple-600 hover:text-purple-700 underline">
+            Voltar ao início
+          </a>
         </div>
       </div>
     );
   }
 
-  // Not authenticated
-  if (!isAuthenticated) {
-    logger.warn('Acesso negado: usuário não autenticado', undefined, 'ADMIN_ROUTE');
-    return <Navigate to="/auth" replace />;
+  if (isLoading) {
+    console.log('⏳ Verificando permissões...');
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando permissões...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Not admin
   if (!isAdmin) {
-    logger.warn('Acesso negado: usuário sem permissões de admin', { 
-      userId: user?.id 
-    }, 'ADMIN_ROUTE');
-    return <Navigate to="/" replace />;
+    console.log('🚫 Usuário não é admin - acesso negado');
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Negado</h1>
+          <p className="text-gray-600 mb-4">Você não tem permissão para acessar o painel administrativo.</p>
+          <p className="text-sm text-gray-500 mb-4">
+            User ID: {user?.id} | Email: {user?.email}
+          </p>
+          <a href="/" className="text-purple-600 hover:text-purple-700 underline">
+            Voltar ao início
+          </a>
+        </div>
+      </div>
+    );
   }
 
-  // Admin access granted
-  logger.info('Acesso ao painel admin autorizado', { 
-    userId: user?.id 
-  }, 'ADMIN_ROUTE');
-  
+  console.log('✅ Usuário é admin - permitindo acesso');
   return <>{children}</>;
 };
 

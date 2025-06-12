@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { authService } from '@/services/authService';
-import { LoginForm, RegisterForm } from '@/types/forms';
+import { LoginForm, RegisterForm } from '@/types';
 import { useAuthStateCore } from './useAuthStateCore';
 import { useAuthRefs } from './useAuthRefs';
 import { logger } from '@/utils/logger';
