@@ -1,11 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { RankingPlayer } from '@/types';
+import { logger } from '@/utils/logger';
 
 export class RankingQueryService {
   async getWeeklyRanking(): Promise<RankingPlayer[]> {
     try {
-      console.log('📊 Buscando ranking semanal diretamente dos perfis...');
+      logger.debug('Fetching weekly ranking from profiles');
       
       const { data, error } = await supabase
         .from('profiles')
@@ -15,7 +16,7 @@ export class RankingQueryService {
         .limit(100);
 
       if (error) {
-        console.error('❌ Erro ao buscar ranking:', error);
+        logger.error('Error fetching ranking', { error });
         throw error;
       }
 
@@ -27,17 +28,17 @@ export class RankingQueryService {
         user_id: profile.id
       })) || [];
 
-      console.log('✅ Ranking carregado:', rankings.length, 'jogadores');
+      logger.debug('Ranking loaded successfully', { playersCount: rankings.length });
       return rankings;
     } catch (error) {
-      console.error('❌ Erro ao buscar ranking:', error);
+      logger.error('Error fetching ranking', { error });
       return [];
     }
   }
 
   async getHistoricalRanking(userId: string): Promise<any[]> {
     try {
-      console.log('📊 Buscando histórico simplificado para usuário:', userId);
+      logger.debug('Fetching simplified historical ranking', { userId });
       
       // Para histórico, vamos retornar um mock simplificado baseado na pontuação atual
       const { data: profile, error } = await supabase
@@ -47,7 +48,7 @@ export class RankingQueryService {
         .single();
 
       if (error || !profile) {
-        console.log('⚠️ Perfil não encontrado');
+        logger.info('Profile not found for historical ranking');
         return [];
       }
 
@@ -75,10 +76,10 @@ export class RankingQueryService {
         });
       }
 
-      console.log('✅ Histórico simplificado gerado:', historical.length, 'entradas');
+      logger.debug('Historical ranking generated', { entriesCount: historical.length });
       return historical;
     } catch (error) {
-      console.error('❌ Erro ao gerar histórico:', error);
+      logger.error('Error generating historical ranking', { error });
       return [];
     }
   }
@@ -93,7 +94,7 @@ export class RankingQueryService {
         .order('total_score', { ascending: false });
 
       if (error) {
-        console.error('❌ Erro ao buscar posição do usuário:', error);
+        logger.error('Error fetching user position', { error });
         return null;
       }
 
@@ -101,7 +102,7 @@ export class RankingQueryService {
       const userIndex = data?.findIndex(profile => profile.id === userId);
       return userIndex !== -1 ? (userIndex || 0) + 1 : null;
     } catch (error) {
-      console.error('❌ Erro ao buscar posição do usuário:', error);
+      logger.error('Error fetching user position', { error });
       return null;
     }
   }

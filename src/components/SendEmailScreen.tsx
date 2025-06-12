@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +5,7 @@ import { ArrowLeft, Mail, Send } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 interface SendEmailScreenProps {
   onBack: () => void;
@@ -32,16 +32,18 @@ const SendEmailScreen = ({ onBack }: SendEmailScreenProps) => {
     setIsSending(true);
     
     try {
+      const insertData = {
+        user_id: user.id,
+        report_type: 'support',
+        subject: subject.trim(),
+        message: message.trim(),
+        priority: priority,
+        status: 'pending'
+      };
+
       const { error } = await supabase
         .from('user_reports')
-        .insert({
-          user_id: user.id,
-          report_type: 'support',
-          subject: subject.trim(),
-          message: message.trim(),
-          priority: priority as 'low' | 'medium' | 'high',
-          status: 'pending'
-        });
+        .insert(insertData);
 
       if (error) throw error;
 
@@ -50,9 +52,10 @@ const SendEmailScreen = ({ onBack }: SendEmailScreenProps) => {
         description: "Sua mensagem foi enviada. Responderemos em até 24 horas.",
       });
       
+      logger.debug('Support email sent successfully');
       onBack();
     } catch (error) {
-      console.error('Erro ao enviar email:', error);
+      logger.error('Error sending support email', { error });
       toast({
         title: "Erro ao enviar email",
         description: "Tente novamente mais tarde",
