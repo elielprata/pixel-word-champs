@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,21 +49,26 @@ export const SupportTab = () => {
 
       if (error) throw error;
       
-      // Transform data to match Report interface
-      const transformedData: Report[] = (data || []).map(report => ({
-        id: report.id,
-        user_id: report.user_id || '',
-        report_type: report.report_type,
-        subject: report.subject,
-        message: report.message,
-        status: report.status || 'pending',
-        priority: report.priority || 'medium',
-        resolution: report.resolution,
-        created_at: report.created_at || '',
-        updated_at: report.updated_at || ''
-      }));
-      
-      setReports(transformedData);
+      if (data && Array.isArray(data)) {
+        const transformedData: Report[] = data
+          .filter((item): item is any => item && typeof item === 'object')
+          .map(report => ({
+            id: report.id || '',
+            user_id: report.user_id || '',
+            report_type: report.report_type || '',
+            subject: report.subject || '',
+            message: report.message || '',
+            status: report.status || 'pending',
+            priority: report.priority || 'medium',
+            resolution: report.resolution || null,
+            created_at: report.created_at || '',
+            updated_at: report.updated_at || ''
+          }));
+        
+        setReports(transformedData);
+      } else {
+        setReports([]);
+      }
     } catch (error) {
       logger.error('Error loading reports', { error });
       toast({

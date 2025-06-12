@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -61,12 +62,14 @@ export const CreateAdminForm = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // 3. Adicionar role de admin
+      const insertData = {
+        user_id: authData.user.id,
+        role: 'admin' as any
+      };
+
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert({
-          user_id: authData.user.id,
-          role: 'admin'
-        });
+        .insert([insertData]);
 
       if (roleError) {
         logger.error('Error adding admin role', { error: roleError });

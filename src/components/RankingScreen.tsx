@@ -33,9 +33,9 @@ const RankingScreen = () => {
       const { data, error } = await supabase
         .from('prize_configurations')
         .select('position, prize_amount')
-        .eq('type', 'individual')
-        .eq('active', true)
-        .in('position', [1, 2, 3])
+        .eq('type', 'individual' as any)
+        .eq('active', true as any)
+        .in('position', [1, 2, 3] as any[])
         .order('position', { ascending: true });
 
       if (error) {
@@ -43,16 +43,27 @@ const RankingScreen = () => {
         throw error;
       }
 
-      const prizes: PrizeConfig[] = (data || []).map(config => ({
-        position: config.position || 0,
-        prize_amount: Number(config.prize_amount) || 0
-      }));
+      if (data && Array.isArray(data)) {
+        const prizes: PrizeConfig[] = data
+          .filter((item): item is { position: number; prize_amount: number } => 
+            item && typeof item === 'object' && 'position' in item && 'prize_amount' in item
+          )
+          .map(config => ({
+            position: Number(config.position) || 0,
+            prize_amount: Number(config.prize_amount) || 0
+          }));
 
-      setPrizeConfigs(prizes);
-      logger.debug('Prizes loaded successfully', { count: prizes.length });
+        setPrizeConfigs(prizes);
+        logger.debug('Prizes loaded successfully', { count: prizes.length });
+      } else {
+        setPrizeConfigs([
+          { position: 1, prize_amount: 100 },
+          { position: 2, prize_amount: 50 },
+          { position: 3, prize_amount: 25 }
+        ]);
+      }
     } catch (err) {
       logger.error('Error loading prize configurations', { error: err });
-      // Define prêmios padrão em caso de erro
       setPrizeConfigs([
         { position: 1, prize_amount: 100 },
         { position: 2, prize_amount: 50 },
@@ -80,26 +91,34 @@ const RankingScreen = () => {
         throw error;
       }
 
-      const players: RankingPlayer[] = (data || []).map((profile, index) => ({
-        pos: index + 1,
-        user_id: profile.id,
-        name: profile.username || 'Usuário',
-        score: profile.total_score || 0
-      }));
+      if (data && Array.isArray(data)) {
+        const players: RankingPlayer[] = data
+          .filter((profile): profile is { id: string; username: string; total_score: number } => 
+            profile && typeof profile === 'object' && 'id' in profile && 'username' in profile && 'total_score' in profile
+          )
+          .map((profile, index) => ({
+            pos: index + 1,
+            user_id: profile.id,
+            name: profile.username || 'Usuário',
+            score: profile.total_score || 0
+          }));
 
-      setRanking(players);
+        setRanking(players);
 
-      // Encontrar posição do usuário atual
-      if (user?.id) {
-        const userRank = players.find(p => p.user_id === user.id);
-        setUserPosition(userRank?.pos || null);
-        
-        if (userRank) {
-          logger.debug('User position found', { position: userRank.pos, score: userRank.score });
+        // Encontrar posição do usuário atual
+        if (user?.id) {
+          const userRank = players.find(p => p.user_id === user.id);
+          setUserPosition(userRank?.pos || null);
+          
+          if (userRank) {
+            logger.debug('User position found', { position: userRank.pos, score: userRank.score });
+          }
         }
-      }
 
-      logger.debug('Ranking loaded successfully', { playersCount: players.length });
+        logger.debug('Ranking loaded successfully', { playersCount: players.length });
+      } else {
+        setRanking([]);
+      }
 
     } catch (err) {
       logger.error('Error loading ranking', { error: err });

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,16 +33,18 @@ const SendEmailScreen = ({ onBack }: SendEmailScreenProps) => {
     setIsSending(true);
     
     try {
+      const insertData = {
+        user_id: user.id,
+        report_type: 'support',
+        subject: subject.trim(),
+        message: message.trim(),
+        priority: priority,
+        status: 'pending'
+      };
+
       const { error } = await supabase
         .from('user_reports')
-        .insert({
-          user_id: user.id,
-          report_type: 'support',
-          subject: subject.trim(),
-          message: message.trim(),
-          priority: priority,
-          status: 'pending'
-        });
+        .insert([insertData]);
 
       if (error) throw error;
 
