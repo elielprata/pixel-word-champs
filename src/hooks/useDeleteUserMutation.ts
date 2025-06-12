@@ -9,7 +9,7 @@ export const useDeleteUserMutation = () => {
   const queryClient = useQueryClient();
 
   const deleteUserMutation = useMutation({
-    mutationFn: async ({ userId, adminPassword }: { userId: string; adminPassword: string }) => {
+    mutationFn: async ({ userId }: { userId: string }) => {
       logger.info('Iniciando exclusão do usuário via Edge Function', { targetUserId: userId }, 'DELETE_USER_MUTATION');
       
       const { data: currentUser } = await supabase.auth.getUser();
@@ -21,7 +21,6 @@ export const useDeleteUserMutation = () => {
       const { data, error } = await supabase.functions.invoke('admin-delete-user', {
         body: {
           userId,
-          adminPassword,
           adminId: currentUser.user.id
         }
       });

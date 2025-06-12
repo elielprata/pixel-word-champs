@@ -15,7 +15,6 @@ interface DeleteUserModalProps {
 }
 
 export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps) => {
-  const [adminPassword, setAdminPassword] = useState('');
   const [confirmUsername, setConfirmUsername] = useState('');
   const { deleteUser, isDeletingUser } = useUserMutations();
 
@@ -23,11 +22,6 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!adminPassword.trim()) {
-      alert('Digite sua senha de administrador');
-      return;
-    }
     
     if (confirmUsername !== user.username) {
       alert('Confirmação do nome de usuário incorreta');
@@ -38,12 +32,10 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
       console.log('🗑️ Iniciando exclusão do usuário:', user.username);
       
       await deleteUser({
-        userId: user.id,
-        adminPassword: adminPassword.trim()
+        userId: user.id
       });
       
       // Reset form e fechar modal
-      setAdminPassword('');
       setConfirmUsername('');
       onClose();
       
@@ -55,7 +47,6 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
 
   const handleClose = () => {
     if (!isDeletingUser) {
-      setAdminPassword('');
       setConfirmUsername('');
       onClose();
     }
@@ -101,22 +92,6 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="adminPassword">Sua senha de administrador *</Label>
-            <Input
-              id="adminPassword"
-              type="password"
-              placeholder="Digite sua senha atual para confirmar"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              required
-              disabled={isDeletingUser}
-            />
-            <p className="text-xs text-slate-500">
-              Sua senha será validada para confirmar esta ação crítica
-            </p>
-          </div>
-
           <div className="flex justify-end space-x-2 pt-4">
             <Button 
               type="button" 
@@ -129,7 +104,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
             <Button
               type="submit"
               variant="destructive"
-              disabled={isDeletingUser || confirmUsername !== user.username || !adminPassword.trim()}
+              disabled={isDeletingUser || confirmUsername !== user.username}
             >
               {isDeletingUser ? (
                 <div className="flex items-center gap-2">

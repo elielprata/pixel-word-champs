@@ -24,50 +24,40 @@ Deno.serve(async (req) => {
 
     console.log('🗑️ Iniciando exclusão completa do usuário:', { userId, adminId })
 
-    if (!userId || !adminPassword || !adminId) {
-      throw new Error('Parâmetros obrigatórios: userId, adminPassword, adminId')
+    if (!userId || !adminId) {
+      throw new Error('Parâmetros obrigatórios: userId, adminId')
     }
 
     // Validar se o admin existe e tem permissões
-    const { data: adminProfile } = await supabase
+    console.log('🔍 Verificando se admin existe...')
+    const { data: adminProfile, error: adminProfileError } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, username')
       .eq('id', adminId)
       .single()
 
-    if (!adminProfile) {
+    if (adminProfileError || !adminProfile) {
+      console.error('❌ Admin não encontrado:', adminProfileError?.message)
       throw new Error('Admin não encontrado')
     }
 
+    console.log('✅ Admin encontrado:', adminProfile.username)
+
     // Verificar se o admin tem role de admin
-    const { data: adminRoles } = await supabase
+    console.log('🔍 Verificando permissões de admin...')
+    const { data: adminRoles, error: rolesError } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', adminId)
       .eq('role', 'admin')
       .single()
 
-    if (!adminRoles) {
+    if (rolesError || !adminRoles) {
+      console.error('❌ Usuário não tem permissões de administrador:', rolesError?.message)
       throw new Error('Usuário não tem permissões de administrador')
     }
 
-    // Validar senha do admin usando auth
-    const { data: authUser } = await supabase.auth.admin.getUserById(adminId)
-    if (!authUser.user?.email) {
-      throw new Error('Email do administrador não encontrado')
-    }
-
-    // Tentar fazer login para validar a senha
-    const { error: passwordError } = await supabase.auth.signInWithPassword({
-      email: authUser.user.email,
-      password: adminPassword
-    })
-
-    if (passwordError) {
-      throw new Error('Senha de administrador incorreta')
-    }
-
-    console.log('✅ Credenciais do admin validadas')
+    console.log('✅ Permissões de admin validadas')
 
     // Verificar se não é o próprio admin tentando se deletar
     if (adminId === userId) {
@@ -75,6 +65,7 @@ Deno.serve(async (req) => {
     }
 
     // Buscar dados do usuário para logs
+    console.log('🔍 Buscando dados do usuário a ser excluído...')
     const { data: userProfile } = await supabase
       .from('profiles')
       .select('username')
@@ -84,9 +75,11 @@ Deno.serve(async (req) => {
     console.log('🧹 Iniciando limpeza de dados relacionados')
 
     // 1. Histórico de palavras
+    console.log('🧹 Limpando user_word_history...')
     await supabase.from('user_word_history').delete().eq('user_id', userId)
     
     // 2. Palavras encontradas (via sessões)
+    console.log('🧹 Limpando words_found...')
     const { data: userSessions } = await supabase
       .from('game_sessions')
       .select('id')
@@ -98,44 +91,55 @@ Deno.serve(async (req) => {
     }
 
     // 3. Sessões de jogo
+    console.log('🧹 Limpando game_sessions...')
     await supabase.from('game_sessions').delete().eq('user_id', userId)
     
     // 4. Participações em competições
+    console.log('🧹 Limpando competition_participations...')
     await supabase.from('competition_participations').delete().eq('user_id', userId)
     
     // 5. Rankings semanais
+    console.log('🧹 Limpando weekly_rankings...')
     await supabase.from('weekly_rankings').delete().eq('user_id', userId)
     
     // 6. Histórico de pagamentos
+    console.log('🧹 Limpando payment_history...')
     await supabase.from('payment_history').delete().eq('user_id', userId)
     
     // 7. Distribuições de prêmios
+    console.log('🧹 Limpando prize_distributions...')
     await supabase.from('prize_distributions').delete().eq('user_id', userId)
     
     // 8. Convites relacionados
+    console.log('🧹 Limpando invite_rewards e invites...')
     await supabase.from('invite_rewards').delete().or(`user_id.eq.${userId},invited_user_id.eq.${userId}`)
     await supabase.from('invites').delete().or(`invited_by.eq.${userId},used_by.eq.${userId}`)
     
     // 9. Relatórios de usuário
+    console.log('🧹 Limpando user_reports...')
     await supabase.from('user_reports').delete().eq('user_id', userId)
     
     // 10. Progresso em desafios
+    console.log('🧹 Limpando challenge_progress...')
     await supabase.from('challenge_progress').delete().eq('user_id', userId)
     
     // 11. Histórico de competições
+    console.log('🧹 Limpando competition_history...')
     await supabase.from('competition_history').delete().eq('user_id', userId)
     
     // 12. Roles do usuário
+    console.log('🧹 Limpando user_roles...')
     await supabase.from('user_roles').delete().eq('user_id', userId)
 
     // 13. CRITICAL: Deletar registros de admin_actions que referenciam este usuário
-    // tanto como admin quanto como target_user
+    console.log('🧹 Limpando admin_actions...')
     await supabase.from('admin_actions').delete().eq('admin_id', userId)
     await supabase.from('admin_actions').delete().eq('target_user_id', userId)
 
     console.log('✅ Limpeza de dados relacionados concluída')
 
     // 14. Registrar ação administrativa ANTES de deletar (agora é seguro)
+    console.log('📝 Registrando ação administrativa...')
     const { error: logError } = await supabase
       .from('admin_actions')
       .insert({
@@ -150,21 +154,26 @@ Deno.serve(async (req) => {
 
     if (logError) {
       console.warn('⚠️ Erro ao registrar log:', logError.message)
+    } else {
+      console.log('✅ Log registrado com sucesso')
     }
 
     // 15. Deletar o perfil do usuário
+    console.log('🗑️ Deletando perfil do usuário...')
     const { error: deleteProfileError } = await supabase
       .from('profiles')
       .delete()
       .eq('id', userId)
 
     if (deleteProfileError) {
+      console.error('❌ Erro ao excluir perfil:', deleteProfileError.message)
       throw new Error(`Erro ao excluir perfil: ${deleteProfileError.message}`)
     }
 
     console.log('✅ Perfil do usuário excluído')
 
     // 16. Deletar o usuário do auth system com service_role
+    console.log('🗑️ Deletando usuário do sistema de autenticação...')
     const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId)
     
     if (deleteAuthError) {
