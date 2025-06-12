@@ -1,105 +1,102 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { LoginForm as LoginFormType } from '@/types';
-import { Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { logger } from '@/utils/logger';
 
-const loginSchema = z.object({
-  email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
-});
-
-const LoginForm = () => {
+export const LoginForm = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading, error } = useAuth();
-  const navigate = useNavigate();
-  
-  const form = useForm<LoginFormType>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: ''
-    }
-  });
 
-  const onSubmit = async (data: LoginFormType) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      logger.warn('Tentativa de login com campos vazios', undefined, 'LOGIN_FORM');
+      return;
+    }
+
+    logger.info('Iniciando processo de login', { email: email.substring(0, 3) + '***' }, 'LOGIN_FORM');
+    
     try {
-      logger.info('Tentativa de login iniciada', { email: data.email }, 'LOGIN_FORM');
-      await login(data);
-      
-      // Redirecionar para home após login bem-sucedido
-      logger.info('Login realizado, redirecionando para home', undefined, 'LOGIN_FORM');
-      navigate('/');
+      await login({ email, password });
+      logger.info('Login realizado com sucesso', undefined, 'LOGIN_FORM');
     } catch (err: any) {
-      logger.error('Erro no login', { error: err.message }, 'LOGIN_FORM');
+      logger.error('Erro no processo de login', { 
+        error: err.message 
+      }, 'LOGIN_FORM');
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="seu@email.com" 
-                  type="email"
-                  autoComplete="email"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="seu@email.com"
+            className="pl-10"
+            disabled={isLoading}
+            required
+          />
+        </div>
+      </div>
 
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Senha</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="••••••••" 
-                  type="password"
-                  autoComplete="current-password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <div className="space-y-2">
+        <Label htmlFor="password">Senha</Label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+          <Input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Sua senha"
+            className="pl-10 pr-10"
+            disabled={isLoading}
+            required
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            onClick={() => setShowPassword(!showPassword)}
+            disabled={isLoading}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4 text-slate-400" />
+            ) : (
+              <Eye className="h-4 w-4 text-slate-400" />
+            )}
+          </Button>
+        </div>
+      </div>
 
-        {error && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-            {error}
-          </div>
-        )}
-
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isLoading}
-        >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Entrar
-        </Button>
-      </form>
-    </Form>
+      <Button
+        type="submit"
+        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+        disabled={isLoading}
+      >
+        {isLoading ? 'Entrando...' : 'Entrar'}
+      </Button>
+    </form>
   );
 };
-
-export default LoginForm;
