@@ -1,8 +1,10 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, LoginForm, RegisterForm, ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { mapUserFromProfile } from '@/utils/userMapper';
 import { validateEmail, validatePassword, sanitizeInput } from '@/utils/validation';
+import { secureLogger } from '@/utils/secureLogger';
 
 export interface AuthResponse {
   user: User;
@@ -25,6 +27,8 @@ class AuthService {
 
       // Sanitização de inputs
       const sanitizedEmail = sanitizeInput(credentials.email);
+
+      secureLogger.info('Tentativa de login iniciada', { email: sanitizedEmail }, 'AUTH_SERVICE');
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: sanitizedEmail,
@@ -55,15 +59,17 @@ class AuthService {
         ]) as any;
 
         if (profileError && profileError.code !== 'PGRST116') {
-          console.warn('Erro ao buscar perfil, usando fallback:', profileError);
+          secureLogger.warn('Erro ao buscar perfil, usando fallback', { error: profileError.message }, 'AUTH_SERVICE');
         } else {
           profile = profileData;
         }
       } catch (timeoutError) {
-        console.warn('Timeout ao buscar perfil, usando dados básicos da auth');
+        secureLogger.warn('Timeout ao buscar perfil, usando dados básicos da auth', undefined, 'AUTH_SERVICE');
       }
 
       const user = mapUserFromProfile(profile, data.user);
+
+      secureLogger.info('Login realizado com sucesso', { userId: user.id, username: user.username }, 'AUTH_SERVICE');
 
       return createSuccessResponse({
         user,
@@ -71,6 +77,7 @@ class AuthService {
         refreshToken: data.session.refresh_token
       });
     } catch (error: any) {
+      secureLogger.error('Erro no login', { error: error.message }, 'AUTH_SERVICE');
       return createErrorResponse(handleServiceError(error, 'AUTH_LOGIN'));
     }
   }
@@ -100,6 +107,8 @@ class AuthService {
       const sanitizedEmail = sanitizeInput(userData.email);
       const sanitizedUsername = sanitizeInput(userData.username);
 
+      secureLogger.info('Tentativa de registro iniciada', { email: sanitizedEmail, username: sanitizedUsername }, 'AUTH_SERVICE');
+
       const { data, error } = await supabase.auth.signUp({
         email: sanitizedEmail,
         password: userData.password,
@@ -125,18 +134,28 @@ class AuthService {
         games_played: 0
       };
 
+      secureLogger.info('Registro realizado com sucesso', { userId: user.id, username: user.username }, 'AUTH_SERVICE');
+
       return createSuccessResponse({
         user,
         token: data.session?.access_token || '',
         refreshToken: data.session?.refresh_token || ''
       });
     } catch (error: any) {
+      secureLogger.error('Erro no registro', { error: error.message }, 'AUTH_SERVICE');
       return createErrorResponse(handleServiceError(error, 'AUTH_REGISTER'));
     }
   }
 
   async logout(): Promise<void> {
-    await supabase.auth.signOut();
+    try {
+      secureLogger.info('Logout iniciado', undefined, 'AUTH_SERVICE');
+      await supabase.auth.signOut();
+      secureLogger.info('Logout realizado com sucesso', undefined, 'AUTH_SERVICE');
+    } catch (error: any) {
+      secureLogger.error('Erro no logout', { error: error.message }, 'AUTH_SERVICE');
+      throw error;
+    }
   }
 
   async getCurrentUser(): Promise<ApiResponse<User>> {
@@ -165,12 +184,15 @@ class AuthService {
         ]) as any;
         profile = profileData;
       } catch {
-        console.warn('Timeout ao buscar perfil completo, usando dados básicos');
+        secureLogger.warn('Timeout ao buscar perfil completo, usando dados básicos', undefined, 'AUTH_SERVICE');
       }
 
       const userData = mapUserFromProfile(profile, user);
+      secureLogger.debug('Usuário atual obtido', { userId: userData.id, username: userData.username }, 'AUTH_SERVICE');
+      
       return createSuccessResponse(userData);
     } catch (error: any) {
+      secureLogger.error('Erro ao obter usuário atual', { error: error.message }, 'AUTH_SERVICE');
       return createErrorResponse(handleServiceError(error, 'AUTH_GET_USER'));
     }
   }

@@ -1,51 +1,48 @@
 
+import { secureLogger } from './secureLogger';
+
 const isDevelopment = import.meta.env.DEV;
 const isProduction = import.meta.env.PROD;
 
 export const logger = {
-  log: (...args: any[]) => {
+  log: (message: string, data?: any, context?: string) => {
+    secureLogger.info(message, data, context);
+  },
+  
+  error: (message: string, data?: any, context?: string) => {
+    secureLogger.error(message, data, context);
+  },
+  
+  warn: (message: string, data?: any, context?: string) => {
+    secureLogger.warn(message, data, context);
+  },
+  
+  info: (message: string, data?: any, context?: string) => {
+    secureLogger.info(message, data, context);
+  },
+  
+  debug: (message: string, data?: any, context?: string) => {
     if (isDevelopment) {
-      console.log(...args);
+      secureLogger.debug(message, data, context);
     }
   },
-  error: (...args: any[]) => {
-    // Manter erros em produção para debugging crítico
-    console.error(...args);
-  },
-  warn: (...args: any[]) => {
-    if (isDevelopment) {
-      console.warn(...args);
-    }
-  },
-  info: (...args: any[]) => {
-    if (isDevelopment) {
-      console.info(...args);
-    }
-  },
-  debug: (...args: any[]) => {
-    // Debug apenas em desenvolvimento
-    if (isDevelopment) {
-      console.debug('[DEBUG]', ...args);
-    }
-  },
-  production: (...args: any[]) => {
-    // Logs críticos que devem aparecer mesmo em produção
-    if (isProduction) {
-      console.log('[PROD]', ...args);
-    }
+  
+  production: (message: string, data?: any, context?: string) => {
+    secureLogger.production(message, data, context);
   }
 };
 
 // Utilitário para logs estruturados em produção
-export const structuredLog = (level: 'info' | 'warn' | 'error', message: string, data?: any) => {
-  if (isProduction) {
-    console[level](JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level,
-      message,
-      data
-    }));
-  } else {
-    console[level](`[${level.toUpperCase()}] ${message}`, data || '');
+export const structuredLog = (level: 'info' | 'warn' | 'error', message: string, data?: any, context?: string) => {
+  switch (level) {
+    case 'error':
+      secureLogger.error(message, data, context);
+      break;
+    case 'warn':
+      secureLogger.warn(message, data, context);
+      break;
+    case 'info':
+      secureLogger.info(message, data, context);
+      break;
   }
 };

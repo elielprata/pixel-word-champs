@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthStateCore } from './useAuthStateCore';
 import { useAuthRefs } from './useAuthRefs';
 import { useSessionProcessor } from './useSessionProcessor';
+import { secureLogger } from '@/utils/secureLogger';
 
 export const useAuthEffects = (
   authState: ReturnType<typeof useAuthStateCore>,
@@ -25,24 +26,23 @@ export const useAuthEffects = (
   } = authRefs;
 
   useEffect(() => {
-    console.log('=== AUTH PROVIDER DEBUG ===');
-    console.log('Iniciando verificação de autenticação...');
+    secureLogger.debug('Iniciando verificação de autenticação...', undefined, 'AUTH_EFFECTS');
     isMountedRef.current = true;
     
     const checkAuth = async () => {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        console.log('getSession - Sessão encontrada:', !!session, 'Erro:', sessionError);
         
         if (session?.user) {
-          console.log('📧 Email do usuário da sessão:', session.user.email);
-          console.log('🆔 ID do usuário da sessão:', session.user.id);
-          console.log('📅 Sessão criada em:', session.user.created_at);
-          console.log('🔗 Metadados:', session.user.user_metadata);
+          secureLogger.debug('Sessão encontrada', { 
+            userId: session.user.id,
+            email: session.user.email,
+            hasMetadata: !!session.user.user_metadata
+          }, 'AUTH_EFFECTS');
         }
         
         if (sessionError) {
-          console.error('Erro ao obter sessão:', sessionError);
+          secureLogger.error('Erro ao obter sessão', { error: sessionError.message }, 'AUTH_EFFECTS');
           setError('Erro ao verificar autenticação');
           setIsAuthenticated(false);
           setUser(null);
@@ -51,8 +51,8 @@ export const useAuthEffects = (
         }
         
         await processAuthentication(session);
-      } catch (err) {
-        console.error('Erro ao verificar autenticação inicial:', err);
+      } catch (err: any) {
+        secureLogger.error('Erro ao verificar autenticação inicial', { error: err.message }, 'AUTH_EFFECTS');
         setIsAuthenticated(false);
         setUser(null);
         setError('Erro de conexão');
@@ -64,34 +64,31 @@ export const useAuthEffects = (
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('=== AUTH STATE CHANGE ===');
-        console.log('Event:', event);
-        console.log('Session exists:', !!session);
-        
-        if (session?.user) {
-          console.log('📧 Email:', session.user.email);
-          console.log('🆔 ID:', session.user.id);
-        }
+        secureLogger.debug('Mudança de estado de autenticação', { 
+          event, 
+          hasSession: !!session,
+          userId: session?.user?.id 
+        }, 'AUTH_EFFECTS');
         
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log('Processando login para:', session.user.email);
+          secureLogger.info('Usuário logado', { userId: session.user.id }, 'AUTH_EFFECTS');
           await processAuthentication(session);
         } else if (event === 'SIGNED_OUT') {
-          console.log('Processando logout');
+          secureLogger.info('Usuário deslogado', undefined, 'AUTH_EFFECTS');
           setUser(null);
           setIsAuthenticated(false);
           setError(undefined);
           setIsLoading(false);
           lastProcessedSessionRef.current = null;
         } else if (event === 'TOKEN_REFRESHED' && session) {
-          console.log('Token refreshed para:', session.user.email);
+          secureLogger.debug('Token atualizado', { userId: session.user.id }, 'AUTH_EFFECTS');
           // Para token refresh, só processar se for um usuário diferente
           if (!user || user.id !== session.user.id) {
             await processAuthentication(session);
           }
         } else if (event === 'INITIAL_SESSION' && !session) {
           // Garantir que o loading pare quando não há sessão inicial
-          console.log('Nenhuma sessão inicial encontrada - parando loading');
+          secureLogger.debug('Nenhuma sessão inicial encontrada', undefined, 'AUTH_EFFECTS');
           setIsLoading(false);
           setIsAuthenticated(false);
           setUser(null);

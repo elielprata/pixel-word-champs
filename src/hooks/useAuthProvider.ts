@@ -5,6 +5,7 @@ import { useAuthRefs } from './useAuthRefs';
 import { useAuthOperations } from './useAuthOperations';
 import { useSessionProcessor } from './useSessionProcessor';
 import { useAuthEffects } from './useAuthEffects';
+import { secureLogger } from '@/utils/secureLogger';
 
 export const useAuthProvider = (): AuthContextType => {
   const authState = useAuthStateCore();
@@ -22,12 +23,14 @@ export const useAuthProvider = (): AuthContextType => {
   // Use the new effects hook
   useAuthEffects(authState, authRefs, processAuthentication);
 
-  // Log do estado atual
-  console.log('🎯 Estado atual do Auth:');
-  console.log('- User:', user);
-  console.log('- IsAuthenticated:', isAuthenticated);
-  console.log('- IsLoading:', isLoading);
-  console.log('- Error:', error);
+  // Log seguro do estado atual
+  secureLogger.debug('Estado atual do Auth', {
+    userId: user?.id,
+    username: user?.username,
+    isAuthenticated,
+    isLoading,
+    hasError: !!error
+  }, 'AUTH_PROVIDER');
 
   return {
     user,

@@ -3,6 +3,7 @@ import { User } from '@/types';
 import { authService } from '@/services/authService';
 import { createFallbackUser, createTimeoutPromise } from '@/utils/authHelpers';
 import type { ApiResponse } from '@/types';
+import { secureLogger } from '@/utils/secureLogger';
 
 export interface AuthProcessorCallbacks {
   setUser: (user: User | null) => void;
@@ -18,33 +19,38 @@ export const processUserAuthentication = async (
 ): Promise<void> => {
   const { setUser, setIsAuthenticated, setIsLoading, setError } = callbacks;
 
-  console.log('Processando sessão para:', session.user.email);
+  secureLogger.debug('Processando autenticação do usuário', { 
+    userId: session.user.id,
+    email: session.user.email 
+  }, 'AUTH_PROCESSOR');
   
   try {
-    console.log('Tentando getCurrentUser com timeout reduzido...');
+    secureLogger.debug('Tentando getCurrentUser com timeout reduzido...', undefined, 'AUTH_PROCESSOR');
     
     const timeoutPromise = createTimeoutPromise(3000);
     const getUserPromise = authService.getCurrentUser();
     
     const response = await Promise.race([getUserPromise, timeoutPromise]) as ApiResponse<User>;
-    console.log('Response do getCurrentUser:', response);
     
     if (!isMountedRef.current) return;
     
     if (response?.success && response?.data) {
-      console.log('Definindo usuário autenticado:', response.data.username);
+      secureLogger.info('Usuário autenticado definido', { 
+        userId: response.data.id, 
+        username: response.data.username 
+      }, 'AUTH_PROCESSOR');
       setUser(response.data);
       setIsAuthenticated(true);
       setError(undefined);
     } else {
-      console.log('getCurrentUser falhou, usando fallback direto');
+      secureLogger.debug('getCurrentUser falhou, usando fallback direto', undefined, 'AUTH_PROCESSOR');
       const fallbackUser = createFallbackUser(session);
       setUser(fallbackUser);
       setIsAuthenticated(true);
       setError(undefined);
     }
-  } catch (error) {
-    console.log('Timeout ou erro - usando fallback direto:', error);
+  } catch (error: any) {
+    secureLogger.warn('Timeout ou erro - usando fallback direto', { error: error.message }, 'AUTH_PROCESSOR');
     if (!isMountedRef.current) return;
     
     try {
@@ -52,15 +58,15 @@ export const processUserAuthentication = async (
       setUser(fallbackUser);
       setIsAuthenticated(true);
       setError(undefined);
-    } catch (fallbackError) {
-      console.error('Erro ao criar fallback user:', fallbackError);
+    } catch (fallbackError: any) {
+      secureLogger.error('Erro ao criar fallback user', { error: fallbackError.message }, 'AUTH_PROCESSOR');
       setIsAuthenticated(false);
       setUser(null);
       setError('Erro de autenticação');
     }
   } finally {
     if (isMountedRef.current) {
-      console.log('Finalizando processamento - definindo isLoading = false');
+      secureLogger.debug('Finalizando processamento - definindo isLoading = false', undefined, 'AUTH_PROCESSOR');
       setIsLoading(false);
     }
   }
