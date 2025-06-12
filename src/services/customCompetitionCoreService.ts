@@ -1,8 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { validateWeeklyCompetitionData } from '@/utils/weeklyCompetitionValidation';
-import { validateDailyCompetitionData } from '@/utils/dailyCompetitionValidation';
 
 interface CompetitionFormData {
   title: string;
@@ -25,8 +23,8 @@ export interface CustomCompetitionData {
   weeklyTournamentId?: string;
   prizePool: number;
   maxParticipants: number;
-  startDate?: string; // RADICAL FIX: Mudança para string
-  endDate?: string;   // RADICAL FIX: Mudança para string
+  startDate?: string; // STRING PURA - sem conversões
+  endDate?: string;   // STRING PURA - sem conversões
 }
 
 export class CustomCompetitionCoreService {
@@ -36,7 +34,7 @@ export class CustomCompetitionCoreService {
    */
   private async checkWeeklyCompetitionOverlap(startDate: string, endDate: string): Promise<boolean> {
     try {
-      console.log('🔍 Verificando sobreposição APENAS entre competições semanais:', { startDate, endDate });
+      console.log('🔍 Verificando sobreposição APENAS entre competições semanais (STRINGS PURAS):', { startDate, endDate });
       
       const { data: existingWeeklyCompetitions, error } = await supabase
         .from('custom_competitions')
@@ -54,23 +52,21 @@ export class CustomCompetitionCoreService {
         return false;
       }
 
-      // Verificar sobreposição APENAS com outras competições semanais
+      // Verificar sobreposição usando comparação de strings simples
       for (const competition of existingWeeklyCompetitions) {
-        const existingStart = new Date(competition.start_date);
-        const existingEnd = new Date(competition.end_date);
-        const newStart = new Date(startDate);
-        const newEnd = new Date(endDate);
+        const existingStart = competition.start_date.split('T')[0]; // Apenas data YYYY-MM-DD
+        const existingEnd = competition.end_date.split('T')[0];     // Apenas data YYYY-MM-DD
+        const newStart = startDate.split('T')[0];                  // Apenas data YYYY-MM-DD
+        const newEnd = endDate.split('T')[0];                      // Apenas data YYYY-MM-DD
 
-        // Verificar se há sobreposição:
-        // 1. Nova competição começa antes da existente terminar E
-        // 2. Nova competição termina depois da existente começar
+        // Verificar se há sobreposição usando strings simples
         const hasOverlap = newStart <= existingEnd && newEnd >= existingStart;
 
         if (hasOverlap) {
-          console.log('❌ Sobreposição detectada entre competições semanais:', {
+          console.log('❌ Sobreposição detectada entre competições semanais (STRINGS):', {
             existingTitle: competition.title,
-            existingPeriod: `${existingStart.toISOString()} - ${existingEnd.toISOString()}`,
-            newPeriod: `${newStart.toISOString()} - ${newEnd.toISOString()}`
+            existingPeriod: `${existingStart} - ${existingEnd}`,
+            newPeriod: `${newStart} - ${newEnd}`
           });
           return true;
         }
@@ -86,7 +82,7 @@ export class CustomCompetitionCoreService {
 
   async createCompetition(data: CompetitionFormData | CustomCompetitionData): Promise<ApiResponse<any>> {
     try {
-      console.log('🎯 RADICAL FINAL - Criando competição SEM conversões de data:', data);
+      console.log('🎯 CORREÇÃO RADICAL FINAL - Criando competição com STRINGS PURAS (ZERO conversões):', data);
       
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) {
@@ -96,19 +92,20 @@ export class CustomCompetitionCoreService {
       let competitionData: any;
       
       if ('type' in data) {
-        // RADICAL FIX: Usar datas como strings diretas
+        // CORREÇÃO RADICAL: Usar datas como STRINGS DIRETAS - ZERO conversões
         
         if (data.type === 'daily') {
-          console.log('🔧 RADICAL FINAL: Competição diária - strings puras');
+          console.log('🔧 RADICAL: Competição diária - STRINGS PURAS (zero conversões)');
           
+          // RADICAL: Se não tem startDate, usar hoje como string simples
           const startDateString = data.startDate || new Date().toISOString().split('T')[0];
           
           competitionData = {
             title: data.title,
             description: data.description,
             competition_type: 'challenge',
-            start_date: startDateString, // STRING PURA - trigger fará padronização
-            end_date: startDateString,   // STRING PURA - trigger fará 23:59:59  
+            start_date: startDateString, // STRING PURA - trigger do banco fará padronização
+            end_date: startDateString,   // STRING PURA - mesmo dia, trigger fará 23:59:59  
             max_participants: data.maxParticipants,
             prize_pool: data.prizePool,
             theme: data.category || 'Geral',
@@ -116,10 +113,11 @@ export class CustomCompetitionCoreService {
             status: 'active'
           };
           
-          console.log('✅ RADICAL FINAL: Competição diária como strings:', competitionData);
+          console.log('✅ RADICAL: Competição diária - STRINGS PURAS enviadas:', competitionData);
         } else {
-          console.log('🔧 RADICAL FINAL: Competição semanal - verificando sobreposição...');
+          console.log('🔧 RADICAL: Competição semanal - verificando sobreposição com STRINGS PURAS...');
           
+          // RADICAL: Se não tem datas, usar hoje como string simples
           const startDateString = data.startDate || new Date().toISOString().split('T')[0];
           const endDateString = data.endDate || new Date().toISOString().split('T')[0];
           
@@ -133,7 +131,7 @@ export class CustomCompetitionCoreService {
             title: data.title,
             description: data.description,
             competition_type: 'tournament',
-            start_date: startDateString, // STRING PURA - trigger fará padronização
+            start_date: startDateString, // STRING PURA - trigger do banco fará padronização
             end_date: endDateString,     // STRING PURA - trigger fará 23:59:59
             prize_pool: data.prizePool,
             max_participants: data.maxParticipants,
@@ -141,19 +139,19 @@ export class CustomCompetitionCoreService {
             status: 'scheduled'
           };
           
-          console.log('✅ RADICAL FINAL: Competição semanal como strings:', competitionData);
+          console.log('✅ RADICAL: Competição semanal - STRINGS PURAS enviadas:', competitionData);
         }
       } else {
-        // RADICAL FIX: Para dados diretos do formulário
-        console.log('🔧 RADICAL FINAL: Dados diretos - strings puras');
+        // RADICAL: Para dados diretos do formulário - STRINGS PURAS
+        console.log('🔧 RADICAL: Dados diretos - STRINGS PURAS (zero conversões)');
         
         if (data.competition_type === 'challenge') {
           competitionData = {
             title: data.title,
             description: data.description,
             competition_type: 'challenge',
-            start_date: data.start_date, // STRING PURA
-            end_date: data.start_date,   // MESMO DIA
+            start_date: data.start_date, // STRING PURA - sem conversões
+            end_date: data.start_date,   // MESMO DIA - STRING PURA
             max_participants: data.max_participants,
             prize_pool: data.prize_pool,
             theme: data.theme || 'Geral',
@@ -161,9 +159,9 @@ export class CustomCompetitionCoreService {
             created_by: user.user.id,
             status: data.status || 'active'
           };
-          console.log('✅ RADICAL FINAL: Challenge como strings:', competitionData);
+          console.log('✅ RADICAL: Challenge - STRINGS PURAS enviadas:', competitionData);
         } else {
-          console.log('🔧 RADICAL FINAL: Tournament - verificando sobreposição...');
+          console.log('🔧 RADICAL: Tournament - verificando sobreposição com STRINGS PURAS...');
           
           const hasOverlap = await this.checkWeeklyCompetitionOverlap(data.start_date, data.end_date);
 
@@ -175,8 +173,8 @@ export class CustomCompetitionCoreService {
             title: data.title,
             description: data.description,
             competition_type: 'tournament',
-            start_date: data.start_date, // STRING PURA
-            end_date: data.end_date,     // STRING PURA
+            start_date: data.start_date, // STRING PURA - sem conversões
+            end_date: data.end_date,     // STRING PURA - sem conversões
             prize_pool: data.prize_pool,
             max_participants: data.max_participants,
             rules: data.rules,
@@ -184,11 +182,11 @@ export class CustomCompetitionCoreService {
             status: data.status || 'scheduled'
           };
           
-          console.log('✅ RADICAL FINAL: Tournament como strings:', competitionData);
+          console.log('✅ RADICAL: Tournament - STRINGS PURAS enviadas:', competitionData);
         }
       }
 
-      console.log('🚀 RADICAL FINAL: Enviando strings puras para o banco:', competitionData);
+      console.log('🚀 RADICAL FINAL: Enviando STRINGS PURAS para o banco (ZERO conversões):', competitionData);
 
       const { data: competition, error } = await supabase
         .from('custom_competitions')
@@ -198,12 +196,12 @@ export class CustomCompetitionCoreService {
 
       if (error) throw error;
 
-      console.log('✅ RADICAL FINAL APLICADO: Competição criada:', competition.id);
-      console.log('🎯 VERIFICAR: Strings preservadas? Start:', competition.start_date, 'End:', competition.end_date);
+      console.log('✅ RADICAL APLICADO: Competição criada com STRINGS PURAS:', competition.id);
+      console.log('🎯 VERIFICAR: Datas preservadas? Start:', competition.start_date, 'End:', competition.end_date);
       
       return createSuccessResponse(competition);
     } catch (error) {
-      console.error('❌ RADICAL FINAL: Erro ao criar competição:', error);
+      console.error('❌ RADICAL: Erro ao criar competição:', error);
       return createErrorResponse(handleServiceError(error, 'CREATE_COMPETITION'));
     }
   }

@@ -1,17 +1,16 @@
 
 /**
- * VALIDAÇÃO SEMANAL RADICAL SIMPLIFICADA
+ * VALIDAÇÃO SEMANAL RADICAL SIMPLIFICADA - VERSÃO FINAL
  * 
  * PRINCÍPIO: Remover TODAS as conversões de timezone do JavaScript.
  * O trigger do banco de dados é responsável por ajustar horários para Brasília.
  * 
- * MUDANÇA RADICAL:
+ * MUDANÇA RADICAL FINAL:
  * - Apenas validação de campos obrigatórios
- * - Horários simples (00:00:00 e 23:59:59) sem conversões
+ * - ZERO conversões de Date objects
+ * - Trabalhar apenas com strings simples
  * - Banco ajusta timezone automaticamente via trigger
  */
-
-import { createSimpleStartOfDay, createSimpleEndOfDay } from '@/utils/brasiliaTime';
 
 export interface WeeklyCompetitionData {
   title: string;
@@ -24,38 +23,28 @@ export interface WeeklyCompetitionData {
 }
 
 /**
- * Validação RADICAL SIMPLIFICADA para competições semanais
- * SEM conversões de timezone - apenas validação de campos e horários simples
+ * Validação RADICAL FINAL para competições semanais
+ * SEM conversões de timezone - apenas validação de campos
  */
 export const validateWeeklyCompetitionData = (data: Partial<WeeklyCompetitionData>): WeeklyCompetitionData => {
-  console.log('🔍 VALIDAÇÃO SEMANAL SIMPLIFICADA:', data);
+  console.log('🔍 VALIDAÇÃO SEMANAL RADICAL FINAL (ZERO conversões Date):', data);
   
   if (!data.title || !data.description || !data.start_date || !data.end_date) {
     throw new Error('Dados obrigatórios faltando para competição semanal');
   }
 
-  // SIMPLES: criar datas com horários fixos, SEM conversões de timezone
-  const startDate = createSimpleStartOfDay(new Date(data.start_date)); // 00:00:00
-  const endDate = createSimpleEndOfDay(new Date(data.end_date)); // 23:59:59
-  
-  console.log('✅ HORÁRIOS DEFINIDOS (SIMPLES):', {
-    start: startDate.toISOString(),
-    end: endDate.toISOString(),
-    startLocal: startDate.toLocaleDateString('pt-BR'),
-    endLocal: endDate.toLocaleDateString('pt-BR')
-  });
-
+  // RADICAL FINAL: Usar strings como estão - SEM conversões Date
   const validatedData: WeeklyCompetitionData = {
     title: data.title,
     description: data.description,
-    start_date: startDate.toISOString(),
-    end_date: endDate.toISOString(),
+    start_date: data.start_date, // STRING PURA - trigger do banco fará padronização
+    end_date: data.end_date,     // STRING PURA - trigger do banco fará 23:59:59
     prize_pool: data.prize_pool || 0,
     max_participants: data.max_participants || 1000,
     competition_type: 'tournament'
   };
 
-  console.log('🎯 DADOS VALIDADOS (TRIGGER DO BANCO AJUSTARÁ TIMEZONE):', validatedData);
+  console.log('🎯 DADOS VALIDADOS FINAL (TRIGGER DO BANCO AJUSTARÁ TIMEZONE):', validatedData);
   return validatedData;
 };
 
@@ -82,22 +71,19 @@ export const formatWeeklyCompetitionTime = (dateString: string, isEndDate: boole
  * Verificação SIMPLIFICADA - sem conversões complexas
  */
 export const isWeeklyCompetitionTimeValid = (startDate: string, endDate: string): boolean => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  if (!startDate || !endDate) return false;
   
-  // Verificação simples: se início é 00:00:00 e fim é 23:59:59
-  const isStartValid = start.getHours() === 0 && start.getMinutes() === 0 && start.getSeconds() === 0;
-  const isEndValid = end.getHours() === 23 && end.getMinutes() === 59 && end.getSeconds() === 59;
+  // Verificação simples usando strings
+  const start = startDate.split('T')[0]; // YYYY-MM-DD
+  const end = endDate.split('T')[0];     // YYYY-MM-DD
   
-  console.log('🕐 VALIDAÇÃO SIMPLIFICADA:', {
-    start: start.toISOString(),
-    end: end.toISOString(),
-    isStartValid,
-    isEndValid,
-    isValid: isStartValid && isEndValid
+  console.log('🕐 VALIDAÇÃO SIMPLIFICADA (STRINGS PURAS):', {
+    start,
+    end,
+    isValid: start <= end
   });
   
-  return isStartValid && isEndValid;
+  return start <= end;
 };
 
-console.log('🎯 VALIDAÇÃO SEMANAL RADICAL SIMPLIFICADA ATIVADA');
+console.log('🎯 VALIDAÇÃO SEMANAL RADICAL FINAL APLICADA - ZERO conversões Date');

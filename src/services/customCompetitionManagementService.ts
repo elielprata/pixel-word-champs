@@ -1,8 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { validateWeeklyCompetitionData } from '@/utils/weeklyCompetitionValidation';
-import { validateDailyCompetitionData } from '@/utils/dailyCompetitionValidation';
 
 interface CompetitionFormData {
   title: string;
@@ -24,7 +23,7 @@ export class CustomCompetitionManagementService {
    */
   private async checkWeeklyCompetitionOverlapForUpdate(competitionId: string, startDate: string, endDate: string): Promise<boolean> {
     try {
-      console.log('🔍 Verificando sobreposição APENAS entre competições semanais para atualização:', { competitionId, startDate, endDate });
+      console.log('🔍 Verificando sobreposição APENAS entre competições semanais para atualização (STRINGS PURAS):', { competitionId, startDate, endDate });
       
       const { data: existingWeeklyCompetitions, error } = await supabase
         .from('custom_competitions')
@@ -43,23 +42,21 @@ export class CustomCompetitionManagementService {
         return false;
       }
 
-      // Verificar sobreposição APENAS com outras competições semanais
+      // Verificar sobreposição usando comparação de strings simples
       for (const competition of existingWeeklyCompetitions) {
-        const existingStart = new Date(competition.start_date);
-        const existingEnd = new Date(competition.end_date);
-        const newStart = new Date(startDate);
-        const newEnd = new Date(endDate);
+        const existingStart = competition.start_date.split('T')[0]; // Apenas data YYYY-MM-DD
+        const existingEnd = competition.end_date.split('T')[0];     // Apenas data YYYY-MM-DD
+        const newStart = startDate.split('T')[0];                  // Apenas data YYYY-MM-DD
+        const newEnd = endDate.split('T')[0];                      // Apenas data YYYY-MM-DD
 
-        // Verificar se há sobreposição:
-        // 1. Nova competição começa antes da existente terminar E
-        // 2. Nova competição termina depois da existente começar
+        // Verificar se há sobreposição usando strings simples
         const hasOverlap = newStart <= existingEnd && newEnd >= existingStart;
 
         if (hasOverlap) {
-          console.log('❌ Sobreposição detectada entre competições semanais:', {
+          console.log('❌ Sobreposição detectada entre competições semanais (STRINGS):', {
             existingTitle: competition.title,
-            existingPeriod: `${existingStart.toISOString()} - ${existingEnd.toISOString()}`,
-            newPeriod: `${newStart.toISOString()} - ${newEnd.toISOString()}`
+            existingPeriod: `${existingStart} - ${existingEnd}`,
+            newPeriod: `${newStart} - ${newEnd}`
           });
           return true;
         }
@@ -95,44 +92,26 @@ export class CustomCompetitionManagementService {
 
   async updateCompetition(competitionId: string, data: Partial<CompetitionFormData>): Promise<ApiResponse<any>> {
     try {
-      console.log('🔧 Atualizando competição:', competitionId, data);
+      console.log('🔧 Atualizando competição com STRINGS PURAS (ZERO conversões):', competitionId, data);
       
-      // Aplicar validação baseada no tipo de competição
+      // CORREÇÃO RADICAL: Usar dados diretamente como strings
       let updateData: any = data;
       
       if (data.competition_type === 'tournament' && data.start_date && data.end_date) {
-        console.log('🔍 Validando e padronizando competição semanal...');
-        const validatedData = validateWeeklyCompetitionData({
-          title: data.title!,
-          description: data.description!,
-          start_date: data.start_date,
-          end_date: data.end_date,
-          prize_pool: data.prize_pool!,
-          max_participants: data.max_participants!,
-          competition_type: 'tournament'
-        });
+        console.log('🔍 Validando competição semanal com STRINGS PURAS...');
         
         const hasOverlap = await this.checkWeeklyCompetitionOverlapForUpdate(
           competitionId,
-          validatedData.start_date,
-          validatedData.end_date
+          data.start_date,  // STRING PURA - sem conversões
+          data.end_date     // STRING PURA - sem conversões
         );
 
         if (hasOverlap) {
           throw new Error('As datas desta competição semanal se sobrepõem a uma competição semanal já existente. Por favor, escolha um período diferente.');
         }
         
-        updateData = validatedData;
-      } else if (data.competition_type === 'challenge' && data.start_date) {
-        console.log('🔍 Validando e padronizando competição diária...');
-        const validatedData = validateDailyCompetitionData({
-          title: data.title!,
-          description: data.description!,
-          theme: data.theme || 'Geral',
-          start_date: data.start_date,
-          competition_type: 'challenge'
-        });
-        updateData = validatedData;
+        console.log('✅ Competição semanal - nenhuma sobreposição detectada');
+      } else if (data.competition_type === 'challenge') {
         console.log('✅ Competição diária - PODE coexistir com qualquer outra competição');
       } else if (!data.start_date || !data.end_date) {
         console.log('✅ Datas não alteradas - ignorando validação de horários');
@@ -141,7 +120,7 @@ export class CustomCompetitionManagementService {
       const { data: competition, error } = await supabase
         .from('custom_competitions')
         .update({
-          ...updateData,
+          ...updateData, // USAR DADOS COMO STRINGS PURAS
           updated_at: new Date().toISOString()
         })
         .eq('id', competitionId)
@@ -150,7 +129,7 @@ export class CustomCompetitionManagementService {
 
       if (error) throw error;
 
-      console.log('✅ Competição atualizada com sucesso');
+      console.log('✅ Competição atualizada com STRINGS PURAS preservadas');
       return createSuccessResponse(competition);
     } catch (error) {
       console.error('❌ Erro ao atualizar competição:', error);

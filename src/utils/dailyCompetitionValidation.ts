@@ -2,7 +2,7 @@
 /**
  * VALIDAÇÃO DIÁRIA RADICAL SIMPLIFICADA - VERSÃO FINAL
  * 
- * CORREÇÃO RADICAL: Eliminar TODAS as conversões problemáticas
+ * CORREÇÃO RADICAL FINAL: Eliminar TODAS as conversões problemáticas
  * Trabalhar apenas com strings simples de data
  * Deixar APENAS o trigger do banco fazer a padronização
  */
@@ -12,7 +12,7 @@ export interface DailyCompetitionData {
   description: string;
   theme: string;
   start_date: string;
-  end_date: string; // Adicionado para corrigir os erros
+  end_date: string;
   competition_type: 'challenge';
 }
 
@@ -21,13 +21,13 @@ export interface DailyCompetitionData {
  * Apenas validação de campos obrigatórios e formatação simples
  */
 export const validateDailyCompetitionData = (data: Partial<DailyCompetitionData>): DailyCompetitionData => {
-  console.log('🔧 VALIDAÇÃO RADICAL FINAL (SEM CONVERSÕES):', data);
+  console.log('🔧 VALIDAÇÃO RADICAL FINAL (ZERO conversões Date):', data);
   
   if (!data.title || !data.description) {
     throw new Error('Título e descrição são obrigatórios para competição diária');
   }
 
-  // RADICAL: Usar a data como string simples, SEM conversões
+  // RADICAL FINAL: Usar a data como string simples, SEM conversões Date
   let startDateString = data.start_date;
   
   if (!startDateString) {
@@ -44,11 +44,11 @@ export const validateDailyCompetitionData = (data: Partial<DailyCompetitionData>
     description: data.description,
     theme: data.theme || 'Geral',
     start_date: startDateString, // STRING SIMPLES - banco ajustará horários
-    end_date: endDateString, // MESMO DIA - banco fará 23:59:59
+    end_date: endDateString,     // MESMO DIA - banco fará 23:59:59
     competition_type: 'challenge'
   };
 
-  console.log('🎯 RADICAL: Dados validados SEM conversões (trigger do banco fará tudo):', validatedData);
+  console.log('🎯 RADICAL FINAL: Dados validados SEM conversões (trigger do banco fará tudo):', validatedData);
   return validatedData;
 };
 
@@ -82,4 +82,4 @@ export const formatDailyCompetitionTime = (dateString: string, isEndTime: boolea
   }
 };
 
-console.log('🎯 VALIDAÇÃO DIÁRIA RADICAL FINAL APLICADA - ZERO CONVERSÕES PROBLEMÁTICAS');
+console.log('🎯 VALIDAÇÃO DIÁRIA RADICAL FINAL APLICADA - ZERO CONVERSÕES Date');
