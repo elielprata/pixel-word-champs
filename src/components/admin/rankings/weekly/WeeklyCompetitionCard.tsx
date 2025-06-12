@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +14,7 @@ interface WeeklyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  // total_participants is optional since it doesn't exist in the database
+  total_participants?: number; // Optional since it doesn't exist in the database
 }
 
 interface WeeklyCompetitionCardProps {

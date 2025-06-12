@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +14,7 @@ interface WeeklyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  // total_participants is optional since it doesn't exist in the database
+  total_participants?: number; // Optional since it doesn't exist in the database
 }
 
 interface ActiveCompetitionCardProps {
@@ -47,7 +46,6 @@ export const ActiveCompetitionCard = ({
     return `${dateFormatted}, ${timeFormatted}`;
   };
 
-  // Usar o serviço centralizado para calcular o status
   const actualStatus = competitionStatusService.calculateCorrectStatus({
     start_date: competition.start_date,
     end_date: competition.end_date,
