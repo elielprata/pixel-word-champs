@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Link, Trophy, Calendar, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { competitionStatusService } from '@/services/competitionStatusService';
+import { logger } from '@/utils/logger';
 
 interface WeeklyCompetition {
   id: string;
@@ -84,6 +85,12 @@ export const WeeklyTournamentSection = ({
     : weeklyTournaments;
 
   const isDailyCompetition = competitionType === 'daily';
+
+  logger.debug('WeeklyTournamentSection - Available tournaments', {
+    total: weeklyTournaments.length,
+    available: availableTournaments.length,
+    isDailyCompetition
+  });
 
   return (
     <div className="space-y-3">

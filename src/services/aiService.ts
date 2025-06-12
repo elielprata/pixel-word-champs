@@ -1,4 +1,6 @@
 
+import { logger } from '@/utils/logger';
+
 export interface WordPosition {
   word: string;
   startRow: number;
@@ -30,6 +32,7 @@ class AIService {
   }
 
   async generateWordsForBoard(board: string[][], level: number): Promise<AIGeneratedData> {
+    logger.debug('Generating words for board', { level });
     return this.getMockData(level);
   }
 
@@ -61,7 +64,9 @@ class AIService {
   }
 
   validateWord(word: string, positions: Array<{row: number, col: number}>, validWords: WordPosition[]): boolean {
-    return validWords.some(validWord => validWord.word === word.toUpperCase());
+    const isValid = validWords.some(validWord => validWord.word === word.toUpperCase());
+    logger.debug('Word validation result', { isValid });
+    return isValid;
   }
 
   getHint(remainingWords: WordPosition[]): string | null {

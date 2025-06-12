@@ -8,19 +8,19 @@ import { logger } from '@/utils/logger';
 class CompetitionFinalizationService {
   async finalizeDailyCompetition(competitionId: string): Promise<void> {
     try {
-      logger.debug('Finalizando competição diária', { competitionId });
+      logger.debug('Finalizing daily competition');
 
       await dailyCompetitionFinalizationService.finalizeDailyCompetition(competitionId);
       
-      logger.debug('Competição diária finalizada com sucesso', { competitionId });
+      logger.debug('Daily competition finalized successfully');
     } catch (error) {
-      logger.error('Erro ao finalizar competição diária', { competitionId, error });
+      logger.error('Error finalizing daily competition', { error });
     }
   }
 
   async finalizeWeeklyCompetition(competitionId: string): Promise<void> {
     try {
-      logger.debug('Finalizando competição semanal', { competitionId });
+      logger.debug('Finalizing weekly competition');
 
       await weeklyCompetitionFinalizationService.finalizeWeeklyCompetition(competitionId);
 
@@ -34,15 +34,14 @@ class CompetitionFinalizationService {
         for (const dailyComp of linkedDailyCompetitions) {
           await this.finalizeDailyCompetition(dailyComp.id);
         }
-        logger.debug('Competições diárias vinculadas finalizadas', { 
-          competitionId, 
+        logger.debug('Linked daily competitions finalized', { 
           count: linkedDailyCompetitions.length 
         });
       }
 
-      logger.debug('Competição semanal finalizada com sucesso', { competitionId });
+      logger.debug('Weekly competition finalized successfully');
     } catch (error) {
-      logger.error('Erro ao finalizar competição semanal', { competitionId, error });
+      logger.error('Error finalizing weekly competition', { error });
     }
   }
 }

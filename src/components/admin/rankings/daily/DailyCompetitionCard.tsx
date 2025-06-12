@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Trophy, Clock } from 'lucide-react';
 import { CompetitionActions } from './CompetitionActions';
 import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
+import { logger } from '@/utils/logger';
 
 interface DailyCompetition {
   id: string;
@@ -36,12 +38,12 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
   useCompetitionStatusUpdater([competition]);
 
   const handleEdit = () => {
-    console.log('🃏 Card: handleEdit executado para competição:', competition.id);
+    logger.debug('Card: handleEdit executed for competition');
     onEdit(competition);
   };
 
   const handleDelete = () => {
-    console.log('🃏 Card: handleDelete executado para competição:', competition.id);
+    logger.debug('Card: handleDelete executed for competition');
     onDelete(competition);
   };
 

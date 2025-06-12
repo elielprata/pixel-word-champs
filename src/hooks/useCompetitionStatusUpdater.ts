@@ -7,7 +7,7 @@ export const useCompetitionStatusUpdater = (competitions: any[]) => {
   useEffect(() => {
     // Auto-update desabilitado para evitar loops infinitos
     // O status é calculado em tempo real nos componentes quando necessário
-    logger.debug('useCompetitionStatusUpdater: Auto-update desabilitado para evitar loops');
+    logger.debug('Competition status updater: Auto-update disabled to prevent infinite loops');
     
     // Apenas log de debug para verificar se há inconsistências
     if (competitions.length > 0) {
@@ -20,7 +20,6 @@ export const useCompetitionStatusUpdater = (competitions: any[]) => {
         
         if (competition.status !== actualStatus) {
           logger.debug('Status inconsistency detected', {
-            title: competition.title,
             dbStatus: competition.status,
             calculatedStatus: actualStatus
           });

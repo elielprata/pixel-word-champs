@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { logger } from '@/utils/logger';
 
 class AvatarService {
   async uploadAvatar(file: File, userId: string): Promise<ApiResponse<string>> {
@@ -30,8 +31,10 @@ class AvatarService {
         .from('avatars')
         .getPublicUrl(fileName);
 
+      logger.debug('Avatar uploaded successfully');
       return createSuccessResponse(publicUrl);
     } catch (error) {
+      logger.error('Avatar upload failed', { error });
       return createErrorResponse(handleServiceError(error, 'AVATAR_UPLOAD'));
     }
   }
@@ -44,8 +47,10 @@ class AvatarService {
 
       if (error) throw error;
 
+      logger.debug('Avatar deleted successfully');
       return createSuccessResponse(true);
     } catch (error) {
+      logger.error('Avatar deletion failed', { error });
       return createErrorResponse(handleServiceError(error, 'AVATAR_DELETE'));
     }
   }

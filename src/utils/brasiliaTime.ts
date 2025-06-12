@@ -23,7 +23,7 @@ export const calculateCompetitionStatus = (
   const start = new Date(startDate);
   const end = new Date(endDate);
 
-  logger.debug('calculateCompetitionStatus', {
+  logger.debug('Calculating competition status', {
     now: now.toISOString(),
     start: start.toISOString(),
     end: end.toISOString()
@@ -75,7 +75,7 @@ export const calculateTimeRemaining = (endDate: string): number => {
   const diffMs = end.getTime() - now.getTime();
   const remainingSeconds = Math.max(0, Math.floor(diffMs / 1000));
   
-  logger.debug('calculateTimeRemaining', {
+  logger.debug('Calculating time remaining', {
     endDate,
     remainingSeconds
   });

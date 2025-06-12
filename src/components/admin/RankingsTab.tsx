@@ -14,6 +14,7 @@ import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
 import { DailyCompetitionsView } from './rankings/DailyCompetitionsView';
 import { useRankings } from '@/hooks/useRankings';
 import { useCompetitions } from '@/hooks/useCompetitions';
+import { logger } from '@/utils/logger';
 
 export const RankingsTab = () => {
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
@@ -32,7 +33,7 @@ export const RankingsTab = () => {
     refetch: refetchCompetitions
   } = useCompetitions();
 
-  console.log('🎯 [RankingsTab] Dados carregados:', {
+  logger.debug('RankingsTab - Data loaded', {
     weeklyCompetitions: weeklyCompetitions.length,
     customCompetitions: customCompetitions.length,
     isRankingsLoading,
@@ -43,7 +44,7 @@ export const RankingsTab = () => {
   const dailyCompetitions = customCompetitions.filter(comp => comp.competition_type === 'challenge');
 
   // Log das competições semanais que serão enviadas para o WeeklyCompetitionsView
-  console.log('📋 [RankingsTab] Competições semanais que serão enviadas:', weeklyCompetitions.map(comp => ({
+  logger.debug('RankingsTab - Weekly competitions to send', weeklyCompetitions.map(comp => ({
     id: comp.id,
     title: comp.title,
     status: comp.status,
@@ -52,13 +53,13 @@ export const RankingsTab = () => {
   })));
 
   const handleCompetitionCreated = () => {
-    console.log('🔄 Nova competição criada, atualizando dados...');
+    logger.debug('New competition created, updating data...');
     refreshData();
     refetchCompetitions();
   };
 
   const handleRefreshCompetitions = () => {
-    console.log('🔄 Atualizando todas as competições...');
+    logger.debug('Updating all competitions...');
     refreshData();
     refetchCompetitions();
   };
