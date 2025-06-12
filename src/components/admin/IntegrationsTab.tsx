@@ -7,16 +7,28 @@ import { useIntegrations } from '@/hooks/useIntegrations';
 
 export const IntegrationsTab = () => {
   const {
-    fingerprintJS,
-    setFingerprintJS,
+    integrations,
     isLoading,
-    testingConnection,
-    handleSaveIntegration,
-    testConnection
+    updateIntegration
   } = useIntegrations();
 
+  const fingerprintJS = integrations?.fingerprintjs || {
+    enabled: false,
+    api_key: '',
+    subdomain: ''
+  };
+
   const handleFingerprintUpdate = (integration: any) => {
-    setFingerprintJS(integration);
+    updateIntegration('fingerprintjs', integration);
+  };
+
+  const handleSaveIntegration = async (key: string, value: any) => {
+    await updateIntegration(key, value);
+  };
+
+  const testConnection = async (type: string) => {
+    // Test connection logic here
+    console.log('Testing connection for:', type);
   };
 
   return (
@@ -42,7 +54,7 @@ export const IntegrationsTab = () => {
                 onSave={handleSaveIntegration}
                 onTest={testConnection}
                 loading={isLoading}
-                testingConnection={testingConnection}
+                testingConnection={false}
               />
             </div>
           </div>

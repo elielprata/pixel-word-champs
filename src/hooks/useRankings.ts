@@ -61,7 +61,7 @@ export const useRankings = () => {
       }
 
       // Filter and validate ranking data
-      const validRankingData = rankingData.filter((item: any) => 
+      const validRankingData = (rankingData || []).filter((item: any) => 
         item && typeof item === 'object' && !('error' in item) && item.user_id
       );
 
@@ -124,7 +124,7 @@ export const useRankings = () => {
         item && typeof item === 'object' && !('error' in item) && item.id
       );
 
-      const competitions = validData.map(comp => ({
+      const competitions = validData.map((comp: any) => ({
         id: comp.id,
         title: comp.title,
         description: comp.description,
