@@ -13,6 +13,7 @@ import HelpSupportScreen from '@/components/HelpSupportScreen';
 import AchievementsScreen from '@/components/AchievementsScreen';
 import GameRulesScreen from '@/components/GameRulesScreen';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
+import { logger } from '@/utils/logger';
 
 const Index = () => {
   const {
@@ -44,6 +45,12 @@ const Index = () => {
     showAchievements,
     showGameRules
   } = navigationState;
+
+  logger.debug('Renderizando página principal', { 
+    activeTab, 
+    activeChallenge, 
+    showFullRanking 
+  }, 'INDEX_PAGE');
 
   // Se há um desafio ativo, mostrar a tela do jogo
   if (activeChallenge) {

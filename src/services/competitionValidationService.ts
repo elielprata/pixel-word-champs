@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { createSuccessResponse, createErrorResponse } from '@/utils/apiHelpers';
 import { ApiResponse } from '@/types';
+import { logger } from '@/utils/logger';
 
 class CompetitionValidationService {
   async validateCompetition(competitionId: string): Promise<ApiResponse<boolean>> {
     try {
-      console.log('🔍 Validando competição:', competitionId);
+      logger.debug('Validando competição', { competitionId }, 'COMPETITION_VALIDATION_SERVICE');
       
       // Verificar se existe na tabela custom_competitions (onde realmente estão)
       const { data: customCompetition, error: customError } = await supabase
@@ -17,12 +18,17 @@ class CompetitionValidationService {
         .single();
 
       if (customError && customError.code !== 'PGRST116') {
-        console.error('❌ Erro ao buscar em custom_competitions:', customError);
+        logger.error('Erro ao buscar em custom_competitions', { 
+          error: customError.message,
+          competitionId 
+        }, 'COMPETITION_VALIDATION_SERVICE');
         return createErrorResponse('Erro ao validar competição');
       }
 
       if (customCompetition) {
-        console.log('✅ Competição encontrada em custom_competitions:', customCompetition.id);
+        logger.info('Competição encontrada em custom_competitions', { 
+          competitionId: customCompetition.id 
+        }, 'COMPETITION_VALIDATION_SERVICE');
         return createSuccessResponse(true);
       }
 
@@ -35,25 +41,37 @@ class CompetitionValidationService {
         .single();
 
       if (competitionError && competitionError.code !== 'PGRST116') {
-        console.error('❌ Erro ao buscar em competitions:', competitionError);
+        logger.error('Erro ao buscar em competitions', { 
+          error: competitionError.message,
+          competitionId 
+        }, 'COMPETITION_VALIDATION_SERVICE');
         return createErrorResponse('Erro ao validar competição');
       }
 
       if (competition) {
-        console.log('✅ Competição encontrada em competitions:', competition.id);
+        logger.info('Competição encontrada em competitions', { 
+          competitionId: competition.id 
+        }, 'COMPETITION_VALIDATION_SERVICE');
         return createSuccessResponse(true);
       }
 
-      console.error('❌ Competição não encontrada em nenhuma tabela:', competitionId);
+      logger.warn('Competição não encontrada em nenhuma tabela', { 
+        competitionId 
+      }, 'COMPETITION_VALIDATION_SERVICE');
       return createErrorResponse('Competição não encontrada ou inativa');
-    } catch (error) {
-      console.error('❌ Erro na validação da competição:', error);
+    } catch (error: any) {
+      logger.error('Erro na validação da competição', { 
+        error: error.message,
+        competitionId 
+      }, 'COMPETITION_VALIDATION_SERVICE');
       return createErrorResponse('Erro ao validar competição');
     }
   }
 
   async getCompetitionTable(competitionId: string): Promise<'custom_competitions' | 'competitions' | null> {
     try {
+      logger.debug('Determinando tabela da competição', { competitionId }, 'COMPETITION_VALIDATION_SERVICE');
+      
       // Verificar primeiro em custom_competitions
       const { data: customCompetition } = await supabase
         .from('custom_competitions')
@@ -62,6 +80,9 @@ class CompetitionValidationService {
         .single();
 
       if (customCompetition) {
+        logger.debug('Competição encontrada em custom_competitions', { 
+          competitionId 
+        }, 'COMPETITION_VALIDATION_SERVICE');
         return 'custom_competitions';
       }
 
@@ -73,12 +94,21 @@ class CompetitionValidationService {
         .single();
 
       if (competition) {
+        logger.debug('Competição encontrada em competitions', { 
+          competitionId 
+        }, 'COMPETITION_VALIDATION_SERVICE');
         return 'competitions';
       }
 
+      logger.warn('Competição não encontrada em nenhuma tabela', { 
+        competitionId 
+      }, 'COMPETITION_VALIDATION_SERVICE');
       return null;
-    } catch (error) {
-      console.error('❌ Erro ao determinar tabela da competição:', error);
+    } catch (error: any) {
+      logger.error('Erro ao determinar tabela da competição', { 
+        error: error.message,
+        competitionId 
+      }, 'COMPETITION_VALIDATION_SERVICE');
       return null;
     }
   }

@@ -6,6 +6,7 @@ import ChallengeErrorDisplay from './challenge/ChallengeErrorDisplay';
 import ChallengeLoadingScreen from './challenge/ChallengeLoadingScreen';
 import ChallengeCompletedScreen from './challenge/ChallengeCompletedScreen';
 import ChallengeGameSession from './challenge/ChallengeGameSession';
+import { logger } from '@/utils/logger';
 
 interface ChallengeScreenProps {
   challengeId: string;
@@ -32,7 +33,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(isGameStarted);
 
   const handleStopGame = async () => {
-    console.log('🛑 Usuário escolheu parar o jogo');
+    logger.info('Usuário escolheu parar o jogo', { challengeId, currentLevel }, 'CHALLENGE_SCREEN');
     await markParticipationAsCompleted();
     onBack();
   };
@@ -40,22 +41,29 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const handleRevive = () => {
     const success = extendTime();
     if (success) {
-      console.log('Revive ativado! Tempo estendido com sucesso');
+      logger.info('Revive ativado com sucesso', { challengeId, currentLevel }, 'CHALLENGE_SCREEN');
+    } else {
+      logger.warn('Falha ao ativar revive', { challengeId, currentLevel }, 'CHALLENGE_SCREEN');
     }
   };
 
   const handleCompleteGame = async () => {
-    console.log('🏆 Finalizando jogo após completar todos os níveis');
+    logger.info('Finalizando jogo após completar todos os níveis', { 
+      challengeId, 
+      totalScore, 
+      currentLevel 
+    }, 'CHALLENGE_SCREEN');
     await markParticipationAsCompleted();
     onBack();
   };
 
   const handleBackToMenu = () => {
-    console.log('🏠 Voltando ao menu principal...');
+    logger.info('Voltando ao menu principal', { challengeId }, 'CHALLENGE_SCREEN');
     onBack();
   };
 
   const handleAdvanceLevelWithReset = () => {
+    logger.debug('Avançando nível com reset de timer', { currentLevel }, 'CHALLENGE_SCREEN');
     handleAdvanceLevel();
     resetTimer();
   };

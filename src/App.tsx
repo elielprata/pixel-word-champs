@@ -12,8 +12,11 @@ import AuthScreen from '@/components/auth/AuthScreen';
 import AuthProvider from '@/components/auth/AuthProvider';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { logger } from '@/utils/logger';
 
 function App() {
+  logger.debug('Aplicação inicializada', undefined, 'APP');
+
   return (
     <ErrorBoundary>
       <TooltipProvider>
