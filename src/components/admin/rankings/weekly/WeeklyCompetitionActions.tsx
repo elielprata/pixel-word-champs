@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Trophy, Edit, Trash2 } from 'lucide-react';
@@ -12,7 +11,7 @@ interface WeeklyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  total_participants: number;
+  total_participants?: number; // Made optional to match other components
 }
 
 interface WeeklyCompetitionActionsProps {
