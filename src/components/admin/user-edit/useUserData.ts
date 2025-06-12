@@ -80,8 +80,8 @@ export const useUserData = (userId: string) => {
           created_at: currentUser.created_at,
         });
 
-        // Extrair roles do array
-        const roles = Array.isArray(currentUser.roles) ? currentUser.roles : [];
+        // Extrair roles do array - verificar se data não é null
+        const roles = (Array.isArray(currentUser.roles) && currentUser.roles !== null) ? currentUser.roles : [];
         setUserRoles(roles);
       }
     } catch (error) {

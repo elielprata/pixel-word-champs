@@ -5,45 +5,53 @@ import { supabase } from '@/integrations/supabase/client';
 export const useIntegrations = () => {
   const [integrations, setIntegrations] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [fingerprintJS, setFingerprintJS] = useState<any>({ enabled: false, apiKey: '' });
+  const [testingConnection, setTestingConnection] = useState(false);
+
+  const fetchIntegrations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('game_settings')
+        .select('setting_key, setting_value')
+        .eq('category', 'integrations' as any);
+
+      if (error) throw error;
+
+      const validData = (data || [])
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item));
+
+      const integrationsData = validData.reduce((acc: any, setting: any) => {
+        if (setting.setting_key && setting.setting_value !== undefined) {
+          // Parse integration settings
+          if (setting.setting_key === 'fingerprintjs_enabled') {
+            acc.fingerprintjs = {
+              enabled: setting.setting_value === 'true',
+              apiKey: ''
+            };
+          }
+          if (setting.setting_key === 'fingerprintjs_api_key') {
+            if (!acc.fingerprintjs) acc.fingerprintjs = { enabled: false };
+            acc.fingerprintjs.apiKey = setting.setting_value;
+          }
+        }
+        return acc;
+      }, {});
+
+      setIntegrations(integrationsData);
+      
+      // Set FingerprintJS state
+      if (integrationsData.fingerprintjs) {
+        setFingerprintJS(integrationsData.fingerprintjs);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar integrações:', error);
+      setIntegrations({});
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchIntegrations = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('game_settings')
-          .select('setting_key, setting_value')
-          .eq('category', 'integrations' as any);
-
-        if (error) throw error;
-
-        const integrationsData = (data || [])
-          .filter((item: any) => item && typeof item === 'object' && !('error' in item))
-          .reduce((acc: any, setting: any) => {
-            if (setting.setting_key && setting.setting_value !== undefined) {
-              // Parse integration settings
-              if (setting.setting_key === 'fingerprintjs_enabled') {
-                acc.fingerprintjs = {
-                  enabled: setting.setting_value === 'true',
-                  apiKey: ''
-                };
-              }
-              if (setting.setting_key === 'fingerprintjs_api_key') {
-                if (!acc.fingerprintjs) acc.fingerprintjs = { enabled: false };
-                acc.fingerprintjs.apiKey = setting.setting_value;
-              }
-            }
-            return acc;
-          }, {});
-
-        setIntegrations(integrationsData);
-      } catch (error) {
-        console.error('Erro ao carregar integrações:', error);
-        setIntegrations({});
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchIntegrations();
   }, []);
 
@@ -91,9 +99,40 @@ export const useIntegrations = () => {
     }
   };
 
+  const handleSaveIntegration = async (integration: any) => {
+    try {
+      await updateIntegration('fingerprintjs_enabled', integration.enabled);
+      if (integration.apiKey) {
+        await updateIntegration('fingerprintjs_api_key', integration.apiKey);
+      }
+    } catch (error) {
+      console.error('Error saving integration:', error);
+      throw error;
+    }
+  };
+
+  const testConnection = async () => {
+    setTestingConnection(true);
+    try {
+      // Simulate connection test
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return { success: true };
+    } catch (error) {
+      return { success: false, error };
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
   return {
     integrations,
     isLoading,
-    updateIntegration
+    updateIntegration,
+    fingerprintJS,
+    setFingerprintJS,
+    loading: isLoading,
+    testingConnection,
+    handleSaveIntegration,
+    testConnection
   };
 };

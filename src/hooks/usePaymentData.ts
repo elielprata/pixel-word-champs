@@ -2,11 +2,38 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { IndividualPrize, GroupPrize } from '@/types/payment';
+import { useIndividualPrizes } from './useIndividualPrizes';
+import { useGroupPrizes } from './useGroupPrizes';
+import { usePrizeCalculations } from './usePrizeCalculations';
 
 export const usePaymentData = () => {
   const [individualPrizes, setIndividualPrizes] = useState<IndividualPrize[]>([]);
   const [groupPrizes, setGroupPrizes] = useState<GroupPrize[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Individual prizes management
+  const {
+    editingRow,
+    editIndividualValue,
+    setEditIndividualValue,
+    handleEditIndividual,
+    handleSaveIndividual,
+    handleCancel: handleCancelIndividual
+  } = useIndividualPrizes();
+
+  // Group prizes management
+  const {
+    editingGroup,
+    editGroupPrize,
+    setEditGroupPrize,
+    handleEditGroup,
+    handleSaveGroup,
+    handleToggleGroup,
+    handleCancel: handleCancelGroup
+  } = useGroupPrizes();
+
+  // Prize calculations
+  const { calculateTotalPrize, calculateTotalWinners } = usePrizeCalculations();
 
   useEffect(() => {
     const fetchPaymentData = async () => {
@@ -36,8 +63,8 @@ export const usePaymentData = () => {
               name: item.group_name || '',
               range: item.position_range || '',
               totalWinners: item.total_winners || 0,
-              prizePerWinner: item.prize_per_winner || 0,
-              active: item.is_active || false
+              prizePerWinner: item.prize_amount || 0,
+              active: item.active || false
             });
           }
         });
@@ -56,9 +83,56 @@ export const usePaymentData = () => {
     fetchPaymentData();
   }, []);
 
+  const handleCancel = () => {
+    handleCancelIndividual();
+    handleCancelGroup();
+  };
+
+  const wrappedHandleEditIndividual = (position: number) => {
+    handleEditIndividual(position, individualPrizes);
+  };
+
+  const wrappedHandleSaveIndividual = async (position: number) => {
+    await handleSaveIndividual(position, individualPrizes, setIndividualPrizes);
+  };
+
+  const wrappedHandleEditGroup = (id: string) => {
+    handleEditGroup(id, groupPrizes);
+  };
+
+  const wrappedHandleSaveGroup = async (id: string) => {
+    await handleSaveGroup(id, groupPrizes, setGroupPrizes);
+  };
+
+  const wrappedHandleToggleGroup = async (id: string) => {
+    await handleToggleGroup(id, groupPrizes, setGroupPrizes);
+  };
+
+  const wrappedCalculateTotalPrize = () => {
+    return calculateTotalPrize(individualPrizes, groupPrizes);
+  };
+
+  const wrappedCalculateTotalWinners = () => {
+    return calculateTotalWinners(individualPrizes, groupPrizes);
+  };
+
   return {
     individualPrizes,
     groupPrizes,
-    isLoading
+    editingRow,
+    editingGroup,
+    editIndividualValue,
+    editGroupPrize,
+    isLoading,
+    setEditIndividualValue,
+    setEditGroupPrize,
+    handleEditIndividual: wrappedHandleEditIndividual,
+    handleSaveIndividual: wrappedHandleSaveIndividual,
+    handleEditGroup: wrappedHandleEditGroup,
+    handleSaveGroup: wrappedHandleSaveGroup,
+    handleToggleGroup: wrappedHandleToggleGroup,
+    handleCancel,
+    calculateTotalPrize: wrappedCalculateTotalPrize,
+    calculateTotalWinners: wrappedCalculateTotalWinners
   };
 };
