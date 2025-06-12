@@ -6,7 +6,7 @@ import { Trophy, Users, Calendar, Medal, Crown } from 'lucide-react';
 import PlayerAvatar from '@/components/ui/PlayerAvatar';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { CompetitionStatusService } from '@/services/competitionStatusService';
+import { competitionStatusService } from '@/services/competitionStatusService';
 import {
   Table,
   TableBody,
@@ -89,7 +89,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
 
   // Usar o serviço centralizado para verificar se a competição está ativa
   const isCompetitionActive = (startDate: string, endDate: string): boolean => {
-    const status = CompetitionStatusService.calculateCorrectStatus({
+    const status = competitionStatusService.calculateCorrectStatus({
       start_date: startDate,
       end_date: endDate,
       competition_type: 'tournament'
