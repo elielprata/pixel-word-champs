@@ -5,6 +5,7 @@ import { PaymentHeader } from './payments/PaymentHeader';
 import { PaymentStatsCards } from './payments/PaymentStatsCards';
 import { IndividualPrizesSection } from './payments/IndividualPrizesSection';
 import { GroupPrizesSection } from './payments/GroupPrizesSection';
+import { GroupPrize } from '@/types/payment';
 
 export const PaymentsTab = () => {
   const {
@@ -43,6 +44,20 @@ export const PaymentsTab = () => {
     );
   }
 
+  const wrappedHandleEditGroup = (group: GroupPrize) => {
+    handleEditGroup(group.id);
+  };
+
+  const wrappedHandleSaveGroup = () => {
+    if (editingGroup) {
+      handleSaveGroup(editingGroup);
+    }
+  };
+
+  const wrappedHandleToggleGroup = (group: GroupPrize) => {
+    handleToggleGroup(group.id);
+  };
+
   return (
     <div className="space-y-6">
       <PaymentHeader totalPrize={totalPrize} totalWinners={totalWinners} />
@@ -69,9 +84,9 @@ export const PaymentsTab = () => {
         editingGroup={editingGroup}
         editGroupPrize={editGroupPrize}
         setEditGroupPrize={setEditGroupPrize}
-        onEditGroup={handleEditGroup}
-        onSaveGroup={handleSaveGroup}
-        onToggleGroup={handleToggleGroup}
+        onEditGroup={wrappedHandleEditGroup}
+        onSaveGroup={wrappedHandleSaveGroup}
+        onToggleGroup={wrappedHandleToggleGroup}
         onCancel={handleCancel}
       />
     </div>

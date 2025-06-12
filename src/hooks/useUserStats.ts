@@ -98,17 +98,20 @@ export const useUserStats = () => {
         }
       }
 
-      const userStats = {
-        position: (weeklyRanking && typeof weeklyRanking === 'object' && !('error' in weeklyRanking)) ? weeklyRanking.position : null,
-        totalScore: (profile && typeof profile === 'object' && !('error' in profile)) ? profile.total_score || 0 : 0,
-        gamesPlayed: (profile && typeof profile === 'object' && !('error' in profile)) ? profile.games_played || 0 : 0,
-        winStreak: streak,
-        bestDailyPosition: (profile && typeof profile === 'object' && !('error' in profile)) ? profile.best_daily_position : null,
-        bestWeeklyPosition: (profile && typeof profile === 'object' && !('error' in profile)) ? profile.best_weekly_position : null
-      };
+      // Verify profile data before accessing properties
+      if (profile && typeof profile === 'object' && !('error' in profile)) {
+        const userStats = {
+          position: (weeklyRanking && typeof weeklyRanking === 'object' && !('error' in weeklyRanking)) ? weeklyRanking.position : null,
+          totalScore: profile.total_score || 0,
+          gamesPlayed: profile.games_played || 0,
+          winStreak: streak,
+          bestDailyPosition: profile.best_daily_position || null,
+          bestWeeklyPosition: profile.best_weekly_position || null
+        };
 
-      console.log('📊 Estatísticas do usuário carregadas:', userStats);
-      setStats(userStats);
+        console.log('📊 Estatísticas do usuário carregadas:', userStats);
+        setStats(userStats);
+      }
     } catch (error) {
       console.error('❌ Erro ao carregar estatísticas do usuário:', error);
     } finally {

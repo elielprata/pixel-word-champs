@@ -5,6 +5,7 @@ import { usePaymentData } from '@/hooks/usePaymentData';
 import { IndividualPrizesSection } from '../payments/IndividualPrizesSection';
 import { GroupPrizesSection } from '../payments/GroupPrizesSection';
 import { PaymentStatsCards } from '../payments/PaymentStatsCards';
+import { GroupPrize } from '@/types/payment';
 
 interface PrizeConfigModalProps {
   open: boolean;
@@ -28,6 +29,20 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
       </Dialog>
     );
   }
+
+  const wrappedHandleEditGroup = (group: GroupPrize) => {
+    paymentData.handleEditGroup(group.id);
+  };
+
+  const wrappedHandleSaveGroup = () => {
+    if (paymentData.editingGroup) {
+      paymentData.handleSaveGroup(paymentData.editingGroup);
+    }
+  };
+
+  const wrappedHandleToggleGroup = (group: GroupPrize) => {
+    paymentData.handleToggleGroup(group.id);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,9 +77,9 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
             editingGroup={paymentData.editingGroup}
             editGroupPrize={paymentData.editGroupPrize}
             setEditGroupPrize={paymentData.setEditGroupPrize}
-            onEditGroup={paymentData.handleEditGroup}
-            onSaveGroup={paymentData.handleSaveGroup}
-            onToggleGroup={paymentData.handleToggleGroup}
+            onEditGroup={wrappedHandleEditGroup}
+            onSaveGroup={wrappedHandleSaveGroup}
+            onToggleGroup={wrappedHandleToggleGroup}
             onCancel={paymentData.handleCancel}
           />
         </div>

@@ -26,7 +26,7 @@ export const IntegrationsTab = () => {
     await updateIntegration('fingerprintjs', integration);
   };
 
-  const testConnection = async (type: string) => {
+  const testConnection = async (type: string): Promise<boolean> => {
     // Test connection logic here
     console.log('Testing connection for:', type);
     return true;

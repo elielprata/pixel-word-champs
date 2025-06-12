@@ -23,7 +23,7 @@ export const useUserData = (userId: string) => {
       if (profileError) throw profileError;
 
       // Buscar email do usuário da auth
-      const { data: { user }, error: authError } = await supabase.auth.admin.getUserById(userId);
+      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
       
       if (authError) {
         console.warn('⚠️ Erro ao buscar dados de auth:', authError);
@@ -44,17 +44,19 @@ export const useUserData = (userId: string) => {
         item && typeof item === 'object' && !('error' in item) && 'role' in item
       );
 
-      const roles = validRolesData.map(r => r.role) || ['user'];
+      const roles = validRolesData.map((r: any) => r.role) || ['user'];
       setUserRoles(roles);
       
-      const combinedData = {
-        ...profileData,
-        email: user?.email || 'Email não disponível',
-        roles: roles
-      };
+      if (profileData && typeof profileData === 'object' && !('error' in profileData)) {
+        const combinedData = {
+          ...profileData,
+          email: authData?.user?.email || 'Email não disponível',
+          roles: roles
+        };
 
-      console.log('✅ Dados do usuário carregados:', combinedData);
-      setUserData(combinedData);
+        console.log('✅ Dados do usuário carregados:', combinedData);
+        setUserData(combinedData);
+      }
     } catch (error) {
       console.error('❌ Erro ao carregar dados do usuário:', error);
       toast({

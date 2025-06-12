@@ -82,16 +82,18 @@ export const useWeeklyCompetitionParticipation = (competitionId: string) => {
         throw error;
       }
 
-      console.log('✅ Inscrição realizada com sucesso (PARTICIPAÇÃO LIVRE):', data);
-      setParticipation(data);
-      setIsParticipating(true);
+      if (data && typeof data === 'object' && !('error' in data)) {
+        console.log('✅ Inscrição realizada com sucesso (PARTICIPAÇÃO LIVRE):', data);
+        setParticipation(data as ParticipationData);
+        setIsParticipating(true);
 
-      toast({
-        title: "Inscrição realizada!",
-        description: "Você foi inscrito na competição semanal com sucesso. Participação é livre para todos!",
-      });
+        toast({
+          title: "Inscrição realizada!",
+          description: "Você foi inscrito na competição semanal com sucesso. Participação é livre para todos!",
+        });
 
-      return data;
+        return data;
+      }
 
     } catch (error) {
       console.error('❌ Erro ao inscrever na competição:', error);
@@ -122,10 +124,11 @@ export const useWeeklyCompetitionParticipation = (competitionId: string) => {
         throw error;
       }
 
-      console.log('✅ Pontuação atualizada:', data);
-      setParticipation(data);
-
-      return data;
+      if (data && typeof data === 'object' && !('error' in data)) {
+        console.log('✅ Pontuação atualizada:', data);
+        setParticipation(data as ParticipationData);
+        return data;
+      }
 
     } catch (error) {
       console.error('❌ Erro ao atualizar pontuação:', error);
