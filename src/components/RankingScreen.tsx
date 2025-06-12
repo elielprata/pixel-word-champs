@@ -33,9 +33,9 @@ const RankingScreen = () => {
       const { data, error } = await supabase
         .from('prize_configurations')
         .select('position, prize_amount')
-        .eq('type', 'individual' as any)
-        .eq('active', true as any)
-        .in('position', [1, 2, 3] as any)
+        .eq('type', 'individual')
+        .eq('active', true)
+        .in('position', [1, 2, 3])
         .order('position', { ascending: true });
 
       if (error) {

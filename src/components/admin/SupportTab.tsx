@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MessageSquare, AlertTriangle, CheckCircle, Clock, User, RefreshCw, Filter, Search } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 interface Report {
   id: string;
@@ -46,9 +47,24 @@ export const SupportTab = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setReports(data || []);
+      
+      // Transform data to match Report interface
+      const transformedData: Report[] = (data || []).map(report => ({
+        id: report.id,
+        user_id: report.user_id || '',
+        report_type: report.report_type,
+        subject: report.subject,
+        message: report.message,
+        status: report.status || 'pending',
+        priority: report.priority || 'medium',
+        resolution: report.resolution,
+        created_at: report.created_at || '',
+        updated_at: report.updated_at || ''
+      }));
+      
+      setReports(transformedData);
     } catch (error) {
-      console.error('Erro ao carregar reports:', error);
+      logger.error('Error loading reports', { error });
       toast({
         title: "Erro",
         description: "Não foi possível carregar os reports",
@@ -87,7 +103,7 @@ export const SupportTab = () => {
       setSelectedReport(null);
       setResolution('');
     } catch (error) {
-      console.error('Erro ao atualizar report:', error);
+      logger.error('Error updating report', { error });
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o report",

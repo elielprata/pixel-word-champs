@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,7 +33,7 @@ export const CreateAdminForm = () => {
 
   const handleSubmit = async (data: AdminFormData) => {
     try {
-      logger.log('🔧 Iniciando criação de usuário admin:', { email: data.email, username: data.username });
+      logger.debug('Creating admin user', { email: data.email, username: data.username });
 
       // 1. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -48,7 +47,7 @@ export const CreateAdminForm = () => {
       });
 
       if (authError) {
-        logger.error('❌ Erro ao criar usuário:', authError);
+        logger.error('Error creating auth user', { error: authError });
         throw authError;
       }
 
@@ -56,7 +55,7 @@ export const CreateAdminForm = () => {
         throw new Error('Usuário não foi criado');
       }
 
-      logger.log('✅ Usuário criado no Auth:', authData.user.id);
+      logger.debug('Auth user created successfully', { userId: authData.user.id });
 
       // 2. Aguardar um momento para o trigger criar o perfil
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -70,14 +69,14 @@ export const CreateAdminForm = () => {
         });
 
       if (roleError) {
-        logger.error('❌ Erro ao adicionar role admin:', roleError);
+        logger.error('Error adding admin role', { error: roleError });
         toast({
           title: "Aviso",
           description: "Usuário criado, mas erro ao definir como admin. Defina manualmente.",
           variant: "destructive",
         });
       } else {
-        logger.log('✅ Role admin adicionada com sucesso');
+        logger.debug('Admin role added successfully');
       }
 
       toast({
@@ -89,7 +88,7 @@ export const CreateAdminForm = () => {
       form.reset();
 
     } catch (error: any) {
-      logger.error('❌ Erro geral:', error);
+      logger.error('Error creating admin user', { error });
       
       let errorMessage = "Erro ao criar usuário admin";
       

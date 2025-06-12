@@ -32,18 +32,16 @@ const SendEmailScreen = ({ onBack }: SendEmailScreenProps) => {
     setIsSending(true);
     
     try {
-      const insertData = {
-        user_id: user.id,
-        report_type: 'support',
-        subject: subject.trim(),
-        message: message.trim(),
-        priority: priority,
-        status: 'pending'
-      };
-
       const { error } = await supabase
         .from('user_reports')
-        .insert(insertData);
+        .insert({
+          user_id: user.id,
+          report_type: 'support',
+          subject: subject.trim(),
+          message: message.trim(),
+          priority: priority,
+          status: 'pending'
+        });
 
       if (error) throw error;
 
