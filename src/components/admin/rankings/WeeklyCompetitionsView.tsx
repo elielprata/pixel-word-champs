@@ -19,7 +19,7 @@ interface WeeklyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  total_participants: number;
+  // Removido total_participants que não existe na tabela custom_competitions
 }
 
 interface WeeklyCompetitionsViewProps {
@@ -93,6 +93,13 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
     handleCompetitionUpdated
   } = useWeeklyCompetitionsActions();
 
+  console.log('🎯 [RENDER CHECK] Preparando para renderizar:', {
+    isLoading,
+    activeCompetitionsCount: activeCompetitions.length,
+    willShowEmpty: !isLoading && activeCompetitions.length === 0,
+    willShowContainer: !isLoading && activeCompetitions.length > 0
+  });
+
   if (isLoading) {
     console.log('⏳ [WeeklyCompetitionsView] Exibindo estado de loading...');
     return (
@@ -110,7 +117,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
     return <WeeklyCompetitionsEmpty />;
   }
 
-  console.log(`✅ [WeeklyCompetitionsView] Exibindo ${activeCompetitions.length} competições`);
+  console.log(`✅ [WeeklyCompetitionsView] Renderizando container com ${activeCompetitions.length} competições`);
 
   return (
     <div className="space-y-6">

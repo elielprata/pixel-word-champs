@@ -32,8 +32,24 @@ export const RankingsTab = () => {
     refetch: refetchCompetitions
   } = useCompetitions();
 
+  console.log('🎯 [RankingsTab] Dados carregados:', {
+    weeklyCompetitions: weeklyCompetitions.length,
+    customCompetitions: customCompetitions.length,
+    isRankingsLoading,
+    isCompetitionsLoading
+  });
+
   // Filtrar competições diárias (tipo 'challenge')
   const dailyCompetitions = customCompetitions.filter(comp => comp.competition_type === 'challenge');
+
+  // Log das competições semanais que serão enviadas para o WeeklyCompetitionsView
+  console.log('📋 [RankingsTab] Competições semanais que serão enviadas:', weeklyCompetitions.map(comp => ({
+    id: comp.id,
+    title: comp.title,
+    status: comp.status,
+    startDate: comp.start_date,
+    endDate: comp.end_date
+  })));
 
   // Calcular prêmio total real baseado nos participantes semanais
   const totalPrizeDistributed = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
@@ -145,6 +161,12 @@ export const RankingsTab = () => {
                     </p>
                   </div>
                 </div>
+                
+                {console.log('🚀 [RankingsTab] Enviando dados para WeeklyCompetitionsView:', {
+                  competitions: weeklyCompetitions.length,
+                  activeCompetition: activeWeeklyCompetition?.title || 'nenhuma',
+                  isLoading: isRankingsLoading
+                })}
                 
                 <WeeklyCompetitionsView 
                   competitions={weeklyCompetitions} 

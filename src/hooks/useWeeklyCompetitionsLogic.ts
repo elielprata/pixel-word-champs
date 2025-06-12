@@ -13,7 +13,7 @@ interface WeeklyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  total_participants: number;
+  // Removido total_participants que não existe na tabela
 }
 
 export const useWeeklyCompetitionsLogic = (competitions: WeeklyCompetition[]) => {

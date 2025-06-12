@@ -15,7 +15,7 @@ interface WeeklyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  total_participants: number;
+  // Removido total_participants que não existe
 }
 
 interface WeeklyCompetitionsContainerProps {
@@ -61,11 +61,18 @@ export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerPr
     total: competitions.length
   });
 
+  console.log('🎨 [RENDER] Componentes que serão renderizados:', {
+    activeCard: !!currentActiveCompetition,
+    scheduledSection: scheduledCompetitions.length > 0,
+    completedSection: completedCompetitions.length > 0
+  });
+
   return (
     <>
       {/* Competição Ativa Atual */}
       {currentActiveCompetition && (
         <div className="space-y-4">
+          {console.log('🟢 [RENDER] Renderizando ActiveCompetitionCard para:', currentActiveCompetition.title)}
           <ActiveCompetitionCard
             competition={currentActiveCompetition}
             onViewRanking={onViewRanking}
@@ -79,22 +86,26 @@ export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerPr
       {/* Competições Agendadas */}
       {scheduledCompetitions.length > 0 && (
         <div className="space-y-4">
+          {console.log('📅 [RENDER] Renderizando seção Agendadas com:', scheduledCompetitions.length, 'competições')}
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Trophy className="h-5 w-5 text-blue-600" />
             Competições Agendadas ({scheduledCompetitions.length})
           </h3>
           
           <div className="grid gap-4">
-            {scheduledCompetitions.map((competition) => (
-              <WeeklyCompetitionCard
-                key={competition.id}
-                competition={competition}
-                onViewRanking={onViewRanking}
-                onEdit={onEdit}
-                onDelete={onDeleteCompetition}
-                deletingId={deletingId}
-              />
-            ))}
+            {scheduledCompetitions.map((competition) => {
+              console.log('📅 [RENDER] Renderizando card agendado para:', competition.title);
+              return (
+                <WeeklyCompetitionCard
+                  key={competition.id}
+                  competition={competition}
+                  onViewRanking={onViewRanking}
+                  onEdit={onEdit}
+                  onDelete={onDeleteCompetition}
+                  deletingId={deletingId}
+                />
+              );
+            })}
           </div>
         </div>
       )}
@@ -102,6 +113,7 @@ export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerPr
       {/* Competições Finalizadas */}
       {completedCompetitions.length > 0 && (
         <div className="space-y-4">
+          {console.log('🏁 [RENDER] Renderizando seção Finalizadas com:', completedCompetitions.length, 'competições')}
           <div className="flex items-center gap-2 mb-4">
             <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
               <Trophy className="h-5 w-5 text-purple-600" />
@@ -117,16 +129,33 @@ export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerPr
           </Alert>
           
           <div className="grid gap-4">
-            {completedCompetitions.map((competition) => (
-              <WeeklyCompetitionCard
-                key={competition.id}
-                competition={competition}
-                onViewRanking={onViewRanking}
-                onEdit={onEdit}
-                onDelete={onDeleteCompetition}
-                deletingId={deletingId}
-              />
-            ))}
+            {completedCompetitions.map((competition) => {
+              console.log('🏁 [RENDER] Renderizando card finalizado para:', competition.title);
+              return (
+                <WeeklyCompetitionCard
+                  key={competition.id}
+                  competition={competition}
+                  onViewRanking={onViewRanking}
+                  onEdit={onEdit}
+                  onDelete={onDeleteCompetition}
+                  deletingId={deletingId}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Fallback visual quando não há competições para mostrar */}
+      {!currentActiveCompetition && scheduledCompetitions.length === 0 && completedCompetitions.length === 0 && (
+        <div className="text-center py-8">
+          {console.log('❌ [RENDER] Renderizando fallback - nenhuma competição para mostrar')}
+          <div className="bg-gray-50 rounded-lg p-6">
+            <Trophy className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+            <p className="text-gray-600 font-medium mb-2">Nenhuma competição encontrada</p>
+            <p className="text-sm text-gray-500">
+              As competições aparecerão aqui quando criadas e ativas.
+            </p>
           </div>
         </div>
       )}
