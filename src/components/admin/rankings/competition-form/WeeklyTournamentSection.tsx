@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, Trophy, Calendar, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { competitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {
   id: string;
@@ -41,8 +42,15 @@ export const WeeklyTournamentSection = ({
     });
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
+  const getStatusText = (competition: WeeklyCompetition) => {
+    // Usar o serviço centralizado para calcular o status correto
+    const actualStatus = competitionStatusService.calculateCorrectStatus({
+      start_date: competition.start_date,
+      end_date: competition.end_date,
+      competition_type: 'tournament'
+    });
+    
+    switch (actualStatus) {
       case 'active': return 'Ativo';
       case 'scheduled': return 'Agendado';
       case 'completed': return 'Finalizado';
@@ -50,8 +58,15 @@ export const WeeklyTournamentSection = ({
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (competition: WeeklyCompetition) => {
+    // Usar o serviço centralizado para calcular o status correto
+    const actualStatus = competitionStatusService.calculateCorrectStatus({
+      start_date: competition.start_date,
+      end_date: competition.end_date,
+      competition_type: 'tournament'
+    });
+    
+    switch (actualStatus) {
       case 'active': return 'text-green-600';
       case 'scheduled': return 'text-blue-600';
       case 'completed': return 'text-purple-600';
@@ -61,9 +76,14 @@ export const WeeklyTournamentSection = ({
 
   // Filtrar apenas competições ativas e agendadas para competições diárias
   const availableTournaments = competitionType === 'daily' 
-    ? weeklyTournaments.filter(tournament => 
-        tournament.status === 'active' || tournament.status === 'scheduled'
-      )
+    ? weeklyTournaments.filter(tournament => {
+        const actualStatus = competitionStatusService.calculateCorrectStatus({
+          start_date: tournament.start_date,
+          end_date: tournament.end_date,
+          competition_type: 'tournament'
+        });
+        return actualStatus === 'active' || actualStatus === 'scheduled';
+      })
     : weeklyTournaments;
 
   const isDailyCompetition = competitionType === 'daily';
@@ -120,8 +140,8 @@ export const WeeklyTournamentSection = ({
                   <div className="flex items-center gap-2">
                     <Trophy className="h-3 w-3 text-yellow-600" />
                     <span className="font-medium text-sm">{tournament.title}</span>
-                    <span className={`text-xs px-1 py-0.5 rounded ${getStatusColor(tournament.status)}`}>
-                      {getStatusText(tournament.status)}
+                    <span className={`text-xs px-1 py-0.5 rounded ${getStatusColor(tournament)}`}>
+                      {getStatusText(tournament)}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
