@@ -22,8 +22,8 @@ export const IntegrationsTab = () => {
     updateIntegration('fingerprintjs', integration);
   };
 
-  const handleSaveIntegration = async (key: string, value: any) => {
-    await updateIntegration(key, value);
+  const handleSaveIntegration = async (integration: any) => {
+    await updateIntegration('fingerprintjs', integration);
   };
 
   const testConnection = async (type: string) => {

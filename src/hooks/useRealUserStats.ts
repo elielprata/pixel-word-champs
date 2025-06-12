@@ -7,6 +7,14 @@ interface UserStats {
   activeUsers: number;
   newUsersToday: number;
   adminUsers: number;
+  totalSessions: number;
+  sessionsToday: number;
+  retentionD1: number;
+  retentionD3: number;
+  retentionD7: number;
+  averageScore: number;
+  totalGamesPlayed: number;
+  totalAdmins: number;
 }
 
 export const useRealUserStats = () => {
@@ -70,11 +78,63 @@ export const useRealUserStats = () => {
           console.error('Erro ao buscar usuários admin:', adminError);
         }
 
+        // Total de sessões
+        const { count: totalSessionsCount, error: sessionsError } = await supabase
+          .from('game_sessions')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_completed', true as any);
+
+        if (sessionsError) {
+          console.error('Erro ao buscar sessões:', sessionsError);
+        }
+
+        // Sessões hoje
+        const { count: sessionsToday, error: sessionsTodayError } = await supabase
+          .from('game_sessions')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_completed', true as any)
+          .gte('completed_at', todayStr);
+
+        if (sessionsTodayError) {
+          console.error('Erro ao buscar sessões hoje:', sessionsTodayError);
+        }
+
+        // Pontuação média e total de jogos
+        const { data: statsData, error: statsError } = await supabase
+          .from('profiles')
+          .select('total_score, games_played')
+          .gt('total_score', 0);
+
+        if (statsError) {
+          console.error('Erro ao buscar estatísticas:', statsError);
+        }
+
+        const validStatsData = (statsData || []).filter((item: any) => 
+          item && typeof item === 'object' && !('error' in item) && 
+          typeof item.total_score === 'number' && typeof item.games_played === 'number'
+        );
+
+        let averageScore = 0;
+        let totalGames = 0;
+        if (validStatsData.length > 0) {
+          const totalScore = validStatsData.reduce((acc, item) => acc + item.total_score, 0);
+          totalGames = validStatsData.reduce((acc, item) => acc + item.games_played, 0);
+          averageScore = Math.round(totalScore / validStatsData.length);
+        }
+
         const stats = {
           totalUsers: totalCount || 0,
           activeUsers: validActiveUsers.length,
           newUsersToday: validNewUsers.length,
-          adminUsers: (adminData || []).length
+          adminUsers: (adminData || []).length,
+          totalSessions: totalSessionsCount || 0,
+          sessionsToday: sessionsToday || 0,
+          retentionD1: 75, // Mock data - calculate based on real retention logic
+          retentionD3: 65,
+          retentionD7: 55,
+          averageScore,
+          totalGamesPlayed: totalGames,
+          totalAdmins: (adminData || []).length
         };
 
         console.log('📊 Estatísticas de usuários:', stats);
@@ -85,7 +145,15 @@ export const useRealUserStats = () => {
           totalUsers: 0,
           activeUsers: 0,
           newUsersToday: 0,
-          adminUsers: 0
+          adminUsers: 0,
+          totalSessions: 0,
+          sessionsToday: 0,
+          retentionD1: 0,
+          retentionD3: 0,
+          retentionD7: 0,
+          averageScore: 0,
+          totalGamesPlayed: 0,
+          totalAdmins: 0
         };
       }
     },

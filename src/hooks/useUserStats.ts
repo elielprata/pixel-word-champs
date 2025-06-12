@@ -41,7 +41,7 @@ export const useUserStats = () => {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', user.id as any)
         .single();
 
       if (profileError) throw profileError;
@@ -56,8 +56,8 @@ export const useUserStats = () => {
       const { data: weeklyRanking, error: weeklyError } = await supabase
         .from('weekly_rankings')
         .select('position')
-        .eq('user_id', user.id)
-        .eq('week_start', weekStartStr)
+        .eq('user_id', user.id as any)
+        .eq('week_start', weekStartStr as any)
         .maybeSingle();
 
       if (weeklyError && weeklyError.code !== 'PGRST116') {
@@ -71,8 +71,8 @@ export const useUserStats = () => {
       const { data: recentSessions, error: sessionsError } = await supabase
         .from('game_sessions')
         .select('completed_at, is_completed')
-        .eq('user_id', user.id)
-        .eq('is_completed', true)
+        .eq('user_id', user.id as any)
+        .eq('is_completed', true as any)
         .gte('completed_at', sevenDaysAgo.toISOString())
         .order('completed_at', { ascending: false });
 
@@ -83,9 +83,9 @@ export const useUserStats = () => {
       // Calcular sequência contínua de dias com jogos
       let streak = 0;
       const completedDates = new Set(
-        recentSessions?.map(session => 
-          new Date(session.completed_at).toDateString()
-        ) || []
+        (recentSessions || [])
+          .filter((session: any) => session && typeof session === 'object' && !('error' in session))
+          .map((session: any) => new Date(session.completed_at).toDateString())
       );
 
       for (let i = 0; i < 7; i++) {
