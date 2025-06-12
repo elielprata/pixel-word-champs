@@ -1,52 +1,71 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useRealGameMetrics = () => {
-  const { data: metrics, isLoading } = useQuery({
-    queryKey: ['gameMetrics'],
-    queryFn: async () => {
-      console.log('🔍 Buscando métricas do sistema...');
-      
-      // Buscar total de palavras ativas
-      const { data: wordsData, error: wordsError } = await supabase
-        .from('level_words')
-        .select('id, word, level, category, difficulty')
-        .eq('is_active', true);
-
-      if (wordsError) {
-        console.error('❌ Erro ao buscar palavras:', wordsError);
-        throw wordsError;
-      }
-
-      console.log('📝 Palavras encontradas:', wordsData?.length, wordsData);
-
-      // Buscar total de categorias ativas
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('word_categories')
-        .select('id, name')
-        .eq('is_active', true);
-
-      if (categoriesError) {
-        console.error('❌ Erro ao buscar categorias:', categoriesError);
-        throw categoriesError;
-      }
-
-      console.log('📋 Categorias encontradas:', categoriesData?.length, categoriesData);
-
-      const result = {
-        activeWords: wordsData?.length || 0,
-        activeCategories: categoriesData?.length || 0
-      };
-
-      console.log('📊 Métricas finais:', result);
-      return result;
-    },
-    refetchInterval: 30000, // Atualizar a cada 30 segundos
+  const [metrics, setMetrics] = useState({
+    totalGames: 0,
+    activePlayers: 0,
+    averageScore: 0,
+    totalWords: 0
   });
+  const [isLoading, setIsLoading] = useState(true);
 
-  return {
-    metrics: metrics || { activeWords: 0, activeCategories: 0 },
-    isLoading
+  const fetchMetrics = async () => {
+    try {
+      // Total de palavras ativas
+      const { count: wordsCount } = await supabase
+        .from('level_words')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true as any);
+
+      // Total de jogos
+      const { count: gamesCount } = await supabase
+        .from('game_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_completed', true as any);
+
+      // Jogadores ativos (que jogaram pelo menos uma vez)
+      const { count: playersCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gt('games_played', 0);
+
+      // Pontuação média
+      const { data: avgData } = await supabase
+        .from('profiles')
+        .select('total_score')
+        .gt('total_score', 0);
+
+      // Calculate average score safely
+      let averageScore = 0;
+      if (avgData && avgData.length > 0) {
+        const validScores = avgData
+          .filter((item: any) => item && typeof item === 'object' && !('error' in item))
+          .map((item: any) => item.total_score || 0);
+        
+        if (validScores.length > 0) {
+          const sum = validScores.reduce((acc: number, score: number) => acc + score, 0);
+          averageScore = Math.round(sum / validScores.length);
+        }
+      }
+
+      setMetrics({
+        totalGames: gamesCount || 0,
+        activePlayers: playersCount || 0,
+        averageScore,
+        totalWords: wordsCount || 0
+      });
+    } catch (error) {
+      console.error('Erro ao buscar métricas:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchMetrics();
+  }, []);
+
+  return { metrics, isLoading, refetch: fetchMetrics };
 };

@@ -24,19 +24,19 @@ export const usePixExportModal = (open: boolean, prizeLevel: string) => {
 
       // Apply prize level filter
       if (prizeLevel === 'first') {
-        query = query.eq('position', 1);
+        query = query.eq('position', 1 as any);
       } else if (prizeLevel === 'top3') {
-        query = query.lte('position', 3);
+        query = query.lte('position', 3 as any);
       } else if (prizeLevel === 'top10') {
-        query = query.lte('position', 10);
+        query = query.lte('position', 10 as any);
       }
 
       // Apply date filters if set
       if (startDate) {
-        query = query.gte('week_start', startDate);
+        query = query.gte('week_start', startDate as any);
       }
       if (endDate) {
-        query = query.lte('week_end', endDate);
+        query = query.lte('week_end', endDate as any);
       }
 
       const { data, error } = await query.order('week_start', { ascending: false });

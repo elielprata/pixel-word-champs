@@ -9,7 +9,7 @@ export const IntegrationsTab = () => {
   const {
     fingerprintJS,
     setFingerprintJS,
-    loading,
+    isLoading,
     testingConnection,
     handleSaveIntegration,
     testConnection
@@ -41,7 +41,7 @@ export const IntegrationsTab = () => {
                 onUpdate={handleFingerprintUpdate}
                 onSave={handleSaveIntegration}
                 onTest={testConnection}
-                loading={loading}
+                loading={isLoading}
                 testingConnection={testingConnection}
               />
             </div>

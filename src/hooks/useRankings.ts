@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -47,7 +48,7 @@ export const useRankings = () => {
       const { data: rankingData, error: rankingError } = await supabase
         .from('weekly_rankings')
         .select('position, total_score, user_id')
-        .eq('week_start', weekStartStr)
+        .eq('week_start', weekStartStr as any)
         .order('position', { ascending: true })
         .limit(10);
 
@@ -59,8 +60,13 @@ export const useRankings = () => {
         return;
       }
 
+      // Filter and validate ranking data
+      const validRankingData = rankingData.filter((item: any) => 
+        item && typeof item === 'object' && !('error' in item)
+      );
+
       // Buscar perfis dos usuários separadamente
-      const userIds = rankingData.map(item => item.user_id);
+      const userIds = validRankingData.map(item => item.user_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
@@ -70,9 +76,14 @@ export const useRankings = () => {
         console.warn('⚠️ Erro ao buscar perfis:', profilesError);
       }
 
+      // Filter and validate profiles data
+      const validProfilesData = (profilesData || []).filter((item: any) => 
+        item && typeof item === 'object' && !('error' in item)
+      );
+
       // Combinar dados do ranking com perfis
-      const rankings = rankingData.map((item) => {
-        const profile = profilesData?.find(p => p.id === item.user_id);
+      const rankings = validRankingData.map((item) => {
+        const profile = validProfilesData.find(p => p.id === item.user_id);
         return {
           pos: item.position,
           name: profile?.username || 'Usuário',
@@ -102,13 +113,18 @@ export const useRankings = () => {
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('competition_type', 'tournament')
-        .in('status', ['active', 'scheduled', 'completed'])
+        .eq('competition_type', 'tournament' as any)
+        .in('status', ['active', 'scheduled', 'completed'] as any)
         .order('start_date', { ascending: false });
 
       if (error) throw error;
 
-      const competitions = (data || []).map(comp => ({
+      // Filter and validate data
+      const validData = (data || []).filter((item: any) => 
+        item && typeof item === 'object' && !('error' in item)
+      );
+
+      const competitions = validData.map(comp => ({
         id: comp.id,
         title: comp.title,
         description: comp.description,
