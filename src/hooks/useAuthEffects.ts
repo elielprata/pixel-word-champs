@@ -33,11 +33,24 @@ export const useAuthEffects = (
         // Configurar listener primeiro
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            logger.debug('Evento de autenticação detectado', { 
+            logger.info('=== EVENTO DE AUTENTICAÇÃO DETECTADO ===', { 
               event, 
               hasSession: !!session,
-              userId: session?.user?.id 
+              userId: session?.user?.id,
+              email: session?.user?.email,
+              provider: session?.user?.app_metadata?.provider
             }, 'AUTH_EFFECTS');
+
+            // Log detalhado da sessão
+            if (session) {
+              logger.debug('Detalhes da sessão:', {
+                accessToken: session.access_token ? 'presente' : 'ausente',
+                refreshToken: session.refresh_token ? 'presente' : 'ausente',
+                expiresAt: session.expires_at,
+                userMetadata: session.user?.user_metadata,
+                appMetadata: session.user?.app_metadata
+              }, 'AUTH_EFFECTS');
+            }
 
             // Processar autenticação de forma assíncrona com timeout
             setTimeout(async () => {
@@ -47,7 +60,8 @@ export const useAuthEffects = (
                 } catch (error: any) {
                   logger.error('Erro no processamento de autenticação', { 
                     error: error.message,
-                    event 
+                    event,
+                    userId: session?.user?.id 
                   }, 'AUTH_EFFECTS');
                 }
               };
@@ -57,7 +71,8 @@ export const useAuthEffects = (
           }
         );
 
-        // Verificar sessão atual
+        // Verificar sessão atual com logs detalhados
+        logger.debug('Verificando sessão inicial...', undefined, 'AUTH_EFFECTS');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -65,15 +80,19 @@ export const useAuthEffects = (
             error: error.message 
           }, 'AUTH_EFFECTS');
         } else {
-          logger.debug('Sessão inicial verificada', { 
+          logger.debug('Resultado da verificação de sessão inicial:', { 
             hasSession: !!session,
-            userId: session?.user?.id 
+            userId: session?.user?.id,
+            email: session?.user?.email,
+            provider: session?.user?.app_metadata?.provider,
+            isExpired: session?.expires_at ? (session.expires_at < Date.now() / 1000) : false
           }, 'AUTH_EFFECTS');
         }
 
         if (session) {
           await processAuthentication(session);
         } else {
+          logger.debug('Nenhuma sessão inicial encontrada - definindo loading como false', undefined, 'AUTH_EFFECTS');
           setIsLoading(false);
         }
 

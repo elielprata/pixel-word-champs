@@ -1,33 +1,75 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/hooks/useAuth';
+import { useCompleteLogout } from '@/hooks/useCompleteLogout';
+import { logger } from '@/utils/logger';
+import { LogOut, AlertCircle } from 'lucide-react';
 
 const SocialLogin = () => {
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
+  const { completeLogout } = useCompleteLogout();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    // Verificar estado de autenticação ao carregar componente
+    const checkAuthState = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (session) {
+          logger.info('Sessão ativa detectada no SocialLogin', { 
+            userId: session.user?.id,
+            email: session.user?.email 
+          }, 'SOCIAL_LOGIN');
+        } else {
+          logger.debug('Nenhuma sessão ativa detectada', undefined, 'SOCIAL_LOGIN');
+        }
+
+        if (error) {
+          logger.warn('Erro ao verificar sessão', { error: error.message }, 'SOCIAL_LOGIN');
+        }
+      } catch (error: any) {
+        logger.error('Erro ao verificar estado de autenticação', { error: error.message }, 'SOCIAL_LOGIN');
+      }
+    };
+
+    checkAuthState();
+  }, []);
+
+  const handleCompleteLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await completeLogout();
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     try {
-      console.log('=== INÍCIO DO LOGIN GOOGLE ===');
-      console.log('URL atual:', window.location.origin);
-      console.log('Redirect URL configurado:', `${window.location.origin}/`);
+      logger.info('=== INÍCIO DO LOGIN GOOGLE ===', undefined, 'SOCIAL_LOGIN');
+      logger.info('URL atual:', { url: window.location.origin }, 'SOCIAL_LOGIN');
+      logger.info('Estado atual de autenticação:', { isAuthenticated, hasUser: !!user }, 'SOCIAL_LOGIN');
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account'  // Força seleção de conta
+          }
         }
       });
 
-      console.log('Resposta do signInWithOAuth:');
-      console.log('- Data:', data);
-      console.log('- Error:', error);
+      logger.info('Resposta do signInWithOAuth:', { data, error }, 'SOCIAL_LOGIN');
 
       if (error) {
-        console.error('=== ERRO DETALHADO DO GOOGLE LOGIN ===');
-        console.error('Código do erro:', error.message);
-        console.error('Detalhes completos:', error);
+        logger.error('=== ERRO DETALHADO DO GOOGLE LOGIN ===', { error }, 'SOCIAL_LOGIN');
         
         let errorMessage = "Não foi possível fazer login com Google.";
         
@@ -45,15 +87,11 @@ const SocialLogin = () => {
           variant: "destructive",
         });
       } else {
-        console.log('=== LOGIN GOOGLE INICIADO COM SUCESSO ===');
-        console.log('Redirecionando para Google...');
+        logger.info('=== LOGIN GOOGLE INICIADO COM SUCESSO ===', undefined, 'SOCIAL_LOGIN');
+        logger.info('Redirecionando para Google...', undefined, 'SOCIAL_LOGIN');
       }
     } catch (err: any) {
-      console.error('=== ERRO INESPERADO NO LOGIN GOOGLE ===');
-      console.error('Tipo do erro:', typeof err);
-      console.error('Mensagem:', err?.message);
-      console.error('Stack:', err?.stack);
-      console.error('Objeto completo:', err);
+      logger.error('=== ERRO INESPERADO NO LOGIN GOOGLE ===', { error: err }, 'SOCIAL_LOGIN');
       
       toast({
         title: "Erro inesperado",
@@ -62,6 +100,36 @@ const SocialLogin = () => {
       });
     }
   };
+
+  // Se o usuário já está autenticado, mostrar informações e opção de logout
+  if (isAuthenticated && user) {
+    return (
+      <div className="space-y-4">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <AlertCircle className="w-4 h-4 text-amber-600" />
+            <p className="text-sm font-medium text-amber-800">Usuário já conectado</p>
+          </div>
+          <p className="text-sm text-amber-700 mb-3">
+            Você está logado como: <strong>{user.email}</strong>
+          </p>
+          <p className="text-xs text-amber-600 mb-3">
+            Para fazer login com uma conta diferente, faça logout completo primeiro.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={handleCompleteLogout}
+            disabled={isLoggingOut}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            {isLoggingOut ? 'Fazendo logout...' : 'Logout Completo'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
