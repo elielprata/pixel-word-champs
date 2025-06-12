@@ -6,7 +6,7 @@ import { logger } from '@/utils/logger';
 export class CompetitionAutoParticipationService {
   async joinCompetitionAutomatically(sessionId: string, activeCompetitions: any[]): Promise<void> {
     try {
-      logger.debug('Checking automatic daily competition participation');
+      logger.debug('Verificando participação automática em competições diárias', { sessionId });
       
       const { data: session, error: sessionError } = await supabase
         .from('game_sessions')
@@ -15,17 +15,17 @@ export class CompetitionAutoParticipationService {
         .single();
 
       if (sessionError || !session) {
-        logger.error('Session not found', { error: sessionError });
+        logger.error('Sessão não encontrada', { sessionId, error: sessionError });
         return;
       }
 
       if (session.competition_id) {
-        logger.debug('Session already linked to a competition');
+        logger.debug('Sessão já vinculada a uma competição', { sessionId, competitionId: session.competition_id });
         return;
       }
 
       if (activeCompetitions.length === 0) {
-        logger.debug('No active daily competitions found');
+        logger.debug('Nenhuma competição diária ativa encontrada', { sessionId });
         return;
       }
 
@@ -33,7 +33,11 @@ export class CompetitionAutoParticipationService {
       const hasParticipated = await competitionParticipationService.checkUserParticipation(session.user_id, activeCompetition.id);
       
       if (hasParticipated) {
-        logger.debug('User already participated in this daily competition');
+        logger.debug('Usuário já participou desta competição diária', { 
+          sessionId, 
+          userId: session.user_id, 
+          competitionId: activeCompetition.id 
+        });
         return;
       }
 
@@ -43,21 +47,25 @@ export class CompetitionAutoParticipationService {
         .eq('id', sessionId);
 
       if (updateError) {
-        logger.error('Error linking session to competition', { error: updateError });
+        logger.error('Erro ao vincular sessão à competição', { sessionId, error: updateError });
         return;
       }
 
       await competitionParticipationService.createParticipation(activeCompetition.id, session.user_id);
-      logger.debug('User automatically enrolled in daily competition');
+      logger.debug('Usuário inscrito automaticamente na competição diária', { 
+        sessionId, 
+        userId: session.user_id, 
+        competitionId: activeCompetition.id 
+      });
 
     } catch (error) {
-      logger.error('Error in automatic participation', { error });
+      logger.error('Erro na participação automática', { sessionId, error });
     }
   }
 
   async updateParticipationScore(sessionId: string, totalScore: number): Promise<void> {
     try {
-      logger.debug('Updating daily competition score');
+      logger.debug('Atualizando pontuação na competição diária', { sessionId, totalScore });
       
       const { data: session, error: sessionError } = await supabase
         .from('game_sessions')
@@ -66,16 +74,16 @@ export class CompetitionAutoParticipationService {
         .single();
 
       if (sessionError || !session || !session.competition_id) {
-        logger.debug('Session not linked to daily competition');
+        logger.debug('Sessão não vinculada a competição diária', { sessionId });
         return;
       }
 
       await competitionParticipationService.updateParticipationScore(sessionId, totalScore);
-      logger.debug('Daily competition score updated');
+      logger.debug('Pontuação atualizada na competição diária', { sessionId, totalScore });
       
       await competitionParticipationService.updateCompetitionRankings(session.competition_id);
     } catch (error) {
-      logger.error('Error updating competition score', { error });
+      logger.error('Erro ao atualizar pontuação da competição', { sessionId, error });
     }
   }
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -61,7 +62,7 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
       const { data: participations, error: participationsError } = await supabase
         .from('competition_participations')
         .select('user_id, user_position, user_score, prize')
-        .eq('competition_id', competition.id as any)
+        .eq('competition_id', competition.id)
         .order('user_position', { ascending: true });
 
       if (participationsError) {
@@ -75,12 +76,8 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
         return;
       }
 
-      // Filtrar e validar dados das participações
-      const validParticipations = participations
-        .filter((item: any) => item && typeof item === 'object' && !('error' in item) && item.user_id);
-
       // Buscar perfis dos participantes
-      const userIds = validParticipations.map((p: any) => p.user_id);
+      const userIds = participations.map(p => p.user_id);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
@@ -91,20 +88,16 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
         throw profilesError;
       }
 
-      // Filtrar e validar perfis
-      const validProfiles = (profiles || [])
-        .filter((profile: any) => profile && typeof profile === 'object' && !('error' in profile));
-
       // Combinar dados
-      const rankingData: RankingParticipant[] = validParticipations.map((participation: any) => {
-        const profile = validProfiles.find((p: any) => p.id === participation.user_id);
+      const rankingData: RankingParticipant[] = participations.map(participation => {
+        const profile = profiles?.find(p => p.id === participation.user_id);
         
         return {
           user_id: participation.user_id,
           user_position: participation.user_position || 0,
           user_score: participation.user_score || 0,
           prize: participation.prize || 0,
-          profiles: profile && typeof profile === 'object' && !('error' in profile) ? {
+          profiles: profile ? {
             username: profile.username || 'Usuário',
             avatar_url: profile.avatar_url
           } : null

@@ -1,9 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
 
-export interface WordCategory {
+interface WordCategory {
   id: string;
   name: string;
   description: string | null;
@@ -13,172 +13,167 @@ export interface WordCategory {
 }
 
 export const useWordCategories = () => {
-  const [categories, setCategories] = useState<WordCategory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const loadCategories = async () => {
-    try {
+  const { data: categories = [], isLoading } = useQuery({
+    queryKey: ['wordCategories'],
+    queryFn: async (): Promise<WordCategory[]> => {
+      console.log('🔍 Buscando categorias de palavras...');
+      
       const { data, error } = await supabase
         .from('word_categories')
         .select('*')
         .eq('is_active', true)
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao buscar categorias:', error);
+        throw error;
+      }
 
-      // Type-safe filtering and mapping
-      const validCategories = (data || [])
-        .filter((item): item is any => item && typeof item === 'object' && !('error' in item))
-        .map((item): WordCategory => ({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          is_active: item.is_active,
-          created_at: item.created_at,
-          updated_at: item.updated_at
-        }));
+      console.log('📋 Categorias encontradas:', data?.length);
+      return data || [];
+    },
+  });
 
-      setCategories(validCategories);
-    } catch (error) {
-      console.error('Erro ao carregar categorias:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as categorias.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const createCategory = useMutation({
+    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
+      const normalizedName = name.toLowerCase().trim();
+      
+      // Verificar se já existe uma categoria com esse nome
+      const { data: existingCategory } = await supabase
+        .from('word_categories')
+        .select('id, name')
+        .eq('name', normalizedName)
+        .eq('is_active', true)
+        .single();
 
-  const createCategory = async (name: string, description?: string) => {
-    try {
+      if (existingCategory) {
+        throw new Error(`Já existe uma categoria com o nome "${name}"`);
+      }
+
       const { data, error } = await supabase
         .from('word_categories')
-        .insert([{
-          name,
-          description,
-          is_active: true
-        }])
+        .insert({
+          name: normalizedName,
+          description: description || null
+        })
         .select()
         .single();
 
       if (error) throw error;
-
-      if (data && typeof data === 'object' && !('error' in data)) {
-        const newCategory: WordCategory = {
-          id: data.id,
-          name: data.name,
-          description: data.description,
-          is_active: data.is_active,
-          created_at: data.created_at,
-          updated_at: data.updated_at
-        };
-
-        setCategories(prev => [...prev, newCategory]);
-        
-        toast({
-          title: "Sucesso",
-          description: "Categoria criada com sucesso.",
-        });
-
-        return newCategory;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sucesso!",
+        description: "Categoria criada com sucesso",
+      });
+      queryClient.invalidateQueries({ queryKey: ['wordCategories'] });
+    },
+    onError: (error: any) => {
+      console.error('❌ Erro ao criar categoria:', error);
+      
+      let errorMessage = "Erro ao criar categoria";
+      
+      if (error.message && error.message.includes('Já existe uma categoria')) {
+        errorMessage = error.message;
+      } else if (error.code === '23505') {
+        errorMessage = "Já existe uma categoria com este nome";
       }
-
-      throw new Error('Failed to create category');
-    } catch (error) {
-      console.error('Erro ao criar categoria:', error);
+      
       toast({
         title: "Erro",
-        description: "Não foi possível criar a categoria.",
+        description: errorMessage,
         variant: "destructive",
       });
-      throw error;
-    }
-  };
+    },
+  });
 
-  const updateCategory = async (id: string, updates: Partial<WordCategory>) => {
-    try {
+  const updateCategory = useMutation({
+    mutationFn: async ({ id, name, description }: { id: string; name: string; description: string }) => {
       const { data, error } = await supabase
         .from('word_categories')
-        .update(updates)
+        .update({
+          name: name.toLowerCase().trim(),
+          description: description || null,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sucesso!",
+        description: "Categoria atualizada com sucesso",
+      });
+      queryClient.invalidateQueries({ queryKey: ['wordCategories'] });
+    },
+    onError: (error: any) => {
+      console.error('❌ Erro ao atualizar categoria:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar categoria",
+        variant: "destructive",
+      });
+    },
+  });
 
-      if (data && typeof data === 'object' && !('error' in data)) {
-        const updatedCategory: WordCategory = {
-          id: data.id,
-          name: data.name,
-          description: data.description,
-          is_active: data.is_active,
-          created_at: data.created_at,
-          updated_at: data.updated_at
-        };
-
-        setCategories(prev => 
-          prev.map(cat => cat.id === id ? updatedCategory : cat)
-        );
-
-        toast({
-          title: "Sucesso",
-          description: "Categoria atualizada com sucesso.",
-        });
-
-        return updatedCategory;
+  const deleteCategory = useMutation({
+    mutationFn: async ({ id, password }: { id: string; password: string }) => {
+      // Verificar senha (simplificado - em produção seria mais seguro)
+      if (password !== 'admin123') {
+        throw new Error('Senha incorreta');
       }
 
-      throw new Error('Failed to update category');
-    } catch (error) {
-      console.error('Erro ao atualizar categoria:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a categoria.",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const deleteCategory = async (id: string) => {
-    try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('word_categories')
-        .delete()
-        .eq('id', id);
+        .update({ is_active: false })
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) throw error;
-
-      setCategories(prev => prev.filter(cat => cat.id !== id));
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sucesso!",
+        description: "Categoria removida com sucesso",
+      });
+      queryClient.invalidateQueries({ queryKey: ['wordCategories'] });
+    },
+    onError: (error: any) => {
+      console.error('❌ Erro ao remover categoria:', error);
+      
+      let errorMessage = "Erro ao remover categoria";
+      if (error.message && error.message.includes('Senha incorreta')) {
+        errorMessage = error.message;
+      }
       
       toast({
-        title: "Sucesso",
-        description: "Categoria removida com sucesso.",
-      });
-    } catch (error) {
-      console.error('Erro ao remover categoria:', error);
-      toast({
         title: "Erro",
-        description: "Não foi possível remover a categoria.",
+        description: errorMessage,
         variant: "destructive",
       });
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
+    },
+  });
 
   return {
     categories,
     isLoading,
-    createCategory,
-    updateCategory,
-    deleteCategory,
-    refetch: loadCategories
+    createCategory: createCategory.mutate,
+    isCreating: createCategory.isPending,
+    updateCategory: updateCategory.mutate,
+    isUpdating: updateCategory.isPending,
+    deleteCategory: deleteCategory.mutate,
+    isDeleting: deleteCategory.isPending,
   };
 };
+
+export type { WordCategory };

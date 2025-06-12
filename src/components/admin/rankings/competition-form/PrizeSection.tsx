@@ -23,15 +23,12 @@ export const PrizeSection = ({ totalPrizePool: propsPrizePool }: PrizeSectionPro
         let total = 0;
         
         // Calcular prêmios individuais
-        const validConfigs = (prizeConfigs || [])
-          .filter((config: any) => config && typeof config === 'object' && !('error' in config));
-        
-        const individualPrizes = validConfigs.filter((config: any) => config.type === 'individual');
-        total += individualPrizes.reduce((sum: number, prize: any) => sum + (Number(prize.prize_amount) || 0), 0);
+        const individualPrizes = prizeConfigs?.filter(config => config.type === 'individual') || [];
+        total += individualPrizes.reduce((sum, prize) => sum + (Number(prize.prize_amount) || 0), 0);
 
         // Calcular prêmios em grupo (apenas os ativos)
-        const groupPrizes = validConfigs.filter((config: any) => config.type === 'group' && config.active);
-        total += groupPrizes.reduce((sum: number, group: any) => {
+        const groupPrizes = prizeConfigs?.filter(config => config.type === 'group' && config.active) || [];
+        total += groupPrizes.reduce((sum, group) => {
           const prizePerWinner = Number(group.prize_amount) || 0;
           const totalWinners = group.total_winners || 0;
           return sum + (prizePerWinner * totalWinners);

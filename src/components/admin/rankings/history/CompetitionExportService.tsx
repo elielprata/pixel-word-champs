@@ -18,7 +18,7 @@ export const handleExportWinners = async (
     const { data: participations, error: participationsError } = await supabase
       .from('competition_participations')
       .select('user_id, user_position, user_score, prize')
-      .eq('competition_id', competition.id as any)
+      .eq('competition_id', competition.id)
       .gt('prize', 0)
       .order('user_position', { ascending: true });
 
@@ -36,12 +36,8 @@ export const handleExportWinners = async (
       return;
     }
 
-    // Filtrar e validar dados das participações
-    const validParticipations = participations
-      .filter((item: any) => item && typeof item === 'object' && !('error' in item) && item.user_id);
-
     // Buscar perfis dos usuários separadamente
-    const userIds = validParticipations.map((p: any) => p.user_id);
+    const userIds = participations.map(p => p.user_id);
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, username')
@@ -52,20 +48,12 @@ export const handleExportWinners = async (
       throw profilesError;
     }
 
-    // Filtrar e validar perfis
-    const validProfiles = (profiles || [])
-      .filter((profile: any) => profile && typeof profile === 'object' && !('error' in profile));
-
     // Combinar dados das participações com perfis
-    const winners = validParticipations.map((participation: any) => {
-      const profile = validProfiles.find((p: any) => p.id === participation.user_id);
-      const username = (profile && typeof profile === 'object' && !('error' in profile)) 
-        ? profile.username || 'Usuário' 
-        : 'Usuário';
-      
+    const winners = participations.map(participation => {
+      const profile = profiles?.find(p => p.id === participation.user_id);
       return {
         id: `${competition.id}-${participation.user_position}`,
-        username: username,
+        username: profile?.username || 'Usuário',
         position: participation.user_position || 0,
         pixKey: '',
         holderName: '',

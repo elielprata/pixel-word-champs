@@ -30,7 +30,7 @@ export const useUsersQuery = () => {
         throw error;
       }
 
-      if (!data || !Array.isArray(data) || data.length === 0) {
+      if (!data || data.length === 0) {
         return [];
       }
 

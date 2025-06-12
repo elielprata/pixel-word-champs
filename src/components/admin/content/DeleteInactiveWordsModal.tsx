@@ -1,8 +1,11 @@
 
 import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,49 +17,51 @@ interface DeleteInactiveWordsModalProps {
 }
 
 export const DeleteInactiveWordsModal = ({ isOpen, onClose, onSuccess, inactiveWordsCount }: DeleteInactiveWordsModalProps) => {
+  const [password, setPassword] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   const handleDelete = async () => {
-    if (inactiveWordsCount === 0) {
+    if (password !== 'DELETE_INACTIVE_WORDS') {
       toast({
-        title: "Nenhuma palavra inativa",
-        description: "Não há palavras inativas para excluir.",
+        title: "Senha incorreta",
+        description: "Digite exatamente 'DELETE_INACTIVE_WORDS' para confirmar",
         variant: "destructive"
       });
       return;
     }
 
     setIsDeleting(true);
-
+    
     try {
       console.log('🗑️ Iniciando exclusão de palavras inativas...');
       
-      // Usar type assertion para contornar problemas de tipagem do Supabase
-      const { error } = await supabase
+      const { error, count } = await supabase
         .from('level_words')
         .delete()
-        .eq('is_active', false as any);
+        .eq('is_active', false);
 
       if (error) {
-        console.error('❌ Erro ao excluir palavras inativas:', error);
+        console.error('❌ Erro ao deletar palavras inativas:', error);
         throw error;
       }
 
-      console.log('✅ Palavras inativas excluídas com sucesso');
+      console.log(`✅ ${count} palavras inativas deletadas com sucesso`);
       
       toast({
         title: "Sucesso!",
-        description: `${inactiveWordsCount} palavras inativas foram excluídas.`,
+        description: `${count} palavras inativas foram deletadas do banco de dados`,
+        variant: "default"
       });
 
       onSuccess();
       onClose();
+      setPassword('');
     } catch (error: any) {
-      console.error('❌ Erro ao excluir palavras inativas:', error);
+      console.error('❌ Erro durante exclusão:', error);
       toast({
-        title: "Erro ao excluir palavras",
-        description: error.message || "Tente novamente mais tarde",
+        title: "Erro ao deletar",
+        description: error.message || "Falha ao deletar palavras inativas",
         variant: "destructive"
       });
     } finally {
@@ -64,47 +69,76 @@ export const DeleteInactiveWordsModal = ({ isOpen, onClose, onSuccess, inactiveW
     }
   };
 
+  const handleClose = () => {
+    if (!isDeleting) {
+      setPassword('');
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
-            <AlertTriangle className="h-5 w-5" />
-            Excluir Palavras Inativas
+            <Trash2 className="h-5 w-5" />
+            Deletar Palavras Inativas
           </DialogTitle>
-          <DialogDescription>
-            Esta ação irá excluir permanentemente <strong>{inactiveWordsCount}</strong> palavras inativas do banco de dados.
-            <br /><br />
-            <span className="text-red-600 font-medium">Esta ação não pode ser desfeita!</span>
-          </DialogDescription>
         </DialogHeader>
-        
-        <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isDeleting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isDeleting || inactiveWordsCount === 0}
-          >
-            {isDeleting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                Excluindo...
-              </>
-            ) : (
-              <>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Excluir {inactiveWordsCount} Palavras
-              </>
-            )}
-          </Button>
-        </DialogFooter>
+
+        <div className="space-y-4">
+          <Alert className="border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              <strong>AÇÃO IRREVERSÍVEL!</strong><br />
+              Esta ação irá deletar permanentemente <strong>{inactiveWordsCount} palavras inativas</strong> do banco de dados.
+              Esta operação não pode ser desfeita.
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-sm font-medium">
+              Para confirmar, digite: <code className="bg-gray-100 px-1 rounded text-xs">DELETE_INACTIVE_WORDS</code>
+            </Label>
+            <Input
+              id="password"
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Digite a confirmação aqui..."
+              disabled={isDeleting}
+              className="font-mono"
+            />
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              disabled={isDeleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting || password !== 'DELETE_INACTIVE_WORDS'}
+              className="min-w-[120px]"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deletando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Deletar Todas
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

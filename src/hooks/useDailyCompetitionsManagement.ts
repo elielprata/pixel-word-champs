@@ -14,24 +14,22 @@ export const useDailyCompetitionsManagement = () => {
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('competition_type', 'challenge' as any)
+        .eq('competition_type', 'challenge')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      const mappedCompetitions: DailyCompetition[] = (data || [])
-        .filter((comp: any) => comp && typeof comp === 'object' && !('error' in comp))
-        .map((comp: any) => ({
-          id: comp.id,
-          title: comp.title,
-          description: comp.description || '',
-          theme: comp.theme || 'Geral',
-          start_date: comp.start_date,
-          end_date: comp.end_date,
-          max_participants: comp.max_participants || 0,
-          status: comp.status || 'draft',
-          created_at: comp.created_at
-        }));
+      const mappedCompetitions: DailyCompetition[] = (data || []).map(comp => ({
+        id: comp.id,
+        title: comp.title,
+        description: comp.description || '',
+        theme: comp.theme || 'Geral',
+        start_date: comp.start_date,
+        end_date: comp.end_date,
+        max_participants: comp.max_participants || 0,
+        status: comp.status || 'draft',
+        created_at: comp.created_at
+      }));
       
       setCompetitions(mappedCompetitions);
     } catch (error) {
@@ -46,7 +44,7 @@ export const useDailyCompetitionsManagement = () => {
       const { error } = await supabase
         .from('custom_competitions')
         .delete()
-        .eq('id', id as any);
+        .eq('id', id);
 
       if (error) throw error;
 

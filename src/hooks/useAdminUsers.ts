@@ -30,7 +30,7 @@ export const useAdminUsers = () => {
       const { data: adminRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id')
-        .eq('role', 'admin' as any);
+        .eq('role', 'admin');
 
       if (rolesError) {
         console.error('❌ Erro ao buscar admins:', rolesError);
@@ -44,9 +44,7 @@ export const useAdminUsers = () => {
       }
 
       // Buscar dados dos usuários nos profiles
-      const userIds = adminRoles
-        .filter((r: any) => r && typeof r === 'object' && !('error' in r) && r.user_id)
-        .map((r: any) => r.user_id);
+      const userIds = adminRoles.map(r => r.user_id);
       
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -62,35 +60,33 @@ export const useAdminUsers = () => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 
       // Mapear dados com fallback inteligente para emails
-      const safeProfiles: ProfileData[] = (profiles as any) || [];
-      const combinedData: AdminUser[] = safeProfiles
-        .filter((profile: any) => profile && typeof profile === 'object' && !('error' in profile))
-        .map((profile: ProfileData) => {
-          let email = 'Email não disponível';
-          
-          // Se for o usuário atual logado, usar o email real
-          if (currentUser && currentUser.id === profile.id) {
-            email = currentUser.email || 'Email não disponível';
+      const safeProfiles: ProfileData[] = profiles || [];
+      const combinedData: AdminUser[] = safeProfiles.map((profile: ProfileData) => {
+        let email = 'Email não disponível';
+        
+        // Se for o usuário atual logado, usar o email real
+        if (currentUser && currentUser.id === profile.id) {
+          email = currentUser.email || 'Email não disponível';
+        }
+        // Fallback baseado no username
+        else if (profile.username) {
+          // Se o username já parece um email, usar como email
+          if (profile.username.includes('@')) {
+            email = profile.username;
+          } else {
+            // Criar um email baseado no username
+            email = `${profile.username}@sistema.local`;
           }
-          // Fallback baseado no username
-          else if (profile.username) {
-            // Se o username já parece um email, usar como email
-            if (profile.username.includes('@')) {
-              email = profile.username;
-            } else {
-              // Criar um email baseado no username
-              email = `${profile.username}@sistema.local`;
-            }
-          }
+        }
 
-          return {
-            id: profile.id,
-            email: email,
-            username: profile.username || 'Username não disponível',
-            created_at: profile.created_at || new Date().toISOString(),
-            role: 'admin'
-          };
-        });
+        return {
+          id: profile.id,
+          email: email,
+          username: profile.username || 'Username não disponível',
+          created_at: profile.created_at || new Date().toISOString(),
+          role: 'admin'
+        };
+      });
 
       console.log('👥 Admins processados:', combinedData.map(u => ({ username: u.username, email: u.email })));
       return combinedData;
@@ -105,8 +101,8 @@ export const useAdminUsers = () => {
       const { error: deleteError } = await supabase
         .from('user_roles')
         .delete()
-        .eq('user_id', userId as any)
-        .eq('role', 'admin' as any);
+        .eq('user_id', userId)
+        .eq('role', 'admin');
 
       if (deleteError) {
         console.error('❌ Erro ao remover role admin:', deleteError);
@@ -119,7 +115,7 @@ export const useAdminUsers = () => {
         .insert({
           user_id: userId,
           role: 'user'
-        } as any);
+        });
 
       if (insertError) {
         console.error('❌ Erro ao adicionar role user:', insertError);

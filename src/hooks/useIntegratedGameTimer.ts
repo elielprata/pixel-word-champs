@@ -1,49 +1,78 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useGamePointsConfig } from './useGamePointsConfig';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useIntegratedGameTimer = (isGameStarted: boolean = false) => {
-  const [timerSettings, setTimerSettings] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [timeRemaining, setTimeRemaining] = useState(300); // Default 5 minutes
+interface TimerConfig {
+  initialTime: number;
+  reviveTimeBonus: number;
+}
 
+export const useIntegratedGameTimer = (isGameStarted: boolean) => {
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [timerConfig, setTimerConfig] = useState<TimerConfig>({
+    initialTime: 180, // fallback padrão
+    reviveTimeBonus: 30 // fallback padrão de 30 segundos
+  });
+  const { config, loading } = useGamePointsConfig();
+
+  // Configurar timer com base nas configurações do backend
   useEffect(() => {
-    const fetchTimerSettings = async () => {
+    const fetchTimerConfig = async () => {
       try {
-        const { data, error } = await supabase
+        // Buscar configuração de tempo base do banco
+        const { data: timerSettings, error } = await supabase
           .from('game_settings')
           .select('setting_key, setting_value')
-          .eq('setting_key', 'game_timer_duration' as any)
-          .eq('category', 'gameplay' as any)
-          .maybeSingle();
+          .eq('setting_key', 'base_time_limit')
+          .eq('category', 'gameplay');
 
         if (error) throw error;
 
-        if (data && typeof data === 'object' && !('error' in data)) {
-          const setting = data as any;
-          if (setting.setting_key && setting.setting_value) {
-            const duration = parseInt(setting.setting_value) || 300;
-            setTimerSettings({ duration });
-            setTimeRemaining(duration);
-          }
+        let initialTime = 180; // fallback
+        
+        // Procurar pela configuração base_time_limit
+        const timerSetting = timerSettings?.find(s => s.setting_key === 'base_time_limit');
+        
+        if (timerSetting) {
+          initialTime = parseInt(timerSetting.setting_value) || 180;
+          console.log(`⏰ Tempo inicial configurado: ${initialTime} segundos (base_time_limit)`);
         } else {
-          // Default settings if none found
-          const defaultDuration = 300;
-          setTimerSettings({ duration: defaultDuration });
-          setTimeRemaining(defaultDuration);
+          console.log('⚠️ Configuração base_time_limit não encontrada, usando padrão de 180s');
         }
+
+        // Garantir que o revive_time_bonus tenha um valor válido
+        const reviveTimeBonus = config?.revive_time_bonus || 30;
+        console.log(`🔄 Revive time bonus configurado: ${reviveTimeBonus} segundos`);
+
+        setTimerConfig({
+          initialTime,
+          reviveTimeBonus
+        });
+        setTimeRemaining(initialTime);
       } catch (error) {
-        console.error('Erro ao carregar configurações do timer:', error);
-        const defaultDuration = 300;
-        setTimerSettings({ duration: defaultDuration });
-        setTimeRemaining(defaultDuration);
-      } finally {
-        setIsLoading(false);
+        console.error('Erro ao buscar configuração de timer:', error);
+        // Usar valores padrão em caso de erro
+        const fallbackReviveBonus = config?.revive_time_bonus || 30;
+        setTimerConfig({
+          initialTime: 180,
+          reviveTimeBonus: fallbackReviveBonus
+        });
+        setTimeRemaining(180);
       }
     };
 
-    fetchTimerSettings();
-  }, []);
+    if (!loading) {
+      fetchTimerConfig();
+    }
+  }, [config, loading]);
+
+  // Reset timer when game starts
+  useEffect(() => {
+    if (isGameStarted) {
+      setTimeRemaining(timerConfig.initialTime);
+    }
+  }, [isGameStarted, timerConfig.initialTime]);
 
   // Timer countdown
   useEffect(() => {
@@ -55,23 +84,22 @@ export const useIntegratedGameTimer = (isGameStarted: boolean = false) => {
     }
   }, [isGameStarted, timeRemaining]);
 
-  const extendTime = () => {
-    const bonusTime = 60; // 1 minute bonus
+  const extendTime = useCallback(() => {
+    const bonusTime = timerConfig.reviveTimeBonus;
+    console.log(`⏰ Adicionando ${bonusTime} segundos ao tempo restante`);
     setTimeRemaining(prev => prev + bonusTime);
     return true;
-  };
+  }, [timerConfig.reviveTimeBonus]);
 
-  const resetTimer = () => {
-    if (timerSettings?.duration) {
-      setTimeRemaining(timerSettings.duration);
-    }
-  };
+  const resetTimer = useCallback(() => {
+    setTimeRemaining(timerConfig.initialTime);
+  }, [timerConfig.initialTime]);
 
   return {
-    timerSettings,
-    isLoading,
     timeRemaining,
     extendTime,
-    resetTimer
+    resetTimer,
+    canRevive: true,
+    timerConfig
   };
 };

@@ -9,7 +9,7 @@ export const useAllUsers = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: usersList = [], isLoading, refetch } = useUsersQuery();
-  const { banUser, deleteUser, unbanUser, isBanning, isDeleting, isUnbanning } = useUserMutations();
+  const { banUser, deleteUser, unbanUser, isBanningUser, isDeletingUser, isUnbanningUser } = useUserMutations();
 
   const validateAdminPassword = async (password: string) => {
     const { data: currentUser } = await supabase.auth.getUser();
@@ -52,7 +52,7 @@ export const useAllUsers = () => {
           games_played: 0,
           best_daily_position: null,
           best_weekly_position: null
-        } as any)
+        })
         .not('id', 'is', null); // WHERE clause que inclui todos os registros com ID não nulo
 
       if (error) {
@@ -70,7 +70,7 @@ export const useAllUsers = () => {
           target_user_id: currentUser.user.id,
           action_type: 'reset_all_scores',
           details: { timestamp: new Date().toISOString() }
-        } as any);
+        });
 
       if (logError) {
         console.warn('⚠️ Erro ao registrar log:', logError);
@@ -102,9 +102,9 @@ export const useAllUsers = () => {
     banUser,
     deleteUser,
     unbanUser,
-    isBanningUser: isBanning,
-    isDeletingUser: isDeleting,
-    isUnbanningUser: isUnbanning,
+    isBanningUser,
+    isDeletingUser,
+    isUnbanningUser,
     resetAllScores: resetAllScoresMutation.mutate,
     isResettingScores: resetAllScoresMutation.isPending,
   };

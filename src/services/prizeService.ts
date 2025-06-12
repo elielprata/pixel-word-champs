@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/utils/logger';
 
 export interface PrizeConfiguration {
   id: string;
@@ -24,7 +23,7 @@ export const prizeService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      logger.error('Error fetching prize configurations', { error });
+      console.error('Error fetching prize configurations:', error);
       return [];
     }
   },
@@ -41,7 +40,7 @@ export const prizeService = {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      logger.error('Error updating prize configuration', { error });
+      console.error('Error updating prize configuration:', error);
       return { success: false, error: 'Erro ao atualizar configuração de prêmio' };
     }
   }

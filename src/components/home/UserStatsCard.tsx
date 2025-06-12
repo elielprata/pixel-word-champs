@@ -28,21 +28,21 @@ const UserStatsCard = () => {
   const statsData = [
     {
       icon: Trophy,
-      value: stats?.score || 0,
+      value: stats?.totalScore || 0,
       label: 'Pontuação',
       color: 'from-blue-400 to-blue-600',
       iconColor: 'text-blue-600'
     },
     {
       icon: Target,
-      value: stats?.level || 0,
+      value: stats?.gamesPlayed || 0,
       label: 'Partidas',
       color: 'from-green-400 to-green-600',
       iconColor: 'text-green-600'
     },
     {
       icon: Star,
-      value: stats?.weeklyPosition || 0,
+      value: stats?.bestDailyPosition || 0,
       label: 'Melhor',
       color: 'from-purple-400 to-purple-600',
       iconColor: 'text-purple-600'

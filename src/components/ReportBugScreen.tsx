@@ -6,7 +6,6 @@ import { ArrowLeft, Bug, Send, AlertTriangle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { logger } from '@/utils/logger';
 
 interface ReportBugScreenProps {
   onBack: () => void;
@@ -43,18 +42,16 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
     try {
       const fullMessage = `Tipo: ${bugTypes.find(t => t.value === bugType)?.label}\n\nDescrição:\n${description}\n\nPassos para reproduzir:\n${steps}`;
       
-      const insertData = {
-        user_id: user.id,
-        report_type: 'bug',
-        subject: `Bug Report: ${bugTypes.find(t => t.value === bugType)?.label}`,
-        message: fullMessage,
-        priority: 'high',
-        status: 'pending'
-      };
-
       const { error } = await supabase
         .from('user_reports')
-        .insert(insertData as any);
+        .insert({
+          user_id: user.id,
+          report_type: 'bug',
+          subject: `Bug Report: ${bugTypes.find(t => t.value === bugType)?.label}`,
+          message: fullMessage,
+          priority: 'high',
+          status: 'pending'
+        });
 
       if (error) throw error;
 
@@ -63,10 +60,9 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
         description: "Obrigado por ajudar a melhorar o jogo. Nossa equipe irá analisar o report.",
       });
       
-      logger.debug('Bug report submitted successfully');
       onBack();
     } catch (error) {
-      logger.error('Error submitting bug report', { error });
+      console.error('Erro ao reportar bug:', error);
       toast({
         title: "Erro ao reportar bug",
         description: "Tente novamente mais tarde",

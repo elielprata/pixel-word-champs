@@ -7,7 +7,7 @@ import { UserGrowthMetrics } from './UserGrowthMetrics';
 import { UserActivityMetrics } from './UserActivityMetrics';
 
 export const DashboardStats = () => {
-  const { stats, isLoading, refetch } = useRealUserStats();
+  const { data: stats, isLoading } = useRealUserStats();
 
   if (isLoading || !stats) {
     return (

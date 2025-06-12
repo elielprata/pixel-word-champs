@@ -1,87 +1,76 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-interface Word {
-  id: string;
-  word: string;
-  level: number;
-  difficulty: string;
-  category: string | null;
-  is_active: boolean;
-}
+import { useToast } from "@/hooks/use-toast";
 
 export const useActiveWords = () => {
-  return useQuery({
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: words, isLoading, error, refetch } = useQuery({
     queryKey: ['activeWords'],
-    queryFn: async (): Promise<Word[]> => {
+    queryFn: async () => {
       console.log('🔍 Buscando palavras ativas...');
       
       const { data, error } = await supabase
         .from('level_words')
-        .select('*')
-        .eq('is_active', true as any)
-        .order('level', { ascending: true })
-        .order('word', { ascending: true });
+        .select('id, word, category, difficulty, created_at')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Erro ao buscar palavras ativas:', error);
+        console.error('❌ Erro ao buscar palavras:', error);
         throw error;
       }
 
-      // Validar e filtrar dados
-      const validWords = (data || [])
-        .filter((word: any) => word && typeof word === 'object' && !('error' in word))
-        .map((word: any) => ({
-          id: word.id,
-          word: word.word || '',
-          level: word.level || 1,
-          difficulty: word.difficulty || 'medium',
-          category: word.category,
-          is_active: Boolean(word.is_active)
-        }));
-
-      console.log(`✅ ${validWords.length} palavras ativas encontradas`);
-      return validWords;
+      console.log('📝 Palavras ativas encontradas:', data?.length, data);
+      return data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchInterval: 30000, // Atualizar a cada 30 segundos
   });
-};
 
-export const useWordsByLevel = (level: number) => {
-  return useQuery({
-    queryKey: ['wordsByLevel', level],
-    queryFn: async (): Promise<Word[]> => {
-      console.log(`🔍 Buscando palavras do nível ${level}...`);
+  const deleteAllWords = useMutation({
+    mutationFn: async ({ password }: { password: string }) => {
+      // Aqui você pode adicionar validação da senha se necessário
+      // Por exemplo, verificar se a senha está correta antes de prosseguir
       
-      const { data, error } = await supabase
+      console.log('🗑️ Excluindo todas as palavras ativas permanentemente...');
+      
+      const { error } = await supabase
         .from('level_words')
-        .select('*')
-        .eq('level', level as any)
-        .eq('is_active', true as any)
-        .order('word', { ascending: true });
+        .delete()
+        .eq('is_active', true);
 
       if (error) {
-        console.error(`❌ Erro ao buscar palavras do nível ${level}:`, error);
+        console.error('❌ Erro ao excluir palavras:', error);
         throw error;
       }
-
-      // Validar e filtrar dados
-      const validWords = (data || [])
-        .filter((word: any) => word && typeof word === 'object' && !('error' in word))
-        .map((word: any) => ({
-          id: word.id,
-          word: word.word || '',
-          level: word.level || level,
-          difficulty: word.difficulty || 'medium',
-          category: word.category,
-          is_active: Boolean(word.is_active)
-        }));
-
-      console.log(`✅ ${validWords.length} palavras encontradas para o nível ${level}`);
-      return validWords;
+      
+      console.log('✅ Todas as palavras ativas foram excluídas permanentemente');
     },
-    enabled: level > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    onSuccess: () => {
+      toast({
+        title: "Sucesso!",
+        description: "Todas as palavras foram excluídas permanentemente",
+      });
+      queryClient.invalidateQueries({ queryKey: ['activeWords'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir palavras",
+        variant: "destructive",
+      });
+      console.error('❌ Erro ao excluir palavras:', error);
+    },
   });
+
+  return {
+    words: words || [],
+    isLoading,
+    error,
+    refetch,
+    deleteAllWords: (password: string) => deleteAllWords.mutate({ password }),
+    isDeletingAll: deleteAllWords.isPending,
+  };
 };

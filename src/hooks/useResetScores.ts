@@ -25,8 +25,8 @@ export const useResetScores = () => {
         .update({
           total_score: 0,
           games_played: 0
-        } as any)
-        .neq('id', '00000000-0000-0000-0000-000000000000' as any); // Atualizar todos
+        })
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Atualizar todos
 
       if (resetError) throw resetError;
 
@@ -38,7 +38,7 @@ export const useResetScores = () => {
           target_user_id: currentUser.user.id, // Self reference para ação global
           action_type: 'reset_all_scores',
           details: { affected_users: 'all' }
-        } as any);
+        });
 
       if (logError) {
         console.warn('⚠️ Erro ao registrar log:', logError);

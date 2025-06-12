@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MessageSquare, AlertTriangle, CheckCircle, Clock, User, RefreshCw, Filter, Search } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { logger } from '@/utils/logger';
 
 interface Report {
   id: string;
@@ -48,29 +46,9 @@ export const SupportTab = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      if (data && Array.isArray(data)) {
-        const transformedData: Report[] = data
-          .filter((report: any) => report && typeof report === 'object')
-          .map((report: any) => ({
-            id: report.id || '',
-            user_id: report.user_id || '',
-            report_type: report.report_type || '',
-            subject: report.subject || '',
-            message: report.message || '',
-            status: report.status || 'pending',
-            priority: report.priority || 'medium',
-            resolution: report.resolution || null,
-            created_at: report.created_at || '',
-            updated_at: report.updated_at || ''
-          }));
-        
-        setReports(transformedData);
-      } else {
-        setReports([]);
-      }
+      setReports(data || []);
     } catch (error) {
-      logger.error('Error loading reports', { error });
+      console.error('Erro ao carregar reports:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar os reports",
@@ -96,7 +74,7 @@ export const SupportTab = () => {
       const { error } = await supabase
         .from('user_reports')
         .update(updateData)
-        .eq('id', reportId as any);
+        .eq('id', reportId);
 
       if (error) throw error;
 
@@ -109,7 +87,7 @@ export const SupportTab = () => {
       setSelectedReport(null);
       setResolution('');
     } catch (error) {
-      logger.error('Error updating report', { error });
+      console.error('Erro ao atualizar report:', error);
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o report",

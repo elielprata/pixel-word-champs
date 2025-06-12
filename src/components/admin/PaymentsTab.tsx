@@ -43,20 +43,6 @@ export const PaymentsTab = () => {
     );
   }
 
-  const handleEditGroupWrapper = (group: any) => {
-    handleEditGroup(group.id);
-  };
-
-  const handleSaveGroupWrapper = () => {
-    if (editingGroup) {
-      handleSaveGroup(editingGroup);
-    }
-  };
-
-  const handleToggleGroupWrapper = (groupId: string) => {
-    handleToggleGroup(groupId);
-  };
-
   return (
     <div className="space-y-6">
       <PaymentHeader totalPrize={totalPrize} totalWinners={totalWinners} />
@@ -83,9 +69,9 @@ export const PaymentsTab = () => {
         editingGroup={editingGroup}
         editGroupPrize={editGroupPrize}
         setEditGroupPrize={setEditGroupPrize}
-        onEditGroup={handleEditGroupWrapper}
-        onSaveGroup={handleSaveGroupWrapper}
-        onToggleGroup={handleToggleGroupWrapper}
+        onEditGroup={handleEditGroup}
+        onSaveGroup={handleSaveGroup}
+        onToggleGroup={handleToggleGroup}
         onCancel={handleCancel}
       />
     </div>

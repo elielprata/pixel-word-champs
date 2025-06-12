@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2, Activity } from 'lucide-react';
 import { useRealUserStats } from '@/hooks/useRealUserStats';
 
 export const UserStatsCards = () => {
-  const { stats, isLoading, refetch } = useRealUserStats();
+  const { data: stats, isLoading, refetch } = useRealUserStats();
 
   if (isLoading || !stats) {
     return (

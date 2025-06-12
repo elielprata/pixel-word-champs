@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Trophy, Star, Medal, Award, Crown, Zap, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { logger } from '@/utils/logger';
 
 interface RankingPlayer {
   pos: number;
@@ -28,39 +28,31 @@ const RankingScreen = () => {
 
   const loadPrizeConfigurations = async () => {
     try {
-      logger.debug('Loading prize configurations');
+      console.log('💰 Carregando configurações de prêmios...');
       
       const { data, error } = await supabase
         .from('prize_configurations')
         .select('position, prize_amount')
-        .eq('type', 'individual' as any)
-        .eq('active', true as any)
-        .in('position', [1, 2, 3] as any);
+        .eq('type', 'individual')
+        .eq('active', true)
+        .in('position', [1, 2, 3])
+        .order('position', { ascending: true });
 
       if (error) {
-        logger.error('Error loading prizes', { error });
+        console.error('❌ Erro ao carregar prêmios:', error);
         throw error;
       }
 
-      if (data && Array.isArray(data)) {
-        const prizes: PrizeConfig[] = data
-          .filter((config: any) => config && typeof config === 'object')
-          .map((config: any) => ({
-            position: Number(config.position) || 0,
-            prize_amount: Number(config.prize_amount) || 0
-          }));
+      const prizes: PrizeConfig[] = (data || []).map(config => ({
+        position: config.position!,
+        prize_amount: Number(config.prize_amount) || 0
+      }));
 
-        setPrizeConfigs(prizes);
-        logger.debug('Prizes loaded successfully', { count: prizes.length });
-      } else {
-        setPrizeConfigs([
-          { position: 1, prize_amount: 100 },
-          { position: 2, prize_amount: 50 },
-          { position: 3, prize_amount: 25 }
-        ]);
-      }
+      setPrizeConfigs(prizes);
+      console.log('✅ Prêmios carregados:', prizes);
     } catch (err) {
-      logger.error('Error loading prize configurations', { error: err });
+      console.error('❌ Erro ao carregar configurações de prêmios:', err);
+      // Define prêmios padrão em caso de erro
       setPrizeConfigs([
         { position: 1, prize_amount: 100 },
         { position: 2, prize_amount: 50 },
@@ -74,7 +66,7 @@ const RankingScreen = () => {
       setIsLoading(true);
       setError(null);
       
-      logger.debug('Loading ranking');
+      console.log('📊 Carregando ranking...');
       
       const { data, error } = await supabase
         .from('profiles')
@@ -84,39 +76,33 @@ const RankingScreen = () => {
         .limit(50);
 
       if (error) {
-        logger.error('Error loading ranking', { error });
+        console.error('❌ Erro ao carregar ranking:', error);
         throw error;
       }
 
-      if (data && Array.isArray(data)) {
-        const players: RankingPlayer[] = data
-          .filter((profile: any) => profile && typeof profile === 'object')
-          .map((profile: any, index: number) => ({
-            pos: index + 1,
-            user_id: profile.id || '',
-            name: profile.username || 'Usuário',
-            score: profile.total_score || 0
-          }));
+      const players: RankingPlayer[] = (data || []).map((profile, index) => ({
+        pos: index + 1,
+        user_id: profile.id,
+        name: profile.username || 'Usuário',
+        score: profile.total_score || 0
+      }));
 
-        setRanking(players);
+      setRanking(players);
 
-        // Encontrar posição do usuário atual
-        if (user?.id) {
-          const userRank = players.find(p => p.user_id === user.id);
-          setUserPosition(userRank?.pos || null);
-          
-          if (userRank) {
-            logger.debug('User position found', { position: userRank.pos, score: userRank.score });
-          }
+      // Encontrar posição do usuário atual
+      if (user?.id) {
+        const userRank = players.find(p => p.user_id === user.id);
+        setUserPosition(userRank?.pos || null);
+        
+        if (userRank) {
+          console.log(`🏆 Posição do usuário: #${userRank.pos} com ${userRank.score} pontos`);
         }
-
-        logger.debug('Ranking loaded successfully', { playersCount: players.length });
-      } else {
-        setRanking([]);
       }
 
+      console.log('✅ Ranking carregado:', players.length, 'jogadores');
+
     } catch (err) {
-      logger.error('Error loading ranking', { error: err });
+      console.error('❌ Erro ao carregar ranking:', err);
       setError('Erro ao carregar ranking');
     } finally {
       setIsLoading(false);
@@ -132,7 +118,7 @@ const RankingScreen = () => {
 
   // Configurar atualizações em tempo real
   useEffect(() => {
-    logger.debug('Setting up real-time monitoring');
+    console.log('🔄 Configurando monitoramento em tempo real...');
 
     const profilesChannel = supabase
       .channel('profiles-ranking-changes')
@@ -144,7 +130,7 @@ const RankingScreen = () => {
           table: 'profiles'
         },
         (payload) => {
-          logger.debug('Profile change detected', { event: payload.eventType });
+          console.log('📡 Mudança detectada nos perfis:', payload);
           loadRanking();
         }
       )
@@ -152,12 +138,12 @@ const RankingScreen = () => {
 
     // Atualizar a cada 30 segundos
     const interval = setInterval(() => {
-      logger.debug('Periodic ranking update');
+      console.log('🔄 Atualização periódica do ranking...');
       loadRanking();
     }, 30000);
 
     return () => {
-      logger.debug('Disconnecting real-time channels');
+      console.log('🔌 Desconectando canais de tempo real');
       supabase.removeChannel(profilesChannel);
       clearInterval(interval);
     };

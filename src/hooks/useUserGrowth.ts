@@ -30,11 +30,6 @@ export const useUserGrowth = () => {
         throw error;
       }
 
-      // Filter and validate data
-      const validUserData = (userData || []).filter((user: any) => 
-        user && typeof user === 'object' && !('error' in user) && user.created_at
-      );
-
       // Agrupar por dia
       const dailyData: { [key: string]: number } = {};
       const last7Days = [];
@@ -47,7 +42,7 @@ export const useUserGrowth = () => {
         dailyData[dateStr] = 0;
       }
 
-      validUserData.forEach((user: any) => {
+      userData?.forEach(user => {
         const dateStr = user.created_at.split('T')[0];
         if (dailyData.hasOwnProperty(dateStr)) {
           dailyData[dateStr]++;

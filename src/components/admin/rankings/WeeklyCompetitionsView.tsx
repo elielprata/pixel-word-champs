@@ -7,7 +7,6 @@ import { EditCompetitionModal } from './EditCompetitionModal';
 import { WeeklyRankingModal } from './WeeklyRankingModal';
 import { useWeeklyCompetitionsActions } from '@/hooks/useWeeklyCompetitionsActions';
 import { competitionStatusService } from '@/services/competitionStatusService';
-import { logger } from '@/utils/logger';
 
 interface WeeklyCompetition {
   id: string;
@@ -52,11 +51,11 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   const debouncedRefresh = useCallback(() => {
     const now = Date.now();
     if (now - lastRefresh > 5000) { // Minimum 5 seconds between refreshes
-      logger.debug('WeeklyCompetitionsView - Executing debounced refresh');
+      console.log('🔄 [WeeklyCompetitionsView] Executando refresh com debounce');
       setLastRefresh(now);
       onRefresh();
     } else {
-      logger.debug('WeeklyCompetitionsView - Refresh blocked by debounce');
+      console.log('⏳ [WeeklyCompetitionsView] Refresh bloqueado por debounce');
     }
   }, [onRefresh, lastRefresh]);
 
@@ -70,7 +69,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
       });
       
       if (comp.status !== actualStatus) {
-        logger.debug('WeeklyCompetitionsView - Status mismatch detected', {
+        console.log(`⚠️ [WeeklyCompetitionsView] Status mismatch para "${comp.title}":`, {
           statusBanco: comp.status,
           statusCalculado: actualStatus
         });
@@ -81,13 +80,13 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   }, [competitions]);
 
   const handleRefreshCallback = useCallback(() => {
-    logger.debug('WeeklyCompetitionsView - Refresh callback called');
+    console.log('🔄 [WeeklyCompetitionsView] Callback de refresh chamado');
     handleCompetitionUpdated(debouncedRefresh);
   }, [handleCompetitionUpdated, debouncedRefresh]);
 
-  logger.debug('WeeklyCompetitionsView - Rendering with', {
+  console.log('🏆 [WeeklyCompetitionsView] Renderizando com:', {
     competitions: validatedCompetitions.length,
-    activeCompetition: activeCompetition?.title || 'none',
+    activeCompetition: activeCompetition?.title || 'nenhuma',
     isLoading
   });
 

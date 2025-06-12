@@ -7,7 +7,6 @@ import { DailyCompetitionsContainer } from './daily/DailyCompetitionsContainer';
 import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 import { useDailyCompetitionsLogic } from '@/hooks/useDailyCompetitionsLogic';
 import { useDailyCompetitionsActions } from '@/hooks/useDailyCompetitionsActions';
-import { logger } from '@/utils/logger';
 
 interface DailyCompetition {
   id: string;
@@ -48,8 +47,9 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
     handleCompetitionUpdated
   } = useDailyCompetitionsActions();
 
-  logger.debug('DailyCompetitionsView - Central states', {
+  console.log('🔍 DailyCompetitionsView - Estados centralizados:', {
     editingCompetition: editingCompetition?.id,
+    editingCompetitionTitle: editingCompetition?.title,
     isEditModalOpen,
     activeCompetitions: activeCompetitions.length,
     deletingId
@@ -57,19 +57,19 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
 
   // Função para lidar com edição
   const onEditCompetition = (competition: DailyCompetition) => {
-    logger.debug('DailyCompetitionsView - Editing competition');
+    console.log('📝 DailyCompetitionsView - Editando competição:', competition.id);
     handleEdit(competition);
   };
 
   // Função para lidar com exclusão
   const onDeleteCompetition = (competition: DailyCompetition) => {
-    logger.debug('DailyCompetitionsView - Deleting competition');
+    console.log('🗑️ DailyCompetitionsView - Excluindo competição:', competition.id);
     handleDelete(competition, onRefresh);
   };
 
   // Função para lidar com a abertura do modal
   const handleModalOpenChange = (open: boolean) => {
-    logger.debug('DailyCompetitionsView - Modal state change', { open });
+    console.log('🔍 DailyCompetitionsView - Mudança de estado do modal:', open);
     setIsEditModalOpen(open);
   };
 

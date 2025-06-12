@@ -39,7 +39,7 @@ const config: AppConfig = {
     environment: (import.meta.env.VITE_APP_ENV as 'development' | 'staging' | 'production') || 'development',
   },
   api: {
-    baseUrl: import.meta.env.VITE_API_URL || 'https://oqzpkqbmcnpxpegshlcm.supabase.co',
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
     timeout: 30000,
   },
   game: {
@@ -59,7 +59,7 @@ const config: AppConfig = {
   },
   invite: {
     defaultCode: import.meta.env.VITE_DEFAULT_INVITE_CODE || 'ARENA2024',
-    baseUrl: import.meta.env.VITE_APP_URL || 'https://pixel-word-champs.lovable.app',
+    baseUrl: import.meta.env.VITE_APP_URL || 'https://letraarena.com',
   },
   features: {
     enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',

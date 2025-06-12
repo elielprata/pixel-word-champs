@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -30,7 +31,7 @@ export const useGameState = (level: number, board: string[][]) => {
         const { data: words, error } = await supabase
           .from('level_words')
           .select('word, difficulty, category')
-          .eq('is_active', true as any)
+          .eq('is_active', true)
           .limit(15);
 
         if (error) {
@@ -49,20 +50,11 @@ export const useGameState = (level: number, board: string[][]) => {
 
         console.log('✅ Palavras encontradas:', words.length);
 
-        // Filter and validate words data
-        const validWordData = words
-          .filter((item: any) => item && typeof item === 'object' && !('error' in item))
-          .map((item: any) => ({
-            word: item.word || '',
-            difficulty: item.difficulty || 'medium',
-            category: item.category || 'geral'
-          }));
-
         // Usar as palavras que foram realmente colocadas no tabuleiro
         const wordPositions: WordPosition[] = [];
         
         // Buscar cada palavra no tabuleiro gerado
-        for (const wordData of validWordData.slice(0, 5)) { // Apenas as primeiras 5 palavras
+        for (const wordData of words.slice(0, 5)) { // Apenas as primeiras 5 palavras
           const positions = findWordInBoard(board, wordData.word);
           if (positions.length > 0) {
             wordPositions.push({
@@ -75,8 +67,8 @@ export const useGameState = (level: number, board: string[][]) => {
 
         const data: AIGeneratedData = {
           validWords: wordPositions,
-          category: validWordData[0]?.category || 'geral',
-          difficulty: calculateGameDifficulty(validWordData)
+          category: words[0]?.category || 'geral',
+          difficulty: calculateGameDifficulty(words)
         };
 
         console.log('🎯 Dados do jogo gerados:', {

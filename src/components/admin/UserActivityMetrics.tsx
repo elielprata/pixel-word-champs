@@ -46,21 +46,16 @@ const useUserActivity = () => {
         dailyActivity[dateStr] = { sessions: 0, users: new Set() };
       }
 
-      // Process sessions with proper error handling
-      if (sessions && Array.isArray(sessions)) {
-        sessions.forEach((session: any) => {
-          if (session && typeof session === 'object' && session.started_at && session.user_id) {
-            const sessionDate = new Date(session.started_at);
-            sessionDate.setHours(0, 0, 0, 0);
-            const dateStr = sessionDate.toISOString().split('T')[0];
-            
-            if (dailyActivity[dateStr]) {
-              dailyActivity[dateStr].sessions++;
-              dailyActivity[dateStr].users.add(session.user_id);
-            }
-          }
-        });
-      }
+      sessions?.forEach(session => {
+        const sessionDate = new Date(session.started_at);
+        sessionDate.setHours(0, 0, 0, 0);
+        const dateStr = sessionDate.toISOString().split('T')[0];
+        
+        if (dailyActivity[dateStr]) {
+          dailyActivity[dateStr].sessions++;
+          dailyActivity[dateStr].users.add(session.user_id);
+        }
+      });
 
       const result = last7Days.map(({ dateStr, dayName }) => ({
         day: dayName,

@@ -108,7 +108,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       const { data: competitionData, error: competitionError } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('id', competitionId as any)
+        .eq('id', competitionId)
         .single();
 
       if (competitionError) {
@@ -118,28 +118,22 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
 
       console.log('✅ Competição carregada:', competitionData);
 
-      // Verificar se os dados são válidos e usar type assertion
-      const validCompetitionData = competitionData as any;
-      if (!validCompetitionData || 'error' in validCompetitionData) {
-        throw new Error('Dados da competição não encontrados');
-      }
-
       // Verificar se a competição está ativa usando o serviço centralizado
-      const isActive = isCompetitionActive(validCompetitionData.start_date, validCompetitionData.end_date);
+      const isActive = isCompetitionActive(competitionData.start_date, competitionData.end_date);
       
       if (!isActive) {
         console.log('⏳ Competição não está ativa, não carregando ranking');
         
         const competitionInfo: CompetitionInfo = {
-          id: validCompetitionData.id,
-          title: validCompetitionData.title,
-          description: validCompetitionData.description || '',
-          start_date: validCompetitionData.start_date,
-          end_date: validCompetitionData.end_date,
-          status: validCompetitionData.status,
-          theme: validCompetitionData.theme,
-          max_participants: validCompetitionData.max_participants || 0,
-          prize_pool: Number(validCompetitionData.prize_pool) || 0,
+          id: competitionData.id,
+          title: competitionData.title,
+          description: competitionData.description || '',
+          start_date: competitionData.start_date,
+          end_date: competitionData.end_date,
+          status: competitionData.status,
+          theme: competitionData.theme,
+          max_participants: competitionData.max_participants || 0,
+          prize_pool: Number(competitionData.prize_pool) || 0,
           total_participants: 0
         };
 
@@ -150,23 +144,11 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
         const { data: prizeData, error: prizeError } = await supabase
           .from('prize_configurations')
           .select('*')
-          .eq('active', true as any)
+          .eq('active', true)
           .order('position', { ascending: true });
 
-        if (!prizeError && prizeData) {
-          const validPrizeData = (prizeData || [])
-            .filter((item: any) => item && typeof item === 'object' && !('error' in item))
-            .map((item: any) => ({
-              id: item?.id || '',
-              type: item?.type || '',
-              position: item?.position,
-              position_range: item?.position_range,
-              prize_amount: Number(item?.prize_amount) || 0,
-              group_name: item?.group_name,
-              total_winners: Number(item?.total_winners) || 1,
-              active: Boolean(item?.active)
-            }));
-          setPrizeConfigs(validPrizeData);
+        if (!prizeError) {
+          setPrizeConfigs(prizeData || []);
         }
 
         return;
@@ -176,7 +158,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       const { data: prizeData, error: prizeError } = await supabase
         .from('prize_configurations')
         .select('*')
-        .eq('active', true as any)
+        .eq('active', true)
         .order('position', { ascending: true });
 
       if (prizeError) {
@@ -185,26 +167,13 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       }
 
       console.log('💰 Configurações de prêmio carregadas:', prizeData);
-      
-      const validPrizeData = (prizeData || [])
-        .filter((item: any) => item && typeof item === 'object' && !('error' in item))
-        .map((item: any) => ({
-          id: item?.id || '',
-          type: item?.type || '',
-          position: item?.position,
-          position_range: item?.position_range,
-          prize_amount: Number(item?.prize_amount) || 0,
-          group_name: item?.group_name,
-          total_winners: Number(item?.total_winners) || 1,
-          active: Boolean(item?.active)
-        }));
-      setPrizeConfigs(validPrizeData);
+      setPrizeConfigs(prizeData || []);
 
       // Buscar participações da competição
       const { data: participationData, error: participationError } = await supabase
         .from('competition_participations')
         .select('user_id, user_score, user_position, created_at')
-        .eq('competition_id', competitionId as any)
+        .eq('competition_id', competitionId)
         .order('user_score', { ascending: false });
 
       if (participationError) {
@@ -217,15 +186,15 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       // Se não há participações, definir competição sem ranking
       if (!participationData || participationData.length === 0) {
         const competitionInfo: CompetitionInfo = {
-          id: validCompetitionData.id,
-          title: validCompetitionData.title,
-          description: validCompetitionData.description || '',
-          start_date: validCompetitionData.start_date,
-          end_date: validCompetitionData.end_date,
-          status: validCompetitionData.status,
-          theme: validCompetitionData.theme,
-          max_participants: validCompetitionData.max_participants || 0,
-          prize_pool: Number(validCompetitionData.prize_pool) || 0,
+          id: competitionData.id,
+          title: competitionData.title,
+          description: competitionData.description || '',
+          start_date: competitionData.start_date,
+          end_date: competitionData.end_date,
+          status: competitionData.status,
+          theme: competitionData.theme,
+          max_participants: competitionData.max_participants || 0,
+          prize_pool: Number(competitionData.prize_pool) || 0,
           total_participants: 0
         };
 
@@ -235,10 +204,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       }
 
       // Buscar perfis dos usuários participantes
-      const userIds = participationData
-        .filter((item: any) => item && typeof item === 'object' && !('error' in item) && item.user_id)
-        .map((p: any) => p.user_id);
-        
+      const userIds = participationData.map(p => p.user_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
@@ -253,43 +219,39 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
 
       // Criar mapa de perfis para lookup rápido
       const profilesMap = new Map();
-      (profilesData || [])
-        .filter((profile: any) => profile && typeof profile === 'object' && !('error' in profile))
-        .forEach((profile: any) => {
-          profilesMap.set(profile.id, profile);
-        });
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
 
       const competitionInfo: CompetitionInfo = {
-        id: validCompetitionData.id,
-        title: validCompetitionData.title,
-        description: validCompetitionData.description || '',
-        start_date: validCompetitionData.start_date,
-        end_date: validCompetitionData.end_date,
-        status: validCompetitionData.status,
-        theme: validCompetitionData.theme,
-        max_participants: validCompetitionData.max_participants || 0,
-        prize_pool: Number(validCompetitionData.prize_pool) || 0,
+        id: competitionData.id,
+        title: competitionData.title,
+        description: competitionData.description || '',
+        start_date: competitionData.start_date,
+        end_date: competitionData.end_date,
+        status: competitionData.status,
+        theme: competitionData.theme,
+        max_participants: competitionData.max_participants || 0,
+        prize_pool: Number(competitionData.prize_pool) || 0,
         total_participants: participationData.length
       };
 
       setCompetition(competitionInfo);
 
       // Mapear dados das participações para o formato do ranking
-      const rankingParticipants: RankingParticipant[] = participationData
-        .filter((item: any) => item && typeof item === 'object' && !('error' in item))
-        .map((participation: any, index: number) => {
-          const profile = profilesMap.get(participation.user_id);
-          return {
-            user_position: index + 1, // Recalcular posição baseada na ordenação
-            user_score: participation.user_score || 0,
-            user_id: participation.user_id || '',
-            created_at: participation.created_at || new Date().toISOString(),
-            profiles: profile ? {
-              username: profile.username || 'Usuário',
-              avatar_url: profile.avatar_url
-            } : null
-          };
-        });
+      const rankingParticipants: RankingParticipant[] = participationData.map((participation, index) => {
+        const profile = profilesMap.get(participation.user_id);
+        return {
+          user_position: index + 1, // Recalcular posição baseada na ordenação
+          user_score: participation.user_score || 0,
+          user_id: participation.user_id || '',
+          created_at: participation.created_at || new Date().toISOString(),
+          profiles: profile ? {
+            username: profile.username || 'Usuário',
+            avatar_url: profile.avatar_url
+          } : null
+        };
+      });
 
       console.log('📊 Ranking da competição carregado:', rankingParticipants.length, 'participantes');
       setRanking(rankingParticipants);

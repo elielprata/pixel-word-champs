@@ -34,7 +34,7 @@ export const CreateAdminForm = () => {
 
   const handleSubmit = async (data: AdminFormData) => {
     try {
-      logger.debug('Creating admin user', { email: data.email, username: data.username });
+      logger.log('🔧 Iniciando criação de usuário admin:', { email: data.email, username: data.username });
 
       // 1. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -48,7 +48,7 @@ export const CreateAdminForm = () => {
       });
 
       if (authError) {
-        logger.error('Error creating auth user', { error: authError });
+        logger.error('❌ Erro ao criar usuário:', authError);
         throw authError;
       }
 
@@ -56,30 +56,28 @@ export const CreateAdminForm = () => {
         throw new Error('Usuário não foi criado');
       }
 
-      logger.debug('Auth user created successfully', { userId: authData.user.id });
+      logger.log('✅ Usuário criado no Auth:', authData.user.id);
 
       // 2. Aguardar um momento para o trigger criar o perfil
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // 3. Adicionar role de admin
-      const insertData = {
-        user_id: authData.user.id,
-        role: 'admin'
-      };
-
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert(insertData as any);
+        .insert({
+          user_id: authData.user.id,
+          role: 'admin'
+        });
 
       if (roleError) {
-        logger.error('Error adding admin role', { error: roleError });
+        logger.error('❌ Erro ao adicionar role admin:', roleError);
         toast({
           title: "Aviso",
           description: "Usuário criado, mas erro ao definir como admin. Defina manualmente.",
           variant: "destructive",
         });
       } else {
-        logger.debug('Admin role added successfully');
+        logger.log('✅ Role admin adicionada com sucesso');
       }
 
       toast({
@@ -91,7 +89,7 @@ export const CreateAdminForm = () => {
       form.reset();
 
     } catch (error: any) {
-      logger.error('Error creating admin user', { error });
+      logger.error('❌ Erro geral:', error);
       
       let errorMessage = "Erro ao criar usuário admin";
       

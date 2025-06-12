@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from 'lucide-react';
-import { logger } from '@/utils/logger';
 
 interface CompetitionActionsProps {
   competitionId: string;
@@ -20,14 +19,12 @@ export const CompetitionActions: React.FC<CompetitionActionsProps> = ({
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    logger.debug('Competition edit action triggered');
     onEdit();
   };
 
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    logger.debug('Competition delete action triggered');
     onDelete();
   };
 

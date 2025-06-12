@@ -29,20 +29,6 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
     );
   }
 
-  const handleEditGroupWrapper = (group: any) => {
-    paymentData.handleEditGroup(group.id);
-  };
-
-  const handleSaveGroupWrapper = () => {
-    if (paymentData.editingGroup) {
-      paymentData.handleSaveGroup(paymentData.editingGroup);
-    }
-  };
-
-  const handleToggleGroupWrapper = (groupId: string) => {
-    paymentData.handleToggleGroup(groupId);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
@@ -51,6 +37,7 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Stats Cards */}
           <PaymentStatsCards 
             totalPrize={paymentData.calculateTotalPrize()}
             totalWinners={paymentData.calculateTotalWinners()}
@@ -58,6 +45,7 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
             groupPrizes={paymentData.groupPrizes}
           />
 
+          {/* Individual Prizes */}
           <IndividualPrizesSection 
             individualPrizes={paymentData.individualPrizes}
             editingRow={paymentData.editingRow}
@@ -68,14 +56,15 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
             onCancel={paymentData.handleCancel}
           />
 
+          {/* Group Prizes */}
           <GroupPrizesSection 
             groupPrizes={paymentData.groupPrizes}
             editingGroup={paymentData.editingGroup}
             editGroupPrize={paymentData.editGroupPrize}
             setEditGroupPrize={paymentData.setEditGroupPrize}
-            onEditGroup={handleEditGroupWrapper}
-            onSaveGroup={handleSaveGroupWrapper}
-            onToggleGroup={handleToggleGroupWrapper}
+            onEditGroup={paymentData.handleEditGroup}
+            onSaveGroup={paymentData.handleSaveGroup}
+            onToggleGroup={paymentData.handleToggleGroup}
             onCancel={paymentData.handleCancel}
           />
         </div>

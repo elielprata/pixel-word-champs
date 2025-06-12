@@ -76,7 +76,7 @@ export const useGameLogic = (
       const { data: profile, error: fetchError } = await supabase
         .from('profiles')
         .select('total_score, games_played')
-        .eq('id', user.id as any)
+        .eq('id', user.id)
         .single();
 
       if (fetchError) {
@@ -84,9 +84,7 @@ export const useGameLogic = (
         return;
       }
 
-      const currentScore = (profile && typeof profile === 'object' && !('error' in profile)) 
-        ? (profile as any).total_score || 0 
-        : 0;
+      const currentScore = profile?.total_score || 0;
       const newScore = currentScore + points;
 
       // Atualizar pontuação no perfil
@@ -94,11 +92,9 @@ export const useGameLogic = (
         .from('profiles')
         .update({ 
           total_score: newScore,
-          games_played: (profile && typeof profile === 'object' && !('error' in profile)) 
-            ? ((profile as any).games_played || 0) + 1 
-            : 1
-        } as any)
-        .eq('id', user.id as any);
+          games_played: (profile?.games_played || 0) + 1 // Incrementa games_played quando completa nível
+        })
+        .eq('id', user.id);
 
       if (updateError) {
         logger.error('❌ Erro ao atualizar pontuação:', updateError);

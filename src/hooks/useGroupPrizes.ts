@@ -7,7 +7,7 @@ import { GroupPrize } from '@/types/payment';
 export const useGroupPrizes = () => {
   const { toast } = useToast();
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
-  const [editGroupPrize, setEditGroupPrize] = useState<any>({});
+  const [editGroupPrize, setEditGroupPrize] = useState<string>('');
 
   const parseInputValue = (value: string): number => {
     const cleanValue = value.replace(/[R$\s]/g, '').replace(',', '.');
@@ -21,47 +21,32 @@ export const useGroupPrizes = () => {
     });
   };
 
-  const handleEditGroup = (id: string, groupPrizes: GroupPrize[]) => {
-    const group = groupPrizes.find(g => g.id === id);
+  const handleEditGroup = (groupId: string, groups: GroupPrize[]) => {
+    const group = groups.find(g => g.id === groupId);
     if (group) {
-      setEditGroupPrize({
-        name: group.name,
-        range: group.range,
-        totalWinners: group.totalWinners.toString(),
-        prizePerWinner: formatInputValue(group.prizePerWinner)
-      });
-      setEditingGroup(id);
+      setEditGroupPrize(formatInputValue(group.prizePerWinner));
+      setEditingGroup(groupId);
     }
   };
 
   const handleSaveGroup = async (
-    id: string, 
-    groupPrizes: GroupPrize[],
-    onUpdate: (updatedPrizes: GroupPrize[]) => void
+    groupId: string,
+    groups: GroupPrize[],
+    onUpdate: (updatedGroups: GroupPrize[]) => void
   ) => {
-    const prizePerWinner = parseInputValue(editGroupPrize.prizePerWinner);
-    const totalWinners = parseInt(editGroupPrize.totalWinners) || 0;
-
-    const result = await prizeService.updatePrizeConfiguration(id, {
-      group_name: editGroupPrize.name,
-      position_range: editGroupPrize.range,
-      total_winners: totalWinners,
-      prize_amount: prizePerWinner
+    const numericValue = parseInputValue(editGroupPrize);
+    
+    const result = await prizeService.updatePrizeConfiguration(groupId, {
+      prize_amount: numericValue
     });
 
     if (result.success) {
-      const updatedPrizes = groupPrizes.map(g => 
-        g.id === id 
-          ? { 
-              ...g, 
-              name: editGroupPrize.name,
-              range: editGroupPrize.range,
-              totalWinners,
-              prizePerWinner 
-            }
-          : g
+      const updatedGroups = groups.map(group => 
+        group.id === groupId 
+          ? { ...group, prizePerWinner: numericValue }
+          : group
       );
-      onUpdate(updatedPrizes);
+      onUpdate(updatedGroups);
       setEditingGroup(null);
       toast({
         title: "Premiação atualizada",
@@ -77,26 +62,24 @@ export const useGroupPrizes = () => {
   };
 
   const handleToggleGroup = async (
-    id: string,
-    groupPrizes: GroupPrize[],
-    onUpdate: (updatedPrizes: GroupPrize[]) => void
+    groupId: string,
+    groups: GroupPrize[],
+    onUpdate: (updatedGroups: GroupPrize[]) => void
   ) => {
-    const group = groupPrizes.find(g => g.id === id);
+    const group = groups.find(g => g.id === groupId);
     if (!group) return;
 
-    const result = await prizeService.updatePrizeConfiguration(id, {
+    const result = await prizeService.updatePrizeConfiguration(groupId, {
       active: !group.active
     });
 
     if (result.success) {
-      const updatedPrizes = groupPrizes.map(g => 
-        g.id === id ? { ...g, active: !g.active } : g
+      const updatedGroups = groups.map(g => 
+        g.id === groupId 
+          ? { ...g, active: !g.active }
+          : g
       );
-      onUpdate(updatedPrizes);
-      toast({
-        title: "Status atualizado",
-        description: `Grupo ${group.active ? 'desativado' : 'ativado'} com sucesso.`,
-      });
+      onUpdate(updatedGroups);
     } else {
       toast({
         title: "Erro ao atualizar",
@@ -108,7 +91,7 @@ export const useGroupPrizes = () => {
 
   const handleCancel = () => {
     setEditingGroup(null);
-    setEditGroupPrize({});
+    setEditGroupPrize('');
   };
 
   return {
