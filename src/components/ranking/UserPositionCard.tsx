@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trophy, Star, TrendingUp } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface RankingPlayer {
   position: number;
@@ -20,6 +21,11 @@ interface UserPositionCardProps {
 }
 
 const UserPositionCard = ({ userWeeklyPosition, weeklyRanking, user, getPrizeAmount }: UserPositionCardProps) => {
+  logger.debug('Renderizando UserPositionCard do ranking', { 
+    userWeeklyPosition, 
+    userId: user?.id 
+  }, 'RANKING_USER_POSITION_CARD');
+
   if (!userWeeklyPosition || !user) return null;
 
   const userScore = weeklyRanking.find(p => p.user_id === user.id)?.score || 0;

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Target } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface GameProgressBarProps {
   level: number;
@@ -10,6 +11,13 @@ interface GameProgressBarProps {
 
 const GameProgressBar = ({ level, foundWords, totalWords }: GameProgressBarProps) => {
   const progress = (foundWords / totalWords) * 100;
+
+  logger.debug('Renderizando GameProgressBar', { 
+    level, 
+    foundWords, 
+    totalWords, 
+    progress 
+  }, 'GAME_PROGRESS_BAR');
 
   return (
     <div className="bg-white rounded-full p-1 shadow-md mb-4">

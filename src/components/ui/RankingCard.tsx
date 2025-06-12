@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Medal, Award } from 'lucide-react';
 import { RankingPlayer } from '@/types';
+import { logger } from '@/utils/logger';
 
 interface RankingCardProps {
   player: RankingPlayer;
@@ -10,6 +11,11 @@ interface RankingCardProps {
 }
 
 const RankingCard = ({ player, isCurrentUser = false }: RankingCardProps) => {
+  logger.debug('Renderizando RankingCard', { 
+    playerPosition: player.pos, 
+    isCurrentUser 
+  }, 'RANKING_CARD');
+
   const getRankingIcon = (position: number) => {
     switch (position) {
       case 1: return <Trophy className="w-5 h-5 text-yellow-500" />;

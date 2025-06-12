@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Lightbulb, Clock, Trophy } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface GameStatsProps {
   timeLeft: number;
@@ -17,13 +18,24 @@ const GameStats = ({ timeLeft, hintsUsed, levelScore, onUseHint }: GameStatsProp
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleUseHint = () => {
+    logger.info('Dica solicitada', { hintsUsed, timeLeft }, 'GAME_STATS');
+    onUseHint();
+  };
+
+  logger.debug('Renderizando GameStats', { 
+    timeLeft, 
+    hintsUsed, 
+    levelScore 
+  }, 'GAME_STATS');
+
   return (
     <div className="flex justify-between items-center gap-3">
       <Button 
         size="sm" 
         variant="outline" 
         className="rounded-full bg-white shadow-md"
-        onClick={onUseHint}
+        onClick={handleUseHint}
         disabled={hintsUsed >= 1}
       >
         <Lightbulb className="w-4 h-4" />

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, TrendingUp, Star } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface UserPositionCardProps {
   position: number | null;
@@ -11,6 +12,12 @@ interface UserPositionCardProps {
 }
 
 const UserPositionCard = ({ position, score, userName, type }: UserPositionCardProps) => {
+  logger.debug('Renderizando UserPositionCard', { 
+    position, 
+    score, 
+    type 
+  }, 'USER_POSITION_CARD');
+
   if (!position) return null;
 
   const getPositionColor = () => {

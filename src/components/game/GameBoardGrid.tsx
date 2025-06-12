@@ -2,6 +2,7 @@
 import React, { useRef } from 'react';
 import GameCell from './GameCell';
 import { getCellSize, type Position } from '@/utils/boardUtils';
+import { logger } from '@/utils/logger';
 
 interface GameBoardGridProps {
   boardData: { board: string[][] };
@@ -34,6 +35,12 @@ const GameBoardGrid = ({
 }: GameBoardGridProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const cellSize = getCellSize(size);
+
+  logger.debug('Renderizando GameBoardGrid', { 
+    size, 
+    selectedCellsCount: selectedCells.length, 
+    isSelecting 
+  }, 'GAME_BOARD_GRID');
 
   return (
     <div 

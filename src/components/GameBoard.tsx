@@ -1,3 +1,4 @@
+
 import React from 'react';
 import GameProgressBar from './game/GameProgressBar';
 import GameStats from './game/GameStats';
@@ -10,6 +11,7 @@ import { useWordValidation } from '@/hooks/useWordValidation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useGameInteractions } from '@/hooks/useGameInteractions';
 import { type Position } from '@/utils/boardUtils';
+import { logger } from '@/utils/logger';
 
 interface GameBoardProps {
   level: number;
@@ -34,6 +36,8 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
+  logger.debug('Renderizando GameBoard', { level, timeLeft, canRevive }, 'GAME_BOARD');
+
   // Usar palavras do banco de dados através do useBoard
   const { boardData, size, levelWords } = useBoard(level);
   const { 
@@ -61,7 +65,7 @@ const GameBoard = ({
     closeGameOver
   } = useGameLogic(level, timeLeft, levelWords, onWordFound, (levelScore) => {
     // Só contabiliza pontos quando o nível é completado
-    console.log(`Nível ${level} completado! Contabilizando ${levelScore} pontos no ranking.`);
+    logger.info('Nível completado', { level, levelScore }, 'GAME_BOARD');
     onLevelComplete(levelScore);
   });
 
@@ -87,6 +91,7 @@ const GameBoard = ({
       if (levelWords.includes(word) && 
           !foundWords.some(fw => fw.word === word) && 
           isValidWordDirection(finalSelection)) {
+        logger.info('Palavra encontrada', { word, level }, 'GAME_BOARD');
         addFoundWord(word, finalSelection);
       }
     }
@@ -98,7 +103,7 @@ const GameBoard = ({
 
   const handleReviveClick = () => {
     if (onRevive) {
-      console.log('Iniciando processo de revive...');
+      logger.info('Iniciando processo de revive', { level }, 'GAME_BOARD');
       onRevive();
       closeGameOver();
     }

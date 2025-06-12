@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { User, Trophy, Calendar, Settings, HelpCircle, LogOut, Award, ChevronRig
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import AvatarUpload from '@/components/ui/AvatarUpload';
+import { logger } from '@/utils/logger';
 
 interface ProfileScreenProps {
   onNavigateToSettings?: () => void;
@@ -17,6 +19,8 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url);
+
+  logger.debug('Renderizando ProfileScreen', { userId: user?.id }, 'PROFILE_SCREEN');
 
   const getPlayerLevel = () => {
     const score = user?.total_score || 0;
@@ -79,18 +83,16 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   ];
 
   const handleSettings = () => {
+    logger.info('Navegando para configurações', undefined, 'PROFILE_SCREEN');
     if (onNavigateToSettings) {
       onNavigateToSettings();
-    } else {
-      console.log('Navegando para configurações...');
     }
   };
 
   const handleHelp = () => {
+    logger.info('Navegando para ajuda', undefined, 'PROFILE_SCREEN');
     if (onNavigateToHelp) {
       onNavigateToHelp();
-    } else {
-      console.log('Navegando para ajuda...');
     }
   };
 
@@ -101,12 +103,12 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
 
   const handleLogout = async () => {
     try {
-      console.log('🚪 Iniciando logout...');
+      logger.info('Iniciando logout', { userId: user?.id }, 'PROFILE_SCREEN');
       await logout();
-      console.log('✅ Logout realizado com sucesso, redirecionando para auth');
+      logger.info('Logout realizado com sucesso', undefined, 'PROFILE_SCREEN');
       navigate('/auth');
     } catch (error) {
-      console.error('❌ Erro ao fazer logout:', error);
+      logger.error('Erro ao fazer logout', { error }, 'PROFILE_SCREEN');
     }
   };
 
@@ -154,6 +156,7 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   };
 
   const handleAvatarUpdate = (newAvatarUrl: string) => {
+    logger.info('Avatar atualizado', undefined, 'PROFILE_SCREEN');
     setCurrentAvatar(newAvatarUrl);
   };
 

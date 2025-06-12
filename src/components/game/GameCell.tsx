@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { logger } from '@/utils/logger';
 
 interface GameCellProps {
   letter: string;
@@ -71,6 +72,11 @@ const GameCell = ({
     }
   };
 
+  const handleCellStart = () => {
+    logger.debug('Célula selecionada', { rowIndex, colIndex, letter }, 'GAME_CELL');
+    onCellStart(rowIndex, colIndex);
+  };
+
   return (
     <div
       className={`
@@ -87,12 +93,12 @@ const GameCell = ({
       }}
       onTouchStart={(e) => {
         e.preventDefault();
-        onCellStart(rowIndex, colIndex);
+        handleCellStart();
       }}
       onTouchMove={handleTouchMove}
       onMouseDown={(e) => {
         e.preventDefault();
-        onCellStart(rowIndex, colIndex);
+        handleCellStart();
       }}
       onMouseEnter={handleMouseMove}
       data-cell="true"

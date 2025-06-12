@@ -2,6 +2,7 @@
 import React from 'react';
 import GameOverModal from './GameOverModal';
 import LevelCompleteModal from './LevelCompleteModal';
+import { logger } from '@/utils/logger';
 
 interface FoundWord {
   word: string;
@@ -34,19 +35,31 @@ const GameModals = ({
 }: GameModalsProps) => {
   const totalScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
 
+  logger.debug('Renderizando GameModals', { 
+    showGameOver, 
+    showLevelComplete, 
+    totalScore, 
+    level 
+  }, 'GAME_MODALS');
+
   const handleAdvanceLevelClick = () => {
-    console.log(`Advancing to next level from level ${level}`);
+    logger.info('Avançando para próximo nível', { level }, 'GAME_MODALS');
     onAdvanceLevel();
   };
 
   const handleStayLevel = () => {
-    console.log(`User chose to stop at level ${level} - calling onStopGame to mark participation`);
+    logger.info('Usuário escolheu parar no nível', { level }, 'GAME_MODALS');
     onStopGame();
   };
 
   const handleGameOverStop = () => {
-    console.log(`User chose to stop from Game Over modal at level ${level} - calling onStopGame to mark participation`);
+    logger.info('Usuário escolheu parar do Game Over', { level }, 'GAME_MODALS');
     onStopGame();
+  };
+
+  const handleRevive = () => {
+    logger.info('Usuário solicitou revive', { level }, 'GAME_MODALS');
+    onRevive();
   };
 
   return (
@@ -56,7 +69,7 @@ const GameModals = ({
         score={totalScore}
         wordsFound={foundWords.length}
         totalWords={5}
-        onRevive={onRevive}
+        onRevive={handleRevive}
         onGoHome={handleGameOverStop}
         canRevive={canRevive}
       />

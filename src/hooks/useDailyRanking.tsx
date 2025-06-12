@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { rankingApi } from '@/api/rankingApi';
 import { RankingPlayer } from '@/types';
+import { logger } from '@/utils/logger';
 
 export const useDailyRanking = () => {
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
@@ -13,13 +14,15 @@ export const useDailyRanking = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log('🔄 Carregando ranking semanal (não há mais ranking diário separado)...');
+      logger.info('Carregando ranking semanal', undefined, 'DAILY_RANKING');
       const ranking = await rankingApi.getWeeklyRanking();
       
-      console.log('✅ Ranking semanal carregado:', ranking.length, 'jogadores');
+      logger.info('Ranking semanal carregado', { 
+        playersCount: ranking.length 
+      }, 'DAILY_RANKING');
       setWeeklyRanking(ranking);
     } catch (err) {
-      console.error('❌ Erro ao carregar ranking semanal:', err);
+      logger.error('Erro ao carregar ranking semanal', { error: err }, 'DAILY_RANKING');
       setError('Erro ao carregar ranking semanal');
     } finally {
       setIsLoading(false);

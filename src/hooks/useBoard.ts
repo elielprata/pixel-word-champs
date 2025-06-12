@@ -20,17 +20,26 @@ export const useBoard = (level: number) => {
     if (levelWords.length > 0 && !isLoading) {
       const size = getBoardSize(level);
       
-      logger.log(`🎯 Gerando tabuleiro ${size}x${size} para nível ${level} com palavras:`, levelWords);
+      logger.info('Gerando tabuleiro para nível', { 
+        level, 
+        size, 
+        wordsCount: levelWords.length 
+      }, 'USE_BOARD');
       
       // Validar que todas as palavras cabem no tabuleiro
       const invalidWords = levelWords.filter(word => word.length > size);
       if (invalidWords.length > 0) {
-        logger.error(`❌ ERRO: Palavras muito grandes para o tabuleiro ${size}x${size}:`, invalidWords);
+        logger.error('Palavras muito grandes para o tabuleiro', { 
+          size, 
+          invalidWords 
+        }, 'USE_BOARD');
         const validWords = levelWords.filter(word => word.length <= size);
         if (validWords.length > 0) {
           const newBoardData = generateBoard(size, validWords);
           setBoardData(newBoardData);
-          logger.log(`🎲 Tabuleiro gerado com ${validWords.length} palavras válidas`);
+          logger.info('Tabuleiro gerado com palavras válidas', { 
+            validWordsCount: validWords.length 
+          }, 'USE_BOARD');
         }
         return;
       }
@@ -42,11 +51,14 @@ export const useBoard = (level: number) => {
       // Validar que o tabuleiro contém todas as palavras solicitadas
       const isValid = validateBoardContainsWords(newBoardData.board, levelWords);
       if (!isValid) {
-        logger.error(`❌ VALIDAÇÃO FALHOU: Tabuleiro não contém todas as palavras solicitadas!`);
-        logger.log('📝 Palavras solicitadas:', levelWords);
-        logger.log('📝 Palavras colocadas:', newBoardData.placedWords.map(pw => pw.word));
+        logger.error('Validação do tabuleiro falhou', { 
+          requestedWords: levelWords,
+          placedWords: newBoardData.placedWords.map(pw => pw.word)
+        }, 'USE_BOARD');
       } else {
-        logger.log(`✅ Validação OK: Tabuleiro contém todas as ${levelWords.length} palavras solicitadas`);
+        logger.info('Tabuleiro validado com sucesso', { 
+          wordsCount: levelWords.length 
+        }, 'USE_BOARD');
       }
     }
   }, [level, levelWords, isLoading, generateBoard]);

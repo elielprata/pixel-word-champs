@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, ArrowRight, StopCircle } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface LevelCompleteModalProps {
   isOpen: boolean;
@@ -20,6 +21,18 @@ const LevelCompleteModal = ({
   onStay 
 }: LevelCompleteModalProps) => {
   if (!isOpen) return null;
+
+  logger.info('Modal de nível completado aberto', { level, score }, 'LEVEL_COMPLETE_MODAL');
+
+  const handleAdvance = () => {
+    logger.info('Usuário escolheu avançar para próximo nível', { level }, 'LEVEL_COMPLETE_MODAL');
+    onAdvance();
+  };
+
+  const handleStay = () => {
+    logger.info('Usuário escolheu parar no nível atual', { level }, 'LEVEL_COMPLETE_MODAL');
+    onStay();
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -40,7 +53,7 @@ const LevelCompleteModal = ({
           
           <div className="space-y-3">
             <Button 
-              onClick={onAdvance}
+              onClick={handleAdvance}
               className="w-full bg-green-500 hover:bg-green-600 text-white"
             >
               <ArrowRight className="w-4 h-4 mr-2" />
@@ -48,7 +61,7 @@ const LevelCompleteModal = ({
             </Button>
             
             <Button 
-              onClick={onStay}
+              onClick={handleStay}
               className="w-full bg-red-500 hover:bg-red-600 text-white"
             >
               <StopCircle className="w-4 h-4 mr-2" />

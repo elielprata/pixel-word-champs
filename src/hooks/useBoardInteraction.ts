@@ -1,12 +1,14 @@
 
 import { useState, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
+import { logger } from '@/utils/logger';
 
 export const useBoardInteraction = () => {
   const [selectedCells, setSelectedCells] = useState<Position[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
 
   const handleCellStart = useCallback((row: number, col: number) => {
+    logger.debug('Iniciando seleção de célula', { row, col }, 'BOARD_INTERACTION');
     setIsSelecting(true);
     setSelectedCells([{ row, col }]);
   }, []);
@@ -36,6 +38,9 @@ export const useBoardInteraction = () => {
   }, [isSelecting]);
 
   const handleCellEnd = useCallback(() => {
+    logger.debug('Finalizando seleção', { 
+      selectedCellsCount: selectedCells.length 
+    }, 'BOARD_INTERACTION');
     setIsSelecting(false);
     const finalSelection = [...selectedCells];
     setSelectedCells([]);

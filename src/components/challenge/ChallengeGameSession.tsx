@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import GameBoard from '../GameBoard';
+import { logger } from '@/utils/logger';
 
 interface ChallengeGameSessionProps {
   currentLevel: number;
@@ -25,13 +26,23 @@ const ChallengeGameSession = ({
   onStopGame,
   onRevive
 }: ChallengeGameSessionProps) => {
+  logger.debug('Renderizando ChallengeGameSession', { 
+    currentLevel, 
+    timeRemaining 
+  }, 'CHALLENGE_GAME_SESSION');
+
+  const handleStopGame = () => {
+    logger.info('Parando jogo de desafio', { currentLevel }, 'CHALLENGE_GAME_SESSION');
+    onStopGame();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
       <div className="absolute top-0 left-0 z-10 p-2">
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={onStopGame}
+          onClick={handleStopGame}
           className="rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white"
         >
           <ArrowLeft className="w-6 h-6" />
