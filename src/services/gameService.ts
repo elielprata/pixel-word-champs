@@ -16,48 +16,81 @@ class GameService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
+      console.log('🎮 Criando sessão de jogo para usuário:', user.id);
+      console.log('📊 Configuração:', config);
+
       const board = this.generateBoard(config.boardSize || 10);
+
+      const sessionData = {
+        user_id: user.id,
+        level: config.level,
+        board: board,
+        words_found: [],
+        total_score: 0,
+        time_elapsed: 0,
+        is_completed: false,
+        ...(config.competitionId && { competition_id: config.competitionId })
+      };
+
+      console.log('💾 Inserindo sessão no banco:', sessionData);
 
       const { data, error } = await supabase
         .from('game_sessions')
-        .insert({
-          user_id: user.id,
-          level: config.level,
-          board: board,
-          words_found: [],
-          total_score: 0,
-          time_elapsed: 0,
-          is_completed: false
-        })
+        .insert(sessionData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao inserir sessão:', error);
+        throw error;
+      }
+
+      console.log('✅ Sessão criada com sucesso:', data.id);
 
       const session = this.mapGameSession(data);
       
-      // Participação automática em competições diárias
-      await dailyCompetitionService.joinCompetitionAutomatically(session.id);
+      // Participação automática em competições diárias se tiver competitionId
+      if (config.competitionId) {
+        try {
+          await dailyCompetitionService.joinCompetitionAutomatically(session.id);
+          console.log('✅ Participação automática registrada');
+        } catch (participationError) {
+          console.warn('⚠️ Erro ao registrar participação automática:', participationError);
+          // Não falhar a criação da sessão por causa disso
+        }
+      }
       
       return createSuccessResponse(session);
     } catch (error) {
+      console.error('❌ Erro ao criar sessão:', error);
       return createErrorResponse(handleServiceError(error, 'GAME_CREATE_SESSION'));
     }
   }
 
   async getGameSession(sessionId: string): Promise<ApiResponse<GameSession>> {
     try {
+      console.log('🔍 Buscando sessão:', sessionId);
+
       const { data, error } = await supabase
         .from('game_sessions')
         .select('*')
         .eq('id', sessionId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao buscar sessão:', error);
+        throw error;
+      }
 
+      if (!data) {
+        throw new Error('Sessão não encontrada');
+      }
+
+      console.log('✅ Sessão encontrada:', data.id);
       const session = this.mapGameSession(data);
       return createSuccessResponse(session);
     } catch (error) {
+      console.error('❌ Erro ao obter sessão:', error);
       return createErrorResponse(handleServiceError(error, 'GAME_GET_SESSION'));
     }
   }
@@ -99,6 +132,8 @@ class GameService {
 
   async completeGameSession(sessionId: string): Promise<ApiResponse<GameSession>> {
     try {
+      console.log('🏁 Completando sessão:', sessionId);
+
       const { data, error } = await supabase
         .from('game_sessions')
         .update({
@@ -115,11 +150,17 @@ class GameService {
       
       // Atualizar pontuação final na competição diária
       if (session.total_score > 0) {
-        await dailyCompetitionService.updateParticipationScore(sessionId, session.total_score);
+        try {
+          await dailyCompetitionService.updateParticipationScore(sessionId, session.total_score);
+          console.log('✅ Pontuação final atualizada na competição');
+        } catch (updateError) {
+          console.warn('⚠️ Erro ao atualizar pontuação na competição:', updateError);
+        }
       }
       
       return createSuccessResponse(session);
     } catch (error) {
+      console.error('❌ Erro ao completar sessão:', error);
       return createErrorResponse(handleServiceError(error, 'GAME_COMPLETE_SESSION'));
     }
   }
@@ -140,7 +181,11 @@ class GameService {
         .eq('id', sessionId);
 
       // Atualizar pontuação na competição diária em tempo real
-      await dailyCompetitionService.updateParticipationScore(sessionId, newTotalScore);
+      try {
+        await dailyCompetitionService.updateParticipationScore(sessionId, newTotalScore);
+      } catch (error) {
+        console.warn('⚠️ Erro ao atualizar pontuação na competição:', error);
+      }
     }
   }
 
@@ -189,6 +234,7 @@ class GameService {
   }
 
   private generateBoard(size: number): string[][] {
+    console.log(`🎲 Gerando tabuleiro ${size}x${size}`);
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const board: string[][] = [];
     
@@ -199,6 +245,7 @@ class GameService {
       }
     }
     
+    console.log('✅ Tabuleiro gerado com sucesso');
     return board;
   }
 }
