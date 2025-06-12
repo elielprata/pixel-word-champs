@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useCompetitions } from "@/hooks/useCompetitions";
@@ -29,8 +28,8 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
     weeklyTournamentId: 'none' as string,
     prizePool: 0,
     maxParticipants: 999999,
-    startDate: undefined as Date | undefined,
-    endDate: undefined as Date | undefined
+    startDate: '',
+    endDate: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrizePool, setTotalPrizePool] = useState(0);
@@ -71,6 +70,10 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
     fetchPrizeConfigurations();
   }, []);
 
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -96,8 +99,9 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
         weeklyTournamentId: formData.weeklyTournamentId !== 'none' ? formData.weeklyTournamentId : undefined,
         prizePool: formData.prizePool,
         maxParticipants: formData.maxParticipants,
-        startDate: formData.startDate,
-        endDate: formData.endDate
+        // Convert string dates to Date objects for the service
+        startDate: formData.startDate ? new Date(formData.startDate) : undefined,
+        endDate: formData.endDate ? new Date(formData.endDate) : undefined
       };
 
       const result = await customCompetitionService.createCompetition(competitionData);
@@ -123,8 +127,8 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
           weeklyTournamentId: 'none',
           prizePool: totalPrizePool,
           maxParticipants: 999999,
-          startDate: undefined,
-          endDate: undefined
+          startDate: '',
+          endDate: ''
         });
       } else {
         throw new Error(result.error || 'Erro ao criar competição');
@@ -192,11 +196,9 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
       </div>
 
       <ScheduleSection 
-        startDate={formData.startDate}
-        endDate={formData.endDate}
-        type={formData.type}
-        onStartDateChange={(startDate) => setFormData(prev => ({ ...prev, startDate }))}
-        onEndDateChange={(endDate) => setFormData(prev => ({ ...prev, endDate }))}
+        formData={formData}
+        onInputChange={handleInputChange}
+        competitionType={formData.type}
       />
 
       {isPrizeEnabled && (

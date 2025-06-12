@@ -12,6 +12,7 @@ export interface DailyCompetitionData {
   description: string;
   theme: string;
   start_date: string;
+  end_date: string; // Adicionado para corrigir os erros
   competition_type: 'challenge';
 }
 
@@ -35,11 +36,15 @@ export const validateDailyCompetitionData = (data: Partial<DailyCompetitionData>
     startDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
   }
 
+  // Para competições diárias, end_date é o mesmo dia que start_date
+  const endDateString = startDateString;
+
   const validatedData: DailyCompetitionData = {
     title: data.title,
     description: data.description,
     theme: data.theme || 'Geral',
     start_date: startDateString, // STRING SIMPLES - banco ajustará horários
+    end_date: endDateString, // MESMO DIA - banco fará 23:59:59
     competition_type: 'challenge'
   };
 
@@ -59,6 +64,22 @@ export const isDailyCompetitionTimeValid = (startDate: string, endDate: string):
   
   console.log('✅ VALIDAÇÃO SIMPLES:', { isStartValid, isEndValid });
   return isStartValid && isEndValid;
+};
+
+/**
+ * Função para formatar tempo de competição diária (adicionada para compatibilidade)
+ */
+export const formatDailyCompetitionTime = (dateString: string, isEndTime: boolean = false): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    const timeString = isEndTime ? '23:59:59' : '00:00:00';
+    return `${date.toLocaleDateString('pt-BR')} às ${timeString}`;
+  } catch (error) {
+    console.error('Erro ao formatar data:', error);
+    return dateString;
+  }
 };
 
 console.log('🎯 VALIDAÇÃO DIÁRIA RADICAL FINAL APLICADA - ZERO CONVERSÕES PROBLEMÁTICAS');
