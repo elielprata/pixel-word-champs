@@ -33,30 +33,22 @@ export const ActiveCompetitionCard = ({
   onDelete,
   deletingId
 }: ActiveCompetitionCardProps) => {
-  // Função para formatar datas corretamente
+  // Função simples para formatar datas - extrai apenas a parte da data sem conversões
   const formatCompetitionDate = (dateString: string, isEndDate: boolean = false) => {
     try {
-      // Criar a data diretamente sem conversões desnecessárias
-      const date = new Date(dateString);
+      // Extrair apenas YYYY-MM-DD da string do banco
+      const datePart = dateString.split('T')[0]; // "2025-06-11"
+      const [year, month, day] = datePart.split('-');
+      const brazilianDate = `${day}/${month}/${year}`;
+      const time = isEndDate ? '23:59:59' : '00:00:00';
       
-      // Formatar a data para exibição em português brasileiro
-      const formattedDate = date.toLocaleDateString('pt-BR', {
-        timeZone: 'America/Sao_Paulo',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-      
-      const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
-      
-      console.log('🗓️ [ActiveCompetitionCard] Formatação de data:', {
+      console.log('🗓️ [ActiveCompetitionCard] Formatação simples:', {
         input: dateString,
-        date: date.toISOString(),
-        formatted: formattedDate,
-        final: `${formattedDate}, ${timeFormatted}`
+        datePart,
+        final: `${brazilianDate}, ${time}`
       });
       
-      return `${formattedDate}, ${timeFormatted}`;
+      return `${brazilianDate}, ${time}`;
     } catch (error) {
       console.error('❌ Erro ao formatar data da competição:', error);
       return dateString; // Fallback para data original
