@@ -11,8 +11,8 @@ export interface CustomCompetitionData {
   weeklyTournamentId?: string;
   prizePool: number;
   maxParticipants: number;
-  startDate?: Date;
-  endDate?: Date;
+  startDate?: string; // RADICAL FIX: Mudança para string
+  endDate?: string;   // RADICAL FIX: Mudança para string
 }
 
 class CustomCompetitionService {

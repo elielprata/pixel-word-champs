@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useCompetitions } from "@/hooks/useCompetitions";
@@ -89,7 +90,7 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 Iniciando criação da competição...');
+      console.log('🚀 RADICAL FIX: Criando competição SEM conversões de data...');
       
       const competitionData: CustomCompetitionData = {
         title: formData.title,
@@ -99,10 +100,12 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
         weeklyTournamentId: formData.weeklyTournamentId !== 'none' ? formData.weeklyTournamentId : undefined,
         prizePool: formData.prizePool,
         maxParticipants: formData.maxParticipants,
-        // Convert string dates to Date objects for the service
-        startDate: formData.startDate ? new Date(formData.startDate) : undefined,
-        endDate: formData.endDate ? new Date(formData.endDate) : undefined
+        // RADICAL FIX: Manter como strings - ZERO conversões
+        startDate: formData.startDate || undefined,
+        endDate: formData.endDate || undefined
       };
+
+      console.log('🎯 RADICAL: Dados enviados como strings puras:', competitionData);
 
       const result = await customCompetitionService.createCompetition(competitionData);
       

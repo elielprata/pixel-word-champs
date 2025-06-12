@@ -25,8 +25,8 @@ export interface CustomCompetitionData {
   weeklyTournamentId?: string;
   prizePool: number;
   maxParticipants: number;
-  startDate?: Date;
-  endDate?: Date;
+  startDate?: string; // RADICAL FIX: Mudança para string
+  endDate?: string;   // RADICAL FIX: Mudança para string
 }
 
 export class CustomCompetitionCoreService {
@@ -86,7 +86,7 @@ export class CustomCompetitionCoreService {
 
   async createCompetition(data: CompetitionFormData | CustomCompetitionData): Promise<ApiResponse<any>> {
     try {
-      console.log('🎯 CORREÇÃO RADICAL - Criando nova competição SEM conversões problemáticas:', data);
+      console.log('🎯 RADICAL FINAL - Criando competição SEM conversões de data:', data);
       
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) {
@@ -96,20 +96,19 @@ export class CustomCompetitionCoreService {
       let competitionData: any;
       
       if ('type' in data) {
-        // RADICAL FIX: Remover TODAS as conversões .toISOString()
-        // Passar datas como strings simples para o banco
+        // RADICAL FIX: Usar datas como strings diretas
         
         if (data.type === 'daily') {
-          console.log('🔧 RADICAL: Competição diária - SEM conversão de data, apenas string simples');
+          console.log('🔧 RADICAL FINAL: Competição diária - strings puras');
           
-          const startDateString = data.startDate ? data.startDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+          const startDateString = data.startDate || new Date().toISOString().split('T')[0];
           
           competitionData = {
             title: data.title,
             description: data.description,
             competition_type: 'challenge',
-            start_date: startDateString, // STRING SIMPLES - banco fará a padronização
-            end_date: startDateString,   // STRING SIMPLES - banco fará a padronização  
+            start_date: startDateString, // STRING PURA - trigger fará padronização
+            end_date: startDateString,   // STRING PURA - trigger fará 23:59:59  
             max_participants: data.maxParticipants,
             prize_pool: data.prizePool,
             theme: data.category || 'Geral',
@@ -117,12 +116,12 @@ export class CustomCompetitionCoreService {
             status: 'active'
           };
           
-          console.log('✅ RADICAL: Competição diária preparada SEM conversões:', competitionData);
+          console.log('✅ RADICAL FINAL: Competição diária como strings:', competitionData);
         } else {
-          console.log('🔧 RADICAL: Competição semanal - verificando sobreposição...');
+          console.log('🔧 RADICAL FINAL: Competição semanal - verificando sobreposição...');
           
-          const startDateString = data.startDate ? data.startDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-          const endDateString = data.endDate ? data.endDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+          const startDateString = data.startDate || new Date().toISOString().split('T')[0];
+          const endDateString = data.endDate || new Date().toISOString().split('T')[0];
           
           const hasOverlap = await this.checkWeeklyCompetitionOverlap(startDateString, endDateString);
 
@@ -134,27 +133,27 @@ export class CustomCompetitionCoreService {
             title: data.title,
             description: data.description,
             competition_type: 'tournament',
-            start_date: startDateString, // STRING SIMPLES - banco fará a padronização
-            end_date: endDateString,     // STRING SIMPLES - banco fará a padronização
+            start_date: startDateString, // STRING PURA - trigger fará padronização
+            end_date: endDateString,     // STRING PURA - trigger fará 23:59:59
             prize_pool: data.prizePool,
             max_participants: data.maxParticipants,
             created_by: user.user.id,
             status: 'scheduled'
           };
           
-          console.log('✅ RADICAL: Competição semanal preparada SEM conversões:', competitionData);
+          console.log('✅ RADICAL FINAL: Competição semanal como strings:', competitionData);
         }
       } else {
-        // RADICAL FIX: Para dados diretos do formulário, também eliminar conversões
-        console.log('🔧 RADICAL: Dados diretos do formulário - SEM conversões problemáticas');
+        // RADICAL FIX: Para dados diretos do formulário
+        console.log('🔧 RADICAL FINAL: Dados diretos - strings puras');
         
         if (data.competition_type === 'challenge') {
           competitionData = {
             title: data.title,
             description: data.description,
             competition_type: 'challenge',
-            start_date: data.start_date, // STRING SIMPLES - banco fará a padronização
-            end_date: data.start_date,   // MESMO DIA - banco fará a padronização
+            start_date: data.start_date, // STRING PURA
+            end_date: data.start_date,   // MESMO DIA
             max_participants: data.max_participants,
             prize_pool: data.prize_pool,
             theme: data.theme || 'Geral',
@@ -162,9 +161,9 @@ export class CustomCompetitionCoreService {
             created_by: user.user.id,
             status: data.status || 'active'
           };
-          console.log('✅ RADICAL: Competição diária do formulário preparada SEM conversões:', competitionData);
+          console.log('✅ RADICAL FINAL: Challenge como strings:', competitionData);
         } else {
-          console.log('🔧 RADICAL: Tournament do formulário - verificando sobreposição...');
+          console.log('🔧 RADICAL FINAL: Tournament - verificando sobreposição...');
           
           const hasOverlap = await this.checkWeeklyCompetitionOverlap(data.start_date, data.end_date);
 
@@ -176,8 +175,8 @@ export class CustomCompetitionCoreService {
             title: data.title,
             description: data.description,
             competition_type: 'tournament',
-            start_date: data.start_date, // STRING SIMPLES - banco fará a padronização
-            end_date: data.end_date,     // STRING SIMPLES - banco fará a padronização
+            start_date: data.start_date, // STRING PURA
+            end_date: data.end_date,     // STRING PURA
             prize_pool: data.prize_pool,
             max_participants: data.max_participants,
             rules: data.rules,
@@ -185,11 +184,11 @@ export class CustomCompetitionCoreService {
             status: data.status || 'scheduled'
           };
           
-          console.log('✅ RADICAL: Tournament do formulário preparado SEM conversões:', competitionData);
+          console.log('✅ RADICAL FINAL: Tournament como strings:', competitionData);
         }
       }
 
-      console.log('🚀 RADICAL: Enviando dados para o banco (trigger irá padronizar horários):', competitionData);
+      console.log('🚀 RADICAL FINAL: Enviando strings puras para o banco:', competitionData);
 
       const { data: competition, error } = await supabase
         .from('custom_competitions')
@@ -199,12 +198,12 @@ export class CustomCompetitionCoreService {
 
       if (error) throw error;
 
-      console.log('✅ CORREÇÃO RADICAL APLICADA: Competição criada com sucesso:', competition.id);
-      console.log('🎯 VERIFICAR: Data mantida como enviada? Start:', competition.start_date, 'End:', competition.end_date);
+      console.log('✅ RADICAL FINAL APLICADO: Competição criada:', competition.id);
+      console.log('🎯 VERIFICAR: Strings preservadas? Start:', competition.start_date, 'End:', competition.end_date);
       
       return createSuccessResponse(competition);
     } catch (error) {
-      console.error('❌ RADICAL: Erro ao criar competição:', error);
+      console.error('❌ RADICAL FINAL: Erro ao criar competição:', error);
       return createErrorResponse(handleServiceError(error, 'CREATE_COMPETITION'));
     }
   }
