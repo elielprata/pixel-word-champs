@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, UserPlus, Mail, User, Key } from 'lucide-react';
-import { secureLogger } from '@/utils/secureLogger';
+import { logger } from '@/utils/logger';
 
 const adminSchema = z.object({
   email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
@@ -34,7 +34,7 @@ export const CreateAdminForm = () => {
 
   const handleSubmit = async (data: AdminFormData) => {
     try {
-      secureLogger.info('Iniciando criação de usuário admin', { 
+      logger.info('Iniciando criação de usuário admin', { 
         email: data.email, 
         username: data.username 
       }, 'CREATE_ADMIN_FORM');
@@ -51,7 +51,7 @@ export const CreateAdminForm = () => {
       });
 
       if (authError) {
-        secureLogger.error('Erro ao criar usuário', { error: authError.message }, 'CREATE_ADMIN_FORM');
+        logger.error('Erro ao criar usuário', { error: authError.message }, 'CREATE_ADMIN_FORM');
         throw authError;
       }
 
@@ -59,7 +59,7 @@ export const CreateAdminForm = () => {
         throw new Error('Usuário não foi criado');
       }
 
-      secureLogger.info('Usuário criado no Auth', { userId: authData.user.id }, 'CREATE_ADMIN_FORM');
+      logger.info('Usuário criado no Auth', { userId: authData.user.id }, 'CREATE_ADMIN_FORM');
 
       // 2. Aguardar um momento para o trigger criar o perfil
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -73,14 +73,14 @@ export const CreateAdminForm = () => {
         });
 
       if (roleError) {
-        secureLogger.error('Erro ao adicionar role admin', { error: roleError.message }, 'CREATE_ADMIN_FORM');
+        logger.error('Erro ao adicionar role admin', { error: roleError.message }, 'CREATE_ADMIN_FORM');
         toast({
           title: "Aviso",
           description: "Usuário criado, mas erro ao definir como admin. Defina manualmente.",
           variant: "destructive",
         });
       } else {
-        secureLogger.info('Role admin adicionada com sucesso', { userId: authData.user.id }, 'CREATE_ADMIN_FORM');
+        logger.info('Role admin adicionada com sucesso', { userId: authData.user.id }, 'CREATE_ADMIN_FORM');
       }
 
       toast({
@@ -92,7 +92,7 @@ export const CreateAdminForm = () => {
       form.reset();
 
     } catch (error: any) {
-      secureLogger.error('Erro geral na criação de admin', { error: error.message }, 'CREATE_ADMIN_FORM');
+      logger.error('Erro geral na criação de admin', { error: error.message }, 'CREATE_ADMIN_FORM');
       
       let errorMessage = "Erro ao criar usuário admin";
       

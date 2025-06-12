@@ -13,17 +13,27 @@ interface LogEntry {
   message: string;
   data?: any;
   context?: string;
+  environment: string;
 }
 
 class SecureLogger {
   private logLevel: number;
+  private environment: string;
   private sensitiveFields = [
     'password', 'token', 'secret', 'key', 'auth', 'credential',
-    'email', 'phone', 'cpf', 'cnpj', 'pix', 'card', 'credit'
+    'email', 'phone', 'cpf', 'cnpj', 'pix', 'card', 'credit',
+    'access_token', 'refresh_token', 'session', 'authorization'
   ];
 
   constructor() {
-    this.logLevel = import.meta.env.PROD ? 1 : 4; // ERROR only in prod, DEBUG in dev
+    this.environment = import.meta.env.PROD ? 'production' : 'development';
+    
+    // Configuração de níveis por ambiente
+    if (import.meta.env.PROD) {
+      this.logLevel = 2; // WARN e ERROR apenas em produção
+    } else {
+      this.logLevel = 4; // DEBUG completo em desenvolvimento
+    }
   }
 
   private maskSensitiveData(data: any): any {
@@ -78,44 +88,96 @@ class SecureLogger {
       level,
       message,
       data: data ? this.maskSensitiveData(data) : undefined,
-      context
+      context,
+      environment: this.environment
     };
+  }
+
+  private logToConsole(entry: LogEntry): void {
+    const logString = `[${entry.level}] ${entry.message}`;
+    const logData = entry.data || '';
+    
+    switch (entry.level) {
+      case 'ERROR':
+        console.error(logString, logData);
+        break;
+      case 'WARN':
+        console.warn(logString, logData);
+        break;
+      case 'INFO':
+        console.info(logString, logData);
+        break;
+      case 'DEBUG':
+        console.debug(logString, logData);
+        break;
+      case 'PROD':
+        console.log(logString, logData);
+        break;
+      default:
+        console.log(logString, logData);
+    }
   }
 
   error(message: string, data?: any, context?: string): void {
     if (this.shouldLog(1)) {
       const entry = this.formatMessage('ERROR', message, data, context);
-      console.error(`[${entry.level}] ${entry.message}`, entry.data || '');
+      this.logToConsole(entry);
+      
+      // Em produção, registrar erros críticos
+      if (this.environment === 'production') {
+        // Aqui poderia ser integrado com serviços de monitoramento
+        // como Sentry, LogRocket, etc.
+      }
     }
   }
 
   warn(message: string, data?: any, context?: string): void {
     if (this.shouldLog(2)) {
       const entry = this.formatMessage('WARN', message, data, context);
-      console.warn(`[${entry.level}] ${entry.message}`, entry.data || '');
+      this.logToConsole(entry);
     }
   }
 
   info(message: string, data?: any, context?: string): void {
     if (this.shouldLog(3)) {
       const entry = this.formatMessage('INFO', message, data, context);
-      console.info(`[${entry.level}] ${entry.message}`, entry.data || '');
+      this.logToConsole(entry);
     }
   }
 
   debug(message: string, data?: any, context?: string): void {
     if (this.shouldLog(4)) {
       const entry = this.formatMessage('DEBUG', message, data, context);
-      console.debug(`[${entry.level}] ${entry.message}`, entry.data || '');
+      this.logToConsole(entry);
     }
   }
 
   // Método específico para logs de produção críticos
   production(message: string, data?: any, context?: string): void {
-    if (import.meta.env.PROD) {
+    if (this.environment === 'production') {
       const entry = this.formatMessage('PROD', message, data, context);
-      console.log(`[${entry.level}] ${entry.message}`, entry.data || '');
+      this.logToConsole(entry);
     }
+  }
+
+  // Método para auditoria de segurança
+  security(message: string, data?: any, context?: string): void {
+    const entry = this.formatMessage('SECURITY', message, data, context);
+    this.logToConsole(entry);
+    
+    // Logs de segurança sempre são registrados independente do nível
+    if (this.environment === 'production') {
+      // Integração com sistemas de auditoria de segurança
+    }
+  }
+
+  // Método para verificar configuração
+  getConfig(): { level: number; environment: string; sensitiveFields: string[] } {
+    return {
+      level: this.logLevel,
+      environment: this.environment,
+      sensitiveFields: [...this.sensitiveFields]
+    };
   }
 }
 

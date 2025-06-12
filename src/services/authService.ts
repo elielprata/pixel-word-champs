@@ -4,7 +4,7 @@ import { User, LoginForm, RegisterForm, ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { mapUserFromProfile } from '@/utils/userMapper';
 import { validateEmail, validatePassword, sanitizeInput } from '@/utils/validation';
-import { secureLogger } from '@/utils/secureLogger';
+import { logger } from '@/utils/logger';
 
 export interface AuthResponse {
   user: User;
@@ -28,7 +28,7 @@ class AuthService {
       // Sanitização de inputs
       const sanitizedEmail = sanitizeInput(credentials.email);
 
-      secureLogger.info('Tentativa de login iniciada', { email: sanitizedEmail }, 'AUTH_SERVICE');
+      logger.info('Tentativa de login iniciada', { email: sanitizedEmail }, 'AUTH_SERVICE');
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: sanitizedEmail,
@@ -59,17 +59,17 @@ class AuthService {
         ]) as any;
 
         if (profileError && profileError.code !== 'PGRST116') {
-          secureLogger.warn('Erro ao buscar perfil, usando fallback', { error: profileError.message }, 'AUTH_SERVICE');
+          logger.warn('Erro ao buscar perfil, usando fallback', { error: profileError.message }, 'AUTH_SERVICE');
         } else {
           profile = profileData;
         }
       } catch (timeoutError) {
-        secureLogger.warn('Timeout ao buscar perfil, usando dados básicos da auth', undefined, 'AUTH_SERVICE');
+        logger.warn('Timeout ao buscar perfil, usando dados básicos da auth', undefined, 'AUTH_SERVICE');
       }
 
       const user = mapUserFromProfile(profile, data.user);
 
-      secureLogger.info('Login realizado com sucesso', { userId: user.id, username: user.username }, 'AUTH_SERVICE');
+      logger.info('Login realizado com sucesso', { userId: user.id, username: user.username }, 'AUTH_SERVICE');
 
       return createSuccessResponse({
         user,
@@ -77,7 +77,7 @@ class AuthService {
         refreshToken: data.session.refresh_token
       });
     } catch (error: any) {
-      secureLogger.error('Erro no login', { error: error.message }, 'AUTH_SERVICE');
+      logger.error('Erro no login', { error: error.message }, 'AUTH_SERVICE');
       return createErrorResponse(handleServiceError(error, 'AUTH_LOGIN'));
     }
   }
@@ -107,7 +107,7 @@ class AuthService {
       const sanitizedEmail = sanitizeInput(userData.email);
       const sanitizedUsername = sanitizeInput(userData.username);
 
-      secureLogger.info('Tentativa de registro iniciada', { email: sanitizedEmail, username: sanitizedUsername }, 'AUTH_SERVICE');
+      logger.info('Tentativa de registro iniciada', { email: sanitizedEmail, username: sanitizedUsername }, 'AUTH_SERVICE');
 
       const { data, error } = await supabase.auth.signUp({
         email: sanitizedEmail,
@@ -134,7 +134,7 @@ class AuthService {
         games_played: 0
       };
 
-      secureLogger.info('Registro realizado com sucesso', { userId: user.id, username: user.username }, 'AUTH_SERVICE');
+      logger.info('Registro realizado com sucesso', { userId: user.id, username: user.username }, 'AUTH_SERVICE');
 
       return createSuccessResponse({
         user,
@@ -142,18 +142,18 @@ class AuthService {
         refreshToken: data.session?.refresh_token || ''
       });
     } catch (error: any) {
-      secureLogger.error('Erro no registro', { error: error.message }, 'AUTH_SERVICE');
+      logger.error('Erro no registro', { error: error.message }, 'AUTH_SERVICE');
       return createErrorResponse(handleServiceError(error, 'AUTH_REGISTER'));
     }
   }
 
   async logout(): Promise<void> {
     try {
-      secureLogger.info('Logout iniciado', undefined, 'AUTH_SERVICE');
+      logger.info('Logout iniciado', undefined, 'AUTH_SERVICE');
       await supabase.auth.signOut();
-      secureLogger.info('Logout realizado com sucesso', undefined, 'AUTH_SERVICE');
+      logger.info('Logout realizado com sucesso', undefined, 'AUTH_SERVICE');
     } catch (error: any) {
-      secureLogger.error('Erro no logout', { error: error.message }, 'AUTH_SERVICE');
+      logger.error('Erro no logout', { error: error.message }, 'AUTH_SERVICE');
       throw error;
     }
   }
@@ -184,15 +184,15 @@ class AuthService {
         ]) as any;
         profile = profileData;
       } catch {
-        secureLogger.warn('Timeout ao buscar perfil completo, usando dados básicos', undefined, 'AUTH_SERVICE');
+        logger.warn('Timeout ao buscar perfil completo, usando dados básicos', undefined, 'AUTH_SERVICE');
       }
 
       const userData = mapUserFromProfile(profile, user);
-      secureLogger.debug('Usuário atual obtido', { userId: userData.id, username: userData.username }, 'AUTH_SERVICE');
+      logger.debug('Usuário atual obtido', { userId: userData.id, username: userData.username }, 'AUTH_SERVICE');
       
       return createSuccessResponse(userData);
     } catch (error: any) {
-      secureLogger.error('Erro ao obter usuário atual', { error: error.message }, 'AUTH_SERVICE');
+      logger.error('Erro ao obter usuário atual', { error: error.message }, 'AUTH_SERVICE');
       return createErrorResponse(handleServiceError(error, 'AUTH_GET_USER'));
     }
   }

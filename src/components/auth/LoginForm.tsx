@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { LoginForm as LoginFormType } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { secureLogger } from '@/utils/secureLogger';
+import { logger } from '@/utils/logger';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
@@ -31,14 +31,14 @@ const LoginForm = () => {
 
   const onSubmit = async (data: LoginFormType) => {
     try {
-      secureLogger.info('Tentativa de login iniciada', { email: data.email }, 'LOGIN_FORM');
+      logger.info('Tentativa de login iniciada', { email: data.email }, 'LOGIN_FORM');
       await login(data);
       
       // Redirecionar para home após login bem-sucedido
-      secureLogger.info('Login realizado, redirecionando para home', undefined, 'LOGIN_FORM');
+      logger.info('Login realizado, redirecionando para home', undefined, 'LOGIN_FORM');
       navigate('/');
     } catch (err: any) {
-      secureLogger.error('Erro no login', { error: err.message }, 'LOGIN_FORM');
+      logger.error('Erro no login', { error: err.message }, 'LOGIN_FORM');
     }
   };
 

@@ -7,6 +7,54 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Secure logger for edge function
+const secureLog = {
+  info: (message: string, data?: any) => {
+    const maskedData = data ? maskSensitiveData(data) : undefined;
+    console.log(`[INFO] ${message}`, maskedData || '');
+  },
+  error: (message: string, data?: any) => {
+    const maskedData = data ? maskSensitiveData(data) : undefined;
+    console.error(`[ERROR] ${message}`, maskedData || '');
+  },
+  warn: (message: string, data?: any) => {
+    const maskedData = data ? maskSensitiveData(data) : undefined;
+    console.warn(`[WARN] ${message}`, maskedData || '');
+  }
+};
+
+const maskSensitiveData = (data: any): any => {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+
+  const sensitiveFields = ['password', 'email', 'token', 'key', 'secret'];
+  const masked = { ...data };
+  
+  Object.keys(masked).forEach(key => {
+    const lowerKey = key.toLowerCase();
+    const isSensitive = sensitiveFields.some(field => lowerKey.includes(field));
+
+    if (isSensitive && typeof masked[key] === 'string') {
+      if (key.toLowerCase().includes('email')) {
+        const email = masked[key];
+        if (email.includes('@')) {
+          const [user, domain] = email.split('@');
+          masked[key] = `${user[0]}***${user[user.length - 1]}@***`;
+        } else {
+          masked[key] = '***';
+        }
+      } else {
+        masked[key] = '***';
+      }
+    } else if (typeof masked[key] === 'object') {
+      masked[key] = maskSensitiveData(masked[key]);
+    }
+  });
+
+  return masked;
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -75,7 +123,11 @@ serve(async (req) => {
       throw new Error('Password must be at least 6 characters long')
     }
 
-    console.log(`Admin ${user.email} updating password for user ${targetUserId}`)
+    secureLog.info('Admin password update initiated', { 
+      adminId: user.id,
+      targetUserId,
+      username
+    });
 
     // Update user password using admin client
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
@@ -84,7 +136,7 @@ serve(async (req) => {
     )
 
     if (updateError) {
-      console.error('Error updating password:', updateError)
+      secureLog.error('Error updating password', { error: updateError.message });
       throw updateError
     }
 
@@ -103,10 +155,13 @@ serve(async (req) => {
       })
 
     if (logError) {
-      console.warn('Failed to log admin action:', logError)
+      secureLog.warn('Failed to log admin action', { error: logError.message });
     }
 
-    console.log(`Password successfully updated for user ${targetUserId}`)
+    secureLog.info('Password update completed successfully', { 
+      targetUserId,
+      username
+    });
 
     return new Response(
       JSON.stringify({ 
@@ -120,7 +175,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in admin-update-password function:', error)
+    secureLog.error('Error in admin-update-password function', { error: error.message });
     return new Response(
       JSON.stringify({ 
         success: false, 
