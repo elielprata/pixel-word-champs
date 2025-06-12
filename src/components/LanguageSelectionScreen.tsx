@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Check } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface LanguageSelectionScreenProps {
   onBack: () => void;
@@ -17,16 +18,28 @@ const LanguageSelectionScreen = ({ onBack }: LanguageSelectionScreenProps) => {
     { code: 'es-ES', name: 'Español', flag: '🇪🇸' },
   ];
 
+  logger.debug('LanguageSelectionScreen carregado', { selectedLanguage }, 'LANGUAGE_SELECTION');
+
+  const handleLanguageSelect = (languageCode: string) => {
+    logger.info('Idioma selecionado', { from: selectedLanguage, to: languageCode }, 'LANGUAGE_SELECTION');
+    setSelectedLanguage(languageCode);
+  };
+
   const handleSave = () => {
     // Aqui seria implementada a lógica para salvar o idioma
-    console.log('Idioma selecionado:', selectedLanguage);
+    logger.info('Idioma salvo', { selectedLanguage }, 'LANGUAGE_SELECTION');
+    onBack();
+  };
+
+  const handleBack = () => {
+    logger.debug('Voltando da seleção de idioma', undefined, 'LANGUAGE_SELECTION');
     onBack();
   };
 
   return (
     <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
       <div className="flex items-center mb-6">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+        <Button variant="ghost" size="icon" onClick={handleBack}>
           <ArrowLeft className="w-6 h-6" />
         </Button>
         <h1 className="text-2xl font-bold text-purple-800 ml-3">Selecionar Idioma</h1>
@@ -45,7 +58,7 @@ const LanguageSelectionScreen = ({ onBack }: LanguageSelectionScreenProps) => {
                   ? 'bg-purple-50 border-purple-300'
                   : 'bg-white border-gray-200 hover:bg-gray-50'
               }`}
-              onClick={() => setSelectedLanguage(language.code)}
+              onClick={() => handleLanguageSelect(language.code)}
             >
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{language.flag}</span>

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { exportToCSV } from '@/utils/csvExport';
 import { CompetitionHistoryItem } from './types';
 import { formatDate } from './competitionUtils';
+import { logger } from '@/utils/logger';
 
 export const handleExportWinners = async (
   competition: CompetitionHistoryItem,
@@ -12,7 +13,7 @@ export const handleExportWinners = async (
   setExportingId(competition.id);
   
   try {
-    console.log('📊 Exportando ganhadores da competição:', competition.id);
+    logger.info('Iniciando exportação de ganhadores', { competitionId: competition.id }, 'COMPETITION_EXPORT');
 
     // Buscar participações da competição com prêmios
     const { data: participations, error: participationsError } = await supabase
@@ -23,11 +24,12 @@ export const handleExportWinners = async (
       .order('user_position', { ascending: true });
 
     if (participationsError) {
-      console.error('❌ Erro ao buscar participações:', participationsError);
+      logger.error('Erro ao buscar participações', { competitionId: competition.id, error: participationsError }, 'COMPETITION_EXPORT');
       throw participationsError;
     }
 
     if (!participations || participations.length === 0) {
+      logger.warn('Nenhum ganhador encontrado para exportação', { competitionId: competition.id }, 'COMPETITION_EXPORT');
       toast({
         title: "Nenhum ganhador encontrado",
         description: "Esta competição não possui ganhadores com prêmios.",
@@ -44,7 +46,7 @@ export const handleExportWinners = async (
       .in('id', userIds);
 
     if (profilesError) {
-      console.error('❌ Erro ao buscar perfis:', profilesError);
+      logger.error('Erro ao buscar perfis dos ganhadores', { competitionId: competition.id, error: profilesError }, 'COMPETITION_EXPORT');
       throw profilesError;
     }
 
@@ -65,6 +67,11 @@ export const handleExportWinners = async (
 
     // Exportar para CSV
     exportToCSV(winners, `${competition.title}_ganhadores`);
+    
+    logger.info('Exportação de ganhadores concluída', { 
+      competitionId: competition.id, 
+      winnersCount: winners.length 
+    }, 'COMPETITION_EXPORT');
 
     toast({
       title: "Exportação concluída",
@@ -72,7 +79,7 @@ export const handleExportWinners = async (
     });
 
   } catch (error) {
-    console.error('❌ Erro ao exportar ganhadores:', error);
+    logger.error('Erro ao exportar ganhadores', { competitionId: competition.id, error }, 'COMPETITION_EXPORT');
     toast({
       title: "Erro na exportação",
       description: "Não foi possível exportar os dados dos ganhadores.",

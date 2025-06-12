@@ -1,4 +1,6 @@
 
+import { logger } from '@/utils/logger';
+
 interface ErrorWithMessage {
   message: string;
 }
@@ -21,11 +23,12 @@ export const errorHandler = {
     if (error instanceof Error) {
       return error.message;
     }
+    logger.warn('Erro sem mensagem identificável', { error }, 'ERROR_HANDLER');
     return 'Ocorreu um erro inesperado';
   },
 
   logError(error: AppError, context?: string): void {
-    console.error(`[${context || 'APP_ERROR'}]:`, error);
+    logger.error(`Erro capturado [${context || 'GENERIC'}]`, { error }, 'ERROR_HANDLER');
   },
 
   handleApiError(error: AppError): string {
@@ -34,10 +37,13 @@ export const errorHandler = {
     if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
       switch (error.code) {
         case 'PGRST116':
+          logger.debug('Erro de dados não encontrados capturado', { code: error.code }, 'ERROR_HANDLER');
           return 'Dados não encontrados';
         case 'PGRST301':
+          logger.warn('Erro de acesso negado capturado', { code: error.code }, 'ERROR_HANDLER');
           return 'Acesso negado';
         default:
+          logger.debug('Erro com código não mapeado', { code: error.code }, 'ERROR_HANDLER');
           return this.getErrorMessage(error);
       }
     }

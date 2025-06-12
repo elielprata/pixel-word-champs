@@ -3,23 +3,31 @@ import { logger } from '@/utils/logger';
 
 export const validateSession = (session: any): boolean => {
   if (!session || !session.user) {
+    logger.debug('Sessão inválida: sessão ou usuário não encontrados', undefined, 'SESSION_VALIDATION');
     return false;
   }
   
   // Validação básica da sessão
   if (!session.user.id || !session.access_token) {
-    logger.warn('Sessão inválida: faltam dados obrigatórios', undefined, 'SESSION_VALIDATION');
+    logger.warn('Sessão inválida: faltam dados obrigatórios', { 
+      hasUserId: !!session.user.id,
+      hasAccessToken: !!session.access_token 
+    }, 'SESSION_VALIDATION');
     return false;
   }
   
+  logger.debug('Sessão validada com sucesso', { userId: session.user.id }, 'SESSION_VALIDATION');
   return true;
 };
 
 export const getSessionId = (session: any): string | null => {
   if (!session || !session.user) {
+    logger.debug('Não é possível gerar ID da sessão: sessão inválida', undefined, 'SESSION_VALIDATION');
     return null;
   }
-  return `${session.user.id}_${session.access_token?.substring(0, 10)}`;
+  const sessionId = `${session.user.id}_${session.access_token?.substring(0, 10)}`;
+  logger.debug('ID da sessão gerado', { sessionId }, 'SESSION_VALIDATION');
+  return sessionId;
 };
 
 export const shouldProcessSession = (
@@ -39,9 +47,10 @@ export const shouldProcessSession = (
   }
   
   if (sessionId === lastProcessedSessionRef.current) {
-    logger.debug('Sessão já processada, ignorando', undefined, 'SESSION_VALIDATION');
+    logger.debug('Sessão já processada, ignorando', { sessionId }, 'SESSION_VALIDATION');
     return false;
   }
   
+  logger.debug('Sessão deve ser processada', { sessionId }, 'SESSION_VALIDATION');
   return true;
 };

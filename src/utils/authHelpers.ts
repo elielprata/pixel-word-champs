@@ -4,6 +4,7 @@ import { logger } from '@/utils/logger';
 
 export const createFallbackUser = (session: any): User => {
   if (!session?.user) {
+    logger.error('Sessão inválida para criar usuário fallback', { hasSession: !!session }, 'AUTH_HELPERS');
     throw new Error('Sessão inválida para criar usuário fallback');
   }
 

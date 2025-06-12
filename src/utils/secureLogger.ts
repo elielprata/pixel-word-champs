@@ -34,6 +34,14 @@ class SecureLogger {
     } else {
       this.logLevel = 4; // DEBUG completo em desenvolvimento
     }
+
+    // Log de inicialização apenas em desenvolvimento
+    if (!import.meta.env.PROD) {
+      console.log('[SECURE_LOGGER] Inicializado', { 
+        environment: this.environment, 
+        logLevel: this.logLevel 
+      });
+    }
   }
 
   private maskSensitiveData(data: any): any {
@@ -112,6 +120,9 @@ class SecureLogger {
         break;
       case 'PROD':
         console.log(logString, logData);
+        break;
+      case 'SECURITY':
+        console.warn(`🔒 [SECURITY] ${entry.message}`, logData);
         break;
       default:
         console.log(logString, logData);

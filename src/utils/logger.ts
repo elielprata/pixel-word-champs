@@ -81,4 +81,11 @@ export const migrateConsoleLog = (originalConsole: any) => {
 // Inicializar migração em produção
 if (isProduction && typeof window !== 'undefined') {
   migrateConsoleLog(console);
+  logger.production('Sistema de logger inicializado em produção', undefined, 'LOGGER_INIT');
 }
+
+// Log de inicialização do sistema
+logger.info('Sistema de logger inicializado', { 
+  environment: isDevelopment ? 'development' : 'production',
+  config: logger.getConfig() 
+}, 'LOGGER_INIT');

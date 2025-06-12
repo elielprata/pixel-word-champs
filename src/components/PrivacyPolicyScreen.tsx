@@ -3,16 +3,24 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Shield } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface PrivacyPolicyScreenProps {
   onBack: () => void;
 }
 
 const PrivacyPolicyScreen = ({ onBack }: PrivacyPolicyScreenProps) => {
+  logger.debug('PrivacyPolicyScreen carregado', undefined, 'PRIVACY_POLICY_SCREEN');
+
+  const handleBack = () => {
+    logger.debug('Voltando da política de privacidade', undefined, 'PRIVACY_POLICY_SCREEN');
+    onBack();
+  };
+
   return (
     <div className="p-4 pb-20 bg-gradient-to-b from-purple-50 to-blue-50 min-h-screen">
       <div className="flex items-center mb-6">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+        <Button variant="ghost" size="icon" onClick={handleBack}>
           <ArrowLeft className="w-6 h-6" />
         </Button>
         <h1 className="text-2xl font-bold text-purple-800 ml-3">Política de Privacidade</h1>
