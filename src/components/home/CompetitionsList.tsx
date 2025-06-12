@@ -5,18 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CompetitionCard from './CompetitionCard';
 import EmptyCompetitionsState from './EmptyCompetitionsState';
-
-interface Competition {
-  id: string;
-  title: string;
-  description: string;
-  theme: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  prize_pool: number;
-  max_participants: number;
-}
+import { Competition } from '@/types';
 
 interface CompetitionsListProps {
   competitions: Competition[];
@@ -25,6 +14,14 @@ interface CompetitionsListProps {
 }
 
 const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: CompetitionsListProps) => {
+  const handleJoin = (competitionId: string) => {
+    onStartChallenge(competitionId);
+  };
+
+  const handleViewRanking = (competitionId: string) => {
+    console.log('Ver ranking da competição:', competitionId);
+  };
+
   return (
     <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
       <CardHeader className="pb-3">
@@ -50,7 +47,8 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
               <CompetitionCard
                 key={competition.id}
                 competition={competition}
-                onStartChallenge={onStartChallenge}
+                onJoin={handleJoin}
+                onViewRanking={handleViewRanking}
               />
             ))}
           </div>

@@ -3,23 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { useAuth } from '@/hooks/useAuth';
 import { TIMING_CONFIG } from '@/constants/app';
+import { Competition } from '@/types';
 import HomeHeader from './home/HomeHeader';
 import UserStatsCard from './home/UserStatsCard';
 import CompetitionsList from './home/CompetitionsList';
 import LoadingState from './home/LoadingState';
 import ErrorState from './home/ErrorState';
-
-interface Competition {
-  id: string;
-  title: string;
-  description: string;
-  theme: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  prize_pool: number;
-  max_participants: number;
-}
 
 interface HomeScreenProps {
   onStartChallenge: (challengeId: string) => void;
@@ -42,9 +31,28 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
 
       const response = await dailyCompetitionService.getActiveDailyCompetitions();
       
-      if (response.success) {
+      if (response.success && response.data) {
         console.log(`✅ ${response.data.length} competições diárias encontradas`);
-        setCompetitions(response.data);
+        
+        // Mapear os dados para a interface Competition
+        const mappedCompetitions: Competition[] = response.data.map(comp => ({
+          id: comp.id,
+          title: comp.title,
+          description: comp.description || '',
+          theme: comp.theme || '',
+          start_date: comp.start_date,
+          end_date: comp.end_date,
+          status: comp.status || 'active',
+          type: comp.competition_type === 'challenge' ? 'daily' as const : 'challenge' as const,
+          prize_pool: Number(comp.prize_pool) || 0,
+          total_participants: 0,
+          max_participants: comp.max_participants || 1000,
+          is_active: comp.status === 'active',
+          created_at: comp.created_at || '',
+          updated_at: comp.updated_at || ''
+        }));
+        
+        setCompetitions(mappedCompetitions);
       } else {
         console.error('❌ Erro ao buscar competições:', response.error);
         setError(response.error || 'Erro ao carregar competições');

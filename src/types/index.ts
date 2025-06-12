@@ -1,3 +1,4 @@
+
 // Corrigir tipagem inconsistente da interface User
 export interface User {
   id: string;
@@ -30,12 +31,15 @@ export interface Competition {
   id: string;
   title: string;
   description?: string;
+  theme?: string;
+  start_date: string;
+  end_date: string;
+  status: string;
   type: 'daily' | 'weekly' | 'challenge';
   prize_pool: number;
   total_participants: number;
+  max_participants: number;
   is_active: boolean;
-  week_start?: string;
-  week_end?: string;
   created_at: string;
   updated_at: string;
 }

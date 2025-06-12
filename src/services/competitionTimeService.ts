@@ -12,9 +12,9 @@ class CompetitionTimeService {
       
       const now = getCurrentDateISO();
       
-      // Buscar todas as competições que podem precisar de atualização
+      // Buscar todas as competições da tabela correta que podem precisar de atualização
       const { data: competitions, error } = await supabase
-        .from('competitions')
+        .from('custom_competitions')
         .select('id, title, start_date, end_date, status')
         .neq('status', 'completed');
 
@@ -36,7 +36,7 @@ class CompetitionTimeService {
           console.log(`🔄 Atualizando status da competição ${competition.title}: ${competition.status} → ${currentStatus}`);
           
           await supabase
-            .from('competitions')
+            .from('custom_competitions')
             .update({ status: currentStatus })
             .eq('id', competition.id);
         }
