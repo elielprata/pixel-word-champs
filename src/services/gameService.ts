@@ -42,6 +42,12 @@ class GameService {
 
       if (error) {
         console.error('❌ Erro ao inserir sessão:', error);
+        
+        // Detectar erro específico de foreign key constraint
+        if (error.code === '23503' || error.message?.includes('foreign key constraint')) {
+          return createErrorResponse('A competição selecionada não está mais disponível');
+        }
+        
         throw error;
       }
 

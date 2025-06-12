@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Trophy, Star } from 'lucide-react';
@@ -5,6 +6,7 @@ import GameBoard from './GameBoard';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
+import { competitionValidationService } from '@/services/competitionValidationService';
 
 interface ChallengeScreenProps {
   challengeId: string;
@@ -35,6 +37,17 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
       
       console.log('🎮 Inicializando sessão de jogo para competição:', challengeId);
       
+      // Validar se a competição existe antes de criar a sessão
+      const competitionValidation = await competitionValidationService.validateCompetition(challengeId);
+      
+      if (!competitionValidation.success) {
+        console.error('❌ Competição inválida:', competitionValidation.error);
+        setError(`Competição não disponível: ${competitionValidation.error}`);
+        return;
+      }
+
+      console.log('✅ Competição validada, criando sessão de jogo...');
+      
       // Criar uma nova sessão de jogo para esta competição
       const sessionResponse = await gameService.createGameSession({
         level: 1,
@@ -43,7 +56,15 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
       });
 
       if (!sessionResponse.success) {
-        throw new Error(sessionResponse.error || 'Erro ao criar sessão de jogo');
+        console.error('❌ Erro ao criar sessão:', sessionResponse.error);
+        
+        // Detectar erro específico de foreign key para fornecer mensagem mais clara
+        if (sessionResponse.error?.includes('foreign key constraint')) {
+          setError('A competição selecionada não está mais disponível. Tente novamente ou escolha outra competição.');
+        } else {
+          setError(sessionResponse.error || 'Erro ao criar sessão de jogo');
+        }
+        return;
       }
 
       const session = sessionResponse.data;
@@ -55,8 +76,8 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
       setIsGameStarted(true);
       
     } catch (error) {
-      console.error('❌ Erro ao inicializar sessão:', error);
-      setError(error instanceof Error ? error.message : 'Erro ao carregar jogo');
+      console.error('❌ Erro inesperado ao inicializar sessão:', error);
+      setError('Erro inesperado ao carregar o jogo. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -133,18 +154,26 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   };
 
   const handleRetry = () => {
+    console.log('🔄 Tentando novamente...');
     setError(null);
+    setGameSession(null);
+    setIsGameStarted(false);
     initializeGameSession();
   };
 
-  // Tela de erro
+  const handleBackToMenu = () => {
+    console.log('🏠 Voltando ao menu principal...');
+    onBack();
+  };
+
+  // Tela de erro com opções claras
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 p-4 flex items-center justify-center">
         <div className="text-center bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl max-w-md mx-auto border border-white/30">
           <div className="text-6xl mb-4">😔</div>
           <h1 className="text-2xl font-bold text-red-800 mb-4">Ops! Algo deu errado</h1>
-          <p className="text-gray-700 mb-6">{error}</p>
+          <p className="text-gray-700 mb-6 text-sm leading-relaxed">{error}</p>
           <div className="space-y-3">
             <Button 
               onClick={handleRetry}
@@ -154,7 +183,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
             </Button>
             <Button 
               variant="outline"
-              onClick={onBack}
+              onClick={handleBackToMenu}
               className="w-full border-2 border-gray-300 hover:bg-gray-50 font-bold py-3 rounded-2xl"
             >
               Voltar ao Menu
