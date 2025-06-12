@@ -162,11 +162,14 @@ export const RankingsTab = () => {
                   </div>
                 </div>
                 
-                {console.log('🚀 [RankingsTab] Enviando dados para WeeklyCompetitionsView:', {
-                  competitions: weeklyCompetitions.length,
-                  activeCompetition: activeWeeklyCompetition?.title || 'nenhuma',
-                  isLoading: isRankingsLoading
-                })}
+                {(() => {
+                  console.log('🚀 [RankingsTab] Enviando dados para WeeklyCompetitionsView:', {
+                    competitions: weeklyCompetitions.length,
+                    activeCompetition: activeWeeklyCompetition?.title || 'nenhuma',
+                    isLoading: isRankingsLoading
+                  });
+                  return null;
+                })()}
                 
                 <WeeklyCompetitionsView 
                   competitions={weeklyCompetitions} 

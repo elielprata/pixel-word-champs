@@ -15,7 +15,7 @@ interface WeeklyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  total_participants: number;
+  // total_participants is optional since it doesn't exist in the database
 }
 
 interface WeeklyCompetitionCardProps {
