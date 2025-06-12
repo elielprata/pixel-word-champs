@@ -20,27 +20,67 @@ export const useWeeklyCompetitionsLogic = (competitions: WeeklyCompetition[]) =>
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  console.log('🔍 [useWeeklyCompetitionsLogic] Recebidas competições:', competitions.length);
+  
   // Usar o serviço centralizado para calcular o status de cada competição
   const calculateActualStatus = (competition: WeeklyCompetition) => {
-    return competitionStatusService.calculateCorrectStatus(competition);
+    const actualStatus = competitionStatusService.calculateCorrectStatus(competition);
+    
+    // Log detalhado para debug
+    if (competition.status !== actualStatus) {
+      console.log(`⚠️ [STATUS MISMATCH] Competição "${competition.title}":`, {
+        statusBanco: competition.status,
+        statusCalculado: actualStatus,
+        startDate: competition.start_date,
+        endDate: competition.end_date,
+        agora: new Date().toISOString()
+      });
+    }
+    
+    return actualStatus;
   };
 
-  // Filtrar apenas competições não finalizadas (ativas ou aguardando)
+  // CORREÇÃO RADICAL: Mostrar TODAS as competições semanais (incluindo completed)
+  // Filtrar apenas competições canceladas ou com erro
   const activeCompetitions = competitions.filter(comp => {
     const actualStatus = calculateActualStatus(comp);
-    return actualStatus === 'active' || actualStatus === 'scheduled';
+    const shouldShow = actualStatus !== 'cancelled' && comp.status !== 'cancelled';
+    
+    console.log(`📊 [FILTER] Competição "${comp.title}":`, {
+      actualStatus,
+      statusBanco: comp.status,
+      shouldShow,
+      startDate: comp.start_date,
+      endDate: comp.end_date
+    });
+    
+    return shouldShow;
   });
+
+  console.log(`✅ [FILTERED] Competições a serem exibidas: ${activeCompetitions.length} de ${competitions.length}`);
 
   // Encontrar a competição realmente ativa (dentro do período)
   const currentActiveCompetition = activeCompetitions.find(comp => {
     const actualStatus = calculateActualStatus(comp);
-    return actualStatus === 'active';
+    const isActive = actualStatus === 'active';
+    
+    if (isActive) {
+      console.log(`🟢 [ACTIVE] Competição ativa encontrada: "${comp.title}"`);
+    }
+    
+    return isActive;
   });
 
-  // Outras competições (aguardando início)
+  // Outras competições (aguardando início ou finalizadas)
   const otherActiveCompetitions = activeCompetitions.filter(comp => {
     const actualStatus = calculateActualStatus(comp);
-    return actualStatus === 'scheduled' || (actualStatus === 'active' && comp.id !== currentActiveCompetition?.id);
+    const isOther = actualStatus !== 'active' || comp.id !== currentActiveCompetition?.id;
+    
+    if (isOther) {
+      console.log(`📋 [OTHER] Competição listada: "${comp.title}" (${actualStatus})`);
+    }
+    
+    return isOther;
   });
 
   const handleDelete = async (competition: WeeklyCompetition, onRefresh?: () => void) => {
