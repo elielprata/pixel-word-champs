@@ -3,6 +3,7 @@ import React from 'react';
 import GameBoardGrid from './GameBoardGrid';
 import WordsList from './WordsList';
 import GameModals from './GameModals';
+import GameBoardHeader from './GameBoardHeader';
 import { useBoard } from '@/hooks/useBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
 import { useWordValidation } from '@/hooks/useWordValidation';
@@ -168,6 +169,17 @@ const GameBoardContent = ({
 
   return (
     <>
+      {/* Header do jogo com estatísticas */}
+      <GameBoardHeader
+        level={level}
+        timeLeft={timeLeft}
+        foundWords={foundWords}
+        levelWords={levelWords}
+        hintsUsed={hintsUsed}
+        currentLevelScore={currentLevelScore}
+        onUseHint={handleUseHintClick}
+      />
+
       {/* Tabuleiro principal */}
       <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-white/30">
         <GameBoardGrid
@@ -206,16 +218,6 @@ const GameBoardContent = ({
         onAdvanceLevel={onAdvanceLevel}
         onStopGame={onStopGame}
       />
-
-      {/* Export data for parent component */}
-      <div style={{ display: 'none' }}>
-        {/* This is a hacky way to pass data up, but it works for the refactor */}
-        <span data-found-words={foundWords.length} />
-        <span data-level-words={levelWords.length} />
-        <span data-hints-used={hintsUsed} />
-        <span data-current-score={currentLevelScore} />
-        <span data-use-hint-handler={handleUseHintClick.toString()} />
-      </div>
     </>
   );
 };
