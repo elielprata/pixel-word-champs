@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { logger } from '@/utils/logger';
 
 export interface Invite {
   id: string;
@@ -35,15 +36,16 @@ export interface InvitedFriend {
 }
 
 class InviteService {
-  // Gerar código de convite único para o usuário
   async generateInviteCode() {
     try {
+      logger.debug('Gerando código de convite', undefined, 'INVITE_SERVICE');
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        logger.warn('Usuário não autenticado ao gerar convite', undefined, 'INVITE_SERVICE');
         return createErrorResponse('Usuário não autenticado');
       }
 
-      // Verificar se já existe um código ativo para o usuário
       const { data: existingInvite } = await supabase
         .from('invites')
         .select('code')
@@ -52,10 +54,10 @@ class InviteService {
         .single();
 
       if (existingInvite) {
+        logger.info('Código de convite existente encontrado', { userId: user.id }, 'INVITE_SERVICE');
         return createSuccessResponse({ code: existingInvite.code });
       }
 
-      // Gerar novo código único
       const code = this.generateUniqueCode();
       
       const { data, error } = await supabase
@@ -69,20 +71,25 @@ class InviteService {
         .single();
 
       if (error) {
+        logger.error('Erro ao criar código de convite', { error: error.message, userId: user.id }, 'INVITE_SERVICE');
         return createErrorResponse(error.message);
       }
 
+      logger.info('Código de convite gerado com sucesso', { userId: user.id, code }, 'INVITE_SERVICE');
       return createSuccessResponse({ code: data.code });
     } catch (error) {
+      logger.error('Erro ao gerar código de convite', { error }, 'INVITE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'generateInviteCode'));
     }
   }
 
-  // Buscar convites do usuário
   async getUserInvites() {
     try {
+      logger.debug('Buscando convites do usuário', undefined, 'INVITE_SERVICE');
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        logger.warn('Usuário não autenticado ao buscar convites', undefined, 'INVITE_SERVICE');
         return createErrorResponse('Usuário não autenticado');
       }
 
@@ -93,20 +100,25 @@ class InviteService {
         .order('created_at', { ascending: false });
 
       if (error) {
+        logger.error('Erro ao buscar convites', { error: error.message, userId: user.id }, 'INVITE_SERVICE');
         return createErrorResponse(error.message);
       }
 
+      logger.info('Convites do usuário carregados', { userId: user.id, count: data?.length || 0 }, 'INVITE_SERVICE');
       return createSuccessResponse(data || []);
     } catch (error) {
+      logger.error('Erro ao buscar convites do usuário', { error }, 'INVITE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'getUserInvites'));
     }
   }
 
-  // Buscar amigos convidados com informações do perfil
   async getInvitedFriends() {
     try {
+      logger.debug('Buscando amigos convidados', undefined, 'INVITE_SERVICE');
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        logger.warn('Usuário não autenticado ao buscar amigos', undefined, 'INVITE_SERVICE');
         return createErrorResponse('Usuário não autenticado');
       }
 
@@ -125,6 +137,7 @@ class InviteService {
         .not('used_by', 'is', null);
 
       if (error) {
+        logger.error('Erro ao buscar amigos convidados', { error: error.message, userId: user.id }, 'INVITE_SERVICE');
         return createErrorResponse(error.message);
       }
 
@@ -141,21 +154,24 @@ class InviteService {
         };
       });
 
+      logger.info('Amigos convidados carregados', { userId: user.id, count: friends.length }, 'INVITE_SERVICE');
       return createSuccessResponse(friends);
     } catch (error) {
+      logger.error('Erro ao buscar amigos convidados', { error }, 'INVITE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'getInvitedFriends'));
     }
   }
 
-  // Usar código de convite
   async useInviteCode(code: string) {
     try {
+      logger.info('Usando código de convite', { code }, 'INVITE_SERVICE');
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        logger.warn('Usuário não autenticado ao usar convite', undefined, 'INVITE_SERVICE');
         return createErrorResponse('Usuário não autenticado');
       }
 
-      // Verificar se o código existe e está ativo
       const { data: invite, error: fetchError } = await supabase
         .from('invites')
         .select('*')
@@ -165,15 +181,15 @@ class InviteService {
         .single();
 
       if (fetchError || !invite) {
+        logger.warn('Código de convite inválido ou já usado', { code, userId: user.id }, 'INVITE_SERVICE');
         return createErrorResponse('Código de convite inválido ou já usado');
       }
 
-      // Verificar se não é o próprio usuário
       if (invite.invited_by === user.id) {
+        logger.warn('Usuário tentou usar próprio código', { code, userId: user.id }, 'INVITE_SERVICE');
         return createErrorResponse('Você não pode usar seu próprio código de convite');
       }
 
-      // Marcar convite como usado
       const { error: updateError } = await supabase
         .from('invites')
         .update({
@@ -183,10 +199,10 @@ class InviteService {
         .eq('id', invite.id);
 
       if (updateError) {
+        logger.error('Erro ao marcar convite como usado', { error: updateError.message, code, userId: user.id }, 'INVITE_SERVICE');
         return createErrorResponse(updateError.message);
       }
 
-      // Criar recompensa pendente
       await supabase
         .from('invite_rewards')
         .insert({
@@ -197,21 +213,24 @@ class InviteService {
           status: 'pending'
         });
 
+      logger.info('Código de convite usado com sucesso', { code, userId: user.id, invitedBy: invite.invited_by }, 'INVITE_SERVICE');
       return createSuccessResponse(true);
     } catch (error) {
+      logger.error('Erro ao usar código de convite', { error, code }, 'INVITE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'useInviteCode'));
     }
   }
 
-  // Buscar estatísticas de convites
   async getInviteStats() {
     try {
+      logger.debug('Buscando estatísticas de convites', undefined, 'INVITE_SERVICE');
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        logger.warn('Usuário não autenticado ao buscar estatísticas', undefined, 'INVITE_SERVICE');
         return createErrorResponse('Usuário não autenticado');
       }
 
-      // Buscar recompensas processadas
       const { data: rewards } = await supabase
         .from('invite_rewards')
         .select('reward_amount')
@@ -220,7 +239,6 @@ class InviteService {
 
       const totalPoints = (rewards || []).reduce((sum, reward) => sum + reward.reward_amount, 0);
 
-      // Buscar convites usados
       const { data: usedInvites } = await supabase
         .from('invites')
         .select(`
@@ -237,8 +255,11 @@ class InviteService {
 
       const totalInvites = (usedInvites || []).length;
 
-      return createSuccessResponse({ totalPoints, activeFriends, totalInvites });
+      const stats = { totalPoints, activeFriends, totalInvites };
+      logger.info('Estatísticas de convites carregadas', { userId: user.id, stats }, 'INVITE_SERVICE');
+      return createSuccessResponse(stats);
     } catch (error) {
+      logger.error('Erro ao buscar estatísticas de convites', { error }, 'INVITE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'getInviteStats'));
     }
   }

@@ -1,4 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface PaymentRecord {
   id: string;
@@ -20,17 +22,18 @@ export interface PaymentRecord {
 export const paymentService = {
   async getWinnersForPrizeLevel(prizeLevel: string): Promise<PaymentRecord[]> {
     try {
-      console.log('🔍 Buscando vencedores para nível de prêmio:', prizeLevel);
+      logger.info('Buscando vencedores para nível de prêmio', { prizeLevel }, 'PAYMENT_SERVICE');
       
-      // Buscar registros de pagamento
       const { data: paymentRecords, error } = await supabase
         .from('payment_history')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao buscar registros de pagamento', { error: error.message }, 'PAYMENT_SERVICE');
+        throw error;
+      }
 
-      // Buscar perfis dos usuários
       const userIds = paymentRecords?.map(record => record.user_id) || [];
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -38,20 +41,18 @@ export const paymentService = {
         .in('id', userIds);
 
       if (profilesError) {
-        console.warn('⚠️ Erro ao buscar perfis:', profilesError);
+        logger.warn('Erro ao buscar perfis de usuários', { error: profilesError.message }, 'PAYMENT_SERVICE');
       }
 
-      // Buscar posições dos rankings semanais
       const { data: weeklyRankings, error: rankingError } = await supabase
         .from('weekly_rankings')
         .select('user_id, position, week_start')
         .order('week_start', { ascending: false });
 
       if (rankingError) {
-        console.warn('⚠️ Aviso: Erro ao buscar rankings:', rankingError);
+        logger.warn('Erro ao buscar rankings semanais', { error: rankingError.message }, 'PAYMENT_SERVICE');
       }
 
-      // Mapear registros com informações completas
       const records: PaymentRecord[] = (paymentRecords || []).map((record: any) => {
         const profile = profiles?.find(p => p.id === record.user_id);
         const ranking = weeklyRankings?.find(r => r.user_id === record.user_id);
@@ -74,7 +75,6 @@ export const paymentService = {
         };
       });
 
-      // Filtrar por nível de prêmio específico
       let filteredRecords = records;
       if (prizeLevel.includes('1º ao 3º')) {
         filteredRecords = records.filter(r => r.position >= 1 && r.position <= 3);
@@ -86,17 +86,17 @@ export const paymentService = {
         filteredRecords = records.filter(r => r.position >= 51 && r.position <= 100);
       }
 
-      console.log('📊 Registros filtrados encontrados:', filteredRecords.length);
+      logger.info('Vencedores filtrados carregados', { prizeLevel, count: filteredRecords.length }, 'PAYMENT_SERVICE');
       return filteredRecords;
     } catch (error) {
-      console.error('❌ Erro ao buscar vencedores:', error);
+      logger.error('Erro ao buscar vencedores', { error, prizeLevel }, 'PAYMENT_SERVICE');
       return [];
     }
   },
 
   async markAsPaid(paymentId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('💰 Marcando pagamento como pago:', paymentId);
+      logger.info('Marcando pagamento como pago', { paymentId }, 'PAYMENT_SERVICE');
       
       const { error } = await supabase
         .from('payment_history')
@@ -107,21 +107,23 @@ export const paymentService = {
         })
         .eq('id', paymentId);
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao marcar pagamento como pago', { error: error.message, paymentId }, 'PAYMENT_SERVICE');
+        throw error;
+      }
       
-      console.log('✅ Pagamento marcado como pago com sucesso');
+      logger.info('Pagamento marcado como pago com sucesso', { paymentId }, 'PAYMENT_SERVICE');
       return { success: true };
     } catch (error) {
-      console.error('❌ Erro ao marcar pagamento como pago:', error);
+      logger.error('Erro ao processar marcação de pagamento', { error, paymentId }, 'PAYMENT_SERVICE');
       return { success: false, error: 'Erro ao marcar pagamento como pago' };
     }
   },
 
   async createPaymentRecords(): Promise<void> {
     try {
-      console.log('📝 Criando registros de pagamento baseados nos rankings semanais...');
+      logger.info('Criando registros de pagamento baseados nos rankings semanais', undefined, 'PAYMENT_SERVICE');
       
-      // Buscar rankings semanais recentes
       const today = new Date();
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
@@ -135,14 +137,16 @@ export const paymentService = {
         .lte('position', 100)
         .order('position', { ascending: true });
 
-      if (weeklyError) throw weeklyError;
+      if (weeklyError) {
+        logger.error('Erro ao buscar rankings semanais', { error: weeklyError.message }, 'PAYMENT_SERVICE');
+        throw weeklyError;
+      }
 
       if (!weeklyRankings?.length) {
-        console.log('ℹ️ Nenhum ranking semanal encontrado');
+        logger.info('Nenhum ranking semanal encontrado', { weekStartStr }, 'PAYMENT_SERVICE');
         return;
       }
 
-      // Buscar perfis dos usuários
       const userIds = weeklyRankings.map(r => r.user_id);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -150,30 +154,30 @@ export const paymentService = {
         .in('id', userIds);
 
       if (profilesError) {
-        console.warn('⚠️ Erro ao buscar perfis:', profilesError);
+        logger.warn('Erro ao buscar perfis de usuários', { error: profilesError.message }, 'PAYMENT_SERVICE');
       }
 
-      // Buscar configurações de prêmios ativas
       const { data: prizeConfigs, error: prizeError } = await supabase
         .from('prize_configurations')
         .select('*')
         .eq('active', true);
 
-      if (prizeError) throw prizeError;
+      if (prizeError) {
+        logger.error('Erro ao buscar configurações de prêmios', { error: prizeError.message }, 'PAYMENT_SERVICE');
+        throw prizeError;
+      }
 
       if (!prizeConfigs?.length) {
-        console.log('ℹ️ Nenhuma configuração de prêmio encontrada');
+        logger.info('Nenhuma configuração de prêmio encontrada', undefined, 'PAYMENT_SERVICE');
         return;
       }
 
-      // Criar registros de pagamento baseados nas configurações
       const paymentRecords = [];
 
       for (const ranking of weeklyRankings) {
         const profile = profiles?.find(p => p.id === ranking.user_id);
         let prizeAmount = 0;
         
-        // Verificar prêmios individuais
         const individualPrize = prizeConfigs.find(
           p => p.type === 'individual' && p.position === ranking.position
         );
@@ -181,7 +185,6 @@ export const paymentService = {
         if (individualPrize) {
           prizeAmount = Number(individualPrize.prize_amount) || 0;
         } else {
-          // Verificar prêmios em grupo
           const groupPrize = prizeConfigs.find(p => {
             if (p.type !== 'group' || !p.position_range) return false;
             const [start, end] = p.position_range.split('-').map(Number);
@@ -211,14 +214,17 @@ export const paymentService = {
           .from('payment_history')
           .insert(paymentRecords);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          logger.error('Erro ao inserir registros de pagamento', { error: insertError.message }, 'PAYMENT_SERVICE');
+          throw insertError;
+        }
         
-        console.log('✅ Registros de pagamento criados:', paymentRecords.length);
+        logger.info('Registros de pagamento criados com sucesso', { count: paymentRecords.length }, 'PAYMENT_SERVICE');
       } else {
-        console.log('ℹ️ Nenhum registro de pagamento para criar');
+        logger.info('Nenhum registro de pagamento para criar', undefined, 'PAYMENT_SERVICE');
       }
     } catch (error) {
-      console.error('❌ Erro ao criar registros de pagamento:', error);
+      logger.error('Erro ao criar registros de pagamento', { error }, 'PAYMENT_SERVICE');
     }
   }
 };

@@ -111,9 +111,10 @@ export const useAuthOperations = (
         logger.info('Logout realizado com sucesso', undefined, 'AUTH_OPERATIONS');
       }
     } catch (error: any) {
-      logger.error('Erro durante logout', { error: error.message }, 'AUTH_OPERATIONS');
       if (isMountedRef.current) {
-        setError('Erro ao fazer logout');
+        const errorMessage = error.message || 'Erro no logout';
+        setError(errorMessage);
+        logger.error('Erro durante logout', { error: errorMessage }, 'AUTH_OPERATIONS');
       }
     }
   }, [setUser, setIsAuthenticated, setError, isMountedRef]);

@@ -10,15 +10,18 @@ import {
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { dailyCompetitionService } from './dailyCompetitionService';
 import { competitionValidationService } from './competitionValidationService';
+import { logger } from '@/utils/logger';
 
 class GameService {
   async createGameSession(config: GameConfig): Promise<ApiResponse<GameSession>> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) {
+        logger.warn('Usuário não autenticado ao criar sessão', undefined, 'GAME_SERVICE');
+        throw new Error('Usuário não autenticado');
+      }
 
-      console.log('🎮 Criando sessão de jogo para usuário:', user.id);
-      console.log('📊 Configuração:', config);
+      logger.info('Criando sessão de jogo', { userId: user.id, level: config.level }, 'GAME_SERVICE');
 
       const board = this.generateBoard(config.boardSize || 10);
 
@@ -32,29 +35,23 @@ class GameService {
         is_completed: false,
       };
 
-      // Se tem competition_id, verificar em qual tabela ela existe
       if (config.competitionId) {
         const competitionTable = await competitionValidationService.getCompetitionTable(config.competitionId);
         
         if (competitionTable === 'competitions') {
-          // Se existe na tabela competitions, pode usar normalmente
           sessionData.competition_id = config.competitionId;
-          console.log('✅ Competição encontrada em "competitions", usando competition_id');
+          logger.debug('Competição encontrada em competitions', { competitionId: config.competitionId }, 'GAME_SERVICE');
         } else if (competitionTable === 'custom_competitions') {
-          // Se existe apenas em custom_competitions, não definir competition_id para evitar foreign key error
-          // Mas salvar o ID em outro campo ou no board para referência
-          console.log('⚠️ Competição encontrada em "custom_competitions", criando sessão sem foreign key');
+          logger.debug('Competição encontrada em custom_competitions', { competitionId: config.competitionId }, 'GAME_SERVICE');
           sessionData.board = { 
             ...board, 
             _custom_competition_id: config.competitionId 
           };
         } else {
-          console.error('❌ Competição não encontrada em nenhuma tabela');
+          logger.error('Competição não encontrada', { competitionId: config.competitionId }, 'GAME_SERVICE');
           return createErrorResponse('Competição não encontrada');
         }
       }
-
-      console.log('💾 Inserindo sessão no banco:', sessionData);
 
       const { data, error } = await supabase
         .from('game_sessions')
@@ -63,9 +60,8 @@ class GameService {
         .single();
 
       if (error) {
-        console.error('❌ Erro ao inserir sessão:', error);
+        logger.error('Erro ao inserir sessão no banco', { error: error.message }, 'GAME_SERVICE');
         
-        // Detectar erro específico de foreign key constraint
         if (error.code === '23503' || error.message?.includes('foreign key constraint')) {
           return createErrorResponse('A competição selecionada não está mais disponível');
         }
@@ -73,31 +69,29 @@ class GameService {
         throw error;
       }
 
-      console.log('✅ Sessão criada com sucesso:', data.id);
+      logger.info('Sessão criada com sucesso', { sessionId: data.id }, 'GAME_SERVICE');
 
       const session = this.mapGameSession(data);
       
-      // Participação automática em competições diárias se tiver competitionId
       if (config.competitionId) {
         try {
           await dailyCompetitionService.joinCompetitionAutomatically(session.id);
-          console.log('✅ Participação automática registrada');
+          logger.info('Participação automática registrada', { sessionId: session.id }, 'GAME_SERVICE');
         } catch (participationError) {
-          console.warn('⚠️ Erro ao registrar participação automática:', participationError);
-          // Não falhar a criação da sessão por causa disso
+          logger.warn('Erro ao registrar participação automática', { error: participationError, sessionId: session.id }, 'GAME_SERVICE');
         }
       }
       
       return createSuccessResponse(session);
     } catch (error) {
-      console.error('❌ Erro ao criar sessão:', error);
+      logger.error('Erro ao criar sessão de jogo', { error }, 'GAME_SERVICE');
       return createErrorResponse(handleServiceError(error, 'GAME_CREATE_SESSION'));
     }
   }
 
   async getGameSession(sessionId: string): Promise<ApiResponse<GameSession>> {
     try {
-      console.log('🔍 Buscando sessão:', sessionId);
+      logger.debug('Buscando sessão de jogo', { sessionId }, 'GAME_SERVICE');
 
       const { data, error } = await supabase
         .from('game_sessions')
@@ -106,19 +100,20 @@ class GameService {
         .single();
 
       if (error) {
-        console.error('❌ Erro ao buscar sessão:', error);
+        logger.error('Erro ao buscar sessão no banco', { error: error.message, sessionId }, 'GAME_SERVICE');
         throw error;
       }
 
       if (!data) {
+        logger.warn('Sessão não encontrada', { sessionId }, 'GAME_SERVICE');
         throw new Error('Sessão não encontrada');
       }
 
-      console.log('✅ Sessão encontrada:', data.id);
+      logger.debug('Sessão encontrada com sucesso', { sessionId }, 'GAME_SERVICE');
       const session = this.mapGameSession(data);
       return createSuccessResponse(session);
     } catch (error) {
-      console.error('❌ Erro ao obter sessão:', error);
+      logger.error('Erro ao obter sessão de jogo', { error, sessionId }, 'GAME_SERVICE');
       return createErrorResponse(handleServiceError(error, 'GAME_GET_SESSION'));
     }
   }
@@ -130,6 +125,8 @@ class GameService {
     points: number
   ): Promise<ApiResponse<WordFound>> {
     try {
+      logger.info('Submetendo palavra', { sessionId, word, points }, 'GAME_SERVICE');
+      
       const { data, error } = await supabase
         .from('words_found')
         .insert({
@@ -141,7 +138,10 @@ class GameService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao inserir palavra encontrada', { error: error.message, sessionId, word }, 'GAME_SERVICE');
+        throw error;
+      }
 
       await this.updateSessionScore(sessionId, points);
 
@@ -152,15 +152,17 @@ class GameService {
         foundAt: data.found_at
       };
 
+      logger.info('Palavra submetida com sucesso', { sessionId, word, points }, 'GAME_SERVICE');
       return createSuccessResponse(wordFound);
     } catch (error) {
+      logger.error('Erro ao submeter palavra', { error, sessionId, word }, 'GAME_SERVICE');
       return createErrorResponse(handleServiceError(error, 'GAME_SUBMIT_WORD'));
     }
   }
 
   async completeGameSession(sessionId: string): Promise<ApiResponse<GameSession>> {
     try {
-      console.log('🏁 Completando sessão:', sessionId);
+      logger.info('Completando sessão de jogo', { sessionId }, 'GAME_SERVICE');
 
       const { data, error } = await supabase
         .from('game_sessions')
@@ -172,23 +174,26 @@ class GameService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao completar sessão no banco', { error: error.message, sessionId }, 'GAME_SERVICE');
+        throw error;
+      }
 
       const session = this.mapGameSession(data);
       
-      // Atualizar pontuação final na competição diária
       if (session.total_score > 0) {
         try {
           await dailyCompetitionService.updateParticipationScore(sessionId, session.total_score);
-          console.log('✅ Pontuação final atualizada na competição');
+          logger.info('Pontuação final atualizada na competição', { sessionId, totalScore: session.total_score }, 'GAME_SERVICE');
         } catch (updateError) {
-          console.warn('⚠️ Erro ao atualizar pontuação na competição:', updateError);
+          logger.warn('Erro ao atualizar pontuação na competição', { error: updateError, sessionId }, 'GAME_SERVICE');
         }
       }
       
+      logger.info('Sessão completada com sucesso', { sessionId, totalScore: session.total_score }, 'GAME_SERVICE');
       return createSuccessResponse(session);
     } catch (error) {
-      console.error('❌ Erro ao completar sessão:', error);
+      logger.error('Erro ao completar sessão de jogo', { error, sessionId }, 'GAME_SERVICE');
       return createErrorResponse(handleServiceError(error, 'GAME_COMPLETE_SESSION'));
     }
   }
@@ -208,21 +213,18 @@ class GameService {
         .update({ total_score: newTotalScore })
         .eq('id', sessionId);
 
-      // Atualizar pontuação na competição diária em tempo real
       try {
         await dailyCompetitionService.updateParticipationScore(sessionId, newTotalScore);
       } catch (error) {
-        console.warn('⚠️ Erro ao atualizar pontuação na competição:', error);
+        logger.warn('Erro ao atualizar pontuação na competição', { error, sessionId }, 'GAME_SERVICE');
       }
     }
   }
 
   private mapGameSession(data: any): GameSession {
-    // Extrair custom_competition_id do board se existir
     let customCompetitionId = null;
     if (data.board && typeof data.board === 'object' && data.board._custom_competition_id) {
       customCompetitionId = data.board._custom_competition_id;
-      // Remover do board para não interferir no jogo
       delete data.board._custom_competition_id;
     }
 
@@ -270,7 +272,7 @@ class GameService {
   }
 
   private generateBoard(size: number): string[][] {
-    console.log(`🎲 Gerando tabuleiro ${size}x${size}`);
+    logger.debug('Gerando tabuleiro', { size }, 'GAME_SERVICE');
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const board: string[][] = [];
     
@@ -281,7 +283,7 @@ class GameService {
       }
     }
     
-    console.log('✅ Tabuleiro gerado com sucesso');
+    logger.debug('Tabuleiro gerado com sucesso', { size }, 'GAME_SERVICE');
     return board;
   }
 }
