@@ -36,8 +36,22 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   }
 
   return (
-    <Card className="border-0 bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] animate-fade-in group overflow-hidden">
-      <CardContent className="p-4">
+    <Card className="relative border-0 bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] animate-fade-in group overflow-hidden">
+      {/* Elementos flutuantes que piscam e desaparecem */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Bolinhas flutuantes */}
+        <div className="absolute top-2 right-8 w-1 h-1 bg-primary/60 rounded-full animate-pulse" style={{ animationDelay: '0s', animationDuration: '2s' }}></div>
+        <div className="absolute top-6 right-12 w-1.5 h-1.5 bg-accent/40 rounded-full animate-pulse" style={{ animationDelay: '0.5s', animationDuration: '3s' }}></div>
+        <div className="absolute bottom-8 left-6 w-1 h-1 bg-primary/50 rounded-full animate-pulse" style={{ animationDelay: '1s', animationDuration: '2.5s' }}></div>
+        <div className="absolute bottom-4 right-6 w-0.5 h-0.5 bg-accent/60 rounded-full animate-pulse" style={{ animationDelay: '1.5s', animationDuration: '2s' }}></div>
+        
+        {/* Letras/símbolos que aparecem e desaparecem */}
+        <div className="absolute top-3 left-16 text-xs text-primary/30 animate-pulse font-bold" style={{ animationDelay: '0.3s', animationDuration: '4s' }}>★</div>
+        <div className="absolute bottom-6 right-16 text-xs text-accent/40 animate-pulse font-bold" style={{ animationDelay: '2s', animationDuration: '3s' }}>◆</div>
+        <div className="absolute top-8 right-20 text-xs text-primary/25 animate-pulse font-bold" style={{ animationDelay: '1.2s', animationDuration: '3.5s' }}>♦</div>
+      </div>
+
+      <CardContent className="p-4 relative">
         {/* Header compacto */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -71,17 +85,6 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
             {competition.description}
           </p>
         )}
-
-        {/* Barra de progresso gamificada */}
-        <div className="mb-3 animate-fade-in delay-150">
-          <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-muted-foreground">⚡ Energia</span>
-            <span className="text-primary font-semibold">100%</span>
-          </div>
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full animate-pulse"></div>
-          </div>
-        </div>
 
         {/* Botão de ação compacto e gamificado */}
         <Button 
