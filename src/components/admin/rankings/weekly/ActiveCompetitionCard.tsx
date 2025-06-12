@@ -1,12 +1,10 @@
 
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Trophy, Users, Crown } from 'lucide-react';
 import { WeeklyCompetitionActions } from './WeeklyCompetitionActions';
 import { competitionStatusService } from '@/services/competitionStatusService';
-import { formatDateForBrasilia } from '@/utils/brasiliaTime';
 
 interface WeeklyCompetition {
   id: string;
@@ -35,17 +33,30 @@ export const ActiveCompetitionCard = ({
   onDelete,
   deletingId
 }: ActiveCompetitionCardProps) => {
-  // Função para formatar datas preservando o dia exato do banco
+  // Função para formatar datas corretamente
   const formatCompetitionDate = (dateString: string, isEndDate: boolean = false) => {
     try {
-      // Usar a função existente e testada do projeto
-      const formattedDate = formatDateForBrasilia(dateString);
+      // Criar a data diretamente sem conversões desnecessárias
+      const date = new Date(dateString);
       
-      // Extrair apenas a parte da data (sem hora) e adicionar hora fixa
-      const datePart = formattedDate.split(',')[0]; // Pega "11/06/2025" de "11/06/2025, 00:00:00"
+      // Formatar a data para exibição em português brasileiro
+      const formattedDate = date.toLocaleDateString('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      
       const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
       
-      return `${datePart}, ${timeFormatted}`;
+      console.log('🗓️ [ActiveCompetitionCard] Formatação de data:', {
+        input: dateString,
+        date: date.toISOString(),
+        formatted: formattedDate,
+        final: `${formattedDate}, ${timeFormatted}`
+      });
+      
+      return `${formattedDate}, ${timeFormatted}`;
     } catch (error) {
       console.error('❌ Erro ao formatar data da competição:', error);
       return dateString; // Fallback para data original
@@ -144,4 +155,3 @@ export const ActiveCompetitionCard = ({
     </Card>
   );
 };
-
