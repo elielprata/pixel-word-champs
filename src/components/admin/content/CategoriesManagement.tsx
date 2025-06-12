@@ -14,12 +14,15 @@ export const CategoriesManagement = () => {
     deleteCategory
   } = useWordCategories();
 
-  const handleCreateCategory = async ({ name, description }: { name: string; description: string }) => {
-    await createCategory(name, description);
+  const handleCreateCategory = async (categoryData: { name: string; description: string }) => {
+    await createCategory(categoryData.name, categoryData.description);
   };
 
   const handleUpdateCategory = async (data: { id: string; name: string; description: string }) => {
-    await updateCategory(data.id, { name: data.name, description: data.description });
+    await updateCategory(data.id, { 
+      name: data.name, 
+      description: data.description 
+    });
   };
 
   const handleDeleteCategory = async (data: { id: string; password: string }) => {

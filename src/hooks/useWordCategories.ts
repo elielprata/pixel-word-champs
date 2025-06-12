@@ -22,7 +22,7 @@ export const useWordCategories = () => {
       const { data, error } = await supabase
         .from('word_categories')
         .select('*')
-        .eq('is_active', true as any)
+        .eq('is_active', true)
         .order('name');
 
       if (error) throw error;
@@ -57,9 +57,9 @@ export const useWordCategories = () => {
       const { data, error } = await supabase
         .from('word_categories')
         .insert([{
-          name: name,
-          description: description,
-          is_active: true as any
+          name,
+          description,
+          is_active: true
         }])
         .select()
         .single();
@@ -85,6 +85,8 @@ export const useWordCategories = () => {
 
         return newCategory;
       }
+
+      throw new Error('Failed to create category');
     } catch (error) {
       console.error('Erro ao criar categoria:', error);
       toast({
@@ -100,8 +102,8 @@ export const useWordCategories = () => {
     try {
       const { data, error } = await supabase
         .from('word_categories')
-        .update(updates as any)
-        .eq('id', id as any)
+        .update(updates)
+        .eq('id', id)
         .select()
         .single();
 
@@ -128,6 +130,8 @@ export const useWordCategories = () => {
 
         return updatedCategory;
       }
+
+      throw new Error('Failed to update category');
     } catch (error) {
       console.error('Erro ao atualizar categoria:', error);
       toast({
@@ -144,7 +148,7 @@ export const useWordCategories = () => {
       const { error } = await supabase
         .from('word_categories')
         .delete()
-        .eq('id', id as any);
+        .eq('id', id);
 
       if (error) throw error;
 

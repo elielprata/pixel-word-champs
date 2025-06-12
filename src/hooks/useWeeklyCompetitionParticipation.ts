@@ -112,7 +112,7 @@ export const useWeeklyCompetitionParticipation = () => {
         return false;
       }
 
-      if (data && typeof data === 'object' && !('error' in data)) {
+      if (data && typeof data === 'object') {
         setParticipationStatus(prev => ({
           ...prev,
           isParticipating: false,

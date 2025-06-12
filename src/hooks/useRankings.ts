@@ -5,6 +5,10 @@ import { RankingPlayer } from '@/types';
 
 export const useRankings = () => {
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
+  const [weeklyCompetitions, setWeeklyCompetitions] = useState<any[]>([]);
+  const [activeWeeklyCompetition, setActiveWeeklyCompetition] = useState<any>(null);
+  const [dailyRanking, setDailyRanking] = useState<RankingPlayer[]>([]);
+  const [totalPlayers, setTotalPlayers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,9 +45,11 @@ export const useRankings = () => {
       }
 
       // Buscar dados dos usuários
-      const userIds = rankingsData
-        .filter((item): item is any => item && typeof item === 'object' && !('error' in item))
-        .map((ranking: any) => ranking.user_id);
+      const validRankings = rankingsData.filter((item): item is any => 
+        item && typeof item === 'object' && !('error' in item)
+      );
+
+      const userIds = validRankings.map((ranking: any) => ranking.user_id);
 
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
@@ -56,27 +62,27 @@ export const useRankings = () => {
       }
 
       // Combinar dados de ranking com dados de usuários
-      const ranking: RankingPlayer[] = rankingsData
-        .filter((item): item is any => item && typeof item === 'object' && !('error' in item))
-        .map((rankingItem: any) => {
-          const user = (usersData || [])
-            .filter((item): item is any => item && typeof item === 'object' && !('error' in item))
-            .find((u: any) => u.id === rankingItem.user_id);
-          
-          return {
-            pos: rankingItem.position,
-            position: rankingItem.position,
-            name: user?.username || 'Usuário Desconhecido',
-            username: user?.username || 'Usuário Desconhecido',
-            score: rankingItem.total_score,
-            avatar_url: user?.avatar_url,
-            user_id: rankingItem.user_id
-          };
-        })
-        .sort((a, b) => a.position - b.position);
+      const ranking: RankingPlayer[] = validRankings.map((rankingItem: any) => {
+        const validUsers = (usersData || []).filter((item): item is any => 
+          item && typeof item === 'object' && !('error' in item)
+        );
+        
+        const user = validUsers.find((u: any) => u.id === rankingItem.user_id);
+        
+        return {
+          pos: rankingItem.position,
+          position: rankingItem.position,
+          name: user?.username || 'Usuário Desconhecido',
+          username: user?.username || 'Usuário Desconhecido',
+          score: rankingItem.total_score,
+          avatar_url: user?.avatar_url,
+          user_id: rankingItem.user_id
+        };
+      }).sort((a, b) => a.position - b.position);
 
       console.log('✅ Ranking semanal carregado:', ranking.length, 'jogadores');
       setWeeklyRanking(ranking);
+      setTotalPlayers(ranking.length);
 
     } catch (err) {
       console.error('❌ Erro ao carregar ranking semanal:', err);
@@ -86,14 +92,23 @@ export const useRankings = () => {
     }
   };
 
+  const refreshData = async () => {
+    await loadWeeklyRanking();
+  };
+
   useEffect(() => {
     loadWeeklyRanking();
   }, []);
 
   return {
     weeklyRanking,
+    weeklyCompetitions,
+    activeWeeklyCompetition,
+    dailyRanking,
+    totalPlayers,
     isLoading,
     error,
-    refetch: loadWeeklyRanking
+    refetch: loadWeeklyRanking,
+    refreshData
   };
 };

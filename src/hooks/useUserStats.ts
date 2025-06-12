@@ -10,6 +10,9 @@ interface UserStats {
   streak: number;
   lastPlayed: Date | null;
   weeklyPosition: number | null;
+  totalScore: number;
+  gamesPlayed: number;
+  bestDailyPosition: number | null;
 }
 
 interface DailyRanking {
@@ -27,7 +30,10 @@ export const useUserStats = () => {
     level: 1,
     streak: 0,
     lastPlayed: null,
-    weeklyPosition: null
+    weeklyPosition: null,
+    totalScore: 0,
+    gamesPlayed: 0,
+    bestDailyPosition: null
   });
   const [dailyRanking, setDailyRanking] = useState<DailyRanking[]>([]);
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
@@ -59,9 +65,12 @@ export const useUserStats = () => {
         setStats(prev => ({
           ...prev,
           score: profile.total_score || 0,
+          totalScore: profile.total_score || 0,
           level: profile.games_played || 1,
+          gamesPlayed: profile.games_played || 0,
           streak: Math.floor((profile.total_score || 0) / 100),
-          lastPlayed: new Date()
+          lastPlayed: new Date(),
+          bestDailyPosition: 0
         }));
       }
 

@@ -41,7 +41,7 @@ export const useUserData = (userId: string) => {
 
       // Filter and validate roles data
       const validRolesData = (rolesData || []).filter((item: any) => 
-        item && typeof item === 'object' && !('error' in item) && 'role' in item
+        item && typeof item === 'object' && !('error' in item)
       );
 
       const roles = validRolesData.map((r: any) => r.role) || ['user'];

@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePaymentData } from '@/hooks/usePaymentData';
 import { IndividualPrizesSection } from '../payments/IndividualPrizesSection';
 import { GroupPrizesSection } from '../payments/GroupPrizesSection';
 import { PaymentStatsCards } from '../payments/PaymentStatsCards';
-import { GroupPrize } from '@/types/payment';
 
 interface PrizeConfigModalProps {
   open: boolean;
@@ -29,8 +29,8 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
     );
   }
 
-  const handleEditGroupWrapper = (groupId: string) => {
-    paymentData.handleEditGroup(groupId);
+  const handleEditGroupWrapper = (group: any) => {
+    paymentData.handleEditGroup(group.id);
   };
 
   const handleSaveGroupWrapper = () => {
@@ -51,7 +51,6 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Stats Cards */}
           <PaymentStatsCards 
             totalPrize={paymentData.calculateTotalPrize()}
             totalWinners={paymentData.calculateTotalWinners()}
@@ -59,7 +58,6 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
             groupPrizes={paymentData.groupPrizes}
           />
 
-          {/* Individual Prizes */}
           <IndividualPrizesSection 
             individualPrizes={paymentData.individualPrizes}
             editingRow={paymentData.editingRow}
@@ -70,7 +68,6 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
             onCancel={paymentData.handleCancel}
           />
 
-          {/* Group Prizes */}
           <GroupPrizesSection 
             groupPrizes={paymentData.groupPrizes}
             editingGroup={paymentData.editingGroup}

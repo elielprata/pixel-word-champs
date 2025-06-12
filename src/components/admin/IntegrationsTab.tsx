@@ -27,7 +27,6 @@ export const IntegrationsTab = () => {
   };
 
   const testConnection = async (type: string): Promise<boolean> => {
-    // Test connection logic here
     console.log('Testing connection for:', type);
     return true;
   };

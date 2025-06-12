@@ -1,10 +1,10 @@
+
 import React, { useState } from 'react';
 import { usePaymentData } from '@/hooks/usePaymentData';
 import { PaymentHeader } from './payments/PaymentHeader';
 import { PaymentStatsCards } from './payments/PaymentStatsCards';
 import { IndividualPrizesSection } from './payments/IndividualPrizesSection';
 import { GroupPrizesSection } from './payments/GroupPrizesSection';
-import { GroupPrize } from '@/types/payment';
 
 export const PaymentsTab = () => {
   const {
@@ -43,8 +43,8 @@ export const PaymentsTab = () => {
     );
   }
 
-  const handleEditGroupWrapper = (groupId: string) => {
-    handleEditGroup(groupId);
+  const handleEditGroupWrapper = (group: any) => {
+    handleEditGroup(group.id);
   };
 
   const handleSaveGroupWrapper = () => {
