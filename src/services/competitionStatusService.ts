@@ -1,108 +1,124 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { calculateDailyCompetitionStatus, calculateWeeklyCompetitionStatus } from '@/utils/brasiliaTime';
+import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { ApiResponse } from '@/types';
 
 export class CompetitionStatusService {
-  /**
-   * FUNÇÃO UNIFICADA: Calcula o status correto baseado no tipo de competição
-   * REMOVIDO: Duplicação de lógica - agora usa funções centralizadas
-   */
-  static calculateCorrectStatus(competition: { competition_type?: string; start_date: string; end_date: string }): string {
-    // Para competições diárias, usar lógica específica de Brasília
-    if (competition.competition_type === 'challenge') {
-      console.log('📅 Aplicando regras de status para competição DIÁRIA');
-      return calculateDailyCompetitionStatus(competition.start_date);
-    } else {
-      console.log('📊 Aplicando regras de status para competição SEMANAL/PADRÃO');
-      return calculateWeeklyCompetitionStatus(competition.start_date, competition.end_date);
+  async updateSingleCompetitionStatus(competitionId: string, newStatus: string): Promise<ApiResponse<void>> {
+    try {
+      console.log(`🔄 Atualizando status da competição ${competitionId} para: ${newStatus}`);
+
+      // Atualizar apenas o status, sem forçar updated_at 
+      // (o trigger do banco só modificará datas se elas realmente mudaram)
+      const { error } = await supabase
+        .from('custom_competitions')
+        .update({ 
+          status: newStatus
+          // Removido: updated_at: new Date().toISOString() 
+          // O banco vai gerenciar isso automaticamente apenas quando necessário
+        })
+        .eq('id', competitionId);
+
+      if (error) throw error;
+
+      console.log(`✅ Status da competição ${competitionId} atualizado para: ${newStatus}`);
+      return createSuccessResponse(undefined);
+    } catch (error) {
+      console.error(`❌ Erro ao atualizar status da competição ${competitionId}:`, error);
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_STATUS_UPDATE'));
     }
   }
 
-  /**
-   * Atualiza o status de uma competição específica
-   * SIMPLIFICADO: Removida duplicação de lógica
-   */
-  static async updateSingleCompetitionStatus(competitionId: string): Promise<void> {
+  async updateMultipleCompetitionsStatus(
+    competitionIds: string[], 
+    newStatus: string
+  ): Promise<ApiResponse<void>> {
     try {
-      console.log('🔄 Atualizando status da competição:', competitionId);
-      
-      // Buscar dados da competição
+      console.log(`🔄 Atualizando status de ${competitionIds.length} competições para: ${newStatus}`);
+
+      // Atualizar múltiplas competições de uma vez, apenas o status
+      const { error } = await supabase
+        .from('custom_competitions')
+        .update({ 
+          status: newStatus
+          // Removido: updated_at para evitar modificações desnecessárias
+        })
+        .in('id', competitionIds);
+
+      if (error) throw error;
+
+      console.log(`✅ Status de ${competitionIds.length} competições atualizado para: ${newStatus}`);
+      return createSuccessResponse(undefined);
+    } catch (error) {
+      console.error(`❌ Erro ao atualizar status de múltiplas competições:`, error);
+      return createErrorResponse(handleServiceError(error, 'MULTIPLE_COMPETITION_STATUS_UPDATE'));
+    }
+  }
+
+  async getCompetitionsByStatus(status: string): Promise<ApiResponse<any[]>> {
+    try {
+      console.log(`🔍 Buscando competições com status: ${status}`);
+
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('status', status)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log(`📊 Encontradas ${data?.length || 0} competições com status: ${status}`);
+      return createSuccessResponse(data || []);
+    } catch (error) {
+      console.error(`❌ Erro ao buscar competições por status ${status}:`, error);
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_STATUS_QUERY'));
+    }
+  }
+
+  // Método específico para finalização que preserva integridade dos dados
+  async finalizeCompetition(competitionId: string): Promise<ApiResponse<void>> {
+    try {
+      console.log(`🏁 Finalizando competição: ${competitionId}`);
+
+      // Verificar se a competição existe e não está já finalizada
       const { data: competition, error: fetchError } = await supabase
         .from('custom_competitions')
-        .select('id, start_date, end_date, status, competition_type, title')
+        .select('id, status, title, start_date, end_date')
         .eq('id', competitionId)
         .single();
 
-      if (fetchError || !competition) {
-        console.error('❌ Erro ao buscar competição:', fetchError);
-        return;
+      if (fetchError) throw fetchError;
+
+      if (!competition) {
+        throw new Error(`Competição ${competitionId} não encontrada`);
       }
 
-      // Usar a função unificada para calcular o status correto
-      const correctStatus = this.calculateCorrectStatus(competition);
-      
-      // Atualizar apenas se o status mudou
-      if (competition.status !== correctStatus) {
-        console.log(`📝 Atualizando status de "${competition.status}" para "${correctStatus}" (${competition.title})`);
-        
-        const { error: updateError } = await supabase
-          .from('custom_competitions')
-          .update({ 
-            status: correctStatus,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', competitionId);
-
-        if (updateError) {
-          console.error('❌ Erro ao atualizar status:', updateError);
-        } else {
-          console.log('✅ Status atualizado com sucesso');
-        }
-      } else {
-        console.log('ℹ️ Status já está correto:', correctStatus);
+      if (competition.status === 'completed') {
+        console.log(`⚠️ Competição ${competitionId} já está finalizada`);
+        return createSuccessResponse(undefined);
       }
-    } catch (error) {
-      console.error('❌ Erro inesperado ao atualizar status:', error);
-    }
-  }
 
-  /**
-   * Atualiza status de todas as competições
-   * SIMPLIFICADO: Usa a lógica unificada
-   */
-  static async updateAllCompetitionsStatus(): Promise<void> {
-    try {
-      console.log('🔄 Atualizando status de todas as competições...');
-      
-      // Buscar todas as competições
-      const { data: competitions, error } = await supabase
+      // Atualizar apenas o status para completed
+      // O trigger corrigido não modificará as datas originais
+      const { error: updateError } = await supabase
         .from('custom_competitions')
-        .select('id, start_date, end_date, status, title, competition_type');
+        .update({ 
+          status: 'completed'
+          // Não incluir updated_at - deixar o banco gerenciar
+        })
+        .eq('id', competitionId);
 
-      if (error || !competitions) {
-        console.error('❌ Erro ao buscar competições:', error);
-        return;
-      }
+      if (updateError) throw updateError;
 
-      console.log(`📋 Encontradas ${competitions.length} competições para verificar`);
-
-      // Atualizar cada competição usando a lógica unificada
-      for (const competition of competitions) {
-        console.log(`🔍 Verificando competição: "${competition.title}" (${competition.competition_type})`);
-        
-        const correctStatus = this.calculateCorrectStatus(competition);
-        
-        if (competition.status !== correctStatus) {
-          console.log(`🔄 Necessária atualização: ${competition.status} → ${correctStatus}`);
-          await this.updateSingleCompetitionStatus(competition.id);
-        } else {
-          console.log(`✅ Status já correto: ${correctStatus}`);
-        }
-      }
+      console.log(`✅ Competição "${competition.title}" finalizada com sucesso`);
+      console.log(`📅 Datas preservadas: ${competition.start_date} até ${competition.end_date}`);
       
-      console.log('✅ Atualização de status concluída');
+      return createSuccessResponse(undefined);
     } catch (error) {
-      console.error('❌ Erro ao atualizar status das competições:', error);
+      console.error(`❌ Erro ao finalizar competição ${competitionId}:`, error);
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_FINALIZATION'));
     }
   }
 }
+
+export const competitionStatusService = new CompetitionStatusService();

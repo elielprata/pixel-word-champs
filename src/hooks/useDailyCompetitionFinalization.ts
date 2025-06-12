@@ -1,68 +1,94 @@
 
-import { useEffect } from 'react';
-import { dailyCompetitionService } from '@/services/dailyCompetitionService';
-import { CompetitionStatusService } from '@/services/competitionStatusService';
-import { supabase } from '@/integrations/supabase/client';
-import { getBrasiliaTime, formatBrasiliaTime } from '@/utils/brasiliaTime';
+import { useCallback } from 'react';
+import { useToast } from "@/hooks/use-toast";
+import { competitionStatusService } from '@/services/competitionStatusService';
 
 export const useDailyCompetitionFinalization = () => {
-  useEffect(() => {
-    const checkExpiredCompetitions = async () => {
-      try {
-        console.log('🔍 Verificando competições diárias para atualização de status...');
-        
-        const now = getBrasiliaTime();
-        console.log('🕐 Horário atual (Brasília):', formatBrasiliaTime(now));
-        
-        // Buscar todas as competições diárias
-        const { data: dailyCompetitions, error } = await supabase
-          .from('custom_competitions')
-          .select('id, title, start_date, end_date, status, competition_type')
-          .eq('competition_type', 'challenge');
+  const { toast } = useToast();
 
-        if (error) {
-          console.error('❌ Erro ao buscar competições diárias:', error);
-          return;
-        }
+  const finalizeCompetition = useCallback(async (competitionId: string, competitionTitle: string) => {
+    try {
+      console.log(`🏁 Iniciando finalização da competição diária: ${competitionTitle}`);
 
-        if (dailyCompetitions && dailyCompetitions.length > 0) {
-          console.log(`📋 Encontradas ${dailyCompetitions.length} competições diárias para verificar`);
-          
-          // CORRIGIDO: Usar lógica unificada do CompetitionStatusService
-          for (const competition of dailyCompetitions) {
-            console.log(`🔍 Verificando competição diária: ${competition.title}`);
-            
-            // Calcular status correto usando a função unificada
-            const correctStatus = CompetitionStatusService.calculateCorrectStatus(competition);
-            
-            console.log(`📊 Status atual: "${competition.status}" | Status correto: "${correctStatus}"`);
-            
-            // Atualizar status se necessário
-            if (competition.status !== correctStatus) {
-              console.log(`🔄 Atualizando status de "${competition.status}" para "${correctStatus}"`);
-              await CompetitionStatusService.updateSingleCompetitionStatus(competition.id);
-            }
-            
-            // Se a competição foi finalizada, executar finalização
-            if (competition.status === 'active' && correctStatus === 'completed') {
-              console.log(`🏁 Finalizando competição diária: ${competition.title}`);
-              await dailyCompetitionService.finalizeDailyCompetition(competition.id);
-            }
-          }
-        } else {
-          console.log('✅ Nenhuma competição diária encontrada');
-        }
-      } catch (error) {
-        console.error('❌ Erro ao verificar competições diárias:', error);
+      // Usar o método específico de finalização que preserva as datas
+      const response = await competitionStatusService.finalizeCompetition(competitionId);
+
+      if (!response.success) {
+        throw new Error(response.error || 'Erro desconhecido ao finalizar competição');
       }
-    };
 
-    // Verificar imediatamente
-    checkExpiredCompetitions();
+      console.log(`✅ Competição "${competitionTitle}" finalizada com sucesso`);
+      
+      toast({
+        title: "Competição Finalizada",
+        description: `"${competitionTitle}" foi finalizada com sucesso.`,
+        duration: 3000,
+      });
 
-    // Verificar a cada 2 minutos para manter status atualizados
-    const interval = setInterval(checkExpiredCompetitions, 2 * 60 * 1000);
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      
+      console.error(`❌ Erro ao finalizar competição "${competitionTitle}":`, error);
+      
+      toast({
+        title: "Erro na Finalização",
+        description: `Falha ao finalizar "${competitionTitle}": ${errorMessage}`,
+        variant: "destructive",
+      });
 
-    return () => clearInterval(interval);
-  }, []);
+      return { success: false, error: errorMessage };
+    }
+  }, [toast]);
+
+  const finalizeMutipleDailyCompetitions = useCallback(async (competitions: Array<{id: string, title: string}>) => {
+    try {
+      console.log(`🏁 Finalizando ${competitions.length} competições diárias em lote`);
+
+      const results = await Promise.allSettled(
+        competitions.map(comp => competitionStatusService.finalizeCompetition(comp.id))
+      );
+
+      const successful = results.filter(result => 
+        result.status === 'fulfilled' && result.value.success
+      ).length;
+
+      const failed = results.length - successful;
+
+      if (failed > 0) {
+        console.warn(`⚠️ ${failed} competições falharam na finalização`);
+        
+        toast({
+          title: "Finalização Parcial",
+          description: `${successful} competições finalizadas com sucesso, ${failed} falharam.`,
+          variant: "destructive",
+        });
+      } else {
+        console.log(`✅ Todas as ${successful} competições foram finalizadas com sucesso`);
+        
+        toast({
+          title: "Finalização Completa",
+          description: `Todas as ${successful} competições foram finalizadas com sucesso.`,
+          duration: 3000,
+        });
+      }
+
+      return { successful, failed };
+    } catch (error) {
+      console.error('❌ Erro no processo de finalização em lote:', error);
+      
+      toast({
+        title: "Erro na Finalização em Lote",
+        description: "Falha no processo de finalização de múltiplas competições.",
+        variant: "destructive",
+      });
+
+      return { successful: 0, failed: competitions.length };
+    }
+  }, [toast]);
+
+  return {
+    finalizeCompetition,
+    finalizeMutipleDailyCompetitions
+  };
 };

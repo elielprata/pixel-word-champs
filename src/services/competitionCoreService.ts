@@ -34,6 +34,7 @@ export class CompetitionCoreService {
       })) || [];
 
       console.log('✅ Competições mapeadas com sucesso:', competitions.length);
+      console.log('📅 Preservando datas originais das competições mapeadas');
       return createSuccessResponse(competitions);
     } catch (error) {
       console.error('❌ Erro ao buscar competições ativas:', error);
