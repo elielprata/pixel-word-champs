@@ -39,7 +39,7 @@ export const WordScoringConfig = () => {
       const { data, error } = await supabase
         .from('game_settings')
         .select('*')
-        .eq('category', 'scoring')
+        .eq('category', 'scoring' as any)
         .order('setting_key');
 
       if (error) {
@@ -47,14 +47,16 @@ export const WordScoringConfig = () => {
         throw error;
       }
 
-      const formattedSettings = (data || []).map((item: any) => ({
-        id: item.id || '',
-        setting_key: item.setting_key || '',
-        setting_value: item.setting_value || '',
-        setting_type: item.setting_type || 'string',
-        description: item.description || '',
-        category: item.category || 'scoring'
-      }));
+      const formattedSettings = (data || [])
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item))
+        .map((item: any) => ({
+          id: item.id || '',
+          setting_key: item.setting_key || '',
+          setting_value: item.setting_value || '',
+          setting_type: item.setting_type || 'string',
+          description: item.description || '',
+          category: item.category || 'scoring'
+        }));
 
       setSettings(formattedSettings);
       console.log('✅ Configurações carregadas:', formattedSettings.length);

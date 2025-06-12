@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useGameSettings } from "@/hooks/useGameSettings";
@@ -50,13 +51,7 @@ export const GameSettings = () => {
       />
 
       {/* Sistema de Pontuação Unificado */}
-      <WordScoringConfig
-        settings={settings}
-        onUpdate={updateSetting}
-        onSave={saveSettings}
-        saving={saving}
-        onRefresh={refetchSettings}
-      />
+      <WordScoringConfig />
 
       {/* Outras configurações agrupadas por categoria */}
       {Object.entries(groupedSettings).map(([category, categorySettings]) => (

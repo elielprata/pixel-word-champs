@@ -40,7 +40,7 @@ export const CompetitionHistory = () => {
       const { data: customCompetitions, error: customError } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('status', 'completed')
+        .eq('status', 'completed' as any)
         .order('end_date', { ascending: false });
 
       if (customError) {
@@ -51,7 +51,7 @@ export const CompetitionHistory = () => {
       const { data: systemCompetitions, error: systemError } = await supabase
         .from('competitions')
         .select('*')
-        .eq('is_active', false)
+        .eq('is_active', false as any)
         .order('week_end', { ascending: false });
 
       if (systemError) {
@@ -60,30 +60,34 @@ export const CompetitionHistory = () => {
 
       // Combinar e formatar os dados reais do banco
       const formattedCompetitions: CompetitionHistoryItem[] = [
-        ...(customCompetitions || []).map(comp => ({
-          id: comp.id,
-          title: comp.title,
-          competition_type: comp.competition_type,
-          start_date: comp.start_date,
-          end_date: comp.end_date,
-          status: comp.status,
-          prize_pool: Number(comp.prize_pool) || 0,
-          max_participants: comp.max_participants || 0,
-          total_participants: 0, // TODO: calcular participantes reais baseado em game_sessions
-          created_at: comp.created_at
-        })),
-        ...(systemCompetitions || []).map(comp => ({
-          id: comp.id,
-          title: comp.title,
-          competition_type: comp.type,
-          start_date: comp.week_start || '',
-          end_date: comp.week_end || '',
-          status: 'completed',
-          prize_pool: Number(comp.prize_pool) || 0,
-          max_participants: 0,
-          total_participants: comp.total_participants || 0,
-          created_at: comp.created_at
-        }))
+        ...(customCompetitions || [])
+          .filter((comp: any) => comp && typeof comp === 'object' && !('error' in comp))
+          .map((comp: any) => ({
+            id: comp.id,
+            title: comp.title,
+            competition_type: comp.competition_type,
+            start_date: comp.start_date,
+            end_date: comp.end_date,
+            status: comp.status,
+            prize_pool: Number(comp.prize_pool) || 0,
+            max_participants: comp.max_participants || 0,
+            total_participants: 0, // TODO: calcular participantes reais baseado em game_sessions
+            created_at: comp.created_at
+          })),
+        ...(systemCompetitions || [])
+          .filter((comp: any) => comp && typeof comp === 'object' && !('error' in comp))
+          .map((comp: any) => ({
+            id: comp.id,
+            title: comp.title,
+            competition_type: comp.type,
+            start_date: comp.week_start || '',
+            end_date: comp.week_end || '',
+            status: 'completed',
+            prize_pool: Number(comp.prize_pool) || 0,
+            max_participants: 0,
+            total_participants: comp.total_participants || 0,
+            created_at: comp.created_at
+          }))
       ];
 
       console.log('📊 Competições do banco carregadas:', formattedCompetitions.length);

@@ -52,13 +52,16 @@ export const WordsListTable = () => {
       }
 
       // Transformar dados com validação
-      const formattedWords = (data || []).map((item: any) => ({
-        id: item?.id || '',
-        word: item?.word || '',
-        category: item?.category || 'Sem categoria',
-        difficulty: item?.difficulty || 'medium',
-        created_at: item?.created_at || new Date().toISOString()
-      })).filter(word => word.word && word.id);
+      const formattedWords = (data || [])
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item))
+        .map((item: any) => ({
+          id: item?.id || '',
+          word: item?.word || '',
+          category: item?.category || 'Sem categoria',
+          difficulty: item?.difficulty || 'medium',
+          created_at: item?.created_at || new Date().toISOString()
+        }))
+        .filter(word => word.word && word.id);
 
       setWords(formattedWords);
       console.log('✅ Palavras carregadas:', formattedWords.length);
@@ -89,10 +92,13 @@ export const WordsListTable = () => {
         throw error;
       }
 
-      const formattedCategories = (data || []).map((item: any) => ({
-        id: item?.id || '',
-        name: item?.name || ''
-      })).filter(cat => cat.name && cat.id);
+      const formattedCategories = (data || [])
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item))
+        .map((item: any) => ({
+          id: item?.id || '',
+          name: item?.name || ''
+        }))
+        .filter(cat => cat.name && cat.id);
 
       setCategories(formattedCategories);
       console.log('✅ Categorias carregadas:', formattedCategories.length);

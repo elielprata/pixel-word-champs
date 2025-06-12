@@ -108,7 +108,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       const { data: competitionData, error: competitionError } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('id', competitionId)
+        .eq('id', competitionId as any)
         .single();
 
       if (competitionError) {
@@ -117,6 +117,11 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       }
 
       console.log('✅ Competição carregada:', competitionData);
+
+      // Verificar se os dados são válidos
+      if (!competitionData || 'error' in competitionData) {
+        throw new Error('Dados da competição não encontrados');
+      }
 
       // Verificar se a competição está ativa usando o serviço centralizado
       const isActive = isCompetitionActive(competitionData.start_date, competitionData.end_date);
@@ -144,7 +149,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
         const { data: prizeData, error: prizeError } = await supabase
           .from('prize_configurations')
           .select('*')
-          .eq('active', true)
+          .eq('active', true as any)
           .order('position', { ascending: true });
 
         if (!prizeError) {
@@ -158,7 +163,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       const { data: prizeData, error: prizeError } = await supabase
         .from('prize_configurations')
         .select('*')
-        .eq('active', true)
+        .eq('active', true as any)
         .order('position', { ascending: true });
 
       if (prizeError) {
@@ -173,7 +178,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       const { data: participationData, error: participationError } = await supabase
         .from('competition_participations')
         .select('user_id, user_score, user_position, created_at')
-        .eq('competition_id', competitionId)
+        .eq('competition_id', competitionId as any)
         .order('user_score', { ascending: false });
 
       if (participationError) {
