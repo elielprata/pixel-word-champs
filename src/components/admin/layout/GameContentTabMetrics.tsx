@@ -3,9 +3,16 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Activity, BookOpen, Folder } from 'lucide-react';
 import { useRealGameMetrics } from '@/hooks/useRealGameMetrics';
+import { logger } from '@/utils/logger';
 
 export const GameContentTabMetrics = () => {
   const { metrics, isLoading } = useRealGameMetrics();
+
+  logger.debug('Renderizando métricas de conteúdo', { 
+    isLoading,
+    activeWords: metrics?.activeWords,
+    activeCategories: metrics?.activeCategories
+  }, 'GAME_CONTENT_TAB_METRICS');
 
   const quickStats = [
     { 

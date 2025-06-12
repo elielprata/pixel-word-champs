@@ -4,8 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Shield, UserCog } from 'lucide-react';
 import { AdminManagement } from "../AdminManagement";
 import { AllUsersList } from "../AllUsersList";
+import { logger } from '@/utils/logger';
 
 export const UsersTabContent = () => {
+  logger.debug('Renderizando conteúdo da aba de usuários', undefined, 'USERS_TAB_CONTENT');
+  
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <Tabs defaultValue="all-users" className="w-full">

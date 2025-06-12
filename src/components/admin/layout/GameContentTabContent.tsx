@@ -4,8 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Settings } from 'lucide-react';
 import { WordsManagement } from '../content/WordsManagement';
 import { GameSettings } from '../content/GameSettings';
+import { logger } from '@/utils/logger';
 
 export const GameContentTabContent = () => {
+  logger.debug('Renderizando conteúdo da aba de gestão de conteúdo', undefined, 'GAME_CONTENT_TAB_CONTENT');
+  
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <Tabs defaultValue="words" className="w-full">

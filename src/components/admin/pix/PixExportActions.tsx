@@ -5,6 +5,7 @@ import { Download } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { PaymentRecord } from '@/services/paymentService';
 import { exportToCSV } from '@/utils/csvExport';
+import { logger } from '@/utils/logger';
 
 interface PixExportActionsProps {
   displayWinners: PaymentRecord[];
@@ -24,7 +25,15 @@ export const PixExportActions = ({
   const { toast } = useToast();
 
   const handleExport = () => {
+    logger.info('Iniciando exportação de chaves PIX', { 
+      winnersCount: displayWinners.length,
+      prizeLevel,
+      isFiltered,
+      dateRange: isFiltered ? `${startDate} - ${endDate}` : 'all'
+    }, 'PIX_EXPORT_ACTIONS');
+
     if (displayWinners.length === 0) {
+      logger.warn('Tentativa de exportação sem ganhadores', undefined, 'PIX_EXPORT_ACTIONS');
       toast({
         title: "Nenhum ganhador",
         description: "Não há ganhadores para exportar no período selecionado.",
@@ -45,6 +54,10 @@ export const PixExportActions = ({
     }));
 
     exportToCSV(exportData, prizeLevel);
+
+    logger.info('Exportação concluída com sucesso', { 
+      exportedCount: displayWinners.length 
+    }, 'PIX_EXPORT_ACTIONS');
 
     toast({
       title: "Exportação concluída",

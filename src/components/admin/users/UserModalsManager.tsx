@@ -6,6 +6,7 @@ import { BanUserModal } from './BanUserModal';
 import { DeleteUserModal } from './DeleteUserModal';
 import { EditUserModal } from '../EditUserModal';
 import { ResetScoresModal } from './ResetScoresModal';
+import { logger } from '@/utils/logger';
 
 interface UserModalsManagerProps {
   selectedUser: AllUsersData | null;
@@ -32,6 +33,15 @@ export const UserModalsManager = ({
   onCloseResetModal,
   onResetScores,
 }: UserModalsManagerProps) => {
+  logger.debug('Gerenciando modais de usuário', { 
+    hasSelectedUser: !!selectedUser,
+    showDetailModal,
+    showBanModal,
+    showDeleteModal,
+    showEditModal,
+    showResetModal
+  }, 'USER_MODALS_MANAGER');
+
   return (
     <>
       {selectedUser && (

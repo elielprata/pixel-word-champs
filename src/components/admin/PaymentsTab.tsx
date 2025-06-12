@@ -5,6 +5,7 @@ import { PaymentHeader } from './payments/PaymentHeader';
 import { PaymentStatsCards } from './payments/PaymentStatsCards';
 import { IndividualPrizesSection } from './payments/IndividualPrizesSection';
 import { GroupPrizesSection } from './payments/GroupPrizesSection';
+import { logger } from '@/utils/logger';
 
 export const PaymentsTab = () => {
   const {
@@ -29,6 +30,14 @@ export const PaymentsTab = () => {
 
   const totalPrize = calculateTotalPrize();
   const totalWinners = calculateTotalWinners();
+
+  logger.debug('Renderizando aba de pagamentos', { 
+    totalPrize,
+    totalWinners,
+    isLoading,
+    individualPrizesCount: individualPrizes?.length,
+    groupPrizesCount: groupPrizes?.length
+  }, 'PAYMENTS_TAB');
 
   if (isLoading) {
     return (

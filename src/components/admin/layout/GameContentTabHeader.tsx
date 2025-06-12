@@ -1,8 +1,11 @@
 
 import React from 'react';
 import { BookOpen } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 export const GameContentTabHeader = () => {
+  logger.debug('Renderizando cabeçalho da aba de conteúdo', undefined, 'GAME_CONTENT_TAB_HEADER');
+  
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
       <div className="flex justify-between items-start">

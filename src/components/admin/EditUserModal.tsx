@@ -7,6 +7,7 @@ import { UserRoleSection } from './user-edit/UserRoleSection';
 import { PasswordChangeSection } from './user-edit/PasswordChangeSection';
 import { useUserData } from './user-edit/useUserData';
 import { useUserActions } from './user-edit/useUserActions';
+import { logger } from '@/utils/logger';
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
     userId, 
     username, 
     () => {
-      console.log('🔄 Usuário atualizado, recarregando dados...');
+      logger.info('Usuário atualizado, recarregando dados...', { userId }, 'EDIT_USER_MODAL');
       refetch();
       onUserUpdated();
     }
@@ -37,15 +38,14 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
 
   const currentRole = userData?.roles?.[0] || 'user';
 
-  console.log('🔍 Estado do modal:', { 
+  logger.debug('Estado do modal de edição', { 
     isOpen, 
     userId, 
     username, 
-    userData, 
     currentRole, 
     userLoading, 
-    error 
-  });
+    hasError: !!error 
+  }, 'EDIT_USER_MODAL');
 
   if (userLoading) {
     return (
@@ -63,6 +63,11 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
   }
 
   if (error) {
+    logger.error('Erro ao carregar dados do usuário', { 
+      error: error.message, 
+      userId 
+    }, 'EDIT_USER_MODAL');
+    
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-md">

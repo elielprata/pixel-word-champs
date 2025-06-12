@@ -3,9 +3,15 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2, Activity } from 'lucide-react';
 import { useRealUserStats } from '@/hooks/useRealUserStats';
+import { logger } from '@/utils/logger';
 
 export const UserStatsCards = () => {
   const { data: stats, isLoading, refetch } = useRealUserStats();
+
+  logger.debug('Renderizando cards de estatísticas de usuários', { 
+    isLoading,
+    hasStats: !!stats
+  }, 'USER_STATS_CARDS');
 
   if (isLoading || !stats) {
     return (

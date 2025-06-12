@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { logger } from '@/utils/logger';
 
 interface ResetScoresModalProps {
   isOpen: boolean;
@@ -34,20 +35,21 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
       return;
     }
 
-    console.log('📝 Enviando formulário de reset...');
+    logger.info('Enviando formulário de reset de pontuações', undefined, 'RESET_SCORES_MODAL');
     
     try {
       await onConfirm(password);
-      console.log('✅ Reset realizado com sucesso');
+      logger.info('Reset de pontuações realizado com sucesso', undefined, 'RESET_SCORES_MODAL');
       setPassword('');
       onClose();
     } catch (error: any) {
-      console.error('❌ Erro no reset modal:', error);
+      logger.error('Erro no reset de pontuações', { error: error.message }, 'RESET_SCORES_MODAL');
       setError(error.message || 'Erro ao zerar pontuações');
     }
   };
 
   const handleClose = () => {
+    logger.debug('Fechando modal de reset de pontuações', undefined, 'RESET_SCORES_MODAL');
     setPassword('');
     setError('');
     onClose();

@@ -7,8 +7,11 @@ import { RankingsTab } from "@/components/admin/RankingsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
+import { logger } from '@/utils/logger';
 
 export const AdminPanelContent = () => {
+  logger.debug('Renderizando conteúdo do painel admin', undefined, 'ADMIN_PANEL_CONTENT');
+  
   return (
     <>
       <TabsContent value="dashboard">

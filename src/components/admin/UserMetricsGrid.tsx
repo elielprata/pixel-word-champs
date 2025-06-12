@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp, Activity, Clock } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface UserMetricsGridProps {
   totalUsers?: number;
@@ -16,6 +17,13 @@ export const UserMetricsGrid: React.FC<UserMetricsGridProps> = ({
   avgSessionTime = 0,
   userGrowth = 0
 }) => {
+  logger.debug('Renderizando grade de métricas de usuários', { 
+    totalUsers,
+    activeUsers,
+    avgSessionTime,
+    userGrowth
+  }, 'USER_METRICS_GRID');
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <Card>

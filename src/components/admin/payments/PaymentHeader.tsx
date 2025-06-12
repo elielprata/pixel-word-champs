@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Trophy } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface PaymentHeaderProps {
   totalPrize: number;
@@ -17,6 +18,11 @@ const formatCurrency = (value: number): string => {
 };
 
 export const PaymentHeader = ({ totalPrize, totalWinners }: PaymentHeaderProps) => {
+  logger.debug('Renderizando cabeçalho de pagamentos', { 
+    totalPrize, 
+    totalWinners 
+  }, 'PAYMENT_HEADER');
+
   return (
     <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl p-6 text-white">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">

@@ -1,8 +1,11 @@
 
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { logger } from '@/utils/logger';
 
 export const AdminPanelTabs = () => {
+  logger.debug('Renderizando abas do painel administrativo', undefined, 'ADMIN_PANEL_TABS');
+  
   return (
     <TabsList className="grid w-full grid-cols-6 lg:grid-cols-6">
       <TabsTrigger value="dashboard">Dashboard</TabsTrigger>

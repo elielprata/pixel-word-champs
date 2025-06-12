@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Edit, Ban, Trash2, UserCheck, Users } from 'lucide-react';
 import { AllUsersData } from '@/hooks/useAllUsers';
+import { logger } from '@/utils/logger';
 
 interface UserCardProps {
   user: AllUsersData;
@@ -14,6 +15,27 @@ interface UserCardProps {
 }
 
 export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser }: UserCardProps) => {
+  const handleViewUser = () => {
+    logger.info('Visualizando detalhes do usuário', { userId: user.id }, 'USER_CARD');
+    onViewUser(user);
+  };
+
+  const handleEditUser = () => {
+    logger.info('Editando usuário', { userId: user.id }, 'USER_CARD');
+    onEditUser(user);
+  };
+
+  const handleBanUser = () => {
+    const action = user.is_banned ? 'desbanindo' : 'banindo';
+    logger.info(`Ação de ${action} usuário`, { userId: user.id, currentlyBanned: user.is_banned }, 'USER_CARD');
+    onBanUser(user);
+  };
+
+  const handleDeleteUser = () => {
+    logger.info('Excluindo usuário', { userId: user.id }, 'USER_CARD');
+    onDeleteUser(user);
+  };
+
   return (
     <div
       className={`flex items-center justify-between p-3 border-b border-slate-100 transition-colors hover:bg-slate-50 ${
@@ -58,7 +80,7 @@ export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onViewUser(user)}
+          onClick={handleViewUser}
           className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 h-7 w-7 p-0"
         >
           <Eye className="h-3 w-3" />
@@ -67,7 +89,7 @@ export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onEditUser(user)}
+          onClick={handleEditUser}
           className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 h-7 w-7 p-0"
         >
           <Edit className="h-3 w-3" />
@@ -77,7 +99,7 @@ export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onBanUser(user)}
+            onClick={handleBanUser}
             className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 h-7 w-7 p-0"
           >
             <UserCheck className="h-3 w-3" />
@@ -86,7 +108,7 @@ export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onBanUser(user)}
+            onClick={handleBanUser}
             className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 h-7 w-7 p-0"
           >
             <Ban className="h-3 w-3" />
@@ -96,7 +118,7 @@ export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onDeleteUser(user)}
+          onClick={handleDeleteUser}
           className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 h-7 w-7 p-0"
         >
           <Trash2 className="h-3 w-3" />

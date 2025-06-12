@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface PaymentStatusProps {
   pendingCount: number;
@@ -10,12 +11,24 @@ interface PaymentStatusProps {
 }
 
 export const PaymentStatus = ({ pendingCount, paidCount, onMarkAllAsPaid }: PaymentStatusProps) => {
+  logger.debug('Renderizando status de pagamentos', { 
+    pendingCount, 
+    paidCount 
+  }, 'PAYMENT_STATUS');
+
+  const handleMarkAllAsPaid = () => {
+    logger.info('Marcando todos os pagamentos como pagos', { 
+      pendingCount 
+    }, 'PAYMENT_STATUS');
+    onMarkAllAsPaid();
+  };
+
   return (
     <div className="bg-blue-50 p-2 sm:p-3 rounded-lg">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
         <h3 className="font-medium text-sm">Status dos Pagamentos</h3>
         <Button 
-          onClick={onMarkAllAsPaid} 
+          onClick={handleMarkAllAsPaid} 
           disabled={pendingCount === 0}
           className="h-8 text-xs"
         >

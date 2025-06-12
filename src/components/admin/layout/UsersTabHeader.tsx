@@ -1,8 +1,11 @@
 
 import React from 'react';
 import { Users } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 export const UsersTabHeader = () => {
+  logger.debug('Renderizando cabeçalho da aba de usuários', undefined, 'USERS_TAB_HEADER');
+  
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
       <div className="flex justify-between items-start">

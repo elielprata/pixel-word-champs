@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Shield } from 'lucide-react';
 import { AdminUser } from '@/hooks/useAdminUsers';
 import { AdminUserItem } from './AdminUserItem';
+import { logger } from '@/utils/logger';
 
 interface AdminUsersListContainerProps {
   usersList: AdminUser[];
@@ -19,6 +20,11 @@ export const AdminUsersListContainer = ({
   onEditUser, 
   onRemoveUser 
 }: AdminUsersListContainerProps) => {
+  logger.debug('Renderizando container de lista de admins', { 
+    usersCount: usersList?.length,
+    isLoading 
+  }, 'ADMIN_USERS_LIST_CONTAINER');
+
   if (isLoading) {
     return (
       <Card className="border-slate-200 shadow-sm">

@@ -4,14 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 
 export const AdminPanelHeader = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/auth');
+    try {
+      logger.info('Iniciando logout do painel admin', undefined, 'ADMIN_PANEL_HEADER');
+      await logout();
+      logger.info('Logout realizado, redirecionando...', undefined, 'ADMIN_PANEL_HEADER');
+      navigate('/auth');
+    } catch (error: any) {
+      logger.error('Erro durante logout do admin', { error: error.message }, 'ADMIN_PANEL_HEADER');
+    }
   };
 
   return (

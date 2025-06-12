@@ -4,6 +4,7 @@ import { IntegrationsHeader } from './integrations/IntegrationsHeader';
 import { FingerprintJSCard } from './integrations/FingerprintJSCard';
 import { IntegrationStatusOverview } from './integrations/IntegrationStatusOverview';
 import { useIntegrations } from '@/hooks/useIntegrations';
+import { logger } from '@/utils/logger';
 
 export const IntegrationsTab = () => {
   const {
@@ -15,7 +16,14 @@ export const IntegrationsTab = () => {
     testConnection
   } = useIntegrations();
 
+  logger.debug('Renderizando aba de integrações', { 
+    fingerprintJSStatus: fingerprintJS?.status,
+    loading,
+    testingConnection
+  }, 'INTEGRATIONS_TAB');
+
   const handleFingerprintUpdate = (integration: any) => {
+    logger.debug('Atualizando integração FingerprintJS', undefined, 'INTEGRATIONS_TAB');
     setFingerprintJS(integration);
   };
 

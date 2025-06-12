@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { logger } from '@/utils/logger';
 
 interface AdminUser {
   id: string;
@@ -24,7 +25,7 @@ export const useAdminUsers = () => {
   const { data: adminUsers, isLoading, refetch } = useQuery({
     queryKey: ['adminUsers'],
     queryFn: async (): Promise<AdminUser[]> => {
-      console.log('🔍 Buscando usuários admin...');
+      logger.debug('Buscando usuários admin...', undefined, 'USE_ADMIN_USERS');
       
       // Buscar todos os usuários que têm role admin
       const { data: adminRoles, error: rolesError } = await supabase
@@ -33,119 +34,80 @@ export const useAdminUsers = () => {
         .eq('role', 'admin');
 
       if (rolesError) {
-        console.error('❌ Erro ao buscar admins:', rolesError);
+        logger.error('Erro ao buscar roles de admin', { error: rolesError.message }, 'USE_ADMIN_USERS');
         throw rolesError;
       }
 
-      console.log('📋 Admin roles encontrados:', adminRoles);
-
       if (!adminRoles || adminRoles.length === 0) {
+        logger.debug('Nenhum usuário admin encontrado', undefined, 'USE_ADMIN_USERS');
         return [];
       }
 
-      // Buscar dados dos usuários nos profiles
-      const userIds = adminRoles.map(r => r.user_id);
-      
-      const { data: profiles, error: profilesError } = await supabase
+      const adminUserIds = adminRoles.map(role => role.user_id);
+      logger.debug('IDs de usuários admin encontrados', { count: adminUserIds.length }, 'USE_ADMIN_USERS');
+
+      // Buscar os perfis dos usuários admin
+      const { data: adminProfiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, created_at')
-        .in('id', userIds);
+        .select('id, username, email, created_at')
+        .in('id', adminUserIds);
 
       if (profilesError) {
-        console.error('❌ Erro ao buscar profiles:', profilesError);
+        logger.error('Erro ao buscar perfis de admin', { error: profilesError.message }, 'USE_ADMIN_USERS');
         throw profilesError;
       }
 
-      // Buscar o usuário atual para comparação
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const adminUsersData: AdminUser[] = (adminProfiles || []).map((profile: any) => ({
+        id: profile.id,
+        email: profile.email || 'Email não disponível',
+        username: profile.username || 'Usuário sem nome',
+        created_at: profile.created_at || new Date().toISOString(),
+        role: 'admin'
+      }));
 
-      // Mapear dados com fallback inteligente para emails
-      const safeProfiles: ProfileData[] = profiles || [];
-      const combinedData: AdminUser[] = safeProfiles.map((profile: ProfileData) => {
-        let email = 'Email não disponível';
-        
-        // Se for o usuário atual logado, usar o email real
-        if (currentUser && currentUser.id === profile.id) {
-          email = currentUser.email || 'Email não disponível';
-        }
-        // Fallback baseado no username
-        else if (profile.username) {
-          // Se o username já parece um email, usar como email
-          if (profile.username.includes('@')) {
-            email = profile.username;
-          } else {
-            // Criar um email baseado no username
-            email = `${profile.username}@sistema.local`;
-          }
-        }
-
-        return {
-          id: profile.id,
-          email: email,
-          username: profile.username || 'Username não disponível',
-          created_at: profile.created_at || new Date().toISOString(),
-          role: 'admin'
-        };
-      });
-
-      console.log('👥 Admins processados:', combinedData.map(u => ({ username: u.username, email: u.email })));
-      return combinedData;
+      logger.info('Usuários admin carregados com sucesso', { count: adminUsersData.length }, 'USE_ADMIN_USERS');
+      return adminUsersData;
     },
   });
 
-  const removeAdminRole = async (userId: string, username: string): Promise<void> => {
+  const removeAdminRole = async (userId: string, username: string) => {
     try {
-      console.log('🗑️ Removendo role admin do usuário:', userId);
+      logger.info('Removendo role de admin', { userId, username }, 'USE_ADMIN_USERS');
       
-      // Remover role admin
-      const { error: deleteError } = await supabase
+      const { error } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
         .eq('role', 'admin');
 
-      if (deleteError) {
-        console.error('❌ Erro ao remover role admin:', deleteError);
-        throw deleteError;
+      if (error) {
+        logger.error('Erro ao remover role de admin', { error: error.message }, 'USE_ADMIN_USERS');
+        throw error;
       }
 
-      // Adicionar role user se não existir
-      const { error: insertError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: userId,
-          role: 'user'
-        });
-
-      if (insertError) {
-        console.error('❌ Erro ao adicionar role user:', insertError);
-        throw insertError;
-      }
-
+      logger.info('Role de admin removida com sucesso', { userId }, 'USE_ADMIN_USERS');
+      
       toast({
-        title: "Sucesso!",
-        description: `${username} agora é um usuário comum`,
+        title: "Administrador removido",
+        description: `${username} não é mais administrador.`,
       });
-
+      
       refetch();
     } catch (error: any) {
-      console.error('❌ Erro:', error);
+      logger.error('Erro ao remover administrador', { error: error.message }, 'USE_ADMIN_USERS');
       toast({
         title: "Erro",
-        description: "Erro ao alterar permissões",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  // Explicitly type usersList with safe default and proper typing
-  const usersList: AdminUser[] = adminUsers ?? [];
-
   return {
-    usersList,
+    usersList: adminUsers || [],
     isLoading,
     removeAdminRole,
-    refetch
+    refetch,
   };
 };
 

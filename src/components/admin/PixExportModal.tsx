@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Download } from 'lucide-react';
 import { usePixExportModal } from '@/hooks/usePixExportModal';
 import { PixModalContent } from './pix/PixModalContent';
+import { logger } from '@/utils/logger';
 
 interface PixExportModalProps {
   open: boolean;
@@ -26,13 +27,22 @@ export const PixExportModal = ({ open, onOpenChange, prizeLevel }: PixExportModa
     handleClearFilter
   } = usePixExportModal(open, prizeLevel);
 
+  logger.debug('Renderizando modal de exportação PIX', { 
+    open, 
+    prizeLevel,
+    winnersCount: displayWinners?.length
+  }, 'PIX_EXPORT_MODAL');
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      logger.debug('Fechando modal PIX e limpando filtros', undefined, 'PIX_EXPORT_MODAL');
+      handleClearFilter();
+    }
+    onOpenChange(newOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) {
-        handleClearFilter();
-      }
-      onOpenChange(newOpen);
-    }}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-[95vw] max-w-4xl h-[90vh] max-h-[600px] overflow-y-auto p-3 sm:p-6">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">

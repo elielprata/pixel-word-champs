@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { useUsersQuery, AllUsersData } from './useUsersQuery';
 import { useUserMutations } from './useUserMutations';
+import { logger } from '@/utils/logger';
 
 export const useAllUsers = () => {
   const { toast } = useToast();
@@ -17,6 +18,8 @@ export const useAllUsers = () => {
       throw new Error('Usuário não autenticado');
     }
 
+    logger.debug('Validando senha do administrador', { userId: currentUser.user.id }, 'USE_ALL_USERS');
+
     // Validar senha usando uma sessão temporária sem afetar a sessão atual
     const { data, error } = await supabase.auth.signInWithPassword({
       email: currentUser.user.email!,
@@ -24,15 +27,17 @@ export const useAllUsers = () => {
     });
 
     if (error) {
+      logger.error('Senha de administrador incorreta', { error: error.message }, 'USE_ALL_USERS');
       throw new Error('Senha de administrador incorreta');
     }
 
+    logger.debug('Senha validada com sucesso', undefined, 'USE_ALL_USERS');
     return true;
   };
 
   const resetAllScoresMutation = useMutation({
     mutationFn: async (adminPassword: string) => {
-      console.log('🔐 Iniciando reset de pontuações...');
+      logger.info('Iniciando reset de pontuações', undefined, 'USE_ALL_USERS');
       
       // Validar senha real do admin
       await validateAdminPassword(adminPassword);
@@ -42,7 +47,7 @@ export const useAllUsers = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log('✅ Senha validada, resetando pontuações...');
+      logger.info('Senha validada, resetando pontuações...', undefined, 'USE_ALL_USERS');
 
       // Resetar pontuações de TODOS os usuários
       const { error } = await supabase
@@ -56,11 +61,11 @@ export const useAllUsers = () => {
         .not('id', 'is', null); // WHERE clause que inclui todos os registros com ID não nulo
 
       if (error) {
-        console.error('❌ Erro ao resetar pontuações:', error);
+        logger.error('Erro ao resetar pontuações', { error: error.message }, 'USE_ALL_USERS');
         throw error;
       }
 
-      console.log('✅ Pontuações resetadas com sucesso');
+      logger.info('Pontuações resetadas com sucesso', undefined, 'USE_ALL_USERS');
 
       // Registrar ação administrativa
       const { error: logError } = await supabase
@@ -73,11 +78,11 @@ export const useAllUsers = () => {
         });
 
       if (logError) {
-        console.warn('⚠️ Erro ao registrar log:', logError);
+        logger.warn('Erro ao registrar log de ação administrativa', { error: logError.message }, 'USE_ALL_USERS');
       }
     },
     onSuccess: () => {
-      console.log('🎉 Reset concluído com sucesso');
+      logger.info('Reset de pontuações concluído com sucesso', undefined, 'USE_ALL_USERS');
       toast({
         title: "Sucesso!",
         description: "Todas as pontuações foram zeradas.",
@@ -86,7 +91,7 @@ export const useAllUsers = () => {
       queryClient.invalidateQueries({ queryKey: ['realUserStats'] });
     },
     onError: (error: any) => {
-      console.error('❌ Erro no reset:', error);
+      logger.error('Erro no reset de pontuações', { error: error.message }, 'USE_ALL_USERS');
       toast({
         title: "Erro",
         description: error.message,

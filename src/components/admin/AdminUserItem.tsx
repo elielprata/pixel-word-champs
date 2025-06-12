@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit, Mail, Calendar, Crown } from 'lucide-react';
 import { AdminUser } from '@/hooks/useAdminUsers';
+import { logger } from '@/utils/logger';
 
 interface AdminUserItemProps {
   user: AdminUser;
@@ -12,6 +13,16 @@ interface AdminUserItemProps {
 }
 
 export const AdminUserItem = ({ user, onEdit, onRemove }: AdminUserItemProps) => {
+  const handleEdit = () => {
+    logger.info('Editando administrador', { userId: user.id }, 'ADMIN_USER_ITEM');
+    onEdit({ id: user.id, username: user.username });
+  };
+
+  const handleRemove = () => {
+    logger.info('Removendo administrador', { userId: user.id }, 'ADMIN_USER_ITEM');
+    onRemove(user.id, user.username);
+  };
+
   return (
     <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 transition-colors">
       <div className="flex-1">
@@ -43,7 +54,7 @@ export const AdminUserItem = ({ user, onEdit, onRemove }: AdminUserItemProps) =>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onEdit({ id: user.id, username: user.username })}
+          onClick={handleEdit}
           className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
         >
           <Edit className="h-4 w-4" />
@@ -52,7 +63,7 @@ export const AdminUserItem = ({ user, onEdit, onRemove }: AdminUserItemProps) =>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onRemove(user.id, user.username)}
+          onClick={handleRemove}
           className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
         >
           <Trash2 className="h-4 w-4" />

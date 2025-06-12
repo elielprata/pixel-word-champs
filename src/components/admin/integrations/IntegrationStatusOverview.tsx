@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertCircle, Activity } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface Integration {
   id: string;
@@ -15,6 +16,14 @@ interface IntegrationStatusOverviewProps {
 }
 
 export const IntegrationStatusOverview = ({ fingerprintJS }: IntegrationStatusOverviewProps) => {
+  const activeIntegrations = [fingerprintJS].filter(integration => integration.status === 'active');
+
+  logger.debug('Renderizando overview de status de integrações', { 
+    totalIntegrations: 1,
+    activeIntegrationsCount: activeIntegrations.length,
+    fingerprintJSStatus: fingerprintJS?.status
+  }, 'INTEGRATION_STATUS_OVERVIEW');
+
   const getStatusIcon = (status: string) => {
     return status === 'active' ? (
       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -34,8 +43,6 @@ export const IntegrationStatusOverview = ({ fingerprintJS }: IntegrationStatusOv
       </Badge>
     );
   };
-
-  const activeIntegrations = [fingerprintJS].filter(integration => integration.status === 'active');
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

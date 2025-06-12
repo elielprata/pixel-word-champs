@@ -4,9 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { useUserGrowth } from '@/hooks/useUserGrowth';
+import { logger } from '@/utils/logger';
 
 export const UserGrowthMetrics = () => {
   const { data: growthData, isLoading, error } = useUserGrowth();
+
+  logger.debug('Renderizando métricas de crescimento de usuários', { 
+    isLoading,
+    hasError: !!error,
+    dataPoints: growthData?.length
+  }, 'USER_GROWTH_METRICS');
 
   if (isLoading) {
     return (
@@ -27,6 +34,8 @@ export const UserGrowthMetrics = () => {
   }
 
   if (error) {
+    logger.error('Erro ao carregar dados de crescimento', { error: error.message }, 'USER_GROWTH_METRICS');
+    
     return (
       <Card className="border-slate-200 shadow-lg">
         <CardHeader className="pb-3">

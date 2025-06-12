@@ -2,8 +2,11 @@
 import React from 'react';
 import { CreateAdminForm } from './CreateAdminForm';
 import { AdminUsersList } from './AdminUsersList';
+import { logger } from '@/utils/logger';
 
 export const AdminManagement = () => {
+  logger.debug('Renderizando gerenciamento de administradores', undefined, 'ADMIN_MANAGEMENT');
+  
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
       {/* Formulário para criar admin */}

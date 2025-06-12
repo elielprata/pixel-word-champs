@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Target, Users, TrendingUp, DollarSign } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface PaymentStatsCardsProps {
   individualPrizes: { prize: number }[];
@@ -29,6 +30,15 @@ export const PaymentStatsCards = ({
   const activeGroups = groupPrizes.filter(g => g.active).length;
   const maxPrize = Math.max(...individualPrizes.map(p => p.prize));
   const avgPrize = totalPrize / totalWinners;
+
+  logger.debug('Renderizando cards de estatísticas de pagamento', { 
+    totalPrize,
+    totalWinners,
+    podiumTotal,
+    activeGroups,
+    maxPrize,
+    avgPrize
+  }, 'PAYMENT_STATS_CARDS');
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

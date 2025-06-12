@@ -1,8 +1,11 @@
 
 import React from 'react';
 import { Settings } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 export const IntegrationsHeader = () => {
+  logger.debug('Renderizando cabeçalho de integrações', undefined, 'INTEGRATIONS_HEADER');
+  
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
       <div className="flex justify-between items-start">
