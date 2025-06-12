@@ -1,62 +1,78 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export class DailyCompetitionParticipationService {
   async joinCompetitionAutomatically(sessionId: string, competitions: any[]): Promise<void> {
     try {
-      console.log('🎯 Inscrevendo automaticamente em competições diárias vinculadas...');
+      logger.info('Inscrevendo automaticamente em competições diárias vinculadas...', undefined, 'DAILY_COMPETITION_PARTICIPATION');
 
       if (!competitions || competitions.length === 0) {
-        console.log('📅 Nenhuma competição diária ativa encontrada');
+        logger.debug('Nenhuma competição diária ativa encontrada', undefined, 'DAILY_COMPETITION_PARTICIPATION');
         return;
       }
 
       const { data: session, error: sessionError } = await supabase
         .from('game_sessions')
-        .select('user_id, competition_id')
+        .select('user_id, competition_id, board')
         .eq('id', sessionId)
         .single();
 
       if (sessionError || !session) {
-        console.error('❌ Erro ao buscar sessão:', sessionError);
+        logger.error('Erro ao buscar sessão', { error: sessionError }, 'DAILY_COMPETITION_PARTICIPATION');
         return;
       }
 
-      if (session.competition_id) {
-        console.log('✅ Sessão já vinculada à competição:', session.competition_id);
+      // CORREÇÃO: Verificar se já está vinculada ou se é custom_competition
+      let competitionId = session.competition_id;
+      
+      // Se não tem competition_id, verificar se é custom_competition no metadata
+      if (!competitionId && session.board && typeof session.board === 'object') {
+        const customCompetitionId = (session.board as any)._custom_competition_id;
+        if (customCompetitionId) {
+          logger.debug('Sessão vinculada a custom_competition via metadata', { customCompetitionId }, 'DAILY_COMPETITION_PARTICIPATION');
+          competitionId = customCompetitionId;
+        }
+      }
+
+      if (competitionId) {
+        logger.debug('Sessão já vinculada à competição', { competitionId }, 'DAILY_COMPETITION_PARTICIPATION');
+        
+        // Verificar se a competição tem weekly_tournament_id
+        const { data: competition, error: compError } = await supabase
+          .from('custom_competitions')
+          .select('weekly_tournament_id')
+          .eq('id', competitionId)
+          .single();
+
+        if (!compError && competition?.weekly_tournament_id) {
+          await this.ensureWeeklyParticipation(session.user_id, competition.weekly_tournament_id);
+        }
         return;
       }
 
       const targetCompetition = competitions[0];
       
-      console.log('🎯 Vinculando sessão à competição diária:', targetCompetition.id);
+      logger.info('Vinculando sessão à competição diária', { competitionId: targetCompetition.id }, 'DAILY_COMPETITION_PARTICIPATION');
 
-      const { error: updateError } = await supabase
-        .from('game_sessions')
-        .update({ competition_id: targetCompetition.id })
-        .eq('id', sessionId);
-
-      if (updateError) {
-        console.error('❌ Erro ao vincular sessão à competição:', updateError);
-        return;
-      }
-
+      // CORREÇÃO: Para custom_competitions, não tentar atualizar foreign key
+      // Apenas garantir participação semanal se houver weekly_tournament_id
       if (targetCompetition.weekly_tournament_id) {
         await this.ensureWeeklyParticipation(session.user_id, targetCompetition.weekly_tournament_id);
+        logger.info('Usuário inscrito automaticamente na competição semanal vinculada', undefined, 'DAILY_COMPETITION_PARTICIPATION');
       } else {
-        console.error('❌ Competição diária não está vinculada a uma competição semanal');
-        return;
+        logger.warn('Competição diária não está vinculada a uma competição semanal', { competitionId: targetCompetition.id }, 'DAILY_COMPETITION_PARTICIPATION');
       }
 
-      console.log('✅ Usuário inscrito automaticamente na competição semanal vinculada (PARTICIPAÇÃO LIVRE)');
     } catch (error) {
-      console.error('❌ Erro ao inscrever automaticamente:', error);
+      logger.error('Erro ao inscrever automaticamente', { error }, 'DAILY_COMPETITION_PARTICIPATION');
+      // Não falhar - apenas logar o erro
     }
   }
 
   private async ensureWeeklyParticipation(userId: string, weeklyCompetitionId: string): Promise<void> {
     try {
-      console.log('🏆 Verificando participação na competição semanal...');
+      logger.debug('Verificando participação na competição semanal...', { weeklyCompetitionId }, 'DAILY_COMPETITION_PARTICIPATION');
 
       const { data: existingWeeklyParticipation, error: checkWeeklyError } = await supabase
         .from('competition_participations')
@@ -66,7 +82,7 @@ export class DailyCompetitionParticipationService {
         .maybeSingle();
 
       if (checkWeeklyError && checkWeeklyError.code !== 'PGRST116') {
-        console.error('❌ Erro ao verificar participação semanal:', checkWeeklyError);
+        logger.error('Erro ao verificar participação semanal', { error: checkWeeklyError }, 'DAILY_COMPETITION_PARTICIPATION');
         return;
       }
 
@@ -81,31 +97,32 @@ export class DailyCompetitionParticipationService {
           });
 
         if (insertWeeklyError) {
-          console.error('❌ Erro ao criar participação na competição semanal:', insertWeeklyError);
+          logger.error('Erro ao criar participação na competição semanal', { error: insertWeeklyError }, 'DAILY_COMPETITION_PARTICIPATION');
           return;
         }
 
-        console.log('✅ Participação criada na competição semanal - PARTICIPAÇÃO LIVRE');
+        logger.info('Participação criada na competição semanal - PARTICIPAÇÃO LIVRE', undefined, 'DAILY_COMPETITION_PARTICIPATION');
       } else {
-        console.log('✅ Usuário já participa da competição semanal');
+        logger.debug('Usuário já participa da competição semanal', undefined, 'DAILY_COMPETITION_PARTICIPATION');
       }
     } catch (error) {
-      console.error('❌ Erro ao verificar/criar participação semanal:', error);
+      logger.error('Erro ao verificar/criar participação semanal', { error }, 'DAILY_COMPETITION_PARTICIPATION');
+      // Não falhar - apenas logar o erro
     }
   }
 
   async updateParticipationScore(sessionId: string, totalScore: number): Promise<void> {
     try {
-      console.log('📊 Atualizando pontuação da sessão e transferindo diretamente para competição semanal...');
+      logger.debug('Atualizando pontuação da sessão e transferindo para competição semanal...', { sessionId, totalScore }, 'DAILY_COMPETITION_PARTICIPATION');
 
       const { data: session, error: sessionError } = await supabase
         .from('game_sessions')
-        .select('user_id, competition_id, total_score')
+        .select('user_id, competition_id, total_score, board')
         .eq('id', sessionId)
         .single();
 
       if (sessionError || !session) {
-        console.error('❌ Erro ao buscar sessão:', sessionError);
+        logger.error('Erro ao buscar sessão', { error: sessionError }, 'DAILY_COMPETITION_PARTICIPATION');
         return;
       }
 
@@ -118,15 +135,23 @@ export class DailyCompetitionParticipationService {
         .eq('id', sessionId);
 
       if (updateSessionError) {
-        console.error('❌ Erro ao atualizar pontuação da sessão:', updateSessionError);
+        logger.error('Erro ao atualizar pontuação da sessão', { error: updateSessionError }, 'DAILY_COMPETITION_PARTICIPATION');
         return;
       }
 
-      if (session.competition_id && scoreDifference > 0) {
+      // CORREÇÃO: Buscar competition_id considerando custom_competitions
+      let competitionId = session.competition_id;
+      
+      // Se não tem competition_id, verificar se é custom_competition no metadata
+      if (!competitionId && session.board && typeof session.board === 'object') {
+        competitionId = (session.board as any)._custom_competition_id;
+      }
+
+      if (competitionId && scoreDifference > 0) {
         const { data: dailyCompetition, error: dailyCompError } = await supabase
           .from('custom_competitions')
           .select('weekly_tournament_id')
-          .eq('id', session.competition_id)
+          .eq('id', competitionId)
           .single();
 
         if (!dailyCompError && dailyCompetition?.weekly_tournament_id) {
@@ -135,15 +160,16 @@ export class DailyCompetitionParticipationService {
             session.user_id, 
             scoreDifference
           );
-          console.log('✅ Pontos transferidos diretamente para competição semanal');
+          logger.info('Pontos transferidos diretamente para competição semanal', { weeklyTournamentId: dailyCompetition.weekly_tournament_id, scoreDifference }, 'DAILY_COMPETITION_PARTICIPATION');
         } else {
-          console.error('❌ Competição diária não vinculada a uma competição semanal');
+          logger.warn('Competição diária não vinculada a uma competição semanal', { competitionId }, 'DAILY_COMPETITION_PARTICIPATION');
         }
       }
 
-      console.log('✅ Pontuação atualizada com sucesso');
+      logger.debug('Pontuação atualizada com sucesso', { sessionId, totalScore }, 'DAILY_COMPETITION_PARTICIPATION');
     } catch (error) {
-      console.error('❌ Erro ao atualizar pontuação:', error);
+      logger.error('Erro ao atualizar pontuação', { error }, 'DAILY_COMPETITION_PARTICIPATION');
+      // Não falhar - apenas logar o erro
     }
   }
 
@@ -157,7 +183,7 @@ export class DailyCompetitionParticipationService {
         .single();
 
       if (getError) {
-        console.error('❌ Erro ao buscar participação:', getError);
+        logger.error('Erro ao buscar participação', { error: getError }, 'DAILY_COMPETITION_PARTICIPATION');
         return;
       }
 
@@ -169,13 +195,14 @@ export class DailyCompetitionParticipationService {
         .eq('id', participation.id);
 
       if (updateError) {
-        console.error('❌ Erro ao atualizar pontuação da competição:', updateError);
+        logger.error('Erro ao atualizar pontuação da competição', { error: updateError }, 'DAILY_COMPETITION_PARTICIPATION');
         return;
       }
 
-      console.log(`✅ Pontuação atualizada na competição ${competitionId}: +${scoreIncrease} pontos (total: ${newScore})`);
+      logger.info(`Pontuação atualizada na competição ${competitionId}: +${scoreIncrease} pontos (total: ${newScore})`, undefined, 'DAILY_COMPETITION_PARTICIPATION');
     } catch (error) {
-      console.error('❌ Erro ao atualizar pontuação da competição:', error);
+      logger.error('Erro ao atualizar pontuação da competição', { error }, 'DAILY_COMPETITION_PARTICIPATION');
+      // Não falhar - apenas logar o erro
     }
   }
 
@@ -194,7 +221,7 @@ export class DailyCompetitionParticipationService {
 
       return !!data;
     } catch (error) {
-      console.error('Error checking user participation:', error);
+      logger.error('Error checking user participation', { error }, 'DAILY_COMPETITION_PARTICIPATION');
       return false;
     }
   }
@@ -212,10 +239,10 @@ export class DailyCompetitionParticipationService {
 
       if (error) throw error;
 
-      console.log('✅ Participação criada - PARTICIPAÇÃO LIVRE');
+      logger.info('Participação criada - PARTICIPAÇÃO LIVRE', undefined, 'DAILY_COMPETITION_PARTICIPATION');
       return { success: true };
     } catch (error) {
-      console.error('❌ Erro ao criar participação:', error);
+      logger.error('Erro ao criar participação', { error }, 'DAILY_COMPETITION_PARTICIPATION');
       return {
         success: false,
         error: 'Erro ao criar participação'
@@ -225,7 +252,7 @@ export class DailyCompetitionParticipationService {
 
   async updateCompetitionRankings(competitionId: string): Promise<void> {
     try {
-      console.log('🔄 Atualizando rankings da competição:', competitionId);
+      logger.debug('Atualizando rankings da competição', { competitionId }, 'DAILY_COMPETITION_PARTICIPATION');
 
       const { data: participations, error: participationsError } = await supabase
         .from('competition_participations')
@@ -234,7 +261,7 @@ export class DailyCompetitionParticipationService {
         .order('user_score', { ascending: false });
 
       if (participationsError) {
-        console.error('❌ Erro ao buscar participações:', participationsError);
+        logger.error('Erro ao buscar participações', { error: participationsError }, 'DAILY_COMPETITION_PARTICIPATION');
         return;
       }
 
@@ -250,13 +277,14 @@ export class DailyCompetitionParticipationService {
           .eq('id', update.id);
 
         if (updateError) {
-          console.error('❌ Erro ao atualizar posição:', updateError);
+          logger.error('Erro ao atualizar posição', { error: updateError }, 'DAILY_COMPETITION_PARTICIPATION');
         }
       }
 
-      console.log('✅ Rankings atualizados para', updates.length, 'participantes - PARTICIPAÇÃO LIVRE');
+      logger.info(`Rankings atualizados para ${updates.length} participantes - PARTICIPAÇÃO LIVRE`, undefined, 'DAILY_COMPETITION_PARTICIPATION');
     } catch (error) {
-      console.error('❌ Erro ao atualizar rankings:', error);
+      logger.error('Erro ao atualizar rankings', { error }, 'DAILY_COMPETITION_PARTICIPATION');
+      // Não falhar - apenas logar o erro
     }
   }
 }
