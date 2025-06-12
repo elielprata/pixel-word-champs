@@ -1,4 +1,5 @@
 
+
 export interface CompetitionHistoryItem {
   id: string;
   title: string;
@@ -7,6 +8,8 @@ export interface CompetitionHistoryItem {
   end_date: string;
   status: string;
   prize_pool: number;
+  max_participants: number;
+  total_participants: number;
   created_at: string;
 }
 
@@ -14,3 +17,4 @@ export interface CompetitionTableProps {
   competitions: CompetitionHistoryItem[];
   onReload: () => void;
 }
+
