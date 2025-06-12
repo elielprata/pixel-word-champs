@@ -1,10 +1,12 @@
 
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Trophy, Users, Crown } from 'lucide-react';
 import { WeeklyCompetitionActions } from './WeeklyCompetitionActions';
 import { competitionStatusService } from '@/services/competitionStatusService';
+import { formatDateForBrasilia } from '@/utils/brasiliaTime';
 
 interface WeeklyCompetition {
   id: string;
@@ -33,20 +35,21 @@ export const ActiveCompetitionCard = ({
   onDelete,
   deletingId
 }: ActiveCompetitionCardProps) => {
-  // Fixed date formatting to preserve the exact date from database
-  const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
-    // Parse the date as UTC and format directly without timezone conversion
-    const date = new Date(dateString + 'Z'); // Ensure UTC parsing
-    
-    const dateFormatted = date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-    
-    const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
-    
-    return `${dateFormatted}, ${timeFormatted}`;
+  // Função para formatar datas preservando o dia exato do banco
+  const formatCompetitionDate = (dateString: string, isEndDate: boolean = false) => {
+    try {
+      // Usar a função existente e testada do projeto
+      const formattedDate = formatDateForBrasilia(dateString);
+      
+      // Extrair apenas a parte da data (sem hora) e adicionar hora fixa
+      const datePart = formattedDate.split(',')[0]; // Pega "11/06/2025" de "11/06/2025, 00:00:00"
+      const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
+      
+      return `${datePart}, ${timeFormatted}`;
+    } catch (error) {
+      console.error('❌ Erro ao formatar data da competição:', error);
+      return dateString; // Fallback para data original
+    }
   };
 
   const actualStatus = competitionStatusService.calculateCorrectStatus({
@@ -108,7 +111,7 @@ export const ActiveCompetitionCard = ({
               <Calendar className="h-4 w-4 text-green-600" />
               <div>
                 <p className="font-medium">Início</p>
-                <p className="text-green-700">{formatDateTime(competition.start_date, false)}</p>
+                <p className="text-green-700">{formatCompetitionDate(competition.start_date, false)}</p>
               </div>
             </div>
             
@@ -116,7 +119,7 @@ export const ActiveCompetitionCard = ({
               <Clock className="h-4 w-4 text-green-600" />
               <div>
                 <p className="font-medium">Fim</p>
-                <p className="text-green-700">{formatDateTime(competition.end_date, true)}</p>
+                <p className="text-green-700">{formatCompetitionDate(competition.end_date, true)}</p>
               </div>
             </div>
             
@@ -141,3 +144,4 @@ export const ActiveCompetitionCard = ({
     </Card>
   );
 };
+
