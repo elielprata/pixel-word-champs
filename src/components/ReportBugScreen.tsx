@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,7 +53,7 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
 
       const { error } = await supabase
         .from('user_reports')
-        .insert([insertData]);
+        .insert(insertData);
 
       if (error) throw error;
 
