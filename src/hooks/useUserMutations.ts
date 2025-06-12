@@ -8,20 +8,26 @@ export const useUserMutations = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const validateAdminCredentials = async (password: string) => {
+  const validateAdminPassword = async (password: string) => {
     const { data: currentUser } = await supabase.auth.getUser();
     if (!currentUser.user) {
       throw new Error('Usuário não autenticado');
     }
 
-    logger.debug('Validando credenciais do admin', { userId: currentUser.user.id }, 'USER_MUTATIONS');
+    logger.debug('Validando senha do administrador', { userId: currentUser.user.id }, 'USER_MUTATIONS');
 
-    // Validação básica da senha (sem re-autenticação)
-    if (!password || password.length < 6) {
-      throw new Error('Senha de administrador inválida');
+    // Criar sessão temporária para validar senha sem afetar a sessão atual
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: currentUser.user.email!,
+      password: password
+    });
+
+    if (error) {
+      logger.error('Senha de administrador incorreta', { error: error.message }, 'USER_MUTATIONS');
+      throw new Error('Senha de administrador incorreta');
     }
 
-    logger.debug('Credenciais validadas com sucesso', undefined, 'USER_MUTATIONS');
+    logger.debug('Senha validada com sucesso', undefined, 'USER_MUTATIONS');
     return true;
   };
 
@@ -29,8 +35,8 @@ export const useUserMutations = () => {
     mutationFn: async ({ userId, reason, adminPassword }: { userId: string; reason: string; adminPassword: string }) => {
       logger.info('Iniciando banimento do usuário', { targetUserId: userId }, 'USER_MUTATIONS');
       
-      // Validar credenciais do admin
-      await validateAdminCredentials(adminPassword);
+      // Validar senha do admin
+      await validateAdminPassword(adminPassword);
 
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
@@ -93,8 +99,8 @@ export const useUserMutations = () => {
     mutationFn: async ({ userId, adminPassword }: { userId: string; adminPassword: string }) => {
       logger.info('Iniciando exclusão do usuário', { targetUserId: userId }, 'USER_MUTATIONS');
       
-      // Validar credenciais do admin
-      await validateAdminCredentials(adminPassword);
+      // Validar senha do admin PRIMEIRO
+      await validateAdminPassword(adminPassword);
 
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
@@ -108,7 +114,14 @@ export const useUserMutations = () => {
         throw new Error('Você não pode excluir sua própria conta');
       }
 
-      // Registrar ação antes de deletar
+      // Buscar dados do usuário para logs
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('username, email')
+        .eq('id', userId)
+        .single();
+
+      // Registrar ação ANTES de deletar
       try {
         const { error: logError } = await supabase
           .from('admin_actions')
@@ -116,7 +129,10 @@ export const useUserMutations = () => {
             admin_id: currentUser.user.id,
             target_user_id: userId,
             action_type: 'delete_user',
-            details: { timestamp: new Date().toISOString() }
+            details: { 
+              timestamp: new Date().toISOString(),
+              username: userProfile?.username || 'Desconhecido'
+            }
           });
 
         if (logError) {
@@ -126,43 +142,156 @@ export const useUserMutations = () => {
         logger.warn('Erro ao registrar ação administrativa', { error: logError }, 'USER_MUTATIONS');
       }
 
-      // Deletar dados relacionados primeiro (se necessário)
+      // Deletar dados relacionados EM ORDEM para evitar violações de FK
+      logger.info('Iniciando limpeza de dados relacionados', { targetUserId: userId }, 'USER_MUTATIONS');
+
       try {
-        // Deletar sessões de jogo
+        // 1. Deletar histórico de palavras
+        await supabase
+          .from('user_word_history')
+          .delete()
+          .eq('user_id', userId);
+        
+        logger.debug('Histórico de palavras removido', undefined, 'USER_MUTATIONS');
+
+        // 2. Deletar palavras encontradas (via sessões)
+        const { data: userSessions } = await supabase
+          .from('game_sessions')
+          .select('id')
+          .eq('user_id', userId);
+
+        if (userSessions && userSessions.length > 0) {
+          const sessionIds = userSessions.map(s => s.id);
+          
+          await supabase
+            .from('words_found')
+            .delete()
+            .in('session_id', sessionIds);
+          
+          logger.debug('Palavras encontradas removidas', undefined, 'USER_MUTATIONS');
+        }
+
+        // 3. Deletar sessões de jogo
         await supabase
           .from('game_sessions')
           .delete()
           .eq('user_id', userId);
+        
+        logger.debug('Sessões de jogo removidas', undefined, 'USER_MUTATIONS');
 
-        // Deletar rankings semanais
+        // 4. Deletar participações em competições
+        await supabase
+          .from('competition_participations')
+          .delete()
+          .eq('user_id', userId);
+        
+        logger.debug('Participações em competições removidas', undefined, 'USER_MUTATIONS');
+
+        // 5. Deletar rankings semanais
         await supabase
           .from('weekly_rankings')
           .delete()
           .eq('user_id', userId);
+        
+        logger.debug('Rankings semanais removidos', undefined, 'USER_MUTATIONS');
 
-        // Deletar roles
+        // 6. Deletar histórico de pagamentos
+        await supabase
+          .from('payment_history')
+          .delete()
+          .eq('user_id', userId);
+        
+        logger.debug('Histórico de pagamentos removido', undefined, 'USER_MUTATIONS');
+
+        // 7. Deletar distribuições de prêmios
+        await supabase
+          .from('prize_distributions')
+          .delete()
+          .eq('user_id', userId);
+        
+        logger.debug('Distribuições de prêmios removidas', undefined, 'USER_MUTATIONS');
+
+        // 8. Deletar convites relacionados
+        await supabase
+          .from('invite_rewards')
+          .delete()
+          .or(`user_id.eq.${userId},invited_user_id.eq.${userId}`);
+
+        await supabase
+          .from('invites')
+          .delete()
+          .or(`invited_by.eq.${userId},used_by.eq.${userId}`);
+        
+        logger.debug('Convites removidos', undefined, 'USER_MUTATIONS');
+
+        // 9. Deletar relatórios de usuário
+        await supabase
+          .from('user_reports')
+          .delete()
+          .eq('user_id', userId);
+        
+        logger.debug('Relatórios removidos', undefined, 'USER_MUTATIONS');
+
+        // 10. Deletar progresso em desafios
+        await supabase
+          .from('challenge_progress')
+          .delete()
+          .eq('user_id', userId);
+        
+        logger.debug('Progresso em desafios removido', undefined, 'USER_MUTATIONS');
+
+        // 11. Deletar histórico de competições
+        await supabase
+          .from('competition_history')
+          .delete()
+          .eq('user_id', userId);
+        
+        logger.debug('Histórico de competições removido', undefined, 'USER_MUTATIONS');
+
+        // 12. Deletar roles do usuário
         await supabase
           .from('user_roles')
           .delete()
           .eq('user_id', userId);
+        
+        logger.debug('Roles removidos', undefined, 'USER_MUTATIONS');
 
-        logger.debug('Dados relacionados removidos', undefined, 'USER_MUTATIONS');
-      } catch (cleanupError) {
-        logger.warn('Erro na limpeza de dados relacionados', { error: cleanupError }, 'USER_MUTATIONS');
+        logger.info('Limpeza de dados relacionados concluída', { targetUserId: userId }, 'USER_MUTATIONS');
+
+      } catch (cleanupError: any) {
+        logger.error('Erro na limpeza de dados relacionados', { error: cleanupError.message }, 'USER_MUTATIONS');
+        throw new Error(`Erro ao limpar dados relacionados: ${cleanupError.message}`);
       }
 
-      // Deletar perfil do usuário (isso também vai deletar o usuário do auth via trigger/cascade)
-      const { error: deleteError } = await supabase
+      // 13. Por último, deletar o perfil do usuário
+      const { error: deleteProfileError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', userId);
 
-      if (deleteError) {
-        logger.error('Erro ao excluir usuário', { error: deleteError.message }, 'USER_MUTATIONS');
-        throw new Error(`Erro ao excluir usuário: ${deleteError.message}`);
+      if (deleteProfileError) {
+        logger.error('Erro ao excluir perfil do usuário', { error: deleteProfileError.message }, 'USER_MUTATIONS');
+        throw new Error(`Erro ao excluir perfil: ${deleteProfileError.message}`);
       }
 
-      logger.info('Usuário excluído com sucesso', { targetUserId: userId }, 'USER_MUTATIONS');
+      logger.info('Perfil do usuário excluído com sucesso', { targetUserId: userId }, 'USER_MUTATIONS');
+
+      // 14. Tentar deletar o usuário do auth (pode falhar se houver outras dependências)
+      try {
+        const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId);
+        
+        if (deleteAuthError) {
+          logger.warn('Erro ao deletar usuário do auth (não crítico)', { error: deleteAuthError.message }, 'USER_MUTATIONS');
+          // Não falhar aqui, pois o perfil já foi removido
+        } else {
+          logger.info('Usuário removido do auth com sucesso', { targetUserId: userId }, 'USER_MUTATIONS');
+        }
+      } catch (authError: any) {
+        logger.warn('Erro ao acessar auth admin (não crítico)', { error: authError.message }, 'USER_MUTATIONS');
+        // Continuar mesmo se falhar, pois o importante é remover o perfil
+      }
+
+      logger.info('Exclusão de usuário concluída com sucesso', { targetUserId: userId }, 'USER_MUTATIONS');
     },
     onSuccess: () => {
       logger.info('Exclusão concluída com sucesso', undefined, 'USER_MUTATIONS');

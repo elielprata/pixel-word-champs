@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Trash2, AlertTriangle } from 'lucide-react';
-import { useAllUsers } from '@/hooks/useAllUsers';
+import { useUserMutations } from '@/hooks/useUserMutations';
 
 interface DeleteUserModalProps {
   isOpen: boolean;
@@ -17,8 +17,7 @@ interface DeleteUserModalProps {
 export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps) => {
   const [adminPassword, setAdminPassword] = useState('');
   const [confirmUsername, setConfirmUsername] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { deleteUser, isDeletingUser } = useAllUsers();
+  const { deleteUser, isDeletingUser } = useUserMutations();
 
   if (!user) return null;
 
@@ -36,7 +35,6 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
     }
 
     try {
-      setIsSubmitting(true);
       console.log('🗑️ Iniciando exclusão do usuário:', user.username);
       
       await deleteUser({
@@ -51,19 +49,17 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
       
     } catch (error) {
       console.error('❌ Erro na exclusão:', error);
-      setIsSubmitting(false);
+      // Não resetar o form se der erro, para o usuário tentar novamente
     }
   };
 
   const handleClose = () => {
-    if (!isSubmitting && !isDeletingUser) {
+    if (!isDeletingUser) {
       setAdminPassword('');
       setConfirmUsername('');
       onClose();
     }
   };
-
-  const isLoading = isDeletingUser || isSubmitting;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -85,6 +81,8 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
                 <li>Histórico de jogos</li>
                 <li>Pontuações e rankings</li>
                 <li>Todas as sessões de jogo</li>
+                <li>Participações em competições</li>
+                <li>Convites e recompensas</li>
               </ul>
             </AlertDescription>
           </Alert>
@@ -99,7 +97,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
               value={confirmUsername}
               onChange={(e) => setConfirmUsername(e.target.value)}
               required
-              disabled={isLoading}
+              disabled={isDeletingUser}
             />
           </div>
 
@@ -108,14 +106,14 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
             <Input
               id="adminPassword"
               type="password"
-              placeholder="Digite sua senha de administrador"
+              placeholder="Digite sua senha atual para confirmar"
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
               required
-              disabled={isLoading}
+              disabled={isDeletingUser}
             />
             <p className="text-xs text-slate-500">
-              Digite sua senha atual para confirmar esta ação
+              Sua senha será validada para confirmar esta ação crítica
             </p>
           </div>
 
@@ -124,16 +122,16 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
               type="button" 
               variant="outline" 
               onClick={handleClose}
-              disabled={isLoading}
+              disabled={isDeletingUser}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               variant="destructive"
-              disabled={isLoading || confirmUsername !== user.username || !adminPassword.trim()}
+              disabled={isDeletingUser || confirmUsername !== user.username || !adminPassword.trim()}
             >
-              {isLoading ? (
+              {isDeletingUser ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   Excluindo...
