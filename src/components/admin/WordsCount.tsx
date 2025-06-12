@@ -19,7 +19,7 @@ export const WordsCount = () => {
       const { count: activeCount, error: activeError } = await supabase
         .from('level_words')
         .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
+        .eq('is_active', true as any);
 
       if (activeError) {
         console.error('❌ Erro ao contar palavras ativas:', activeError);
@@ -30,7 +30,7 @@ export const WordsCount = () => {
       const { count: inactiveCount, error: inactiveError } = await supabase
         .from('level_words')
         .select('*', { count: 'exact', head: true })
-        .eq('is_active', false);
+        .eq('is_active', false as any);
 
       if (inactiveError) {
         console.error('❌ Erro ao contar palavras inativas:', inactiveError);
