@@ -1,4 +1,6 @@
 
+import { logger } from '@/utils/logger';
+
 export interface WordPosition {
   word: string;
   startRow: number;
@@ -27,9 +29,11 @@ class AIService {
 
   setConfig(config: Partial<typeof this.config>) {
     this.config = { ...this.config, ...config };
+    logger.debug('Configuração do AI Service atualizada', { config }, 'AI_SERVICE');
   }
 
   async generateWordsForBoard(board: string[][], level: number): Promise<AIGeneratedData> {
+    logger.debug('Gerando palavras para tabuleiro', { boardSize: board.length, level }, 'AI_SERVICE');
     return this.getMockData(level);
   }
 
@@ -53,21 +57,32 @@ class AIService {
       }
     ];
 
-    return {
+    const result = {
       validWords: mockWords,
       theme: 'Palavras Gerais',
       difficulty: level
     };
+
+    logger.info('Dados mock gerados para AI', { wordsCount: mockWords.length, level }, 'AI_SERVICE');
+    return result;
   }
 
   validateWord(word: string, positions: Array<{row: number, col: number}>, validWords: WordPosition[]): boolean {
-    return validWords.some(validWord => validWord.word === word.toUpperCase());
+    const isValid = validWords.some(validWord => validWord.word === word.toUpperCase());
+    logger.debug('Validação de palavra', { word, isValid, positionsCount: positions.length }, 'AI_SERVICE');
+    return isValid;
   }
 
   getHint(remainingWords: WordPosition[]): string | null {
-    if (remainingWords.length === 0) return null;
+    if (remainingWords.length === 0) {
+      logger.debug('Nenhuma palavra restante para dica', undefined, 'AI_SERVICE');
+      return null;
+    }
+    
     const randomIndex = Math.floor(Math.random() * remainingWords.length);
-    return remainingWords[randomIndex].word;
+    const hint = remainingWords[randomIndex].word;
+    logger.info('Dica gerada', { hint, remainingWordsCount: remainingWords.length }, 'AI_SERVICE');
+    return hint;
   }
 }
 

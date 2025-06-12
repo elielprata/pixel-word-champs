@@ -1,12 +1,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export const useRealGameMetrics = () => {
   const { data: metrics, isLoading } = useQuery({
     queryKey: ['gameMetrics'],
     queryFn: async () => {
-      console.log('🔍 Buscando métricas do sistema...');
+      logger.debug('Buscando métricas do sistema', undefined, 'GAME_METRICS');
       
       // Buscar total de palavras ativas
       const { data: wordsData, error: wordsError } = await supabase
@@ -15,11 +16,11 @@ export const useRealGameMetrics = () => {
         .eq('is_active', true);
 
       if (wordsError) {
-        console.error('❌ Erro ao buscar palavras:', wordsError);
+        logger.error('Erro ao buscar palavras', { error: wordsError.message }, 'GAME_METRICS');
         throw wordsError;
       }
 
-      console.log('📝 Palavras encontradas:', wordsData?.length, wordsData);
+      logger.debug('Palavras encontradas', { count: wordsData?.length }, 'GAME_METRICS');
 
       // Buscar total de categorias ativas
       const { data: categoriesData, error: categoriesError } = await supabase
@@ -28,18 +29,18 @@ export const useRealGameMetrics = () => {
         .eq('is_active', true);
 
       if (categoriesError) {
-        console.error('❌ Erro ao buscar categorias:', categoriesError);
+        logger.error('Erro ao buscar categorias', { error: categoriesError.message }, 'GAME_METRICS');
         throw categoriesError;
       }
 
-      console.log('📋 Categorias encontradas:', categoriesData?.length, categoriesData);
+      logger.debug('Categorias encontradas', { count: categoriesData?.length }, 'GAME_METRICS');
 
       const result = {
         activeWords: wordsData?.length || 0,
         activeCategories: categoriesData?.length || 0
       };
 
-      console.log('📊 Métricas finais:', result);
+      logger.info('Métricas carregadas', result, 'GAME_METRICS');
       return result;
     },
     refetchInterval: 30000, // Atualizar a cada 30 segundos

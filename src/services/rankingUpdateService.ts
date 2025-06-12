@@ -1,21 +1,22 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export class RankingUpdateService {
   async updateWeeklyRanking(): Promise<void> {
     try {
-      console.log('🔄 Atualizando ranking semanal...');
+      logger.info('Atualizando ranking semanal', undefined, 'RANKING_UPDATE_SERVICE');
       
       const { error } = await supabase.rpc('update_weekly_ranking');
       
       if (error) {
-        console.error('❌ Erro ao atualizar ranking semanal:', error);
+        logger.error('Erro ao atualizar ranking semanal', { error: error.message }, 'RANKING_UPDATE_SERVICE');
         throw error;
       }
       
-      console.log('✅ Ranking semanal atualizado com sucesso');
-    } catch (error) {
-      console.error('❌ Erro na atualização do ranking semanal:', error);
+      logger.info('Ranking semanal atualizado com sucesso', undefined, 'RANKING_UPDATE_SERVICE');
+    } catch (error: any) {
+      logger.error('Erro na atualização do ranking semanal', { error: error.message }, 'RANKING_UPDATE_SERVICE');
       throw error;
     }
   }
@@ -35,13 +36,13 @@ export class RankingUpdateService {
         .eq('week_start', weekStartStr);
 
       if (error) {
-        console.error('❌ Erro ao contar participantes semanais:', error);
+        logger.error('Erro ao contar participantes semanais', { error: error.message }, 'RANKING_UPDATE_SERVICE');
         throw error;
       }
       
       return count || 0;
-    } catch (error) {
-      console.error(`❌ Erro ao obter total de participantes semanais:`, error);
+    } catch (error: any) {
+      logger.error('Erro ao obter total de participantes semanais', { error: error.message }, 'RANKING_UPDATE_SERVICE');
       return 0;
     }
   }

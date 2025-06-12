@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { logger } from '@/utils/logger';
 
 interface WeeklyCompetition {
   id: string;
@@ -20,19 +21,19 @@ export const useWeeklyCompetitionsActions = () => {
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string>('');
 
   const handleViewRanking = (competition: WeeklyCompetition) => {
-    console.log('👁️ Abrindo modal de ranking da competição semanal:', competition.id);
+    logger.info('Abrindo modal de ranking da competição semanal', { competitionId: competition.id }, 'WEEKLY_COMPETITIONS_ACTIONS');
     setSelectedCompetitionId(competition.id);
     setIsRankingModalOpen(true);
   };
 
   const handleEdit = (competition: WeeklyCompetition) => {
-    console.log('🔧 Editando competição:', competition.id);
+    logger.info('Editando competição', { competitionId: competition.id }, 'WEEKLY_COMPETITIONS_ACTIONS');
     setEditingCompetition(competition);
     setIsEditModalOpen(true);
   };
 
   const handleCompetitionUpdated = (onRefresh?: () => void) => {
-    console.log('🔄 Competição atualizada, recarregando lista...');
+    logger.info('Competição atualizada, recarregando lista', undefined, 'WEEKLY_COMPETITIONS_ACTIONS');
     if (onRefresh) {
       onRefresh();
     }

@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface PrizeConfiguration {
   id: string;
@@ -15,21 +16,30 @@ export interface PrizeConfiguration {
 export const prizeService = {
   async getPrizeConfigurations(): Promise<PrizeConfiguration[]> {
     try {
+      logger.debug('Buscando configurações de prêmios', undefined, 'PRIZE_SERVICE');
+      
       const { data, error } = await supabase
         .from('prize_configurations')
         .select('*')
         .order('position', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao buscar configurações de prêmios', { error: error.message }, 'PRIZE_SERVICE');
+        throw error;
+      }
+      
+      logger.info('Configurações de prêmios carregadas', { count: data?.length || 0 }, 'PRIZE_SERVICE');
       return data || [];
-    } catch (error) {
-      console.error('Error fetching prize configurations:', error);
+    } catch (error: any) {
+      logger.error('Erro ao carregar configurações de prêmios', { error: error.message }, 'PRIZE_SERVICE');
       return [];
     }
   },
 
   async updatePrizeConfiguration(id: string, updates: Partial<PrizeConfiguration>) {
     try {
+      logger.info('Atualizando configuração de prêmio', { prizeId: id }, 'PRIZE_SERVICE');
+      
       const { data, error } = await supabase
         .from('prize_configurations')
         .update(updates)
@@ -37,10 +47,15 @@ export const prizeService = {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao atualizar configuração de prêmio', { error: error.message, prizeId: id }, 'PRIZE_SERVICE');
+        throw error;
+      }
+      
+      logger.info('Configuração de prêmio atualizada com sucesso', { prizeId: id }, 'PRIZE_SERVICE');
       return { success: true, data };
-    } catch (error) {
-      console.error('Error updating prize configuration:', error);
+    } catch (error: any) {
+      logger.error('Erro ao atualizar configuração de prêmio', { error: error.message }, 'PRIZE_SERVICE');
       return { success: false, error: 'Erro ao atualizar configuração de prêmio' };
     }
   }

@@ -1,5 +1,6 @@
 
 import { type Position } from '@/utils/boardUtils';
+import { logger } from '@/utils/logger';
 
 export const useWordValidation = () => {
   // Função para validar se as células formam uma linha válida (horizontal, vertical ou diagonal)
@@ -18,6 +19,11 @@ export const useWordValidation = () => {
     const isDiagonal = Math.abs(deltaRow) === 1 && Math.abs(deltaCol) === 1;
     
     if (!isHorizontal && !isVertical && !isDiagonal) {
+      logger.debug('Direção inválida detectada', { 
+        deltaRow, 
+        deltaCol, 
+        positionsCount: positions.length 
+      }, 'WORD_VALIDATION');
       return false;
     }
     
@@ -30,10 +36,19 @@ export const useWordValidation = () => {
       const currDeltaCol = curr.col - prev.col;
       
       if (currDeltaRow !== deltaRow || currDeltaCol !== deltaCol) {
+        logger.debug('Inconsistência na direção detectada', { 
+          expectedDelta: { deltaRow, deltaCol },
+          actualDelta: { currDeltaRow, currDeltaCol },
+          position: i
+        }, 'WORD_VALIDATION');
         return false;
       }
     }
     
+    logger.debug('Direção válida confirmada', { 
+      direction: isHorizontal ? 'horizontal' : isVertical ? 'vertical' : 'diagonal',
+      positionsCount: positions.length
+    }, 'WORD_VALIDATION');
     return true;
   };
 

@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useGamePointsConfig } from './useGamePointsConfig';
+import { logger } from '@/utils/logger';
 
 export const useGameTimer = (initialTime: number, isGameStarted: boolean) => {
   const [timeRemaining, setTimeRemaining] = useState(initialTime);
@@ -9,9 +10,10 @@ export const useGameTimer = (initialTime: number, isGameStarted: boolean) => {
   // Reset timer when game starts or level changes
   useEffect(() => {
     setTimeRemaining(initialTime);
+    logger.debug('Timer resetado', { initialTime }, 'GAME_TIMER');
   }, [initialTime]);
 
-  // Timer countdown - removido log repetitivo
+  // Timer countdown
   useEffect(() => {
     if (isGameStarted && timeRemaining > 0) {
       const timer = setInterval(() => {
@@ -22,10 +24,13 @@ export const useGameTimer = (initialTime: number, isGameStarted: boolean) => {
   }, [isGameStarted, timeRemaining]);
 
   const extendTime = useCallback(() => {
-    console.log(`Adicionando ${config.revive_time_bonus} segundos ao tempo restante`);
+    logger.info('Tempo estendido com revive', { 
+      timeBonus: config.revive_time_bonus,
+      timeRemaining 
+    }, 'GAME_TIMER');
     setTimeRemaining(prev => prev + config.revive_time_bonus);
     return true;
-  }, [config.revive_time_bonus]);
+  }, [config.revive_time_bonus, timeRemaining]);
 
   return {
     timeRemaining,
