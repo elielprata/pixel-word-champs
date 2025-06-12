@@ -1,153 +1,105 @@
 
 /**
- * UTILITÁRIOS DE TEMPO PARA BRASÍLIA - VERSÃO CORRIGIDA
+ * UTILITÁRIOS DE TEMPO PARA BRASÍLIA (VERSÃO CORRIGIDA)
  * 
- * Esta versão trabalha com strings simples e comparações diretas,
- * sem conversões complexas de timezone que podem causar problemas.
+ * IMPORTANTE: O banco de dados agora armazena as datas em UTC equivalente ao horário de Brasília
+ * Isso significa que as comparações podem ser feitas diretamente sem conversões complexas
  */
 
 /**
- * Obtém a data/hora atual no formato ISO, ajustada para Brasília
+ * Obtém a data atual no formato ISO
  */
 export const getCurrentDateISO = (): string => {
-  const now = new Date();
-  // Ajustar para UTC-3 (Brasília)
-  const brasiliaTime = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-  const isoString = brasiliaTime.toISOString();
-  
-  console.log('🕐 [getCurrentDateISO] Horário atual (Brasília):', isoString);
-  return isoString;
+  return new Date().toISOString();
 };
 
 /**
  * Calcula o status correto de uma competição baseado nas datas
- * VERSÃO SIMPLIFICADA - usando comparação de strings
+ * CORRIGIDO: Como o banco agora armazena UTC equivalente ao Brasília, 
+ * podemos comparar diretamente com o horário atual
  */
-export const calculateCompetitionStatus = (startDate: string, endDate: string): string => {
+export const calculateCompetitionStatus = (
+  startDate: string, 
+  endDate: string
+): 'scheduled' | 'active' | 'completed' => {
   const now = new Date();
   const start = new Date(startDate);
   const end = new Date(endDate);
-  
+
   console.log('🔍 [calculateCompetitionStatus] Calculando status:', {
-    startDate,
-    endDate,
-    nowISO: now.toISOString(),
-    startISO: start.toISOString(),
-    endISO: end.toISOString()
+    now: now.toISOString(),
+    start: start.toISOString(),
+    end: end.toISOString(),
+    nowTime: now.getTime(),
+    startTime: start.getTime(),
+    endTime: end.getTime()
   });
 
-  let status: string;
-  
   if (now < start) {
-    status = 'scheduled';
+    console.log('📅 Status: scheduled (antes do início)');
+    return 'scheduled';
   } else if (now >= start && now <= end) {
-    status = 'active';
+    console.log('🟢 Status: active (em andamento)');
+    return 'active';
   } else {
-    status = 'completed';
-  }
-
-  console.log(`📊 [calculateCompetitionStatus] Status calculado: ${status}`);
-  return status;
-};
-
-/**
- * Formata uma data para exibição no fuso de Brasília
- */
-export const formatDateForBrasilia = (dateString: string): string => {
-  try {
-    const date = new Date(dateString);
-    
-    const formatted = date.toLocaleDateString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    
-    console.log('📅 [formatDateForBrasilia] Data formatada:', {
-      input: dateString,
-      output: formatted
-    });
-    
-    return formatted;
-  } catch (error) {
-    console.error('❌ [formatDateForBrasilia] Erro ao formatar data:', error);
-    return dateString;
+    console.log('🔴 Status: completed (finalizada)');
+    return 'completed';
   }
 };
 
 /**
- * Alias para formatDateForBrasilia (compatibilidade)
+ * Formata uma data para exibição (VERSÃO SIMPLIFICADA)
  */
 export const formatDateForDisplay = (dateString: string): string => {
-  return formatDateForBrasilia(dateString);
-};
-
-/**
- * Formata data e hora para exibição completa
- */
-export const formatDateTimeForDisplay = (dateString: string): string => {
-  try {
-    const date = new Date(dateString);
-    
-    const formatted = date.toLocaleDateString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
-    console.log('📅 [formatDateTimeForDisplay] Data/hora formatada:', {
-      input: dateString,
-      output: formatted
-    });
-    
-    return formatted;
-  } catch (error) {
-    console.error('❌ [formatDateTimeForDisplay] Erro ao formatar data/hora:', error);
-    return dateString;
-  }
-};
-
-/**
- * Verifica se uma data está no passado (Brasília)
- */
-export const isDateInPast = (dateString: string): boolean => {
-  const now = new Date();
-  const date = new Date(dateString);
-  const isPast = date < now;
+  if (!dateString) return 'N/A';
   
-  console.log('⏪ [isDateInPast] Verificação:', {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Sao_Paulo' // Garantir que seja exibido no horário de Brasília
+  });
+};
+
+/**
+ * Verifica se uma data está no horário de Brasília
+ */
+export const isInBrasiliaTimezone = (dateString: string): boolean => {
+  const date = new Date(dateString);
+  const brasiliaOffset = -3; // UTC-3
+  const dateOffset = -date.getTimezoneOffset() / 60;
+  
+  console.log('🌎 [isInBrasiliaTimezone] Verificação:', {
     dateString,
-    now: now.toISOString(),
-    date: date.toISOString(),
-    isPast
+    brasiliaOffset,
+    dateOffset,
+    match: dateOffset === brasiliaOffset
   });
   
-  return isPast;
+  return dateOffset === brasiliaOffset;
 };
 
 /**
- * Verifica se uma data está no futuro (Brasília)
+ * Calcula tempo restante em segundos
  */
-export const isDateInFuture = (dateString: string): boolean => {
+export const calculateTimeRemaining = (endDate: string): number => {
   const now = new Date();
-  const date = new Date(dateString);
-  const isFuture = date > now;
+  const end = new Date(endDate);
+  const diffMs = end.getTime() - now.getTime();
+  const remainingSeconds = Math.max(0, Math.floor(diffMs / 1000));
   
-  console.log('⏩ [isDateInFuture] Verificação:', {
-    dateString,
+  console.log('⏱️ [calculateTimeRemaining] Tempo restante:', {
+    endDate,
     now: now.toISOString(),
-    date: date.toISOString(),
-    isFuture
+    end: end.toISOString(),
+    diffMs,
+    remainingSeconds
   });
   
-  return isFuture;
+  return remainingSeconds;
 };
 
-console.log('🎯 [brasiliaTime] Utilitários de tempo carregados (versão corrigida)');
+console.log('🕒 UTILITÁRIOS DE TEMPO DE BRASÍLIA CORRIGIDOS CARREGADOS');

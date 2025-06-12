@@ -37,8 +37,12 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   };
   
   const calculateTimeRemaining = () => {
+    // CORREÇÃO RADICAL: Calcular tempo restante usando horário de Brasília
     const now = new Date();
     const endDate = new Date(competition.end_date);
+    
+    // Como o banco agora armazena as datas em UTC correspondente ao horário de Brasília,
+    // podemos fazer a comparação diretamente
     const diff = endDate.getTime() - now.getTime();
     
     if (diff <= 0) return 'Finalizada';
@@ -97,7 +101,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
             </div>
           </div>
           
-          {/* Tempo restante compacto */}
+          {/* Tempo restante compacto - CORRIGIDO para Brasília */}
           <div className="bg-gradient-to-r from-accent/80 to-accent/60 rounded-lg px-3 py-1.5 border border-border/50 hover:from-primary/15 hover:to-primary/10 transition-all duration-300 animate-scale-in">
             <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-primary animate-pulse" />

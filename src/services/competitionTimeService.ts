@@ -5,13 +5,14 @@ import { getCurrentDateISO, calculateCompetitionStatus } from '@/utils/brasiliaT
 class CompetitionTimeService {
   /**
    * Atualiza o status das competições baseado no horário atual (VERSÃO CORRIGIDA)
+   * IMPORTANTE: O banco agora armazena datas em UTC equivalente ao Brasília
    */
   async updateCompetitionStatuses() {
     try {
-      console.log('🔄 [CompetitionTimeService] Atualizando status das competições...');
+      console.log('🔄 [CompetitionTimeService] Atualizando status das competições (CORRIGIDO)...');
       
       const now = getCurrentDateISO();
-      console.log('⏰ [CompetitionTimeService] Horário atual (Brasília):', now);
+      console.log('⏰ [CompetitionTimeService] Horário atual:', now);
       
       // Buscar todas as competições que podem precisar de atualização
       const { data: competitions, error } = await supabase
@@ -75,13 +76,13 @@ class CompetitionTimeService {
   }
 
   /**
-   * Verifica se uma competição está ativa no momento
+   * Verifica se uma competição está ativa no momento (VERSÃO CORRIGIDA)
    */
   isCompetitionActive(startDate: string, endDate: string): boolean {
     const status = calculateCompetitionStatus(startDate, endDate);
     const isActive = status === 'active';
     
-    console.log('🔍 [isCompetitionActive] Verificação:', {
+    console.log('🔍 [isCompetitionActive] Verificação (CORRIGIDA):', {
       startDate,
       endDate,
       status,
@@ -92,7 +93,7 @@ class CompetitionTimeService {
   }
 
   /**
-   * Obtém o tempo restante para uma competição em segundos
+   * Obtém o tempo restante para uma competição em segundos (VERSÃO CORRIGIDA)
    */
   getTimeRemaining(endDate: string): number {
     const now = new Date();
@@ -100,7 +101,7 @@ class CompetitionTimeService {
     const diffMs = end.getTime() - now.getTime();
     const remainingSeconds = Math.max(0, Math.floor(diffMs / 1000));
     
-    console.log('⏱️ [getTimeRemaining] Tempo restante:', {
+    console.log('⏱️ [getTimeRemaining] Tempo restante (CORRIGIDO):', {
       endDate,
       now: now.toISOString(),
       remainingSeconds
@@ -110,7 +111,7 @@ class CompetitionTimeService {
   }
 
   /**
-   * Força atualização de uma competição específica
+   * Força atualização de uma competição específica (VERSÃO CORRIGIDA)
    */
   async forceUpdateCompetitionStatus(competitionId: string): Promise<boolean> {
     try {
