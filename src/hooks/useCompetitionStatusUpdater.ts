@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { CompetitionStatusService } from '@/services/competitionStatusService';
+import { competitionStatusService } from '@/services/competitionStatusService';
 
 export const useCompetitionStatusUpdater = (competitions: any[]) => {
   useEffect(() => {
@@ -10,7 +10,7 @@ export const useCompetitionStatusUpdater = (competitions: any[]) => {
         
         // Atualizar status de competições específicas se necessário
         for (const competition of competitions) {
-          await CompetitionStatusService.updateSingleCompetitionStatus(competition.id);
+          await competitionStatusService.updateSingleCompetitionStatus(competition.id, competition.status);
         }
         
         console.log('✅ Status das competições atualizados');

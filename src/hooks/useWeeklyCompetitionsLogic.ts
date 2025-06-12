@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
-import { CompetitionStatusService } from '@/services/competitionStatusService';
+import { competitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {
   id: string;
@@ -22,7 +22,7 @@ export const useWeeklyCompetitionsLogic = (competitions: WeeklyCompetition[]) =>
 
   // Usar o serviço centralizado para calcular o status de cada competição
   const calculateActualStatus = (competition: WeeklyCompetition) => {
-    return CompetitionStatusService.calculateCorrectStatus(competition);
+    return competitionStatusService.calculateCorrectStatus(competition);
   };
 
   // Filtrar apenas competições não finalizadas (ativas ou aguardando)

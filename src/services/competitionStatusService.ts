@@ -119,6 +119,21 @@ export class CompetitionStatusService {
       return createErrorResponse(handleServiceError(error, 'COMPETITION_FINALIZATION'));
     }
   }
+
+  // Método para calcular status correto baseado nas datas
+  calculateCorrectStatus(competition: { start_date: string; end_date: string; competition_type?: string }): string {
+    const now = new Date();
+    const startDate = new Date(competition.start_date);
+    const endDate = new Date(competition.end_date);
+
+    if (now < startDate) {
+      return 'scheduled';
+    } else if (now >= startDate && now <= endDate) {
+      return 'active';
+    } else {
+      return 'completed';
+    }
+  }
 }
 
 export const competitionStatusService = new CompetitionStatusService();

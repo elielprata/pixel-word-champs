@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Trophy, Users, Crown } from 'lucide-react';
 import { WeeklyCompetitionActions } from './WeeklyCompetitionActions';
-import { CompetitionStatusService } from '@/services/competitionStatusService';
+import { competitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {
   id: string;
@@ -47,7 +48,7 @@ export const ActiveCompetitionCard = ({
   };
 
   // Usar o serviço centralizado para calcular o status
-  const actualStatus = CompetitionStatusService.calculateCorrectStatus({
+  const actualStatus = competitionStatusService.calculateCorrectStatus({
     start_date: competition.start_date,
     end_date: competition.end_date,
     competition_type: 'tournament'
