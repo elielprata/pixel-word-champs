@@ -30,18 +30,18 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
     );
   }
 
-  const wrappedHandleEditGroup = (group: GroupPrize) => {
-    paymentData.handleEditGroup(group.id);
+  const handleEditGroupWrapper = (groupId: string) => {
+    paymentData.handleEditGroup(groupId);
   };
 
-  const wrappedHandleSaveGroup = () => {
+  const handleSaveGroupWrapper = () => {
     if (paymentData.editingGroup) {
       paymentData.handleSaveGroup(paymentData.editingGroup);
     }
   };
 
-  const wrappedHandleToggleGroup = (group: GroupPrize) => {
-    paymentData.handleToggleGroup(group.id);
+  const handleToggleGroupWrapper = (groupId: string) => {
+    paymentData.handleToggleGroup(groupId);
   };
 
   return (
@@ -77,9 +77,9 @@ export const PrizeConfigModal = ({ open, onOpenChange }: PrizeConfigModalProps) 
             editingGroup={paymentData.editingGroup}
             editGroupPrize={paymentData.editGroupPrize}
             setEditGroupPrize={paymentData.setEditGroupPrize}
-            onEditGroup={wrappedHandleEditGroup}
-            onSaveGroup={wrappedHandleSaveGroup}
-            onToggleGroup={wrappedHandleToggleGroup}
+            onEditGroup={handleEditGroupWrapper}
+            onSaveGroup={handleSaveGroupWrapper}
+            onToggleGroup={handleToggleGroupWrapper}
             onCancel={paymentData.handleCancel}
           />
         </div>

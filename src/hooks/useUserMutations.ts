@@ -1,25 +1,17 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/hooks/use-toast";
 
 export const useUserMutations = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const banUserMutation = useMutation({
-    mutationFn: async ({ userId, reason, adminId }: { 
-      userId: string; 
-      reason: string; 
-      adminId: string; 
-    }) => {
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user) {
-        throw new Error('Usuário não autenticado');
-      }
+    mutationFn: async ({ userId, reason, adminId }: { userId: string; reason: string; adminId: string }) => {
+      console.log('🚫 Banindo usuário:', { userId, reason, adminId });
 
-      // Banir usuário
-      const { error: banError } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({
           is_banned: true,
@@ -29,21 +21,12 @@ export const useUserMutations = () => {
         } as any)
         .eq('id', userId as any);
 
-      if (banError) throw banError;
-
-      // Registrar ação administrativa
-      const { error: logError } = await supabase
-        .from('admin_actions')
-        .insert({
-          admin_id: adminId,
-          target_user_id: userId,
-          action_type: 'ban_user',
-          details: { reason }
-        } as any);
-
-      if (logError) {
-        console.warn('⚠️ Erro ao registrar log:', logError);
+      if (error) {
+        console.error('❌ Erro ao banir usuário:', error);
+        throw error;
       }
+
+      console.log('✅ Usuário banido com sucesso');
     },
     onSuccess: () => {
       toast({
@@ -53,9 +36,10 @@ export const useUserMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
+      console.error('❌ Erro ao banir usuário:', error);
       toast({
-        title: "Erro ao banir usuário",
-        description: error.message,
+        title: "Erro",
+        description: "Não foi possível banir o usuário.",
         variant: "destructive",
       });
     },
@@ -63,13 +47,9 @@ export const useUserMutations = () => {
 
   const unbanUserMutation = useMutation({
     mutationFn: async ({ userId, adminId }: { userId: string; adminId: string }) => {
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user) {
-        throw new Error('Usuário não autenticado');
-      }
+      console.log('✅ Removendo ban do usuário:', { userId, adminId });
 
-      // Desbanir usuário
-      const { error: unbanError } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({
           is_banned: false,
@@ -79,33 +59,25 @@ export const useUserMutations = () => {
         } as any)
         .eq('id', userId as any);
 
-      if (unbanError) throw unbanError;
-
-      // Registrar ação administrativa
-      const { error: logError } = await supabase
-        .from('admin_actions')
-        .insert({
-          admin_id: adminId,
-          target_user_id: userId,
-          action_type: 'unban_user',
-          details: {}
-        } as any);
-
-      if (logError) {
-        console.warn('⚠️ Erro ao registrar log:', logError);
+      if (error) {
+        console.error('❌ Erro ao remover ban:', error);
+        throw error;
       }
+
+      console.log('✅ Ban removido com sucesso');
     },
     onSuccess: () => {
       toast({
-        title: "Usuário desbanido",
-        description: "O usuário foi desbanido com sucesso.",
+        title: "Ban removido",
+        description: "O ban do usuário foi removido com sucesso.",
       });
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
+      console.error('❌ Erro ao remover ban:', error);
       toast({
-        title: "Erro ao desbanir usuário",
-        description: error.message,
+        title: "Erro",
+        description: "Não foi possível remover o ban do usuário.",
         variant: "destructive",
       });
     },
@@ -113,44 +85,41 @@ export const useUserMutations = () => {
 
   const deleteUserMutation = useMutation({
     mutationFn: async ({ userId, adminId }: { userId: string; adminId: string }) => {
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user) {
-        throw new Error('Usuário não autenticado');
-      }
+      console.log('🗑️ Deletando usuário:', { userId, adminId });
 
-      // Registrar ação antes de deletar
-      const { error: logError } = await supabase
-        .from('admin_actions')
-        .insert({
-          admin_id: adminId,
-          target_user_id: userId,
-          action_type: 'delete_user',
-          details: {}
-        } as any);
-
-      if (logError) {
-        console.warn('⚠️ Erro ao registrar log:', logError);
-      }
-
-      // Deletar perfil do usuário
-      const { error: deleteError } = await supabase
+      // First delete from profiles table
+      const { error: profileError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', userId as any);
 
-      if (deleteError) throw deleteError;
+      if (profileError) {
+        console.error('❌ Erro ao deletar perfil:', profileError);
+        throw profileError;
+      }
+
+      // Then delete from auth
+      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+
+      if (authError) {
+        console.error('❌ Erro ao deletar usuário da auth:', authError);
+        throw authError;
+      }
+
+      console.log('✅ Usuário deletado com sucesso');
     },
     onSuccess: () => {
       toast({
         title: "Usuário deletado",
-        description: "O usuário foi removido permanentemente.",
+        description: "O usuário foi deletado com sucesso.",
       });
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
+      console.error('❌ Erro ao deletar usuário:', error);
       toast({
-        title: "Erro ao deletar usuário",
-        description: error.message,
+        title: "Erro",
+        description: "Não foi possível deletar o usuário.",
         variant: "destructive",
       });
     },
