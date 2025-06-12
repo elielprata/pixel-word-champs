@@ -1,14 +1,12 @@
 
-import React, { useEffect } from 'react';
-import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { WeeklyCompetitionsContainer } from './weekly/WeeklyCompetitionsContainer';
+import { WeeklyCompetitionHeader } from './weekly/WeeklyCompetitionHeader';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { WeeklyRankingModal } from './WeeklyRankingModal';
-import { WeeklyCompetitionHeader } from './weekly/WeeklyCompetitionHeader';
-import { WeeklyCompetitionsEmpty } from './weekly/WeeklyCompetitionsEmpty';
-import { WeeklyCompetitionsContainer } from './weekly/WeeklyCompetitionsContainer';
 import { useWeeklyCompetitionsActions } from '@/hooks/useWeeklyCompetitionsActions';
-import { useWeeklyCompetitionsLogic } from '@/hooks/useWeeklyCompetitionsLogic';
-import { competitionTimeService } from '@/services/competitionTimeService';
+import { competitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {
   id: string;
@@ -19,14 +17,14 @@ interface WeeklyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  // Removido total_participants que não existe na tabela custom_competitions
+  total_participants?: number;
 }
 
 interface WeeklyCompetitionsViewProps {
   competitions: WeeklyCompetition[];
   activeCompetition: WeeklyCompetition | null;
   isLoading: boolean;
-  onRefresh?: () => void;
+  onRefresh: () => void;
 }
 
 export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
@@ -35,51 +33,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   isLoading,
   onRefresh
 }) => {
-  console.log('🔍 [WeeklyCompetitionsView] Renderizando com:', {
-    totalCompetitions: competitions.length,
-    hasActiveCompetition: !!activeCompetition,
-    isLoading
-  });
-
-  // Log detalhado de cada competição recebida
-  competitions.forEach((comp, index) => {
-    console.log(`📋 [COMP ${index + 1}] "${comp.title}":`, {
-      id: comp.id,
-      status: comp.status,
-      startDate: comp.start_date,
-      endDate: comp.end_date,
-      prizePool: comp.prize_pool
-    });
-  });
-
-  // Adicionar hook para atualização automática de status
-  useCompetitionStatusUpdater(competitions);
-
-  // Atualizar status das competições periodicamente
-  useEffect(() => {
-    const updateStatuses = async () => {
-      console.log('🔄 [AUTO-UPDATE] Atualizando status das competições...');
-      try {
-        await competitionTimeService.updateCompetitionStatuses();
-        if (onRefresh) {
-          console.log('🔄 [AUTO-UPDATE] Fazendo refresh dos dados...');
-          onRefresh();
-        }
-      } catch (error) {
-        console.error('❌ [AUTO-UPDATE] Erro ao atualizar status:', error);
-      }
-    };
-
-    // Atualizar imediatamente
-    updateStatuses();
-
-    // Depois a cada 5 minutos
-    const interval = setInterval(updateStatuses, 5 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [onRefresh]);
-
-  const { activeCompetitions } = useWeeklyCompetitionsLogic(competitions);
+  const [lastRefresh, setLastRefresh] = useState<number>(0);
   
   const {
     editingCompetition,
@@ -93,48 +47,81 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
     handleCompetitionUpdated
   } = useWeeklyCompetitionsActions();
 
-  console.log('🎯 [RENDER CHECK] Preparando para renderizar:', {
-    isLoading,
-    activeCompetitionsCount: activeCompetitions.length,
-    willShowEmpty: !isLoading && activeCompetitions.length === 0,
-    willShowContainer: !isLoading && activeCompetitions.length > 0
+  // Debounced refresh to prevent excessive calls
+  const debouncedRefresh = useCallback(() => {
+    const now = Date.now();
+    if (now - lastRefresh > 5000) { // Minimum 5 seconds between refreshes
+      console.log('🔄 [WeeklyCompetitionsView] Executando refresh com debounce');
+      setLastRefresh(now);
+      onRefresh();
+    } else {
+      console.log('⏳ [WeeklyCompetitionsView] Refresh bloqueado por debounce');
+    }
+  }, [onRefresh, lastRefresh]);
+
+  // Simplified status validation - removed auto-update to prevent conflicts
+  const validatedCompetitions = useMemo(() => {
+    return competitions.map(comp => {
+      const actualStatus = competitionStatusService.calculateCorrectStatus({
+        start_date: comp.start_date,
+        end_date: comp.end_date,
+        competition_type: 'tournament'
+      });
+      
+      if (comp.status !== actualStatus) {
+        console.log(`⚠️ [WeeklyCompetitionsView] Status mismatch para "${comp.title}":`, {
+          statusBanco: comp.status,
+          statusCalculado: actualStatus
+        });
+      }
+      
+      return comp;
+    });
+  }, [competitions]);
+
+  const handleRefreshCallback = useCallback(() => {
+    console.log('🔄 [WeeklyCompetitionsView] Callback de refresh chamado');
+    handleCompetitionUpdated(debouncedRefresh);
+  }, [handleCompetitionUpdated, debouncedRefresh]);
+
+  console.log('🏆 [WeeklyCompetitionsView] Renderizando com:', {
+    competitions: validatedCompetitions.length,
+    activeCompetition: activeCompetition?.title || 'nenhuma',
+    isLoading
   });
 
   if (isLoading) {
-    console.log('⏳ [WeeklyCompetitionsView] Exibindo estado de loading...');
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-b-2 border-purple-600 rounded-full mx-auto mb-4"></div>
-          <p className="text-slate-600">Carregando competições semanais...</p>
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <span className="ml-3 text-slate-600">Carregando competições semanais...</span>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (activeCompetitions.length === 0) {
-    console.log('📭 [WeeklyCompetitionsView] Nenhuma competição ativa, exibindo estado vazio...');
-    return <WeeklyCompetitionsEmpty />;
-  }
-
-  console.log(`✅ [WeeklyCompetitionsView] Renderizando container com ${activeCompetitions.length} competições`);
-
   return (
-    <div className="space-y-6">
-      <WeeklyCompetitionHeader />
+    <>
+      <div className="space-y-6">
+        <WeeklyCompetitionHeader />
+        
+        <WeeklyCompetitionsContainer
+          competitions={validatedCompetitions}
+          onViewRanking={handleViewRanking}
+          onEdit={handleEdit}
+          onRefresh={debouncedRefresh}
+        />
+      </div>
 
-      <WeeklyCompetitionsContainer 
-        competitions={competitions}
-        onViewRanking={handleViewRanking}
-        onEdit={handleEdit}
-        onRefresh={onRefresh}
-      />
-
+      {/* Modals */}
       <EditCompetitionModal
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
         competition={editingCompetition}
-        onCompetitionUpdated={() => handleCompetitionUpdated(onRefresh)}
+        onCompetitionUpdated={handleRefreshCallback}
       />
 
       <WeeklyRankingModal
@@ -142,6 +129,6 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
         onOpenChange={setIsRankingModalOpen}
         competitionId={selectedCompetitionId}
       />
-    </div>
+    </>
   );
 };

@@ -51,15 +51,6 @@ export const RankingsTab = () => {
     endDate: comp.end_date
   })));
 
-  // Calcular prêmio total real baseado nos participantes semanais
-  const totalPrizeDistributed = weeklyRanking.slice(0, 10).reduce((total, _, index) => {
-    if (index === 0) return total + 100;
-    if (index === 1) return total + 50;
-    if (index === 2) return total + 25;
-    if (index <= 9) return total + 10;
-    return total;
-  }, 0);
-
   const handleCompetitionCreated = () => {
     console.log('🔄 Nova competição criada, atualizando dados...');
     refreshData();
@@ -161,15 +152,6 @@ export const RankingsTab = () => {
                     </p>
                   </div>
                 </div>
-                
-                {(() => {
-                  console.log('🚀 [RankingsTab] Enviando dados para WeeklyCompetitionsView:', {
-                    competitions: weeklyCompetitions.length,
-                    activeCompetition: activeWeeklyCompetition?.title || 'nenhuma',
-                    isLoading: isRankingsLoading
-                  });
-                  return null;
-                })()}
                 
                 <WeeklyCompetitionsView 
                   competitions={weeklyCompetitions} 
