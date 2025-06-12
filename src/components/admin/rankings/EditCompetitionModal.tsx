@@ -12,7 +12,7 @@ interface BaseCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  total_participants: number;
+  total_participants?: number; // Made optional to match WeeklyCompetition
   competition_type?: string;
   theme?: string;
   rules?: any;
