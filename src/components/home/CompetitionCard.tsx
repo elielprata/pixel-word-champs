@@ -1,11 +1,10 @@
 
 import React from 'react';
-import { Calendar, Users, Trophy, Clock } from 'lucide-react';
+import { Zap, Clock, Play } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Competition } from '@/types';
-import { formatDateTimeForDisplay, calculateCompetitionStatus } from '@/utils/brasiliaTime';
+import { calculateCompetitionStatus } from '@/utils/brasiliaTime';
 
 interface CompetitionCardProps {
   competition: Competition;
@@ -16,85 +15,97 @@ interface CompetitionCardProps {
 const CompetitionCard = ({ competition, onJoin, onViewRanking }: CompetitionCardProps) => {
   const status = calculateCompetitionStatus(competition.start_date, competition.end_date);
   
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500';
-      case 'scheduled': return 'bg-blue-500';
-      case 'completed': return 'bg-gray-500';
-      default: return 'bg-gray-400';
+  const calculateTimeRemaining = () => {
+    const now = new Date();
+    const endDate = new Date(competition.end_date);
+    const diff = endDate.getTime() - now.getTime();
+    
+    if (diff <= 0) return 'Finalizada';
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m restantes`;
     }
+    return `${minutes}m restantes`;
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Ativa';
-      case 'scheduled': return 'Agendada';
-      case 'completed': return 'Finalizada';
-      default: return 'Indefinido';
-    }
-  };
+  if (status !== 'active') {
+    return null; // Não mostrar competições inativas
+  }
 
   return (
-    <Card className="hover:shadow-md transition-shadow border border-gray-200">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="font-semibold text-lg text-gray-800 line-clamp-1">
-            {competition.title}
-          </h3>
-          <Badge className={`${getStatusColor(status)} text-white text-xs`}>
-            {getStatusText(status)}
-          </Badge>
+    <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500 via-blue-600 to-indigo-700 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
+      {/* Efeitos visuais de fundo */}
+      <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-transparent to-pink-400/10"></div>
+      <div className="absolute -top-4 -right-4 w-24 h-24 bg-yellow-400/20 rounded-full blur-xl"></div>
+      <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-pink-400/20 rounded-full blur-xl"></div>
+      
+      <CardContent className="relative p-6 text-white">
+        {/* Header com ícone de raio */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-yellow-400 rounded-xl shadow-lg">
+            <Zap className="w-6 h-6 text-yellow-900" />
+          </div>
+          <div>
+            <h3 className="font-bold text-xl text-white leading-tight">
+              {competition.title}
+            </h3>
+            <p className="text-blue-100 text-sm font-medium">
+              Desafio Diário Épico
+            </p>
+          </div>
         </div>
 
+        {/* Descrição */}
         {competition.description && (
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+          <p className="text-blue-100 text-sm mb-4 leading-relaxed">
             {competition.description}
           </p>
         )}
 
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Calendar className="w-4 h-4" />
-            <span>Início: {formatDateTimeForDisplay(competition.start_date)}</span>
+        {/* Tempo restante com destaque */}
+        <div className="bg-black/20 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/10">
+          <div className="flex items-center justify-center gap-2">
+            <Clock className="w-5 h-5 text-yellow-400" />
+            <span className="text-yellow-400 font-bold text-lg">
+              {calculateTimeRemaining()}
+            </span>
           </div>
-          
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Clock className="w-4 h-4" />
-            <span>Fim: {formatDateTimeForDisplay(competition.end_date)}</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Users className="w-4 h-4" />
-            <span>{competition.total_participants || 0}/{competition.max_participants} participantes</span>
-          </div>
-
-          {competition.prize_pool && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Trophy className="w-4 h-4" />
-              <span>Prêmio: R$ {competition.prize_pool.toLocaleString('pt-BR')}</span>
-            </div>
-          )}
+          <p className="text-center text-blue-200 text-xs mt-1">
+            ⏰ Corra contra o tempo!
+          </p>
         </div>
 
-        <div className="flex gap-2">
-          {status === 'active' && (
-            <Button 
-              onClick={() => onJoin(competition.id)} 
-              className="flex-1"
-              size="sm"
-            >
-              Participar
-            </Button>
-          )}
+        {/* Botões de ação */}
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => onJoin(competition.id)} 
+            className="flex-1 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold text-lg h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+            size="lg"
+          >
+            <Play className="w-5 h-5 mr-2" />
+            🎯 Jogar Agora
+          </Button>
           
           <Button 
             onClick={() => onViewRanking(competition.id)} 
             variant="outline"
-            className="flex-1"
-            size="sm"
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm font-semibold h-12 px-6 rounded-xl"
+            size="lg"
           >
-            Ver Ranking
+            🏆 Ranking
           </Button>
+        </div>
+
+        {/* Elemento decorativo */}
+        <div className="absolute top-2 right-2">
+          <div className="flex space-x-1">
+            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse delay-100"></div>
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-200"></div>
+          </div>
         </div>
       </CardContent>
     </Card>
