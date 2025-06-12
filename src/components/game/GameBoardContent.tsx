@@ -1,20 +1,14 @@
 
 import React from 'react';
-import GameBoardGrid from './GameBoardGrid';
-import WordsList from './WordsList';
-import GameModals from './GameModals';
 import GameBoardHeader from './GameBoardHeader';
-import { useBoard } from '@/hooks/useBoard';
-import { useBoardInteraction } from '@/hooks/useBoardInteraction';
-import { useWordValidation } from '@/hooks/useWordValidation';
-import { useGameLogic } from '@/hooks/useGameLogic';
-import { useGameInteractions } from '@/hooks/useGameInteractions';
-import { type Position } from '@/utils/boardUtils';
+import GameBoardMainContent from './GameBoardMainContent';
+import GameModals from './GameModals';
+import GameBoardLogic from './GameBoardLogic';
 import { logger } from '@/utils/logger';
 
 interface FoundWord {
   word: string;
-  positions: Position[];
+  positions: Array<{row: number, col: number}>;
   points: number;
 }
 
@@ -41,184 +35,81 @@ const GameBoardContent = ({
   canRevive,
   onRevive
 }: GameBoardContentProps) => {
-  const { boardData, size, levelWords } = useBoard(level);
-  
-  const { 
-    selectedCells, 
-    isSelecting, 
-    handleCellStart, 
-    handleCellMove, 
-    handleCellEnd, 
-    isCellSelected 
-  } = useBoardInteraction();
-  
-  const { isValidWordDirection } = useWordValidation();
-
-  const {
-    foundWords,
-    hintsUsed,
-    showGameOver,
-    showLevelComplete,
-    isLevelCompleted,
-    setHintsUsed,
-    setShowGameOver,
-    setHintHighlightedCells,
-    addFoundWord,
-    isCellPermanentlyMarked,
-    isCellHintHighlighted,
-    closeGameOver
-  } = useGameLogic(level, timeLeft, levelWords, onWordFound, (levelScore) => {
-    logger.info('Nível completado', { 
-      level, 
-      levelScore,
-      foundWordsCount: foundWords.length 
-    }, 'GAME_BOARD_CONTENT');
-    onLevelComplete(levelScore);
-  });
-
-  const { useHint, handleRevive, handleGoHome } = useGameInteractions(
-    foundWords,
-    levelWords,
-    boardData,
-    hintsUsed,
-    setHintsUsed,
-    setHintHighlightedCells,
-    canRevive,
-    () => {}, 
-    setShowGameOver,
-    onTimeUp
-  );
-
-  const handleCellEndWithValidation = () => {
-    const finalSelection = handleCellEnd();
-    
-    if (finalSelection.length >= 3) {
-      const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
-      
-      if (levelWords.includes(word) && 
-          !foundWords.some(fw => fw.word === word) && 
-          isValidWordDirection(finalSelection)) {
-        logger.info('Palavra encontrada', { 
-          word, 
-          level,
-          wordLength: word.length,
-          selectionLength: finalSelection.length 
-        }, 'GAME_BOARD_CONTENT');
-        addFoundWord(word, finalSelection);
-      } else {
-        logger.debug('Palavra inválida tentada', { 
-          word,
-          level,
-          isInWordList: levelWords.includes(word),
-          alreadyFound: foundWords.some(fw => fw.word === word),
-          validDirection: isValidWordDirection(finalSelection)
-        }, 'GAME_BOARD_CONTENT');
-      }
-    }
-  };
-
-  const handleCellMoveWithValidation = (row: number, col: number) => {
-    handleCellMove(row, col, isValidWordDirection);
-  };
-
-  const handleReviveClick = () => {
+  const handleReviveClick = (closeGameOver: () => void) => {
     if (onRevive) {
       logger.info('Revive ativado', { 
         level,
-        timeLeft,
-        foundWordsCount: foundWords.length 
+        timeLeft 
       }, 'GAME_BOARD_CONTENT');
       onRevive();
       closeGameOver();
     }
   };
 
-  const handleUseHintClick = () => {
+  const handleUseHintClick = (useHint: () => void) => {
     logger.info('Dica utilizada', { 
       level,
-      hintsUsed: hintsUsed + 1,
       timeLeft 
     }, 'GAME_BOARD_CONTENT');
     useHint();
   };
 
-  // Função para obter a cor específica de uma palavra encontrada
-  const getWordColor = (wordIndex: number) => {
-    const colors = [
-      'from-emerald-400 to-green-500',
-      'from-blue-400 to-indigo-500', 
-      'from-purple-400 to-violet-500',
-      'from-pink-400 to-rose-500',
-      'from-orange-400 to-amber-500',
-      'from-cyan-400 to-teal-500',
-      'from-red-400 to-pink-500',
-      'from-lime-400 to-green-500'
-    ];
-    return colors[wordIndex % colors.length];
-  };
-
-  // Função para verificar se uma célula pertence a uma palavra específica
-  const getCellWordIndex = (row: number, col: number) => {
-    return foundWords.findIndex(fw => 
-      fw.positions.some(pos => pos.row === row && pos.col === col)
-    );
-  };
-
-  // Calcular pontuação atual do nível (palavras encontradas)
-  const currentLevelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
-
   return (
-    <>
-      {/* Header do jogo com estatísticas */}
-      <GameBoardHeader
-        level={level}
-        timeLeft={timeLeft}
-        foundWords={foundWords}
-        levelWords={levelWords}
-        hintsUsed={hintsUsed}
-        currentLevelScore={currentLevelScore}
-        onUseHint={handleUseHintClick}
-      />
+    <GameBoardLogic
+      level={level}
+      timeLeft={timeLeft}
+      onWordFound={onWordFound}
+      onTimeUp={onTimeUp}
+      onLevelComplete={onLevelComplete}
+      canRevive={canRevive}
+      onRevive={onRevive}
+    >
+      {(logicProps) => (
+        <>
+          {/* Header do jogo com estatísticas */}
+          <GameBoardHeader
+            level={level}
+            timeLeft={timeLeft}
+            foundWords={logicProps.foundWords}
+            levelWords={logicProps.levelWords}
+            hintsUsed={logicProps.hintsUsed}
+            currentLevelScore={logicProps.currentLevelScore}
+            onUseHint={() => handleUseHintClick(logicProps.useHint)}
+          />
 
-      {/* Tabuleiro principal */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-white/30">
-        <GameBoardGrid
-          boardData={boardData}
-          size={size}
-          selectedCells={selectedCells}
-          isSelecting={isSelecting}
-          isCellSelected={isCellSelected}
-          isCellPermanentlyMarked={isCellPermanentlyMarked}
-          isCellHintHighlighted={isCellHintHighlighted}
-          handleCellStart={handleCellStart}
-          handleCellMove={handleCellMoveWithValidation}
-          handleCellEndWithValidation={handleCellEndWithValidation}
-          getWordColor={getWordColor}
-          getCellWordIndex={getCellWordIndex}
-        />
-      </div>
+          {/* Conteúdo principal do tabuleiro */}
+          <GameBoardMainContent
+            boardData={logicProps.boardData}
+            size={logicProps.size}
+            selectedCells={logicProps.selectedCells}
+            isSelecting={logicProps.isSelecting}
+            foundWords={logicProps.foundWords}
+            levelWords={logicProps.levelWords}
+            isCellSelected={logicProps.isCellSelected}
+            isCellPermanentlyMarked={logicProps.isCellPermanentlyMarked}
+            isCellHintHighlighted={logicProps.isCellHintHighlighted}
+            handleCellStart={logicProps.handleCellStart}
+            handleCellMoveWithValidation={logicProps.handleCellMoveWithValidation}
+            handleCellEndWithValidation={logicProps.handleCellEndWithValidation}
+            getWordColor={logicProps.getWordColor}
+            getCellWordIndex={logicProps.getCellWordIndex}
+          />
 
-      {/* Lista de palavras */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20">
-        <WordsList 
-          levelWords={levelWords}
-          foundWords={foundWords}
-          getWordColor={getWordColor}
-        />
-      </div>
-
-      <GameModals
-        showGameOver={showGameOver}
-        showLevelComplete={showLevelComplete}
-        foundWords={foundWords}
-        level={level}
-        canRevive={canRevive}
-        onRevive={handleReviveClick}
-        onGoHome={handleGoHome}
-        onAdvanceLevel={onAdvanceLevel}
-        onStopGame={onStopGame}
-      />
-    </>
+          {/* Modais do jogo */}
+          <GameModals
+            showGameOver={logicProps.showGameOver}
+            showLevelComplete={logicProps.showLevelComplete}
+            foundWords={logicProps.foundWords}
+            level={level}
+            canRevive={canRevive}
+            onRevive={() => handleReviveClick(logicProps.closeGameOver)}
+            onGoHome={logicProps.handleGoHome}
+            onAdvanceLevel={onAdvanceLevel}
+            onStopGame={onStopGame}
+          />
+        </>
+      )}
+    </GameBoardLogic>
   );
 };
 
