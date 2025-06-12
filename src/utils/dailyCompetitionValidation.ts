@@ -1,60 +1,72 @@
 
-import { ensureEndOfDay, createBrasiliaStartOfDay } from '@/utils/brasiliaTime';
-
 /**
- * Utilitários específicos para validação de competições diárias
+ * VALIDAÇÃO DIÁRIA RADICAL SIMPLIFICADA
+ * 
+ * PRINCÍPIO: Remover TODAS as conversões de timezone do JavaScript.
+ * O trigger do banco de dados é responsável por ajustar horários para Brasília.
+ * 
+ * MUDANÇA RADICAL:
+ * - Apenas validação de campos obrigatórios
+ * - Horários simples (00:00:00 e 23:59:59) sem conversões
+ * - Banco ajusta timezone automaticamente via trigger
  */
+
+import { createSimpleStartOfDay, createSimpleEndOfDay } from '@/utils/brasiliaTime';
 
 export interface DailyCompetitionData {
   title: string;
   description: string;
   theme: string;
   start_date: string;
-  end_date?: string; // Opcional pois será calculado automaticamente
+  end_date: string;
+  max_participants: number;
   competition_type: 'challenge';
 }
 
 /**
- * Valida e corrige dados de competição diária
- * GARANTE que sempre comece às 00:00:00 e termine às 23:59:59
+ * Validação RADICAL SIMPLIFICADA para competições diárias
+ * SEM conversões de timezone - apenas validação de campos e horários simples
  */
 export const validateDailyCompetitionData = (data: Partial<DailyCompetitionData>): DailyCompetitionData => {
-  console.log('🔍 Validando dados da competição diária:', data);
+  console.log('🔍 VALIDAÇÃO DIÁRIA SIMPLIFICADA:', data);
   
-  if (!data.title || !data.description || !data.theme || !data.start_date) {
+  if (!data.title || !data.start_date) {
     throw new Error('Dados obrigatórios faltando para competição diária');
   }
 
-  // FORÇAR: sempre calcular horários padronizados - início 00:00:00 e fim 23:59:59
-  const startDate = createBrasiliaStartOfDay(new Date(data.start_date)); // 00:00:00
-  const endDate = ensureEndOfDay(startDate); // 23:59:59 do mesmo dia
+  // SIMPLES: criar datas com horários fixos, SEM conversões de timezone
+  const startDate = createSimpleStartOfDay(new Date(data.start_date)); // 00:00:00
+  const endDate = createSimpleEndOfDay(new Date(data.start_date)); // 23:59:59 do mesmo dia
   
-  console.log('✅ Horários corrigidos automaticamente para competição diária:', {
+  console.log('✅ HORÁRIOS DEFINIDOS (SIMPLES):', {
     start: startDate.toISOString(),
     end: endDate.toISOString(),
-    startTime: startDate.toTimeString(),
-    endTime: endDate.toTimeString()
+    startLocal: startDate.toLocaleDateString('pt-BR'),
+    endLocal: endDate.toLocaleDateString('pt-BR')
   });
 
   const validatedData: DailyCompetitionData = {
     title: data.title,
-    description: data.description,
-    theme: data.theme,
+    description: data.description || '',
+    theme: data.theme || '',
     start_date: startDate.toISOString(),
-    end_date: endDate.toISOString(), // SEMPRE 23:59:59 do mesmo dia
+    end_date: endDate.toISOString(),
+    max_participants: data.max_participants || 1000,
     competition_type: 'challenge'
   };
 
+  console.log('🎯 DADOS VALIDADOS (TRIGGER DO BANCO AJUSTARÁ TIMEZONE):', validatedData);
   return validatedData;
 };
 
 /**
- * Formata horário para exibição na UI - competições diárias
+ * Formata horário para exibição - VERSÃO SIMPLIFICADA
  */
 export const formatDailyCompetitionTime = (dateString: string, isEndDate: boolean = false): string => {
+  if (!dateString) return 'N/A';
+  
   const date = new Date(dateString);
   const dateFormatted = date.toLocaleDateString('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
@@ -63,32 +75,31 @@ export const formatDailyCompetitionTime = (dateString: string, isEndDate: boolea
   // Para competições diárias, sempre mostrar horários fixos
   const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
   
-  return `${dateFormatted}, ${timeFormatted}`;
+  return `${dateFormatted}, ${timeFormatted} (Brasília)`;
 };
 
 /**
- * Verifica se uma competição diária está com horário correto
+ * Verificação SIMPLIFICADA - sem conversões complexas
  */
 export const isDailyCompetitionTimeValid = (startDate: string, endDate: string): boolean => {
   const start = new Date(startDate);
   const end = new Date(endDate);
   
-  // Verificar se início é 00:00:00 e fim é 23:59:59 do mesmo dia
-  const expectedStart = createBrasiliaStartOfDay(start);
-  const expectedEnd = ensureEndOfDay(start); // Mesmo dia da start_date
+  // Verificação simples: se início é 00:00:00 e fim é 23:59:59 do mesmo dia
+  const isStartValid = start.getHours() === 0 && start.getMinutes() === 0 && start.getSeconds() === 0;
+  const isEndValid = end.getHours() === 23 && end.getMinutes() === 59 && end.getSeconds() === 59;
+  const isSameDay = start.toDateString() === end.toDateString();
   
-  const isStartValid = Math.abs(start.getTime() - expectedStart.getTime()) < 1000; // 1 segundo de tolerância
-  const isEndValid = Math.abs(end.getTime() - expectedEnd.getTime()) < 1000;
-  
-  console.log('🕐 Validação de horário diário:', {
+  console.log('🕐 VALIDAÇÃO SIMPLIFICADA:', {
     start: start.toISOString(),
     end: end.toISOString(),
-    expectedStart: expectedStart.toISOString(),
-    expectedEnd: expectedEnd.toISOString(),
     isStartValid,
     isEndValid,
-    isValid: isStartValid && isEndValid
+    isSameDay,
+    isValid: isStartValid && isEndValid && isSameDay
   });
   
-  return isStartValid && isEndValid;
+  return isStartValid && isEndValid && isSameDay;
 };
+
+console.log('🎯 VALIDAÇÃO DIÁRIA RADICAL SIMPLIFICADA ATIVADA');

@@ -1,11 +1,15 @@
 
+/**
+ * UTILITÁRIOS DE COMPETIÇÃO RADICAL SIMPLIFICADOS
+ * 
+ * PRINCÍPIO: Usar as novas funções simplificadas sem conversões de timezone
+ */
+
+import { formatDateForDisplay } from '@/utils/brasiliaTime';
+
 export const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
+  return formatDateForDisplay(dateString);
 };
 
 export const getWeekFromDate = (dateString: string) => {
@@ -15,3 +19,5 @@ export const getWeekFromDate = (dateString: string) => {
   const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
   return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
 };
+
+console.log('🎯 UTILITÁRIOS DE COMPETIÇÃO SIMPLIFICADOS ATIVADOS');

@@ -8,23 +8,23 @@ export const useWeeklyCompetitionValidation = () => {
 
   const validateAndPrepareData = useCallback((formData: any) => {
     try {
-      console.log('🔍 Hook: Validando dados da competição semanal:', formData);
+      console.log('🔍 Hook: Validação semanal SIMPLIFICADA:', formData);
       
-      // Aplicar validação e correção automática
+      // Aplicar validação simplificada (sem conversões de timezone)
       const validatedData = validateWeeklyCompetitionData(formData);
       
-      console.log('✅ Hook: Dados validados e corrigidos:', validatedData);
+      console.log('✅ Hook: Dados validados (SISTEMA SIMPLIFICADO):', validatedData);
       
-      // Informar ao usuário sobre a correção automática
+      // Informar ao usuário sobre o sistema simplificado
       toast({
-        title: "Horários Ajustados Automaticamente",
-        description: "Competições semanais sempre começam às 00:00:00 e terminam às 23:59:59.",
+        title: "Sistema Simplificado Ativo",
+        description: "Horários automáticos: 00:00:00 às 23:59:59 (Brasília). O banco ajusta o timezone.",
         duration: 3000,
       });
       
       return validatedData;
     } catch (error) {
-      console.error('❌ Hook: Erro na validação semanal:', error);
+      console.error('❌ Hook: Erro na validação simplificada:', error);
       
       toast({
         title: "Erro na Validação",
@@ -41,11 +41,11 @@ export const useWeeklyCompetitionValidation = () => {
       const isValid = isWeeklyCompetitionTimeValid(competition.start_date, competition.end_date);
       
       if (!isValid) {
-        console.warn('⚠️ Competição semanal com horário incorreto detectada:', competition.id);
+        console.warn('⚠️ Competição semanal com horário inconsistente:', competition.id);
         
         toast({
-          title: "Horário Inconsistente Detectado",
-          description: "Esta competição será automaticamente corrigida para começar às 00:00:00 e terminar às 23:59:59.",
+          title: "Sistema Simplificado Detectou Inconsistência",
+          description: "Esta competição será automaticamente corrigida pelo novo sistema.",
           variant: "destructive",
         });
       }

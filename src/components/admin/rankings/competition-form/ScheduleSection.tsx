@@ -1,4 +1,11 @@
 
+/**
+ * COMPONENTE DE AGENDAMENTO RADICAL SIMPLIFICADO
+ * 
+ * PRINCÍPIO: Trabalhar com datas simples, sem conversões de timezone.
+ * O usuário seleciona a data e horários padrão são aplicados automaticamente.
+ */
+
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -27,10 +34,17 @@ export const ScheduleSection = ({
   
   const handleStartDateSelect = (date: Date | undefined) => {
     if (date) {
-      // Definir horário padrão de início: 00:00:00
-      const dateWithTime = new Date(date);
-      dateWithTime.setHours(0, 0, 0, 0);
-      onStartDateChange(dateWithTime);
+      // SIMPLES: definir horário padrão de início sem conversões
+      const simpleDate = new Date(date);
+      simpleDate.setHours(0, 0, 0, 0);
+      
+      console.log('📅 SELEÇÃO DE DATA INÍCIO (SIMPLES):', {
+        selected: date.toLocaleDateString('pt-BR'),
+        withTime: simpleDate.toISOString(),
+        willBeSentToDatabase: simpleDate.toISOString()
+      });
+      
+      onStartDateChange(simpleDate);
     } else {
       onStartDateChange(undefined);
     }
@@ -38,17 +52,23 @@ export const ScheduleSection = ({
 
   const handleEndDateSelect = (date: Date | undefined) => {
     if (date) {
-      // Definir horário padrão de fim: 23:59:59
-      const dateWithTime = new Date(date);
-      dateWithTime.setHours(23, 59, 59, 999);
-      onEndDateChange(dateWithTime);
+      // SIMPLES: definir horário padrão de fim sem conversões
+      const simpleDate = new Date(date);
+      simpleDate.setHours(23, 59, 59, 999);
+      
+      console.log('📅 SELEÇÃO DE DATA FIM (SIMPLES):', {
+        selected: date.toLocaleDateString('pt-BR'),
+        withTime: simpleDate.toISOString(),
+        willBeSentToDatabase: simpleDate.toISOString()
+      });
+      
+      onEndDateChange(simpleDate);
     } else {
       onEndDateChange(undefined);
     }
   };
 
-  // Para competições diárias, permitir seleção a partir de hoje
-  // Para competições semanais, também permitir a partir de hoje
+  // Data mínima: hoje (sem conversões complexas)
   const getMinDate = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -59,7 +79,20 @@ export const ScheduleSection = ({
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-2">
         <div className="w-1 h-4 bg-green-500 rounded-full"></div>
-        <h3 className="text-sm font-medium text-slate-700">Cronograma</h3>
+        <h3 className="text-sm font-medium text-slate-700">Cronograma Simplificado</h3>
+      </div>
+
+      {/* Informativo sobre o sistema simplificado */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+        <div className="text-sm text-blue-700">
+          <p className="font-medium">🎯 Sistema Simplificado Ativado</p>
+          <p className="text-xs mt-1">
+            Horários automáticos: Início 00:00:00 | Fim 23:59:59 (Brasília)
+          </p>
+          <p className="text-xs">
+            O banco de dados ajusta automaticamente para o timezone correto.
+          </p>
+        </div>
       </div>
 
       {/* Data de Início */}
@@ -78,7 +111,7 @@ export const ScheduleSection = ({
               {startDate ? (
                 <div>
                   <div>{format(startDate, "PPP", { locale: ptBR })}</div>
-                  <div className="text-xs text-slate-500">00:00:00 (Horário de Brasília)</div>
+                  <div className="text-xs text-slate-500">00:00:00 (Brasília - automático)</div>
                 </div>
               ) : (
                 <span className="text-sm">Selecione a data de início</span>
@@ -115,7 +148,7 @@ export const ScheduleSection = ({
                 {endDate ? (
                   <div>
                     <div>{format(endDate, "PPP", { locale: ptBR })}</div>
-                    <div className="text-xs text-slate-500">23:59:59 (Horário de Brasília)</div>
+                    <div className="text-xs text-slate-500">23:59:59 (Brasília - automático)</div>
                   </div>
                 ) : (
                   <span className="text-sm">Selecione a data de fim</span>
@@ -138,6 +171,12 @@ export const ScheduleSection = ({
           </Popover>
         </div>
       )}
+
+      {/* Informação adicional */}
+      <div className="text-xs text-slate-500 bg-slate-50 p-2 rounded">
+        💡 <strong>Sistema Radical Simplificado:</strong> As datas selecionadas serão automaticamente 
+        ajustadas pelo sistema para começar às 00:00:00 e terminar às 23:59:59 no horário de Brasília.
+      </div>
     </div>
   );
 };

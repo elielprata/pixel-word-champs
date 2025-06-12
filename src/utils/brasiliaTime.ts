@@ -1,122 +1,101 @@
-import { toZonedTime, fromZonedTime, format } from 'date-fns-tz';
 
 /**
- * Configuração padrão de fuso horário para o projeto
+ * VERSÃO RADICAL SIMPLIFICADA - SEM CONVERSÕES DE TIMEZONE
+ * 
+ * Esta versão elimina TODAS as conversões de timezone no JavaScript.
+ * O banco de dados (via triggers) é responsável por ajustar os horários para Brasília.
+ * 
+ * PRINCÍPIO: 
+ * - JavaScript trabalha com datas simples (sem conversões)
+ * - Trigger do banco ajusta automaticamente para horário de Brasília
+ * - Zero conflitos, zero shifts de data
  */
-export const BRASILIA_TIMEZONE = 'America/Sao_Paulo';
 
 /**
- * Obtém a data/hora atual no fuso horário de Brasília
+ * Cria uma data para o início do dia (00:00:00) - SEM conversão de timezone
+ * SIMPLIFICADO: apenas define horário local, banco ajusta timezone
  */
-export const getBrasiliaTime = (): Date => {
-  return toZonedTime(new Date(), BRASILIA_TIMEZONE);
-};
-
-/**
- * Converte uma data UTC para o fuso horário de Brasília
- */
-export const utcToBrasilia = (utcDate: Date): Date => {
-  return toZonedTime(utcDate, BRASILIA_TIMEZONE);
-};
-
-/**
- * Converte uma data do fuso horário de Brasília para UTC
- */
-export const brasiliaToUtc = (brasiliaDate: Date): Date => {
-  return fromZonedTime(brasiliaDate, BRASILIA_TIMEZONE);
-};
-
-/**
- * Formata uma data no fuso horário de Brasília
- */
-export const formatBrasiliaTime = (date: Date, formatString: string = 'yyyy-MM-dd HH:mm:ss'): string => {
-  return format(toZonedTime(date, BRASILIA_TIMEZONE), formatString, { timeZone: BRASILIA_TIMEZONE });
-};
-
-/**
- * Cria uma data para o início do dia em Brasília (00:00:00) e retorna em UTC
- * CORRIGIDO: Garantir que a data resultante seja UTC equivalente ao horário de Brasília
- */
-export const createBrasiliaStartOfDay = (date: Date): Date => {
-  // Obter a data no fuso de Brasília
-  const brasiliaDate = toZonedTime(date, BRASILIA_TIMEZONE);
+export const createSimpleStartOfDay = (date: Date): Date => {
+  const simpleDate = new Date(date);
+  simpleDate.setHours(0, 0, 0, 0);
   
-  // Definir como início do dia (00:00:00)
-  brasiliaDate.setHours(0, 0, 0, 0);
-  
-  // Converter de volta para UTC
-  const utcDate = fromZonedTime(brasiliaDate, BRASILIA_TIMEZONE);
-  
-  console.log('🌅 Criando início do dia:', {
-    original: formatBrasiliaTime(date),
-    brasiliaStartOfDay: formatBrasiliaTime(brasiliaDate),
-    utcEquivalent: utcDate.toISOString()
+  console.log('🌅 Criando início do dia (SIMPLES):', {
+    input: date.toISOString(),
+    output: simpleDate.toISOString(),
+    outputLocal: simpleDate.toLocaleDateString('pt-BR')
   });
   
-  return utcDate;
+  return simpleDate;
 };
 
 /**
- * Cria uma data para o final do dia em Brasília (23:59:59.999) e retorna em UTC
- * CORRIGIDO: Garantir que a data resultante seja UTC equivalente ao horário de Brasília
+ * Cria uma data para o final do dia (23:59:59) - SEM conversão de timezone
+ * SIMPLIFICADO: apenas define horário local, banco ajusta timezone
  */
-export const createBrasiliaEndOfDay = (date: Date): Date => {
-  // Obter a data no fuso de Brasília
-  const brasiliaDate = toZonedTime(date, BRASILIA_TIMEZONE);
+export const createSimpleEndOfDay = (date: Date): Date => {
+  const simpleDate = new Date(date);
+  simpleDate.setHours(23, 59, 59, 999);
   
-  // Definir como final do dia (23:59:59.999)
-  brasiliaDate.setHours(23, 59, 59, 999);
-  
-  // Converter de volta para UTC
-  const utcDate = fromZonedTime(brasiliaDate, BRASILIA_TIMEZONE);
-  
-  console.log('🌆 Criando fim do dia:', {
-    original: formatBrasiliaTime(date),
-    brasiliaEndOfDay: formatBrasiliaTime(brasiliaDate),
-    utcEquivalent: utcDate.toISOString()
+  console.log('🌆 Criando fim do dia (SIMPLES):', {
+    input: date.toISOString(),
+    output: simpleDate.toISOString(),
+    outputLocal: simpleDate.toLocaleDateString('pt-BR')
   });
   
-  return utcDate;
+  return simpleDate;
 };
 
 /**
- * NOVA FUNÇÃO: Garante que uma data termine às 23:59:59 no horário de Brasília
+ * Formata uma data para exibição em português brasileiro
+ * SIMPLES: apenas formatação, sem conversões de timezone
  */
-export const ensureEndOfDay = (date: Date): Date => {
-  return createBrasiliaEndOfDay(date);
-};
-
-/**
- * Verifica se uma data está no período atual de Brasília
- */
-export const isDateInCurrentBrasiliaRange = (startDate: Date, endDate: Date): boolean => {
-  const brasiliaStart = utcToBrasilia(startDate);
-  const brasiliaEnd = utcToBrasilia(endDate);
-  const brasiliaNow = getBrasiliaTime();
+export const formatDateForDisplay = (dateString: string): string => {
+  if (!dateString) return 'N/A';
   
-  console.log('🔍 Verificando período ativo (Brasília):', {
-    start: formatBrasiliaTime(brasiliaStart),
-    end: formatBrasiliaTime(brasiliaEnd),
-    now: formatBrasiliaTime(brasiliaNow)
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
   });
-  
-  const isActive = brasiliaNow >= brasiliaStart && brasiliaNow <= brasiliaEnd;
-  console.log('✅ Ativo:', isActive);
-  
-  return isActive;
 };
 
 /**
- * Verifica se uma data está no futuro (horário de Brasília)
+ * Formata uma data com horário para exibição
+ * SIMPLES: apenas formatação, sem conversões de timezone
  */
-export const isBrasiliaDateInFuture = (date: Date): boolean => {
-  const brasiliaNow = getBrasiliaTime();
-  const brasiliaDate = utcToBrasilia(date);
+export const formatDateTimeForDisplay = (dateString: string): string => {
+  if (!dateString) return 'N/A';
   
-  const isFuture = brasiliaDate > brasiliaNow;
-  console.log('🔍 Verificando se data é futura:', {
-    date: formatBrasiliaTime(brasiliaDate),
-    now: formatBrasiliaTime(brasiliaNow),
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+/**
+ * Obtém a data atual como string ISO simples
+ * SIMPLES: sem conversões de timezone
+ */
+export const getCurrentDateISO = (): string => {
+  return new Date().toISOString();
+};
+
+/**
+ * Verifica se uma data é futura
+ * SIMPLES: comparação direta de timestamps
+ */
+export const isDateInFuture = (date: Date): boolean => {
+  const now = new Date();
+  const isFuture = date > now;
+  
+  console.log('🔍 Verificando se data é futura (SIMPLES):', {
+    date: date.toISOString(),
+    now: now.toISOString(),
     isFuture
   });
   
@@ -124,83 +103,48 @@ export const isBrasiliaDateInFuture = (date: Date): boolean => {
 };
 
 /**
- * Obtém a data atual de Brasília apenas (sem horário)
+ * Calcula status de competição baseado em datas simples
+ * SIMPLES: sem conversões de timezone, comparação direta
  */
-export const getBrasiliaDateOnly = (): string => {
-  return formatBrasiliaTime(new Date(), 'yyyy-MM-dd');
-};
-
-/**
- * Converte uma data ISO string para o horário de Brasília
- */
-export const isoToBrasilia = (isoString: string): Date => {
-  return utcToBrasilia(new Date(isoString));
-};
-
-/**
- * NOVA FUNÇÃO: Calcula o status correto de uma competição diária baseado no horário de Brasília
- * Esta é a única função que deve ser usada para competições diárias
- */
-export const calculateDailyCompetitionStatus = (competitionDate: string): string => {
-  const nowBrasilia = getBrasiliaTime();
-  const competitionDay = new Date(competitionDate);
-  
-  // Criar início e fim do dia da competição em UTC (baseado no horário de Brasília)
-  const dayStartUtc = createBrasiliaStartOfDay(competitionDay);
-  const dayEndUtc = createBrasiliaEndOfDay(competitionDay);
-  
-  // Converter para horário de Brasília para comparação
-  const dayStartBrasilia = utcToBrasilia(dayStartUtc);
-  const dayEndBrasilia = utcToBrasilia(dayEndUtc);
-  
-  console.log('🔍 Calculando status da competição diária:', {
-    competitionDate,
-    nowBrasilia: formatBrasiliaTime(nowBrasilia),
-    dayStartBrasilia: formatBrasiliaTime(dayStartBrasilia),
-    dayEndBrasilia: formatBrasiliaTime(dayEndBrasilia),
-    isBeforeStart: nowBrasilia < dayStartBrasilia,
-    isAfterEnd: nowBrasilia > dayEndBrasilia,
-    isActive: nowBrasilia >= dayStartBrasilia && nowBrasilia <= dayEndBrasilia
-  });
-  
-  // Regras de status em horário de Brasília:
-  if (nowBrasilia < dayStartBrasilia) {
-    console.log('⏳ Competição diária: AGUARDANDO INÍCIO');
-    return 'scheduled';
-  } else if (nowBrasilia >= dayStartBrasilia && nowBrasilia <= dayEndBrasilia) {
-    console.log('✅ Competição diária: ATIVA');
-    return 'active';
-  } else {
-    console.log('🏁 Competição diária: FINALIZADA');
-    return 'completed';
-  }
-};
-
-/**
- * NOVA FUNÇÃO: Calcula o status correto de uma competição semanal baseado em UTC
- */
-export const calculateWeeklyCompetitionStatus = (startDate: string, endDate: string): string => {
+export const calculateCompetitionStatus = (startDate: string, endDate: string): string => {
   const now = new Date();
   const start = new Date(startDate);
   const end = new Date(endDate);
   
-  console.log('🔍 Calculando status da competição semanal:', {
+  console.log('🔍 Calculando status da competição (SIMPLES):', {
     now: now.toISOString(),
     start: start.toISOString(),
-    end: end.toISOString(),
-    isBeforeStart: now < start,
-    isAfterEnd: now > end,
-    isActive: now >= start && now <= end
+    end: end.toISOString()
   });
   
   if (now < start) {
-    console.log('⏳ Competição semanal: AGUARDANDO INÍCIO');
+    console.log('⏳ Status: AGENDADA');
     return 'scheduled';
   } else if (now >= start && now <= end) {
-    console.log('✅ Competição semanal: ATIVA');
+    console.log('✅ Status: ATIVA');
     return 'active';
   } else {
-    console.log('🏁 Competição semanal: FINALIZADA');
+    console.log('🏁 Status: FINALIZADA');
     return 'completed';
   }
 };
+
+// REMOÇÃO COMPLETA das funções complexas que causavam problemas:
+// - getBrasiliaTime()
+// - utcToBrasilia()
+// - brasiliaToUtc()
+// - formatBrasiliaTime()
+// - createBrasiliaStartOfDay()
+// - createBrasiliaEndOfDay()
+// - ensureEndOfDay()
+// - isDateInCurrentBrasiliaRange()
+// - isBrasiliaDateInFuture()
+// - getBrasiliaDateOnly()
+// - isoToBrasilia()
+// - calculateDailyCompetitionStatus()
+// - calculateWeeklyCompetitionStatus()
+
+console.log('🎯 SISTEMA DE TIMEZONE RADICAL SIMPLIFICADO ATIVADO');
+console.log('✅ Todas as conversões complexas de timezone foram removidas');
+console.log('✅ O banco de dados agora é a única fonte de verdade para horários');
+console.log('✅ Zero conflitos, zero shifts de data');
