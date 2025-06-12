@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
@@ -224,7 +225,7 @@ class WordHistoryService {
       
     } catch (error) {
       logger.error('Erro na seleção randomizada', { error }, 'WORD_HISTORY_SERVICE');
-      return this.selectBasicWords(maxWordsNeeded);
+      return this.selectBasicWords(criteria.maxWordsNeeded);
     }
   }
 
