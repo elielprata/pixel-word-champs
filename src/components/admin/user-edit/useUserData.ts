@@ -52,7 +52,7 @@ export const useUserData = (userId: string) => {
       if (error) throw error;
 
       // Validar e filtrar dados
-      const validUsers = Array.isArray(data) ? data.filter((user: any) => 
+      const validUsers = Array.isArray(data) && data ? data.filter((user: any) => 
         user && typeof user === 'object' && !('error' in user)
       ) : [];
 

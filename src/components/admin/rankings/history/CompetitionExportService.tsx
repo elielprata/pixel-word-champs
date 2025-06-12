@@ -59,9 +59,13 @@ export const handleExportWinners = async (
     // Combinar dados das participações com perfis
     const winners = validParticipations.map((participation: any) => {
       const profile = validProfiles.find((p: any) => p.id === participation.user_id);
+      const username = (profile && typeof profile === 'object' && !('error' in profile)) 
+        ? profile.username || 'Usuário' 
+        : 'Usuário';
+      
       return {
         id: `${competition.id}-${participation.user_position}`,
-        username: profile?.username || 'Usuário',
+        username: username,
         position: participation.user_position || 0,
         pixKey: '',
         holderName: '',

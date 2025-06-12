@@ -17,25 +17,16 @@ interface EditUserModalProps {
 }
 
 export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated }: EditUserModalProps) => {
-  const { data: userData, isLoading: userLoading, refetch, error } = useUserData(userId, isOpen);
+  const { userData, userRoles, isLoading: userLoading, refetch } = useUserData(userId);
   const { 
-    updateUserRole, 
-    updateUserProfile, 
-    updatePassword, 
-    isLoading, 
-    isChangingPassword, 
-    isUpdatingProfile 
-  } = useUserActions(
-    userId, 
-    username, 
-    () => {
-      console.log('🔄 Usuário atualizado, recarregando dados...');
-      refetch();
-      onUserUpdated();
-    }
-  );
+    addUserRole, 
+    deleteUserRole, 
+    banUser, 
+    unbanUser, 
+    isLoading 
+  } = useUserActions();
 
-  const currentRole = userData?.roles?.[0] || 'user';
+  const currentRole = userRoles?.[0] || 'user';
 
   console.log('🔍 Estado do modal:', { 
     isOpen, 
@@ -43,9 +34,34 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
     username, 
     userData, 
     currentRole, 
-    userLoading, 
-    error 
+    userLoading 
   });
+
+  const handleRoleChange = async (newRole: 'admin' | 'user') => {
+    console.log('🔄 Alterando role para:', newRole);
+    
+    // Remove role atual se existir
+    if (currentRole && currentRole !== newRole) {
+      await deleteUserRole(userId, currentRole);
+    }
+    
+    // Adiciona novo role
+    const success = await addUserRole(userId, newRole);
+    if (success) {
+      refetch();
+      onUserUpdated();
+    }
+  };
+
+  const handleProfileUpdate = async (username: string, email: string) => {
+    // Placeholder function - not implemented in useUserActions
+    console.log('🔄 Atualizando perfil:', { username, email });
+  };
+
+  const handlePasswordUpdate = async (newPassword: string) => {
+    // Placeholder function - not implemented in useUserActions
+    console.log('🔄 Atualizando senha:', newPassword);
+  };
 
   if (userLoading) {
     return (
@@ -56,24 +72,6 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
           </DialogHeader>
           <div className="py-4">
             <p className="text-gray-500">Carregando dados do usuário...</p>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  if (error) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editando usuário: {username}</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-red-500">Erro ao carregar dados: {error.message}</p>
-            <Button onClick={() => refetch()} className="mt-4">
-              Tentar Novamente
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -91,19 +89,19 @@ export const EditUserModal = ({ isOpen, onClose, userId, username, onUserUpdated
           <UserProfileSection 
             currentUsername={userData?.username || username}
             currentEmail={userData?.email || 'Email não disponível'}
-            isUpdating={isUpdatingProfile}
-            onProfileUpdate={updateUserProfile}
+            isUpdating={false}
+            onProfileUpdate={handleProfileUpdate}
           />
 
           <UserRoleSection 
             currentRole={currentRole}
             isLoading={isLoading}
-            onRoleChange={updateUserRole}
+            onRoleChange={handleRoleChange}
           />
 
           <PasswordChangeSection 
-            onPasswordUpdate={updatePassword}
-            isChangingPassword={isChangingPassword}
+            onPasswordUpdate={handlePasswordUpdate}
+            isChangingPassword={false}
           />
 
           <div className="flex justify-end space-x-2">

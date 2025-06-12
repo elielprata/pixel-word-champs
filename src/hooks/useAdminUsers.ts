@@ -30,7 +30,7 @@ export const useAdminUsers = () => {
       const { data: adminRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id')
-        .eq('role', 'admin');
+        .eq('role', 'admin' as any);
 
       if (rolesError) {
         console.error('❌ Erro ao buscar admins:', rolesError);
@@ -44,7 +44,9 @@ export const useAdminUsers = () => {
       }
 
       // Buscar dados dos usuários nos profiles
-      const userIds = adminRoles.map(r => r.user_id);
+      const userIds = adminRoles
+        .filter((r: any) => r && typeof r === 'object' && !('error' in r) && r.user_id)
+        .map((r: any) => r.user_id);
       
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -60,7 +62,7 @@ export const useAdminUsers = () => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 
       // Mapear dados com fallback inteligente para emails
-      const safeProfiles: ProfileData[] = profiles || [];
+      const safeProfiles: ProfileData[] = (profiles as any) || [];
       const combinedData: AdminUser[] = safeProfiles.map((profile: ProfileData) => {
         let email = 'Email não disponível';
         
@@ -115,7 +117,7 @@ export const useAdminUsers = () => {
         .insert({
           user_id: userId,
           role: 'user'
-        });
+        } as any);
 
       if (insertError) {
         console.error('❌ Erro ao adicionar role user:', insertError);

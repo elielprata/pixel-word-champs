@@ -15,7 +15,7 @@ export const useUserActions = () => {
         .from('user_roles')
         .delete()
         .eq('user_id', userId as any)
-        .eq('role', role);
+        .eq('role', role as any);
 
       if (error) throw error;
 
@@ -47,7 +47,7 @@ export const useUserActions = () => {
         .insert({ 
           user_id: userId as any, 
           role: role as any 
-        });
+        } as any);
 
       if (error) throw error;
 
@@ -80,8 +80,8 @@ export const useUserActions = () => {
           is_banned: true,
           banned_at: new Date().toISOString(),
           ban_reason: reason,
-        })
-        .eq('id', userId);
+        } as any)
+        .eq('id', userId as any);
 
       if (error) throw error;
 
@@ -114,7 +114,7 @@ export const useUserActions = () => {
           is_banned: false,
           banned_at: null,
           ban_reason: null,
-        })
+        } as any)
         .eq('id', userId as any);
 
       if (error) throw error;
