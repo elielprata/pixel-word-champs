@@ -71,7 +71,7 @@ class CompetitionTimeService {
   /**
    * Obtém o tempo restante para uma competição em segundos
    */
-  getTimeRemaining(endDate: string): number => {
+  getTimeRemaining(endDate: string): number {
     const now = new Date();
     const end = new Date(endDate);
     const diffMs = end.getTime() - now.getTime();
