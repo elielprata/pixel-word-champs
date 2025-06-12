@@ -152,8 +152,20 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
           .eq('active', true as any)
           .order('position', { ascending: true });
 
-        if (!prizeError) {
-          setPrizeConfigs(prizeData || []);
+        if (!prizeError && prizeData) {
+          const validPrizeData = (prizeData || [])
+            .filter((item: any) => item && typeof item === 'object' && !('error' in item))
+            .map((item: any) => ({
+              id: item?.id || '',
+              type: item?.type || '',
+              position: item?.position,
+              position_range: item?.position_range,
+              prize_amount: Number(item?.prize_amount) || 0,
+              group_name: item?.group_name,
+              total_winners: Number(item?.total_winners) || 1,
+              active: Boolean(item?.active)
+            }));
+          setPrizeConfigs(validPrizeData);
         }
 
         return;
@@ -172,7 +184,20 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       }
 
       console.log('💰 Configurações de prêmio carregadas:', prizeData);
-      setPrizeConfigs(prizeData || []);
+      
+      const validPrizeData = (prizeData || [])
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item))
+        .map((item: any) => ({
+          id: item?.id || '',
+          type: item?.type || '',
+          position: item?.position,
+          position_range: item?.position_range,
+          prize_amount: Number(item?.prize_amount) || 0,
+          group_name: item?.group_name,
+          total_winners: Number(item?.total_winners) || 1,
+          active: Boolean(item?.active)
+        }));
+      setPrizeConfigs(validPrizeData);
 
       // Buscar participações da competição
       const { data: participationData, error: participationError } = await supabase
@@ -209,7 +234,10 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       }
 
       // Buscar perfis dos usuários participantes
-      const userIds = participationData.map(p => p.user_id);
+      const userIds = participationData
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item) && item.user_id)
+        .map((p: any) => p.user_id);
+        
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
@@ -244,19 +272,21 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       setCompetition(competitionInfo);
 
       // Mapear dados das participações para o formato do ranking
-      const rankingParticipants: RankingParticipant[] = participationData.map((participation, index) => {
-        const profile = profilesMap.get(participation.user_id);
-        return {
-          user_position: index + 1, // Recalcular posição baseada na ordenação
-          user_score: participation.user_score || 0,
-          user_id: participation.user_id || '',
-          created_at: participation.created_at || new Date().toISOString(),
-          profiles: profile ? {
-            username: profile.username || 'Usuário',
-            avatar_url: profile.avatar_url
-          } : null
-        };
-      });
+      const rankingParticipants: RankingParticipant[] = participationData
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item))
+        .map((participation: any, index: number) => {
+          const profile = profilesMap.get(participation.user_id);
+          return {
+            user_position: index + 1, // Recalcular posição baseada na ordenação
+            user_score: participation.user_score || 0,
+            user_id: participation.user_id || '',
+            created_at: participation.created_at || new Date().toISOString(),
+            profiles: profile ? {
+              username: profile.username || 'Usuário',
+              avatar_url: profile.avatar_url
+            } : null
+          };
+        });
 
       console.log('📊 Ranking da competição carregado:', rankingParticipants.length, 'participantes');
       setRanking(rankingParticipants);

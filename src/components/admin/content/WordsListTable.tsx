@@ -189,7 +189,7 @@ export const WordsListTable = () => {
     );
   };
 
-  const hasFilters = searchTerm || selectedCategory !== 'all' || selectedDifficulty !== 'all';
+  const hasFilters = searchTerm !== '' || selectedCategory !== 'all' || selectedDifficulty !== 'all';
 
   if (isLoading) {
     return (
