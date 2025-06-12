@@ -69,9 +69,9 @@ export const PaymentsTab = () => {
         editingGroup={editingGroup}
         editGroupPrize={editGroupPrize}
         setEditGroupPrize={setEditGroupPrize}
-        onEditGroup={handleEditGroup}
-        onSaveGroup={handleSaveGroup}
-        onToggleGroup={handleToggleGroup}
+        onEditGroup={(group) => handleEditGroup(group.id)}
+        onSaveGroup={() => handleSaveGroup(editingGroup || '')}
+        onToggleGroup={(group) => handleToggleGroup(group.id)}
         onCancel={handleCancel}
       />
     </div>

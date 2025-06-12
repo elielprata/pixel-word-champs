@@ -7,7 +7,9 @@ export const useRealGameMetrics = () => {
     totalGames: 0,
     activePlayers: 0,
     averageScore: 0,
-    totalWords: 0
+    totalWords: 0,
+    activeWords: 0,
+    activeCategories: 0
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,6 +39,11 @@ export const useRealGameMetrics = () => {
         .select('total_score')
         .gt('total_score', 0);
 
+      // Categorias ativas
+      const { count: categoriesCount } = await supabase
+        .from('word_categories')
+        .select('*', { count: 'exact', head: true });
+
       // Calculate average score safely
       let averageScore = 0;
       if (avgData && avgData.length > 0) {
@@ -54,7 +61,9 @@ export const useRealGameMetrics = () => {
         totalGames: gamesCount || 0,
         activePlayers: playersCount || 0,
         averageScore,
-        totalWords: wordsCount || 0
+        totalWords: wordsCount || 0,
+        activeWords: wordsCount || 0,
+        activeCategories: categoriesCount || 0
       });
     } catch (error) {
       console.error('Erro ao buscar métricas:', error);

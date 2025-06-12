@@ -62,7 +62,7 @@ export const useRankings = () => {
 
       // Filter and validate ranking data
       const validRankingData = rankingData.filter((item: any) => 
-        item && typeof item === 'object' && !('error' in item)
+        item && typeof item === 'object' && !('error' in item) && item.user_id
       );
 
       // Buscar perfis dos usuários separadamente
@@ -78,7 +78,7 @@ export const useRankings = () => {
 
       // Filter and validate profiles data
       const validProfilesData = (profilesData || []).filter((item: any) => 
-        item && typeof item === 'object' && !('error' in item)
+        item && typeof item === 'object' && !('error' in item) && item.id
       );
 
       // Combinar dados do ranking com perfis
@@ -121,7 +121,7 @@ export const useRankings = () => {
 
       // Filter and validate data
       const validData = (data || []).filter((item: any) => 
-        item && typeof item === 'object' && !('error' in item)
+        item && typeof item === 'object' && !('error' in item) && item.id
       );
 
       const competitions = validData.map(comp => ({

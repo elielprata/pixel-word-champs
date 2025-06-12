@@ -37,7 +37,7 @@ export const useUserData = (userId: string) => {
       if (error) throw error;
 
       // Validar dados do usuário
-      if (data && typeof data === 'object' && !('error' in data)) {
+      if (data && typeof data === 'object' && !('error' in data) && data !== null) {
         setUserData(data);
       }
     } catch (error) {
