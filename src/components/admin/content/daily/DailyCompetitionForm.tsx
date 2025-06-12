@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -55,14 +54,14 @@ export const DailyCompetitionForm: React.FC<DailyCompetitionFormProps> = ({
   isEditing,
   handleStartDateChange
 }) => {
-  const { validateAndPrepareData, checkExistingCompetition } = useDailyCompetitionValidation();
+  const { validateAndPrepareData, checkExistingDailyCompetition } = useDailyCompetitionValidation();
 
   // Verificar competição existente quando abrir modal de edição
   useEffect(() => {
     if (isOpen && isEditing && competition) {
-      checkExistingCompetition(competition);
+      checkExistingDailyCompetition(competition);
     }
-  }, [isOpen, isEditing, competition, checkExistingCompetition]);
+  }, [isOpen, isEditing, competition, checkExistingDailyCompetition]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
