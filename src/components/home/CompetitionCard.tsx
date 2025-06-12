@@ -1,10 +1,9 @@
-
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Zap, Clock, Play } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Competition } from '@/types';
-import { calculateCompetitionStatus } from '@/utils/brasiliaTime';
+import { calculateCompetitionStatus, calculateTimeRemaining } from '@/utils/brasiliaTime';
 
 interface CompetitionCardProps {
   competition: Competition;
@@ -13,10 +12,12 @@ interface CompetitionCardProps {
 }
 
 const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
-  const status = calculateCompetitionStatus(competition.start_date, competition.end_date);
+  const status = useMemo(() => 
+    calculateCompetitionStatus(competition.start_date, competition.end_date),
+    [competition.start_date, competition.end_date]
+  );
   
-  // Gerar cor de fundo baseada no ID da competição para consistência
-  const getBackgroundColor = (id: string) => {
+  const bgGradient = useMemo(() => {
     const colors = [
       'from-blue-50/80 to-indigo-100/60',
       'from-purple-50/80 to-violet-100/60', 
@@ -28,39 +29,31 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
       'from-slate-50/80 to-gray-100/60'
     ];
     
-    const hash = id.split('').reduce((a, b) => {
+    const hash = competition.id.split('').reduce((a, b) => {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0);
     
     return colors[Math.abs(hash) % colors.length];
-  };
+  }, [competition.id]);
   
-  const calculateTimeRemaining = () => {
-    // CORREÇÃO RADICAL: Calcular tempo restante usando horário de Brasília
-    const now = new Date();
-    const endDate = new Date(competition.end_date);
+  const timeDisplay = useMemo(() => {
+    const remainingSeconds = calculateTimeRemaining(competition.end_date);
     
-    // Como o banco agora armazena as datas em UTC correspondente ao horário de Brasília,
-    // podemos fazer a comparação diretamente
-    const diff = endDate.getTime() - now.getTime();
+    if (remainingSeconds <= 0) return 'Finalizada';
     
-    if (diff <= 0) return 'Finalizada';
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const hours = Math.floor(remainingSeconds / 3600);
+    const minutes = Math.floor((remainingSeconds % 3600) / 60);
     
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
     return `${minutes}m`;
-  };
+  }, [competition.end_date]);
 
   if (status !== 'active') {
     return null;
   }
-
-  const bgGradient = getBackgroundColor(competition.id);
 
   return (
     <Card className={`relative border-0 bg-gradient-to-br ${bgGradient} backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] animate-fade-in group overflow-hidden`}>
@@ -106,7 +99,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
             <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-primary animate-pulse" />
               <span className="text-primary font-bold text-sm animate-fade-in">
-                {calculateTimeRemaining()}
+                {timeDisplay}
               </span>
             </div>
           </div>
@@ -133,4 +126,4 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   );
 };
 
-export default CompetitionCard;
+export default React.memo(CompetitionCard);

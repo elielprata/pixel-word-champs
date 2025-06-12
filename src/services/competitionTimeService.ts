@@ -1,55 +1,39 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentDateISO, calculateCompetitionStatus } from '@/utils/brasiliaTime';
+import { logger, structuredLog } from '@/utils/logger';
 
 class CompetitionTimeService {
   /**
-   * Atualiza o status das competições baseado no horário atual (VERSÃO CORRIGIDA)
-   * IMPORTANTE: O banco agora armazena datas em UTC equivalente ao Brasília
+   * Atualiza o status das competições baseado no horário atual
    */
   async updateCompetitionStatuses() {
     try {
-      console.log('🔄 [CompetitionTimeService] Atualizando status das competições (CORRIGIDO)...');
+      logger.debug('Iniciando atualização de status das competições');
       
       const now = getCurrentDateISO();
-      console.log('⏰ [CompetitionTimeService] Horário atual:', now);
       
-      // Buscar todas as competições que podem precisar de atualização
       const { data: competitions, error } = await supabase
         .from('custom_competitions')
         .select('id, title, start_date, end_date, status, competition_type')
         .neq('status', 'completed');
 
       if (error) {
-        console.error('❌ [CompetitionTimeService] Erro ao buscar competições:', error);
+        structuredLog('error', 'Erro ao buscar competições para atualização', error);
         return;
       }
 
       if (!competitions?.length) {
-        console.log('ℹ️ [CompetitionTimeService] Nenhuma competição para atualizar');
+        logger.debug('Nenhuma competição para atualizar');
         return;
       }
 
-      console.log(`📋 [CompetitionTimeService] Processando ${competitions.length} competições`);
-
       let updatedCount = 0;
 
-      // Atualizar status de cada competição
       for (const competition of competitions) {
         const currentStatus = calculateCompetitionStatus(competition.start_date, competition.end_date);
         
-        console.log(`🔍 [COMP] "${competition.title}":`, {
-          id: competition.id,
-          type: competition.competition_type,
-          statusAtual: competition.status,
-          statusCalculado: currentStatus,
-          startDate: competition.start_date,
-          endDate: competition.end_date
-        });
-        
         if (currentStatus !== competition.status) {
-          console.log(`🔄 [UPDATE] Atualizando "${competition.title}": ${competition.status} → ${currentStatus}`);
-          
           const { error: updateError } = await supabase
             .from('custom_competitions')
             .update({ 
@@ -59,64 +43,46 @@ class CompetitionTimeService {
             .eq('id', competition.id);
 
           if (updateError) {
-            console.error(`❌ [UPDATE ERROR] Erro ao atualizar competição ${competition.id}:`, updateError);
+            structuredLog('error', `Erro ao atualizar competição ${competition.id}`, updateError);
           } else {
-            console.log(`✅ [UPDATED] Competição "${competition.title}" atualizada para: ${currentStatus}`);
+            logger.debug(`Competição atualizada: ${competition.title} -> ${currentStatus}`);
             updatedCount++;
           }
-        } else {
-          console.log(`✅ [OK] Competição "${competition.title}" já está com status correto: ${currentStatus}`);
         }
       }
 
-      console.log(`✅ [CompetitionTimeService] Atualização concluída: ${updatedCount} competições atualizadas de ${competitions.length}`);
+      structuredLog('info', 'Atualização de competições concluída', {
+        totalCompetitions: competitions.length,
+        updated: updatedCount
+      });
     } catch (error) {
-      console.error('❌ [CompetitionTimeService] Erro ao atualizar status das competições:', error);
+      structuredLog('error', 'Erro crítico na atualização de competições', error);
     }
   }
 
   /**
-   * Verifica se uma competição está ativa no momento (VERSÃO CORRIGIDA)
+   * Verifica se uma competição está ativa no momento
    */
   isCompetitionActive(startDate: string, endDate: string): boolean {
     const status = calculateCompetitionStatus(startDate, endDate);
-    const isActive = status === 'active';
-    
-    console.log('🔍 [isCompetitionActive] Verificação (CORRIGIDA):', {
-      startDate,
-      endDate,
-      status,
-      isActive
-    });
-    
-    return isActive;
+    return status === 'active';
   }
 
   /**
-   * Obtém o tempo restante para uma competição em segundos (VERSÃO CORRIGIDA)
+   * Obtém o tempo restante para uma competição em segundos
    */
-  getTimeRemaining(endDate: string): number {
+  getTimeRemaining(endDate: string): number => {
     const now = new Date();
     const end = new Date(endDate);
     const diffMs = end.getTime() - now.getTime();
-    const remainingSeconds = Math.max(0, Math.floor(diffMs / 1000));
-    
-    console.log('⏱️ [getTimeRemaining] Tempo restante (CORRIGIDO):', {
-      endDate,
-      now: now.toISOString(),
-      remainingSeconds
-    });
-    
-    return remainingSeconds;
+    return Math.max(0, Math.floor(diffMs / 1000));
   }
 
   /**
-   * Força atualização de uma competição específica (VERSÃO CORRIGIDA)
+   * Força atualização de uma competição específica
    */
   async forceUpdateCompetitionStatus(competitionId: string): Promise<boolean> {
     try {
-      console.log(`🔧 [forceUpdate] Forçando atualização da competição: ${competitionId}`);
-      
       const { data: competition, error: fetchError } = await supabase
         .from('custom_competitions')
         .select('id, title, start_date, end_date, status')
@@ -124,7 +90,7 @@ class CompetitionTimeService {
         .single();
 
       if (fetchError || !competition) {
-        console.error('❌ [forceUpdate] Competição não encontrada:', fetchError);
+        structuredLog('error', 'Competição não encontrada para atualização forçada', { competitionId, error: fetchError });
         return false;
       }
 
@@ -140,18 +106,17 @@ class CompetitionTimeService {
           .eq('id', competitionId);
 
         if (updateError) {
-          console.error('❌ [forceUpdate] Erro ao atualizar:', updateError);
+          structuredLog('error', 'Erro na atualização forçada', updateError);
           return false;
         }
 
-        console.log(`✅ [forceUpdate] Status atualizado: ${competition.status} → ${correctStatus}`);
+        logger.debug(`Atualização forçada: ${competition.status} → ${correctStatus}`);
         return true;
       }
 
-      console.log('✅ [forceUpdate] Status já está correto');
       return true;
     } catch (error) {
-      console.error('❌ [forceUpdate] Erro:', error);
+      structuredLog('error', 'Erro na atualização forçada', error);
       return false;
     }
   }

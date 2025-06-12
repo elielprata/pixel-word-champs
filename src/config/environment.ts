@@ -23,6 +23,12 @@ export interface AppConfig {
     enableAnalytics: boolean;
     enablePushNotifications: boolean;
     enableSocialSharing: boolean;
+    enableDetailedLogging: boolean;
+  };
+  performance: {
+    enableLazyLoading: boolean;
+    cacheTimeout: number;
+    maxRetries: number;
   };
 }
 
@@ -37,7 +43,7 @@ const config: AppConfig = {
     timeout: 30000,
   },
   game: {
-    defaultTimeLimit: 180, // 3 minutos
+    defaultTimeLimit: 180,
     minWordLength: 3,
     pointsPerLength: {
       3: 1,
@@ -59,12 +65,27 @@ const config: AppConfig = {
     enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
     enablePushNotifications: import.meta.env.VITE_ENABLE_PUSH === 'true',
     enableSocialSharing: true,
+    enableDetailedLogging: import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEBUG === 'true',
+  },
+  performance: {
+    enableLazyLoading: import.meta.env.PROD,
+    cacheTimeout: import.meta.env.PROD ? 300000 : 60000, // 5min prod, 1min dev
+    maxRetries: 3,
   },
 };
 
 export default config;
 
-// Utilitário para verificar ambiente
+// Utilitários para verificar ambiente
 export const isDevelopment = () => config.app.environment === 'development';
 export const isProduction = () => config.app.environment === 'production';
 export const isStaging = () => config.app.environment === 'staging';
+
+// Configurações específicas de produção
+export const getProductionConfig = () => ({
+  enableMinification: true,
+  enableCompression: true,
+  enableCaching: true,
+  logLevel: 'error',
+  analyticsEnabled: config.features.enableAnalytics,
+});
