@@ -3,7 +3,29 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
-import { validateAdminPassword } from '@/utils/adminPasswordValidation';
+
+const validateAdminPassword = async (password: string) => {
+  const { data: currentUser } = await supabase.auth.getUser();
+  if (!currentUser.user) {
+    throw new Error('Usuário não autenticado');
+  }
+
+  logger.debug('Validando senha do administrador', { userId: currentUser.user.id }, 'BAN_USER_MUTATION');
+
+  // Criar sessão temporária para validar senha sem afetar a sessão atual
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: currentUser.user.email!,
+    password: password
+  });
+
+  if (error) {
+    logger.error('Senha de administrador incorreta', { error: error.message }, 'BAN_USER_MUTATION');
+    throw new Error('Senha de administrador incorreta');
+  }
+
+  logger.debug('Senha validada com sucesso', undefined, 'BAN_USER_MUTATION');
+  return true;
+};
 
 export const useBanUserMutation = () => {
   const { toast } = useToast();
