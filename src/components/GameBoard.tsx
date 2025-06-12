@@ -1,4 +1,3 @@
-
 import React from 'react';
 import GameProgressBar from './game/GameProgressBar';
 import GameStats from './game/GameStats';
@@ -12,6 +11,9 @@ import { useGameLogic } from '@/hooks/useGameLogic';
 import { useGameInteractions } from '@/hooks/useGameInteractions';
 import { type Position } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface GameBoardProps {
   level: number;
@@ -43,7 +45,8 @@ const GameBoard = ({
   }, 'GAME_BOARD');
 
   // Usar palavras do banco de dados através do useBoard
-  const { boardData, size, levelWords } = useBoard(level);
+  const { boardData, size, levelWords, isLoading, error, debugInfo } = useBoard(level);
+  
   const { 
     selectedCells, 
     isSelecting, 
@@ -52,6 +55,7 @@ const GameBoard = ({
     handleCellEnd, 
     isCellSelected 
   } = useBoardInteraction();
+  
   const { isValidWordDirection } = useWordValidation();
 
   const {
@@ -68,7 +72,6 @@ const GameBoard = ({
     isCellHintHighlighted,
     closeGameOver
   } = useGameLogic(level, timeLeft, levelWords, onWordFound, (levelScore) => {
-    // Só contabiliza pontos quando o nível é completado
     logger.info('Nível completado', { 
       level, 
       levelScore,
@@ -89,6 +92,57 @@ const GameBoard = ({
     setShowGameOver,
     onTimeUp
   );
+
+  // Mostrar loading enquanto carrega
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+        <div className="max-w-md mx-auto space-y-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/30">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-foreground">Preparando Jogo</h3>
+                <p className="text-sm text-muted-foreground">Nível {level}</p>
+                {debugInfo && (
+                  <p className="text-xs text-muted-foreground mt-2">{debugInfo}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar erro se houver
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+        <div className="max-w-md mx-auto space-y-6">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <p><strong>Erro ao carregar o jogo:</strong></p>
+                <p className="text-sm">{error}</p>
+                {debugInfo && (
+                  <p className="text-xs opacity-75">Debug: {debugInfo}</p>
+                )}
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  size="sm" 
+                  className="mt-2"
+                >
+                  Tentar Novamente
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
 
   const handleCellEndWithValidation = () => {
     const finalSelection = handleCellEnd();
