@@ -19,17 +19,13 @@ export const CompetitionActions: React.FC<CompetitionActionsProps> = ({
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('✏️ CompetitionActions: Botão editar clicado para competição:', competitionId);
     onEdit();
-    console.log('✏️ CompetitionActions: onEdit executado');
   };
 
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🗑️ CompetitionActions: Botão excluir clicado para competição:', competitionId);
     onDelete();
-    console.log('🗑️ CompetitionActions: onDelete executado');
   };
 
   return (

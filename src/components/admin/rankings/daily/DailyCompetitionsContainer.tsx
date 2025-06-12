@@ -35,13 +35,6 @@ export const DailyCompetitionsContainer: React.FC<DailyCompetitionsContainerProp
 }) => {
   const { activeCompetitions } = useDailyCompetitionsLogic(competitions);
 
-  console.log('🏢 Container: Recebendo props para ações:', {
-    activeCompetitions: activeCompetitions.length,
-    hasOnEdit: !!onEdit,
-    hasOnDelete: !!onDelete,
-    deletingId
-  });
-
   return (
     <div>
       <div className="flex items-center justify-between mb-4">

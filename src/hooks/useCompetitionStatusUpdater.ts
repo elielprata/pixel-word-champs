@@ -1,12 +1,13 @@
 
 import { useEffect } from 'react';
 import { competitionStatusService } from '@/services/competitionStatusService';
+import { logger } from '@/utils/logger';
 
 export const useCompetitionStatusUpdater = (competitions: any[]) => {
   useEffect(() => {
-    // Removido auto-update para evitar loops infinitos
+    // Auto-update desabilitado para evitar loops infinitos
     // O status é calculado em tempo real nos componentes quando necessário
-    console.log('ℹ️ [useCompetitionStatusUpdater] Auto-update desabilitado para evitar loops');
+    logger.debug('useCompetitionStatusUpdater: Auto-update desabilitado para evitar loops');
     
     // Apenas log de debug para verificar se há inconsistências
     if (competitions.length > 0) {
@@ -18,7 +19,11 @@ export const useCompetitionStatusUpdater = (competitions: any[]) => {
         });
         
         if (competition.status !== actualStatus) {
-          console.log(`📊 [Status Debug] "${competition.title}": DB=${competition.status}, Calculado=${actualStatus}`);
+          logger.debug('Status inconsistency detected', {
+            title: competition.title,
+            dbStatus: competition.status,
+            calculatedStatus: actualStatus
+          });
         }
       });
     }

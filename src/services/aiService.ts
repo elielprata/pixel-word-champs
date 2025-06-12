@@ -30,7 +30,6 @@ class AIService {
   }
 
   async generateWordsForBoard(board: string[][], level: number): Promise<AIGeneratedData> {
-    // Sempre retorna dados mock para o jogo funcionar
     return this.getMockData(level);
   }
 

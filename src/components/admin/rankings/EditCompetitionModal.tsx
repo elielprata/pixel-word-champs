@@ -12,7 +12,7 @@ interface BaseCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  total_participants?: number; // Made optional to match WeeklyCompetition
+  total_participants?: number;
   competition_type?: string;
   theme?: string;
   rules?: any;
@@ -31,14 +31,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
   competition,
   onCompetitionUpdated
 }) => {
-  console.log('🎭 EditCompetitionModal - Props recebidas:', {
-    open,
-    competition: competition?.id,
-    competitionTitle: competition?.title
-  });
-
   const handleClose = () => {
-    console.log('🎭 EditCompetitionModal - Fechando modal');
     onOpenChange(false);
   };
 
@@ -66,7 +59,6 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     return "Editar Competição Semanal";
   };
 
-  // Determinar se precisa de modal maior para configuração de prêmios
   const isDailyCompetition = competition?.theme || competition?.competition_type === 'challenge';
   const modalSize = isDailyCompetition ? "max-w-2xl" : "max-w-6xl";
 

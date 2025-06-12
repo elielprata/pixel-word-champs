@@ -2,7 +2,6 @@
 import { customCompetitionCoreService } from './customCompetitionCoreService';
 import { customCompetitionManagementService } from './customCompetitionManagementService';
 
-// Exportar a interface para uso em outros componentes
 export interface CustomCompetitionData {
   title: string;
   description: string;
@@ -11,8 +10,8 @@ export interface CustomCompetitionData {
   weeklyTournamentId?: string;
   prizePool: number;
   maxParticipants: number;
-  startDate?: string; // RADICAL FIX: Mudança para string
-  endDate?: string;   // RADICAL FIX: Mudança para string
+  startDate?: string;
+  endDate?: string;
 }
 
 class CustomCompetitionService {

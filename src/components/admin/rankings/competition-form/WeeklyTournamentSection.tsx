@@ -43,7 +43,6 @@ export const WeeklyTournamentSection = ({
   };
 
   const getStatusText = (competition: WeeklyCompetition) => {
-    // Usar o serviço centralizado para calcular o status correto
     const actualStatus = competitionStatusService.calculateCorrectStatus({
       start_date: competition.start_date,
       end_date: competition.end_date,
@@ -59,7 +58,6 @@ export const WeeklyTournamentSection = ({
   };
 
   const getStatusColor = (competition: WeeklyCompetition) => {
-    // Usar o serviço centralizado para calcular o status correto
     const actualStatus = competitionStatusService.calculateCorrectStatus({
       start_date: competition.start_date,
       end_date: competition.end_date,
@@ -74,7 +72,6 @@ export const WeeklyTournamentSection = ({
     }
   };
 
-  // Filtrar apenas competições ativas e agendadas para competições diárias
   const availableTournaments = competitionType === 'daily' 
     ? weeklyTournaments.filter(tournament => {
         const actualStatus = competitionStatusService.calculateCorrectStatus({

@@ -6,30 +6,26 @@ import { createSuccessResponse, createErrorResponse, handleServiceError } from '
 class AvatarService {
   async uploadAvatar(file: File, userId: string): Promise<ApiResponse<string>> {
     try {
-      // Validar arquivo
       if (!file.type.startsWith('image/')) {
         throw new Error('Arquivo deve ser uma imagem');
       }
 
-      if (file.size > 5 * 1024 * 1024) { // 5MB
+      if (file.size > 5 * 1024 * 1024) {
         throw new Error('Arquivo muito grande. Máximo 5MB');
       }
 
-      // Criar nome único para o arquivo
       const fileExt = file.name.split('.').pop();
       const fileName = `${userId}/avatar.${fileExt}`;
 
-      // Fazer upload
       const { data, error } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: true // Substitui arquivo existente
+          upsert: true
         });
 
       if (error) throw error;
 
-      // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);

@@ -3,32 +3,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { competitionParticipationService } from './competitionParticipationService';
 import { dailyCompetitionFinalizationService } from './dailyCompetition/dailyCompetitionFinalization';
 import { weeklyCompetitionFinalizationService } from './weeklyCompetitionFinalizationService';
+import { logger } from '@/utils/logger';
 
-/**
- * Serviço para finalização de competições com nova regra de histórico
- */
 class CompetitionFinalizationService {
   async finalizeDailyCompetition(competitionId: string): Promise<void> {
     try {
-      console.log('🏁 Finalizando competição diária (nova dinâmica - pontos já na semanal)...');
+      logger.debug('Finalizando competição diária', { competitionId });
 
-      // Usar o serviço específico para competições diárias
       await dailyCompetitionFinalizationService.finalizeDailyCompetition(competitionId);
       
-      console.log('✅ Competição diária finalizada com sucesso');
+      logger.debug('Competição diária finalizada com sucesso', { competitionId });
     } catch (error) {
-      console.error('❌ Erro ao finalizar competição diária:', error);
+      logger.error('Erro ao finalizar competição diária', { competitionId, error });
     }
   }
 
   async finalizeWeeklyCompetition(competitionId: string): Promise<void> {
     try {
-      console.log('🏁 Finalizando competição semanal com nova regra de histórico...');
+      logger.debug('Finalizando competição semanal', { competitionId });
 
-      // Usar o novo serviço com regras de finalização automática
       await weeklyCompetitionFinalizationService.finalizeWeeklyCompetition(competitionId);
 
-      // Buscar e finalizar todas as competições diárias vinculadas
       const { data: linkedDailyCompetitions, error: linkedError } = await supabase
         .from('custom_competitions')
         .select('id')
@@ -39,12 +34,15 @@ class CompetitionFinalizationService {
         for (const dailyComp of linkedDailyCompetitions) {
           await this.finalizeDailyCompetition(dailyComp.id);
         }
-        console.log(`✅ ${linkedDailyCompetitions.length} competições diárias vinculadas finalizadas`);
+        logger.debug('Competições diárias vinculadas finalizadas', { 
+          competitionId, 
+          count: linkedDailyCompetitions.length 
+        });
       }
 
-      console.log('✅ Competição semanal finalizada com histórico salvo e pontuações zeradas');
+      logger.debug('Competição semanal finalizada com sucesso', { competitionId });
     } catch (error) {
-      console.error('❌ Erro ao finalizar competição semanal:', error);
+      logger.error('Erro ao finalizar competição semanal', { competitionId, error });
     }
   }
 }
