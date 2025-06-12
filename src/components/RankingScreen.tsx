@@ -33,10 +33,9 @@ const RankingScreen = () => {
       const { data, error } = await supabase
         .from('prize_configurations')
         .select('position, prize_amount')
-        .eq('type', 'individual')
-        .eq('active', true)
-        .in('position', [1, 2, 3])
-        .order('position', { ascending: true });
+        .eq('type', 'individual' as any)
+        .eq('active', true as any)
+        .in('position', [1, 2, 3] as any);
 
       if (error) {
         logger.error('Error loading prizes', { error });
@@ -44,10 +43,12 @@ const RankingScreen = () => {
       }
 
       if (data && Array.isArray(data)) {
-        const prizes: PrizeConfig[] = data.map(config => ({
-          position: Number(config.position) || 0,
-          prize_amount: Number(config.prize_amount) || 0
-        }));
+        const prizes: PrizeConfig[] = data
+          .filter((config: any) => config && typeof config === 'object')
+          .map((config: any) => ({
+            position: Number(config.position) || 0,
+            prize_amount: Number(config.prize_amount) || 0
+          }));
 
         setPrizeConfigs(prizes);
         logger.debug('Prizes loaded successfully', { count: prizes.length });
@@ -88,12 +89,14 @@ const RankingScreen = () => {
       }
 
       if (data && Array.isArray(data)) {
-        const players: RankingPlayer[] = data.map((profile, index) => ({
-          pos: index + 1,
-          user_id: profile.id,
-          name: profile.username || 'Usuário',
-          score: profile.total_score || 0
-        }));
+        const players: RankingPlayer[] = data
+          .filter((profile: any) => profile && typeof profile === 'object')
+          .map((profile: any, index: number) => ({
+            pos: index + 1,
+            user_id: profile.id || '',
+            name: profile.username || 'Usuário',
+            score: profile.total_score || 0
+          }));
 
         setRanking(players);
 
