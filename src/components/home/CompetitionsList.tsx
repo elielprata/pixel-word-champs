@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Trophy, RefreshCw } from 'lucide-react';
+import { Calendar, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CompetitionCard from './CompetitionCard';
@@ -27,10 +27,10 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2 text-slate-800">
-            <div className="p-1.5 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg">
-              <Trophy className="w-4 h-4 text-white" />
+            <div className="p-1.5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+              <Calendar className="w-4 h-4 text-white" />
             </div>
-            Competições Ativas ({competitions.length})
+            Competições Diárias ({competitions.length})
           </CardTitle>
           <Button onClick={onRefresh} variant="ghost" size="sm" className="h-8 w-8 p-0">
             <RefreshCw className="w-4 h-4" />

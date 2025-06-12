@@ -27,32 +27,35 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
       setIsLoading(true);
       setError(null);
       
-      console.log('🎯 Carregando competições diárias ativas...');
+      console.log('🎯 Carregando apenas competições diárias ativas...');
 
       const response = await dailyCompetitionService.getActiveDailyCompetitions();
       
       if (response.success && response.data) {
         console.log(`✅ ${response.data.length} competições diárias encontradas`);
         
-        // Mapear os dados para a interface Competition
-        const mappedCompetitions: Competition[] = response.data.map(comp => ({
-          id: comp.id,
-          title: comp.title,
-          description: comp.description || '',
-          theme: comp.theme || '',
-          start_date: comp.start_date,
-          end_date: comp.end_date,
-          status: comp.status || 'active',
-          type: comp.competition_type === 'challenge' ? 'daily' as const : 'challenge' as const,
-          prize_pool: Number(comp.prize_pool) || 0,
-          total_participants: 0,
-          max_participants: comp.max_participants || 1000,
-          is_active: comp.status === 'active',
-          created_at: comp.created_at || '',
-          updated_at: comp.updated_at || ''
-        }));
+        // Mapear os dados para a interface Competition - APENAS competições diárias
+        const mappedCompetitions: Competition[] = response.data
+          .filter(comp => comp.competition_type === 'challenge') // Garantir que são apenas diárias
+          .map(comp => ({
+            id: comp.id,
+            title: comp.title,
+            description: comp.description || '',
+            theme: comp.theme || '',
+            start_date: comp.start_date,
+            end_date: comp.end_date,
+            status: comp.status || 'active',
+            type: 'daily' as const, // Forçar tipo diário
+            prize_pool: Number(comp.prize_pool) || 0,
+            total_participants: 0,
+            max_participants: comp.max_participants || 1000,
+            is_active: comp.status === 'active',
+            created_at: comp.created_at || '',
+            updated_at: comp.updated_at || ''
+          }));
         
         setCompetitions(mappedCompetitions);
+        console.log('📊 Competições diárias carregadas para o menu inicial:', mappedCompetitions.length);
       } else {
         console.error('❌ Erro ao buscar competições:', response.error);
         setError(response.error || 'Erro ao carregar competições');
