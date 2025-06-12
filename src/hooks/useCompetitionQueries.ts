@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { competitionService } from '@/services/competitionService';
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { Competition } from '@/types';
+import { logger } from '@/utils/logger';
 
 export const useCompetitionQueries = () => {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
@@ -22,7 +23,7 @@ export const useCompetitionQueries = () => {
         throw new Error(response.error || 'Erro ao carregar competições');
       }
     } catch (err) {
-      console.error('❌ Erro ao carregar competições ativas:', err);
+      logger.error('Erro ao carregar competições ativas', { error: err }, 'COMPETITION_QUERIES');
       throw err;
     }
   };
@@ -37,7 +38,7 @@ export const useCompetitionQueries = () => {
         throw new Error(response.error || 'Erro ao carregar competições customizadas');
       }
     } catch (err) {
-      console.error('❌ Erro ao carregar competições customizadas:', err);
+      logger.error('Erro ao carregar competições customizadas', { error: err }, 'COMPETITION_QUERIES');
       throw err;
     }
   };
@@ -52,7 +53,7 @@ export const useCompetitionQueries = () => {
         throw new Error(response.error || 'Erro ao carregar competição diária');
       }
     } catch (err) {
-      console.error('❌ Erro ao carregar competição diária:', err);
+      logger.error('Erro ao carregar competição diária', { error: err }, 'COMPETITION_QUERIES');
       throw err;
     }
   };
@@ -67,7 +68,7 @@ export const useCompetitionQueries = () => {
         throw new Error(response.error || 'Erro ao carregar competição semanal');
       }
     } catch (err) {
-      console.error('❌ Erro ao carregar competição semanal:', err);
+      logger.error('Erro ao carregar competição semanal', { error: err }, 'COMPETITION_QUERIES');
       throw err;
     }
   };

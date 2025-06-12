@@ -78,7 +78,7 @@ export const useGameInteractions = (
         }, 3000);
       }
       
-      logger.log(`Dica: Procure por "${hintWord}"`);
+      logger.info('Dica utilizada', { word: hintWord, hintsUsed: hintsUsed + 1 }, 'GAME_INTERACTIONS');
     } else {
       toast({
         title: "Dica não disponível",
@@ -96,7 +96,7 @@ export const useGameInteractions = (
     setShowGameOver(false);
     
     // Adicionar 30 segundos (isso seria feito no componente pai)
-    logger.log('Revive ativado! +30 segundos');
+    logger.info('Revive ativado', { canRevive }, 'GAME_INTERACTIONS');
   };
 
   const handleGoHome = () => {

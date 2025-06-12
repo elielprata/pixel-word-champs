@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
@@ -45,8 +44,7 @@ class CompetitionHistoryService {
 
       logger.info('Histórico de competições salvo com sucesso', { count: historyRecords.length }, 'COMPETITION_HISTORY_SERVICE');
     } catch (error) {
-      logger.error('Erro no serviço de histórico de competições', { error }, 'COMPETITION_HISTORY_SERVICE');
-      throw error;
+      logger.error('Erro ao salvar histórico de competições', { error }, 'COMPETITION_HISTORY_SERVICE');
     }
   }
 

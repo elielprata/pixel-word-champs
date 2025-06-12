@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { rankingApi } from '@/api/rankingApi';
 import { RankingPlayer } from '@/types';
 import { rankingService } from '@/services/rankingService';
+import { logger } from '@/utils/logger';
 
 export const useRankingQueries = () => {
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
@@ -12,33 +13,33 @@ export const useRankingQueries = () => {
 
   const loadWeeklyRanking = async () => {
     try {
-      console.log('🔄 Carregando ranking semanal...');
+      logger.debug('Carregando ranking semanal', undefined, 'RANKING_QUERIES');
       
       try {
         await rankingService.updateWeeklyRanking();
-        console.log('✅ Ranking semanal atualizado com sucesso');
+        logger.info('Ranking semanal atualizado com sucesso', undefined, 'RANKING_QUERIES');
       } catch (updateError) {
-        console.warn('⚠️ Erro ao atualizar ranking semanal, continuando com dados existentes:', updateError);
+        logger.warn('Erro ao atualizar ranking semanal, continuando com dados existentes', { error: updateError }, 'RANKING_QUERIES');
       }
 
       const weekly = await rankingApi.getWeeklyRanking();
-      console.log('📊 Ranking semanal carregado:', weekly.length);
+      logger.info('Ranking semanal carregado', { count: weekly.length }, 'RANKING_QUERIES');
       setWeeklyRanking(weekly);
     } catch (err) {
-      console.error('❌ Erro ao carregar ranking semanal:', err);
+      logger.error('Erro ao carregar ranking semanal', { error: err }, 'RANKING_QUERIES');
       throw err;
     }
   };
 
   const loadHistoricalRanking = async (userId: string) => {
     try {
-      console.log('🔄 Carregando histórico de competições...');
+      logger.debug('Carregando histórico de competições', { userId }, 'RANKING_QUERIES');
       
       const historical = await rankingApi.getHistoricalRanking(userId);
-      console.log('📊 Histórico carregado:', historical.length);
+      logger.info('Histórico carregado', { count: historical.length }, 'RANKING_QUERIES');
       setHistoricalCompetitions(historical);
     } catch (err) {
-      console.error('❌ Erro ao carregar histórico:', err);
+      logger.error('Erro ao carregar histórico', { error: err }, 'RANKING_QUERIES');
       throw err;
     }
   };

@@ -1,12 +1,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export const useUserData = (userId: string, isOpen: boolean) => {
   return useQuery({
     queryKey: ['userData', userId],
     queryFn: async () => {
-      console.log('🔍 Buscando dados completos do usuário:', userId);
+      logger.debug('Buscando dados completos do usuário', { userId }, 'USER_DATA_HOOK');
       
       // Buscar roles atuais
       const { data: rolesData, error: rolesError } = await supabase
@@ -15,7 +16,7 @@ export const useUserData = (userId: string, isOpen: boolean) => {
         .eq('user_id', userId);
 
       if (rolesError) {
-        console.error('❌ Erro ao buscar roles:', rolesError);
+        logger.error('Erro ao buscar roles', { error: rolesError, userId }, 'USER_DATA_HOOK');
         throw rolesError;
       }
 
@@ -27,7 +28,7 @@ export const useUserData = (userId: string, isOpen: boolean) => {
         .single();
 
       if (profileError) {
-        console.error('❌ Erro ao buscar perfil:', profileError);
+        logger.error('Erro ao buscar perfil', { error: profileError, userId }, 'USER_DATA_HOOK');
       }
 
       // Buscar email real usando a função do banco
@@ -42,7 +43,7 @@ export const useUserData = (userId: string, isOpen: boolean) => {
           }
         }
       } catch (error) {
-        console.log('⚠️ Erro ao buscar email real:', error);
+        logger.warn('Erro ao buscar email real', { error, userId }, 'USER_DATA_HOOK');
         
         // Fallback: tentar buscar através do auth se for o usuário atual
         try {
@@ -59,15 +60,16 @@ export const useUserData = (userId: string, isOpen: boolean) => {
             }
           }
         } catch (fallbackError) {
-          console.log('⚠️ Erro no fallback:', fallbackError);
+          logger.warn('Erro no fallback de email', { error: fallbackError, userId }, 'USER_DATA_HOOK');
         }
       }
 
-      console.log('📋 Dados encontrados:', { 
-        roles: rolesData, 
-        email: finalEmail, 
-        profile: profileData 
-      });
+      logger.info('Dados do usuário carregados', { 
+        userId,
+        hasRoles: rolesData?.length || 0,
+        hasProfile: !!profileData,
+        hasEmail: finalEmail !== 'Email não disponível'
+      }, 'USER_DATA_HOOK');
       
       return {
         roles: rolesData?.map(r => r.role) || [],
