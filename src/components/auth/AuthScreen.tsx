@@ -9,6 +9,7 @@ import RegisterForm from './RegisterForm';
 import SocialLogin from './SocialLogin';
 import { Gamepad2, Trophy, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 
 const AuthScreen = () => {
   const [activeTab, setActiveTab] = useState('login');
@@ -18,7 +19,7 @@ const AuthScreen = () => {
   // Redirecionar usuários já autenticados
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      console.log('👤 Usuário já autenticado, redirecionando para home');
+      logger.info('Usuário já autenticado, redirecionando para home', undefined, 'AUTH_SCREEN');
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);

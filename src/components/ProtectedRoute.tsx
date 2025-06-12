@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,7 +11,10 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth();
 
-  console.log('🛡️ ProtectedRoute - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
+  logger.debug('ProtectedRoute verificação', { 
+    isAuthenticated, 
+    isLoading 
+  }, 'PROTECTED_ROUTE');
 
   // Mostrar loading enquanto verifica autenticação
   if (isLoading) {
@@ -26,12 +30,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // Redirecionar para login se não estiver autenticado
   if (!isAuthenticated) {
-    console.log('🚫 Usuário não autenticado, redirecionando para /auth');
+    logger.info('Usuário não autenticado redirecionado para auth', undefined, 'PROTECTED_ROUTE');
     return <Navigate to="/auth" replace />;
   }
 
   // Renderizar conteúdo protegido se autenticado
-  console.log('✅ Usuário autenticado, mostrando conteúdo protegido');
+  logger.debug('Usuário autenticado, mostrando conteúdo protegido', undefined, 'PROTECTED_ROUTE');
   return <>{children}</>;
 };
 

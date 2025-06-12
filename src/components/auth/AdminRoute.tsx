@@ -3,6 +3,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 
 interface AdminRouteProps {
   children: React.ReactNode;
@@ -11,58 +12,58 @@ interface AdminRouteProps {
 const AdminRoute = ({ children }: AdminRouteProps) => {
   const { user, isAuthenticated } = useAuth();
 
-  console.log('=== ADMIN ROUTE DEBUG ===');
-  console.log('User object:', user);
-  console.log('User ID:', user?.id);
-  console.log('User email:', user?.email);
-  console.log('Is authenticated:', isAuthenticated);
+  logger.debug('Admin Route verificação', {
+    userId: user?.id,
+    userEmail: user?.email,
+    isAuthenticated
+  }, 'ADMIN_ROUTE');
 
   const { data: isAdmin, isLoading, error } = useQuery({
     queryKey: ['userRole', user?.id],
     queryFn: async () => {
       if (!user?.id) {
-        console.log('❌ Sem user ID para verificar role');
+        logger.warn('Sem user ID para verificar role', undefined, 'ADMIN_ROUTE');
         return false;
       }
       
-      console.log('🔍 Verificando role de admin para user ID:', user.id);
+      logger.debug('Verificando role de admin', { userId: user.id }, 'ADMIN_ROUTE');
       
-      // Primeiro, vamos verificar se o usuário existe na tabela user_roles
+      // Primeiro, verificar se o usuário existe na tabela user_roles
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('*')
         .eq('user_id', user.id);
       
-      console.log('📋 Roles do usuário:', userRoles);
-      console.log('❌ Erro ao buscar roles:', rolesError);
+      if (rolesError) {
+        logger.error('Erro ao buscar roles', { error: rolesError.message }, 'ADMIN_ROUTE');
+      } else {
+        logger.debug('Roles do usuário encontradas', { roles: userRoles }, 'ADMIN_ROUTE');
+      }
       
-      // Agora vamos usar a função has_role
+      // Usar a função has_role
       const { data, error } = await supabase
         .rpc('has_role', { 
           _user_id: user.id, 
           _role: 'admin' 
         });
       
-      console.log('🎯 Resultado da função has_role:', data);
-      console.log('❌ Erro da função has_role:', error);
-      
       if (error) {
-        console.error('Erro ao verificar role de admin:', error);
+        logger.error('Erro ao verificar role de admin', { error: error.message }, 'ADMIN_ROUTE');
         return false;
       }
       
-      console.log('✅ É admin?', data);
+      logger.info('Verificação de admin concluída', { isAdmin: data }, 'ADMIN_ROUTE');
       return data;
     },
     enabled: !!user?.id && isAuthenticated,
   });
 
-  console.log('🔐 Resultado final - isAdmin:', isAdmin);
-  console.log('⏳ Carregando:', isLoading);
-  console.log('❌ Erro da query:', error);
+  if (error) {
+    logger.error('Erro na query de verificação admin', { error: error.message }, 'ADMIN_ROUTE');
+  }
 
   if (!isAuthenticated) {
-    console.log('🚫 Usuário não autenticado - redirecionando');
+    logger.warn('Usuário não autenticado tentando acessar área admin', undefined, 'ADMIN_ROUTE');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -77,7 +78,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
   }
 
   if (isLoading) {
-    console.log('⏳ Verificando permissões...');
+    logger.debug('Verificando permissões de admin', undefined, 'ADMIN_ROUTE');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -89,7 +90,10 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
   }
 
   if (!isAdmin) {
-    console.log('🚫 Usuário não é admin - acesso negado');
+    logger.warn('Usuário não é admin tentando acessar área administrativa', {
+      userId: user?.id,
+      userEmail: user?.email
+    }, 'ADMIN_ROUTE');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -106,7 +110,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
     );
   }
 
-  console.log('✅ Usuário é admin - permitindo acesso');
+  logger.info('Usuário autorizado a acessar área admin', { userId: user?.id }, 'ADMIN_ROUTE');
   return <>{children}</>;
 };
 

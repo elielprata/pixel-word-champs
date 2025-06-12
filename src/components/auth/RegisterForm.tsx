@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useAuth } from '@/hooks/useAuth';
 import { RegisterForm as RegisterFormType } from '@/types';
 import { Loader2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
@@ -37,9 +38,13 @@ const RegisterForm = () => {
 
   const onSubmit = async (data: RegisterFormType) => {
     try {
+      logger.info('Tentativa de registro iniciada', { 
+        email: data.email, 
+        username: data.username 
+      }, 'REGISTER_FORM');
       await register(data);
-    } catch (err) {
-      console.error('Erro no registro:', err);
+    } catch (err: any) {
+      logger.error('Erro no registro', { error: err.message }, 'REGISTER_FORM');
     }
   };
 
@@ -50,6 +55,8 @@ const RegisterForm = () => {
     form.setValue('email', `teste${randomNum}@exemplo.com`);
     form.setValue('password', '123456');
     form.setValue('confirmPassword', '123456');
+    
+    logger.debug('Dados de teste preenchidos', { randomNum }, 'REGISTER_FORM');
   };
 
   return (
