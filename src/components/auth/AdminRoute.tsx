@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +26,7 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id as any)
-          .eq('role', 'admin')
+          .eq('role', 'admin' as any)
           .maybeSingle();
 
         if (error) {

@@ -51,7 +51,7 @@ export const useUserData = (userId: string) => {
       
       if (error) throw error;
 
-      // Validar e filtrar dados
+      // Validar e filtrar dados - verificar se data não é null
       const validUsers = Array.isArray(data) && data ? data.filter((user: any) => 
         user && typeof user === 'object' && !('error' in user)
       ) : [];
@@ -61,10 +61,18 @@ export const useUserData = (userId: string) => {
       if (currentUser) {
         setUserData({
           id: currentUser.id,
-          username: currentUser.username || 'Usuário',
-          email: currentUser.email || 'Email não disponível',
-          total_score: currentUser.total_score || 0,
-          games_played: currentUser.games_played || 0,
+          username: (currentUser && typeof currentUser === 'object' && !('error' in currentUser)) 
+            ? currentUser.username || 'Usuário' 
+            : 'Usuário',
+          email: (currentUser && typeof currentUser === 'object' && !('error' in currentUser)) 
+            ? currentUser.email || 'Email não disponível' 
+            : 'Email não disponível',
+          total_score: (currentUser && typeof currentUser === 'object' && !('error' in currentUser)) 
+            ? currentUser.total_score || 0 
+            : 0,
+          games_played: (currentUser && typeof currentUser === 'object' && !('error' in currentUser)) 
+            ? currentUser.games_played || 0 
+            : 0,
           is_banned: currentUser.is_banned || false,
           banned_at: currentUser.banned_at,
           banned_by: currentUser.banned_by,
@@ -94,8 +102,8 @@ export const useUserData = (userId: string) => {
       if (error) throw error;
 
       const validRoles = (data || [])
-        .filter((item: any) => item && typeof item === 'object' && !('error' in item) && item.role)
-        .map((item: any) => item.role);
+        .filter((item: any) => item && typeof item === 'object' && !('error' in item) && (item as any).role)
+        .map((item: any) => (item as any).role);
       
       setUserRoles(validRoles);
     } catch (error) {

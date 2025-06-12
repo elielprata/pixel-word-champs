@@ -57,7 +57,7 @@ export const useWordsByLevel = (level: number) => {
       const { data, error } = await supabase
         .from('level_words')
         .select('*')
-        .eq('level', level)
+        .eq('level', level as any)
         .eq('is_active', true as any)
         .order('word', { ascending: true });
 

@@ -63,32 +63,34 @@ export const useAdminUsers = () => {
 
       // Mapear dados com fallback inteligente para emails
       const safeProfiles: ProfileData[] = (profiles as any) || [];
-      const combinedData: AdminUser[] = safeProfiles.map((profile: ProfileData) => {
-        let email = 'Email não disponível';
-        
-        // Se for o usuário atual logado, usar o email real
-        if (currentUser && currentUser.id === profile.id) {
-          email = currentUser.email || 'Email não disponível';
-        }
-        // Fallback baseado no username
-        else if (profile.username) {
-          // Se o username já parece um email, usar como email
-          if (profile.username.includes('@')) {
-            email = profile.username;
-          } else {
-            // Criar um email baseado no username
-            email = `${profile.username}@sistema.local`;
+      const combinedData: AdminUser[] = safeProfiles
+        .filter((profile: any) => profile && typeof profile === 'object' && !('error' in profile))
+        .map((profile: ProfileData) => {
+          let email = 'Email não disponível';
+          
+          // Se for o usuário atual logado, usar o email real
+          if (currentUser && currentUser.id === profile.id) {
+            email = currentUser.email || 'Email não disponível';
           }
-        }
+          // Fallback baseado no username
+          else if (profile.username) {
+            // Se o username já parece um email, usar como email
+            if (profile.username.includes('@')) {
+              email = profile.username;
+            } else {
+              // Criar um email baseado no username
+              email = `${profile.username}@sistema.local`;
+            }
+          }
 
-        return {
-          id: profile.id,
-          email: email,
-          username: profile.username || 'Username não disponível',
-          created_at: profile.created_at || new Date().toISOString(),
-          role: 'admin'
-        };
-      });
+          return {
+            id: profile.id,
+            email: email,
+            username: profile.username || 'Username não disponível',
+            created_at: profile.created_at || new Date().toISOString(),
+            role: 'admin'
+          };
+        });
 
       console.log('👥 Admins processados:', combinedData.map(u => ({ username: u.username, email: u.email })));
       return combinedData;
@@ -103,8 +105,8 @@ export const useAdminUsers = () => {
       const { error: deleteError } = await supabase
         .from('user_roles')
         .delete()
-        .eq('user_id', userId)
-        .eq('role', 'admin');
+        .eq('user_id', userId as any)
+        .eq('role', 'admin' as any);
 
       if (deleteError) {
         console.error('❌ Erro ao remover role admin:', deleteError);
