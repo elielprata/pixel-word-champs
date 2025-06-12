@@ -45,15 +45,24 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
     // podemos fazer a comparação diretamente
     const diff = endDate.getTime() - now.getTime();
     
-    if (diff <= 0) return 'Finalizada';
+    if (diff <= 0) return { text: 'Finalizada', minutes: 0, totalMinutes: 0 };
     
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const totalMinutes = Math.floor(diff / (1000 * 60));
     
+    // Calcular total de minutos da competição (assumindo 24h = 1440 minutos)
+    const startDate = new Date(competition.start_date);
+    const totalCompetitionTime = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60));
+    
+    let text = '';
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      text = `${hours}h ${minutes}m`;
+    } else {
+      text = `${minutes}m`;
     }
-    return `${minutes}m`;
+    
+    return { text, minutes: totalMinutes, totalMinutes: totalCompetitionTime };
   };
 
   if (status !== 'active') {
@@ -61,6 +70,12 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   }
 
   const bgGradient = getBackgroundColor(competition.id);
+  const timeData = calculateTimeRemaining();
+  
+  // Calcular porcentagem para a barra de progresso (invertida - quanto menos tempo, menos progresso)
+  const progressPercentage = timeData.totalMinutes > 0 
+    ? Math.max(0, Math.min(100, (timeData.minutes / timeData.totalMinutes) * 100))
+    : 0;
 
   return (
     <Card className={`relative border-0 bg-gradient-to-br ${bgGradient} backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] animate-fade-in group overflow-hidden`}>
@@ -101,13 +116,23 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
             </div>
           </div>
           
-          {/* Tempo restante compacto - CORRIGIDO para Brasília */}
-          <div className="bg-gradient-to-r from-accent/80 to-accent/60 rounded-lg px-3 py-1.5 border border-border/50 hover:from-primary/15 hover:to-primary/10 transition-all duration-300 animate-scale-in">
-            <div className="flex items-center gap-1.5">
+          {/* Tempo restante com barra de progresso */}
+          <div className="bg-gradient-to-r from-accent/80 to-accent/60 rounded-lg px-3 py-1.5 border border-border/50 hover:from-primary/15 hover:to-primary/10 transition-all duration-300 animate-scale-in min-w-[120px]">
+            <div className="flex items-center gap-1.5 mb-1">
               <Clock className="w-3.5 h-3.5 text-primary animate-pulse" />
               <span className="text-primary font-bold text-sm animate-fade-in">
-                {calculateTimeRemaining()}
+                {timeData.text}
               </span>
+            </div>
+            {/* Barra de progresso */}
+            <div className="w-full bg-gray-200/50 rounded-full h-1.5 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-1000 ease-out"
+                style={{ width: `${progressPercentage}%` }}
+              />
+            </div>
+            <div className="text-center text-xs text-primary/70 mt-0.5">
+              {Math.round(progressPercentage)}% restante
             </div>
           </div>
         </div>
