@@ -48,7 +48,9 @@ export const useCompetitionQueries = () => {
       const response = await competitionService.getCurrentDailyCompetition();
       
       if (response.success) {
-        setDailyCompetition(response.data);
+        // Corrigindo: extrair o primeiro item se for array, senão usar o objeto diretamente
+        const data = Array.isArray(response.data) ? response.data[0] : response.data;
+        setDailyCompetition(data || null);
       } else {
         throw new Error(response.error || 'Erro ao carregar competição diária');
       }
@@ -63,7 +65,9 @@ export const useCompetitionQueries = () => {
       const response = await competitionService.getCurrentWeeklyCompetition();
       
       if (response.success) {
-        setWeeklyCompetition(response.data);
+        // Corrigindo: extrair o primeiro item se for array, senão usar o objeto diretamente
+        const data = Array.isArray(response.data) ? response.data[0] : response.data;
+        setWeeklyCompetition(data || null);
       } else {
         throw new Error(response.error || 'Erro ao carregar competição semanal');
       }
