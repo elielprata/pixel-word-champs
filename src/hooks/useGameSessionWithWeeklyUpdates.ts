@@ -104,7 +104,7 @@ export const useGameSessionWithWeeklyUpdates = () => {
       // Buscar pontuação total atual do usuário
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('total_score')
+        .select('total_score, games_played')
         .eq('id', user.id)
         .single();
 
@@ -114,14 +114,16 @@ export const useGameSessionWithWeeklyUpdates = () => {
       }
 
       const currentTotalScore = profile.total_score || 0;
+      const currentGamesPlayed = profile.games_played || 0;
       const newTotalScore = currentTotalScore + sessionScore;
+      const newGamesPlayed = currentGamesPlayed + 1;
 
       // Atualizar pontuação total do usuário
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
           total_score: newTotalScore,
-          games_played: supabase.rpc('increment', { x: 1 })
+          games_played: newGamesPlayed
         })
         .eq('id', user.id);
 
@@ -139,6 +141,7 @@ export const useGameSessionWithWeeklyUpdates = () => {
         userId: user.id,
         sessionScore,
         newTotalScore,
+        newGamesPlayed,
         weeklyUpdated: !!activeWeeklyCompetition 
       }, 'GAME_SESSION_WEEKLY');
 
