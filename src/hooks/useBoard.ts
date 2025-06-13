@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { getBoardSize, type PlacedWord, validateBoardContainsWords } from '@/utils/boardUtils';
+import { getBoardSize, getMobileBoardSize, type PlacedWord, validateBoardContainsWords } from '@/utils/boardUtils';
 import { useWordSelection } from './useWordSelection';
 import { useBoardGeneration } from './useBoardGeneration';
+import { useIsMobile } from './use-mobile';
 import { logger } from '@/utils/logger';
 
 interface BoardData {
@@ -15,16 +16,18 @@ export const useBoard = (level: number) => {
   const [boardError, setBoardError] = useState<string | null>(null);
   const { levelWords, isLoading: wordsLoading, error: wordsError, debugInfo } = useWordSelection(level);
   const { generateBoard } = useBoardGeneration();
+  const isMobile = useIsMobile();
 
   // Regenerar tabuleiro quando o nível ou palavras mudam
   useEffect(() => {
     // Só tentar gerar se não estiver carregando palavras
     if (!wordsLoading) {
-      const size = getBoardSize(level);
+      const size = isMobile ? getMobileBoardSize(level) : getBoardSize(level);
       
       logger.info('Iniciando geração do tabuleiro', { 
         level, 
         size, 
+        isMobile,
         wordsCount: levelWords.length,
         hasWordsError: !!wordsError
       }, 'USE_BOARD');
@@ -34,7 +37,8 @@ export const useBoard = (level: number) => {
         if (levelWords.length === 0) {
           logger.warn('Gerando tabuleiro sem palavras específicas', { 
             level, 
-            size 
+            size,
+            isMobile
           }, 'USE_BOARD');
           
           // Gerar com palavras padrão se necessário
@@ -44,7 +48,8 @@ export const useBoard = (level: number) => {
           setBoardError(null);
           
           logger.info('Tabuleiro gerado com palavras padrão', { 
-            wordsPlaced: newBoardData.placedWords.length 
+            wordsPlaced: newBoardData.placedWords.length,
+            isMobile
           }, 'USE_BOARD');
           return;
         }
@@ -54,7 +59,8 @@ export const useBoard = (level: number) => {
         if (invalidWords.length > 0) {
           logger.warn('Palavras muito grandes removidas', { 
             size, 
-            invalidWords 
+            invalidWords,
+            isMobile
           }, 'USE_BOARD');
           
           const validWords = levelWords.filter(word => word.length <= size);
@@ -65,7 +71,8 @@ export const useBoard = (level: number) => {
             
             logger.info('Tabuleiro gerado com palavras válidas', { 
               validWordsCount: validWords.length,
-              placedWordsCount: newBoardData.placedWords.length
+              placedWordsCount: newBoardData.placedWords.length,
+              isMobile
             }, 'USE_BOARD');
           } else {
             throw new Error('Nenhuma palavra válida para o tabuleiro');
@@ -83,18 +90,20 @@ export const useBoard = (level: number) => {
         if (!isValid) {
           logger.error('Validação do tabuleiro falhou', { 
             requestedWords: levelWords,
-            placedWords: newBoardData.placedWords.map(pw => pw.word)
+            placedWords: newBoardData.placedWords.map(pw => pw.word),
+            isMobile
           }, 'USE_BOARD');
           setBoardError('Tabuleiro gerado não contém todas as palavras');
         } else {
           logger.info('Tabuleiro validado com sucesso', { 
             wordsCount: levelWords.length,
-            placedWordsCount: newBoardData.placedWords.length
+            placedWordsCount: newBoardData.placedWords.length,
+            isMobile
           }, 'USE_BOARD');
         }
         
       } catch (error) {
-        logger.error('Erro crítico na geração do tabuleiro', { error }, 'USE_BOARD');
+        logger.error('Erro crítico na geração do tabuleiro', { error, isMobile }, 'USE_BOARD');
         setBoardError(error instanceof Error ? error.message : 'Erro na geração do tabuleiro');
         
         // Fallback: gerar tabuleiro vazio mas funcional
@@ -110,15 +119,15 @@ export const useBoard = (level: number) => {
             placedWords: []
           });
           
-          logger.info('Tabuleiro de fallback gerado', { size }, 'USE_BOARD');
+          logger.info('Tabuleiro de fallback gerado', { size, isMobile }, 'USE_BOARD');
         } catch (fallbackError) {
-          logger.error('Erro no fallback do tabuleiro', { fallbackError }, 'USE_BOARD');
+          logger.error('Erro no fallback do tabuleiro', { fallbackError, isMobile }, 'USE_BOARD');
         }
       }
     }
-  }, [level, levelWords, wordsLoading, generateBoard]);
+  }, [level, levelWords, wordsLoading, generateBoard, isMobile]);
 
-  const size = getBoardSize(level);
+  const size = isMobile ? getMobileBoardSize(level) : getBoardSize(level);
   const isLoading = wordsLoading || boardData.board.length === 0;
   const error = wordsError || boardError;
 

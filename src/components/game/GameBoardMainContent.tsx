@@ -2,6 +2,7 @@
 import React from 'react';
 import GameBoardGrid from './GameBoardGrid';
 import WordsList from './WordsList';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { type Position } from '@/utils/boardUtils';
 
 interface FoundWord {
@@ -43,10 +44,15 @@ const GameBoardMainContent = ({
   getWordColor,
   getCellWordIndex
 }: GameBoardMainContentProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <>
-      {/* Tabuleiro principal */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-white/30">
+      {/* Tabuleiro principal com layout otimizado para mobile */}
+      <div className={`
+        bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/30
+        ${isMobile ? 'p-3' : 'p-6'}
+      `}>
         <GameBoardGrid
           boardData={boardData}
           size={size}
@@ -63,8 +69,11 @@ const GameBoardMainContent = ({
         />
       </div>
 
-      {/* Lista de palavras */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20">
+      {/* Lista de palavras com layout responsivo */}
+      <div className={`
+        bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20
+        ${isMobile ? 'max-h-32 overflow-y-auto' : ''}
+      `}>
         <WordsList 
           levelWords={levelWords}
           foundWords={foundWords}

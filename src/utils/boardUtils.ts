@@ -22,13 +22,35 @@ export const getBoardSize = (level: number): number => {
   }
 };
 
+export const getMobileBoardSize = (level: number): number => {
+  // Limitar tamanho do tabuleiro em mobile para melhor performance
+  const baseSize = getBoardSize(level);
+  return Math.min(baseSize, 15); // Máximo 15x15 em mobile
+};
+
 export const getLevelWords = (level: number): string[] => {
   // Como as palavras não são organizadas por nível, retornamos um array genérico
   // que será preenchido com palavras do banco de dados baseadas na dificuldade
   return [];
 };
 
-export const getCellSize = (boardSize: number): number => {
+export const getCellSize = (boardSize: number, isMobile: boolean = false): number => {
+  if (isMobile) {
+    // Tamanhos otimizados para mobile com mínimos maiores
+    if (boardSize <= 5) return 48;  // Aumentado de 42 para 48
+    if (boardSize <= 6) return 42;  // Aumentado de 36 para 42
+    if (boardSize <= 7) return 36;  // Aumentado de 31 para 36
+    if (boardSize <= 8) return 32;  // Aumentado de 27 para 32
+    if (boardSize <= 9) return 28;  // Aumentado de 24 para 28
+    if (boardSize <= 10) return 26; // Aumentado de 22 para 26
+    if (boardSize <= 11) return 24; // Aumentado de 20 para 24
+    if (boardSize <= 12) return 22; // Aumentado de 18 para 22
+    if (boardSize <= 14) return 20; // Aumentado de 16 para 20
+    if (boardSize <= 16) return 18; // Aumentado de 14 para 18
+    return 16; // Mínimo 16px em mobile (era 8px)
+  }
+  
+  // Tamanhos originais para desktop
   if (boardSize <= 5) return 42;
   if (boardSize <= 6) return 36;
   if (boardSize <= 7) return 31;
@@ -40,8 +62,8 @@ export const getCellSize = (boardSize: number): number => {
   if (boardSize <= 14) return 16;
   if (boardSize <= 16) return 14;
   if (boardSize <= 18) return 12;
-  if (boardSize <= 20) return 10; // Para tabuleiros 20x20
-  return 8; // Para tabuleiros ainda maiores (se necessário)
+  if (boardSize <= 20) return 10;
+  return 8;
 };
 
 // Esta função está DEPRECADA - use useGamePointsConfig hook em vez disso

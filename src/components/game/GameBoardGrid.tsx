@@ -2,6 +2,7 @@
 import React, { useRef } from 'react';
 import GameCell from './GameCell';
 import { getCellSize, type Position } from '@/utils/boardUtils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { logger } from '@/utils/logger';
 
 interface GameBoardGridProps {
@@ -34,13 +35,25 @@ const GameBoardGrid = ({
   getCellWordIndex
 }: GameBoardGridProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
-  const cellSize = getCellSize(size);
+  const isMobile = useIsMobile();
+  const cellSize = getCellSize(size, isMobile);
 
   logger.debug('Renderizando GameBoardGrid', { 
     size, 
     selectedCellsCount: selectedCells.length, 
-    isSelecting 
+    isSelecting,
+    isMobile,
+    cellSize
   }, 'GAME_BOARD_GRID');
+
+  // Configurações específicas para mobile
+  const gridConfig = {
+    gap: isMobile ? (size > 10 ? '1px' : '2px') : (size > 8 ? '2px' : '3px'),
+    maxWidth: isMobile ? 
+      (size > 12 ? '320px' : size > 10 ? '350px' : '360px') : 
+      (size > 8 ? '380px' : '360px'),
+    padding: isMobile ? '4px' : '6px'
+  };
 
   return (
     <div 
@@ -48,13 +61,16 @@ const GameBoardGrid = ({
       className="grid mx-auto"
       style={{ 
         gridTemplateColumns: `repeat(${size}, 1fr)`,
-        gap: size > 8 ? '2px' : '3px', // Espaçamento menor entre as células
-        maxWidth: size > 8 ? '380px' : '360px',
+        gap: gridConfig.gap,
+        maxWidth: gridConfig.maxWidth,
         width: '100%',
-        touchAction: 'none'
+        touchAction: 'none',
+        padding: gridConfig.padding,
+        overflowX: isMobile && size > 12 ? 'auto' : 'visible'
       }}
       onTouchEnd={(e) => {
         e.preventDefault();
+        logger.debug('Touch end detectado no grid', { isMobile }, 'GAME_BOARD_GRID');
         handleCellEndWithValidation();
       }}
       onMouseUp={(e) => {
@@ -76,6 +92,7 @@ const GameBoardGrid = ({
             onCellStart={handleCellStart}
             onCellMove={(row, col) => handleCellMove(row, col)}
             isSelecting={isSelecting}
+            isMobile={isMobile}
             wordColorClass={isCellPermanentlyMarked(rowIndex, colIndex) 
               ? getWordColor(getCellWordIndex(rowIndex, colIndex))
               : undefined
