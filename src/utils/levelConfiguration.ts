@@ -7,30 +7,65 @@ export const DIFFICULTY_DISTRIBUTION = {
   expert: 1   // 1 palavra expert
 };
 
-// Palavras padrão proporcionais ao tamanho do tabuleiro garantindo que cabem
+// Normalizar texto removendo acentos e caracteres especiais
+export const normalizeText = (text: string): string => {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .toUpperCase()
+    .replace(/[^A-Z]/g, ''); // Remove caracteres não alfabéticos
+};
+
+// Palavras padrão otimizadas para tabuleiro 10x10 (sem acentos)
 export const getDefaultWordsForSize = (boardSize: number): string[] => {
-  const maxLength = Math.min(boardSize - 1, 8);
+  console.log(`🎯 Gerando palavras padrão para tabuleiro ${boardSize}x${boardSize}`);
   
-  console.log(`🎯 Gerando palavras padrão para tabuleiro ${boardSize}x${boardSize} (máx ${maxLength} letras)`);
+  // Para tabuleiro 10x10 fixo, sempre usar essas palavras testadas
+  const defaultWords10x10 = [
+    'CASA',      // 4 letras
+    'AMOR',      // 4 letras  
+    'VIDA',      // 4 letras
+    'TEMPO',     // 5 letras
+    'MUNDO',     // 5 letras
+    'AGUA',      // 4 letras (sem acento)
+    'TERRA',     // 5 letras
+    'FOGO',      // 4 letras
+    'VENTO',     // 5 letras
+    'PEDRA'      // 5 letras
+  ];
   
-  if (boardSize === 5) {
-    // Nível 1: 5x5 - palavras até 4 letras
-    return ['SOL', 'LUA', 'CASA', 'AMOR'];
-  }
-  if (boardSize === 6) {
-    // Nível 2: 6x6 - palavras até 5 letras
-    return ['CÉU', 'MAR', 'TERRA', 'MUNDO', 'TEMPO'];
-  }
-  if (boardSize === 7) {
-    // Nível 3: 7x7 - palavras até 6 letras
-    return ['RIO', 'PAZ', 'SONHO', 'AMIGO', 'FLOR'];
-  }
-  if (boardSize === 8) {
-    // Nível 4: 8x8 - palavras até 7 letras
-    return ['LUZ', 'FÉ', 'CORAGEM', 'VITÓRIA', 'FAMÍLIA'];
+  // Selecionar 5 palavras das 10 disponíveis
+  const shuffled = [...defaultWords10x10].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 5);
+  
+  console.log(`✅ Palavras padrão selecionadas:`, selected);
+  return selected;
+};
+
+// Validar se uma palavra é adequada para o jogo
+export const isValidGameWord = (word: string, maxLength: number = 10): boolean => {
+  if (!word || typeof word !== 'string') {
+    console.warn(`❌ Palavra inválida (não é string):`, word);
+    return false;
   }
   
-  // Para níveis maiores, sempre garantir que as palavras cabem
-  const baseWords = ['FIM', 'SIM', 'FLOR', 'ESPERANÇA', 'SABEDORIA', 'AMIZADE', 'LIBERDADE'];
-  return baseWords.filter(w => w.length <= maxLength).slice(0, 5);
+  const normalizedWord = normalizeText(word);
+  
+  if (normalizedWord.length < 3) {
+    console.warn(`❌ Palavra "${word}" muito pequena (${normalizedWord.length} letras)`);
+    return false;
+  }
+  
+  if (normalizedWord.length > maxLength) {
+    console.warn(`❌ Palavra "${word}" muito grande (${normalizedWord.length} letras) para tabuleiro ${maxLength}x${maxLength}`);
+    return false;
+  }
+  
+  if (!/^[A-Z]+$/.test(normalizedWord)) {
+    console.warn(`❌ Palavra "${word}" contém caracteres inválidos após normalização: "${normalizedWord}"`);
+    return false;
+  }
+  
+  console.log(`✅ Palavra "${word}" → "${normalizedWord}" é válida`);
+  return true;
 };

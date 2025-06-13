@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useBoard } from '@/hooks/useBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
 import { useWordValidation } from '@/hooks/useWordValidation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useGameInteractions } from '@/hooks/useGameInteractions';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { type Position } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
 
@@ -58,7 +59,36 @@ const GameBoardLogic = ({
   onRevive,
   children
 }: GameBoardLogicProps) => {
-  const { boardData, size, levelWords } = useBoard(level);
+  const isMobile = useIsMobile();
+  const { boardData, size, levelWords, isLoading, error } = useBoard(level);
+  
+  // Log detalhado do estado dos dados
+  useEffect(() => {
+    logger.info('🎮 GameBoardLogic renderizado', { 
+      level,
+      isMobile,
+      isLoading,
+      hasError: !!error,
+      boardSize: boardData.board.length,
+      levelWordsCount: levelWords.length,
+      placedWordsCount: boardData.placedWords.length,
+      timeLeft
+    }, 'GAME_BOARD_LOGIC');
+  }, [level, isMobile, isLoading, error, boardData, levelWords, timeLeft]);
+
+  // Log quando os dados mudam
+  useEffect(() => {
+    if (boardData.board.length > 0) {
+      logger.info('📋 Dados do tabuleiro recebidos', {
+        level,
+        isMobile,
+        boardSize: boardData.board.length,
+        levelWords,
+        placedWords: boardData.placedWords.map(pw => pw.word),
+        boardPreview: boardData.board.slice(0, 2).map(row => row.join(''))
+      }, 'GAME_BOARD_LOGIC');
+    }
+  }, [boardData, levelWords, level, isMobile]);
   
   const { 
     selectedCells, 
@@ -85,10 +115,11 @@ const GameBoardLogic = ({
     isCellHintHighlighted,
     closeGameOver
   } = useGameLogic(level, timeLeft, levelWords, onWordFound, (levelScore) => {
-    logger.info('Nível completado', { 
+    logger.info('🎉 Nível completado', { 
       level, 
       levelScore,
-      foundWordsCount: foundWords.length 
+      foundWordsCount: foundWords.length,
+      isMobile 
     }, 'GAME_BOARD_LOGIC');
     onLevelComplete(levelScore);
   });
@@ -112,24 +143,27 @@ const GameBoardLogic = ({
     if (finalSelection.length >= 3) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
+      logger.debug('🔍 Tentativa de palavra', {
+        word,
+        level,
+        isMobile,
+        selectionLength: finalSelection.length,
+        isInWordList: levelWords.includes(word),
+        alreadyFound: foundWords.some(fw => fw.word === word),
+        validDirection: isValidWordDirection(finalSelection)
+      }, 'GAME_BOARD_LOGIC');
+      
       if (levelWords.includes(word) && 
           !foundWords.some(fw => fw.word === word) && 
           isValidWordDirection(finalSelection)) {
-        logger.info('Palavra encontrada', { 
+        logger.info('✅ Palavra encontrada', { 
           word, 
           level,
+          isMobile,
           wordLength: word.length,
           selectionLength: finalSelection.length 
         }, 'GAME_BOARD_LOGIC');
         addFoundWord(word, finalSelection);
-      } else {
-        logger.debug('Palavra inválida tentada', { 
-          word,
-          level,
-          isInWordList: levelWords.includes(word),
-          alreadyFound: foundWords.some(fw => fw.word === word),
-          validDirection: isValidWordDirection(finalSelection)
-        }, 'GAME_BOARD_LOGIC');
       }
     }
   };
@@ -162,6 +196,16 @@ const GameBoardLogic = ({
 
   // Calcular pontuação atual do nível (palavras encontradas)
   const currentLevelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
+
+  // Log final antes de retornar
+  logger.debug('🎯 GameBoardLogic props finais', {
+    level,
+    isMobile,
+    boardDataReady: boardData.board.length > 0,
+    levelWordsCount: levelWords.length,
+    foundWordsCount: foundWords.length,
+    currentLevelScore
+  }, 'GAME_BOARD_LOGIC');
 
   return (
     <>

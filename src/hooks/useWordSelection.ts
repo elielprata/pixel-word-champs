@@ -2,9 +2,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getBoardSize } from '@/utils/boardUtils';
-import { DIFFICULTY_DISTRIBUTION } from '@/utils/levelConfiguration';
+import { DIFFICULTY_DISTRIBUTION, getDefaultWordsForSize, normalizeText, isValidGameWord } from '@/utils/levelConfiguration';
 import { wordHistoryService } from '@/services/wordHistoryService';
 import { logger } from '@/utils/logger';
+import { useIsMobile } from './use-mobile';
 
 export const useWordSelection = (level: number) => {
   const [levelWords, setLevelWords] = useState<string[]>([]);
@@ -12,6 +13,7 @@ export const useWordSelection = (level: number) => {
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string>('');
   const timeoutRef = useRef<NodeJS.Timeout>();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const selectWordsForLevel = async () => {
@@ -19,71 +21,95 @@ export const useWordSelection = (level: number) => {
       setError(null);
       setDebugInfo('Iniciando seleção de palavras...');
       
-      // Timeout de segurança - forçar fallback após 10 segundos
+      logger.info('🚀 Iniciando seleção de palavras', { 
+        level, 
+        isMobile,
+        userAgent: navigator.userAgent 
+      }, 'WORD_SELECTION');
+      
+      // Timeout de segurança - forçar fallback após 8 segundos para mobile, 10 para desktop
+      const timeoutMs = isMobile ? 8000 : 10000;
       timeoutRef.current = setTimeout(() => {
-        logger.warn('Timeout na seleção de palavras - usando fallback', { level }, 'WORD_SELECTION');
-        setDebugInfo('Timeout - usando palavras padrão');
-        setLevelWords(getDefaultWordsForLevel(level));
+        logger.warn('⏰ Timeout na seleção de palavras - usando fallback', { 
+          level, 
+          isMobile,
+          timeoutMs 
+        }, 'WORD_SELECTION');
+        setDebugInfo(`Timeout (${timeoutMs}ms) - usando palavras padrão`);
+        const fallbackWords = getDefaultWordsForSize(10);
+        setLevelWords(fallbackWords);
         setIsLoading(false);
-      }, 10000);
+      }, timeoutMs);
 
       try {
         const boardSize = getBoardSize(level);
         const maxWordLength = Math.min(boardSize - 1, 8);
         
-        logger.info('Iniciando seleção de palavras', { 
+        logger.info('📏 Configuração do tabuleiro', { 
           level, 
           boardSize, 
-          maxWordLength 
+          maxWordLength,
+          isMobile 
         }, 'WORD_SELECTION');
         
-        setDebugInfo(`Buscando palavras para nível ${level} (tabuleiro ${boardSize}x${boardSize})`);
+        setDebugInfo(`Buscando palavras para nível ${level} (tabuleiro ${boardSize}x${boardSize}, mobile: ${isMobile})`);
 
         // Tentar buscar palavras do banco
+        logger.info('🔍 Buscando palavras no banco de dados...', undefined, 'WORD_SELECTION');
         const { data: words, error: dbError } = await supabase
           .from('level_words')
           .select('word, difficulty, category')
           .eq('is_active', true);
 
         if (dbError) {
-          logger.error('Erro ao buscar palavras do banco', { error: dbError }, 'WORD_SELECTION');
+          logger.error('❌ Erro ao buscar palavras do banco', { error: dbError, isMobile }, 'WORD_SELECTION');
           throw new Error(`Erro no banco: ${dbError.message}`);
         }
 
         if (!words || words.length === 0) {
-          logger.warn('Nenhuma palavra encontrada no banco - usando fallback', { level }, 'WORD_SELECTION');
+          logger.warn('📭 Nenhuma palavra encontrada no banco - usando fallback', { level, isMobile }, 'WORD_SELECTION');
           setDebugInfo('Banco vazio - usando palavras padrão');
-          setLevelWords(getDefaultWordsForLevel(level));
+          const fallbackWords = getDefaultWordsForSize(boardSize);
+          setLevelWords(fallbackWords);
           setIsLoading(false);
           clearTimeout(timeoutRef.current);
           return;
         }
 
         setDebugInfo(`Encontradas ${words.length} palavras no banco`);
-        logger.info(`Encontradas ${words.length} palavras no banco`, undefined, 'WORD_SELECTION');
+        logger.info(`📊 Encontradas ${words.length} palavras no banco`, { isMobile }, 'WORD_SELECTION');
 
-        // Filtrar palavras válidas
-        const validWords = words.filter(w => {
-          if (!w.word || typeof w.word !== 'string') return false;
-          if (w.word.length < 3 || w.word.length > maxWordLength) return false;
-          if (!/^[A-Za-z]+$/.test(w.word)) return false;
-          return true;
-        });
+        // Filtrar e normalizar palavras válidas
+        const validWords = words
+          .filter(w => w.word && typeof w.word === 'string')
+          .map(w => ({
+            ...w,
+            normalizedWord: normalizeText(w.word)
+          }))
+          .filter(w => isValidGameWord(w.normalizedWord, maxWordLength));
+
+        logger.info('🔍 Palavras após validação', { 
+          totalOriginal: words.length,
+          validCount: validWords.length,
+          maxWordLength,
+          isMobile
+        }, 'WORD_SELECTION');
 
         if (validWords.length === 0) {
-          logger.warn('Nenhuma palavra válida após filtros - usando fallback', { 
+          logger.warn('⚠️ Nenhuma palavra válida após filtros - usando fallback', { 
             totalWords: words.length,
-            maxWordLength 
+            maxWordLength,
+            isMobile 
           }, 'WORD_SELECTION');
           setDebugInfo('Nenhuma palavra válida - usando palavras padrão');
-          setLevelWords(getDefaultWordsForLevel(level));
+          const fallbackWords = getDefaultWordsForSize(boardSize);
+          setLevelWords(fallbackWords);
           setIsLoading(false);
           clearTimeout(timeoutRef.current);
           return;
         }
 
         setDebugInfo(`${validWords.length} palavras válidas encontradas`);
-        logger.info(`${validWords.length} palavras válidas após filtros`, undefined, 'WORD_SELECTION');
 
         // Tentar usar seleção inteligente com histórico
         let selectedWords: string[] = [];
@@ -102,8 +128,9 @@ export const useWordSelection = (level: number) => {
             });
             
             if (selectedWords.length >= 5) {
-              logger.info('Seleção inteligente bem-sucedida', { 
-                wordsCount: selectedWords.length 
+              logger.info('🎯 Seleção inteligente bem-sucedida', { 
+                wordsCount: selectedWords.length,
+                isMobile 
               }, 'WORD_SELECTION');
               setDebugInfo(`Seleção inteligente: ${selectedWords.length} palavras`);
               setLevelWords(selectedWords);
@@ -113,8 +140,9 @@ export const useWordSelection = (level: number) => {
             }
           }
         } catch (smartSelectionError) {
-          logger.warn('Erro na seleção inteligente - usando seleção simples', { 
-            error: smartSelectionError 
+          logger.warn('⚠️ Erro na seleção inteligente - usando seleção simples', { 
+            error: smartSelectionError,
+            isMobile 
           }, 'WORD_SELECTION');
           setDebugInfo('Seleção inteligente falhou - usando seleção simples');
         }
@@ -124,31 +152,44 @@ export const useWordSelection = (level: number) => {
         selectedWords = selectWordsByDifficulty(validWords);
 
         if (selectedWords.length === 0) {
-          logger.warn('Seleção por dificuldade falhou - usando seleção aleatória', undefined, 'WORD_SELECTION');
+          logger.warn('⚠️ Seleção por dificuldade falhou - usando seleção aleatória', { isMobile }, 'WORD_SELECTION');
           setDebugInfo('Seleção por dificuldade falhou - seleção aleatória');
           selectedWords = selectRandomWords(validWords, 5);
         }
 
         if (selectedWords.length === 0) {
-          logger.error('Todas as seleções falharam - usando palavras padrão', undefined, 'WORD_SELECTION');
+          logger.error('❌ Todas as seleções falharam - usando palavras padrão', { isMobile }, 'WORD_SELECTION');
           setDebugInfo('Todas as seleções falharam - usando palavras padrão');
-          selectedWords = getDefaultWordsForLevel(level);
+          selectedWords = getDefaultWordsForSize(boardSize);
         }
 
-        // Validar que as palavras cabem no tabuleiro
-        const finalWords = selectedWords.filter(word => word.length <= maxWordLength);
+        // Normalizar palavras finais
+        const finalWords = selectedWords
+          .map(word => normalizeText(word))
+          .filter(word => isValidGameWord(word, maxWordLength));
         
         if (finalWords.length < selectedWords.length) {
-          logger.warn('Algumas palavras removidas por tamanho', { 
+          logger.warn('⚠️ Algumas palavras removidas por normalização', { 
             original: selectedWords.length,
-            final: finalWords.length 
+            final: finalWords.length,
+            isMobile 
           }, 'WORD_SELECTION');
         }
 
-        logger.info('Seleção de palavras concluída', { 
+        if (finalWords.length === 0) {
+          logger.error('❌ Nenhuma palavra final válida - usando fallback absoluto', { isMobile }, 'WORD_SELECTION');
+          const absoluteFallback = getDefaultWordsForSize(boardSize);
+          setLevelWords(absoluteFallback);
+          setIsLoading(false);
+          clearTimeout(timeoutRef.current);
+          return;
+        }
+
+        logger.info('✅ Seleção de palavras concluída', { 
           level,
           wordsCount: finalWords.length,
-          words: finalWords 
+          words: finalWords,
+          isMobile 
         }, 'WORD_SELECTION');
 
         setDebugInfo(`Concluído: ${finalWords.length} palavras selecionadas`);
@@ -161,17 +202,27 @@ export const useWordSelection = (level: number) => {
             await wordHistoryService.recordWordsUsage(user.id, finalWords, level);
           }
         } catch (historyError) {
-          logger.warn('Erro ao registrar histórico - continuando', { error: historyError }, 'WORD_SELECTION');
+          logger.warn('⚠️ Erro ao registrar histórico - continuando', { 
+            error: historyError,
+            isMobile 
+          }, 'WORD_SELECTION');
         }
         
       } catch (error) {
-        logger.error('Erro crítico na seleção de palavras', { error }, 'WORD_SELECTION');
+        logger.error('❌ Erro crítico na seleção de palavras', { 
+          error, 
+          isMobile,
+          userAgent: navigator.userAgent 
+        }, 'WORD_SELECTION');
         setError(error instanceof Error ? error.message : 'Erro desconhecido');
         setDebugInfo(`Erro: ${error instanceof Error ? error.message : 'Desconhecido'}`);
         
         // Fallback final: palavras padrão
-        const fallbackWords = getDefaultWordsForLevel(level);
-        logger.info('Usando fallback final', { words: fallbackWords }, 'WORD_SELECTION');
+        const fallbackWords = getDefaultWordsForSize(10); // Sempre 10x10 agora
+        logger.info('🆘 Usando fallback final', { 
+          words: fallbackWords,
+          isMobile 
+        }, 'WORD_SELECTION');
         setLevelWords(fallbackWords);
       } finally {
         setIsLoading(false);
@@ -187,13 +238,13 @@ export const useWordSelection = (level: number) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [level]);
+  }, [level, isMobile]);
 
   return { levelWords, isLoading, error, debugInfo };
 };
 
 // Função para seleção por distribuição de dificuldade
-const selectWordsByDifficulty = (words: Array<{ word: string; difficulty: string }>): string[] => {
+const selectWordsByDifficulty = (words: Array<{ normalizedWord: string; difficulty: string }>): string[] => {
   const wordsByDifficulty = {
     easy: words.filter(w => w.difficulty === 'easy'),
     medium: words.filter(w => w.difficulty === 'medium'),
@@ -208,11 +259,11 @@ const selectWordsByDifficulty = (words: Array<{ word: string; difficulty: string
     const availableWords = wordsByDifficulty[difficulty as keyof typeof wordsByDifficulty] || [];
     
     for (let i = 0; i < count && selected.length < 5; i++) {
-      const candidateWords = availableWords.filter(w => !selected.includes(w.word.toUpperCase()));
+      const candidateWords = availableWords.filter(w => !selected.includes(w.normalizedWord));
       
       if (candidateWords.length > 0) {
         const randomWord = candidateWords[Math.floor(Math.random() * candidateWords.length)];
-        selected.push(randomWord.word.toUpperCase());
+        selected.push(randomWord.normalizedWord);
       }
     }
   }
@@ -221,23 +272,7 @@ const selectWordsByDifficulty = (words: Array<{ word: string; difficulty: string
 };
 
 // Função para seleção aleatória simples
-const selectRandomWords = (words: Array<{ word: string }>, count: number): string[] => {
+const selectRandomWords = (words: Array<{ normalizedWord: string }>, count: number): string[] => {
   const shuffled = [...words].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count).map(w => w.word.toUpperCase());
-};
-
-// Função para palavras padrão quando tudo falha
-const getDefaultWordsForLevel = (level: number): string[] => {
-  const defaultWords = [
-    'CASA', 'AMOR', 'VIDA', 'TEMPO', 'MUNDO',
-    'ÁGUA', 'TERRA', 'FOGO', 'VENTO', 'PEDRA',
-    'FLOR', 'ÁRVORE', 'PÁSSARO', 'GATO', 'CACHORRO'
-  ];
-  
-  const boardSize = getBoardSize(level);
-  const maxLength = Math.min(boardSize - 1, 8);
-  
-  const validDefaults = defaultWords.filter(word => word.length <= maxLength);
-  
-  return validDefaults.slice(0, 5);
+  return shuffled.slice(0, count).map(w => w.normalizedWord);
 };
