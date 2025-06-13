@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from 'lucide-react';
 import { useDailyCompetitionFinalization } from "@/hooks/useDailyCompetitionFinalization";
+import { useCompetitionStatusChecker } from '@/hooks/useCompetitionStatusChecker';
 import { useDailyCompetitionsManagement } from '@/hooks/useDailyCompetitionsManagement';
 import { useDailyCompetitionForm } from '@/hooks/useDailyCompetitionForm';
 import { DailyCompetitionForm } from './daily/DailyCompetitionForm';
@@ -15,6 +16,9 @@ import { DailyCompetitionsHeader } from './daily/DailyCompetitionsHeader';
 export const DailyCompetitionsManagement = () => {
   // Usar o hook de finalização automática
   useDailyCompetitionFinalization();
+
+  // Adicionar verificação automática de status
+  useCompetitionStatusChecker();
 
   const {
     competitions,
