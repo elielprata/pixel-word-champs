@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStateCore } from '@/hooks/auth/useAuthStateCore';
 import { useAuthRefs } from '@/hooks/auth/useAuthRefs';
