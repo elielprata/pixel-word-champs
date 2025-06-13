@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
-import { useDailyCompetitionGameLogic } from '@/hooks/useDailyCompetitionGameLogic';
+import { useDailyCompetitionGameLogic } from '@/hooks/competitions/useDailyCompetitionGameLogic';
 import CompetitionErrorDisplay from './challenge/CompetitionErrorDisplay';
 import CompetitionLoadingScreen from './challenge/CompetitionLoadingScreen';
 import CompetitionCompletedScreen from './challenge/CompetitionCompletedScreen';
