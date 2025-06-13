@@ -31,8 +31,8 @@ const ChallengeGameSession = ({
     timeRemaining 
   }, 'CHALLENGE_GAME_SESSION');
 
-  const handleStopGame = () => {
-    logger.info('Parando competição', { currentLevel }, 'CHALLENGE_GAME_SESSION');
+  const handleStopChallenge = () => {
+    logger.info('Parando desafio', { currentLevel }, 'CHALLENGE_GAME_SESSION');
     onStopGame();
   };
 
@@ -42,7 +42,7 @@ const ChallengeGameSession = ({
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={handleStopGame}
+          onClick={handleStopChallenge}
           className="rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white"
         >
           <ArrowLeft className="w-6 h-6" />

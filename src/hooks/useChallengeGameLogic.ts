@@ -17,36 +17,36 @@ export const useChallengeGameLogic = (challengeId: string) => {
   const maxLevels = 20;
 
   useEffect(() => {
-    initializeGameSession();
+    initializeChallengeSession();
   }, [challengeId]);
 
-  const initializeGameSession = async () => {
+  const initializeChallengeSession = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      console.log('🎮 Inicializando sessão de jogo para competição:', challengeId);
+      console.log('🎮 Inicializando sessão de desafio para competição:', challengeId);
       
       // Primeiro, descobrir em qual tabela a competição existe
-      const competitionTable = await competitionValidationService.getCompetitionTable(challengeId);
-      console.log('🔍 Tabela da competição:', competitionTable);
+      const challengeTable = await competitionValidationService.getCompetitionTable(challengeId);
+      console.log('🔍 Tabela do desafio:', challengeTable);
       
-      if (!competitionTable) {
-        console.error('❌ Competição não encontrada em nenhuma tabela:', challengeId);
-        setError('Competição não encontrada. Verifique se o ID está correto.');
+      if (!challengeTable) {
+        console.error('❌ Desafio não encontrado em nenhuma tabela:', challengeId);
+        setError('Desafio não encontrado. Verifique se o ID está correto.');
         return;
       }
       
       // Validar se a competição está ativa
-      const competitionValidation = await competitionValidationService.validateCompetition(challengeId);
+      const challengeValidation = await competitionValidationService.validateCompetition(challengeId);
       
-      if (!competitionValidation.success) {
-        console.error('❌ Competição inválida:', competitionValidation.error);
-        setError(`Competição não disponível: ${competitionValidation.error}`);
+      if (!challengeValidation.success) {
+        console.error('❌ Desafio inválido:', challengeValidation.error);
+        setError(`Desafio não disponível: ${challengeValidation.error}`);
         return;
       }
 
-      console.log('✅ Competição validada, criando sessão de jogo...');
+      console.log('✅ Desafio validado, criando sessão de jogo...');
       
       // Criar uma nova sessão de jogo para esta competição
       const sessionResponse = await gameService.createGameSession({
@@ -77,42 +77,42 @@ export const useChallengeGameLogic = (challengeId: string) => {
     }
   };
 
-  const markParticipationAsCompleted = async () => {
+  const markChallengeParticipationAsCompleted = async () => {
     if (hasMarkedParticipation) {
-      console.log('Participação já foi marcada como concluída');
+      console.log('Participação no desafio já foi marcada como concluída');
       return;
     }
 
     try {
-      console.log('🏁 Marcando participação como concluída...');
+      console.log('🏁 Marcando participação no desafio como concluída...');
       await competitionParticipationService.markUserAsParticipated(challengeId);
       if (gameSession?.id) {
         await gameService.completeGameSession(gameSession.id);
       }
       setHasMarkedParticipation(true);
-      console.log('✅ Participação marcada como concluída');
+      console.log('✅ Participação no desafio marcada como concluída');
     } catch (error) {
-      console.error('❌ Erro ao marcar participação:', error);
+      console.error('❌ Erro ao marcar participação no desafio:', error);
     }
   };
 
-  const handleWordFound = async (word: string, points: number) => {
+  const handleChallengeWordFound = async (word: string, points: number) => {
     console.log(`Palavra encontrada: ${word} com ${points} pontos (pontos serão registrados apenas quando nível completar)`);
     // Pontos não são mais registrados aqui - apenas quando o nível for completado
   };
 
-  const handleTimeUp = () => {
-    console.log('Tempo esgotado!');
+  const handleChallengeTimeUp = () => {
+    console.log('Tempo esgotado no desafio!');
   };
 
-  const handleLevelComplete = async (levelScore: number) => {
+  const handleChallengeLevelComplete = async (levelScore: number) => {
     const newTotalScore = totalScore + levelScore;
     setTotalScore(newTotalScore);
     
     console.log(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Pontos já registrados no banco de dados.`);
   };
 
-  const handleAdvanceLevel = () => {
+  const handleChallengeAdvanceLevel = () => {
     if (currentLevel < maxLevels) {
       setCurrentLevel(prev => prev + 1);
       setIsGameStarted(false);
@@ -123,16 +123,16 @@ export const useChallengeGameLogic = (challengeId: string) => {
       console.log(`Avançando para o nível ${currentLevel + 1}`);
     } else {
       setGameCompleted(true);
-      console.log('Você completou todos os 20 níveis!');
+      console.log('Você completou todos os 20 níveis do desafio!');
     }
   };
 
-  const handleRetry = () => {
+  const handleChallengeRetry = () => {
     console.log('🔄 Tentando novamente...');
     setError(null);
     setGameSession(null);
     setIsGameStarted(false);
-    initializeGameSession();
+    initializeChallengeSession();
   };
 
   return {
@@ -143,11 +143,11 @@ export const useChallengeGameLogic = (challengeId: string) => {
     gameCompleted,
     isLoading,
     error,
-    handleWordFound,
-    handleTimeUp,
-    handleLevelComplete,
-    handleAdvanceLevel,
-    handleRetry,
-    markParticipationAsCompleted
+    handleWordFound: handleChallengeWordFound,
+    handleTimeUp: handleChallengeTimeUp,
+    handleLevelComplete: handleChallengeLevelComplete,
+    handleAdvanceLevel: handleChallengeAdvanceLevel,
+    handleRetry: handleChallengeRetry,
+    markParticipationAsCompleted: markChallengeParticipationAsCompleted
   };
 };

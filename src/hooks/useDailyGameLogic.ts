@@ -17,10 +17,10 @@ export const useDailyGameLogic = (competitionId: string) => {
   const maxLevels = 20;
 
   useEffect(() => {
-    initializeGameSession();
+    initializeDailyCompetitionSession();
   }, [competitionId]);
 
-  const initializeGameSession = async () => {
+  const initializeDailyCompetitionSession = async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -77,7 +77,7 @@ export const useDailyGameLogic = (competitionId: string) => {
     }
   };
 
-  const markParticipationAsCompleted = async () => {
+  const markDailyCompetitionParticipationAsCompleted = async () => {
     if (hasMarkedParticipation) {
       console.log('Participação já foi marcada como concluída');
       return;
@@ -96,23 +96,23 @@ export const useDailyGameLogic = (competitionId: string) => {
     }
   };
 
-  const handleWordFound = async (word: string, points: number) => {
+  const handleDailyCompetitionWordFound = async (word: string, points: number) => {
     console.log(`Palavra encontrada: ${word} com ${points} pontos (pontos serão registrados apenas quando nível completar)`);
     // Pontos não são mais registrados aqui - apenas quando o nível for completado
   };
 
-  const handleTimeUp = () => {
+  const handleDailyCompetitionTimeUp = () => {
     console.log('Tempo esgotado na competição!');
   };
 
-  const handleLevelComplete = async (levelScore: number) => {
+  const handleDailyCompetitionLevelComplete = async (levelScore: number) => {
     const newTotalScore = totalScore + levelScore;
     setTotalScore(newTotalScore);
     
     console.log(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Pontos já registrados no banco de dados.`);
   };
 
-  const handleAdvanceLevel = () => {
+  const handleDailyCompetitionAdvanceLevel = () => {
     if (currentLevel < maxLevels) {
       setCurrentLevel(prev => prev + 1);
       setIsGameStarted(false);
@@ -127,12 +127,12 @@ export const useDailyGameLogic = (competitionId: string) => {
     }
   };
 
-  const handleRetry = () => {
+  const handleDailyCompetitionRetry = () => {
     console.log('🔄 Tentando novamente...');
     setError(null);
     setGameSession(null);
     setIsGameStarted(false);
-    initializeGameSession();
+    initializeDailyCompetitionSession();
   };
 
   return {
@@ -143,11 +143,11 @@ export const useDailyGameLogic = (competitionId: string) => {
     gameCompleted,
     isLoading,
     error,
-    handleWordFound,
-    handleTimeUp,
-    handleLevelComplete,
-    handleAdvanceLevel,
-    handleRetry,
-    markParticipationAsCompleted
+    handleWordFound: handleDailyCompetitionWordFound,
+    handleTimeUp: handleDailyCompetitionTimeUp,
+    handleLevelComplete: handleDailyCompetitionLevelComplete,
+    handleAdvanceLevel: handleDailyCompetitionAdvanceLevel,
+    handleRetry: handleDailyCompetitionRetry,
+    markParticipationAsCompleted: markDailyCompetitionParticipationAsCompleted
   };
 };
