@@ -1,4 +1,3 @@
-
 export interface Position {
   row: number;
   col: number;
@@ -13,19 +12,13 @@ export interface PlacedWord {
 }
 
 export const getBoardSize = (level: number): number => {
-  // Nível 1: 10x10, Nível 2: 11x11, ..., Nível 11: 20x20
-  // A partir do nível 12: 20x20 (fixo)
-  if (level <= 11) {
-    return 9 + level; // Nível 1 = 10, Nível 2 = 11, ..., Nível 11 = 20
-  } else {
-    return 20; // Níveis 12+ = 20x20 fixo
-  }
+  // Sempre retorna 10x10 independente do nível
+  return 10;
 };
 
 export const getMobileBoardSize = (level: number): number => {
-  // Limitar tamanho do tabuleiro em mobile para melhor performance
-  const baseSize = getBoardSize(level);
-  return Math.min(baseSize, 15); // Máximo 15x15 em mobile
+  // Sempre retorna 10x10 em mobile também
+  return 10;
 };
 
 export const getLevelWords = (level: number): string[] => {
