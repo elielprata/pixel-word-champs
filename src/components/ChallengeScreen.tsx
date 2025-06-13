@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
-import { useCompetitionGameLogic } from '@/hooks/useCompetitionGameLogic';
+import { useDailyCompetitionGameLogic } from '@/hooks/useDailyCompetitionGameLogic';
 import CompetitionErrorDisplay from './challenge/CompetitionErrorDisplay';
 import CompetitionLoadingScreen from './challenge/CompetitionLoadingScreen';
 import CompetitionCompletedScreen from './challenge/CompetitionCompletedScreen';
@@ -28,7 +27,7 @@ const CompetitionScreen = ({ competitionId, onBack }: CompetitionScreenProps) =>
     handleAdvanceLevel,
     handleRetry,
     markParticipationAsCompleted
-  } = useCompetitionGameLogic(competitionId);
+  } = useDailyCompetitionGameLogic(competitionId);
 
   const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(isGameStarted);
 
