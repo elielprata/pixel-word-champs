@@ -928,6 +928,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       update_competition_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined

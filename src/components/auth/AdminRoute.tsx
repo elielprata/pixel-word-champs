@@ -26,26 +26,11 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
         return false;
       }
       
-      logger.debug('Verificando role de admin', { userId: user.id }, 'ADMIN_ROUTE');
+      logger.debug('Verificando role de admin usando função is_admin()', { userId: user.id }, 'ADMIN_ROUTE');
       
-      // Primeiro, verificar se o usuário existe na tabela user_roles
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      if (rolesError) {
-        logger.error('Erro ao buscar roles', { error: rolesError.message }, 'ADMIN_ROUTE');
-      } else {
-        logger.debug('Roles do usuário encontradas', { roles: userRoles }, 'ADMIN_ROUTE');
-      }
-      
-      // Usar a função has_role
+      // Usar a nova função is_admin() do banco que é mais eficiente
       const { data, error } = await supabase
-        .rpc('has_role', { 
-          _user_id: user.id, 
-          _role: 'admin' 
-        });
+        .rpc('is_admin');
       
       if (error) {
         logger.error('Erro ao verificar role de admin', { error: error.message }, 'ADMIN_ROUTE');
@@ -100,7 +85,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Negado</h1>
           <p className="text-gray-600 mb-4">Você não tem permissão para acessar o painel administrativo.</p>
           <p className="text-sm text-gray-500 mb-4">
-            User ID: {user?.id} | Email: {user?.email}
+            Apenas administradores podem acessar esta área.
           </p>
           <a href="/" className="text-purple-600 hover:text-purple-700 underline">
             Voltar ao início

@@ -13,12 +13,6 @@ interface AdminUser {
   role: string;
 }
 
-interface ProfileData {
-  id: string;
-  username: string | null;
-  created_at: string | null;
-}
-
 export const useAdminUsers = () => {
   const { toast } = useToast();
 
@@ -46,10 +40,9 @@ export const useAdminUsers = () => {
       const adminUserIds = adminRoles.map(role => role.user_id);
       logger.debug('IDs de usuários admin encontrados', { count: adminUserIds.length }, 'USE_ADMIN_USERS');
 
-      // Buscar os perfis dos usuários admin
+      // Buscar os perfis dos usuários admin usando a nova função que retorna emails
       const { data: adminProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, email, created_at')
+        .rpc('get_users_with_real_emails')
         .in('id', adminUserIds);
 
       if (profilesError) {
