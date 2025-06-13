@@ -38,7 +38,7 @@ export const useDailyCompetitionForm = (onSuccess?: () => void) => {
     try {
       console.log('➕ Hook: Criando nova competição com validação automática');
       
-      const response = await customCompetitionService.createCustomCompetition(formData);
+      const response = await customCompetitionService.createCompetition(formData);
       
       if (response.success) {
         toast({
@@ -67,7 +67,7 @@ export const useDailyCompetitionForm = (onSuccess?: () => void) => {
     try {
       console.log('✏️ Hook: Atualizando competição com validação automática');
       
-      const response = await customCompetitionService.updateCustomCompetition(
+      const response = await customCompetitionService.updateCompetition(
         editingCompetition.id, 
         formData
       );
