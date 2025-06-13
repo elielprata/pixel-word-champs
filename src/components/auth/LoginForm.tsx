@@ -31,7 +31,7 @@ const LoginForm = () => {
 
   const onSubmit = async (data: LoginFormType) => {
     try {
-      logger.info('Tentativa de login iniciada', { email: data.email }, 'LOGIN_FORM');
+      logger.info('Tentativa de login iniciada', { hasEmail: !!data.email }, 'LOGIN_FORM');
       await login(data);
       
       // Redirecionar para home após login bem-sucedido
