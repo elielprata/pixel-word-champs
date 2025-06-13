@@ -16,7 +16,7 @@ const RankingDebugPanel = () => {
     setIsChecking(true);
     setError(null);
     try {
-      const result = await rankingDebugService.checkDataConsistency();
+      const result = await rankingDebugService.debugDailyRanking();
       setLastResult(result);
     } catch (err) {
       setError('Erro ao verificar consistência');
@@ -30,10 +30,10 @@ const RankingDebugPanel = () => {
     setIsUpdating(true);
     setError(null);
     try {
-      await rankingDebugService.forceRankingUpdate();
+      await rankingDebugService.debugWeeklyRanking();
       // Verificar consistência após atualização
       setTimeout(async () => {
-        const result = await rankingDebugService.checkDataConsistency();
+        const result = await rankingDebugService.debugDailyRanking();
         setLastResult(result);
       }, 1500);
     } catch (err: any) {
@@ -48,10 +48,10 @@ const RankingDebugPanel = () => {
     setIsTesting(true);
     setError(null);
     try {
-      const result = await rankingDebugService.testFunctionDirectly();
+      const result = await rankingDebugService.getSystemStatus();
       console.log('🧪 Resultado do teste:', result);
-      if (!result.success) {
-        setError(`Erro no teste: ${result.error?.message || 'Erro desconhecido'}`);
+      if (result.status === 'error') {
+        setError(`Erro no teste: ${result.details?.error || 'Erro desconhecido'}`);
       }
     } catch (err: any) {
       setError(`Erro no teste: ${err.message || 'Erro desconhecido'}`);
@@ -85,11 +85,8 @@ const RankingDebugPanel = () => {
           <div className="bg-white p-3 rounded border border-yellow-200">
             <h4 className="font-medium text-yellow-800 mb-2">📊 Último Resultado:</h4>
             <div className="text-sm space-y-1">
-              <p>• Total de perfis: {lastResult.summary?.totalProfiles}</p>
-              <p>• Total no ranking: {lastResult.summary?.totalInRanking}</p>
-              <p className={lastResult.summary?.inconsistenciesFound > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
-                • Inconsistências: {lastResult.summary?.inconsistenciesFound}
-              </p>
+              <p>• Total de participações: {lastResult.debugInfo?.totalParticipants || 0}</p>
+              <p>• Mensagem: {lastResult.message}</p>
             </div>
           </div>
         )}

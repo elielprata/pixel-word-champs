@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
@@ -19,12 +18,19 @@ export interface InvitedFriend {
   invited_at: string;
   total_score: number;
   games_played: number;
+  name?: string;
+  avatar_url?: string;
+  status?: string;
+  level?: number;
+  reward?: number;
 }
 
 export interface InviteStats {
   totalInvites: number;
   successfulInvites: number;
   totalRewards: number;
+  totalPoints?: number;
+  activeFriends?: number;
 }
 
 class InviteService {
@@ -129,9 +135,13 @@ class InviteService {
       const mappedFriends: InvitedFriend[] = (friends || []).map(friend => ({
         id: friend.profiles?.id || '',
         username: friend.profiles?.username || 'Usuário',
+        name: friend.profiles?.username || 'Usuário',
         invited_at: friend.used_at || '',
         total_score: friend.profiles?.total_score || 0,
-        games_played: friend.profiles?.games_played || 0
+        games_played: friend.profiles?.games_played || 0,
+        status: 'Ativo',
+        level: 1,
+        reward: 50
       }));
 
       logger.debug('Amigos convidados carregados com sucesso', { count: mappedFriends.length }, 'INVITE_SERVICE');
@@ -150,7 +160,13 @@ class InviteService {
       
       if (!user) {
         logger.warn('Tentativa de calcular estatísticas sem usuário autenticado', undefined, 'INVITE_SERVICE');
-        return { totalInvites: 0, successfulInvites: 0, totalRewards: 0 };
+        return { 
+          totalInvites: 0, 
+          successfulInvites: 0, 
+          totalRewards: 0,
+          totalPoints: 0,
+          activeFriends: 0
+        };
       }
 
       const { data: invites, error } = await supabase
@@ -167,13 +183,25 @@ class InviteService {
       const successfulInvites = invites?.filter(invite => invite.used_by).length || 0;
       const totalRewards = invites?.reduce((sum, invite) => sum + (invite.rewards_earned || 0), 0) || 0;
 
-      const stats = { totalInvites, successfulInvites, totalRewards };
+      const stats = { 
+        totalInvites, 
+        successfulInvites, 
+        totalRewards,
+        totalPoints: totalRewards,
+        activeFriends: successfulInvites
+      };
 
       logger.debug('Estatísticas de convites calculadas', { stats }, 'INVITE_SERVICE');
       return stats;
     } catch (error) {
       logger.error('Erro crítico ao calcular estatísticas', { error }, 'INVITE_SERVICE');
-      return { totalInvites: 0, successfulInvites: 0, totalRewards: 0 };
+      return { 
+        totalInvites: 0, 
+        successfulInvites: 0, 
+        totalRewards: 0,
+        totalPoints: 0,
+        activeFriends: 0
+      };
     }
   }
 
