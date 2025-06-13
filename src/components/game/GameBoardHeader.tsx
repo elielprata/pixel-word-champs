@@ -2,6 +2,7 @@
 import React from 'react';
 import GameProgressBar from './GameProgressBar';
 import GameStats from './GameStats';
+import { logger } from '@/utils/logger';
 
 interface FoundWord {
   word: string;
@@ -28,6 +29,15 @@ const GameBoardHeader = ({
   currentLevelScore,
   onUseHint
 }: GameBoardHeaderProps) => {
+  logger.debug('Renderizando GameBoardHeader', {
+    level,
+    timeLeft,
+    foundWordsCount: foundWords.length,
+    totalWords: levelWords.length,
+    hintsUsed,
+    currentLevelScore
+  }, 'GAME_BOARD_HEADER');
+
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
       <GameProgressBar 

@@ -3,6 +3,7 @@ import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { logger } from '@/utils/logger';
 
 interface GameBoardErrorStateProps {
   error: string;
@@ -10,6 +11,16 @@ interface GameBoardErrorStateProps {
 }
 
 const GameBoardErrorState = ({ error, debugInfo }: GameBoardErrorStateProps) => {
+  logger.error('Renderizando GameBoardErrorState', { 
+    error, 
+    hasDebugInfo: !!debugInfo 
+  }, 'GAME_BOARD_ERROR_STATE');
+
+  const handleRetry = () => {
+    logger.info('Usuário tentando recarregar após erro', { error }, 'GAME_BOARD_ERROR_STATE');
+    window.location.reload();
+  };
+
   return (
     <Alert variant="destructive">
       <AlertTriangle className="h-4 w-4" />
@@ -21,7 +32,7 @@ const GameBoardErrorState = ({ error, debugInfo }: GameBoardErrorStateProps) => 
             <p className="text-xs opacity-75">Debug: {debugInfo}</p>
           )}
           <Button 
-            onClick={() => window.location.reload()} 
+            onClick={handleRetry} 
             size="sm" 
             className="mt-2"
           >

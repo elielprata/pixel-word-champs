@@ -39,26 +39,40 @@ const GameModals = ({
     showGameOver, 
     showLevelComplete, 
     totalScore, 
-    level 
+    level,
+    canRevive,
+    foundWordsCount: foundWords.length
   }, 'GAME_MODALS');
 
   const handleAdvanceLevelClick = () => {
-    logger.info('Avançando para próximo nível', { level }, 'GAME_MODALS');
+    logger.info('Usuário avançando para próximo nível', { 
+      currentLevel: level, 
+      totalScore 
+    }, 'GAME_MODALS');
     onAdvanceLevel();
   };
 
   const handleStayLevel = () => {
-    logger.info('Usuário escolheu parar no nível', { level }, 'GAME_MODALS');
+    logger.info('Usuário escolheu parar no nível atual', { 
+      level, 
+      totalScore 
+    }, 'GAME_MODALS');
     onStopGame();
   };
 
   const handleGameOverStop = () => {
-    logger.info('Usuário escolheu parar do Game Over', { level }, 'GAME_MODALS');
+    logger.info('Usuário escolheu parar após Game Over', { 
+      level, 
+      totalScore 
+    }, 'GAME_MODALS');
     onStopGame();
   };
 
   const handleRevive = () => {
-    logger.info('Usuário solicitou revive', { level }, 'GAME_MODALS');
+    logger.info('Usuário solicitou revive', { 
+      level, 
+      canRevive 
+    }, 'GAME_MODALS');
     onRevive();
   };
 
