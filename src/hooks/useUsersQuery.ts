@@ -53,5 +53,3 @@ export const useUsersQuery = () => {
     gcTime: 10 * 60 * 1000, // Manter no cache por 10 minutos
   });
 };
-
-export type { AllUsersData };

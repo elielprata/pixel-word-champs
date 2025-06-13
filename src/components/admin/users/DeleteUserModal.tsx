@@ -16,6 +16,7 @@ interface DeleteUserModalProps {
 
 export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps) => {
   const [confirmUsername, setConfirmUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const { deleteUser, isDeletingUser } = useUserMutations();
 
   if (!user) return null;
@@ -28,15 +29,22 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
       return;
     }
 
+    if (!adminPassword.trim()) {
+      alert('Senha de administrador é obrigatória');
+      return;
+    }
+
     try {
       console.log('🗑️ Iniciando exclusão do usuário:', user.username);
       
       await deleteUser({
-        userId: user.id
+        userId: user.id,
+        adminPassword: adminPassword.trim()
       });
       
       // Reset form e fechar modal
       setConfirmUsername('');
+      setAdminPassword('');
       onClose();
       
     } catch (error) {
@@ -48,6 +56,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
   const handleClose = () => {
     if (!isDeletingUser) {
       setConfirmUsername('');
+      setAdminPassword('');
       onClose();
     }
   };
@@ -92,6 +101,21 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="adminPassword">
+              Senha de administrador (para confirmar a ação)
+            </Label>
+            <Input
+              id="adminPassword"
+              type="password"
+              placeholder="Digite sua senha de administrador"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              required
+              disabled={isDeletingUser}
+            />
+          </div>
+
           <div className="flex justify-end space-x-2 pt-4">
             <Button 
               type="button" 
@@ -104,7 +128,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
             <Button
               type="submit"
               variant="destructive"
-              disabled={isDeletingUser || confirmUsername !== user.username}
+              disabled={isDeletingUser || confirmUsername !== user.username || !adminPassword.trim()}
             >
               {isDeletingUser ? (
                 <div className="flex items-center gap-2">
