@@ -30,6 +30,6 @@ export const useIsAdmin = () => {
     },
     enabled: !!user?.id && isAuthenticated,
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
-    cacheTime: 10 * 60 * 1000, // Manter no cache por 10 minutos
+    gcTime: 10 * 60 * 1000, // Manter no cache por 10 minutos
   });
 };
