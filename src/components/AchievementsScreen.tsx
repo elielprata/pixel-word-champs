@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import AchievementStats from './achievements/AchievementStats';
 import AchievementsList from './achievements/AchievementsList';
 import { createAchievements, getRarityColor } from './achievements/achievementData';

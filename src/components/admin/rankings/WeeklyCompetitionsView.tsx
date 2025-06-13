@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { WeeklyCompetitionsContainer } from './weekly/WeeklyCompetitionsContainer';
 import { WeeklyCompetitionHeader } from './weekly/WeeklyCompetitionHeader';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { WeeklyRankingModal } from './WeeklyRankingModal';
-import { useWeeklyCompetitionsActions } from '@/hooks/useWeeklyCompetitionsActions';
-import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
+import { useWeeklyCompetitionsActions } from '@/hooks/admin/useWeeklyCompetitionsActions';
+import { useWeeklyRankingUpdater } from '@/hooks/admin/useWeeklyRankingUpdater';
 import { competitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {

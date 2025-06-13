@@ -1,10 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { useCompetitionStatusChecker } from '@/hooks/useCompetitionStatusChecker';
-import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
-import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
+import { useWeeklyCompetitionAutoParticipation } from '@/hooks/game/useWeeklyCompetitionAutoParticipation';
+import { useWeeklyRankingUpdater } from '@/hooks/admin/useWeeklyRankingUpdater';
 import { TIMING_CONFIG } from '@/constants/app';
 import { Competition } from '@/types';
 import HomeHeader from './home/HomeHeader';

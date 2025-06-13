@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { useCompleteLogout } from '@/hooks/useCompleteLogout';
 import { logger } from '@/utils/logger';
 import { LogOut, AlertCircle } from 'lucide-react';
@@ -51,90 +50,66 @@ const SocialLogin = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      logger.info('=== INÍCIO DO LOGIN GOOGLE ===', undefined, 'SOCIAL_LOGIN');
-      logger.info('URL atual:', { url: window.location.origin }, 'SOCIAL_LOGIN');
-      logger.info('Estado atual de autenticação:', { isAuthenticated, hasUser: !!user }, 'SOCIAL_LOGIN');
+      logger.info('Iniciando login com Google', undefined, 'SOCIAL_LOGIN');
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account'  // Força seleção de conta
-          }
+          redirectTo: `${window.location.origin}/`
         }
       });
 
-      logger.info('Resposta do signInWithOAuth:', { data, error }, 'SOCIAL_LOGIN');
-
       if (error) {
-        logger.error('=== ERRO DETALHADO DO GOOGLE LOGIN ===', { error }, 'SOCIAL_LOGIN');
-        
-        let errorMessage = "Não foi possível fazer login com Google.";
-        
-        if (error.message.includes('Invalid login credentials')) {
-          errorMessage = "Credenciais do Google não configuradas no Supabase.";
-        } else if (error.message.includes('redirect')) {
-          errorMessage = "URL de redirecionamento não configurada corretamente.";
-        } else if (error.message.includes('provider')) {
-          errorMessage = "Provedor Google não habilitado no Supabase.";
-        }
-        
-        toast({
-          title: "Erro no login com Google",
-          description: errorMessage + " Verifique a configuração no Supabase.",
-          variant: "destructive",
-        });
-      } else {
-        logger.info('=== LOGIN GOOGLE INICIADO COM SUCESSO ===', undefined, 'SOCIAL_LOGIN');
-        logger.info('Redirecionando para Google...', undefined, 'SOCIAL_LOGIN');
+        logger.error('Erro no login Google', { error: error.message }, 'SOCIAL_LOGIN');
+        throw error;
       }
-    } catch (err: any) {
-      logger.error('=== ERRO INESPERADO NO LOGIN GOOGLE ===', { error: err }, 'SOCIAL_LOGIN');
-      
+    } catch (error: any) {
+      logger.error('Erro ao fazer login com Google', { error: error.message }, 'SOCIAL_LOGIN');
       toast({
-        title: "Erro inesperado",
-        description: `Erro técnico: ${err?.message || 'Desconhecido'}`,
+        title: "Erro no login",
+        description: "Não foi possível fazer login com Google. Tente novamente.",
         variant: "destructive",
       });
     }
   };
 
-  // Se o usuário já está autenticado, mostrar informações e opção de logout
+  // Se o usuário estiver autenticado, mostrar opção de logout
   if (isAuthenticated && user) {
     return (
       <div className="space-y-4">
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <AlertCircle className="w-4 h-4 text-amber-600" />
-            <p className="text-sm font-medium text-amber-800">Usuário já conectado</p>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-center gap-2 text-sm text-blue-800">
+            <AlertCircle className="w-4 h-4" />
+            <span>Você já está logado como <strong>{user.username}</strong></span>
           </div>
-          <p className="text-sm text-amber-700 mb-3">
-            Você está logado como: <strong>{user.email}</strong>
-          </p>
-          <p className="text-xs text-amber-600 mb-3">
-            Para fazer login com uma conta diferente, faça logout completo primeiro.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={handleCompleteLogout}
-            disabled={isLoggingOut}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            {isLoggingOut ? 'Fazendo logout...' : 'Logout Completo'}
-          </Button>
         </div>
+        
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={handleCompleteLogout}
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+              Fazendo logout...
+            </>
+          ) : (
+            <>
+              <LogOut className="mr-2 h-4 w-4" />
+              Fazer logout
+            </>
+          )}
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      <Button
-        variant="outline"
+      <Button 
+        variant="outline" 
         className="w-full"
         onClick={handleGoogleLogin}
       >
@@ -157,28 +132,6 @@ const SocialLogin = () => {
           />
         </svg>
         Continuar com Google
-      </Button>
-
-      <Button
-        variant="outline"
-        className="w-full opacity-60 cursor-not-allowed"
-        disabled
-      >
-        <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-        </svg>
-        Continuar com Facebook (em breve)
-      </Button>
-
-      <Button
-        variant="outline"
-        className="w-full opacity-60 cursor-not-allowed"
-        disabled
-      >
-        <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-        </svg>
-        Continuar com Apple (em breve)
       </Button>
     </div>
   );

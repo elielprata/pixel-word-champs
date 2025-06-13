@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2, Activity } from 'lucide-react';
-import { useRealUserStats } from '@/hooks/useRealUserStats';
+import { useRealUserStats } from '@/hooks/admin/useRealUserStats';
 import { logger } from '@/utils/logger';
 
 export const UserStatsCards = () => {

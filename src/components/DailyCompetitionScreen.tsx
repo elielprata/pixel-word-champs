@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
+import { useIntegratedGameTimer } from '@/hooks/game/useIntegratedGameTimer';
 import { useDailyCompetitionGameLogic } from '@/hooks/competitions/useDailyCompetitionGameLogic';
 import DailyChallengeErrorDisplay from './challenge/DailyChallengeErrorDisplay';
 import DailyChallengeLoadingScreen from './challenge/DailyChallengeLoadingScreen';
