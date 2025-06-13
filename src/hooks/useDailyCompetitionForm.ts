@@ -1,6 +1,7 @@
+
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { dailyCompetitionValidationService } from '@/services/dailyCompetition/dailyCompetitionValidationService';
+import { customCompetitionService } from '@/services/customCompetitionService';
 import { useDailyCompetitionValidation } from '@/hooks/useDailyCompetitionValidation';
 import { DailyCompetition } from '@/types/dailyCompetition';
 
@@ -37,7 +38,7 @@ export const useDailyCompetitionForm = (onSuccess?: () => void) => {
     try {
       console.log('➕ Hook: Criando nova competição com validação automática');
       
-      const response = await dailyCompetitionValidationService.createDailyCompetition(formData);
+      const response = await customCompetitionService.createCustomCompetition(formData);
       
       if (response.success) {
         toast({
@@ -66,7 +67,7 @@ export const useDailyCompetitionForm = (onSuccess?: () => void) => {
     try {
       console.log('✏️ Hook: Atualizando competição com validação automática');
       
-      const response = await dailyCompetitionValidationService.updateDailyCompetition(
+      const response = await customCompetitionService.updateCustomCompetition(
         editingCompetition.id, 
         formData
       );
