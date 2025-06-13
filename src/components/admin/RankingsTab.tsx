@@ -12,7 +12,7 @@ import { CompetitionHistory } from './rankings/CompetitionHistory';
 import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
 import { DailyCompetitionsView } from './rankings/DailyCompetitionsView';
 import { useRankings } from '@/hooks/useRankings';
-import { useCustomCompetitions } from '@/hooks/useCustomCompetitions';
+import { useCustomCompetitions } from '@/hooks/competitions/useCustomCompetitions';
 
 export const RankingsTab = () => {
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);

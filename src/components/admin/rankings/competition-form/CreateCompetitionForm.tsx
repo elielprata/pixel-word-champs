@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { useCustomCompetitions } from "@/hooks/useCustomCompetitions";
+import { useCustomCompetitions } from "@/hooks/competitions/useCustomCompetitions";
 import { prizeService } from '@/services/prizeService';
 import { customCompetitionService, CustomCompetitionData } from '@/services/customCompetitionService';
 import { usePaymentData } from '@/hooks/usePaymentData';
