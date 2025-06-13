@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
-import { useChallengeGameLogic } from '@/hooks/useChallengeGameLogic';
-import ChallengeErrorDisplay from './challenge/ChallengeErrorDisplay';
-import ChallengeLoadingScreen from './challenge/ChallengeLoadingScreen';
-import ChallengeCompletedScreen from './challenge/ChallengeCompletedScreen';
-import ChallengeGameSession from './challenge/ChallengeGameSession';
+import { useCompetitionGameLogic } from '@/hooks/useCompetitionGameLogic';
+import CompetitionErrorDisplay from './competition/CompetitionErrorDisplay';
+import CompetitionLoadingScreen from './competition/CompetitionLoadingScreen';
+import CompetitionCompletedScreen from './competition/CompetitionCompletedScreen';
+import CompetitionGameSession from './competition/CompetitionGameSession';
 import { logger } from '@/utils/logger';
 
 interface ChallengeScreenProps {
@@ -28,7 +27,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     handleAdvanceLevel,
     handleRetry,
     markParticipationAsCompleted
-  } = useChallengeGameLogic(challengeId);
+  } = useCompetitionGameLogic(challengeId);
 
   const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(isGameStarted);
 
@@ -90,7 +89,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   // Tela de erro com opções claras
   if (error) {
     return (
-      <ChallengeErrorDisplay
+      <CompetitionErrorDisplay
         error={error}
         onRetry={handleRetry}
         onBackToMenu={handleBackToMenu}
@@ -100,13 +99,13 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   // Tela de loading
   if (isLoading) {
-    return <ChallengeLoadingScreen />;
+    return <CompetitionLoadingScreen />;
   }
 
   // Tela de jogo completado
   if (gameCompleted) {
     return (
-      <ChallengeCompletedScreen
+      <CompetitionCompletedScreen
         totalScore={totalScore}
         onCompleteGame={handleCompleteGame}
       />
@@ -116,7 +115,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   // Verificar se temos uma sessão válida antes de renderizar o jogo
   if (!gameSession) {
     return (
-      <ChallengeErrorDisplay
+      <CompetitionErrorDisplay
         error="Sessão de jogo não encontrada"
         onRetry={handleRetry}
         onBackToMenu={handleBackToMenu}
@@ -125,7 +124,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   }
 
   return (
-    <ChallengeGameSession
+    <CompetitionGameSession
       currentLevel={currentLevel}
       timeRemaining={timeRemaining}
       onWordFound={handleWordFound}
