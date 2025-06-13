@@ -1,7 +1,7 @@
 
 import { RankingPlayer } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
-import { useRankingQueries } from './useRankingQueries';
+import { useRankingQueries } from './ranking/useRankingQueries';
 import { useRankingPagination } from './useRankingPagination';
 import { useEffect } from 'react';
 

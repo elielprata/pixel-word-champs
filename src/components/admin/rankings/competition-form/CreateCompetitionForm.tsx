@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { useCompetitions } from "@/hooks/useCompetitions";
+import { useCustomCompetitions } from "@/hooks/useCustomCompetitions";
 import { prizeService } from '@/services/prizeService';
 import { customCompetitionService, CustomCompetitionData } from '@/services/customCompetitionService';
 import { usePaymentData } from '@/hooks/usePaymentData';
@@ -33,7 +32,7 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrizePool, setTotalPrizePool] = useState(0);
   const { toast } = useToast();
-  const { customCompetitions, refetch } = useCompetitions();
+  const { customCompetitions, refetch } = useCustomCompetitions();
   const paymentData = usePaymentData();
 
   const weeklyTournaments = customCompetitions.filter(comp => 

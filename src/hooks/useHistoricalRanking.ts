@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useRankingQueries } from './useRankingQueries';
+import { useRankingQueries } from './ranking/useRankingQueries';
 
 export const useHistoricalRanking = () => {
   const { user } = useAuth();

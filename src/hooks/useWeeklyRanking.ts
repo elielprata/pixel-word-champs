@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { RankingPlayer } from '@/types';
-import { useRankingQueries } from './useRankingQueries';
+import { useRankingQueries } from './ranking/useRankingQueries';
 import { useRankingPagination } from './useRankingPagination';
 
 export const useWeeklyRanking = () => {

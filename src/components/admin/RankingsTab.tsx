@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +12,7 @@ import { CompetitionHistory } from './rankings/CompetitionHistory';
 import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
 import { DailyCompetitionsView } from './rankings/DailyCompetitionsView';
 import { useRankings } from '@/hooks/useRankings';
-import { useCompetitions } from '@/hooks/useCompetitions';
+import { useCustomCompetitions } from '@/hooks/useCustomCompetitions';
 
 export const RankingsTab = () => {
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
@@ -30,7 +29,7 @@ export const RankingsTab = () => {
     customCompetitions,
     isLoading: isCompetitionsLoading,
     refetch: refetchCompetitions
-  } = useCompetitions();
+  } = useCustomCompetitions();
 
   console.log('🎯 [RankingsTab] Dados carregados:', {
     weeklyCompetitions: weeklyCompetitions.length,
