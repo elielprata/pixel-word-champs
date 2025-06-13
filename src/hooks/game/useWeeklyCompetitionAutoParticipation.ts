@@ -1,128 +1,127 @@
-
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useState } from 'react';
+import { weeklyCompetitionService } from '@/services/weeklyCompetitionService';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { logger } from '@/utils/logger';
 
 export const useWeeklyCompetitionAutoParticipation = () => {
   const { user } = useAuth();
   const [activeWeeklyCompetition, setActiveWeeklyCompetition] = useState<any>(null);
+  const [weeklyParticipation, setWeeklyParticipation] = useState<any>(null);
 
-  useEffect(() => {
-    if (user?.id) {
-      checkAndJoinActiveWeeklyCompetition();
+  const loadActiveWeeklyCompetition = async () => {
+    try {
+      logger.debug('Buscando competição semanal ativa', { userId: user?.id }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
+      const response = await weeklyCompetitionService.getActiveWeeklyCompetition();
+
+      if (response.success && response.data) {
+        setActiveWeeklyCompetition(response.data);
+        logger.info('Competição semanal ativa encontrada', { 
+          competitionId: response.data.id,
+          userId: user?.id 
+        }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
+      } else {
+        setActiveWeeklyCompetition(null);
+        logger.warn('Nenhuma competição semanal ativa encontrada', { 
+          userId: user?.id,
+          error: response.error 
+        }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
+      }
+    } catch (error) {
+      setActiveWeeklyCompetition(null);
+      logger.error('Erro ao buscar competição semanal ativa', { 
+        userId: user?.id,
+        error 
+      }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
     }
-  }, [user?.id]);
+  };
 
-  const checkAndJoinActiveWeeklyCompetition = async () => {
-    if (!user?.id) return;
+  const participateInWeeklyCompetition = async () => {
+    if (!user?.id || !activeWeeklyCompetition?.id) return;
 
     try {
-      logger.debug('Verificando competição semanal ativa para auto-participação', { userId: user.id }, 'WEEKLY_AUTO_PARTICIPATION');
+      logger.info('Participando automaticamente da competição semanal', { 
+        userId: user.id,
+        competitionId: activeWeeklyCompetition.id 
+      }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
 
-      // Buscar competição semanal ativa
-      const { data: competitions, error: competitionError } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .eq('competition_type', 'tournament')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1);
+      const response = await weeklyCompetitionService.participateInWeeklyCompetition(activeWeeklyCompetition.id);
 
-      if (competitionError) {
-        logger.error('Erro ao buscar competição semanal ativa', { error: competitionError }, 'WEEKLY_AUTO_PARTICIPATION');
-        return;
-      }
-
-      if (!competitions || competitions.length === 0) {
-        logger.debug('Nenhuma competição semanal ativa encontrada', undefined, 'WEEKLY_AUTO_PARTICIPATION');
-        return;
-      }
-
-      const competition = competitions[0];
-      setActiveWeeklyCompetition(competition);
-
-      // Verificar se usuário já está participando
-      const { data: participation, error: participationError } = await supabase
-        .from('competition_participations')
-        .select('*')
-        .eq('competition_id', competition.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (participationError) {
-        logger.error('Erro ao verificar participação', { error: participationError }, 'WEEKLY_AUTO_PARTICIPATION');
-        return;
-      }
-
-      if (!participation) {
-        // Inscrever automaticamente na competição semanal
-        const { data: newParticipation, error: insertError } = await supabase
-          .from('competition_participations')
-          .insert({
-            competition_id: competition.id,
-            user_id: user.id,
-            user_score: 0
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          logger.error('Erro ao inscrever automaticamente na competição semanal', { error: insertError }, 'WEEKLY_AUTO_PARTICIPATION');
-          return;
-        }
-
-        logger.info('Usuário inscrito automaticamente na competição semanal', { 
-          competitionId: competition.id,
-          participationId: newParticipation.id 
-        }, 'WEEKLY_AUTO_PARTICIPATION');
+      if (response.success && response.data) {
+        setWeeklyParticipation(response.data);
+        logger.info('Participação na competição semanal registrada', { 
+          participationId: response.data.id,
+          userId: user.id,
+          competitionId: activeWeeklyCompetition.id 
+        }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
       } else {
-        logger.debug('Usuário já está participando da competição semanal', { 
-          competitionId: competition.id,
-          participationId: participation.id 
-        }, 'WEEKLY_AUTO_PARTICIPATION');
+        setWeeklyParticipation(null);
+        logger.error('Erro ao participar da competição semanal', { 
+          userId: user.id,
+          competitionId: activeWeeklyCompetition.id,
+          error: response.error 
+        }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
       }
-
     } catch (error) {
-      logger.error('Erro na auto-participação semanal', { error }, 'WEEKLY_AUTO_PARTICIPATION');
+      setWeeklyParticipation(null);
+      logger.error('Erro ao participar da competição semanal', { 
+        userId: user?.id,
+        competitionId: activeWeeklyCompetition?.id,
+        error 
+      }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
     }
   };
 
   const updateWeeklyScore = async (newScore: number) => {
-    if (!user?.id || !activeWeeklyCompetition) return;
+    if (!user?.id || !activeWeeklyCompetition?.id || !weeklyParticipation?.id) return;
 
     try {
       logger.debug('Atualizando pontuação na competição semanal', { 
         userId: user.id,
         competitionId: activeWeeklyCompetition.id,
+        participationId: weeklyParticipation.id,
         newScore 
-      }, 'WEEKLY_SCORE_UPDATE');
+      }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
 
-      const { error } = await supabase
-        .from('competition_participations')
-        .update({ user_score: newScore })
-        .eq('competition_id', activeWeeklyCompetition.id)
-        .eq('user_id', user.id);
+      const response = await weeklyCompetitionService.updateWeeklyCompetitionScore(weeklyParticipation.id, newScore);
 
-      if (error) {
-        logger.error('Erro ao atualizar pontuação semanal', { error }, 'WEEKLY_SCORE_UPDATE');
-        return;
+      if (response.success) {
+        logger.info('Pontuação na competição semanal atualizada', { 
+          userId: user.id,
+          competitionId: activeWeeklyCompetition.id,
+          participationId: weeklyParticipation.id,
+          newScore 
+        }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
+      } else {
+        logger.error('Erro ao atualizar pontuação na competição semanal', { 
+          userId: user.id,
+          competitionId: activeWeeklyCompetition.id,
+          participationId: weeklyParticipation.id,
+          error: response.error 
+        }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
       }
-
-      logger.info('Pontuação semanal atualizada com sucesso', { 
-        userId: user.id,
-        competitionId: activeWeeklyCompetition.id,
-        newScore 
-      }, 'WEEKLY_SCORE_UPDATE');
-
     } catch (error) {
-      logger.error('Erro na atualização de pontuação semanal', { error }, 'WEEKLY_SCORE_UPDATE');
+      logger.error('Erro ao atualizar pontuação na competição semanal', { 
+        userId: user?.id,
+        competitionId: activeWeeklyCompetition?.id,
+        participationId: weeklyParticipation?.id,
+        error 
+      }, 'WEEKLY_COMPETITION_AUTO_PARTICIPATION');
     }
   };
 
+  useEffect(() => {
+    loadActiveWeeklyCompetition();
+  }, [user]);
+
+  useEffect(() => {
+    if (activeWeeklyCompetition && user) {
+      participateInWeeklyCompetition();
+    }
+  }, [activeWeeklyCompetition, user]);
+
   return {
     activeWeeklyCompetition,
-    updateWeeklyScore,
-    refetch: checkAndJoinActiveWeeklyCompetition
+    weeklyParticipation,
+    updateWeeklyScore
   };
 };

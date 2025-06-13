@@ -1,283 +1,240 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { User, Trophy, Calendar, Settings, HelpCircle, LogOut, Award, ChevronRight, Star, Zap, Target, Crown } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
-import AvatarUpload from '@/components/ui/AvatarUpload';
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, User, Mail, Calendar, Trophy, Target, Star, Edit3, Save, X } from 'lucide-react';
+import { useAuth } from '@/hooks/auth/useAuth';
+import { useProfile } from '@/hooks/auth/useProfile';
+import AvatarUpload from './ui/AvatarUpload';
 import { logger } from '@/utils/logger';
 
 interface ProfileScreenProps {
-  onNavigateToSettings?: () => void;
-  onNavigateToHelp?: () => void;
-  onNavigateToAchievements?: () => void;
+  onBack: () => void;
 }
 
-const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAchievements }: ProfileScreenProps) => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url);
+const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
+  const { user } = useAuth();
+  const { profile, isLoading, error, updateProfile, refetch } = useProfile();
+  const [isEditing, setIsEditing] = useState(false);
+  const [username, setUsername] = useState(profile?.username || '');
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
 
-  logger.debug('Renderizando ProfileScreen', { userId: user?.id }, 'PROFILE_SCREEN');
+  logger.debug('ProfileScreen carregado', { 
+    userId: user?.id,
+    username: user?.username,
+    email: user?.email,
+    hasProfile: !!profile
+  }, 'PROFILE_SCREEN');
 
-  const getPlayerLevel = () => {
-    const score = user?.total_score || 0;
-    if (score >= 10000) return { level: 10, title: "Lenda", icon: Crown, color: "from-yellow-400 to-orange-500" };
-    if (score >= 5000) return { level: 9, title: "Mestre", icon: Trophy, color: "from-purple-500 to-pink-500" };
-    if (score >= 2500) return { level: 8, title: "Expert", icon: Star, color: "from-blue-500 to-cyan-500" };
-    if (score >= 1000) return { level: 7, title: "Avançado", icon: Target, color: "from-green-500 to-emerald-500" };
-    if (score >= 500) return { level: 6, title: "Experiente", icon: Zap, color: "from-indigo-500 to-purple-500" };
-    if (score >= 250) return { level: 5, title: "Veterano", icon: Award, color: "from-orange-500 to-red-500" };
-    if (score >= 100) return { level: 4, title: "Competente", icon: Trophy, color: "from-teal-500 to-blue-500" };
-    if (score >= 50) return { level: 3, title: "Intermediário", icon: Star, color: "from-purple-400 to-pink-400" };
-    if (score >= 25) return { level: 2, title: "Iniciante", icon: Target, color: "from-green-400 to-blue-400" };
-    return { level: 1, title: "Novato", icon: User, color: "from-gray-400 to-gray-500" };
+  const handleBack = () => {
+    logger.debug('Voltando da tela de perfil', undefined, 'PROFILE_SCREEN');
+    onBack();
   };
 
-  const getNextLevelProgress = () => {
-    const score = user?.total_score || 0;
-    const thresholds = [0, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
-    const currentLevel = getPlayerLevel().level;
-    
-    if (currentLevel >= 10) return { current: score, next: score, progress: 100 };
-    
-    const currentThreshold = thresholds[currentLevel - 1];
-    const nextThreshold = thresholds[currentLevel];
-    const progress = ((score - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
-    
-    return { 
-      current: score - currentThreshold, 
-      next: nextThreshold - currentThreshold, 
-      progress: Math.min(progress, 100) 
-    };
+  const handleEditClick = () => {
+    logger.debug('Iniciando edição de perfil', undefined, 'PROFILE_SCREEN');
+    setIsEditing(true);
   };
 
-  const playerLevel = getPlayerLevel();
-  const nextLevel = getNextLevelProgress();
-  const LevelIcon = playerLevel.icon;
+  const handleSaveClick = async () => {
+    logger.info('Salvando perfil', { 
+      newUsername: username,
+      newAvatar: avatarUrl 
+    }, 'PROFILE_SCREEN');
 
-  const stats = [
-    { 
-      label: 'Jogos', 
-      value: user?.games_played?.toString() || '0', 
-      icon: Calendar,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    { 
-      label: 'Melhor Posição', 
-      value: user?.best_daily_position ? `#${user.best_daily_position}` : '-', 
-      icon: Trophy,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50'
-    },
-    { 
-      label: 'Pontos', 
-      value: user?.total_score?.toLocaleString() || '0', 
-      icon: Star,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    },
-  ];
+    const result = await updateProfile({ 
+      username: username,
+      avatar_url: avatarUrl
+    });
 
-  const handleSettings = () => {
-    logger.info('Navegando para configurações', undefined, 'PROFILE_SCREEN');
-    if (onNavigateToSettings) {
-      onNavigateToSettings();
+    if (result.success) {
+      logger.info('Perfil atualizado com sucesso', { 
+        newUsername: username,
+        newAvatar: avatarUrl 
+      }, 'PROFILE_SCREEN');
+      setIsEditing(false);
+      refetch();
+    } else {
+      logger.error('Erro ao atualizar perfil', { error: result.error }, 'PROFILE_SCREEN');
+      alert(`Erro ao salvar: ${result.error}`);
     }
   };
 
-  const handleHelp = () => {
-    logger.info('Navegando para ajuda', undefined, 'PROFILE_SCREEN');
-    if (onNavigateToHelp) {
-      onNavigateToHelp();
-    }
-  };
-
-  const handleAchievements = () => {
-    // Função desabilitada - não faz nada
-    return;
-  };
-
-  const handleLogout = async () => {
-    try {
-      logger.info('Iniciando logout', { userId: user?.id }, 'PROFILE_SCREEN');
-      await logout();
-      logger.info('Logout realizado com sucesso', undefined, 'PROFILE_SCREEN');
-      navigate('/auth');
-    } catch (error) {
-      logger.error('Erro ao fazer logout', { error }, 'PROFILE_SCREEN');
-    }
-  };
-
-  const menuItems = [
-    { 
-      label: 'Conquistas (em breve)', 
-      icon: Award, 
-      action: handleAchievements,
-      description: 'Veja seus troféus',
-      color: 'text-gray-400',
-      disabled: true
-    },
-    { 
-      label: 'Configurações', 
-      icon: Settings, 
-      action: handleSettings,
-      description: 'Personalize sua conta',
-      color: 'text-gray-600'
-    },
-    { 
-      label: 'Ajuda', 
-      icon: HelpCircle, 
-      action: handleHelp,
-      description: 'Suporte e dúvidas',
-      color: 'text-blue-600'
-    },
-    { 
-      label: 'Sair', 
-      icon: LogOut, 
-      action: handleLogout, 
-      danger: true,
-      description: 'Encerrar sessão',
-      color: 'text-red-600'
-    },
-  ];
-
-  const getAvatarFallback = () => {
-    if (user?.username && user.username.length > 0) {
-      return user.username.charAt(0).toUpperCase();
-    }
-    if (user?.email && user.email.length > 0) {
-      return user.email.charAt(0).toUpperCase();
-    }
-    return 'U';
+  const handleCancelClick = () => {
+    logger.debug('Cancelando edição de perfil', undefined, 'PROFILE_SCREEN');
+    setIsEditing(false);
+    setUsername(profile?.username || '');
+    setAvatarUrl(profile?.avatar_url || '');
   };
 
   const handleAvatarUpdate = (newAvatarUrl: string) => {
-    logger.info('Avatar atualizado', undefined, 'PROFILE_SCREEN');
-    setCurrentAvatar(newAvatarUrl);
+    logger.debug('Avatar atualizado', { newAvatarUrl }, 'PROFILE_SCREEN');
+    setAvatarUrl(newAvatarUrl);
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50 p-4">
+        <div className="animate-pulse">
+          <Card>
+            <CardHeader>
+              <CardTitle>Carregando Perfil...</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                <div className="h-24 bg-gray-200 rounded-full"></div>
+                <div className="h-8 bg-gray-200 rounded"></div>
+                <div className="h-8 bg-gray-200 rounded"></div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50 p-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Erro</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Erro ao carregar perfil: {error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50 p-4">
       {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">Seu Perfil</h1>
-        <p className="text-sm text-gray-600">Estatísticas e progressão</p>
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="ghost" size="icon" onClick={handleBack}>
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-purple-800">
+            {isEditing ? 'Editar Perfil' : 'Meu Perfil'}
+          </h1>
+          <p className="text-gray-600">
+            Gerencie suas informações pessoais e preferências
+          </p>
+        </div>
       </div>
 
-      {/* Card principal do jogador */}
-      <Card className={`mb-4 bg-gradient-to-r ${playerLevel.color} text-white border-0 shadow-lg`}>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <AvatarUpload
-                currentAvatar={currentAvatar || undefined}
-                fallback={getAvatarFallback()}
-                onAvatarUpdate={handleAvatarUpdate}
-                size="lg"
-              />
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <LevelIcon className="w-4 h-4 text-gray-700" />
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="w-4 h-4 text-purple-500" />
+            Informações Pessoais
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-center">
+            <AvatarUpload 
+              currentAvatar={avatarUrl}
+              fallback={profile?.username?.substring(0, 2).toUpperCase() || 'U'}
+              onAvatarUpdate={handleAvatarUpdate}
+              size="lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Nome de Usuário
+            </label>
+            {isEditing ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="mt-1 w-full"
+                />
               </div>
-            </div>
-            
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-lg font-bold">{user?.username || 'Jogador'}</h2>
-                <Badge className="bg-white/20 text-white text-xs">
-                  Nível {playerLevel.level}
-                </Badge>
+            ) : (
+              <p className="mt-1 text-gray-900">{profile?.username}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <p className="mt-1 text-gray-900">{profile?.email}</p>
+          </div>
+
+          <div className="flex justify-between">
+            {!isEditing ? (
+              <Button variant="outline" onClick={handleEditClick}>
+                <Edit3 className="w-4 h-4 mr-2" />
+                Editar Perfil
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={handleCancelClick}>
+                  <X className="w-4 h-4 mr-2" />
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveClick}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Salvar
+                </Button>
               </div>
-              <p className="text-sm opacity-90 mb-2">{playerLevel.title}</p>
-              
-              {/* Barra de progresso para próximo nível */}
-              {playerLevel.level < 10 && (
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs opacity-90">
-                    <span>{nextLevel.current} / {nextLevel.next} XP</span>
-                    <span>Nível {playerLevel.level + 1}</span>
-                  </div>
-                  <div className="bg-white/20 rounded-full h-2">
-                    <div 
-                      className="bg-white rounded-full h-2 transition-all duration-500"
-                      style={{ width: `${nextLevel.progress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Estatísticas compactas */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        {stats.map((stat, index) => (
-          <Card key={index} className="border-0 shadow-sm">
-            <CardContent className="p-3 text-center">
-              <div className={`w-10 h-10 ${stat.bgColor} rounded-full flex items-center justify-center mx-auto mb-2`}>
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
-              </div>
-              <p className="text-lg font-bold text-gray-900">{stat.value}</p>
-              <p className="text-xs text-gray-600">{stat.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Menu de ações */}
-      <Card className="shadow-sm">
-        <CardContent className="p-0">
-          {menuItems.map((item, index) => (
-            <button
-              key={index}
-              onClick={item.disabled ? undefined : item.action}
-              disabled={item.disabled}
-              className={`w-full flex items-center gap-3 p-4 text-left transition-colors border-b last:border-b-0 ${
-                item.disabled 
-                  ? 'cursor-not-allowed bg-gray-50' 
-                  : item.danger 
-                    ? 'hover:bg-red-50' 
-                    : 'hover:bg-gray-50'
-              }`}
-            >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                item.disabled 
-                  ? 'bg-gray-100' 
-                  : item.danger 
-                    ? 'bg-red-50' 
-                    : 'bg-gray-50'
-              }`}>
-                <item.icon className={`w-5 h-5 ${
-                  item.disabled 
-                    ? 'text-gray-400' 
-                    : item.danger 
-                      ? 'text-red-600' 
-                      : item.color
-                }`} />
-              </div>
-              <div className="flex-1">
-                <p className={`font-medium ${
-                  item.disabled 
-                    ? 'text-gray-400' 
-                    : item.danger 
-                      ? 'text-red-600' 
-                      : 'text-gray-900'
-                }`}>
-                  {item.label}
-                </p>
-                <p className={`text-xs ${item.disabled ? 'text-gray-300' : 'text-gray-500'}`}>
-                  {item.description}
-                </p>
-              </div>
-              {!item.disabled && (
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              )}
-            </button>
-          ))}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-purple-500" />
+            Estatísticas
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Pontuação Total
+              </label>
+              <p className="mt-1 text-gray-900">
+                <Trophy className="inline-block w-4 h-4 mr-1" />
+                {profile?.total_score}
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Partidas Jogadas
+              </label>
+              <p className="mt-1 text-gray-900">
+                <Target className="inline-block w-4 h-4 mr-1" />
+                {profile?.games_played}
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Melhor Pontuação Diária
+              </label>
+              <p className="mt-1 text-gray-900">
+                <Star className="inline-block w-4 h-4 mr-1" />
+                {profile?.best_daily_position || 'N/A'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Ranking Semanal
+              </label>
+              <p className="mt-1 text-gray-900">
+                <Star className="inline-block w-4 h-4 mr-1" />
+                {profile?.best_weekly_position || 'N/A'}
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

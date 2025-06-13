@@ -1,7 +1,7 @@
 
 import { type Position } from '@/utils/boardUtils';
 import { toast } from '@/hooks/use-toast';
-import { useGamePointsConfig } from './useGamePointsConfig';
+import { useGamePointsConfig } from '@/hooks/game/useGamePointsConfig';
 import { logger } from '@/utils/logger';
 
 interface FoundWord {

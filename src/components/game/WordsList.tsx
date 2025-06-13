@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { CheckCircle, Star, Target, Lock } from 'lucide-react';
-import { useGamePointsConfig } from '@/hooks/useGamePointsConfig';
+import { useGamePointsConfig } from '@/hooks/game/useGamePointsConfig';
 
 interface FoundWord {
   word: string;

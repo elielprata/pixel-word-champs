@@ -1,45 +1,41 @@
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/auth/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useRankingQueries } from './useRankingQueries';
+interface HistoricalRankingEntry {
+  week_start: string;
+  position: number;
+  total_score: number;
+}
 
 export const useHistoricalRanking = () => {
   const { user } = useAuth();
-  const {
-    historicalCompetitions,
-    isLoading,
-    error,
-    setIsLoading,
-    setError,
-    loadHistoricalRanking
-  } = useRankingQueries();
 
-  const loadRanking = async () => {
-    if (!user?.id) {
-      setIsLoading(false);
-      return;
-    }
+  return useQuery({
+    queryKey: ['historicalRanking', user?.id],
+    queryFn: async (): Promise<HistoricalRankingEntry[]> => {
+      if (!user?.id) {
+        console.warn('Sem user ID para buscar ranking histórico');
+        return [];
+      }
 
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      await loadHistoricalRanking(user.id);
-    } catch (err) {
-      setError('Erro ao carregar histórico');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      console.log('Buscando ranking histórico do usuário:', user.id);
 
-  useEffect(() => {
-    loadRanking();
-  }, [user?.id]);
+      const { data, error } = await supabase
+        .from('weekly_rankings')
+        .select('week_start, position, total_score')
+        .eq('user_id', user.id)
+        .order('week_start', { ascending: false });
 
-  return {
-    historicalCompetitions,
-    isLoading,
-    error,
-    refetch: loadRanking
-  };
+      if (error) {
+        console.error('Erro ao buscar ranking histórico:', error);
+        throw error;
+      }
+
+      console.log('Ranking histórico encontrado:', data.length, 'semanas');
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
 };
+

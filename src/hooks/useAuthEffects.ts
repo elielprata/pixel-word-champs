@@ -1,8 +1,7 @@
-
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthStateCore } from './useAuthStateCore';
-import { useAuthRefs } from './useAuthRefs';
+import { useAuthStateCore } from '@/hooks/auth/useAuthStateCore';
+import { useAuthRefs } from '@/hooks/auth/useAuthRefs';
 import { logger } from '@/utils/logger';
 
 export const useAuthEffects = (

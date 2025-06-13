@@ -1,190 +1,112 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Calendar, Users, TrendingUp, Activity, Plus, History } from 'lucide-react';
-import { RankingHeader } from './rankings/RankingHeader';
+import { Button } from "@/components/ui/button";
+import { Trophy, Users, TrendingUp, Calendar, RefreshCw, BarChart3, Medal, Crown } from 'lucide-react';
+import { DailyCompetitionsView } from './rankings/DailyCompetitionsView';
+import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
 import { RankingMetrics } from './rankings/RankingMetrics';
 import { RankingInfoCard } from './rankings/RankingInfoCard';
-import { CreateCompetitionModal } from './rankings/CreateCompetitionModal';
-import { CompetitionHistory } from './rankings/CompetitionHistory';
-import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
-import { DailyCompetitionsView } from './rankings/DailyCompetitionsView';
-import { useRankings } from '@/hooks/useRankings';
-import { useCustomCompetitions } from '@/hooks/competitions/useCustomCompetitions';
+import { useRankings } from '@/hooks/admin/useRankings';
+import { useDailyCompetitions } from '@/hooks/competitions/useDailyCompetitions';
+import { useWeeklyCompetitions } from '@/hooks/competitions/useWeeklyCompetitions';
+import { logger } from '@/utils/logger';
 
-export const RankingsTab = () => {
-  const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
-  
-  const {
-    weeklyRanking,
-    weeklyCompetitions,
-    activeWeeklyCompetition,
-    isLoading: isRankingsLoading,
-    refreshData
+interface RankingsTabProps {
+  onRefresh: () => void;
+}
+
+export const RankingsTab: React.FC<RankingsTabProps> = ({ onRefresh }) => {
+  const { 
+    dailyRanking, 
+    weeklyRanking, 
+    weeklyCompetitions, 
+    activeWeeklyCompetition, 
+    totalPlayers, 
+    isLoading: areRankingsLoading, 
+    refreshData: refreshRankings 
   } = useRankings();
+  
+  const { 
+    competitions: dailyCompetitions, 
+    isLoading: areDailyCompetitionsLoading, 
+    refresh: refreshDailyCompetitions 
+  } = useDailyCompetitions();
 
-  const {
-    customCompetitions,
-    isLoading: isCompetitionsLoading,
-    refetch: refetchCompetitions
-  } = useCustomCompetitions();
+  const { 
+    competitions: weeklyCompetitionList, 
+    isLoading: areWeeklyCompetitionsLoading, 
+    refresh: refreshWeeklyCompetitions 
+  } = useWeeklyCompetitions();
 
-  console.log('🎯 [RankingsTab] Dados carregados:', {
-    weeklyCompetitions: weeklyCompetitions.length,
-    customCompetitions: customCompetitions.length,
-    isRankingsLoading,
-    isCompetitionsLoading
-  });
+  const isLoading = areRankingsLoading || areDailyCompetitionsLoading || areWeeklyCompetitionsLoading;
 
-  // Filtrar competições diárias (tipo 'challenge')
-  const dailyCompetitions = customCompetitions.filter(comp => comp.competition_type === 'challenge');
-
-  // Log das competições semanais que serão enviadas para o WeeklyCompetitionsView
-  console.log('📋 [RankingsTab] Competições semanais que serão enviadas:', weeklyCompetitions.map(comp => ({
-    id: comp.id,
-    title: comp.title,
-    status: comp.status,
-    startDate: comp.start_date,
-    endDate: comp.end_date
-  })));
-
-  const handleCompetitionCreated = () => {
-    console.log('🔄 Nova competição criada, atualizando dados...');
-    refreshData();
-    refetchCompetitions();
-  };
-
-  const handleRefreshCompetitions = () => {
-    console.log('🔄 Atualizando todas as competições...');
-    refreshData();
-    refetchCompetitions();
-  };
+  logger.debug('Renderizando aba de rankings', { 
+    isLoading,
+    hasDaily: dailyRanking.length > 0,
+    hasWeekly: weeklyRanking.length > 0,
+    totalPlayers
+  }, 'RANKINGS_TAB');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
-        <RankingHeader />
-
-        {/* Métricas Overview */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-slate-600" />
-              <h2 className="text-lg font-semibold text-slate-900">Métricas das Competições</h2>
-            </div>
+    <Card className="border-none shadow-none">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-orange-500" />
+            Gerenciamento de Rankings
+          </CardTitle>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onRefresh}
+            disabled={isLoading}
+            className="border-slate-300 hover:bg-slate-50"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Atualizar Dados
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Tabs defaultValue="daily" className="space-y-4">
+          <TabsList className="bg-transparent p-0 border-b border-slate-200">
+            <TabsTrigger value="daily" className="data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
+              <Calendar className="h-4 w-4 mr-2" />
+              Diário
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Semanal
+            </TabsTrigger>
+            <TabsTrigger value="metrics" className="data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Métricas
+            </TabsTrigger>
+          </TabsList>
+          <div className="p-4 space-y-4">
+            <RankingInfoCard />
+            <TabsContent value="daily" className="space-y-4">
+              <DailyCompetitionsView 
+                competitions={dailyCompetitions}
+                isLoading={isLoading}
+                onRefresh={refreshDailyCompetitions}
+              />
+            </TabsContent>
+            <TabsContent value="weekly" className="space-y-4">
+              <WeeklyCompetitionsView
+                competitions={weeklyCompetitionList}
+                activeCompetition={activeWeeklyCompetition}
+                isLoading={isLoading}
+                onRefresh={refreshWeeklyCompetitions}
+              />
+            </TabsContent>
+            <TabsContent value="metrics" className="space-y-4">
+              <RankingMetrics />
+            </TabsContent>
           </div>
-          <RankingMetrics />
-        </div>
-
-        {/* Main Content */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <Tabs defaultValue="daily" className="w-full">
-            <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <TabsList className="grid grid-cols-3 bg-white border border-slate-200">
-                  <TabsTrigger 
-                    value="daily" 
-                    className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
-                  >
-                    <Calendar className="h-4 w-4" />
-                    Competições Diárias
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="weekly" 
-                    className="flex items-center gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700"
-                  >
-                    <Users className="h-4 w-4" />
-                    Competição Semanal
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="history" 
-                    className="flex items-center gap-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700"
-                  >
-                    <History className="h-4 w-4" />
-                    Histórico
-                  </TabsTrigger>
-                </TabsList>
-                
-                <Button 
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700" 
-                  onClick={() => setIsCreateCompetitionOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Competição
-                </Button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <TabsContent value="daily" className="space-y-6 mt-0">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-blue-600" />
-                      Competições Diárias
-                    </h3>
-                    <p className="text-slate-600 text-sm">
-                      Gerencie as competições diárias e suas configurações de premiação
-                    </p>
-                  </div>
-                </div>
-                
-                <DailyCompetitionsView 
-                  competitions={dailyCompetitions}
-                  isLoading={isCompetitionsLoading}
-                  onRefresh={handleRefreshCompetitions}
-                />
-              </TabsContent>
-
-              <TabsContent value="weekly" className="space-y-6 mt-0">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                      <Users className="h-5 w-5 text-purple-600" />
-                      Competição Semanal
-                    </h3>
-                    <p className="text-slate-600 text-sm">
-                      Competições semanais ativas e suas configurações
-                    </p>
-                  </div>
-                </div>
-                
-                <WeeklyCompetitionsView 
-                  competitions={weeklyCompetitions} 
-                  activeCompetition={activeWeeklyCompetition} 
-                  isLoading={isRankingsLoading} 
-                  onRefresh={refreshData} 
-                />
-              </TabsContent>
-
-              <TabsContent value="history" className="space-y-6 mt-0">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                      <History className="h-5 w-5 text-orange-600" />
-                      Histórico de Competições
-                    </h3>
-                    <p className="text-slate-600 text-sm">
-                      Visualize todas as competições semanais que já foram finalizadas
-                    </p>
-                  </div>
-                </div>
-                <CompetitionHistory />
-              </TabsContent>
-            </div>
-          </Tabs>
-        </div>
-
-        {/* Modals */}
-        <CreateCompetitionModal 
-          open={isCreateCompetitionOpen} 
-          onOpenChange={setIsCreateCompetitionOpen} 
-          onCompetitionCreated={handleCompetitionCreated} 
-        />
-      </div>
-    </div>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 };

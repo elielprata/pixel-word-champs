@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Trophy, Target, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useUserStats } from '@/hooks/useUserStats';
+import { useUserStats } from '@/hooks/admin/useUserStats';
 
 const UserStatsCard = () => {
   const { stats, isLoading } = useUserStats();

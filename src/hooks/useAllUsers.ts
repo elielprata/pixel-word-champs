@@ -2,8 +2,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { useUsersQuery, AllUsersData } from './useUsersQuery';
-import { useUserMutations } from './useUserMutations';
+import { useUsersQuery, AllUsersData } from '@/hooks/admin/useUsersQuery';
+import { useUserMutations } from '@/hooks/admin/useUserMutations';
 import { logger } from '@/utils/logger';
 
 export const useAllUsers = () => {

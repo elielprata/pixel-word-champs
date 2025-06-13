@@ -2,8 +2,8 @@
 import { useCallback } from 'react';
 import { authService } from '@/services/authService';
 import { LoginForm, RegisterForm } from '@/types';
-import { useAuthStateCore } from './useAuthStateCore';
-import { useAuthRefs } from './useAuthRefs';
+import { useAuthStateCore } from '@/hooks/auth/useAuthStateCore';
+import { useAuthRefs } from '@/hooks/auth/useAuthRefs';
 import { logger } from '@/utils/logger';
 
 export const useAuthOperations = (

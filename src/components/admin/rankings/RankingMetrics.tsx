@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock } from 'lucide-react';
-import { useRankings } from '@/hooks/useRankings';
+import { useRankings } from '@/hooks/ranking/useRankings';
 
 export const RankingMetrics = () => {
   const { totalPlayers, dailyRanking, weeklyRanking } = useRankings();
@@ -42,7 +41,7 @@ export const RankingMetrics = () => {
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium text-slate-600">{metric.title}</p>
                     <div className={`bg-gradient-to-r ${metric.color} p-2 rounded-lg shadow-sm`}>
-                      <Icon className="h-4 w-4 text-white" />
+                      <Icon className="h-4 w-4" />
                     </div>
                   </div>
                   <div className="space-y-1">

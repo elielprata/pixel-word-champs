@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Activity, BookOpen, Folder } from 'lucide-react';
-import { useRealGameMetrics } from '@/hooks/useRealGameMetrics';
+import { useRealGameMetrics } from '@/hooks/admin/useRealGameMetrics';
 import { logger } from '@/utils/logger';
 
 export const GameContentTabMetrics = () => {

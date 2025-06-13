@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useWeeklyCompetitionAutoParticipation } from './useWeeklyCompetitionAutoParticipation';
+import { useAuth } from '@/hooks/auth/useAuth';
+import { useWeeklyCompetitionAutoParticipation } from '@/hooks/game/useWeeklyCompetitionAutoParticipation';
 import { logger } from '@/utils/logger';
 
 export const useGameSessionWithWeeklyUpdates = () => {

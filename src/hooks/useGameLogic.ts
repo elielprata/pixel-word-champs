@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { type Position } from '@/utils/boardUtils';
-import { useGamePointsConfig } from './useGamePointsConfig';
+import { useGamePointsConfig } from '@/hooks/game/useGamePointsConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 

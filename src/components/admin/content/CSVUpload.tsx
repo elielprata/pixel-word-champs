@@ -1,389 +1,209 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, AlertCircle, CheckCircle, Info, Layers } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Upload, FileText, CheckCircle, AlertCircle, Download } from 'lucide-react';
+import { useWordCategories } from '@/hooks/game/useWordCategories';
 import { useToast } from "@/hooks/use-toast";
-import { useWordCategories } from '@/hooks/useWordCategories';
-import { saveWordsToDatabase } from '@/services/wordStorageService';
+import { logger } from '@/utils/logger';
 
 export const CSVUpload = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [uploadMode, setUploadMode] = useState<'single' | 'multiple'>('single');
-  const [isUploading, setIsUploading] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState<boolean | null>(null);
+  const { createCategory, createWord, categories } = useWordCategories();
   const { toast } = useToast();
-  const { categories } = useWordCategories();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type === 'text/csv') {
-      setSelectedFile(file);
-    } else {
+    setCsvFile(file);
+  };
+
+  const handleUpload = async () => {
+    if (!csvFile) {
       toast({
         title: "Erro",
-        description: "Por favor, selecione um arquivo CSV válido",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const parseCSVSingleCategory = (text: string): string[] => {
-    const lines = text.split('\n');
-    const words: string[] = [];
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine) {
-        // Se a linha contém vírgulas, pega o primeiro valor
-        const word = trimmedLine.split(',')[0].trim();
-        if (word && word.length >= 3) {
-          words.push(word);
-        }
-      }
-    }
-    
-    return words;
-  };
-
-  const parseCSVMultipleCategories = (text: string): { [category: string]: string[] } => {
-    const lines = text.split('\n');
-    const categorizedWords: { [category: string]: string[] } = {};
-    const existingCategoryNames = new Set(['geral', ...categories.map(cat => cat.name.toLowerCase())]);
-    const skippedWords: string[] = [];
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine) {
-        const parts = trimmedLine.split(',');
-        if (parts.length >= 2) {
-          const word = parts[0].trim();
-          const category = parts[1].trim().toLowerCase();
-          
-          if (word && word.length >= 3 && category) {
-            // Verificar se a categoria existe
-            if (existingCategoryNames.has(category)) {
-              if (!categorizedWords[category]) {
-                categorizedWords[category] = [];
-              }
-              categorizedWords[category].push(word);
-            } else {
-              skippedWords.push(`${word} (categoria "${category}" não existe)`);
-            }
-          }
-        }
-      }
-    }
-    
-    // Mostrar aviso sobre palavras ignoradas
-    if (skippedWords.length > 0) {
-      toast({
-        title: "Palavras ignoradas",
-        description: `${skippedWords.length} palavras foram ignoradas por pertencerem a categorias inexistentes`,
-        variant: "destructive",
-      });
-      console.log('Palavras ignoradas:', skippedWords);
-    }
-    
-    return categorizedWords;
-  };
-
-  const handleUploadSingle = async () => {
-    if (!selectedFile || !selectedCategory) {
-      toast({
-        title: "Erro",
-        description: "Selecione um arquivo CSV e uma categoria",
+        description: "Selecione um arquivo CSV para fazer upload.",
         variant: "destructive",
       });
       return;
     }
 
-    setIsUploading(true);
+    setUploading(true);
+    setUploadSuccess(null);
 
     try {
-      const text = await selectedFile.text();
-      const words = parseCSVSingleCategory(text);
+      const text = await csvFile.text();
+      const lines = text.split('\n').map(line => line.trim());
+      const headers = lines[0].split(',').map(header => header.trim());
+      const data = lines.slice(1).map(line => {
+        const values = line.split(',').map(value => value.trim());
+        return headers.reduce((obj: any, header, index) => {
+          obj[header] = values[index];
+          return obj;
+        }, {});
+      });
 
-      if (words.length === 0) {
-        toast({
-          title: "Erro",
-          description: "Nenhuma palavra válida encontrada no arquivo",
-          variant: "destructive",
-        });
-        return;
+      logger.info('Iniciando upload de CSV', { 
+        fileName: csvFile.name,
+        fileSize: csvFile.size,
+        rowCount: data.length
+      }, 'CSV_UPLOAD');
+
+      // Validar headers
+      const expectedHeaders = ['word', 'category', 'level', 'isActive'];
+      const missingHeaders = expectedHeaders.filter(header => !headers.includes(header));
+      if (missingHeaders.length > 0) {
+        throw new Error(`Faltando colunas obrigatórias: ${missingHeaders.join(', ')}`);
       }
 
-      // Encontrar a categoria selecionada
-      const category = categories.find(cat => cat.name === selectedCategory);
-      const categoryId = category?.id || '';
+      // Processar cada linha
+      for (const row of data) {
+        const { word, category: categoryName, level, isActive } = row;
 
-      const result = await saveWordsToDatabase(words, categoryId, selectedCategory);
-
-      toast({
-        title: "Sucesso!",
-        description: `${result.count} palavras foram importadas para a categoria "${selectedCategory}"`,
-      });
-
-      // Limpar formulário
-      setSelectedFile(null);
-      setSelectedCategory('');
-      const fileInput = document.getElementById('csv-file') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-
-    } catch (error) {
-      console.error('Erro no upload:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao processar o arquivo CSV",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleUploadMultiple = async () => {
-    if (!selectedFile) {
-      toast({
-        title: "Erro",
-        description: "Selecione um arquivo CSV",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsUploading(true);
-
-    try {
-      const text = await selectedFile.text();
-      const categorizedWords = parseCSVMultipleCategories(text);
-
-      if (Object.keys(categorizedWords).length === 0) {
-        toast({
-          title: "Erro",
-          description: "Nenhuma palavra válida encontrada para categorias existentes. Verifique se as categorias no arquivo existem no sistema.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      let totalImported = 0;
-      let categoriesProcessed = 0;
-
-      // Processar cada categoria
-      for (const [categoryName, words] of Object.entries(categorizedWords)) {
-        try {
-          // Encontrar o ID da categoria existente
-          const categoryInDb = categories.find(cat => cat.name === categoryName) || 
-                              (categoryName === 'geral' ? { id: '', name: 'geral' } : null);
-          
-          if (!categoryInDb) {
-            console.log(`Categoria "${categoryName}" não encontrada - pulando`);
-            continue;
-          }
-
-          const categoryId = categoryInDb.id || '';
-
-          // Salvar palavras na categoria
-          const result = await saveWordsToDatabase(words, categoryId, categoryName);
-          totalImported += result.count;
-          categoriesProcessed++;
-
-          console.log(`Categoria "${categoryName}": ${result.count} palavras importadas`);
-        } catch (error) {
-          console.error(`Erro ao processar categoria "${categoryName}":`, error);
+        // Validar dados
+        if (!word || !categoryName || !level || !['true', 'false'].includes(String(isActive).toLowerCase())) {
+          logger.warn('Linha inválida detectada', { row }, 'CSV_UPLOAD');
+          continue; // Ignorar linha inválida
         }
+
+        // Verificar se a categoria existe
+        let category = categories?.find(cat => cat.name === categoryName);
+        if (!category) {
+          logger.debug('Categoria não encontrada, criando nova', { categoryName }, 'CSV_UPLOAD');
+          category = await createCategory(categoryName);
+          if (!category) {
+            logger.error('Erro ao criar categoria', { categoryName }, 'CSV_UPLOAD');
+            continue; // Ignorar se falhar na criação da categoria
+          }
+        }
+
+        // Criar palavra
+        const newWord = {
+          word,
+          category: category.id,
+          level: parseInt(level, 10),
+          isActive: String(isActive).toLowerCase() === 'true'
+        };
+
+        logger.debug('Criando palavra', { newWord }, 'CSV_UPLOAD');
+        await createWord(newWord);
       }
 
+      logger.info('Upload de CSV concluído com sucesso', { rowCount: data.length }, 'CSV_UPLOAD');
+      setUploadSuccess(true);
       toast({
-        title: "Sucesso!",
-        description: `${totalImported} palavras foram importadas em ${categoriesProcessed} categorias existentes`,
+        title: "Sucesso",
+        description: "Upload do arquivo CSV concluído com sucesso.",
       });
 
-      // Limpar formulário
-      setSelectedFile(null);
-      const fileInput = document.getElementById('csv-file') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-
-    } catch (error) {
-      console.error('Erro no upload:', error);
+    } catch (error: any) {
+      logger.error('Erro no upload de CSV', { error: error.message }, 'CSV_UPLOAD');
+      setUploadSuccess(false);
       toast({
-        title: "Erro",
-        description: "Erro ao processar o arquivo CSV",
+        title: "Erro no upload",
+        description: error.message || "Ocorreu um erro ao processar o arquivo CSV.",
         variant: "destructive",
       });
     } finally {
-      setIsUploading(false);
+      setUploading(false);
+      // Limpar o campo de arquivo
+      setCsvFile(null);
+      const input = document.getElementById('csv-file-upload') as HTMLInputElement;
+      if (input) {
+        input.value = '';
+      }
     }
   };
 
-  const handleUpload = () => {
-    if (uploadMode === 'single') {
-      handleUploadSingle();
-    } else {
-      handleUploadMultiple();
-    }
+  const handleDownloadTemplate = () => {
+    const csvContent = "data:text/csv;charset=utf-8," +
+      "word,category,level,isActive\n" +
+      "exemplo,nome_da_categoria,1,true\n" +
+      "segundo,outra_categoria,2,false";
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "template_palavras.csv");
+    document.body.appendChild(link); // Required for FF
+
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <Card>
+    <Card className="border-slate-200 shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Upload className="h-5 w-5" />
-          Upload de Palavras via CSV
+          <FileText className="h-4 w-4 text-blue-600" />
+          Importar Palavras via CSV
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Formulário à esquerda */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="upload-mode">Modo de Upload</Label>
-              <Select value={uploadMode} onValueChange={(value: 'single' | 'multiple') => setUploadMode(value)} disabled={isUploading}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Uma categoria - Palavras para uma categoria específica
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="multiple">
-                    <div className="flex items-center gap-2">
-                      <Layers className="h-4 w-4" />
-                      Múltiplas categorias - Palavras organizadas por categoria existente
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      <CardContent className="space-y-4">
+        <Alert>
+          <AlertDescription>
+            O arquivo CSV deve conter as colunas: <strong>word, category, level, isActive</strong>.
+          </AlertDescription>
+        </Alert>
 
-            <div className="space-y-2">
-              <Label htmlFor="csv-file">Arquivo CSV</Label>
-              <Input
-                id="csv-file"
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                disabled={isUploading}
-              />
-              {selectedFile && (
-                <div className="flex items-center gap-2 text-sm text-green-600">
-                  <CheckCircle className="h-4 w-4" />
-                  {selectedFile.name}
-                </div>
-              )}
-            </div>
+        <div className="grid gap-2">
+          <Label htmlFor="csv-file-upload">
+            Arquivo CSV
+          </Label>
+          <Input
+            id="csv-file-upload"
+            type="file"
+            accept=".csv"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
+        </div>
 
-            {uploadMode === 'single' && (
-              <div className="space-y-2">
-                <Label htmlFor="category">Categoria de Destino</Label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={isUploading}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="geral">Geral</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.name}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <div className="flex justify-between items-center">
+          <Button
+            onClick={handleUpload}
+            disabled={uploading || !csvFile}
+          >
+            {uploading ? (
+              <div className="flex items-center gap-2">
+                <Upload className="h-4 w-4 animate-spin" />
+                Enviando...
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Enviar CSV
               </div>
             )}
+          </Button>
 
-            <Button
-              onClick={handleUpload}
-              disabled={!selectedFile || (uploadMode === 'single' && !selectedCategory) || isUploading}
-              className="w-full"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              {isUploading ? 'Processando...' : 'Fazer Upload'}
-            </Button>
-          </div>
-
-          {/* Instruções à direita */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-medium text-blue-800 mb-2">
-                  {uploadMode === 'single' ? 'Formato - Uma Categoria' : 'Formato - Múltiplas Categorias'}
-                </h4>
-                <div className="text-sm text-blue-700 space-y-2">
-                  {uploadMode === 'single' ? (
-                    <>
-                      <p>• Uma palavra por linha</p>
-                      <p>• Palavras com pelo menos 3 letras</p>
-                      <p>• Apenas letras (sem números ou símbolos)</p>
-                      <p>• Se houver vírgulas, apenas a primeira coluna será usada</p>
-                    </>
-                  ) : (
-                    <>
-                      <p>• Formato: PALAVRA,CATEGORIA</p>
-                      <p>• Uma palavra e categoria por linha</p>
-                      <p>• Palavras com pelo menos 3 letras</p>
-                      <p><strong>• Apenas categorias que já existem no sistema</strong></p>
-                      <p>• Palavras de categorias inexistentes serão ignoradas</p>
-                    </>
-                  )}
-                </div>
-                
-                <div className="mt-3">
-                  <h5 className="text-sm font-medium text-blue-800 mb-1">Exemplo:</h5>
-                  <div className="bg-white border border-blue-200 rounded p-2 text-xs font-mono">
-                    {uploadMode === 'single' ? (
-                      <>
-                        CASA<br/>
-                        CARRO<br/>
-                        COMPUTADOR<br/>
-                        TELEFONE
-                      </>
-                    ) : (
-                      <>
-                        CASA,geral<br/>
-                        CARRO,veiculos<br/>
-                        GATO,animais<br/>
-                        CACHORRO,animais<br/>
-                        COMPUTADOR,tecnologia
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {uploadMode === 'multiple' && (
-                  <div className="mt-3">
-                    <h5 className="text-sm font-medium text-blue-800 mb-1">Categorias Disponíveis:</h5>
-                    <div className="bg-white border border-blue-200 rounded p-2 text-xs">
-                      <div className="flex flex-wrap gap-1">
-                        <span className="bg-blue-100 px-2 py-1 rounded text-blue-800">geral</span>
-                        {categories.map((category) => (
-                          <span key={category.id} className="bg-blue-100 px-2 py-1 rounded text-blue-800">
-                            {category.name}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-3 flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
-                  <p className="text-xs text-amber-700">
-                    Palavras duplicadas na mesma categoria serão ignoradas automaticamente
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleDownloadTemplate}
+            disabled={uploading}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Baixar Template
+          </Button>
         </div>
+
+        {uploadSuccess === true && (
+          <Alert variant="success">
+            <CheckCircle className="h-4 w-4" />
+            Upload realizado com sucesso!
+          </Alert>
+        )}
+
+        {uploadSuccess === false && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            Erro ao realizar upload. Verifique o arquivo e tente novamente.
+          </Alert>
+        )}
       </CardContent>
     </Card>
   );

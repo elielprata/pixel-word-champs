@@ -1,177 +1,129 @@
+import { useState } from 'react';
+import { weeklyCompetitionService } from '@/services/weeklyCompetitionService';
+import { useAuth } from '@/hooks/auth/useAuth';
+import { WeeklyParticipation } from '@/types';
+import { logger } from '@/utils/logger';
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-
-interface ParticipationData {
-  id: string;
-  competition_id: string;
-  user_id: string;
-  user_score: number;
-  user_position: number | null;
-  created_at: string;
-}
-
-export const useWeeklyCompetitionParticipation = (competitionId: string) => {
+export const useWeeklyCompetitionParticipation = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [participation, setParticipation] = useState<ParticipationData | null>(null);
-  const [isParticipating, setIsParticipating] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [participation, setParticipation] = useState<WeeklyParticipation | null>(null);
 
-  useEffect(() => {
-    if (competitionId && user?.id) {
-      checkParticipation();
-    }
-  }, [competitionId, user?.id]);
-
-  const checkParticipation = async () => {
-    if (!competitionId || !user?.id) return;
+  const getParticipation = async (competitionId: string) => {
+    if (!user?.id) return null;
 
     try {
-      console.log('🔍 Verificando participação na competição:', competitionId);
+      logger.debug('Buscando participação do usuário na competição semanal', { 
+        userId: user.id,
+        competitionId 
+      }, 'WEEKLY_COMPETITION_PARTICIPATION');
 
-      const { data, error } = await supabase
-        .from('competition_participations')
-        .select('*')
-        .eq('competition_id', competitionId)
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const response = await weeklyCompetitionService.getParticipation(competitionId, user.id);
 
-      if (error) {
-        console.error('❌ Erro ao verificar participação:', error);
-        throw error;
-      }
-
-      if (data) {
-        console.log('✅ Usuário já participando:', data);
-        setParticipation(data);
-        setIsParticipating(true);
+      if (response.success && response.data) {
+        setParticipation(response.data);
+        logger.info('Participação encontrada', { 
+          participationId: response.data.id,
+          score: response.data.total_score 
+        }, 'WEEKLY_COMPETITION_PARTICIPATION');
+        return response.data;
       } else {
-        console.log('ℹ️ Usuário não está participando ainda');
-        setIsParticipating(false);
+        logger.warn('Participação não encontrada', { 
+          userId: user.id,
+          competitionId,
+          error: response.error 
+        }, 'WEEKLY_COMPETITION_PARTICIPATION');
+        return null;
       }
-
     } catch (error) {
-      console.error('❌ Erro ao verificar participação:', error);
-    } finally {
-      setIsLoading(false);
+      logger.error('Erro ao buscar participação', { 
+        userId: user.id,
+        competitionId,
+        error 
+      }, 'WEEKLY_COMPETITION_PARTICIPATION');
+      return null;
     }
   };
 
-  const joinCompetition = async () => {
-    if (!competitionId || !user?.id || isParticipating) return;
+  const participate = async (competitionId: string) => {
+    if (!user?.id) return null;
 
     try {
-      console.log('🎯 Inscrevendo usuário na competição (PARTICIPAÇÃO LIVRE):', competitionId);
+      logger.info('Participando da competição semanal', { 
+        userId: user.id,
+        competitionId 
+      }, 'WEEKLY_COMPETITION_PARTICIPATION');
 
-      // Participação livre - sem verificação de limites
-      const { data, error } = await supabase
-        .from('competition_participations')
-        .insert({
-          competition_id: competitionId,
-          user_id: user.id,
-          user_score: 0
-        })
-        .select()
-        .single();
+      const response = await weeklyCompetitionService.participate(competitionId, user.id);
 
-      if (error) {
-        console.error('❌ Erro ao inscrever na competição:', error);
-        throw error;
+      if (response.success && response.data) {
+        setParticipation(response.data);
+        logger.info('Participação criada com sucesso', { 
+          participationId: response.data.id,
+          score: response.data.total_score 
+        }, 'WEEKLY_COMPETITION_PARTICIPATION');
+        return response.data;
+      } else {
+        logger.error('Erro ao participar da competição', { 
+          userId: user.id,
+          competitionId,
+          error: response.error 
+        }, 'WEEKLY_COMPETITION_PARTICIPATION');
+        return null;
       }
-
-      console.log('✅ Inscrição realizada com sucesso (PARTICIPAÇÃO LIVRE):', data);
-      setParticipation(data);
-      setIsParticipating(true);
-
-      toast({
-        title: "Inscrição realizada!",
-        description: "Você foi inscrito na competição semanal com sucesso. Participação é livre para todos!",
-      });
-
-      return data;
-
     } catch (error) {
-      console.error('❌ Erro ao inscrever na competição:', error);
-      toast({
-        title: "Erro na inscrição",
-        description: "Não foi possível inscrever na competição. Tente novamente.",
-        variant: "destructive",
-      });
-      throw error;
+      logger.error('Erro ao participar da competição', { 
+        userId: user.id,
+        competitionId,
+        error 
+      }, 'WEEKLY_COMPETITION_PARTICIPATION');
+      return null;
     }
   };
 
-  const updateScore = async (newScore: number) => {
-    if (!participation || !user?.id) return;
+  const updateScore = async (competitionId: string, newScore: number) => {
+    if (!user?.id || !participation?.id) return null;
 
     try {
-      console.log('📊 Atualizando pontuação:', newScore);
+      logger.debug('Atualizando pontuação na competição semanal', { 
+        userId: user.id,
+        competitionId,
+        participationId: participation.id,
+        newScore 
+      }, 'WEEKLY_COMPETITION_PARTICIPATION');
 
-      const { data, error } = await supabase
-        .from('competition_participations')
-        .update({ user_score: newScore })
-        .eq('id', participation.id)
-        .select()
-        .single();
+      const response = await weeklyCompetitionService.updateScore(participation.id, newScore);
 
-      if (error) {
-        console.error('❌ Erro ao atualizar pontuação:', error);
-        throw error;
+      if (response.success && response.data) {
+        setParticipation(response.data);
+        logger.info('Pontuação atualizada com sucesso', { 
+          participationId: response.data.id,
+          newScore: response.data.total_score 
+        }, 'WEEKLY_COMPETITION_PARTICIPATION');
+        return response.data;
+      } else {
+        logger.error('Erro ao atualizar pontuação', { 
+          userId: user.id,
+          competitionId,
+          participationId: participation.id,
+          error: response.error 
+        }, 'WEEKLY_COMPETITION_PARTICIPATION');
+        return null;
       }
-
-      console.log('✅ Pontuação atualizada:', data);
-      setParticipation(data);
-
-      return data;
-
     } catch (error) {
-      console.error('❌ Erro ao atualizar pontuação:', error);
-      throw error;
+      logger.error('Erro ao atualizar pontuação', { 
+        userId: user.id,
+        competitionId,
+        participationId: participation.id,
+        error 
+      }, 'WEEKLY_COMPETITION_PARTICIPATION');
+      return null;
     }
   };
-
-  // Monitorar mudanças em tempo real na participação
-  useEffect(() => {
-    if (!competitionId || !user?.id) return;
-
-    const channel = supabase
-      .channel(`participation-${competitionId}-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'competition_participations',
-          filter: `competition_id=eq.${competitionId} AND user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('📡 Mudança na participação detectada:', payload);
-          
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            setParticipation(payload.new as ParticipationData);
-            setIsParticipating(true);
-          } else if (payload.eventType === 'DELETE') {
-            setParticipation(null);
-            setIsParticipating(false);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [competitionId, user?.id]);
 
   return {
     participation,
-    isParticipating,
-    isLoading,
-    joinCompetition,
-    updateScore,
-    refetch: checkParticipation
+    getParticipation,
+    participate,
+    updateScore
   };
 };
