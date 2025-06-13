@@ -3,38 +3,38 @@ import { useState } from 'react';
 
 export interface NavigationState {
   activeTab: string;
-  activeDailyCompetition: string | null;
+  activeChallenge: string | null;
   showFullRanking: boolean;
-  dailyCompetitionRankingId: number | null;
+  challengeRankingId: number | null;
   showSettings: boolean;
   showHelp: boolean;
   showAchievements: boolean;
   showGameRules: boolean;
-  pendingCompetitionId: string | null;
+  pendingChallengeId: string | null;
 }
 
 export const useAppNavigation = () => {
   const [navigationState, setNavigationState] = useState<NavigationState>({
     activeTab: 'home',
-    activeDailyCompetition: null,
+    activeChallenge: null,
     showFullRanking: false,
-    dailyCompetitionRankingId: null,
+    challengeRankingId: null,
     showSettings: false,
     showHelp: false,
     showAchievements: false,
     showGameRules: false,
-    pendingCompetitionId: null,
+    pendingChallengeId: null,
   });
 
   const setActiveTab = (tab: string) => {
     setNavigationState(prev => ({ ...prev, activeTab: tab }));
   };
 
-  const handleStartDailyCompetition = (competitionId: string) => {
+  const handleStartChallenge = (challengeId: string) => {
     setNavigationState(prev => ({ 
       ...prev, 
       showGameRules: true,
-      pendingCompetitionId: competitionId,
+      pendingChallengeId: challengeId,
       activeTab: 'home'
     }));
   };
@@ -43,8 +43,8 @@ export const useAppNavigation = () => {
     setNavigationState(prev => ({
       ...prev,
       showGameRules: false,
-      activeDailyCompetition: prev.pendingCompetitionId,
-      pendingCompetitionId: null
+      activeChallenge: prev.pendingChallengeId,
+      pendingChallengeId: null
     }));
   };
 
@@ -52,14 +52,14 @@ export const useAppNavigation = () => {
     setNavigationState(prev => ({
       ...prev,
       showGameRules: false,
-      pendingCompetitionId: null
+      pendingChallengeId: null
     }));
   };
 
   const handleBackToHome = () => {
     setNavigationState(prev => ({
       ...prev,
-      activeDailyCompetition: null,
+      activeChallenge: null,
       activeTab: 'home'
     }));
   };
@@ -72,12 +72,12 @@ export const useAppNavigation = () => {
     setNavigationState(prev => ({ ...prev, showFullRanking: false }));
   };
 
-  const handleViewDailyCompetitionRanking = (competitionId: number) => {
-    setNavigationState(prev => ({ ...prev, dailyCompetitionRankingId: competitionId }));
+  const handleViewChallengeRanking = (challengeId: number) => {
+    setNavigationState(prev => ({ ...prev, challengeRankingId: challengeId }));
   };
 
-  const handleBackFromDailyCompetitionRanking = () => {
-    setNavigationState(prev => ({ ...prev, dailyCompetitionRankingId: null }));
+  const handleBackFromChallengeRanking = () => {
+    setNavigationState(prev => ({ ...prev, challengeRankingId: null }));
   };
 
   const handleNavigateToSettings = () => {
@@ -107,14 +107,14 @@ export const useAppNavigation = () => {
   return {
     navigationState,
     setActiveTab,
-    handleStartDailyCompetition,
+    handleStartChallenge,
     handleStartGameFromRules,
     handleBackFromRules,
     handleBackToHome,
     handleViewFullRanking,
     handleBackFromFullRanking,
-    handleViewDailyCompetitionRanking,
-    handleBackFromDailyCompetitionRanking,
+    handleViewChallengeRanking,
+    handleBackFromChallengeRanking,
     handleNavigateToSettings,
     handleBackFromSettings,
     handleNavigateToHelp,

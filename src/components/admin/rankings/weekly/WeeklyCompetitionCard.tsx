@@ -16,7 +16,7 @@ interface WeeklyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  total_participants?: number;
+  total_participants?: number; // Optional since it doesn't exist in the database
 }
 
 interface WeeklyCompetitionCardProps {
@@ -34,6 +34,7 @@ export const WeeklyCompetitionCard = ({
   onDelete,
   deletingId
 }: WeeklyCompetitionCardProps) => {
+  // Usar a função centralizada de formatação que converte corretamente para Brasília
   const formatCompetitionDate = (dateString: string) => {
     try {
       const formatted = formatDateForDisplay(dateString);
@@ -44,14 +45,15 @@ export const WeeklyCompetitionCard = ({
       return formatted;
     } catch (error) {
       console.error('❌ Erro ao formatar data da competição:', error);
-      return dateString;
+      return dateString; // Fallback para data original
     }
   };
 
+  // Usar o serviço centralizado para calcular o status
   const actualStatus = competitionStatusService.calculateCorrectStatus({
     start_date: competition.start_date,
     end_date: competition.end_date,
-    competition_type: 'weekly'
+    competition_type: 'tournament'
   });
 
   const getStatusColor = (status: string) => {

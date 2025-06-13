@@ -1,9 +1,9 @@
 
 import type { AuthContextType } from '@/types/auth';
-import { useAuthStateCore } from '@/hooks/auth/useAuthStateCore';
-import { useAuthRefs } from '@/hooks/auth/useAuthRefs';
+import { useAuthStateCore } from './useAuthStateCore';
+import { useAuthRefs } from './useAuthRefs';
 import { useAuthOperations } from './useAuthOperations';
-import { useSessionProcessor } from '@/hooks/auth/useSessionProcessor';
+import { useSessionProcessor } from './useSessionProcessor';
 import { useAuthEffects } from './useAuthEffects';
 import { logger } from '@/utils/logger';
 

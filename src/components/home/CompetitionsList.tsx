@@ -1,54 +1,60 @@
 
 import React from 'react';
-import { Competition } from '@/types';
+import { Calendar, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CompetitionCard from './CompetitionCard';
 import EmptyCompetitionsState from './EmptyCompetitionsState';
-import { useOptimizedCompetitions } from '@/hooks/competitions/useOptimizedCompetitions';
+import { Competition } from '@/types';
 
 interface CompetitionsListProps {
-  onJoinCompetition: (competitionId: string) => void;
+  competitions: Competition[];
+  onStartChallenge: (challengeId: string) => void;
+  onRefresh: () => void;
 }
 
-const CompetitionsList: React.FC<CompetitionsListProps> = ({ onJoinCompetition }) => {
-  const { competitions, dailyCompetition, weeklyCompetition, isLoading, error } = useOptimizedCompetitions();
+const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: CompetitionsListProps) => {
+  const handleJoin = (competitionId: string) => {
+    onStartChallenge(competitionId);
+  };
 
-  if (isLoading) {
-    return <p>Carregando competições...</p>;
-  }
-
-  if (error) {
-    return <p>Erro ao carregar competições: {error}</p>;
-  }
-
-  if (!competitions || competitions.length === 0 && !dailyCompetition && !weeklyCompetition) {
-    return <EmptyCompetitionsState onRefresh={() => {}} />;
-  }
+  const handleViewRanking = (competitionId: string) => {
+    console.log('Ver ranking da competição:', competitionId);
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {dailyCompetition && (
-        <CompetitionCard
-          competition={dailyCompetition}
-          onJoin={onJoinCompetition}
-          onViewRanking={() => {}}
-        />
-      )}
-      {weeklyCompetition && (
-        <CompetitionCard
-          competition={weeklyCompetition}
-          onJoin={onJoinCompetition}
-          onViewRanking={() => {}}
-        />
-      )}
-      {competitions && competitions.map((competition) => (
-        <CompetitionCard
-          key={competition.id}
-          competition={competition}
-          onJoin={onJoinCompetition}
-          onViewRanking={() => {}}
-        />
-      ))}
-    </div>
+    <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2 text-slate-800">
+            <div className="p-1.5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+              <Calendar className="w-4 h-4 text-white" />
+            </div>
+            Competições Diárias ({competitions.length})
+          </CardTitle>
+          <Button onClick={onRefresh} variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-3 pt-0">
+        {competitions.length === 0 ? (
+          <EmptyCompetitionsState onRefresh={onRefresh} />
+        ) : (
+          <div className="space-y-3">
+            {competitions.map((competition) => (
+              <CompetitionCard
+                key={competition.id}
+                competition={competition}
+                onJoin={handleJoin}
+                onViewRanking={handleViewRanking}
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Loader2 } from 'lucide-react';
-import { useRankingData } from '@/hooks/ranking/useRankingData';
+import { useRankingData } from '@/hooks/useRankingData';
 
 interface RankingPreviewProps {
   onViewFullRanking: () => void;

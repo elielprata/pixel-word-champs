@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { Camera, Loader2, Plus } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { avatarService } from '@/services/avatarService';
 import { profileService } from '@/services/profileService';
-import { useAuth } from '@/hooks/auth/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AvatarUploadProps {
   currentAvatar?: string;

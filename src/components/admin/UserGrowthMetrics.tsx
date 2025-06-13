@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
-import { useUserGrowth } from '@/hooks/admin/useUserGrowth';
+import { useUserGrowth } from '@/hooks/useUserGrowth';
 import { logger } from '@/utils/logger';
 
 export const UserGrowthMetrics = () => {

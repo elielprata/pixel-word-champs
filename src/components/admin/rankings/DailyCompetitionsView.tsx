@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { CompetitionTimeInfo } from './daily/CompetitionTimeInfo';
@@ -6,7 +5,7 @@ import { DailyCompetitionsEmpty } from './daily/DailyCompetitionsEmpty';
 import { DailyCompetitionsContainer } from './daily/DailyCompetitionsContainer';
 import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 import { useCompetitionStatusChecker } from '@/hooks/useCompetitionStatusChecker';
-import { useDailyCompetitionsLogic } from '@/hooks/competitions/useDailyCompetitionsLogic';
+import { useDailyCompetitionsLogic } from '@/hooks/useDailyCompetitionsLogic';
 import { useDailyCompetitionsActions } from '@/hooks/useDailyCompetitionsActions';
 
 interface DailyCompetition {

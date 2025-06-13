@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Gift, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { useInvites } from '@/hooks/social/useInvites';
+import { useInvites } from '@/hooks/useInvites';
 
 interface UseInviteCodeModalProps {
   isOpen: boolean;

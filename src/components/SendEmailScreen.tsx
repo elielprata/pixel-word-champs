@@ -1,13 +1,11 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Mail, Send, User } from 'lucide-react';
-import { useAuth } from '@/hooks/auth/useAuth';
+import { ArrowLeft, Mail, Send } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/utils/logger';
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SendEmailScreenProps {
   onBack: () => void;
@@ -101,7 +99,7 @@ const SendEmailScreen = ({ onBack }: SendEmailScreenProps) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Assunto *
             </label>
-            <Input
+            <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
@@ -115,7 +113,7 @@ const SendEmailScreen = ({ onBack }: SendEmailScreenProps) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Mensagem *
             </label>
-            <Textarea
+            <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Descreva sua dúvida ou problema em detalhes..."

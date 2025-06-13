@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { competitionStatusService } from '@/services/competitionStatusService';
 import { rankingQueryService } from '@/services/rankingQueryService';
-import { useQuery } from '@tanstack/react-query';
 import {
   Table,
   TableBody,
@@ -76,28 +75,10 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
   const { toast } = useToast();
   
   const [ranking, setRanking] = useState<RankingParticipant[]>([]);
-  const [prizeConfigs, setPrizeConfigs] = useState<PrizeConfig[]>([]);
   const [competition, setCompetition] = useState<CompetitionInfo | null>(null);
+  const [prizeConfigs, setPrizeConfigs] = useState<PrizeConfig[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Buscar dados da competição
-  const { data: competitionData } = useQuery({
-    queryKey: ['competition', competitionId],
-    queryFn: async () => {
-      if (!competitionId) return null;
-      
-      const { data, error } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .eq('id', competitionId)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!competitionId && open
-  });
 
   useEffect(() => {
     if (open && competitionId) {
@@ -110,7 +91,7 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
     const status = competitionStatusService.calculateCorrectStatus({
       start_date: startDate,
       end_date: endDate,
-      competition_type: 'weekly'
+      competition_type: 'tournament'
     });
     return status === 'active';
   };
@@ -122,17 +103,23 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
     try {
       console.log('🔄 Carregando dados da competição:', competitionId);
 
-      // Usar dados da competição do useQuery
-      if (!competitionData) return;
+      // Carregar informações da competição
+      const { data: competitionData, error: competitionError } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('id', competitionId)
+        .single();
 
-      const actualStatus = competitionStatusService.calculateCorrectStatus({
-        start_date: competitionData.start_date,
-        end_date: competitionData.end_date,
-        competition_type: 'weekly'
-      });
+      if (competitionError) {
+        console.error('❌ Erro ao carregar competição:', competitionError);
+        throw competitionError;
+      }
 
       console.log('✅ Competição carregada:', competitionData);
 
+      // Verificar se a competição está ativa usando o serviço centralizado
+      const isActive = isCompetitionActive(competitionData.start_date, competitionData.end_date);
+      
       // Buscar configurações de prêmio do banco de dados
       const { data: prizeData, error: prizeError } = await supabase
         .from('prize_configurations')
@@ -250,12 +237,6 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentRanking = ranking.slice(startIndex, endIndex);
 
-  const actualStatus = competition ? competitionStatusService.calculateCorrectStatus({
-    start_date: competition.start_date,
-    end_date: competition.end_date,
-    competition_type: 'weekly'
-  }) : null;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
@@ -289,11 +270,11 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
                     </div>
                     <div className="text-right">
                       <Badge className={
-                        actualStatus === 'active' ? 'bg-green-100 text-green-700 border-green-200' :
+                        isCompetitionActive(competition.start_date, competition.end_date) ? 'bg-green-100 text-green-700 border-green-200' :
                         new Date() < new Date(competition.start_date) ? 'bg-blue-100 text-blue-700 border-blue-200' :
                         'bg-purple-100 text-purple-700 border-purple-200'
                       }>
-                        {actualStatus === 'active' ? 'Ativo' : 
+                        {isCompetitionActive(competition.start_date, competition.end_date) ? 'Ativo' : 
                          new Date() < new Date(competition.start_date) ? 'Aguardando Início' : 'Finalizado'}
                       </Badge>
                     </div>

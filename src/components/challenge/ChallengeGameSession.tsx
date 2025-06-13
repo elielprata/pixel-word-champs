@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import GameBoard from '../GameBoard';
 import { logger } from '@/utils/logger';
 
-interface DailyChallengeGameSessionProps {
+interface ChallengeGameSessionProps {
   currentLevel: number;
   timeRemaining: number;
   onWordFound: (word: string, points: number) => void;
@@ -16,7 +16,7 @@ interface DailyChallengeGameSessionProps {
   onRevive: () => void;
 }
 
-const DailyChallengeGameSession = ({
+const ChallengeGameSession = ({
   currentLevel,
   timeRemaining,
   onWordFound,
@@ -25,14 +25,14 @@ const DailyChallengeGameSession = ({
   onAdvanceLevel,
   onStopGame,
   onRevive
-}: DailyChallengeGameSessionProps) => {
-  logger.debug('Renderizando DailyChallengeGameSession', { 
+}: ChallengeGameSessionProps) => {
+  logger.debug('Renderizando ChallengeGameSession', { 
     currentLevel, 
     timeRemaining 
-  }, 'DAILY_CHALLENGE_GAME_SESSION');
+  }, 'CHALLENGE_GAME_SESSION');
 
-  const handleStopChallenge = () => {
-    logger.info('Parando desafio diário', { currentLevel }, 'DAILY_CHALLENGE_GAME_SESSION');
+  const handleStopGame = () => {
+    logger.info('Parando jogo de desafio', { currentLevel }, 'CHALLENGE_GAME_SESSION');
     onStopGame();
   };
 
@@ -42,7 +42,7 @@ const DailyChallengeGameSession = ({
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={handleStopChallenge}
+          onClick={handleStopGame}
           className="rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white"
         >
           <ArrowLeft className="w-6 h-6" />
@@ -64,4 +64,4 @@ const DailyChallengeGameSession = ({
   );
 };
 
-export default DailyChallengeGameSession;
+export default ChallengeGameSession;

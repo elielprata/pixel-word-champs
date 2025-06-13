@@ -1,5 +1,6 @@
-import { useAuthStateCore } from '@/hooks/auth/useAuthStateCore';
-import { useAuthRefs } from '@/hooks/auth/useAuthRefs';
+
+import { useAuthStateCore } from './useAuthStateCore';
+import { useAuthRefs } from './useAuthRefs';
 
 export const useAuthState = () => {
   const authState = useAuthStateCore();

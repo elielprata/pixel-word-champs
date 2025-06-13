@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { customCompetitionService } from '@/services/customCompetitionService';
+import { dailyCompetitionValidationService } from '@/services/dailyCompetition/dailyCompetitionValidationService';
 import { useDailyCompetitionValidation } from '@/hooks/useDailyCompetitionValidation';
 import { DailyCompetition } from '@/types/dailyCompetition';
 
@@ -36,9 +35,9 @@ export const useDailyCompetitionForm = (onSuccess?: () => void) => {
 
   const addCompetition = async (formData: any) => {
     try {
-      console.log('➕ Hook: Criando nova competição diária com validação automática');
+      console.log('➕ Hook: Criando nova competição com validação automática');
       
-      const response = await customCompetitionService.createCompetition(formData);
+      const response = await dailyCompetitionValidationService.createDailyCompetition(formData);
       
       if (response.success) {
         toast({
@@ -49,12 +48,12 @@ export const useDailyCompetitionForm = (onSuccess?: () => void) => {
         resetForm();
         if (onSuccess) onSuccess();
       } else {
-        throw new Error(response.error || 'Erro ao criar competição diária');
+        throw new Error(response.error || 'Erro ao criar competição');
       }
     } catch (error) {
       console.error('❌ Hook: Erro ao criar:', error);
       toast({
-        title: "Erro ao criar competição diária",
+        title: "Erro ao criar competição",
         description: error instanceof Error ? error.message : "Tente novamente.",
         variant: "destructive",
       });
@@ -65,28 +64,28 @@ export const useDailyCompetitionForm = (onSuccess?: () => void) => {
     if (!editingCompetition) return;
     
     try {
-      console.log('✏️ Hook: Atualizando competição diária com validação automática');
+      console.log('✏️ Hook: Atualizando competição com validação automática');
       
-      const response = await customCompetitionService.updateCompetition(
+      const response = await dailyCompetitionValidationService.updateDailyCompetition(
         editingCompetition.id, 
         formData
       );
       
       if (response.success) {
         toast({
-          title: "Competição Diária Atualizada",
+          title: "Competição Atualizada",
           description: "A competição foi atualizada com horário de término às 23:59:59 automaticamente.",
         });
         
         setEditingCompetition(null);
         if (onSuccess) onSuccess();
       } else {
-        throw new Error(response.error || 'Erro ao atualizar competição diária');
+        throw new Error(response.error || 'Erro ao atualizar competição');
       }
     } catch (error) {
       console.error('❌ Hook: Erro ao atualizar:', error);
       toast({
-        title: "Erro ao atualizar competição diária",
+        title: "Erro ao atualizar competição",
         description: error instanceof Error ? error.message : "Tente novamente.",
         variant: "destructive",
       });
@@ -94,7 +93,7 @@ export const useDailyCompetitionForm = (onSuccess?: () => void) => {
   };
 
   const handleEdit = (competition: DailyCompetition) => {
-    console.log('✏️ Hook: Iniciando edição de competição diária:', competition.id);
+    console.log('✏️ Hook: Iniciando edição de competição:', competition.id);
     setEditingCompetition(competition);
   };
 

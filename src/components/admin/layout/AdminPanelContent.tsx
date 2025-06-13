@@ -1,77 +1,42 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Trophy, Settings, CreditCard, HelpCircle, Zap } from 'lucide-react';
-import { UsersTab } from '../UsersTab';
-import { GameContentTab } from '../GameContentTab';
-import { RankingsTab } from '../RankingsTab';
-import { PaymentsTab } from '../PaymentsTab';
-import { SupportTab } from '../SupportTab';
-import { IntegrationsTab } from '../IntegrationsTab';
+import { TabsContent } from "@/components/ui/tabs";
+import { DashboardStats } from "@/components/admin/DashboardStats";
+import { UsersTab } from "@/components/admin/UsersTab";
+import { RankingsTab } from "@/components/admin/RankingsTab";
+import { GameContentTab } from "@/components/admin/GameContentTab";
+import { SupportTab } from "@/components/admin/SupportTab";
+import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
+import { logger } from '@/utils/logger';
 
-interface AdminPanelContentProps {
-  onRefresh?: () => void;
-}
-
-export const AdminPanelContent = ({ onRefresh }: AdminPanelContentProps) => {
-  const handleRefresh = () => {
-    if (onRefresh) {
-      onRefresh();
-    }
-  };
-
+export const AdminPanelContent = () => {
+  logger.debug('Renderizando conteúdo do painel admin', undefined, 'ADMIN_PANEL_CONTENT');
+  
   return (
-    <Tabs defaultValue="users" className="w-full">
-      <TabsList className="grid w-full grid-cols-6 bg-slate-100">
-        <TabsTrigger value="users" className="flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          Usuários
-        </TabsTrigger>
-        <TabsTrigger value="game-content" className="flex items-center gap-2">
-          <Settings className="h-4 w-4" />
-          Conteúdo
-        </TabsTrigger>
-        <TabsTrigger value="rankings" className="flex items-center gap-2">
-          <Trophy className="h-4 w-4" />
-          Rankings
-        </TabsTrigger>
-        <TabsTrigger value="payments" className="flex items-center gap-2">
-          <CreditCard className="h-4 w-4" />
-          Pagamentos
-        </TabsTrigger>
-        <TabsTrigger value="support" className="flex items-center gap-2">
-          <HelpCircle className="h-4 w-4" />
-          Suporte
-        </TabsTrigger>
-        <TabsTrigger value="integrations" className="flex items-center gap-2">
-          <Zap className="h-4 w-4" />
-          Integrações
-        </TabsTrigger>
-      </TabsList>
+    <>
+      <TabsContent value="dashboard">
+        <DashboardStats />
+      </TabsContent>
 
-      <TabsContent value="users" className="mt-6">
+      <TabsContent value="users">
         <UsersTab />
       </TabsContent>
 
-      <TabsContent value="game-content" className="mt-6">
+      <TabsContent value="rankings">
+        <RankingsTab />
+      </TabsContent>
+
+      <TabsContent value="content">
         <GameContentTab />
       </TabsContent>
 
-      <TabsContent value="rankings" className="mt-6">
-        <RankingsTab onRefresh={handleRefresh} />
-      </TabsContent>
-
-      <TabsContent value="payments" className="mt-6">
-        <PaymentsTab />
-      </TabsContent>
-
-      <TabsContent value="support" className="mt-6">
+      <TabsContent value="support">
         <SupportTab />
       </TabsContent>
 
-      <TabsContent value="integrations" className="mt-6">
+      <TabsContent value="integrations">
         <IntegrationsTab />
       </TabsContent>
-    </Tabs>
+    </>
   );
 };

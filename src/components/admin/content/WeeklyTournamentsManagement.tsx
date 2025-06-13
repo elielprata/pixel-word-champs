@@ -85,18 +85,18 @@ export const WeeklyTournamentsManagement = () => {
         return;
       }
 
-      // CORREÇÃO: Usar a interface CustomCompetitionData correta
+      // CORREÇÃO RADICAL: Usar datas como STRINGS PURAS - sem conversões
       const competitionData = {
         title: newTournament.title,
         description: newTournament.description,
-        type: 'weekly' as 'daily' | 'weekly',
-        prizePool: currentPrizePool,
-        maxParticipants: 0, // Participação livre - sem limite
-        startDate: newTournament.start_date,
-        endDate: newTournament.end_date
+        competition_type: 'tournament',
+        start_date: newTournament.start_date, // STRING PURA - trigger do banco fará padronização
+        end_date: newTournament.end_date,     // STRING PURA - trigger do banco fará 23:59:59
+        prize_pool: currentPrizePool,
+        max_participants: 0 // Participação livre - sem limite
       };
 
-      console.log('🏆 Criando torneio semanal com dados corretos:', competitionData);
+      console.log('🏆 Criando torneio semanal com STRINGS PURAS (ZERO conversões):', competitionData);
 
       const result = await customCompetitionService.createCompetition(competitionData);
 
@@ -140,17 +140,17 @@ export const WeeklyTournamentsManagement = () => {
         return;
       }
 
-      // CORREÇÃO: Usar a interface CustomCompetitionData correta
+      // CORREÇÃO RADICAL: Usar datas como STRINGS PURAS - sem conversões
       const updateData = {
         title: editingTournament.title,
         description: editingTournament.description,
-        type: 'weekly' as 'daily' | 'weekly',
-        maxParticipants: 0, // Forçar participação livre
-        startDate: editingTournament.start_date,
-        endDate: editingTournament.end_date
+        competition_type: 'tournament',
+        max_participants: 0, // Forçar participação livre
+        start_date: editingTournament.start_date, // STRING PURA - trigger do banco fará padronização
+        end_date: editingTournament.end_date      // STRING PURA - trigger do banco fará 23:59:59
       };
 
-      console.log('🔧 Atualizando torneio semanal com dados corretos:', updateData);
+      console.log('🔧 Atualizando torneio semanal com STRINGS PURAS (ZERO conversões):', updateData);
 
       const result = await customCompetitionService.updateCompetition(editingTournament.id, updateData);
 

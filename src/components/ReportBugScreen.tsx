@@ -1,13 +1,11 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Bug, Send, AlertTriangle } from 'lucide-react';
-import { useAuth } from '@/hooks/auth/useAuth';
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/utils/logger';
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReportBugScreenProps {
   onBack: () => void;
@@ -123,7 +121,7 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Descrição do problema *
             </label>
-            <Textarea
+            <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Descreva o que aconteceu..."
@@ -136,7 +134,7 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Passos para reproduzir *
             </label>
-            <Textarea
+            <textarea
               value={steps}
               onChange={(e) => setSteps(e.target.value)}
               placeholder="1. Abri o jogo&#10;2. Cliquei em...&#10;3. O erro aconteceu quando..."

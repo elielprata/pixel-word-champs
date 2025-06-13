@@ -1,106 +1,85 @@
 
-import { competitionStatusService } from '@/services/competitionStatusService';
+/**
+ * VALIDAÇÃO DIÁRIA RADICAL SIMPLIFICADA - VERSÃO FINAL
+ * 
+ * CORREÇÃO RADICAL FINAL: Eliminar TODAS as conversões problemáticas
+ * Trabalhar apenas com strings simples de data
+ * Deixar APENAS o trigger do banco fazer a padronização
+ */
 
-export const isDailyCompetition = (competition: any): boolean => {
-  return competition?.competition_type === 'daily' || competition?.theme;
-};
+export interface DailyCompetitionData {
+  title: string;
+  description: string;
+  theme: string;
+  start_date: string;
+  end_date: string;
+  competition_type: 'challenge';
+}
 
-export const validateDailyCompetition = (competition: any): boolean => {
-  if (!competition) return false;
+/**
+ * CORREÇÃO RADICAL FINAL: Validação SEM conversões de timezone
+ * Apenas validação de campos obrigatórios e formatação simples
+ */
+export const validateDailyCompetitionData = (data: Partial<DailyCompetitionData>): DailyCompetitionData => {
+  console.log('🔧 VALIDAÇÃO RADICAL FINAL (ZERO conversões Date):', data);
   
-  // Verificar se é uma competição diária válida
-  if (!isDailyCompetition(competition)) return false;
-  
-  // Verificar se o status está correto
-  const correctStatus = competitionStatusService.calculateCorrectStatus({
-    start_date: competition.start_date,
-    end_date: competition.end_date,
-    competition_type: 'daily'
-  });
-  
-  return correctStatus === 'active';
-};
-
-export const validateDailyCompetitionData = (formData: any) => {
-  if (!formData.title) {
-    throw new Error('Título é obrigatório');
+  if (!data.title || !data.description) {
+    throw new Error('Título e descrição são obrigatórios para competição diária');
   }
+
+  // RADICAL FINAL: Usar a data como string simples, SEM conversões Date
+  let startDateString = data.start_date;
   
-  if (!formData.start_date) {
-    throw new Error('Data de início é obrigatória');
+  if (!startDateString) {
+    // Se não fornecida, usar data atual como string simples
+    const today = new Date();
+    startDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
   }
-  
-  return {
-    ...formData,
-    competition_type: 'daily'
+
+  // Para competições diárias, end_date é o mesmo dia que start_date
+  const endDateString = startDateString;
+
+  const validatedData: DailyCompetitionData = {
+    title: data.title,
+    description: data.description,
+    theme: data.theme || 'Geral',
+    start_date: startDateString, // STRING SIMPLES - banco ajustará horários
+    end_date: endDateString,     // MESMO DIA - banco fará 23:59:59
+    competition_type: 'challenge'
   };
+
+  console.log('🎯 RADICAL FINAL: Dados validados SEM conversões (trigger do banco fará tudo):', validatedData);
+  return validatedData;
 };
 
+/**
+ * Verificação SIMPLIFICADA - apenas formato básico
+ */
 export const isDailyCompetitionTimeValid = (startDate: string, endDate: string): boolean => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  console.log('🕐 VERIFICAÇÃO RADICAL SIMPLIFICADA:', { startDate, endDate });
   
-  // Verificar se é o mesmo dia
-  const isSameDay = start.toDateString() === end.toDateString();
+  // Verificação básica: se as datas são strings válidas
+  const isStartValid = !!startDate && startDate.length >= 10;
+  const isEndValid = !!endDate && endDate.length >= 10;
   
-  return isSameDay;
+  console.log('✅ VALIDAÇÃO SIMPLES:', { isStartValid, isEndValid });
+  return isStartValid && isEndValid;
 };
 
-export const getDailyCompetitionEndTime = (startDate: string): string => {
-  const start = new Date(startDate);
-  const endOfDay = new Date(start);
-  endOfDay.setHours(23, 59, 59, 999);
-  return endOfDay.toISOString();
-};
-
+/**
+ * Função para formatar tempo de competição diária (adicionada para compatibilidade)
+ */
 export const formatDailyCompetitionTime = (dateString: string, isEndTime: boolean = false): string => {
-  const date = new Date(dateString);
+  if (!dateString) return '';
   
-  if (isEndTime) {
-    // Para horário de fim, mostrar 23:59:59
-    const endDate = new Date(date);
-    endDate.setHours(23, 59, 59);
-    return endDate.toLocaleString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
+  try {
+    const date = new Date(dateString);
+    const timeString = isEndTime ? '23:59:59' : '00:00:00';
+    return `${date.toLocaleDateString('pt-BR')} às ${timeString}`;
+  } catch (error) {
+    console.error('Erro ao formatar data:', error);
+    return dateString;
   }
-  
-  // Para horário de início, mostrar 00:00:00
-  const startDate = new Date(date);
-  startDate.setHours(0, 0, 0);
-  return startDate.toLocaleString('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
 };
 
-export const isDailyCompetitionActive = (competition: any): boolean => {
-  if (!isDailyCompetition(competition)) return false;
-  
-  return competitionStatusService.shouldCompetitionBeActive({
-    start_date: competition.start_date,
-    end_date: competition.end_date,
-    competition_type: 'daily'
-  });
-};
-
-export const isDailyCompetitionCompleted = (competition: any): boolean => {
-  if (!isDailyCompetition(competition)) return false;
-  
-  return competitionStatusService.shouldCompetitionBeCompleted({
-    start_date: competition.start_date,
-    end_date: competition.end_date,
-    competition_type: 'daily'
-  });
-};
+console.log('🎯 VALIDAÇÃO DIÁRIA RADICAL FINAL APLICADA - ZERO CONVERSÕES Date');

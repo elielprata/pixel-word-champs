@@ -1,18 +1,19 @@
+
 import React from 'react';
-import { useIntegratedGameTimer } from '@/hooks/game/useIntegratedGameTimer';
-import { useDailyCompetitionGameLogic } from '@/hooks/competitions/useDailyCompetitionGameLogic';
-import CompetitionErrorDisplay from './challenge/CompetitionErrorDisplay';
-import CompetitionLoadingScreen from './challenge/CompetitionLoadingScreen';
-import CompetitionCompletedScreen from './challenge/CompetitionCompletedScreen';
-import CompetitionGameSession from './challenge/CompetitionGameSession';
+import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
+import { useChallengeGameLogic } from '@/hooks/useChallengeGameLogic';
+import ChallengeErrorDisplay from './challenge/ChallengeErrorDisplay';
+import ChallengeLoadingScreen from './challenge/ChallengeLoadingScreen';
+import ChallengeCompletedScreen from './challenge/ChallengeCompletedScreen';
+import ChallengeGameSession from './challenge/ChallengeGameSession';
 import { logger } from '@/utils/logger';
 
-interface CompetitionScreenProps {
-  competitionId: string;
+interface ChallengeScreenProps {
+  challengeId: string;
   onBack: () => void;
 }
 
-const CompetitionScreen = ({ competitionId, onBack }: CompetitionScreenProps) => {
+const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   const {
     currentLevel,
     totalScore,
@@ -27,16 +28,16 @@ const CompetitionScreen = ({ competitionId, onBack }: CompetitionScreenProps) =>
     handleAdvanceLevel,
     handleRetry,
     markParticipationAsCompleted
-  } = useDailyCompetitionGameLogic(competitionId);
+  } = useChallengeGameLogic(challengeId);
 
   const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(isGameStarted);
 
   const handleStopGame = async () => {
     logger.info('Usuário parou o jogo', { 
-      competitionId, 
+      challengeId, 
       currentLevel,
       totalScore 
-    }, 'COMPETITION_SCREEN');
+    }, 'CHALLENGE_SCREEN');
     await markParticipationAsCompleted();
     onBack();
   };
@@ -45,35 +46,35 @@ const CompetitionScreen = ({ competitionId, onBack }: CompetitionScreenProps) =>
     const success = extendTime();
     if (success) {
       logger.info('Revive ativado', { 
-        competitionId, 
+        challengeId, 
         currentLevel,
         timeRemaining 
-      }, 'COMPETITION_SCREEN');
+      }, 'CHALLENGE_SCREEN');
     } else {
       logger.warn('Falha ao ativar revive', { 
-        competitionId, 
+        challengeId, 
         currentLevel 
-      }, 'COMPETITION_SCREEN');
+      }, 'CHALLENGE_SCREEN');
     }
   };
 
   const handleCompleteGame = async () => {
     logger.info('Jogo finalizado', { 
-      competitionId, 
+      challengeId, 
       totalScore, 
       currentLevel,
       gameCompleted: true
-    }, 'COMPETITION_SCREEN');
+    }, 'CHALLENGE_SCREEN');
     await markParticipationAsCompleted();
     onBack();
   };
 
   const handleBackToMenu = () => {
     logger.info('Retorno ao menu principal', { 
-      competitionId,
+      challengeId,
       currentLevel,
       totalScore 
-    }, 'COMPETITION_SCREEN');
+    }, 'CHALLENGE_SCREEN');
     onBack();
   };
 
@@ -81,7 +82,7 @@ const CompetitionScreen = ({ competitionId, onBack }: CompetitionScreenProps) =>
     logger.debug('Avançando nível com reset', { 
       currentLevel,
       nextLevel: currentLevel + 1 
-    }, 'COMPETITION_SCREEN');
+    }, 'CHALLENGE_SCREEN');
     handleAdvanceLevel();
     resetTimer();
   };
@@ -89,7 +90,7 @@ const CompetitionScreen = ({ competitionId, onBack }: CompetitionScreenProps) =>
   // Tela de erro com opções claras
   if (error) {
     return (
-      <CompetitionErrorDisplay
+      <ChallengeErrorDisplay
         error={error}
         onRetry={handleRetry}
         onBackToMenu={handleBackToMenu}
@@ -99,13 +100,13 @@ const CompetitionScreen = ({ competitionId, onBack }: CompetitionScreenProps) =>
 
   // Tela de loading
   if (isLoading) {
-    return <CompetitionLoadingScreen />;
+    return <ChallengeLoadingScreen />;
   }
 
   // Tela de jogo completado
   if (gameCompleted) {
     return (
-      <CompetitionCompletedScreen
+      <ChallengeCompletedScreen
         totalScore={totalScore}
         onCompleteGame={handleCompleteGame}
       />
@@ -115,7 +116,7 @@ const CompetitionScreen = ({ competitionId, onBack }: CompetitionScreenProps) =>
   // Verificar se temos uma sessão válida antes de renderizar o jogo
   if (!gameSession) {
     return (
-      <CompetitionErrorDisplay
+      <ChallengeErrorDisplay
         error="Sessão de jogo não encontrada"
         onRetry={handleRetry}
         onBackToMenu={handleBackToMenu}
@@ -124,7 +125,7 @@ const CompetitionScreen = ({ competitionId, onBack }: CompetitionScreenProps) =>
   }
 
   return (
-    <CompetitionGameSession
+    <ChallengeGameSession
       currentLevel={currentLevel}
       timeRemaining={timeRemaining}
       onWordFound={handleWordFound}
@@ -137,4 +138,4 @@ const CompetitionScreen = ({ competitionId, onBack }: CompetitionScreenProps) =>
   );
 };
 
-export default CompetitionScreen;
+export default ChallengeScreen;

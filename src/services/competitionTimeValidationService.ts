@@ -1,65 +1,138 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { ApiResponse } from '@/types';
+import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { isDailyCompetitionTimeValid } from '@/utils/dailyCompetitionValidation';
+import { isWeeklyCompetitionTimeValid } from '@/utils/weeklyCompetitionValidation';
 import { logger } from '@/utils/logger';
-import { isDailyCompetition } from '@/utils/dailyCompetitionValidation';
-import { isWeeklyCompetition } from '@/utils/weeklyCompetitionValidation';
 
-class CompetitionTimeValidationService {
-  private validateDailyTime(startDate: string, endDate: string): boolean {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    // Para competições diárias, deve ser no mesmo dia
-    return start.toDateString() === end.toDateString();
-  }
-
-  private validateWeeklyTime(startDate: string, endDate: string): boolean {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    // Para competições semanais, deve ter pelo menos 1 dia de duração
-    const diffInDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return diffInDays >= 1;
-  }
-
-  validateTimeFormat(competition: any): { isValid: boolean; error?: string } {
-    if (!competition?.start_date || !competition?.end_date) {
-      return { isValid: false, error: 'Datas de início e fim são obrigatórias' };
-    }
-
-    const isDailyComp = isDailyCompetition(competition);
-    const isWeeklyComp = isWeeklyCompetition(competition);
-
-    if (isDailyComp) {
-      const isValid = this.validateDailyTime(competition.start_date, competition.end_date);
-      return { 
-        isValid, 
-        error: isValid ? undefined : 'Competições diárias devem começar e terminar no mesmo dia' 
-      };
-    }
-
-    if (isWeeklyComp) {
-      const isValid = this.validateWeeklyTime(competition.start_date, competition.end_date);
-      return { 
-        isValid, 
-        error: isValid ? undefined : 'Competições semanais devem ter pelo menos 1 dia de duração' 
-      };
-    }
-
-    return { isValid: true };
-  }
-
-  async validateCompetitionTimes(competitions: any[]): Promise<void> {
-    for (const competition of competitions) {
-      const validation = this.validateTimeFormat(competition);
+export class CompetitionTimeValidationService {
+  /**
+   * Verifica todas as competições e identifica horários inconsistentes
+   */
+  async validateAllCompetitionTimes(): Promise<ApiResponse<any>> {
+    try {
+      logger.debug('Verificando horários de todas as competições', undefined, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
-      if (!validation.isValid) {
-        logger.warn('Competição com horário inválido detectada', {
-          competitionId: competition.id,
-          error: validation.error
-        }, 'COMPETITION_TIME_VALIDATION');
+      const { data: competitions, error } = await supabase
+        .from('custom_competitions')
+        .select('id, title, competition_type, start_date, end_date, status');
+
+      if (error) throw error;
+
+      const results = {
+        totalChecked: competitions?.length || 0,
+        dailyInconsistent: [] as any[],
+        weeklyInconsistent: [] as any[],
+        validCompetitions: 0
+      };
+
+      for (const comp of competitions || []) {
+        let isValid = false;
+        
+        if (comp.competition_type === 'challenge') {
+          isValid = isDailyCompetitionTimeValid(comp.start_date, comp.end_date);
+          if (!isValid) {
+            results.dailyInconsistent.push(comp);
+          }
+        } else if (comp.competition_type === 'tournament') {
+          isValid = isWeeklyCompetitionTimeValid(comp.start_date, comp.end_date);
+          if (!isValid) {
+            results.weeklyInconsistent.push(comp);
+          }
+        }
+        
+        if (isValid) {
+          results.validCompetitions++;
+        }
       }
+
+      logger.info('Resultado da validação de horários', results, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      
+      return createSuccessResponse(results);
+    } catch (error) {
+      logger.error('Erro na validação de horários', { error }, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'VALIDATE_COMPETITION_TIMES'));
+    }
+  }
+
+  /**
+   * Força a correção de uma competição específica atualizando ela
+   */
+  async forceTimeCorrection(competitionId: string): Promise<ApiResponse<any>> {
+    try {
+      logger.info('Forçando correção de horário para competição', { competitionId }, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      
+      // Buscar a competição atual
+      const { data: competition, error: fetchError } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('id', competitionId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Fazer uma atualização mínima que irá acionar o trigger
+      const { data: updatedCompetition, error: updateError } = await supabase
+        .from('custom_competitions')
+        .update({
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', competitionId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      logger.info('Competição corrigida pelo trigger', { competitionId, updatedCompetition }, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      
+      return createSuccessResponse(updatedCompetition);
+    } catch (error) {
+      logger.error('Erro ao forçar correção', { competitionId, error }, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'FORCE_TIME_CORRECTION'));
+    }
+  }
+
+  /**
+   * Corrige todas as competições com horários inconsistentes
+   */
+  async fixAllInconsistentTimes(): Promise<ApiResponse<any>> {
+    try {
+      logger.info('Corrigindo todas as competições com horários inconsistentes', undefined, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      
+      const validationResult = await this.validateAllCompetitionTimes();
+      
+      if (!validationResult.success) {
+        throw new Error('Falha na validação inicial');
+      }
+
+      const { dailyInconsistent, weeklyInconsistent } = validationResult.data;
+      const allInconsistent = [...dailyInconsistent, ...weeklyInconsistent];
+      
+      const correctionResults = [];
+      
+      for (const comp of allInconsistent) {
+        const result = await this.forceTimeCorrection(comp.id);
+        correctionResults.push({
+          id: comp.id,
+          title: comp.title,
+          success: result.success,
+          error: result.error
+        });
+      }
+
+      logger.info('Resultados das correções de horários', { 
+        totalCorrected: correctionResults.length, 
+        results: correctionResults 
+      }, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      
+      return createSuccessResponse({
+        totalCorrected: correctionResults.length,
+        results: correctionResults
+      });
+    } catch (error) {
+      logger.error('Erro ao corrigir horários inconsistentes', { error }, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'FIX_ALL_INCONSISTENT_TIMES'));
     }
   }
 }

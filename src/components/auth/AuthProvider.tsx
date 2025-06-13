@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { useAuthProvider, AuthContext } from '@/hooks/auth/useAuth';
+import { useAuthProvider, AuthContext } from '@/hooks/useAuth';
 import { useAuthCleanup } from '@/hooks/useAuthCleanup';
 
 interface AuthProviderProps {

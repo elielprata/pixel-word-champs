@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { useCustomCompetitions } from "@/hooks/competitions/useCustomCompetitions";
+import { useCompetitions } from "@/hooks/useCompetitions";
 import { prizeService } from '@/services/prizeService';
 import { customCompetitionService, CustomCompetitionData } from '@/services/customCompetitionService';
 import { usePaymentData } from '@/hooks/usePaymentData';
@@ -33,11 +33,11 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrizePool, setTotalPrizePool] = useState(0);
   const { toast } = useToast();
-  const { customCompetitions, refetch } = useCustomCompetitions();
+  const { customCompetitions, refetch } = useCompetitions();
   const paymentData = usePaymentData();
 
   const weeklyTournaments = customCompetitions.filter(comp => 
-    comp.competition_type === 'weekly' && 
+    comp.competition_type === 'tournament' && 
     (comp.status === 'active' || comp.status === 'scheduled')
   );
 
@@ -88,13 +88,13 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 Criando competição...');
+      console.log('🚀 Criando competição sem CategorySection...');
       
       const competitionData: CustomCompetitionData = {
         title: formData.title,
         description: formData.description,
         type: formData.type,
-        category: 'geral',
+        category: 'geral', // Valor padrão fixo
         weeklyTournamentId: formData.weeklyTournamentId !== 'none' ? formData.weeklyTournamentId : undefined,
         prizePool: formData.prizePool,
         maxParticipants: formData.maxParticipants,

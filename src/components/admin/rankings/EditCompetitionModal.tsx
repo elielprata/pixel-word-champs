@@ -42,9 +42,9 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
       return "Editar Competição Diária";
     }
     
-    if (competition.competition_type === 'daily') {
+    if (competition.competition_type === 'challenge') {
       return "Editar Competição Diária";
-    } else if (competition.competition_type === 'weekly') {
+    } else if (competition.competition_type === 'tournament') {
       return "Editar Competição Semanal";
     }
     
@@ -59,7 +59,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     return "Editar Competição Semanal";
   };
 
-  const isDailyCompetition = competition?.theme || competition?.competition_type === 'daily';
+  const isDailyCompetition = competition?.theme || competition?.competition_type === 'challenge';
   const modalSize = isDailyCompetition ? "max-w-2xl" : "max-w-6xl";
 
   return (

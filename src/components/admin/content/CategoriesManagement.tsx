@@ -3,7 +3,7 @@ import React from 'react';
 import { CategoryList } from './CategoryList';
 import { CategoryForm } from './CategoryForm';
 import { CSVUpload } from './CSVUpload';
-import { useWordCategories } from '@/hooks/content/useWordCategories';
+import { useWordCategories } from '@/hooks/useWordCategories';
 
 export const CategoriesManagement = () => {
   const { 

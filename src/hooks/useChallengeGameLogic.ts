@@ -4,7 +4,7 @@ import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
 import { competitionValidationService } from '@/services/competitionValidationService';
 
-export const useDailyCompetitionGameLogic = (competitionId: string) => {
+export const useChallengeGameLogic = (challengeId: string) => {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
   const [gameSession, setGameSession] = useState<any>(null);
@@ -17,28 +17,28 @@ export const useDailyCompetitionGameLogic = (competitionId: string) => {
   const maxLevels = 20;
 
   useEffect(() => {
-    initializeDailyCompetitionSession();
-  }, [competitionId]);
+    initializeGameSession();
+  }, [challengeId]);
 
-  const initializeDailyCompetitionSession = async () => {
+  const initializeGameSession = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      console.log('🎮 Inicializando sessão da competição diária:', competitionId);
+      console.log('🎮 Inicializando sessão de jogo para competição:', challengeId);
       
       // Primeiro, descobrir em qual tabela a competição existe
-      const competitionTable = await competitionValidationService.getCompetitionTable(competitionId);
+      const competitionTable = await competitionValidationService.getCompetitionTable(challengeId);
       console.log('🔍 Tabela da competição:', competitionTable);
       
       if (!competitionTable) {
-        console.error('❌ Competição não encontrada em nenhuma tabela:', competitionId);
+        console.error('❌ Competição não encontrada em nenhuma tabela:', challengeId);
         setError('Competição não encontrada. Verifique se o ID está correto.');
         return;
       }
       
       // Validar se a competição está ativa
-      const competitionValidation = await competitionValidationService.validateCompetition(competitionId);
+      const competitionValidation = await competitionValidationService.validateCompetition(challengeId);
       
       if (!competitionValidation.success) {
         console.error('❌ Competição inválida:', competitionValidation.error);
@@ -46,23 +46,23 @@ export const useDailyCompetitionGameLogic = (competitionId: string) => {
         return;
       }
 
-      console.log('✅ Competição validada, criando sessão da competição...');
+      console.log('✅ Competição validada, criando sessão de jogo...');
       
       // Criar uma nova sessão de jogo para esta competição
       const sessionResponse = await gameService.createGameSession({
         level: 1,
         boardSize: 10,
-        competitionId: competitionId
+        competitionId: challengeId
       });
 
       if (!sessionResponse.success) {
         console.error('❌ Erro ao criar sessão:', sessionResponse.error);
-        setError(sessionResponse.error || 'Erro ao criar sessão da competição');
+        setError(sessionResponse.error || 'Erro ao criar sessão de jogo');
         return;
       }
 
       const session = sessionResponse.data;
-      console.log('✅ Sessão da competição criada:', session.id);
+      console.log('✅ Sessão de jogo criada:', session.id);
       
       setGameSession(session);
       setCurrentLevel(session.level || 1);
@@ -71,13 +71,13 @@ export const useDailyCompetitionGameLogic = (competitionId: string) => {
       
     } catch (error) {
       console.error('❌ Erro inesperado ao inicializar sessão:', error);
-      setError('Erro inesperado ao carregar a competição. Tente novamente.');
+      setError('Erro inesperado ao carregar o jogo. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const markDailyCompetitionParticipationAsCompleted = async () => {
+  const markParticipationAsCompleted = async () => {
     if (hasMarkedParticipation) {
       console.log('Participação já foi marcada como concluída');
       return;
@@ -85,7 +85,7 @@ export const useDailyCompetitionGameLogic = (competitionId: string) => {
 
     try {
       console.log('🏁 Marcando participação como concluída...');
-      await competitionParticipationService.markUserAsParticipated(competitionId);
+      await competitionParticipationService.markUserAsParticipated(challengeId);
       if (gameSession?.id) {
         await gameService.completeGameSession(gameSession.id);
       }
@@ -96,23 +96,23 @@ export const useDailyCompetitionGameLogic = (competitionId: string) => {
     }
   };
 
-  const handleDailyCompetitionWordFound = async (word: string, points: number) => {
+  const handleWordFound = async (word: string, points: number) => {
     console.log(`Palavra encontrada: ${word} com ${points} pontos (pontos serão registrados apenas quando nível completar)`);
     // Pontos não são mais registrados aqui - apenas quando o nível for completado
   };
 
-  const handleDailyCompetitionTimeUp = () => {
-    console.log('Tempo esgotado na competição!');
+  const handleTimeUp = () => {
+    console.log('Tempo esgotado!');
   };
 
-  const handleDailyCompetitionLevelComplete = async (levelScore: number) => {
+  const handleLevelComplete = async (levelScore: number) => {
     const newTotalScore = totalScore + levelScore;
     setTotalScore(newTotalScore);
     
     console.log(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Pontos já registrados no banco de dados.`);
   };
 
-  const handleDailyCompetitionAdvanceLevel = () => {
+  const handleAdvanceLevel = () => {
     if (currentLevel < maxLevels) {
       setCurrentLevel(prev => prev + 1);
       setIsGameStarted(false);
@@ -123,16 +123,16 @@ export const useDailyCompetitionGameLogic = (competitionId: string) => {
       console.log(`Avançando para o nível ${currentLevel + 1}`);
     } else {
       setGameCompleted(true);
-      console.log('Você completou todos os 20 níveis da competição!');
+      console.log('Você completou todos os 20 níveis!');
     }
   };
 
-  const handleDailyCompetitionRetry = () => {
+  const handleRetry = () => {
     console.log('🔄 Tentando novamente...');
     setError(null);
     setGameSession(null);
     setIsGameStarted(false);
-    initializeDailyCompetitionSession();
+    initializeGameSession();
   };
 
   return {
@@ -143,11 +143,11 @@ export const useDailyCompetitionGameLogic = (competitionId: string) => {
     gameCompleted,
     isLoading,
     error,
-    handleWordFound: handleDailyCompetitionWordFound,
-    handleTimeUp: handleDailyCompetitionTimeUp,
-    handleLevelComplete: handleDailyCompetitionLevelComplete,
-    handleAdvanceLevel: handleDailyCompetitionAdvanceLevel,
-    handleRetry: handleDailyCompetitionRetry,
-    markParticipationAsCompleted: markDailyCompetitionParticipationAsCompleted
+    handleWordFound,
+    handleTimeUp,
+    handleLevelComplete,
+    handleAdvanceLevel,
+    handleRetry,
+    markParticipationAsCompleted
   };
 };

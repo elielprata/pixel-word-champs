@@ -15,7 +15,7 @@ export const useCompetitionQueries = () => {
 
   const fetchActiveCompetitions = async () => {
     try {
-      const response = await competitionService.getActiveDailyCompetitions();
+      const response = await competitionService.getActiveCompetitions();
       
       if (response.success) {
         setCompetitions(response.data);
@@ -45,12 +45,10 @@ export const useCompetitionQueries = () => {
 
   const fetchDailyCompetition = async () => {
     try {
-      const response = await competitionService.getCurrentDailyCompetition();
+      const response = await competitionService.getDailyCompetition();
       
       if (response.success) {
-        // Corrigindo: dailyCompetition deve ser um objeto, não array
-        const data = Array.isArray(response.data) ? response.data[0] : response.data;
-        setDailyCompetition(data || null);
+        setDailyCompetition(response.data);
       } else {
         throw new Error(response.error || 'Erro ao carregar competição diária');
       }
@@ -62,12 +60,10 @@ export const useCompetitionQueries = () => {
 
   const fetchWeeklyCompetition = async () => {
     try {
-      const response = await competitionService.getCurrentWeeklyCompetition();
+      const response = await competitionService.getWeeklyCompetition();
       
       if (response.success) {
-        // Corrigindo: weeklyCompetition deve ser um objeto, não array
-        const data = Array.isArray(response.data) ? response.data[0] : response.data;
-        setWeeklyCompetition(data || null);
+        setWeeklyCompetition(response.data);
       } else {
         throw new Error(response.error || 'Erro ao carregar competição semanal');
       }

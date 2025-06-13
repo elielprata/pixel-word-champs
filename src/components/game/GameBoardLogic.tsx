@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { type Position } from '@/utils/boardUtils';
+
+import React from 'react';
 import { useBoard } from '@/hooks/useBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
-import { useWordValidation } from '@/hooks/game/useWordValidation';
+import { useWordValidation } from '@/hooks/useWordValidation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useGameInteractions } from '@/hooks/useGameInteractions';
+import { type Position } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
 
 interface FoundWord {

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Trash2, AlertTriangle } from 'lucide-react';
-import { useUserMutations } from '@/hooks/admin/useUserMutations';
+import { useUserMutations } from '@/hooks/useUserMutations';
 
 interface DeleteUserModalProps {
   isOpen: boolean;

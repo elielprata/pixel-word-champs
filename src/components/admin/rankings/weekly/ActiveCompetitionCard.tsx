@@ -52,7 +52,7 @@ export const ActiveCompetitionCard = ({
   const actualStatus = competitionStatusService.calculateCorrectStatus({
     start_date: competition.start_date,
     end_date: competition.end_date,
-    competition_type: 'weekly'
+    competition_type: 'tournament'
   });
 
   const getStatusColor = (status: string) => {
