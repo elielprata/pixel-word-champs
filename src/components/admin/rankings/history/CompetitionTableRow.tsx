@@ -21,6 +21,8 @@ export const CompetitionTableRow: React.FC<CompetitionTableRowProps> = ({
   onExportWinners,
   exportingId
 }) => {
+  const isDailyCompetition = competition.competition_type === 'challenge';
+
   return (
     <TableRow key={competition.id} className="hover:bg-slate-50">
       <TableCell>
@@ -49,31 +51,35 @@ export const CompetitionTableRow: React.FC<CompetitionTableRowProps> = ({
         R$ {competition.prize_pool.toFixed(2)}
       </TableCell>
       <TableCell className="text-center">
-        <div className="flex gap-2 justify-center">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-            onClick={() => onViewCompetition(competition)}
-          >
-            <Eye className="h-3 w-3 mr-1" />
-            Ver
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-            onClick={() => onExportWinners(competition)}
-            disabled={exportingId === competition.id}
-          >
-            {exportingId === competition.id ? (
-              <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full mr-1" />
-            ) : (
-              <Download className="h-3 w-3 mr-1" />
-            )}
-            Exportar
-          </Button>
-        </div>
+        {isDailyCompetition ? (
+          <span className="text-xs text-slate-400">Sem ações</span>
+        ) : (
+          <div className="flex gap-2 justify-center">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+              onClick={() => onViewCompetition(competition)}
+            >
+              <Eye className="h-3 w-3 mr-1" />
+              Ver
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+              onClick={() => onExportWinners(competition)}
+              disabled={exportingId === competition.id}
+            >
+              {exportingId === competition.id ? (
+                <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full mr-1" />
+              ) : (
+                <Download className="h-3 w-3 mr-1" />
+              )}
+              Exportar
+            </Button>
+          </div>
+        )}
       </TableCell>
     </TableRow>
   );
