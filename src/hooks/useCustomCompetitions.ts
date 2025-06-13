@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useCompetitionQueries } from './useCompetitionQueries';
+import { useCompetitionQueries } from './competitions/useCompetitionQueries';
 
 export const useCustomCompetitions = () => {
   const {

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
-import { useDailyGameLogic } from '@/hooks/useDailyGameLogic';
+import { useDailyCompetitionGameLogic } from '@/hooks/competitions/useDailyCompetitionGameLogic';
 import DailyChallengeErrorDisplay from './challenge/DailyChallengeErrorDisplay';
 import DailyChallengeLoadingScreen from './challenge/DailyChallengeLoadingScreen';
 import DailyChallengeCompletedScreen from './challenge/DailyChallengeCompletedScreen';
@@ -28,7 +28,7 @@ const DailyCompetitionScreen = ({ competitionId, onBack }: DailyCompetitionScree
     handleAdvanceLevel,
     handleRetry,
     markParticipationAsCompleted
-  } = useDailyGameLogic(competitionId);
+  } = useDailyCompetitionGameLogic(competitionId);
 
   const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(isGameStarted);
 
