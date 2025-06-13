@@ -43,7 +43,7 @@ class PrizeService {
     }
   }
 
-  async updatePrizeConfiguration(id: string, updates: Partial<PrizeConfiguration>): Promise<boolean> {
+  async updatePrizeConfiguration(id: string, updates: Partial<PrizeConfiguration>): Promise<{ success: boolean; error?: string }> {
     try {
       logger.info('Atualizando configuração de prêmio', { id, updates }, 'PRIZE_SERVICE');
 
@@ -60,14 +60,14 @@ class PrizeService {
           id, 
           error 
         }, 'PRIZE_SERVICE');
-        throw error;
+        return { success: false, error: error.message };
       }
 
       logger.info('Configuração de prêmio atualizada com sucesso', { id }, 'PRIZE_SERVICE');
-      return true;
+      return { success: true };
     } catch (error) {
       logger.error('Erro crítico ao atualizar configuração de prêmio', { id, error }, 'PRIZE_SERVICE');
-      return false;
+      return { success: false, error: error instanceof Error ? error.message : 'Erro desconhecido' };
     }
   }
 

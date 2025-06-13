@@ -1,10 +1,4 @@
 
-/**
- * UTILITÁRIOS DE COMPETIÇÃO RADICAL SIMPLIFICADOS
- * 
- * PRINCÍPIO: Usar as novas funções simplificadas sem conversões de timezone
- */
-
 import { formatDateForDisplay } from '@/utils/brasiliaTime';
 import { logger } from '@/utils/logger';
 

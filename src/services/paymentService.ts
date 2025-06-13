@@ -23,6 +23,9 @@ export interface PaymentRecord {
   payment_status: 'pending' | 'completed' | 'failed';
   created_at: string;
   updated_at: string;
+  username?: string;
+  position?: number;
+  prize_amount?: number;
   profiles?: {
     username: string;
     avatar_url?: string;
@@ -54,7 +57,7 @@ class PaymentService {
       };
 
       const { data: payment, error } = await supabase
-        .from('payments')
+        .from('payment_history')
         .insert(paymentData)
         .select()
         .single();
@@ -85,7 +88,7 @@ class PaymentService {
       }, 'PAYMENT_SERVICE');
 
       const { error } = await supabase
-        .from('payments')
+        .from('payment_history')
         .update({ 
           payment_status: status,
           updated_at: new Date().toISOString()
@@ -129,7 +132,7 @@ class PaymentService {
       }
 
       const { data: payments, error } = await supabase
-        .from('payments')
+        .from('payment_history')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });

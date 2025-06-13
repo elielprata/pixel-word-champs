@@ -9,7 +9,7 @@ export interface WordData {
   level: number;
 }
 
-export const saveWordsToDatabase = async (words: WordData[]): Promise<boolean> => {
+export const saveWordsToDatabase = async (words: WordData[]): Promise<{ success: boolean; count?: number; error?: string }> => {
   try {
     logger.info('Salvando palavras no banco de dados', { count: words.length }, 'WORD_STORAGE_SERVICE');
 
@@ -25,14 +25,14 @@ export const saveWordsToDatabase = async (words: WordData[]): Promise<boolean> =
 
     if (error) {
       logger.error('Erro ao salvar palavras no banco de dados', { error }, 'WORD_STORAGE_SERVICE');
-      throw error;
+      return { success: false, error: error.message };
     }
 
     logger.info('Palavras salvas com sucesso', { count: words.length }, 'WORD_STORAGE_SERVICE');
-    return true;
+    return { success: true, count: words.length };
   } catch (error) {
     logger.error('Erro crítico ao salvar palavras', { error }, 'WORD_STORAGE_SERVICE');
-    return false;
+    return { success: false, error: error instanceof Error ? error.message : 'Erro desconhecido' };
   }
 };
 
@@ -78,7 +78,7 @@ class WordStorageService {
     }
   }
 
-  async saveWords(words: WordData[]): Promise<boolean> {
+  async saveWords(words: WordData[]): Promise<{ success: boolean; count?: number; error?: string }> {
     return saveWordsToDatabase(words);
   }
 
