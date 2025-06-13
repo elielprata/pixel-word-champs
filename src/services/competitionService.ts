@@ -11,12 +11,12 @@ class CompetitionService {
 
   async getDailyCompetition() {
     logger.debug('Buscando competição diária', undefined, 'COMPETITION_SERVICE');
-    return competitionCoreService.getDailyCompetition();
+    return competitionCoreService.getCurrentDailyCompetition();
   }
 
   async getWeeklyCompetition() {
     logger.debug('Buscando competição semanal', undefined, 'COMPETITION_SERVICE');
-    return competitionCoreService.getWeeklyCompetition();
+    return competitionCoreService.getCurrentWeeklyCompetition();
   }
 
   async joinCompetition(competitionId: string) {

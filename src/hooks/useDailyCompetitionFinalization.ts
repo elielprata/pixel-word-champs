@@ -1,94 +1,74 @@
 
-import { useCallback } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { competitionStatusService } from '@/services/competitionStatusService';
+import { useToast } from "@/hooks/use-toast";
 
 export const useDailyCompetitionFinalization = () => {
   const { toast } = useToast();
 
-  const finalizeCompetition = useCallback(async (competitionId: string, competitionTitle: string) => {
+  const finalizeExpiredCompetitions = async () => {
     try {
-      console.log(`🏁 Iniciando finalização da competição diária: ${competitionTitle}`);
+      console.log('🔍 [useDailyCompetitionFinalization] Verificando competições expiradas...');
+      
+      // Buscar competições diárias ativas que passaram do prazo
+      const { data: expiredCompetitions, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('competition_type', 'daily')
+        .eq('status', 'active')
+        .lt('end_date', new Date().toISOString());
 
-      // Usar o método específico de finalização que preserva as datas
-      const response = await competitionStatusService.finalizeCompetition(competitionId);
-
-      if (!response.success) {
-        throw new Error(response.error || 'Erro desconhecido ao finalizar competição');
+      if (error) {
+        console.error('❌ Erro ao buscar competições expiradas:', error);
+        return;
       }
 
-      console.log(`✅ Competição "${competitionTitle}" finalizada com sucesso`);
-      
-      toast({
-        title: "Competição Finalizada",
-        description: `"${competitionTitle}" foi finalizada com sucesso.`,
-        duration: 3000,
-      });
-
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      
-      console.error(`❌ Erro ao finalizar competição "${competitionTitle}":`, error);
-      
-      toast({
-        title: "Erro na Finalização",
-        description: `Falha ao finalizar "${competitionTitle}": ${errorMessage}`,
-        variant: "destructive",
-      });
-
-      return { success: false, error: errorMessage };
-    }
-  }, [toast]);
-
-  const finalizeMutipleDailyCompetitions = useCallback(async (competitions: Array<{id: string, title: string}>) => {
-    try {
-      console.log(`🏁 Finalizando ${competitions.length} competições diárias em lote`);
-
-      const results = await Promise.allSettled(
-        competitions.map(comp => competitionStatusService.finalizeCompetition(comp.id))
-      );
-
-      const successful = results.filter(result => 
-        result.status === 'fulfilled' && result.value.success
-      ).length;
-
-      const failed = results.length - successful;
-
-      if (failed > 0) {
-        console.warn(`⚠️ ${failed} competições falharam na finalização`);
-        
-        toast({
-          title: "Finalização Parcial",
-          description: `${successful} competições finalizadas com sucesso, ${failed} falharam.`,
-          variant: "destructive",
-        });
-      } else {
-        console.log(`✅ Todas as ${successful} competições foram finalizadas com sucesso`);
-        
-        toast({
-          title: "Finalização Completa",
-          description: `Todas as ${successful} competições foram finalizadas com sucesso.`,
-          duration: 3000,
-        });
+      if (!expiredCompetitions || expiredCompetitions.length === 0) {
+        console.log('✅ Nenhuma competição diária expirada encontrada');
+        return;
       }
 
-      return { successful, failed };
-    } catch (error) {
-      console.error('❌ Erro no processo de finalização em lote:', error);
-      
+      console.log(`📋 Encontradas ${expiredCompetitions.length} competições diárias expiradas`);
+
+      // Finalizar cada competição expirada
+      for (const competition of expiredCompetitions) {
+        try {
+          const { error: updateError } = await supabase
+            .from('custom_competitions')
+            .update({ 
+              status: 'completed',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', competition.id);
+
+          if (updateError) {
+            console.error(`❌ Erro ao finalizar competição ${competition.id}:`, updateError);
+          } else {
+            console.log(`✅ Competição finalizada: ${competition.title}`);
+          }
+        } catch (error) {
+          console.error(`❌ Erro ao processar competição ${competition.id}:`, error);
+        }
+      }
+
       toast({
-        title: "Erro na Finalização em Lote",
-        description: "Falha no processo de finalização de múltiplas competições.",
-        variant: "destructive",
+        title: "Competições Finalizadas",
+        description: `${expiredCompetitions.length} competição(ões) diária(s) foram automaticamente finalizadas.`,
       });
 
-      return { successful: 0, failed: competitions.length };
+    } catch (error) {
+      console.error('❌ Erro geral na finalização de competições:', error);
     }
-  }, [toast]);
-
-  return {
-    finalizeCompetition,
-    finalizeMutipleDailyCompetitions
   };
+
+  useEffect(() => {
+    // Executar imediatamente
+    finalizeExpiredCompetitions();
+
+    // Configurar intervalo para execução a cada 30 segundos
+    const interval = setInterval(finalizeExpiredCompetitions, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 };

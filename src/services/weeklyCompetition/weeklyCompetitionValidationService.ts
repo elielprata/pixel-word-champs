@@ -1,9 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { validateWeeklyCompetitionData } from '@/utils/weeklyCompetitionValidation';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { ApiResponse } from '@/types';
 import { logger } from '@/utils/logger';
+import { competitionStatusService } from '@/services/competitionStatusService';
 
 export class WeeklyCompetitionValidationService {
   /**

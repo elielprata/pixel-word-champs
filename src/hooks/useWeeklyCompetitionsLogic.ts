@@ -25,7 +25,7 @@ export const useWeeklyCompetitionsLogic = (competitions: WeeklyCompetition[]) =>
     return competitionStatusService.calculateCorrectStatus({
       start_date: competition.start_date,
       end_date: competition.end_date,
-      competition_type: 'tournament'
+      competition_type: 'weekly'
     });
   };
 

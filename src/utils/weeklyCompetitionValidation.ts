@@ -21,6 +21,35 @@ export const validateWeeklyCompetition = (competition: any): boolean => {
   return correctStatus === 'active';
 };
 
+export const validateWeeklyCompetitionData = (formData: any) => {
+  if (!formData.title) {
+    throw new Error('Título é obrigatório');
+  }
+  
+  if (!formData.start_date) {
+    throw new Error('Data de início é obrigatória');
+  }
+  
+  if (!formData.end_date) {
+    throw new Error('Data de fim é obrigatória');
+  }
+  
+  return {
+    ...formData,
+    competition_type: 'weekly'
+  };
+};
+
+export const isWeeklyCompetitionTimeValid = (startDate: string, endDate: string): boolean => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  // Verificar se a duração é de pelo menos 1 dia
+  const diffInDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  
+  return diffInDays >= 1;
+};
+
 export const isWeeklyCompetitionActive = (competition: any): boolean => {
   if (!isWeeklyCompetition(competition)) return false;
   

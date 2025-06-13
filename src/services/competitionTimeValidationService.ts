@@ -1,9 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { isDailyCompetitionTimeValid } from '@/utils/dailyCompetitionValidation';
-import { isWeeklyCompetitionTimeValid } from '@/utils/weeklyCompetitionValidation';
+import { isDailyCompetition } from '@/utils/dailyCompetitionValidation';
+import { isWeeklyCompetition } from '@/utils/weeklyCompetitionValidation';
 import { logger } from '@/utils/logger';
 
 export class CompetitionTimeValidationService {
@@ -31,12 +31,12 @@ export class CompetitionTimeValidationService {
         let isValid = false;
         
         if (comp.competition_type === 'challenge') {
-          isValid = isDailyCompetitionTimeValid(comp.start_date, comp.end_date);
+          isValid = isDailyCompetition(comp.start_date, comp.end_date);
           if (!isValid) {
             results.dailyInconsistent.push(comp);
           }
         } else if (comp.competition_type === 'tournament') {
-          isValid = isWeeklyCompetitionTimeValid(comp.start_date, comp.end_date);
+          isValid = isWeeklyCompetition(comp.start_date, comp.end_date);
           if (!isValid) {
             results.weeklyInconsistent.push(comp);
           }

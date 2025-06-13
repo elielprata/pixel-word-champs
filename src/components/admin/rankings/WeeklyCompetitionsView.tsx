@@ -69,7 +69,7 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
       const actualStatus = competitionStatusService.calculateCorrectStatus({
         start_date: comp.start_date,
         end_date: comp.end_date,
-        competition_type: 'tournament'
+        competition_type: 'weekly'
       });
       
       if (comp.status !== actualStatus) {

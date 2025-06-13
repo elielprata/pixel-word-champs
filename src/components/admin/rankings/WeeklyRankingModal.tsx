@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { competitionStatusService } from '@/services/competitionStatusService';
 import { rankingQueryService } from '@/services/rankingQueryService';
+import { useQuery } from 'react-query';
 import {
   Table,
   TableBody,
@@ -75,7 +75,6 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
   const { toast } = useToast();
   
   const [ranking, setRanking] = useState<RankingParticipant[]>([]);
-  const [competition, setCompetition] = useState<CompetitionInfo | null>(null);
   const [prizeConfigs, setPrizeConfigs] = useState<PrizeConfig[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -104,21 +103,33 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       console.log('🔄 Carregando dados da competição:', competitionId);
 
       // Carregar informações da competição
-      const { data: competitionData, error: competitionError } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .eq('id', competitionId)
-        .single();
+      const { data: competition, isLoading: isLoadingCompetition } = useQuery({
+        queryKey: ['competition', competitionId],
+        queryFn: async () => {
+          if (!competitionId) return null;
+          
+          const { data, error } = await supabase
+            .from('custom_competitions')
+            .select('*')
+            .eq('id', competitionId)
+            .single();
 
-      if (competitionError) {
-        console.error('❌ Erro ao carregar competição:', competitionError);
-        throw competitionError;
-      }
+          if (error) throw error;
+          return data;
+        },
+        enabled: !!competitionId && open
+      });
 
-      console.log('✅ Competição carregada:', competitionData);
+      const actualStatus = competition ? competitionStatusService.calculateCorrectStatus({
+        start_date: competition.start_date,
+        end_date: competition.end_date,
+        competition_type: 'weekly'
+      }) : null;
+
+      console.log('✅ Competição carregada:', competition);
 
       // Verificar se a competição está ativa usando o serviço centralizado
-      const isActive = isCompetitionActive(competitionData.start_date, competitionData.end_date);
+      const isActive = isCompetitionActive(competition.start_date, competition.end_date);
       
       // Buscar configurações de prêmio do banco de dados
       const { data: prizeData, error: prizeError } = await supabase
@@ -141,15 +152,15 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       console.log('📊 Ranking simplificado carregado:', rankingData.length, 'participantes');
 
       const competitionInfo: CompetitionInfo = {
-        id: competitionData.id,
-        title: competitionData.title,
-        description: competitionData.description || '',
-        start_date: competitionData.start_date,
-        end_date: competitionData.end_date,
-        status: competitionData.status,
-        theme: competitionData.theme,
-        max_participants: competitionData.max_participants || 0,
-        prize_pool: Number(competitionData.prize_pool) || 0,
+        id: competition.id,
+        title: competition.title,
+        description: competition.description || '',
+        start_date: competition.start_date,
+        end_date: competition.end_date,
+        status: competition.status,
+        theme: competition.theme,
+        max_participants: competition.max_participants || 0,
+        prize_pool: Number(competition.prize_pool) || 0,
         total_participants: rankingData.length
       };
 
@@ -270,11 +281,11 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
                     </div>
                     <div className="text-right">
                       <Badge className={
-                        isCompetitionActive(competition.start_date, competition.end_date) ? 'bg-green-100 text-green-700 border-green-200' :
+                        actualStatus === 'active' ? 'bg-green-100 text-green-700 border-green-200' :
                         new Date() < new Date(competition.start_date) ? 'bg-blue-100 text-blue-700 border-blue-200' :
                         'bg-purple-100 text-purple-700 border-purple-200'
                       }>
-                        {isCompetitionActive(competition.start_date, competition.end_date) ? 'Ativo' : 
+                        {actualStatus === 'active' ? 'Ativo' : 
                          new Date() < new Date(competition.start_date) ? 'Aguardando Início' : 'Finalizado'}
                       </Badge>
                     </div>

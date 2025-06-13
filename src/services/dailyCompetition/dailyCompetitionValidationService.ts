@@ -1,5 +1,5 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
+import { competitionStatusService } from '@/services/competitionStatusService';
 import { validateDailyCompetitionData } from '@/utils/dailyCompetitionValidation';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { ApiResponse } from '@/types';

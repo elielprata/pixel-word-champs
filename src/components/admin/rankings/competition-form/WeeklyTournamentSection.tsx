@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -46,7 +45,7 @@ export const WeeklyTournamentSection = ({
     const actualStatus = competitionStatusService.calculateCorrectStatus({
       start_date: competition.start_date,
       end_date: competition.end_date,
-      competition_type: 'tournament'
+      competition_type: 'weekly'
     });
     
     switch (actualStatus) {
@@ -61,7 +60,7 @@ export const WeeklyTournamentSection = ({
     const actualStatus = competitionStatusService.calculateCorrectStatus({
       start_date: competition.start_date,
       end_date: competition.end_date,
-      competition_type: 'tournament'
+      competition_type: 'weekly'
     });
     
     switch (actualStatus) {
@@ -77,7 +76,7 @@ export const WeeklyTournamentSection = ({
         const actualStatus = competitionStatusService.calculateCorrectStatus({
           start_date: tournament.start_date,
           end_date: tournament.end_date,
-          competition_type: 'tournament'
+          competition_type: 'weekly'
         });
         return actualStatus === 'active' || actualStatus === 'scheduled';
       })

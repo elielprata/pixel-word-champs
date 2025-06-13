@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { CompetitionStatusService } from '@/services/competitionStatusService';
+import { competitionStatusService } from '@/services/competitionStatusService';
 
 interface RankingPlayer {
   pos: number;

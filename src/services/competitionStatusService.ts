@@ -1,6 +1,4 @@
 
-import { formatToUTC } from '@/utils/brasiliaTime';
-
 interface CompetitionForStatus {
   start_date: string;
   end_date: string;
