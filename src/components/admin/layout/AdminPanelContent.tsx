@@ -2,7 +2,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Trophy, Settings, CreditCard, HelpCircle, Zap } from 'lucide-react';
-import { UsersTab } from './UsersTab';
+import { UsersTab } from '../UsersTab';
 import { GameContentTab } from '../GameContentTab';
 import { RankingsTab } from '../RankingsTab';
 import { PaymentsTab } from '../PaymentsTab';

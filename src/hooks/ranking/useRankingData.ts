@@ -17,8 +17,9 @@ export const useRankingData = () => {
   const { isAuthenticated } = useAuth();
   const { dailyLimit } = useRankingPagination();
 
+  // Daily ranking based on profiles total_score for today
   const { data: dailyRanking = [], isLoading: isDailyLoading } = useQuery({
-    queryKey: ['rankings', dailyLimit],
+    queryKey: ['dailyRanking', dailyLimit],
     queryFn: async (): Promise<RankingEntry[]> => {
       if (!isAuthenticated) {
         logger.warn('Usuário não autenticado tentando acessar ranking', undefined, 'RANKING_DATA');
@@ -26,61 +27,6 @@ export const useRankingData = () => {
       }
 
       logger.debug('Buscando ranking diário', { limit: dailyLimit }, 'RANKING_DATA');
-
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
-
-      const { data, error } = await supabase
-        .from('daily_rankings')
-        .select('position, total_score, user_id')
-        .eq('day', todayStr)
-        .order('position', { ascending: true })
-        .limit(dailyLimit);
-
-      if (error) {
-        logger.error('Erro ao buscar ranking diário', { error: error.message }, 'RANKING_DATA');
-        throw error;
-      }
-
-      // Buscar informações dos usuários
-      const userIds = data.map(item => item.user_id);
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', userIds);
-
-      if (profilesError) {
-        logger.error('Erro ao buscar perfis', { error: profilesError.message }, 'RANKING_DATA');
-        throw profilesError;
-      }
-
-      const enrichedRanking = data.map(item => {
-        const profile = profiles.find(p => p.id === item.user_id);
-        return {
-          pos: item.position,
-          name: profile?.username || 'Usuário Desconhecido',
-          score: item.total_score,
-          avatar_url: profile?.avatar_url || null,
-          user_id: item.user_id,
-        };
-      });
-
-      logger.info('Ranking diário carregado', { count: enrichedRanking.length }, 'RANKING_DATA');
-      return enrichedRanking;
-    },
-    retry: 1,
-  });
-
-  // Weekly ranking query
-  const { data: weeklyRanking = [], isLoading: isWeeklyLoading } = useQuery({
-    queryKey: ['weeklyRanking', dailyLimit],
-    queryFn: async (): Promise<RankingEntry[]> => {
-      if (!isAuthenticated) {
-        logger.warn('Usuário não autenticado tentando acessar ranking semanal', undefined, 'RANKING_DATA');
-        return [];
-      }
-
-      logger.debug('Buscando ranking semanal', { limit: dailyLimit }, 'RANKING_DATA');
 
       const { data, error } = await supabase
         .from('profiles')
@@ -90,7 +36,7 @@ export const useRankingData = () => {
         .limit(dailyLimit);
 
       if (error) {
-        logger.error('Erro ao buscar ranking semanal', { error: error.message }, 'RANKING_DATA');
+        logger.error('Erro ao buscar ranking diário', { error: error.message }, 'RANKING_DATA');
         throw error;
       }
 
@@ -102,6 +48,50 @@ export const useRankingData = () => {
         user_id: profile.id
       })) || [];
 
+      logger.info('Ranking diário carregado', { count: rankings.length }, 'RANKING_DATA');
+      return rankings;
+    },
+    retry: 1,
+  });
+
+  // Weekly ranking using weekly_rankings table
+  const { data: weeklyRanking = [], isLoading: isWeeklyLoading } = useQuery({
+    queryKey: ['weeklyRanking', dailyLimit],
+    queryFn: async (): Promise<RankingEntry[]> => {
+      if (!isAuthenticated) {
+        logger.warn('Usuário não autenticado tentando acessar ranking semanal', undefined, 'RANKING_DATA');
+        return [];
+      }
+
+      logger.debug('Buscando ranking semanal', { limit: dailyLimit }, 'RANKING_DATA');
+
+      // Get current week
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekStart = new Date(today.setDate(diff));
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from('weekly_rankings')
+        .select('*')
+        .eq('week_start', weekStartStr)
+        .order('position', { ascending: true })
+        .limit(dailyLimit);
+
+      if (error) {
+        logger.error('Erro ao buscar ranking semanal', { error: error.message }, 'RANKING_DATA');
+        throw error;
+      }
+
+      const rankings = data?.map((ranking) => ({
+        pos: ranking.position,
+        name: ranking.username || 'Usuário',
+        score: ranking.total_score || 0,
+        avatar_url: null,
+        user_id: ranking.user_id
+      })) || [];
+
       logger.info('Ranking semanal carregado', { count: rankings.length }, 'RANKING_DATA');
       return rankings;
     },
@@ -111,8 +101,8 @@ export const useRankingData = () => {
   const isLoading = isDailyLoading || isWeeklyLoading;
 
   const refreshData = () => {
-    // Refresh both rankings
     logger.info('Atualizando dados de ranking', undefined, 'RANKING_DATA');
+    // Refresh functionality can be added here if needed
   };
 
   return { 

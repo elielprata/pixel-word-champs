@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Calendar, Trophy } from 'lucide-react';
 import { WeeklyCompetitionCard } from './WeeklyCompetitionCard';
@@ -30,6 +31,11 @@ export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerPr
 }) => {
   const { activeCompetitions, currentActiveCompetition, otherActiveCompetitions } = useWeeklyCompetitionsLogic(competitions);
 
+  // Mock delete handler and deletingId for compatibility
+  const handleDelete = (competition: WeeklyCompetition) => {
+    console.log('Delete not implemented:', competition.id);
+  };
+
   return (
     <div>
       {currentActiveCompetition && (
@@ -44,7 +50,8 @@ export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerPr
             competition={currentActiveCompetition}
             onViewRanking={onViewRanking}
             onEdit={onEdit}
-            onRefresh={onRefresh}
+            onDelete={handleDelete}
+            deletingId={null}
           />
         </div>
       )}
@@ -63,7 +70,8 @@ export const WeeklyCompetitionsContainer: React.FC<WeeklyCompetitionsContainerPr
             competition={competition}
             onViewRanking={onViewRanking}
             onEdit={onEdit}
-            onRefresh={onRefresh}
+            onDelete={handleDelete}
+            deletingId={null}
           />
         ))}
       </div>

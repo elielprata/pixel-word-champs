@@ -115,15 +115,13 @@ const Index = () => {
           />
         );
       case 'ranking':
-        return <RankingScreen />;
+        return <RankingScreen onBack={() => setActiveTab('home')} />;
       case 'invite':
-        return <InviteScreen />;
+        return <InviteScreen onBack={() => setActiveTab('home')} />;
       case 'profile':
         return (
           <ProfileScreen 
-            onNavigateToSettings={handleNavigateToSettings}
-            onNavigateToHelp={handleNavigateToHelp}
-            onNavigateToAchievements={handleNavigateToAchievements}
+            onBack={() => setActiveTab('home')}
           />
         );
       default:

@@ -142,6 +142,21 @@ export interface WeeklyParticipation {
   updated_at: string;
 }
 
+// Adicionar interface para WeeklyRankingEntry
+export interface WeeklyRankingEntry {
+  id: string;
+  user_id: string;
+  week_start: string;
+  week_end: string;
+  position: number;
+  total_score: number;
+  prize_amount: number;
+  payment_status: string;
+  username: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Adicionar interface para InviteData
 export interface InviteData {
   id: string;
