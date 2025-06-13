@@ -42,7 +42,12 @@ const RegisterForm = () => {
         email: data.email, 
         username: data.username 
       }, 'REGISTER_FORM');
+      
       await register(data);
+      
+      logger.info('Registro concluído com sucesso', { 
+        email: data.email 
+      }, 'REGISTER_FORM');
     } catch (err: any) {
       logger.error('Erro no registro', { error: err.message }, 'REGISTER_FORM');
     }
@@ -50,7 +55,7 @@ const RegisterForm = () => {
 
   // Função para preencher dados de teste
   const handleTestRegister = () => {
-    const randomNum = Math.floor(Math.random() * 1000);
+    const randomNum = Math.floor(Math.random() * 10000);
     form.setValue('username', `usuario${randomNum}`);
     form.setValue('email', `teste${randomNum}@exemplo.com`);
     form.setValue('password', '123456');
