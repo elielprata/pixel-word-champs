@@ -45,7 +45,7 @@ export const useBanUserMutation = () => {
 
       logger.debug('Credenciais validadas, banindo usuário...', undefined, 'BAN_USER_MUTATION');
 
-      // Banir usuário específico
+      // Banir usuário específico usando as novas políticas
       const { error: banError } = await supabase
         .from('profiles')
         .update({
@@ -63,7 +63,7 @@ export const useBanUserMutation = () => {
 
       logger.info('Usuário banido com sucesso', { targetUserId: userId }, 'BAN_USER_MUTATION');
 
-      // Registrar ação administrativa
+      // Registrar ação administrativa usando as novas políticas
       const { error: logError } = await supabase
         .from('admin_actions')
         .insert({

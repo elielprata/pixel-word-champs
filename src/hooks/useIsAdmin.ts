@@ -17,7 +17,7 @@ export const useIsAdmin = () => {
       
       logger.debug('Verificando se usuário é admin', { userId: user.id }, 'USE_IS_ADMIN');
       
-      // Usar a função is_admin() criada no banco
+      // Usar a função is_admin() criada no banco que é otimizada e evita recursão
       const { data, error } = await supabase.rpc('is_admin');
       
       if (error) {

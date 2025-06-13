@@ -175,7 +175,7 @@ export type Database = {
           payment_date: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
           prize: number | null
-          user_id: string | null
+          user_id: string
           user_position: number | null
           user_score: number | null
         }
@@ -186,7 +186,7 @@ export type Database = {
           payment_date?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           prize?: number | null
-          user_id?: string | null
+          user_id: string
           user_position?: number | null
           user_score?: number | null
         }
@@ -197,7 +197,7 @@ export type Database = {
           payment_date?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           prize?: number | null
-          user_id?: string | null
+          user_id?: string
           user_position?: number | null
           user_score?: number | null
         }

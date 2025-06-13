@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
 
@@ -11,37 +10,14 @@ interface AdminRouteProps {
 
 const AdminRoute = ({ children }: AdminRouteProps) => {
   const { user, isAuthenticated } = useAuth();
+  const { data: isAdmin, isLoading, error } = useIsAdmin();
 
   logger.debug('Admin Route verificação', {
     userId: user?.id,
     userEmail: user?.email,
-    isAuthenticated
+    isAuthenticated,
+    isAdmin
   }, 'ADMIN_ROUTE');
-
-  const { data: isAdmin, isLoading, error } = useQuery({
-    queryKey: ['userRole', user?.id],
-    queryFn: async () => {
-      if (!user?.id) {
-        logger.warn('Sem user ID para verificar role', undefined, 'ADMIN_ROUTE');
-        return false;
-      }
-      
-      logger.debug('Verificando role de admin usando função is_admin()', { userId: user.id }, 'ADMIN_ROUTE');
-      
-      // Usar a nova função is_admin() do banco que é mais eficiente
-      const { data, error } = await supabase
-        .rpc('is_admin');
-      
-      if (error) {
-        logger.error('Erro ao verificar role de admin', { error: error.message }, 'ADMIN_ROUTE');
-        return false;
-      }
-      
-      logger.info('Verificação de admin concluída', { isAdmin: data }, 'ADMIN_ROUTE');
-      return data;
-    },
-    enabled: !!user?.id && isAuthenticated,
-  });
 
   if (error) {
     logger.error('Erro na query de verificação admin', { error: error.message }, 'ADMIN_ROUTE');

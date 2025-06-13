@@ -49,7 +49,7 @@ export const useAllUsers = () => {
 
       logger.info('Senha validada, resetando pontuações...', undefined, 'USE_ALL_USERS');
 
-      // Resetar pontuações de TODOS os usuários
+      // Resetar pontuações de TODOS os usuários usando as novas políticas
       const { error } = await supabase
         .from('profiles')
         .update({ 
@@ -67,7 +67,7 @@ export const useAllUsers = () => {
 
       logger.info('Pontuações resetadas com sucesso', undefined, 'USE_ALL_USERS');
 
-      // Registrar ação administrativa
+      // Registrar ação administrativa usando as novas políticas
       const { error: logError } = await supabase
         .from('admin_actions')
         .insert({

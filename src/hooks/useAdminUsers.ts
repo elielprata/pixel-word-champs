@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +20,7 @@ export const useAdminUsers = () => {
     queryFn: async (): Promise<AdminUser[]> => {
       logger.debug('Buscando usuários admin...', undefined, 'USE_ADMIN_USERS');
       
-      // Buscar todos os usuários que têm role admin
+      // Buscar todos os usuários que têm role admin usando as novas políticas
       const { data: adminRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id')
@@ -40,7 +39,7 @@ export const useAdminUsers = () => {
       const adminUserIds = adminRoles.map(role => role.user_id);
       logger.debug('IDs de usuários admin encontrados', { count: adminUserIds.length }, 'USE_ADMIN_USERS');
 
-      // Buscar os perfis dos usuários admin usando a nova função que retorna emails
+      // Buscar os perfis dos usuários admin usando a função otimizada
       const { data: adminProfiles, error: profilesError } = await supabase
         .rpc('get_users_with_real_emails')
         .in('id', adminUserIds);
@@ -67,6 +66,7 @@ export const useAdminUsers = () => {
     try {
       logger.info('Removendo role de admin', { userId, username }, 'USE_ADMIN_USERS');
       
+      // Usar as novas políticas que permitem admins gerenciarem roles
       const { error } = await supabase
         .from('user_roles')
         .delete()
