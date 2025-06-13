@@ -28,10 +28,7 @@ export class WeeklyRankingUpdateService {
       // Buscar todas as participações da competição ativa ordenadas por pontuação
       const { data: participations, error: participationsError } = await supabase
         .from('competition_participations')
-        .select(`
-          *,
-          profiles!inner(username, pix_key, pix_holder_name)
-        `)
+        .select('*')
         .eq('competition_id', competition.id)
         .order('user_score', { ascending: false });
 
@@ -43,6 +40,18 @@ export class WeeklyRankingUpdateService {
       if (!participations || participations.length === 0) {
         logger.info('Nenhuma participação encontrada na competição semanal', undefined, 'WEEKLY_RANKING_UPDATE');
         return;
+      }
+
+      // Buscar perfis dos usuários separadamente
+      const userIds = participations.map(p => p.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, pix_key, pix_holder_name')
+        .in('id', userIds);
+
+      if (profilesError) {
+        logger.error('Erro ao buscar perfis dos usuários', { error: profilesError }, 'WEEKLY_RANKING_UPDATE');
+        throw profilesError;
       }
 
       // Atualizar posições nas participações
@@ -83,18 +92,19 @@ export class WeeklyRankingUpdateService {
       const weeklyRankingData = participations.map((participation, index) => {
         const position = index + 1;
         const prizeAmount = this.calculatePrizeAmount(position);
+        const profile = profiles?.find(p => p.id === participation.user_id);
 
         return {
           user_id: participation.user_id,
-          username: participation.profiles?.username || 'Usuário',
+          username: profile?.username || 'Usuário',
           week_start: weekStart.toISOString().split('T')[0],
           week_end: weekEnd.toISOString().split('T')[0],
           position: position,
           total_score: participation.user_score || 0,
           prize_amount: prizeAmount,
           payment_status: prizeAmount > 0 ? 'pending' : 'not_eligible',
-          pix_key: participation.profiles?.pix_key,
-          pix_holder_name: participation.profiles?.pix_holder_name
+          pix_key: profile?.pix_key,
+          pix_holder_name: profile?.pix_holder_name
         };
       });
 

@@ -48,8 +48,7 @@ export class RankingQueryService {
         .select(`
           user_id,
           user_score,
-          user_position,
-          profiles!inner(username, avatar_url)
+          user_position
         `)
         .eq('competition_id', competition.id)
         .order('user_score', { ascending: false })
@@ -60,13 +59,33 @@ export class RankingQueryService {
         return this.getFallbackRanking();
       }
 
-      const rankings = participations?.map((participation, index) => ({
-        pos: participation.user_position || (index + 1),
-        name: participation.profiles?.username || 'Usuário',
-        score: participation.user_score || 0,
-        avatar_url: participation.profiles?.avatar_url || undefined,
-        user_id: participation.user_id
-      })) || [];
+      if (!participations || participations.length === 0) {
+        logger.info('Nenhuma participação encontrada na competição semanal', undefined, 'RANKING_QUERY_SERVICE');
+        return this.getFallbackRanking();
+      }
+
+      // Buscar perfis dos usuários separadamente
+      const userIds = participations.map(p => p.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        logger.error('Erro ao buscar perfis dos usuários', { error: profilesError }, 'RANKING_QUERY_SERVICE');
+        return this.getFallbackRanking();
+      }
+
+      const rankings = participations.map((participation, index) => {
+        const profile = profiles?.find(p => p.id === participation.user_id);
+        return {
+          pos: participation.user_position || (index + 1),
+          name: profile?.username || 'Usuário',
+          score: participation.user_score || 0,
+          avatar_url: profile?.avatar_url || undefined,
+          user_id: participation.user_id
+        };
+      });
 
       logger.info('Ranking semanal carregado das participações', { count: rankings.length }, 'RANKING_QUERY_SERVICE');
       return rankings;

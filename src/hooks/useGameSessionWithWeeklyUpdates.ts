@@ -121,7 +121,7 @@ export const useGameSessionWithWeeklyUpdates = () => {
         .from('profiles')
         .update({ 
           total_score: newTotalScore,
-          games_played: supabase.sql`games_played + 1`
+          games_played: supabase.rpc('increment', { x: 1 })
         })
         .eq('id', user.id);
 
