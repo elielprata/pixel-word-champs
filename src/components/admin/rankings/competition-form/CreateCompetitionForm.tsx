@@ -37,7 +37,7 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
   const paymentData = usePaymentData();
 
   const weeklyTournaments = customCompetitions.filter(comp => 
-    comp.competition_type === 'tournament' && 
+    comp.competition_type === 'weekly' && 
     (comp.status === 'active' || comp.status === 'scheduled')
   );
 
@@ -88,13 +88,13 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 Criando competição sem CategorySection...');
+      console.log('🚀 Criando competição...');
       
       const competitionData: CustomCompetitionData = {
         title: formData.title,
         description: formData.description,
         type: formData.type,
-        category: 'geral', // Valor padrão fixo
+        category: 'geral',
         weeklyTournamentId: formData.weeklyTournamentId !== 'none' ? formData.weeklyTournamentId : undefined,
         prizePool: formData.prizePool,
         maxParticipants: formData.maxParticipants,

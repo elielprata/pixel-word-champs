@@ -14,7 +14,7 @@ export const useDailyCompetitionsManagement = () => {
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('competition_type', 'challenge')
+        .eq('competition_type', 'daily')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

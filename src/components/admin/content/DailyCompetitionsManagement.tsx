@@ -14,10 +14,7 @@ import { DailyCompetitionTable } from './daily/DailyCompetitionTable';
 import { DailyCompetitionsHeader } from './daily/DailyCompetitionsHeader';
 
 export const DailyCompetitionsManagement = () => {
-  // Usar o hook de finalização automática
   useDailyCompetitionFinalization();
-
-  // Adicionar verificação automática de status
   useCompetitionStatusChecker();
 
   const {
@@ -57,10 +54,8 @@ export const DailyCompetitionsManagement = () => {
       </CardHeader>
 
       <CardContent className="p-6">
-        {/* Estatísticas */}
         <DailyCompetitionStats competitions={competitions} />
-
-        {/* Tabela de competições */}
+        
         <DailyCompetitionTable
           competitions={competitions}
           loading={loading}
@@ -68,7 +63,6 @@ export const DailyCompetitionsManagement = () => {
           onDelete={deleteCompetition}
         />
 
-        {/* Modals */}
         <DailyCompetitionForm
           isOpen={isAddModalOpen}
           onOpenChange={setIsAddModalOpen}
