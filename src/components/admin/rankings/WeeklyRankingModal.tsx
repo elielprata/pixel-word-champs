@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import PlayerAvatar from '@/components/ui/PlayerAvatar';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { competitionStatusService } from '@/services/competitionStatusService';
+import { rankingQueryService } from '@/services/rankingQueryService';
 import {
   Table,
   TableBody,
@@ -26,14 +28,11 @@ import {
 } from "@/components/ui/pagination";
 
 interface RankingParticipant {
-  user_position: number;
-  user_score: number;
+  pos: number;
+  name: string;
+  score: number;
+  avatar_url?: string;
   user_id: string;
-  created_at: string;
-  profiles: {
-    username: string;
-    avatar_url?: string;
-  } | null;
 }
 
 interface CompetitionInfo {
@@ -121,39 +120,6 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       // Verificar se a competição está ativa usando o serviço centralizado
       const isActive = isCompetitionActive(competitionData.start_date, competitionData.end_date);
       
-      if (!isActive) {
-        console.log('⏳ Competição não está ativa, não carregando ranking');
-        
-        const competitionInfo: CompetitionInfo = {
-          id: competitionData.id,
-          title: competitionData.title,
-          description: competitionData.description || '',
-          start_date: competitionData.start_date,
-          end_date: competitionData.end_date,
-          status: competitionData.status,
-          theme: competitionData.theme,
-          max_participants: competitionData.max_participants || 0,
-          prize_pool: Number(competitionData.prize_pool) || 0,
-          total_participants: 0
-        };
-
-        setCompetition(competitionInfo);
-        setRanking([]);
-        
-        // Buscar configurações de prêmio mesmo se não ativa
-        const { data: prizeData, error: prizeError } = await supabase
-          .from('prize_configurations')
-          .select('*')
-          .eq('active', true)
-          .order('position', { ascending: true });
-
-        if (!prizeError) {
-          setPrizeConfigs(prizeData || []);
-        }
-
-        return;
-      }
-
       // Buscar configurações de prêmio do banco de dados
       const { data: prizeData, error: prizeError } = await supabase
         .from('prize_configurations')
@@ -169,59 +135,10 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
       console.log('💰 Configurações de prêmio carregadas:', prizeData);
       setPrizeConfigs(prizeData || []);
 
-      // Buscar participações da competição
-      const { data: participationData, error: participationError } = await supabase
-        .from('competition_participations')
-        .select('user_id, user_score, user_position, created_at')
-        .eq('competition_id', competitionId)
-        .order('user_score', { ascending: false });
-
-      if (participationError) {
-        console.error('❌ Erro ao carregar participações da competição:', participationError);
-        throw participationError;
-      }
-
-      console.log('📊 Participações carregadas:', participationData?.length || 0);
-
-      // Se não há participações, definir competição sem ranking
-      if (!participationData || participationData.length === 0) {
-        const competitionInfo: CompetitionInfo = {
-          id: competitionData.id,
-          title: competitionData.title,
-          description: competitionData.description || '',
-          start_date: competitionData.start_date,
-          end_date: competitionData.end_date,
-          status: competitionData.status,
-          theme: competitionData.theme,
-          max_participants: competitionData.max_participants || 0,
-          prize_pool: Number(competitionData.prize_pool) || 0,
-          total_participants: 0
-        };
-
-        setCompetition(competitionInfo);
-        setRanking([]);
-        return;
-      }
-
-      // Buscar perfis dos usuários participantes
-      const userIds = participationData.map(p => p.user_id);
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', userIds);
-
-      if (profilesError) {
-        console.error('❌ Erro ao carregar perfis:', profilesError);
-        throw profilesError;
-      }
-
-      console.log('👥 Perfis carregados:', profilesData?.length || 0);
-
-      // Criar mapa de perfis para lookup rápido
-      const profilesMap = new Map();
-      profilesData?.forEach(profile => {
-        profilesMap.set(profile.id, profile);
-      });
+      // Usar o ranking simplificado baseado na pontuação total dos perfis
+      const rankingData = await rankingQueryService.getWeeklyRanking();
+      
+      console.log('📊 Ranking simplificado carregado:', rankingData.length, 'participantes');
 
       const competitionInfo: CompetitionInfo = {
         id: competitionData.id,
@@ -233,27 +150,20 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
         theme: competitionData.theme,
         max_participants: competitionData.max_participants || 0,
         prize_pool: Number(competitionData.prize_pool) || 0,
-        total_participants: participationData.length
+        total_participants: rankingData.length
       };
 
       setCompetition(competitionInfo);
 
-      // Mapear dados das participações para o formato do ranking
-      const rankingParticipants: RankingParticipant[] = participationData.map((participation, index) => {
-        const profile = profilesMap.get(participation.user_id);
-        return {
-          user_position: index + 1, // Recalcular posição baseada na ordenação
-          user_score: participation.user_score || 0,
-          user_id: participation.user_id || '',
-          created_at: participation.created_at || new Date().toISOString(),
-          profiles: profile ? {
-            username: profile.username || 'Usuário',
-            avatar_url: profile.avatar_url
-          } : null
-        };
-      });
+      // Mapear dados do ranking para o formato esperado
+      const rankingParticipants: RankingParticipant[] = rankingData.map((player) => ({
+        pos: player.pos,
+        name: player.name,
+        score: player.score,
+        avatar_url: player.avatar_url,
+        user_id: player.user_id
+      }));
 
-      console.log('📊 Ranking da competição carregado:', rankingParticipants.length, 'participantes');
       setRanking(rankingParticipants);
 
     } catch (error) {
@@ -397,29 +307,18 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="h-5 w-5 text-purple-500" />
-                  Ranking ({ranking.length} participantes)
+                  Ranking Simplificado ({ranking.length} participantes)
                 </CardTitle>
+                <p className="text-sm text-slate-600">
+                  💡 Ranking baseado na pontuação total acumulada dos jogadores
+                </p>
               </CardHeader>
               <CardContent>
-                {!competition || !isCompetitionActive(competition.start_date, competition.end_date) ? (
-                  <div className="text-center py-12 text-slate-500">
-                    <Trophy className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-                    <p className="font-medium mb-2">
-                      {!competition ? 'Carregando competição...' : 
-                       new Date() < new Date(competition.start_date) ? 'Competição ainda não iniciou' : 
-                       'Competição finalizada'}
-                    </p>
-                    <p className="text-sm">
-                      {!competition ? 'Aguarde...' : 
-                       new Date() < new Date(competition.start_date) ? 'O ranking aparecerá quando a competição estiver ativa.' : 
-                       'Esta competição já foi finalizada.'}
-                    </p>
-                  </div>
-                ) : ranking.length === 0 ? (
+                {ranking.length === 0 ? (
                   <div className="text-center py-12 text-slate-500">
                     <Trophy className="h-12 w-12 mx-auto mb-4 text-slate-300" />
                     <p className="font-medium mb-2">Nenhum participante ainda</p>
-                    <p className="text-sm">Os participantes aparecerão aqui conforme participarem da competição.</p>
+                    <p className="text-sm">Os participantes aparecerão aqui conforme jogarem e acumularem pontuação.</p>
                   </div>
                 ) : (
                   <>
@@ -430,7 +329,6 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
                           <TableHead>Jogador</TableHead>
                           <TableHead className="text-right w-24">Pontuação</TableHead>
                           <TableHead className="text-right w-32">Prêmio</TableHead>
-                          <TableHead className="text-right w-32">Participação</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -438,10 +336,10 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
                           <TableRow key={participant.user_id} className="hover:bg-slate-50">
                             <TableCell>
                               <div className="flex items-center justify-center">
-                                <Badge className={getPositionBadgeColor(participant.user_position)}>
+                                <Badge className={getPositionBadgeColor(participant.pos)}>
                                   <div className="flex items-center gap-1">
-                                    {getPositionIcon(participant.user_position)}
-                                    {participant.user_position}º
+                                    {getPositionIcon(participant.pos)}
+                                    {participant.pos}º
                                   </div>
                                 </Badge>
                               </div>
@@ -449,30 +347,27 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
                             <TableCell>
                               <div className="flex items-center gap-3">
                                 <PlayerAvatar
-                                  src={participant.profiles?.avatar_url}
-                                  alt={participant.profiles?.username || 'Usuário'}
-                                  fallback={participant.profiles?.username?.charAt(0) || 'U'}
+                                  src={participant.avatar_url}
+                                  alt={participant.name}
+                                  fallback={participant.name.charAt(0)}
                                   size="sm"
                                 />
                                 <span className="font-medium">
-                                  {participant.profiles?.username || 'Usuário'}
+                                  {participant.name}
                                 </span>
                               </div>
                             </TableCell>
                             <TableCell className="text-right font-mono font-semibold">
-                              {participant.user_score.toLocaleString()} pts
+                              {participant.score.toLocaleString()} pts
                             </TableCell>
                             <TableCell className="text-right">
-                              {getPrizeAmount(participant.user_position) > 0 ? (
+                              {getPrizeAmount(participant.pos) > 0 ? (
                                 <span className="font-semibold text-green-600">
-                                  R$ {getPrizeAmount(participant.user_position).toFixed(2)}
+                                  R$ {getPrizeAmount(participant.pos).toFixed(2)}
                                 </span>
                               ) : (
                                 <span className="text-slate-400">-</span>
                               )}
-                            </TableCell>
-                            <TableCell className="text-right text-sm text-slate-500">
-                              {new Date(participant.created_at).toLocaleDateString('pt-BR')}
                             </TableCell>
                           </TableRow>
                         ))}
