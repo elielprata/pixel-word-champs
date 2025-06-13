@@ -35,7 +35,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
     }
 
     try {
-      console.log('🗑️ Iniciando exclusão do usuário:', user.username);
+      console.log('🗑️ Iniciando exclusão COMPLETA do usuário:', user.username);
       
       await deleteUser({
         userId: user.id,
@@ -48,7 +48,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
       onClose();
       
     } catch (error) {
-      console.error('❌ Erro na exclusão:', error);
+      console.error('❌ Erro na exclusão completa:', error);
       // Não resetar o form se der erro, para o usuário tentar novamente
     }
   };
@@ -67,7 +67,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
             <Trash2 className="h-5 w-5" />
-            Excluir Usuário
+            Excluir Usuário Completamente
           </DialogTitle>
         </DialogHeader>
         
@@ -75,15 +75,15 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <strong>ATENÇÃO:</strong> Esta ação é irreversível! O usuário "{user.username}" e todos os seus dados serão excluídos permanentemente do sistema, incluindo:
+              <strong>ATENÇÃO:</strong> Esta ação é irreversível! O usuário "{user.username}" será excluído permanentemente de:
               <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Dados do perfil</li>
-                <li>Histórico de jogos</li>
-                <li>Pontuações e rankings</li>
-                <li>Todas as sessões de jogo</li>
-                <li>Participações em competições</li>
-                <li>Convites e recompensas</li>
+                <li><strong>Sistema de autenticação</strong> (não poderá mais fazer login)</li>
+                <li><strong>Banco de dados</strong> (perfil, histórico, pontuações, etc.)</li>
+                <li><strong>Todas as tabelas relacionadas</strong> (sessões, convites, rankings, etc.)</li>
               </ul>
+              <div className="mt-2 p-2 bg-red-100 rounded text-sm">
+                <strong>Resultado:</strong> O usuário será completamente removido do sistema e não aparecerá mais no painel de administração nem poderá acessar a conta.
+              </div>
             </AlertDescription>
           </Alert>
 
@@ -136,7 +136,7 @@ export const DeleteUserModal = ({ isOpen, onClose, user }: DeleteUserModalProps)
                   Excluindo...
                 </div>
               ) : (
-                'Excluir Permanentemente'
+                'Excluir Completamente'
               )}
             </Button>
           </div>

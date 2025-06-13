@@ -33,7 +33,7 @@ export const useDeleteUserMutation = () => {
 
   const deleteUserMutation = useMutation({
     mutationFn: async ({ userId, adminPassword }: { userId: string; adminPassword: string }) => {
-      logger.info('Iniciando exclusão do usuário', { targetUserId: userId }, 'DELETE_USER_MUTATION');
+      logger.info('Iniciando exclusão completa do usuário', { targetUserId: userId }, 'DELETE_USER_MUTATION');
       
       // Validar senha do admin
       await validateAdminPassword(adminPassword);
@@ -43,45 +43,49 @@ export const useDeleteUserMutation = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      logger.debug('Credenciais validadas, excluindo usuário...', undefined, 'DELETE_USER_MUTATION');
+      logger.debug('Credenciais validadas, chamando Edge Function para exclusão completa...', undefined, 'DELETE_USER_MUTATION');
 
-      // Deletar perfil do usuário usando as novas políticas padronizadas
-      const { error: deleteError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (deleteError) {
-        logger.error('Erro ao deletar usuário', { error: deleteError.message }, 'DELETE_USER_MUTATION');
-        throw deleteError;
-      }
-
-      logger.info('Usuário deletado com sucesso', { targetUserId: userId }, 'DELETE_USER_MUTATION');
-
-      // Registrar ação administrativa usando as novas políticas
-      const { error: logError } = await supabase
-        .from('admin_actions')
-        .insert({
-          admin_id: currentUser.user.id,
-          target_user_id: userId,
-          action_type: 'delete_user',
-          details: { timestamp: new Date().toISOString() }
-        });
-
-      if (logError) {
-        logger.warn('Erro ao registrar log de ação administrativa', { error: logError.message }, 'DELETE_USER_MUTATION');
-      }
-    },
-    onSuccess: () => {
-      logger.info('Exclusão concluída com sucesso', undefined, 'DELETE_USER_MUTATION');
-      toast({
-        title: "Usuário excluído",
-        description: "O usuário foi excluído permanentemente.",
+      // Usar a Edge Function para exclusão completa (perfil + autenticação)
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: {
+          userId: userId,
+          adminPassword: adminPassword,
+          adminId: currentUser.user.id
+        }
       });
+
+      if (error) {
+        logger.error('Erro na Edge Function de exclusão', { error: error.message }, 'DELETE_USER_MUTATION');
+        throw new Error(`Erro na exclusão: ${error.message}`);
+      }
+
+      if (!data?.success) {
+        logger.error('Edge Function retornou erro', { error: data?.error }, 'DELETE_USER_MUTATION');
+        throw new Error(data?.error || 'Erro desconhecido na exclusão');
+      }
+
+      logger.info('Usuário completamente excluído', { 
+        targetUserId: userId,
+        deletedUsername: data.deletedUsername 
+      }, 'DELETE_USER_MUTATION');
+
+      return data;
+    },
+    onSuccess: (data) => {
+      logger.info('Exclusão completa concluída com sucesso', { 
+        deletedUserId: data.deletedUserId,
+        deletedUsername: data.deletedUsername
+      }, 'DELETE_USER_MUTATION');
+      
+      toast({
+        title: "Usuário excluído completamente",
+        description: `O usuário "${data.deletedUsername}" foi excluído permanentemente do sistema (perfil + autenticação).`,
+      });
+      
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
     onError: (error: any) => {
-      logger.error('Erro na exclusão', { error: error.message }, 'DELETE_USER_MUTATION');
+      logger.error('Erro na exclusão completa', { error: error.message }, 'DELETE_USER_MUTATION');
       toast({
         title: "Erro ao excluir usuário",
         description: error.message,
