@@ -32,7 +32,7 @@ const ChallengeGameSession = ({
   }, 'CHALLENGE_GAME_SESSION');
 
   const handleStopGame = () => {
-    logger.info('Parando jogo de desafio', { currentLevel }, 'CHALLENGE_GAME_SESSION');
+    logger.info('Parando competição', { currentLevel }, 'CHALLENGE_GAME_SESSION');
     onStopGame();
   };
 

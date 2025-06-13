@@ -25,7 +25,7 @@ export const useDailyGameLogic = (competitionId: string) => {
       setIsLoading(true);
       setError(null);
       
-      console.log('🎮 Inicializando sessão de jogo para competição diária:', competitionId);
+      console.log('🎮 Inicializando sessão da competição diária:', competitionId);
       
       // Primeiro, descobrir em qual tabela a competição existe
       const competitionTable = await competitionValidationService.getCompetitionTable(competitionId);
@@ -46,7 +46,7 @@ export const useDailyGameLogic = (competitionId: string) => {
         return;
       }
 
-      console.log('✅ Competição validada, criando sessão de jogo...');
+      console.log('✅ Competição validada, criando sessão da competição...');
       
       // Criar uma nova sessão de jogo para esta competição
       const sessionResponse = await gameService.createGameSession({
@@ -57,12 +57,12 @@ export const useDailyGameLogic = (competitionId: string) => {
 
       if (!sessionResponse.success) {
         console.error('❌ Erro ao criar sessão:', sessionResponse.error);
-        setError(sessionResponse.error || 'Erro ao criar sessão de jogo');
+        setError(sessionResponse.error || 'Erro ao criar sessão da competição');
         return;
       }
 
       const session = sessionResponse.data;
-      console.log('✅ Sessão de jogo criada:', session.id);
+      console.log('✅ Sessão da competição criada:', session.id);
       
       setGameSession(session);
       setCurrentLevel(session.level || 1);
@@ -71,7 +71,7 @@ export const useDailyGameLogic = (competitionId: string) => {
       
     } catch (error) {
       console.error('❌ Erro inesperado ao inicializar sessão:', error);
-      setError('Erro inesperado ao carregar o jogo. Tente novamente.');
+      setError('Erro inesperado ao carregar a competição. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +102,7 @@ export const useDailyGameLogic = (competitionId: string) => {
   };
 
   const handleTimeUp = () => {
-    console.log('Tempo esgotado!');
+    console.log('Tempo esgotado na competição!');
   };
 
   const handleLevelComplete = async (levelScore: number) => {
@@ -123,7 +123,7 @@ export const useDailyGameLogic = (competitionId: string) => {
       console.log(`Avançando para o nível ${currentLevel + 1}`);
     } else {
       setGameCompleted(true);
-      console.log('Você completou todos os 20 níveis!');
+      console.log('Você completou todos os 20 níveis da competição!');
     }
   };
 

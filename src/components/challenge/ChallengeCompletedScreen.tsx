@@ -19,7 +19,7 @@ const ChallengeCompletedScreen = ({ totalScore, onCompleteGame }: ChallengeCompl
         </div>
         <h1 className="text-3xl font-bold text-emerald-800 mb-2">🎉 Parabéns!</h1>
         <p className="text-lg text-gray-700 mb-4">
-          Você completou todos os <strong>20 níveis</strong>!
+          Você completou todos os <strong>20 níveis</strong> da competição!
         </p>
         <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl p-4 mb-6 text-white">
           <p className="text-2xl font-bold">
@@ -30,7 +30,7 @@ const ChallengeCompletedScreen = ({ totalScore, onCompleteGame }: ChallengeCompl
           onClick={onCompleteGame}
           className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold py-3 rounded-2xl shadow-lg"
         >
-          Finalizar Jogo
+          Finalizar Competição
         </Button>
       </div>
     </div>
