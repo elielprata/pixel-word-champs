@@ -21,14 +21,14 @@ export const CompetitionTableRow: React.FC<CompetitionTableRowProps> = ({
   onExportWinners,
   exportingId
 }) => {
-  const isDailyCompetition = competition.competition_type === 'challenge';
+  const isDailyCompetition = competition.competition_type === 'daily' || competition.competition_type === 'challenge';
 
   return (
     <TableRow key={competition.id} className="hover:bg-slate-50">
       <TableCell>
         <div>
           <p className="font-medium text-slate-900">{competition.title}</p>
-          {competition.competition_type === 'weekly' && (
+          {(competition.competition_type === 'weekly' || competition.competition_type === 'tournament') && (
             <p className="text-xs text-slate-500">
               Semana {getWeekFromDate(competition.start_date)} de {new Date(competition.start_date).getFullYear()}
             </p>

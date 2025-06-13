@@ -28,7 +28,7 @@ export class CustomCompetitionManagementService {
       const { data: existingWeeklyCompetitions, error } = await supabase
         .from('custom_competitions')
         .select('id, title, start_date, end_date')
-        .eq('competition_type', 'tournament') // APENAS competições semanais
+        .eq('competition_type', 'weekly') // APENAS competições semanais
         .neq('status', 'completed')
         .neq('id', competitionId); // Excluir a competição atual
 
@@ -97,7 +97,7 @@ export class CustomCompetitionManagementService {
       // CORREÇÃO RADICAL: Usar dados diretamente como strings
       let updateData: any = data;
       
-      if (data.competition_type === 'tournament' && data.start_date && data.end_date) {
+      if (data.competition_type === 'weekly' && data.start_date && data.end_date) {
         console.log('🔍 Validando competição semanal com STRINGS PURAS...');
         
         const hasOverlap = await this.checkWeeklyCompetitionOverlapForUpdate(
@@ -111,7 +111,7 @@ export class CustomCompetitionManagementService {
         }
         
         console.log('✅ Competição semanal - nenhuma sobreposição detectada');
-      } else if (data.competition_type === 'challenge') {
+      } else if (data.competition_type === 'daily') {
         console.log('✅ Competição diária - PODE coexistir com qualquer outra competição');
       } else if (!data.start_date || !data.end_date) {
         console.log('✅ Datas não alteradas - ignorando validação de horários');
@@ -129,34 +129,13 @@ export class CustomCompetitionManagementService {
 
       if (error) throw error;
 
-      console.log('✅ Competição atualizada com STRINGS PURAS preservadas');
+      console.log('✅ Competição atualizada com sucesso:', competition.title);
       return createSuccessResponse(competition);
     } catch (error) {
       console.error('❌ Erro ao atualizar competição:', error);
       return createErrorResponse(handleServiceError(error, 'UPDATE_COMPETITION'));
     }
   }
-
-  async deleteCompetition(competitionId: string): Promise<ApiResponse<boolean>> {
-    try {
-      console.log('🗑️ Excluindo competição:', competitionId);
-      
-      const { error } = await supabase
-        .from('custom_competitions')
-        .delete()
-        .eq('id', competitionId);
-
-      if (error) throw error;
-
-      console.log('✅ Competição excluída com sucesso');
-      return createSuccessResponse(true);
-    } catch (error) {
-      console.error('❌ Erro ao excluir competição:', error);
-      return createErrorResponse(handleServiceError(error, 'DELETE_COMPETITION'));
-    }
-  }
 }
 
 export const customCompetitionManagementService = new CustomCompetitionManagementService();
-
-export default customCompetitionManagementService;
