@@ -6,6 +6,7 @@ import { WeeklyCompetitionHeader } from './weekly/WeeklyCompetitionHeader';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { WeeklyRankingModal } from './WeeklyRankingModal';
 import { useWeeklyCompetitionsActions } from '@/hooks/useWeeklyCompetitionsActions';
+import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
 import { competitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {
@@ -34,6 +35,9 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   onRefresh
 }) => {
   const [lastRefresh, setLastRefresh] = useState<number>(0);
+  
+  // Adicionar atualização automática do ranking semanal
+  useWeeklyRankingUpdater();
   
   const {
     editingCompetition,

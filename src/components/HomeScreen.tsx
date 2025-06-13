@@ -1,7 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompetitionStatusChecker } from '@/hooks/useCompetitionStatusChecker';
+import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
+import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
 import { TIMING_CONFIG } from '@/constants/app';
 import { Competition } from '@/types';
 import HomeHeader from './home/HomeHeader';
@@ -25,6 +28,10 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
 
   // Adicionar verificação automática de status
   useCompetitionStatusChecker();
+
+  // Adicionar participação automática e atualização de ranking semanal
+  useWeeklyCompetitionAutoParticipation();
+  useWeeklyRankingUpdater();
 
   const loadCompetitions = async () => {
     try {
