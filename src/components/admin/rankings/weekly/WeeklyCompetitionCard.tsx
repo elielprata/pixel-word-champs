@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Trophy, Users } from 'lucide-react';
 import { WeeklyCompetitionActions } from './WeeklyCompetitionActions';
 import { competitionStatusService } from '@/services/competitionStatusService';
+import { formatDateForDisplay } from '@/utils/brasiliaTime';
 
 interface WeeklyCompetition {
   id: string;
@@ -33,22 +34,15 @@ export const WeeklyCompetitionCard = ({
   onDelete,
   deletingId
 }: WeeklyCompetitionCardProps) => {
-  // Função simples para formatar datas - extrai apenas a parte da data sem conversões
-  const formatCompetitionDate = (dateString: string, isEndDate: boolean = false) => {
+  // Usar a função centralizada de formatação que converte corretamente para Brasília
+  const formatCompetitionDate = (dateString: string) => {
     try {
-      // Extrair apenas YYYY-MM-DD da string do banco
-      const datePart = dateString.split('T')[0]; // "2025-06-11"
-      const [year, month, day] = datePart.split('-');
-      const brazilianDate = `${day}/${month}/${year}`;
-      const time = isEndDate ? '23:59:59' : '00:00:00';
-      
-      console.log('🗓️ [WeeklyCompetitionCard] Formatação simples:', {
+      const formatted = formatDateForDisplay(dateString);
+      console.log('🗓️ [WeeklyCompetitionCard] Formatação corrigida:', {
         input: dateString,
-        datePart,
-        final: `${brazilianDate}, ${time}`
+        formatted
       });
-      
-      return `${brazilianDate}, ${time}`;
+      return formatted;
     } catch (error) {
       console.error('❌ Erro ao formatar data da competição:', error);
       return dateString; // Fallback para data original
@@ -97,12 +91,12 @@ export const WeeklyCompetitionCard = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>{formatCompetitionDate(competition.start_date, false)}</span>
+                <span>{formatCompetitionDate(competition.start_date)}</span>
               </div>
               
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3 text-slate-500" />
-                <span>{formatCompetitionDate(competition.end_date, true)}</span>
+                <span>{formatCompetitionDate(competition.end_date)}</span>
               </div>
               
               <div className="flex items-center gap-1">

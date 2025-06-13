@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Trophy, Users, Crown } from 'lucide-react';
 import { WeeklyCompetitionActions } from './WeeklyCompetitionActions';
 import { competitionStatusService } from '@/services/competitionStatusService';
+import { formatDateForDisplay } from '@/utils/brasiliaTime';
 
 interface WeeklyCompetition {
   id: string;
@@ -33,22 +34,15 @@ export const ActiveCompetitionCard = ({
   onDelete,
   deletingId
 }: ActiveCompetitionCardProps) => {
-  // Função simples para formatar datas - extrai apenas a parte da data sem conversões
-  const formatCompetitionDate = (dateString: string, isEndDate: boolean = false) => {
+  // Usar a função centralizada de formatação que converte corretamente para Brasília
+  const formatCompetitionDate = (dateString: string) => {
     try {
-      // Extrair apenas YYYY-MM-DD da string do banco
-      const datePart = dateString.split('T')[0]; // "2025-06-11"
-      const [year, month, day] = datePart.split('-');
-      const brazilianDate = `${day}/${month}/${year}`;
-      const time = isEndDate ? '23:59:59' : '00:00:00';
-      
-      console.log('🗓️ [ActiveCompetitionCard] Formatação simples:', {
+      const formatted = formatDateForDisplay(dateString);
+      console.log('🗓️ [ActiveCompetitionCard] Formatação corrigida:', {
         input: dateString,
-        datePart,
-        final: `${brazilianDate}, ${time}`
+        formatted
       });
-      
-      return `${brazilianDate}, ${time}`;
+      return formatted;
     } catch (error) {
       console.error('❌ Erro ao formatar data da competição:', error);
       return dateString; // Fallback para data original
@@ -114,7 +108,7 @@ export const ActiveCompetitionCard = ({
               <Calendar className="h-4 w-4 text-green-600" />
               <div>
                 <p className="font-medium">Início</p>
-                <p className="text-green-700">{formatCompetitionDate(competition.start_date, false)}</p>
+                <p className="text-green-700">{formatCompetitionDate(competition.start_date)}</p>
               </div>
             </div>
             
@@ -122,7 +116,7 @@ export const ActiveCompetitionCard = ({
               <Clock className="h-4 w-4 text-green-600" />
               <div>
                 <p className="font-medium">Fim</p>
-                <p className="text-green-700">{formatCompetitionDate(competition.end_date, true)}</p>
+                <p className="text-green-700">{formatCompetitionDate(competition.end_date)}</p>
               </div>
             </div>
             
