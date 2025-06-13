@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import GameBoard from '../GameBoard';
 import { logger } from '@/utils/logger';
 
-interface ChallengeGameSessionProps {
+interface DailyChallengeGameSessionProps {
   currentLevel: number;
   timeRemaining: number;
   onWordFound: (word: string, points: number) => void;
@@ -16,7 +16,7 @@ interface ChallengeGameSessionProps {
   onRevive: () => void;
 }
 
-const ChallengeGameSession = ({
+const DailyChallengeGameSession = ({
   currentLevel,
   timeRemaining,
   onWordFound,
@@ -25,14 +25,14 @@ const ChallengeGameSession = ({
   onAdvanceLevel,
   onStopGame,
   onRevive
-}: ChallengeGameSessionProps) => {
-  logger.debug('Renderizando ChallengeGameSession', { 
+}: DailyChallengeGameSessionProps) => {
+  logger.debug('Renderizando DailyChallengeGameSession', { 
     currentLevel, 
     timeRemaining 
-  }, 'CHALLENGE_GAME_SESSION');
+  }, 'DAILY_CHALLENGE_GAME_SESSION');
 
   const handleStopChallenge = () => {
-    logger.info('Parando desafio', { currentLevel }, 'CHALLENGE_GAME_SESSION');
+    logger.info('Parando desafio diário', { currentLevel }, 'DAILY_CHALLENGE_GAME_SESSION');
     onStopGame();
   };
 
@@ -64,4 +64,4 @@ const ChallengeGameSession = ({
   );
 };
 
-export default ChallengeGameSession;
+export default DailyChallengeGameSession;

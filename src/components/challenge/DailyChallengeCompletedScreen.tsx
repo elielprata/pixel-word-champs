@@ -3,12 +3,12 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Trophy, Star } from 'lucide-react';
 
-interface ChallengeCompletedScreenProps {
+interface DailyChallengeCompletedScreenProps {
   totalScore: number;
   onCompleteGame: () => void;
 }
 
-const ChallengeCompletedScreen = ({ totalScore, onCompleteGame }: ChallengeCompletedScreenProps) => {
+const DailyChallengeCompletedScreen = ({ totalScore, onCompleteGame }: DailyChallengeCompletedScreenProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-4 flex items-center justify-center">
       <div className="text-center bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl max-w-md mx-auto border border-white/30">
@@ -37,4 +37,4 @@ const ChallengeCompletedScreen = ({ totalScore, onCompleteGame }: ChallengeCompl
   );
 };
 
-export default ChallengeCompletedScreen;
+export default DailyChallengeCompletedScreen;

@@ -1,13 +1,13 @@
 
 import React from 'react';
 
-interface ChallengeErrorDisplayProps {
+interface DailyChallengeErrorDisplayProps {
   error: string;
   onRetry: () => void;
   onBackToMenu: () => void;
 }
 
-const ChallengeErrorDisplay = ({ error, onRetry, onBackToMenu }: ChallengeErrorDisplayProps) => {
+const DailyChallengeErrorDisplay = ({ error, onRetry, onBackToMenu }: DailyChallengeErrorDisplayProps) => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
       <div className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl max-w-md mx-auto">
@@ -35,4 +35,4 @@ const ChallengeErrorDisplay = ({ error, onRetry, onBackToMenu }: ChallengeErrorD
   );
 };
 
-export default ChallengeErrorDisplay;
+export default DailyChallengeErrorDisplay;

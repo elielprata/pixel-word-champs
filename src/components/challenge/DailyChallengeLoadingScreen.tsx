@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-const ChallengeLoadingScreen = () => {
+const DailyChallengeLoadingScreen = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
       <div className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl">
@@ -13,4 +13,4 @@ const ChallengeLoadingScreen = () => {
   );
 };
 
-export default ChallengeLoadingScreen;
+export default DailyChallengeLoadingScreen;
