@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { useCompetitionGameLogic } from '@/hooks/useCompetitionGameLogic';
