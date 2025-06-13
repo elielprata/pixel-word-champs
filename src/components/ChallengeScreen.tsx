@@ -2,10 +2,10 @@
 import React from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { useCompetitionGameLogic } from '@/hooks/useCompetitionGameLogic';
-import CompetitionErrorDisplay from './challenge/ChallengeErrorDisplay';
-import CompetitionLoadingScreen from './challenge/ChallengeLoadingScreen';
-import CompetitionCompletedScreen from './challenge/ChallengeCompletedScreen';
-import CompetitionGameSession from './challenge/ChallengeGameSession';
+import CompetitionErrorDisplay from './challenge/CompetitionErrorDisplay';
+import CompetitionLoadingScreen from './challenge/CompetitionLoadingScreen';
+import CompetitionCompletedScreen from './challenge/CompetitionCompletedScreen';
+import CompetitionGameSession from './challenge/CompetitionGameSession';
 import { logger } from '@/utils/logger';
 
 interface CompetitionScreenProps {
