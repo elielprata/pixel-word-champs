@@ -60,9 +60,7 @@ export const useWordSelection = (level: number) => {
         }
 
         setDebugInfo(`Encontradas ${words.length} palavras no banco`);
-        logger.info('Palavras encontradas no banco de dados', { 
-          wordsCount: words.length 
-        }, 'WORD_SELECTION');
+        logger.info(`Encontradas ${words.length} palavras no banco`, undefined, 'WORD_SELECTION');
 
         // Filtrar palavras válidas
         const validWords = words.filter(w => {
@@ -85,9 +83,7 @@ export const useWordSelection = (level: number) => {
         }
 
         setDebugInfo(`${validWords.length} palavras válidas encontradas`);
-        logger.info('Palavras válidas após filtros', { 
-          validWordsCount: validWords.length 
-        }, 'WORD_SELECTION');
+        logger.info(`${validWords.length} palavras válidas após filtros`, undefined, 'WORD_SELECTION');
 
         // Tentar usar seleção inteligente com histórico
         let selectedWords: string[] = [];

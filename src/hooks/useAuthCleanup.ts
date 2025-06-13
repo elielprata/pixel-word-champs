@@ -25,13 +25,13 @@ export const useAuthCleanup = () => {
           }
           
           if (keysToRemove.length > 0) {
-            logger.info('Removendo chaves inválidas do localStorage', { keysCount: keysToRemove.length }, 'AUTH_CLEANUP');
+            logger.info('Removendo chaves inválidas do localStorage', { keys: keysToRemove }, 'AUTH_CLEANUP');
             keysToRemove.forEach(key => localStorage.removeItem(key));
           }
         } else if (session) {
           logger.debug('Sessão válida encontrada', { 
             userId: session.user?.id,
-            hasEmail: !!session.user?.email,
+            email: session.user?.email,
             expiresAt: session.expires_at 
           }, 'AUTH_CLEANUP');
 

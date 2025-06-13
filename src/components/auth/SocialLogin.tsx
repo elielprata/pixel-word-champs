@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { supabase } from '@/integrations/supabase/client';
@@ -20,9 +21,9 @@ const SocialLogin = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (session) {
-          logger.info('Sessão ativa detectada', { 
+          logger.info('Sessão ativa detectada no SocialLogin', { 
             userId: session.user?.id,
-            hasEmail: !!session.user?.email 
+            email: session.user?.email 
           }, 'SOCIAL_LOGIN');
         } else {
           logger.debug('Nenhuma sessão ativa detectada', undefined, 'SOCIAL_LOGIN');
@@ -50,9 +51,9 @@ const SocialLogin = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      logger.info('Iniciando login com Google', { 
-        currentOrigin: window.location.origin 
-      }, 'SOCIAL_LOGIN');
+      logger.info('=== INÍCIO DO LOGIN GOOGLE ===', undefined, 'SOCIAL_LOGIN');
+      logger.info('URL atual:', { url: window.location.origin }, 'SOCIAL_LOGIN');
+      logger.info('Estado atual de autenticação:', { isAuthenticated, hasUser: !!user }, 'SOCIAL_LOGIN');
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -65,10 +66,10 @@ const SocialLogin = () => {
         }
       });
 
+      logger.info('Resposta do signInWithOAuth:', { data, error }, 'SOCIAL_LOGIN');
+
       if (error) {
-        logger.error('Erro no login com Google', { 
-          error: error.message 
-        }, 'SOCIAL_LOGIN');
+        logger.error('=== ERRO DETALHADO DO GOOGLE LOGIN ===', { error }, 'SOCIAL_LOGIN');
         
         let errorMessage = "Não foi possível fazer login com Google.";
         
@@ -86,12 +87,11 @@ const SocialLogin = () => {
           variant: "destructive",
         });
       } else {
-        logger.info('Login com Google iniciado com sucesso', undefined, 'SOCIAL_LOGIN');
+        logger.info('=== LOGIN GOOGLE INICIADO COM SUCESSO ===', undefined, 'SOCIAL_LOGIN');
+        logger.info('Redirecionando para Google...', undefined, 'SOCIAL_LOGIN');
       }
     } catch (err: any) {
-      logger.error('Erro inesperado no login Google', { 
-        error: err?.message || 'Desconhecido' 
-      }, 'SOCIAL_LOGIN');
+      logger.error('=== ERRO INESPERADO NO LOGIN GOOGLE ===', { error: err }, 'SOCIAL_LOGIN');
       
       toast({
         title: "Erro inesperado",

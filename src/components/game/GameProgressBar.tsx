@@ -16,7 +16,7 @@ const GameProgressBar = ({ level, foundWords, totalWords }: GameProgressBarProps
     level, 
     foundWords, 
     totalWords, 
-    progress: Math.round(progress) 
+    progress 
   }, 'GAME_PROGRESS_BAR');
 
   return (

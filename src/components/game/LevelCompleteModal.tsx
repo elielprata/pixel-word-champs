@@ -22,24 +22,15 @@ const LevelCompleteModal = ({
 }: LevelCompleteModalProps) => {
   if (!isOpen) return null;
 
-  logger.info('Modal de nível completado exibido', { 
-    level, 
-    score 
-  }, 'LEVEL_COMPLETE_MODAL');
+  logger.info('Modal de nível completado aberto', { level, score }, 'LEVEL_COMPLETE_MODAL');
 
   const handleAdvance = () => {
-    logger.info('Usuário escolheu avançar para próximo nível', { 
-      currentLevel: level, 
-      score 
-    }, 'LEVEL_COMPLETE_MODAL');
+    logger.info('Usuário escolheu avançar para próximo nível', { level }, 'LEVEL_COMPLETE_MODAL');
     onAdvance();
   };
 
   const handleStay = () => {
-    logger.info('Usuário escolheu parar no nível atual', { 
-      level, 
-      score 
-    }, 'LEVEL_COMPLETE_MODAL');
+    logger.info('Usuário escolheu parar no nível atual', { level }, 'LEVEL_COMPLETE_MODAL');
     onStay();
   };
 

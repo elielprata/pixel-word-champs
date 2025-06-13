@@ -13,7 +13,6 @@ import { ScheduleSection } from './ScheduleSection';
 import { PrizeSection } from './PrizeSection';
 import { PrizeConfigurationSection } from './PrizeConfigurationSection';
 import { FormActions } from './FormActions';
-import { logger } from '@/utils/logger';
 
 interface CreateCompetitionFormProps {
   onClose: () => void;
@@ -63,7 +62,7 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
         setTotalPrizePool(total);
         setFormData(prev => ({ ...prev, prizePool: total }));
       } catch (error) {
-        logger.error('Erro ao buscar configurações de prêmios', { error }, 'CREATE_COMPETITION_FORM');
+        console.error('Error fetching prize configurations:', error);
       }
     };
 
@@ -89,10 +88,7 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
     setIsSubmitting(true);
 
     try {
-      logger.info('Iniciando criação de competição', { 
-        title: formData.title,
-        type: formData.type 
-      }, 'CREATE_COMPETITION_FORM');
+      console.log('🚀 Criando competição sem CategorySection...');
       
       const competitionData: CustomCompetitionData = {
         title: formData.title,
@@ -106,19 +102,11 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
         endDate: formData.endDate || undefined
       };
 
-      logger.debug('Dados da competição preparados', { 
-        hasTitle: !!competitionData.title,
-        type: competitionData.type,
-        category: competitionData.category 
-      }, 'CREATE_COMPETITION_FORM');
+      console.log('🎯 Dados enviados:', competitionData);
 
       const result = await customCompetitionService.createCompetition(competitionData);
       
       if (result.success) {
-        logger.info('Competição criada com sucesso', { 
-          title: formData.title 
-        }, 'CREATE_COMPETITION_FORM');
-        
         toast({
           title: "Competição criada com sucesso!",
           description: `${formData.title} foi criada e está ativa.`,
@@ -145,11 +133,7 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
         throw new Error(result.error || 'Erro ao criar competição');
       }
     } catch (error) {
-      logger.error('Erro ao criar competição', { 
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        title: formData.title 
-      }, 'CREATE_COMPETITION_FORM');
-      
+      console.error('❌ Erro ao criar competição:', error);
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Não foi possível criar a competição.",

@@ -33,10 +33,11 @@ export const useAuthEffects = (
         // Configurar listener primeiro
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            logger.info('Evento de autenticação detectado', { 
+            logger.info('=== EVENTO DE AUTENTICAÇÃO DETECTADO ===', { 
               event, 
               hasSession: !!session,
               userId: session?.user?.id,
+              email: session?.user?.email,
               provider: session?.user?.app_metadata?.provider
             }, 'AUTH_EFFECTS');
 
@@ -82,6 +83,7 @@ export const useAuthEffects = (
           logger.debug('Resultado da verificação de sessão inicial:', { 
             hasSession: !!session,
             userId: session?.user?.id,
+            email: session?.user?.email,
             provider: session?.user?.app_metadata?.provider,
             isExpired: session?.expires_at ? (session.expires_at < Date.now() / 1000) : false
           }, 'AUTH_EFFECTS');

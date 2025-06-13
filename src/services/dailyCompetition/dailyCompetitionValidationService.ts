@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { validateDailyCompetitionData } from '@/utils/dailyCompetitionValidation';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { ApiResponse } from '@/types';
-import { logger } from '@/utils/logger';
 
 export class DailyCompetitionValidationService {
   /**
@@ -11,19 +10,12 @@ export class DailyCompetitionValidationService {
    */
   async createDailyCompetition(formData: any): Promise<ApiResponse<any>> {
     try {
-      logger.info('Service: Criando competição diária com validação', { 
-        title: formData.title,
-        hasStartDate: !!formData.start_date 
-      }, 'DAILY_COMPETITION_VALIDATION');
+      console.log('🔍 Service: Criando competição diária com validação:', formData);
       
       // OBRIGATÓRIO: Validar e corrigir dados antes de salvar
       const validatedData = validateDailyCompetitionData(formData);
       
-      logger.info('Service: Dados validados e corrigidos', { 
-        title: validatedData.title,
-        start_date: validatedData.start_date,
-        end_date: validatedData.end_date 
-      }, 'DAILY_COMPETITION_VALIDATION');
+      console.log('✅ Service: Dados validados e corrigidos:', validatedData);
       
       // Obter o usuário atual
       const { data: { user } } = await supabase.auth.getUser();
@@ -45,17 +37,14 @@ export class DailyCompetitionValidationService {
         .single();
 
       if (error) {
-        logger.error('Service: Erro ao criar competição', { error }, 'DAILY_COMPETITION_VALIDATION');
+        console.error('❌ Service: Erro ao criar competição:', error);
         throw error;
       }
 
-      logger.info('Service: Competição criada com sucesso', { 
-        competitionId: data.id,
-        title: data.title 
-      }, 'DAILY_COMPETITION_VALIDATION');
+      console.log('🎉 Service: Competição criada com sucesso:', data);
       return createSuccessResponse(data);
     } catch (error) {
-      logger.error('Service: Erro na criação', { error }, 'DAILY_COMPETITION_VALIDATION');
+      console.error('❌ Service: Erro na criação:', error);
       return createErrorResponse(handleServiceError(error, 'CREATE_DAILY_COMPETITION'));
     }
   }
@@ -65,20 +54,12 @@ export class DailyCompetitionValidationService {
    */
   async updateDailyCompetition(competitionId: string, formData: any): Promise<ApiResponse<any>> {
     try {
-      logger.info('Service: Atualizando competição diária', { 
-        competitionId,
-        hasFormData: !!formData 
-      }, 'DAILY_COMPETITION_VALIDATION');
+      console.log('🔍 Service: Atualizando competição diária:', { competitionId, formData });
       
       // OBRIGATÓRIO: Validar e corrigir dados antes de atualizar
       const validatedData = validateDailyCompetitionData(formData);
       
-      logger.info('Service: Dados validados para atualização', { 
-        competitionId,
-        title: validatedData.title,
-        start_date: validatedData.start_date,
-        end_date: validatedData.end_date 
-      }, 'DAILY_COMPETITION_VALIDATION');
+      console.log('✅ Service: Dados validados para atualização:', validatedData);
       
       // Atualizar no banco - o trigger garantirá 23:59:59
       const { data, error } = await supabase
@@ -97,10 +78,7 @@ export class DailyCompetitionValidationService {
         .single();
 
       if (error) {
-        logger.error('Service: Erro ao atualizar competição', { 
-          competitionId, 
-          error 
-        }, 'DAILY_COMPETITION_VALIDATION');
+        console.error('❌ Service: Erro ao atualizar competição:', error);
         throw error;
       }
 
@@ -108,16 +86,10 @@ export class DailyCompetitionValidationService {
         throw new Error('Competição não encontrada ou não é uma competição diária');
       }
 
-      logger.info('Service: Competição atualizada com sucesso', { 
-        competitionId,
-        title: data.title 
-      }, 'DAILY_COMPETITION_VALIDATION');
+      console.log('🎉 Service: Competição atualizada com sucesso:', data);
       return createSuccessResponse(data);
     } catch (error) {
-      logger.error('Service: Erro na atualização', { 
-        competitionId, 
-        error 
-      }, 'DAILY_COMPETITION_VALIDATION');
+      console.error('❌ Service: Erro na atualização:', error);
       return createErrorResponse(handleServiceError(error, 'UPDATE_DAILY_COMPETITION'));
     }
   }
@@ -127,7 +99,7 @@ export class DailyCompetitionValidationService {
    */
   async validateAllDailyCompetitions(): Promise<ApiResponse<any>> {
     try {
-      logger.info('Service: Verificando todas as competições diárias...', undefined, 'DAILY_COMPETITION_VALIDATION');
+      console.log('🔍 Service: Verificando todas as competições diárias...');
       
       // Buscar todas as competições diárias
       const { data: competitions, error } = await supabase
@@ -149,12 +121,10 @@ export class DailyCompetitionValidationService {
         expectedEndDate.setHours(23, 59, 59, 999);
         
         if (endDate.getTime() !== expectedEndDate.getTime()) {
-          logger.info('Corrigindo competição', {
-            competitionId: comp.id,
-            title: comp.title,
+          console.log(`🔧 Corrigindo competição ${comp.title}:`, {
             current: endDate.toISOString(),
             expected: expectedEndDate.toISOString()
-          }, 'DAILY_COMPETITION_VALIDATION');
+          });
           
           corrections.push({
             id: comp.id,
@@ -164,13 +134,10 @@ export class DailyCompetitionValidationService {
         }
       }
 
-      logger.info('Verificação concluída', { 
-        totalChecked: competitions?.length || 0,
-        correctionsNeeded: corrections.length 
-      }, 'DAILY_COMPETITION_VALIDATION');
+      console.log(`✅ Verificação concluída. ${corrections.length} competições precisaram de correção.`);
       return createSuccessResponse({ totalChecked: competitions?.length || 0, corrected: corrections });
     } catch (error) {
-      logger.error('Service: Erro na validação', { error }, 'DAILY_COMPETITION_VALIDATION');
+      console.error('❌ Service: Erro na validação:', error);
       return createErrorResponse(handleServiceError(error, 'VALIDATE_ALL_DAILY_COMPETITIONS'));
     }
   }

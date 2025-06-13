@@ -19,19 +19,14 @@ const GameStats = ({ timeLeft, hintsUsed, levelScore, onUseHint }: GameStatsProp
   };
 
   const handleUseHint = () => {
-    logger.info('Dica solicitada pelo usuário', { 
-      hintsUsed, 
-      timeLeft, 
-      levelScore 
-    }, 'GAME_STATS');
+    logger.info('Dica solicitada', { hintsUsed, timeLeft }, 'GAME_STATS');
     onUseHint();
   };
 
   logger.debug('Renderizando GameStats', { 
     timeLeft, 
     hintsUsed, 
-    levelScore,
-    formattedTime: formatTime(timeLeft)
+    levelScore 
   }, 'GAME_STATS');
 
   return (

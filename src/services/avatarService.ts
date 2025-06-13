@@ -1,141 +1,61 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { ApiResponse } from '@/types';
+import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { logger } from '@/utils/logger';
 
 class AvatarService {
-  async uploadAvatar(file: File): Promise<{ success: boolean; data?: string; error?: string }> {
+  async uploadAvatar(file: File, userId: string): Promise<ApiResponse<string>> {
     try {
-      logger.info('Iniciando upload de avatar', { 
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type 
-      }, 'AVATAR_SERVICE');
-
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        logger.warn('Tentativa de upload de avatar sem usuário autenticado', undefined, 'AVATAR_SERVICE');
-        return { success: false, error: 'Usuário não autenticado' };
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Arquivo deve ser uma imagem');
       }
 
-      // Gerar nome único para o arquivo
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('Arquivo muito grande. Máximo 5MB');
+      }
+
+      logger.info('Iniciando upload de avatar', { userId, fileSize: file.size, fileType: file.type }, 'AVATAR_SERVICE');
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${userId}/avatar.${fileExt}`;
 
-      logger.debug('Enviando arquivo para storage', { 
-        filePath,
-        userId: user.id 
-      }, 'AVATAR_SERVICE');
-
-      const { error: uploadError } = await supabase.storage
+      const { data, error } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, {
+        .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true
         });
 
-      if (uploadError) {
-        logger.error('Erro ao fazer upload do avatar para storage', { 
-          filePath,
-          error: uploadError 
-        }, 'AVATAR_SERVICE');
-        return { success: false, error: uploadError.message };
-      }
+      if (error) throw error;
 
-      // Obter URL pública do arquivo
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
-      logger.info('Avatar enviado com sucesso', { 
-        filePath,
-        publicUrl,
-        userId: user.id 
-      }, 'AVATAR_SERVICE');
-
-      return { success: true, data: publicUrl };
-    } catch (error) {
-      logger.error('Erro crítico ao fazer upload de avatar', { error }, 'AVATAR_SERVICE');
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Erro desconhecido' 
-      };
+      logger.info('Avatar carregado com sucesso', { userId, fileName }, 'AVATAR_SERVICE');
+      return createSuccessResponse(publicUrl);
+    } catch (error: any) {
+      logger.error('Erro no upload de avatar', { error: error.message, userId }, 'AVATAR_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'AVATAR_UPLOAD'));
     }
   }
 
-  async deleteAvatar(filePath: string): Promise<boolean> {
+  async deleteAvatar(userId: string): Promise<ApiResponse<boolean>> {
     try {
-      logger.info('Removendo avatar', { filePath }, 'AVATAR_SERVICE');
-
+      logger.info('Removendo avatar do usuário', { userId }, 'AVATAR_SERVICE');
+      
       const { error } = await supabase.storage
         .from('avatars')
-        .remove([filePath]);
+        .remove([`${userId}/avatar.jpg`, `${userId}/avatar.png`, `${userId}/avatar.jpeg`]);
 
-      if (error) {
-        logger.error('Erro ao remover avatar do storage', { 
-          filePath, 
-          error 
-        }, 'AVATAR_SERVICE');
-        throw error;
-      }
+      if (error) throw error;
 
-      logger.info('Avatar removido com sucesso', { filePath }, 'AVATAR_SERVICE');
-      return true;
-    } catch (error) {
-      logger.error('Erro crítico ao remover avatar', { 
-        filePath, 
-        error 
-      }, 'AVATAR_SERVICE');
-      return false;
-    }
-  }
-
-  async updateProfileAvatar(avatarUrl: string): Promise<{ success: boolean; data?: any; error?: string }> {
-    try {
-      logger.info('Atualizando URL do avatar no perfil', { avatarUrl }, 'AVATAR_SERVICE');
-
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        logger.warn('Tentativa de atualizar avatar no perfil sem usuário autenticado', undefined, 'AVATAR_SERVICE');
-        return { success: false, error: 'Usuário não autenticado' };
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({ 
-          avatar_url: avatarUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('Erro ao atualizar avatar no perfil', { 
-          userId: user.id,
-          avatarUrl, 
-          error 
-        }, 'AVATAR_SERVICE');
-        return { success: false, error: error.message };
-      }
-
-      logger.info('Avatar atualizado no perfil com sucesso', { 
-        userId: user.id,
-        avatarUrl 
-      }, 'AVATAR_SERVICE');
-
-      return { success: true, data };
-    } catch (error) {
-      logger.error('Erro crítico ao atualizar avatar no perfil', { 
-        avatarUrl, 
-        error 
-      }, 'AVATAR_SERVICE');
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Erro desconhecido' 
-      };
+      logger.info('Avatar removido com sucesso', { userId }, 'AVATAR_SERVICE');
+      return createSuccessResponse(true);
+    } catch (error: any) {
+      logger.error('Erro ao remover avatar', { error: error.message, userId }, 'AVATAR_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'AVATAR_DELETE'));
     }
   }
 }

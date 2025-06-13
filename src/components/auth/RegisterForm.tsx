@@ -39,8 +39,8 @@ const RegisterForm = () => {
   const onSubmit = async (data: RegisterFormType) => {
     try {
       logger.info('Tentativa de registro iniciada', { 
-        hasEmail: !!data.email, 
-        hasUsername: !!data.username 
+        email: data.email, 
+        username: data.username 
       }, 'REGISTER_FORM');
       await register(data);
     } catch (err: any) {

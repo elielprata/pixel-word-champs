@@ -32,32 +32,33 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
         userId: user?.id 
       }, 'HOME_SCREEN');
 
-      // Usar método existente do serviço
-      const response = await dailyCompetitionService.getTodayCompetition();
+      const response = await dailyCompetitionService.getActiveDailyCompetitions();
       
       if (response.success && response.data) {
         logger.info('Competições carregadas', { 
-          count: 1,
+          count: response.data.length,
           userId: user?.id 
         }, 'HOME_SCREEN');
         
-        // Mapear dados para a interface Competition
-        const mappedCompetitions: Competition[] = [{
-          id: response.data.id,
-          title: response.data.title || 'Competição Diária',
-          description: response.data.description || '',
-          theme: response.data.theme || '',
-          start_date: response.data.start_date || '',
-          end_date: response.data.end_date || '',
-          status: response.data.status || 'active',
-          type: 'daily' as const,
-          prize_pool: Number(response.data.prize_pool) || 0,
-          total_participants: 0,
-          max_participants: response.data.max_participants || 1000,
-          is_active: response.data.status === 'active',
-          created_at: response.data.created_at || '',
-          updated_at: response.data.updated_at || ''
-        }];
+        // Mapear os dados para a interface Competition - APENAS competições diárias
+        const mappedCompetitions: Competition[] = response.data
+          .filter(comp => comp.competition_type === 'challenge') // Garantir que são apenas diárias
+          .map(comp => ({
+            id: comp.id,
+            title: comp.title,
+            description: comp.description || '',
+            theme: comp.theme || '',
+            start_date: comp.start_date,
+            end_date: comp.end_date,
+            status: comp.status || 'active',
+            type: 'daily' as const, // Forçar tipo diário
+            prize_pool: Number(comp.prize_pool) || 0,
+            total_participants: 0,
+            max_participants: comp.max_participants || 1000,
+            is_active: comp.status === 'active',
+            created_at: comp.created_at || '',
+            updated_at: comp.updated_at || ''
+          }));
         
         setCompetitions(mappedCompetitions);
         logger.debug('Competições mapeadas', { 

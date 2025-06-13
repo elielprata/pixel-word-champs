@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,12 +16,6 @@ const AuthScreen = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  logger.debug('AuthScreen renderizado', {
-    activeTab,
-    isAuthenticated,
-    isLoading
-  }, 'AUTH_SCREEN');
-
   // Redirecionar usuários já autenticados
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
@@ -31,7 +26,6 @@ const AuthScreen = () => {
 
   // Mostrar loading enquanto verifica autenticação
   if (isLoading) {
-    logger.debug('Mostrando tela de carregamento de autenticação', undefined, 'AUTH_SCREEN');
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4">
         <div className="text-center">
@@ -41,14 +35,6 @@ const AuthScreen = () => {
       </div>
     );
   }
-
-  const handleTabChange = (newTab: string) => {
-    logger.debug('Mudança de aba na tela de autenticação', {
-      previousTab: activeTab,
-      newTab
-    }, 'AUTH_SCREEN');
-    setActiveTab(newTab);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4">
@@ -95,7 +81,7 @@ const AuthScreen = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Entrar</TabsTrigger>
                 <TabsTrigger value="register">Cadastrar</TabsTrigger>

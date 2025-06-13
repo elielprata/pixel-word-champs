@@ -1,119 +1,179 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/utils/logger';
 
-export interface WordData {
-  word: string;
-  category: string;
-  difficulty: string;
-  level: number;
-}
+export const saveWordsToDatabase = async (
+  words: string[], 
+  categoryId: string, 
+  categoryName: string
+) => {
+  console.log('📝 Iniciando salvamento de palavras:', {
+    category: categoryName,
+    wordsReceived: words.length,
+    words: words
+  });
 
-export const saveWordsToDatabase = async (words: WordData[]): Promise<{ success: boolean; count?: number; error?: string }> => {
-  try {
-    logger.info('Salvando palavras no banco de dados', { count: words.length }, 'WORD_STORAGE_SERVICE');
-
-    const { error } = await supabase
-      .from('level_words')
-      .insert(words.map(word => ({
-        word: word.word,
-        category: word.category,
-        difficulty: word.difficulty,
-        level: word.level,
-        is_active: true
-      })));
-
-    if (error) {
-      logger.error('Erro ao salvar palavras no banco de dados', { error }, 'WORD_STORAGE_SERVICE');
-      return { success: false, error: error.message };
-    }
-
-    logger.info('Palavras salvas com sucesso', { count: words.length }, 'WORD_STORAGE_SERVICE');
-    return { success: true, count: words.length };
-  } catch (error) {
-    logger.error('Erro crítico ao salvar palavras', { error }, 'WORD_STORAGE_SERVICE');
-    return { success: false, error: error instanceof Error ? error.message : 'Erro desconhecido' };
+  if (!words || words.length === 0) {
+    console.log('ℹ️ Nenhuma palavra para salvar');
+    return { words: [], count: 0 };
   }
+
+  // Normalizar palavras (maiúsculas e sem espaços)
+  const normalizedWords = words
+    .map(word => word.trim().toUpperCase())
+    .filter(word => word.length >= 3 && /^[A-Z]+$/.test(word));
+
+  console.log('📊 Palavras após normalização:', {
+    category: categoryName,
+    original: words.length,
+    normalized: normalizedWords.length,
+    normalizedWords
+  });
+
+  if (normalizedWords.length === 0) {
+    console.log('⚠️ Nenhuma palavra válida após normalização');
+    return { words: [], count: 0 };
+  }
+
+  // VERIFICAÇÃO MELHORADA: Buscar palavras existentes APENAS nesta categoria
+  console.log(`🔍 Verificando palavras existentes na categoria "${categoryName}"...`);
+  
+  const { data: existingWords, error: checkError } = await supabase
+    .from('level_words')
+    .select('word, id, created_at')
+    .in('word', normalizedWords)
+    .eq('category', categoryName)
+    .eq('is_active', true);
+
+  if (checkError) {
+    console.error('❌ Erro ao verificar palavras existentes:', checkError);
+    throw checkError;
+  }
+
+  console.log(`📋 Palavras já existentes na categoria "${categoryName}":`, {
+    count: existingWords?.length || 0,
+    words: existingWords?.map(w => w.word) || []
+  });
+
+  // Criar um Set das palavras que já existem NESTA CATEGORIA
+  const existingWordsSet = new Set(
+    existingWords?.map(item => item.word) || []
+  );
+
+  // Filtrar apenas palavras que realmente não existem NESTA CATEGORIA
+  const newWords = normalizedWords.filter(word => {
+    const exists = existingWordsSet.has(word);
+    if (exists) {
+      console.log(`⚠️ Palavra "${word}" já existe na categoria "${categoryName}" - pulando`);
+    }
+    return !exists;
+  });
+
+  // Remover duplicatas dentro do próprio array de palavras novas
+  const uniqueNewWords = [...new Set(newWords)];
+
+  console.log(`📊 Análise final para categoria "${categoryName}":`, {
+    palavrasOriginais: words.length,
+    palavrasNormalizadas: normalizedWords.length,
+    palavrasJaExistentes: normalizedWords.length - newWords.length,
+    palavrasNovasUnicas: uniqueNewWords.length,
+    palavrasParaInserir: uniqueNewWords
+  });
+
+  if (uniqueNewWords.length === 0) {
+    console.log(`ℹ️ Todas as palavras já existem na categoria "${categoryName}"`);
+    return { words: [], count: 0 };
+  }
+
+  // Preparar palavras para inserção - sem definir dificuldade automaticamente
+  const wordsToInsert = uniqueNewWords.map(word => {
+    const wordData = {
+      word: word,
+      category: categoryName,
+      difficulty: 'medium', // Dificuldade padrão, será definida manualmente
+      level: 1,
+      is_active: true
+    };
+    
+    console.log(`🎯 Preparando para inserir: "${word}" na categoria "${categoryName}" com dificuldade "${wordData.difficulty}"`);
+    return wordData;
+  });
+
+  console.log('💾 Iniciando inserção no banco de dados...', {
+    category: categoryName,
+    totalToInsert: wordsToInsert.length
+  });
+
+  // INSERÇÃO MELHORADA: Usar upsert com melhor tratamento de erros
+  const insertedWords = [];
+  let successCount = 0;
+  let duplicateCount = 0;
+  let errorCount = 0;
+
+  for (const [index, wordData] of wordsToInsert.entries()) {
+    try {
+      console.log(`💽 [${index + 1}/${wordsToInsert.length}] Inserindo: "${wordData.word}" na categoria "${categoryName}"`);
+      
+      const { data, error } = await supabase
+        .from('level_words')
+        .insert([wordData])
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === '23505') {
+          // Erro de duplicata - pode ser constraint única que não conhecemos
+          duplicateCount++;
+          console.warn(`⚠️ DUPLICATA detectada: "${wordData.word}" na categoria "${categoryName}" (erro ${error.code})`);
+          console.warn('🔍 Detalhes do erro de duplicata:', error);
+        } else {
+          errorCount++;
+          console.error(`❌ Erro inesperado ao inserir "${wordData.word}":`, error);
+        }
+      } else {
+        insertedWords.push(data);
+        successCount++;
+        console.log(`✅ [${successCount}] Palavra inserida com sucesso: "${wordData.word}" na categoria "${categoryName}"`);
+      }
+    } catch (err) {
+      errorCount++;
+      console.error(`❌ Erro inesperado ao inserir palavra "${wordData.word}":`, err);
+    }
+  }
+
+  // Registrar a geração na tabela de controle SE houve sucesso
+  if (successCount > 0) {
+    try {
+      const { error: logError } = await supabase
+        .from('ai_word_generation')
+        .insert({
+          category_id: categoryId,
+          level: 1,
+          words_generated: successCount,
+          last_generation: new Date().toISOString()
+        });
+
+      if (logError) {
+        console.error('❌ Erro ao registrar geração na tabela de controle:', logError);
+      } else {
+        console.log('📊 Geração registrada na tabela de controle');
+      }
+    } catch (logErr) {
+      console.error('❌ Erro inesperado ao registrar geração:', logErr);
+    }
+  }
+
+  const finalResult = {
+    category: categoryName,
+    totalReceived: words.length,
+    normalizedWords: normalizedWords.length,
+    duplicatesSkipped: duplicateCount,
+    errors: errorCount,
+    successfulInserts: successCount,
+    insertedWords: insertedWords,
+    count: successCount
+  };
+
+  console.log(`🎯 RESULTADO FINAL para categoria "${categoryName}":`, finalResult);
+
+  return { words: insertedWords, count: successCount };
 };
-
-class WordStorageService {
-  async getWords(level?: number, category?: string): Promise<WordData[]> {
-    try {
-      logger.debug('Buscando palavras', { level, category }, 'WORD_STORAGE_SERVICE');
-
-      let query = supabase
-        .from('level_words')
-        .select('*')
-        .eq('is_active', true);
-
-      if (level) {
-        query = query.eq('level', level);
-      }
-
-      if (category) {
-        query = query.eq('category', category);
-      }
-
-      const { data: words, error } = await query.order('created_at', { ascending: false });
-
-      if (error) {
-        logger.error('Erro ao buscar palavras no banco de dados', { 
-          level, 
-          category, 
-          error 
-        }, 'WORD_STORAGE_SERVICE');
-        throw error;
-      }
-
-      logger.debug('Palavras carregadas com sucesso', { 
-        level, 
-        category, 
-        count: words?.length || 0 
-      }, 'WORD_STORAGE_SERVICE');
-
-      return words || [];
-    } catch (error) {
-      logger.error('Erro crítico ao buscar palavras', { level, category, error }, 'WORD_STORAGE_SERVICE');
-      return [];
-    }
-  }
-
-  async saveWords(words: WordData[]): Promise<{ success: boolean; count?: number; error?: string }> {
-    return saveWordsToDatabase(words);
-  }
-
-  async deleteWord(wordId: string): Promise<boolean> {
-    try {
-      logger.info('Removendo palavra', { wordId }, 'WORD_STORAGE_SERVICE');
-
-      const { error } = await supabase
-        .from('level_words')
-        .update({ is_active: false })
-        .eq('id', wordId);
-
-      if (error) {
-        logger.error('Erro ao remover palavra no banco de dados', { 
-          wordId, 
-          error 
-        }, 'WORD_STORAGE_SERVICE');
-        throw error;
-      }
-
-      logger.info('Palavra removida com sucesso', { wordId }, 'WORD_STORAGE_SERVICE');
-      return true;
-    } catch (error) {
-      logger.error('Erro crítico ao remover palavra', { wordId, error }, 'WORD_STORAGE_SERVICE');
-      return false;
-    }
-  }
-
-  async getWordsByCategory(category: string): Promise<WordData[]> {
-    return this.getWords(undefined, category);
-  }
-
-  async getWordsByLevel(level: number): Promise<WordData[]> {
-    return this.getWords(level);
-  }
-}
-
-export const wordStorageService = new WordStorageService();

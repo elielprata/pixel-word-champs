@@ -3,7 +3,6 @@ import React from 'react';
 import GameBoardGrid from './GameBoardGrid';
 import WordsList from './WordsList';
 import { type Position } from '@/utils/boardUtils';
-import { logger } from '@/utils/logger';
 
 interface FoundWord {
   word: string;
@@ -44,14 +43,6 @@ const GameBoardMainContent = ({
   getWordColor,
   getCellWordIndex
 }: GameBoardMainContentProps) => {
-  logger.debug('Renderizando GameBoardMainContent', {
-    boardSize: size,
-    selectedCellsCount: selectedCells.length,
-    isSelecting,
-    foundWordsCount: foundWords.length,
-    totalWords: levelWords.length
-  }, 'GAME_BOARD_MAIN_CONTENT');
-
   return (
     <>
       {/* Tabuleiro principal */}
