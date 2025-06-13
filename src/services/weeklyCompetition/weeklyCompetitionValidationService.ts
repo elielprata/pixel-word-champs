@@ -19,7 +19,7 @@ class WeeklyCompetitionValidationService {
 
       if (error) {
         logger.error('Erro ao verificar competições existentes', { error }, 'WEEKLY_COMPETITION_VALIDATION');
-        return { isValid: false, error: 'Erro ao validar competição' };
+        return { isValid: false, error: 'Erro ao validar competição semanal' };
       }
 
       // Verificar conflitos com competições existentes
