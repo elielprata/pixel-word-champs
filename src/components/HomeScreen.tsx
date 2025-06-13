@@ -22,7 +22,6 @@ interface HomeScreenProps {
 
 const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) => {
   const { user } = useAuth();
-  const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,31 +47,6 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
         logger.info('Competições carregadas', { 
           count: response.data.length,
           userId: user?.id 
-        }, 'HOME_SCREEN');
-        
-        // Mapear os dados para a interface Competition - APENAS competições diárias
-        const mappedCompetitions: Competition[] = response.data
-          .filter(comp => comp.competition_type === 'challenge') // Garantir que são apenas diárias
-          .map(comp => ({
-            id: comp.id,
-            title: comp.title,
-            description: comp.description || '',
-            theme: comp.theme || '',
-            start_date: comp.start_date,
-            end_date: comp.end_date,
-            status: comp.status || 'active',
-            type: 'daily' as const, // Forçar tipo diário
-            prize_pool: Number(comp.prize_pool) || 0,
-            total_participants: 0,
-            max_participants: comp.max_participants || 1000,
-            is_active: comp.status === 'active',
-            created_at: comp.created_at || '',
-            updated_at: comp.updated_at || ''
-          }));
-        
-        setCompetitions(mappedCompetitions);
-        logger.debug('Competições mapeadas', { 
-          mappedCount: mappedCompetitions.length 
         }, 'HOME_SCREEN');
       } else {
         logger.error('Erro ao buscar competições', { 
@@ -115,9 +89,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
         )}
 
         <CompetitionsList
-          competitions={competitions}
-          onStartChallenge={onStartChallenge}
-          onRefresh={loadCompetitions}
+          onJoinCompetition={onStartChallenge}
         />
       </div>
     </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Competition } from '@/types';
 import CompetitionCard from './CompetitionCard';
@@ -20,7 +21,7 @@ const CompetitionsList: React.FC<CompetitionsListProps> = ({ onJoinCompetition }
   }
 
   if (!competitions || competitions.length === 0 && !dailyCompetition && !weeklyCompetition) {
-    return <EmptyCompetitionsState />;
+    return <EmptyCompetitionsState onRefresh={() => {}} />;
   }
 
   return (
@@ -28,22 +29,23 @@ const CompetitionsList: React.FC<CompetitionsListProps> = ({ onJoinCompetition }
       {dailyCompetition && (
         <CompetitionCard
           competition={dailyCompetition}
-          type="daily"
-          onJoinCompetition={onJoinCompetition}
+          onJoin={onJoinCompetition}
+          onViewRanking={() => {}}
         />
       )}
       {weeklyCompetition && (
         <CompetitionCard
           competition={weeklyCompetition}
-          type="weekly"
-          onJoinCompetition={onJoinCompetition}
+          onJoin={onJoinCompetition}
+          onViewRanking={() => {}}
         />
       )}
       {competitions && competitions.map((competition) => (
         <CompetitionCard
           key={competition.id}
           competition={competition}
-          onJoinCompetition={onJoinCompetition}
+          onJoin={onJoinCompetition}
+          onViewRanking={() => {}}
         />
       ))}
     </div>

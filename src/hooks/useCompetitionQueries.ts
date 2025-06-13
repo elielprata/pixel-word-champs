@@ -15,7 +15,7 @@ export const useCompetitionQueries = () => {
 
   const fetchActiveCompetitions = async () => {
     try {
-      const response = await competitionService.getActiveCompetitions();
+      const response = await competitionService.getActiveDailyCompetitions();
       
       if (response.success) {
         setCompetitions(response.data);
@@ -45,7 +45,7 @@ export const useCompetitionQueries = () => {
 
   const fetchDailyCompetition = async () => {
     try {
-      const response = await competitionService.getDailyCompetition();
+      const response = await competitionService.getCurrentDailyCompetition();
       
       if (response.success) {
         setDailyCompetition(response.data);
@@ -60,7 +60,7 @@ export const useCompetitionQueries = () => {
 
   const fetchWeeklyCompetition = async () => {
     try {
-      const response = await competitionService.getWeeklyCompetition();
+      const response = await competitionService.getCurrentWeeklyCompetition();
       
       if (response.success) {
         setWeeklyCompetition(response.data);

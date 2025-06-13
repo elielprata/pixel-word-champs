@@ -39,7 +39,7 @@ export const useOptimizedCompetitions = () => {
 
     try {
       const [competitionsResponse, customCompetitionsResponse] = await Promise.all([
-        competitionService.getActiveCompetitions(),
+        competitionService.getActiveDailyCompetitions(),
         customCompetitionService.getCustomCompetitions()
       ]);
 
