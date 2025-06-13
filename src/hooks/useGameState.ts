@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface WordPosition {
   word: string;
@@ -25,7 +26,7 @@ export const useGameState = (level: number, board: string[][]) => {
     const generateGameData = async () => {
       setIsLoading(true);
       try {
-        console.log('🔍 Buscando palavras ativas para o jogo...');
+        logger.info('Buscando palavras ativas para o jogo', { level }, 'GAME_STATE');
         
         // Buscar palavras do banco de dados
         const { data: words, error } = await supabase
@@ -35,20 +36,22 @@ export const useGameState = (level: number, board: string[][]) => {
           .limit(15);
 
         if (error) {
-          console.error('❌ Erro ao buscar palavras:', error);
+          logger.error('Erro ao buscar palavras', { error }, 'GAME_STATE');
           setValidWords([]);
           setGameData(null);
           return;
         }
 
         if (!words || words.length === 0) {
-          console.log('⚠️ Nenhuma palavra ativa encontrada');
+          logger.warn('Nenhuma palavra ativa encontrada', undefined, 'GAME_STATE');
           setValidWords([]);
           setGameData(null);
           return;
         }
 
-        console.log('✅ Palavras encontradas:', words.length);
+        logger.info('Palavras encontradas no banco', { 
+          wordsCount: words.length 
+        }, 'GAME_STATE');
 
         // Usar as palavras que foram realmente colocadas no tabuleiro
         const wordPositions: WordPosition[] = [];
@@ -71,18 +74,18 @@ export const useGameState = (level: number, board: string[][]) => {
           difficulty: calculateGameDifficulty(words)
         };
 
-        console.log('🎯 Dados do jogo gerados:', {
-          palavras: wordPositions.length,
+        logger.info('Dados do jogo gerados', {
+          palavrasEncontradas: wordPositions.length,
           categoria: data.category,
           dificuldade: data.difficulty
-        });
+        }, 'GAME_STATE');
 
         setGameData(data);
         setValidWords(wordPositions);
         setFoundWords([]);
         setHintsRemaining(Math.max(1, Math.floor(wordPositions.length / 5)));
       } catch (error) {
-        console.error('❌ Erro ao gerar dados do jogo:', error);
+        logger.error('Erro ao gerar dados do jogo', { error }, 'GAME_STATE');
         setValidWords([]);
         setGameData(null);
       } finally {
@@ -183,7 +186,7 @@ export const useGameState = (level: number, board: string[][]) => {
     const upperWord = word.toUpperCase();
     if (foundWords.includes(upperWord)) return false;
     
-    console.log('✅ Palavra encontrada:', upperWord);
+    logger.info('Palavra encontrada pelo jogador', { word: upperWord }, 'GAME_STATE');
     setFoundWords(prev => [...prev, upperWord]);
     return true;
   };
@@ -195,7 +198,10 @@ export const useGameState = (level: number, board: string[][]) => {
     if (unfoundWords.length === 0) return null;
     
     const hint = unfoundWords[0].word;
-    console.log('💡 Dica usada:', hint);
+    logger.info('Dica utilizada pelo jogador', { 
+      hint,
+      hintsRemaining: hintsRemaining - 1 
+    }, 'GAME_STATE');
     setHintsRemaining(prev => prev - 1);
     addFoundWord(hint);
     

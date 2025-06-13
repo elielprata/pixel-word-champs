@@ -30,7 +30,7 @@ export const useGameLogic = (
 
   // Reset state when level changes
   useEffect(() => {
-    logger.log(`Resetting game state for level ${level}`);
+    logger.debug('Resetting game state for level', { level }, 'GAME_LOGIC');
     setFoundWords([]);
     setPermanentlyMarkedCells([]);
     setHintsUsed(0);
@@ -51,7 +51,11 @@ export const useGameLogic = (
   useEffect(() => {
     if (foundWords.length === 5 && !showLevelComplete && !isLevelCompleted) {
       const levelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
-      logger.log(`Level ${level} completed with score ${levelScore} - NOW registering points in database`);
+      logger.info('Nível completado - registrando pontos no banco de dados', { 
+        level,
+        levelScore,
+        foundWordsCount: foundWords.length 
+      }, 'GAME_LOGIC');
       
       setShowLevelComplete(true);
       setIsLevelCompleted(true);
@@ -66,11 +70,14 @@ export const useGameLogic = (
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        logger.warn('⚠️ Usuário não autenticado, não é possível atualizar pontuação');
+        logger.warn('Usuário não autenticado, não é possível atualizar pontuação', undefined, 'GAME_LOGIC');
         return;
       }
 
-      logger.log(`🔄 Registrando pontuação do nível completado para usuário ${user.id}: +${points} pontos`);
+      logger.info('Registrando pontuação do nível completado', { 
+        userId: user.id,
+        points 
+      }, 'GAME_LOGIC');
 
       // Buscar pontuação atual do usuário
       const { data: profile, error: fetchError } = await supabase
@@ -80,7 +87,7 @@ export const useGameLogic = (
         .single();
 
       if (fetchError) {
-        logger.error('❌ Erro ao buscar perfil:', fetchError);
+        logger.error('Erro ao buscar perfil', { error: fetchError }, 'GAME_LOGIC');
         return;
       }
 
@@ -97,26 +104,30 @@ export const useGameLogic = (
         .eq('id', user.id);
 
       if (updateError) {
-        logger.error('❌ Erro ao atualizar pontuação:', updateError);
+        logger.error('Erro ao atualizar pontuação', { error: updateError }, 'GAME_LOGIC');
         throw updateError;
       }
 
-      logger.log(`✅ Pontuação do nível completado registrada: ${currentScore} → ${newScore} (+${points})`);
+      logger.info('Pontuação do nível completado registrada com sucesso', { 
+        previousScore: currentScore,
+        newScore,
+        pointsAdded: points 
+      }, 'GAME_LOGIC');
 
       // Forçar atualização do ranking semanal
       try {
         const { error: rankingError } = await supabase.rpc('update_weekly_ranking');
         if (rankingError) {
-          logger.warn('⚠️ Erro ao atualizar ranking semanal:', rankingError);
+          logger.warn('Erro ao atualizar ranking semanal', { error: rankingError }, 'GAME_LOGIC');
         } else {
-          logger.log('✅ Ranking semanal atualizado após completar nível');
+          logger.info('Ranking semanal atualizado após completar nível', undefined, 'GAME_LOGIC');
         }
       } catch (rankingUpdateError) {
-        logger.warn('⚠️ Erro ao forçar atualização do ranking:', rankingUpdateError);
+        logger.warn('Erro ao forçar atualização do ranking', { error: rankingUpdateError }, 'GAME_LOGIC');
       }
 
     } catch (error) {
-      logger.error('❌ Erro ao atualizar pontuação do usuário:', error);
+      logger.error('Erro ao atualizar pontuação do usuário', { error }, 'GAME_LOGIC');
     }
   };
 
@@ -124,7 +135,10 @@ export const useGameLogic = (
     const points = getPointsForWord(word);
     const newFoundWord = { word, positions: [...positions], points };
     
-    logger.log(`📝 Palavra encontrada: "${word}" = ${points} pontos (acumulando para registrar quando nível completar)`);
+    logger.info('Palavra encontrada - acumulando para registrar quando nível completar', { 
+      word,
+      points 
+    }, 'GAME_LOGIC');
     
     setFoundWords(prev => [...prev, newFoundWord]);
     setPermanentlyMarkedCells(prev => [...prev, ...positions]);
