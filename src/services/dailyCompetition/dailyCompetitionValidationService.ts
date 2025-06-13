@@ -1,144 +1,121 @@
+
+import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 import { competitionStatusService } from '@/services/competitionStatusService';
 import { validateDailyCompetitionData } from '@/utils/dailyCompetitionValidation';
-import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { ApiResponse } from '@/types';
 
-export class DailyCompetitionValidationService {
-  /**
-   * Cria competição diária com validação obrigatória de horário
-   */
-  async createDailyCompetition(formData: any): Promise<ApiResponse<any>> {
+class DailyCompetitionValidationService {
+  async validateDailyCompetition(competitionData: any): Promise<{ isValid: boolean; error?: string }> {
     try {
-      console.log('🔍 Service: Criando competição diária com validação:', formData);
+      // Usar a função de validação centralizada
+      const validatedData = validateDailyCompetitionData(competitionData);
       
-      // OBRIGATÓRIO: Validar e corrigir dados antes de salvar
-      const validatedData = validateDailyCompetitionData(formData);
-      
-      console.log('✅ Service: Dados validados e corrigidos:', validatedData);
-      
-      // Obter o usuário atual
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Inserir no banco - o trigger garantirá 23:59:59
-      const { data, error } = await supabase
+      // Verificar se já existe uma competição diária ativa para o mesmo período
+      const { data: existingCompetitions, error } = await supabase
         .from('custom_competitions')
-        .insert({
-          title: validatedData.title,
-          description: validatedData.description,
-          theme: validatedData.theme,
-          start_date: validatedData.start_date,
-          end_date: validatedData.end_date, // Obrigatório e sempre fornecido pela validação
-          competition_type: validatedData.competition_type,
-          max_participants: formData.max_participants || null,
-          created_by: user?.id
-        })
-        .select()
-        .single();
+        .select('*')
+        .eq('competition_type', 'daily')
+        .eq('status', 'active');
 
       if (error) {
-        console.error('❌ Service: Erro ao criar competição:', error);
-        throw error;
+        logger.error('Erro ao verificar competições existentes', { error }, 'DAILY_COMPETITION_VALIDATION');
+        return { isValid: false, error: 'Erro ao validar competição' };
       }
 
-      console.log('🎉 Service: Competição criada com sucesso:', data);
-      return createSuccessResponse(data);
-    } catch (error) {
-      console.error('❌ Service: Erro na criação:', error);
-      return createErrorResponse(handleServiceError(error, 'CREATE_DAILY_COMPETITION'));
-    }
-  }
-
-  /**
-   * Atualiza competição diária com validação obrigatória de horário
-   */
-  async updateDailyCompetition(competitionId: string, formData: any): Promise<ApiResponse<any>> {
-    try {
-      console.log('🔍 Service: Atualizando competição diária:', { competitionId, formData });
-      
-      // OBRIGATÓRIO: Validar e corrigir dados antes de atualizar
-      const validatedData = validateDailyCompetitionData(formData);
-      
-      console.log('✅ Service: Dados validados para atualização:', validatedData);
-      
-      // Atualizar no banco - o trigger garantirá 23:59:59
-      const { data, error } = await supabase
+      const { data: scheduledCompetitions, error: scheduledError } = await supabase
         .from('custom_competitions')
-        .update({
-          title: validatedData.title,
-          description: validatedData.description,
-          theme: validatedData.theme,
-          start_date: validatedData.start_date,
-          end_date: validatedData.end_date, // Será corrigido pelo trigger se necessário
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', competitionId)
-        .eq('competition_type', 'challenge') // Garantir que só atualize competições diárias
-        .select()
-        .single();
+        .select('*')
+        .eq('competition_type', 'daily')
+        .eq('status', 'scheduled');
 
-      if (error) {
-        console.error('❌ Service: Erro ao atualizar competição:', error);
-        throw error;
+      if (scheduledError) {
+        logger.error('Erro ao verificar competições agendadas', { scheduledError }, 'DAILY_COMPETITION_VALIDATION');
+        return { isValid: false, error: 'Erro ao validar competição' };
       }
 
-      if (!data) {
-        throw new Error('Competição não encontrada ou não é uma competição diária');
-      }
-
-      console.log('🎉 Service: Competição atualizada com sucesso:', data);
-      return createSuccessResponse(data);
-    } catch (error) {
-      console.error('❌ Service: Erro na atualização:', error);
-      return createErrorResponse(handleServiceError(error, 'UPDATE_DAILY_COMPETITION'));
-    }
-  }
-
-  /**
-   * Verifica e corrige competições diárias com horário incorreto
-   */
-  async validateAllDailyCompetitions(): Promise<ApiResponse<any>> {
-    try {
-      console.log('🔍 Service: Verificando todas as competições diárias...');
+      // Verificar conflitos com competições existentes
+      const allExisting = [...(existingCompetitions || []), ...(scheduledCompetitions || [])];
       
-      // Buscar todas as competições diárias
-      const { data: competitions, error } = await supabase
-        .from('custom_competitions')
-        .select('id, title, start_date, end_date, status')
-        .eq('competition_type', 'challenge');
+      for (const existing of allExisting) {
+        // Pular se for a mesma competição (para edições)
+        if (competitionData.id && existing.id === competitionData.id) {
+          continue;
+        }
 
-      if (error) {
-        throw error;
-      }
+        const newStart = new Date(validatedData.start_date);
+        const newEnd = new Date(validatedData.end_date);
+        const existingStart = new Date(existing.start_date);
+        const existingEnd = new Date(existing.end_date);
 
-      const corrections = [];
-      
-      for (const comp of competitions || []) {
-        // Verificar se precisa correção
-        const startDate = new Date(comp.start_date);
-        const endDate = new Date(comp.end_date);
-        const expectedEndDate = new Date(startDate);
-        expectedEndDate.setHours(23, 59, 59, 999);
+        // Verificar se há sobreposição de datas
+        const hasOverlap = (newStart < existingEnd) && (newEnd > existingStart);
         
-        if (endDate.getTime() !== expectedEndDate.getTime()) {
-          console.log(`🔧 Corrigindo competição ${comp.title}:`, {
-            current: endDate.toISOString(),
-            expected: expectedEndDate.toISOString()
-          });
-          
-          corrections.push({
-            id: comp.id,
-            title: comp.title,
-            corrected: true
-          });
+        if (hasOverlap) {
+          return { 
+            isValid: false, 
+            error: `Já existe uma competição diária no período selecionado: "${existing.title}"` 
+          };
         }
       }
 
-      console.log(`✅ Verificação concluída. ${corrections.length} competições precisaram de correção.`);
-      return createSuccessResponse({ totalChecked: competitions?.length || 0, corrected: corrections });
+      // Verificar se a data está no futuro ou presente
+      const now = new Date();
+      const competitionStart = new Date(validatedData.start_date);
+      
+      if (competitionStart < now && !competitionData.id) {
+        // Permitir datas passadas apenas para edições
+        const diffHours = Math.abs(now.getTime() - competitionStart.getTime()) / (1000 * 60 * 60);
+        if (diffHours > 24) {
+          return { 
+            isValid: false, 
+            error: 'Não é possível criar competições com mais de 24 horas de atraso' 
+          };
+        }
+      }
+
+      logger.info('Validação de competição diária bem-sucedida', {
+        title: validatedData.title,
+        startDate: validatedData.start_date
+      }, 'DAILY_COMPETITION_VALIDATION');
+
+      return { isValid: true };
+
     } catch (error) {
-      console.error('❌ Service: Erro na validação:', error);
-      return createErrorResponse(handleServiceError(error, 'VALIDATE_ALL_DAILY_COMPETITIONS'));
+      logger.error('Erro na validação de competição diária', { error }, 'DAILY_COMPETITION_VALIDATION');
+      return { 
+        isValid: false, 
+        error: error instanceof Error ? error.message : 'Erro de validação' 
+      };
+    }
+  }
+
+  async checkExistingDailyCompetition(date: string): Promise<boolean> {
+    try {
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('id')
+        .eq('competition_type', 'daily')
+        .in('status', ['active', 'scheduled'])
+        .gte('start_date', startOfDay.toISOString())
+        .lte('start_date', endOfDay.toISOString());
+
+      if (error) {
+        logger.error('Erro ao verificar competição diária existente', { error }, 'DAILY_COMPETITION_VALIDATION');
+        return false;
+      }
+
+      return (data && data.length > 0) || false;
+
+    } catch (error) {
+      logger.error('Erro ao verificar competição diária', { error }, 'DAILY_COMPETITION_VALIDATION');
+      return false;
     }
   }
 }
