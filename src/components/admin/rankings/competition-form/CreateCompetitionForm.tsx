@@ -7,7 +7,6 @@ import { customCompetitionService, CustomCompetitionData } from '@/services/cust
 import { usePaymentData } from '@/hooks/usePaymentData';
 import { CompetitionTypeSection } from './CompetitionTypeSection';
 import { BasicInfoSection } from './BasicInfoSection';
-import { CategorySection } from './CategorySection';
 import { WeeklyTournamentSection } from './WeeklyTournamentSection';
 import { ParticipantsSection } from './ParticipantsSection';
 import { ScheduleSection } from './ScheduleSection';
@@ -25,7 +24,6 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
     title: '',
     description: '',
     type: 'weekly' as 'daily' | 'weekly',
-    category: 'geral' as string,
     weeklyTournamentId: 'none' as string,
     prizePool: 0,
     maxParticipants: 999999,
@@ -90,22 +88,21 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 RADICAL FIX: Criando competição SEM conversões de data...');
+      console.log('🚀 Criando competição sem CategorySection...');
       
       const competitionData: CustomCompetitionData = {
         title: formData.title,
         description: formData.description,
         type: formData.type,
-        category: formData.category,
+        category: 'geral', // Valor padrão fixo
         weeklyTournamentId: formData.weeklyTournamentId !== 'none' ? formData.weeklyTournamentId : undefined,
         prizePool: formData.prizePool,
         maxParticipants: formData.maxParticipants,
-        // RADICAL FIX: Manter como strings - ZERO conversões
         startDate: formData.startDate || undefined,
         endDate: formData.endDate || undefined
       };
 
-      console.log('🎯 RADICAL: Dados enviados como strings puras:', competitionData);
+      console.log('🎯 Dados enviados:', competitionData);
 
       const result = await customCompetitionService.createCompetition(competitionData);
       
@@ -126,7 +123,6 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
           title: '',
           description: '',
           type: 'weekly',
-          category: 'geral',
           weeklyTournamentId: 'none',
           prizePool: totalPrizePool,
           maxParticipants: 999999,
@@ -176,13 +172,6 @@ export const CreateCompetitionForm = ({ onClose, onCompetitionCreated }: CreateC
           <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
           <h3 className="text-sm font-medium text-slate-700">Configurações Específicas</h3>
         </div>
-
-        {formData.type === 'daily' && (
-          <CategorySection 
-            category={formData.category}
-            onCategoryChange={(category) => setFormData(prev => ({ ...prev, category }))}
-          />
-        )}
 
         {formData.type === 'daily' && (
           <WeeklyTournamentSection 
