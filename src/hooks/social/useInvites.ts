@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { inviteService } from '@/services/inviteService';
 import { useAuth } from '@/hooks/auth/useAuth';
@@ -12,6 +13,9 @@ export const useInvites = () => {
   const [isResending, setIsResending] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const { user } = useAuth();
+
+  // Generate invite link based on user
+  const inviteLink = user ? `${window.location.origin}/invite/${user.id}` : null;
 
   const fetchInvites = async () => {
     if (!user) return;
@@ -60,6 +64,9 @@ export const useInvites = () => {
       setIsCreating(false);
     }
   };
+
+  // Alias for sendInvite to match component expectations
+  const sendInvite = createInvite;
 
   const resendInvite = async (inviteId: string) => {
     if (!user) return;
@@ -111,6 +118,9 @@ export const useInvites = () => {
     }
   };
 
+  // Alias for useInviteCode to match component expectations
+  const useInviteCode = claimInvite;
+
   useEffect(() => {
     fetchInvites();
   }, [user]);
@@ -122,9 +132,12 @@ export const useInvites = () => {
     isCreating,
     isResending,
     isClaiming,
+    inviteLink,
     fetchInvites,
     createInvite,
+    sendInvite,
     resendInvite,
-    claimInvite
+    claimInvite,
+    useInviteCode
   };
 };

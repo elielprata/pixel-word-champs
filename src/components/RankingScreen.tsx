@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +15,7 @@ interface RankingScreenProps {
 const RankingScreen = ({ onBack }: RankingScreenProps) => {
   const { user } = useAuth();
   const { dailyRanking, weeklyRanking, isLoading, refreshData } = useRankingData();
-  const { historicalRanking, isLoading: isHistoricalLoading, fetchHistoricalRanking } = useHistoricalRanking();
+  const { data: historicalRanking = [], isLoading: isHistoricalLoading } = useHistoricalRanking();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   logger.info('RankingScreen carregado', { 
@@ -31,8 +32,7 @@ const RankingScreen = ({ onBack }: RankingScreenProps) => {
   const handleDateChange = async (date: Date | null) => {
     setSelectedDate(date);
     if (date) {
-      logger.info('Buscando ranking histórico', { date }, 'RANKING_SCREEN');
-      await fetchHistoricalRanking(date);
+      logger.info('Data selecionada para ranking histórico', { date }, 'RANKING_SCREEN');
     }
   };
 
@@ -84,13 +84,13 @@ const RankingScreen = ({ onBack }: RankingScreenProps) => {
               <p>Carregando ranking histórico...</p>
             ) : (
               <div className="space-y-2">
-                {historicalRanking.map((player) => (
-                  <div key={player.pos} className="flex items-center justify-between">
+                {historicalRanking.map((entry, index) => (
+                  <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Medal className="w-4 h-4 text-yellow-500" />
-                      <span>{player.name}</span>
+                      <span>Semana {entry.week_start}</span>
                     </div>
-                    <span>{player.score}</span>
+                    <span>Posição: {entry.position} - {entry.total_score} pts</span>
                   </div>
                 ))}
               </div>

@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Trophy, Users, Clock, RefreshCw, Info } from 'lucide-react';
-import { useRankings } from '@/hooks/ranking/useRankings';
+import { useRankings } from '@/hooks/admin/useRankings';
 import { logger } from '@/utils/logger';
 
 export const RankingInfoCard = () => {

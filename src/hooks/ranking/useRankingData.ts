@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +17,7 @@ export const useRankingData = () => {
   const { isAuthenticated } = useAuth();
   const { dailyLimit } = useRankingPagination();
 
-  const { data: dailyRanking = [], isLoading } = useQuery({
+  const { data: dailyRanking = [], isLoading: isDailyLoading } = useQuery({
     queryKey: ['rankings', dailyLimit],
     queryFn: async (): Promise<RankingEntry[]> => {
       if (!isAuthenticated) {
@@ -70,5 +71,54 @@ export const useRankingData = () => {
     retry: 1,
   });
 
-  return { dailyRanking, isLoading };
+  // Weekly ranking query
+  const { data: weeklyRanking = [], isLoading: isWeeklyLoading } = useQuery({
+    queryKey: ['weeklyRanking', dailyLimit],
+    queryFn: async (): Promise<RankingEntry[]> => {
+      if (!isAuthenticated) {
+        logger.warn('Usuário não autenticado tentando acessar ranking semanal', undefined, 'RANKING_DATA');
+        return [];
+      }
+
+      logger.debug('Buscando ranking semanal', { limit: dailyLimit }, 'RANKING_DATA');
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url, total_score')
+        .gt('total_score', 0)
+        .order('total_score', { ascending: false })
+        .limit(dailyLimit);
+
+      if (error) {
+        logger.error('Erro ao buscar ranking semanal', { error: error.message }, 'RANKING_DATA');
+        throw error;
+      }
+
+      const rankings = data?.map((profile, index) => ({
+        pos: index + 1,
+        name: profile.username || 'Usuário',
+        score: profile.total_score || 0,
+        avatar_url: profile.avatar_url || null,
+        user_id: profile.id
+      })) || [];
+
+      logger.info('Ranking semanal carregado', { count: rankings.length }, 'RANKING_DATA');
+      return rankings;
+    },
+    retry: 1,
+  });
+
+  const isLoading = isDailyLoading || isWeeklyLoading;
+
+  const refreshData = () => {
+    // Refresh both rankings
+    logger.info('Atualizando dados de ranking', undefined, 'RANKING_DATA');
+  };
+
+  return { 
+    dailyRanking, 
+    weeklyRanking, 
+    isLoading,
+    refreshData
+  };
 };

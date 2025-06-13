@@ -131,3 +131,23 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   page: number;
   limit: number;
 }
+
+// Adicionar interface para WeeklyParticipation
+export interface WeeklyParticipation {
+  id: string;
+  user_id: string;
+  competition_id: string;
+  total_score: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Adicionar interface para InviteData
+export interface InviteData {
+  id: string;
+  email: string;
+  code: string;
+  status: 'pending' | 'accepted' | 'expired';
+  created_at: string;
+  used_at?: string;
+}

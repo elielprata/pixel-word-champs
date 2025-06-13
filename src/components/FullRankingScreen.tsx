@@ -27,7 +27,7 @@ const FullRankingScreen = ({ onBack }: FullRankingScreenProps) => {
       </div>
       
       <div className="px-4">
-        <RankingScreen />
+        <RankingScreen onBack={onBack} />
       </div>
     </div>
   );
