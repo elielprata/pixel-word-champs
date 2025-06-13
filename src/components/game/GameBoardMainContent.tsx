@@ -69,11 +69,8 @@ const GameBoardMainContent = ({
         />
       </div>
 
-      {/* Lista de palavras com layout responsivo */}
-      <div className={`
-        bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20
-        ${isMobile ? 'max-h-32 overflow-y-auto' : ''}
-      `}>
+      {/* Lista de palavras sem scroll - layout flexível */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20">
         <WordsList 
           levelWords={levelWords}
           foundWords={foundWords}

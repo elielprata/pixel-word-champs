@@ -43,7 +43,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
         </div>
       </div>
       
-      {/* Grid de palavras otimizado */}
+      {/* Grid de palavras sem scroll - layout flexível */}
       <div className="grid grid-cols-1 gap-1">
         {levelWords.map((word, index) => {
           const foundWordIndex = foundWords.findIndex(fw => fw.word === word);
