@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
   try {
     const { userId, adminPassword, adminId } = await req.json()
 
-    console.log('🗑️ Iniciando exclusão completa do usuário:', { userId, adminId })
+    console.log('🗑️ Iniciando exclusão SIMPLIFICADA do usuário:', { userId, adminId })
 
     if (!userId || !adminId) {
       throw new Error('Parâmetros obrigatórios: userId, adminId')
@@ -78,82 +78,20 @@ Deno.serve(async (req) => {
       .eq('id', userId)
       .single()
 
-    console.log('🧹 Iniciando limpeza de dados relacionados')
+    console.log('🧹 Iniciando exclusão OTIMIZADA com CASCADE')
 
-    // 1. CRITICAL: Deletar registros de admin_actions que referenciam este usuário PRIMEIRO
-    console.log('🧹 Limpando admin_actions...')
-    await supabase.from('admin_actions').delete().eq('admin_id', userId)
-    await supabase.from('admin_actions').delete().eq('target_user_id', userId)
-
-    // 2. Histórico de palavras
-    console.log('🧹 Limpando user_word_history...')
-    await supabase.from('user_word_history').delete().eq('user_id', userId)
-    
-    // 3. Palavras encontradas (via sessões)
-    console.log('🧹 Limpando words_found...')
-    const { data: userSessions } = await supabase
-      .from('game_sessions')
-      .select('id')
-      .eq('user_id', userId)
-
-    if (userSessions && userSessions.length > 0) {
-      const sessionIds = userSessions.map(s => s.id)
-      await supabase.from('words_found').delete().in('session_id', sessionIds)
-    }
-
-    // 4. Sessões de jogo
-    console.log('🧹 Limpando game_sessions...')
-    await supabase.from('game_sessions').delete().eq('user_id', userId)
-    
-    // 5. Participações em competições
-    console.log('🧹 Limpando competition_participations...')
-    await supabase.from('competition_participations').delete().eq('user_id', userId)
-    
-    // 6. Rankings semanais
-    console.log('🧹 Limpando weekly_rankings...')
-    await supabase.from('weekly_rankings').delete().eq('user_id', userId)
-    
-    // 7. Histórico de pagamentos
-    console.log('🧹 Limpando payment_history...')
-    await supabase.from('payment_history').delete().eq('user_id', userId)
-    
-    // 8. Distribuições de prêmios
-    console.log('🧹 Limpando prize_distributions...')
-    await supabase.from('prize_distributions').delete().eq('user_id', userId)
-    
-    // 9. Convites relacionados
-    console.log('🧹 Limpando invite_rewards e invites...')
-    await supabase.from('invite_rewards').delete().or(`user_id.eq.${userId},invited_user_id.eq.${userId}`)
-    await supabase.from('invites').delete().or(`invited_by.eq.${userId},used_by.eq.${userId}`)
-    
-    // 10. Relatórios de usuário
-    console.log('🧹 Limpando user_reports...')
-    await supabase.from('user_reports').delete().eq('user_id', userId)
-    
-    // 11. Progresso em desafios
-    console.log('🧹 Limpando challenge_progress...')
-    await supabase.from('challenge_progress').delete().eq('user_id', userId)
-    
-    // 12. Histórico de competições
-    console.log('🧹 Limpando competition_history...')
-    await supabase.from('competition_history').delete().eq('user_id', userId)
-    
-    // 13. Roles do usuário
-    console.log('🧹 Limpando user_roles...')
-    await supabase.from('user_roles').delete().eq('user_id', userId)
-
-    console.log('✅ Limpeza de dados relacionados concluída')
-
-    // 14. Registrar ação administrativa ANTES de deletar o perfil
+    // IMPORTANTE: Registrar ação administrativa ANTES da exclusão
+    // Isso permite rastrear quem fez a exclusão
     console.log('📝 Registrando ação administrativa...')
     const { error: logError } = await supabase
       .from('admin_actions')
       .insert({
         admin_id: adminId,
-        target_user_id: userId,
+        target_user_id: null, // Não referenciar o usuário que será deletado
         action_type: 'delete_user',
         details: { 
           timestamp: new Date().toISOString(),
+          deleted_user_id: userId,
           username: userProfile?.username || 'Usuário não encontrado'
         }
       })
@@ -164,21 +102,8 @@ Deno.serve(async (req) => {
       console.log('✅ Log registrado com sucesso')
     }
 
-    // 15. Deletar o perfil do usuário
-    console.log('🗑️ Deletando perfil do usuário...')
-    const { error: deleteProfileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId)
-
-    if (deleteProfileError) {
-      console.error('❌ Erro ao excluir perfil:', deleteProfileError.message)
-      throw new Error(`Erro ao excluir perfil: ${deleteProfileError.message}`)
-    }
-
-    console.log('✅ Perfil do usuário excluído')
-
-    // 16. Deletar o usuário do auth system com service_role - COM LOGS DETALHADOS
+    // Agora deletar o usuário do auth system
+    // As foreign keys CASCADE farão toda a limpeza automaticamente
     console.log('🗑️ Deletando usuário do sistema de autenticação...')
     console.log('🔧 Configuração do cliente:', {
       url: Deno.env.get('SUPABASE_URL') ? 'SET' : 'NOT_SET',
@@ -200,7 +125,8 @@ Deno.serve(async (req) => {
       }
 
       console.log('✅ Resposta da API de auth:', deleteAuthData)
-      console.log('✅ Usuário completamente removido do sistema de autenticação')
+      console.log('✅ Usuário completamente removido do sistema')
+      console.log('🧹 Todas as tabelas relacionadas foram limpas automaticamente via CASCADE')
 
     } catch (authDeleteError) {
       console.error('❌ Exceção capturada ao deletar do auth:', {
@@ -216,7 +142,8 @@ Deno.serve(async (req) => {
         success: true, 
         message: 'Usuário excluído completamente do sistema',
         deletedUserId: userId,
-        deletedUsername: userProfile?.username
+        deletedUsername: userProfile?.username,
+        method: 'CASCADE_DELETE'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
