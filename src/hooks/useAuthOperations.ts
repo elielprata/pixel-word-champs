@@ -26,7 +26,7 @@ export const useAuthOperations = (
     setError('');
 
     try {
-      logger.info('Iniciando processo de login', { email: credentials.email }, 'AUTH_OPERATIONS');
+      logger.info('Iniciando processo de login', { hasEmail: !!credentials.email }, 'AUTH_OPERATIONS');
       
       const response = await authService.login(credentials);
       
@@ -66,7 +66,10 @@ export const useAuthOperations = (
     setError('');
 
     try {
-      logger.info('Iniciando processo de registro', { email: userData.email, username: userData.username }, 'AUTH_OPERATIONS');
+      logger.info('Iniciando processo de registro', { 
+        hasEmail: !!userData.email, 
+        hasUsername: !!userData.username 
+      }, 'AUTH_OPERATIONS');
       
       const response = await authService.register(userData);
       
