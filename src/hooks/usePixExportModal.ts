@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -40,27 +39,24 @@ export const usePixExportModal = (open: boolean, prizeLevel: string) => {
     try {
       console.log('🏆 Buscando vencedores para:', prizeLevel);
       
-      // Buscar registros de pagamento do banco
-      const { data: paymentRecords, error } = await supabase
+      // Buscar registros de pagamento separadamente
+      const { data: paymentRecords, error: paymentError } = await supabase
         .from('payment_history')
-        .select(`
-          id,
-          user_id,
-          ranking_type,
-          ranking_id,
-          prize_amount,
-          payment_status,
-          payment_date,
-          pix_key,
-          pix_holder_name,
-          notes,
-          created_at,
-          updated_at,
-          profiles!inner(username)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (paymentError) throw paymentError;
+
+      // Buscar perfis separadamente
+      const userIds = paymentRecords?.map(record => record.user_id) || [];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.warn('⚠️ Erro ao buscar perfis:', profilesError);
+      }
 
       // Buscar posições dos rankings semanais para cada usuário
       const { data: weeklyRankings, error: rankingError } = await supabase
@@ -72,8 +68,9 @@ export const usePixExportModal = (open: boolean, prizeLevel: string) => {
         console.warn('⚠️ Erro ao buscar rankings:', rankingError);
       }
 
-      // Mapear registros com posições
+      // Mapear registros com perfis e posições
       const winnersWithPositions: PaymentRecord[] = (paymentRecords || []).map(record => {
+        const profile = profiles?.find(p => p.id === record.user_id);
         const ranking = weeklyRankings?.find(r => r.user_id === record.user_id);
         
         return {
@@ -89,7 +86,7 @@ export const usePixExportModal = (open: boolean, prizeLevel: string) => {
           notes: record.notes || undefined,
           created_at: record.created_at,
           updated_at: record.updated_at,
-          username: record.profiles?.username || 'Usuário',
+          username: profile?.username || 'Usuário',
           position: ranking?.position || 0
         };
       });
