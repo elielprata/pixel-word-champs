@@ -1,28 +1,37 @@
 
 import { Winner } from '@/types/winner';
 
-export const exportToCSV = (winners: Winner[], prizeLevel: string): void => {
+export const exportToCSV = (winners: Winner[], filename: string): void => {
+  // Gerar nome do arquivo mais limpo
+  const cleanFilename = filename.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+  const dateStr = new Date().toISOString().split('T')[0];
+  const fullFilename = `${cleanFilename}_${dateStr}.csv`;
+
   const headers = ['Posição', 'Usuário', 'Chave PIX', 'Nome do Titular', 'Data Consolidada', 'Prêmio', 'Status Pagamento'];
   const csvContent = [
     headers.join(','),
     ...winners.map(winner => [
       winner.position,
-      winner.username,
-      `"${winner.pixKey}"`,
-      `"${winner.holderName}"`,
+      `"${winner.username.replace(/"/g, '""')}"`, // Escapar aspas duplas
+      `"${winner.pixKey.replace(/"/g, '""')}"`,
+      `"${winner.holderName.replace(/"/g, '""')}"`,
       winner.consolidatedDate,
-      `R$ ${winner.prize.toLocaleString('pt-BR')}`,
+      `R$ ${winner.prize.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       winner.paymentStatus === 'paid' ? 'Pago' : winner.paymentStatus === 'cancelled' ? 'Cancelado' : 'Pendente'
     ].join(','))
   ].join('\n');
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  // Adicionar BOM para UTF-8 para melhor compatibilidade com Excel
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+  
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
   link.setAttribute('href', url);
-  link.setAttribute('download', `pix_${prizeLevel.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('download', fullFilename);
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };
