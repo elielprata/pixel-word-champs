@@ -140,28 +140,6 @@ export const saveWordsToDatabase = async (
     }
   }
 
-  // Registrar a geração na tabela de controle SE houve sucesso
-  if (successCount > 0) {
-    try {
-      const { error: logError } = await supabase
-        .from('ai_word_generation')
-        .insert({
-          category_id: categoryId,
-          level: 1,
-          words_generated: successCount,
-          last_generation: new Date().toISOString()
-        });
-
-      if (logError) {
-        console.error('❌ Erro ao registrar geração na tabela de controle:', logError);
-      } else {
-        console.log('📊 Geração registrada na tabela de controle');
-      }
-    } catch (logErr) {
-      console.error('❌ Erro inesperado ao registrar geração:', logErr);
-    }
-  }
-
   const finalResult = {
     category: categoryName,
     totalReceived: words.length,
