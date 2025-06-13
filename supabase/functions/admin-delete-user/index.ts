@@ -2,6 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.10'
 import { corsHeaders } from '../_shared/cors.ts'
 
+// Inicializar cliente Supabase com configurações específicas para operações administrativas
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -9,6 +10,11 @@ const supabase = createClient(
     auth: {
       autoRefreshToken: false,
       persistSession: false
+    },
+    global: {
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}`
+      }
     }
   }
 )
@@ -172,16 +178,38 @@ Deno.serve(async (req) => {
 
     console.log('✅ Perfil do usuário excluído')
 
-    // 16. Deletar o usuário do auth system com service_role
+    // 16. Deletar o usuário do auth system com service_role - COM LOGS DETALHADOS
     console.log('🗑️ Deletando usuário do sistema de autenticação...')
-    const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId)
-    
-    if (deleteAuthError) {
-      console.error('❌ Erro ao deletar usuário do auth:', deleteAuthError.message)
-      throw new Error(`Erro ao deletar usuário do sistema de autenticação: ${deleteAuthError.message}`)
-    }
+    console.log('🔧 Configuração do cliente:', {
+      url: Deno.env.get('SUPABASE_URL') ? 'SET' : 'NOT_SET',
+      serviceKey: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'SET' : 'NOT_SET',
+      serviceKeyLength: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.length || 0
+    })
 
-    console.log('✅ Usuário completamente removido do sistema de autenticação')
+    try {
+      const { data: deleteAuthData, error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId)
+      
+      if (deleteAuthError) {
+        console.error('❌ Erro detalhado ao deletar usuário do auth:', {
+          message: deleteAuthError.message,
+          code: deleteAuthError.code || 'NO_CODE',
+          status: deleteAuthError.status || 'NO_STATUS',
+          details: deleteAuthError
+        })
+        throw new Error(`Erro ao deletar usuário do sistema de autenticação: ${deleteAuthError.message}`)
+      }
+
+      console.log('✅ Resposta da API de auth:', deleteAuthData)
+      console.log('✅ Usuário completamente removido do sistema de autenticação')
+
+    } catch (authDeleteError) {
+      console.error('❌ Exceção capturada ao deletar do auth:', {
+        message: authDeleteError.message,
+        name: authDeleteError.name,
+        stack: authDeleteError.stack
+      })
+      throw new Error(`Erro crítico ao deletar usuário do sistema de autenticação: ${authDeleteError.message}`)
+    }
 
     return new Response(
       JSON.stringify({ 
