@@ -6,8 +6,8 @@ import RankingScreen from '@/components/RankingScreen';
 import InviteScreen from '@/components/InviteScreen';
 import ProfileScreen from '@/components/ProfileScreen';
 import FullRankingScreen from '@/components/FullRankingScreen';
-import ChallengeRankingScreen from '@/components/ChallengeRankingScreen';
-import ChallengeScreen from '@/components/ChallengeScreen';
+import DailyCompetitionRankingScreen from '@/components/DailyCompetitionRankingScreen';
+import DailyCompetitionScreen from '@/components/DailyCompetitionScreen';
 import SettingsScreen from '@/components/SettingsScreen';
 import HelpSupportScreen from '@/components/HelpSupportScreen';
 import AchievementsScreen from '@/components/AchievementsScreen';
@@ -19,14 +19,14 @@ const Index = () => {
   const {
     navigationState,
     setActiveTab,
-    handleStartChallenge,
+    handleStartDailyCompetition,
     handleStartGameFromRules,
     handleBackFromRules,
     handleBackToHome,
     handleViewFullRanking,
     handleBackFromFullRanking,
-    handleViewChallengeRanking,
-    handleBackFromChallengeRanking,
+    handleViewDailyCompetitionRanking,
+    handleBackFromDailyCompetitionRanking,
     handleNavigateToSettings,
     handleBackFromSettings,
     handleNavigateToHelp,
@@ -37,9 +37,9 @@ const Index = () => {
 
   const {
     activeTab,
-    activeChallenge,
+    activeDailyCompetition,
     showFullRanking,
-    challengeRankingId,
+    dailyCompetitionRankingId,
     showSettings,
     showHelp,
     showAchievements,
@@ -48,15 +48,15 @@ const Index = () => {
 
   logger.debug('Renderizando página principal', { 
     activeTab, 
-    activeChallenge, 
+    activeDailyCompetition, 
     showFullRanking 
   }, 'INDEX_PAGE');
 
-  // Se há um desafio ativo, mostrar a tela do jogo
-  if (activeChallenge) {
+  // Se há uma competição diária ativa, mostrar a tela do jogo
+  if (activeDailyCompetition) {
     return (
-      <ChallengeScreen 
-        challengeId={activeChallenge}
+      <DailyCompetitionScreen 
+        competitionId={activeDailyCompetition}
         onBack={handleBackToHome}
       />
     );
@@ -77,11 +77,11 @@ const Index = () => {
     );
   }
 
-  if (challengeRankingId) {
+  if (dailyCompetitionRankingId) {
     return (
-      <ChallengeRankingScreen 
-        challengeId={challengeRankingId}
-        onBack={handleBackFromChallengeRanking} 
+      <DailyCompetitionRankingScreen 
+        competitionId={dailyCompetitionRankingId}
+        onBack={handleBackFromDailyCompetitionRanking} 
       />
     );
   }
@@ -109,9 +109,9 @@ const Index = () => {
       case 'home':
         return (
           <HomeScreen 
-            onStartChallenge={handleStartChallenge} 
+            onStartChallenge={handleStartDailyCompetition} 
             onViewFullRanking={handleViewFullRanking}
-            onViewChallengeRanking={handleViewChallengeRanking}
+            onViewChallengeRanking={handleViewDailyCompetitionRanking}
           />
         );
       case 'ranking':
@@ -129,9 +129,9 @@ const Index = () => {
       default:
         return (
           <HomeScreen 
-            onStartChallenge={handleStartChallenge} 
+            onStartChallenge={handleStartDailyCompetition} 
             onViewFullRanking={handleViewFullRanking}
-            onViewChallengeRanking={handleViewChallengeRanking}
+            onViewChallengeRanking={handleViewDailyCompetitionRanking}
           />
         );
     }

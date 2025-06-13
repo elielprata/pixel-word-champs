@@ -2,10 +2,10 @@
 import React from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { useDailyGameLogic } from '@/hooks/useDailyGameLogic';
-import DailyCompetitionErrorDisplay from './daily/DailyCompetitionErrorDisplay';
-import DailyCompetitionLoadingScreen from './daily/DailyCompetitionLoadingScreen';
-import DailyCompetitionCompletedScreen from './daily/DailyCompetitionCompletedScreen';
-import DailyCompetitionGameSession from './daily/DailyCompetitionGameSession';
+import ChallengeErrorDisplay from './challenge/ChallengeErrorDisplay';
+import ChallengeLoadingScreen from './challenge/ChallengeLoadingScreen';
+import ChallengeCompletedScreen from './challenge/ChallengeCompletedScreen';
+import ChallengeGameSession from './challenge/ChallengeGameSession';
 import { logger } from '@/utils/logger';
 
 interface DailyCompetitionScreenProps {
@@ -90,7 +90,7 @@ const DailyCompetitionScreen = ({ competitionId, onBack }: DailyCompetitionScree
   // Tela de erro com opções claras
   if (error) {
     return (
-      <DailyCompetitionErrorDisplay
+      <ChallengeErrorDisplay
         error={error}
         onRetry={handleRetry}
         onBackToMenu={handleBackToMenu}
@@ -100,13 +100,13 @@ const DailyCompetitionScreen = ({ competitionId, onBack }: DailyCompetitionScree
 
   // Tela de loading
   if (isLoading) {
-    return <DailyCompetitionLoadingScreen />;
+    return <ChallengeLoadingScreen />;
   }
 
   // Tela de jogo completado
   if (gameCompleted) {
     return (
-      <DailyCompetitionCompletedScreen
+      <ChallengeCompletedScreen
         totalScore={totalScore}
         onCompleteGame={handleCompleteGame}
       />
@@ -116,7 +116,7 @@ const DailyCompetitionScreen = ({ competitionId, onBack }: DailyCompetitionScree
   // Verificar se temos uma sessão válida antes de renderizar o jogo
   if (!gameSession) {
     return (
-      <DailyCompetitionErrorDisplay
+      <ChallengeErrorDisplay
         error="Sessão de jogo não encontrada"
         onRetry={handleRetry}
         onBackToMenu={handleBackToMenu}
@@ -125,7 +125,7 @@ const DailyCompetitionScreen = ({ competitionId, onBack }: DailyCompetitionScree
   }
 
   return (
-    <DailyCompetitionGameSession
+    <ChallengeGameSession
       currentLevel={currentLevel}
       timeRemaining={timeRemaining}
       onWordFound={handleWordFound}
