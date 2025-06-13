@@ -1,115 +1,263 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { createSuccessResponse, createErrorResponse } from '@/utils/apiHelpers';
-import { ApiResponse } from '@/types';
 import { logger } from '@/utils/logger';
 
+export interface CompetitionValidation {
+  success: boolean;
+  competition?: any;
+  error?: string;
+}
+
+export interface JoinValidation {
+  canJoin: boolean;
+  reason: string;
+}
+
 class CompetitionValidationService {
-  async validateCompetition(competitionId: string): Promise<ApiResponse<boolean>> {
+  async validateCompetition(competitionId: string): Promise<CompetitionValidation> {
     try {
       logger.debug('Validando competição', { competitionId }, 'COMPETITION_VALIDATION_SERVICE');
-      
-      // Verificar se existe na tabela custom_competitions (onde realmente estão)
-      const { data: customCompetition, error: customError } = await supabase
+
+      const { data: competition, error } = await supabase
         .from('custom_competitions')
-        .select('id, status')
+        .select('*')
         .eq('id', competitionId)
-        .eq('status', 'active')
         .single();
 
-      if (customError && customError.code !== 'PGRST116') {
-        logger.error('Erro ao buscar em custom_competitions', { 
-          error: customError.message,
-          competitionId 
+      if (error) {
+        if (error.code === 'PGRST116') {
+          logger.warn('Competição não encontrada', { competitionId }, 'COMPETITION_VALIDATION_SERVICE');
+          return {
+            success: false,
+            error: 'Competição não encontrada'
+          };
+        }
+        logger.error('Erro ao buscar competição para validação', { 
+          competitionId, 
+          error 
         }, 'COMPETITION_VALIDATION_SERVICE');
-        return createErrorResponse('Erro ao validar competição');
+        throw error;
       }
 
-      if (customCompetition) {
-        logger.info('Competição encontrada em custom_competitions', { 
-          competitionId: customCompetition.id 
+      // Verificar se está ativa
+      if (competition.status !== 'active') {
+        logger.warn('Competição não está ativa', { 
+          competitionId, 
+          status: competition.status 
         }, 'COMPETITION_VALIDATION_SERVICE');
-        return createSuccessResponse(true);
+        return {
+          success: false,
+          error: `Competição não está ativa (status: ${competition.status})`
+        };
       }
 
-      // Se não encontrou em custom_competitions, verificar na tabela competitions (fallback)
-      const { data: competition, error: competitionError } = await supabase
-        .from('competitions')
-        .select('id, is_active')
-        .eq('id', competitionId)
-        .eq('is_active', true)
-        .single();
+      // Verificar datas
+      const now = new Date();
+      const startDate = new Date(competition.start_date);
+      const endDate = new Date(competition.end_date);
 
-      if (competitionError && competitionError.code !== 'PGRST116') {
-        logger.error('Erro ao buscar em competitions', { 
-          error: competitionError.message,
-          competitionId 
+      if (now < startDate) {
+        logger.warn('Competição ainda não começou', { 
+          competitionId, 
+          startDate, 
+          currentTime: now 
         }, 'COMPETITION_VALIDATION_SERVICE');
-        return createErrorResponse('Erro ao validar competição');
+        return {
+          success: false,
+          error: 'Competição ainda não começou'
+        };
       }
 
-      if (competition) {
-        logger.info('Competição encontrada em competitions', { 
-          competitionId: competition.id 
+      if (now > endDate) {
+        logger.warn('Competição já terminou', { 
+          competitionId, 
+          endDate, 
+          currentTime: now 
         }, 'COMPETITION_VALIDATION_SERVICE');
-        return createSuccessResponse(true);
+        return {
+          success: false,
+          error: 'Competição já terminou'
+        };
       }
 
-      logger.warn('Competição não encontrada em nenhuma tabela', { 
+      // Verificar limite de participantes
+      if (competition.max_participants) {
+        const { count, error: countError } = await supabase
+          .from('competition_participations')
+          .select('*', { count: 'exact', head: true })
+          .eq('competition_id', competitionId);
+
+        if (countError) {
+          logger.error('Erro ao verificar número de participantes', { 
+            competitionId, 
+            error: countError 
+          }, 'COMPETITION_VALIDATION_SERVICE');
+          throw countError;
+        }
+
+        if ((count || 0) >= competition.max_participants) {
+          logger.warn('Competição atingiu limite de participantes', { 
+            competitionId, 
+            currentCount: count,
+            maxParticipants: competition.max_participants 
+          }, 'COMPETITION_VALIDATION_SERVICE');
+          return {
+            success: false,
+            error: 'Competição atingiu o limite de participantes'
+          };
+        }
+      }
+
+      logger.debug('Competição validada com sucesso', { 
         competitionId 
       }, 'COMPETITION_VALIDATION_SERVICE');
-      return createErrorResponse('Competição não encontrada ou inativa');
-    } catch (error: any) {
-      logger.error('Erro na validação da competição', { 
-        error: error.message,
-        competitionId 
+
+      return {
+        success: true,
+        competition
+      };
+    } catch (error) {
+      logger.error('Erro crítico ao validar competição', { 
+        competitionId, 
+        error 
       }, 'COMPETITION_VALIDATION_SERVICE');
-      return createErrorResponse('Erro ao validar competição');
+      return {
+        success: false,
+        error: 'Erro interno na validação'
+      };
     }
   }
 
-  async getCompetitionTable(competitionId: string): Promise<'custom_competitions' | 'competitions' | null> {
+  async getCompetitionTable(competitionId: string): Promise<string | null> {
     try {
-      logger.debug('Determinando tabela da competição', { competitionId }, 'COMPETITION_VALIDATION_SERVICE');
-      
-      // Verificar primeiro em custom_competitions
-      const { data: customCompetition } = await supabase
+      logger.debug('Identificando tabela da competição', { competitionId }, 'COMPETITION_VALIDATION_SERVICE');
+
+      // Verificar se existe na tabela custom_competitions
+      const { data: customCompetition, error: customError } = await supabase
         .from('custom_competitions')
         .select('id')
         .eq('id', competitionId)
         .single();
 
-      if (customCompetition) {
-        logger.debug('Competição encontrada em custom_competitions', { 
+      if (!customError && customCompetition) {
+        logger.debug('Competição encontrada na tabela custom_competitions', { 
           competitionId 
         }, 'COMPETITION_VALIDATION_SERVICE');
         return 'custom_competitions';
       }
 
-      // Verificar em competitions
-      const { data: competition } = await supabase
-        .from('competitions')
-        .select('id')
-        .eq('id', competitionId)
-        .single();
-
-      if (competition) {
-        logger.debug('Competição encontrada em competitions', { 
-          competitionId 
-        }, 'COMPETITION_VALIDATION_SERVICE');
-        return 'competitions';
-      }
-
+      // Se chegou aqui, a competição não foi encontrada
       logger.warn('Competição não encontrada em nenhuma tabela', { 
         competitionId 
       }, 'COMPETITION_VALIDATION_SERVICE');
       return null;
-    } catch (error: any) {
-      logger.error('Erro ao determinar tabela da competição', { 
-        error: error.message,
-        competitionId 
+    } catch (error) {
+      logger.error('Erro crítico ao identificar tabela da competição', { 
+        competitionId, 
+        error 
       }, 'COMPETITION_VALIDATION_SERVICE');
       return null;
+    }
+  }
+
+  async isUserParticipating(competitionId: string): Promise<boolean> {
+    try {
+      logger.debug('Verificando se usuário está participando da competição', { 
+        competitionId 
+      }, 'COMPETITION_VALIDATION_SERVICE');
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        logger.warn('Verificação de participação sem usuário autenticado', { 
+          competitionId 
+        }, 'COMPETITION_VALIDATION_SERVICE');
+        return false;
+      }
+
+      const { data: participation, error } = await supabase
+        .from('competition_participations')
+        .select('id')
+        .eq('competition_id', competitionId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          logger.debug('Usuário não está participando da competição', { 
+            competitionId, 
+            userId: user.id 
+          }, 'COMPETITION_VALIDATION_SERVICE');
+          return false;
+        }
+        logger.error('Erro ao verificar participação do usuário', { 
+          competitionId, 
+          userId: user.id, 
+          error 
+        }, 'COMPETITION_VALIDATION_SERVICE');
+        throw error;
+      }
+
+      logger.debug('Usuário está participando da competição', { 
+        competitionId, 
+        userId: user.id 
+      }, 'COMPETITION_VALIDATION_SERVICE');
+
+      return true;
+    } catch (error) {
+      logger.error('Erro crítico ao verificar participação do usuário', { 
+        competitionId, 
+        error 
+      }, 'COMPETITION_VALIDATION_SERVICE');
+      return false;
+    }
+  }
+
+  async canJoinCompetition(competitionId: string): Promise<JoinValidation> {
+    try {
+      logger.debug('Verificando se pode participar da competição', { 
+        competitionId 
+      }, 'COMPETITION_VALIDATION_SERVICE');
+
+      // Validar a competição
+      const competitionValidation = await this.validateCompetition(competitionId);
+      
+      if (!competitionValidation.success) {
+        return {
+          canJoin: false,
+          reason: competitionValidation.error || 'Competição inválida'
+        };
+      }
+
+      // Verificar se já está participando
+      const isParticipating = await this.isUserParticipating(competitionId);
+      
+      if (isParticipating) {
+        logger.debug('Usuário já está participando da competição', { 
+          competitionId 
+        }, 'COMPETITION_VALIDATION_SERVICE');
+        return {
+          canJoin: false,
+          reason: 'Usuário já está participando'
+        };
+      }
+
+      logger.debug('Usuário pode participar da competição', { 
+        competitionId 
+      }, 'COMPETITION_VALIDATION_SERVICE');
+
+      return {
+        canJoin: true,
+        reason: 'Pode participar'
+      };
+    } catch (error) {
+      logger.error('Erro crítico ao verificar se pode participar', { 
+        competitionId, 
+        error 
+      }, 'COMPETITION_VALIDATION_SERVICE');
+      return {
+        canJoin: false,
+        reason: 'Erro interno na validação'
+      };
     }
   }
 }

@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { logger } from '@/utils/logger';
 
 export class DailyCompetitionCoreService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
     try {
-      console.log('🔍 Buscando TODAS as competições diárias ativas...');
+      logger.info('Buscando TODAS as competições diárias ativas...', undefined, 'DAILY_COMPETITION_CORE');
 
       // Buscar todas as competições diárias ativas, independente de vinculação semanal
       const { data, error } = await supabase
@@ -25,20 +26,23 @@ export class DailyCompetitionCoreService {
         .eq('status', 'active');
 
       if (error) {
-        console.error('❌ Erro na consulta SQL:', error);
+        logger.error('Erro na consulta SQL', { error }, 'DAILY_COMPETITION_CORE');
         throw error;
       }
 
       if (!data) {
-        console.log('⚠️ Nenhum dado retornado do banco');
+        logger.warn('Nenhum dado retornado do banco', undefined, 'DAILY_COMPETITION_CORE');
         return createSuccessResponse([]);
       }
 
-      console.log(`✅ Total de competições diárias ativas encontradas: ${data.length}`);
+      logger.info('Total de competições diárias ativas encontradas', { 
+        count: data.length 
+      }, 'DAILY_COMPETITION_CORE');
       
       // Log detalhado de cada competição encontrada
       data.forEach((comp, index) => {
-        console.log(`📋 Competição ${index + 1}:`, {
+        logger.debug('Competição encontrada', {
+          index: index + 1,
           id: comp.id,
           title: comp.title,
           status: comp.status,
@@ -46,23 +50,25 @@ export class DailyCompetitionCoreService {
           end_date: comp.end_date,
           hasWeeklyLink: !!comp.weekly_tournament_id,
           weeklyStatus: comp.weekly_competition?.status || 'N/A'
-        });
+        }, 'DAILY_COMPETITION_CORE');
       });
 
       // Retornar todas as competições ativas (não filtrar por vinculação semanal)
       return createSuccessResponse(data);
     } catch (error) {
-      console.error('❌ Erro ao buscar competições diárias ativas:', error);
+      logger.error('Erro ao buscar competições diárias ativas', { error }, 'DAILY_COMPETITION_CORE');
       return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_DAILY_COMPETITIONS'));
     }
   }
 
   async getDailyCompetitionRanking(competitionId: string): Promise<ApiResponse<any[]>> {
     try {
-      console.log('📊 Buscando ranking da competição diária (transferido para semanal):', competitionId);
+      logger.info('Buscando ranking da competição diária (transferido para semanal)', { 
+        competitionId 
+      }, 'DAILY_COMPETITION_CORE');
       
       if (!competitionId) {
-        console.error('❌ ID da competição não fornecido');
+        logger.error('ID da competição não fornecido', undefined, 'DAILY_COMPETITION_CORE');
         return createErrorResponse('ID da competição é obrigatório');
       }
 
@@ -74,7 +80,9 @@ export class DailyCompetitionCoreService {
         .single();
 
       if (dailyError || !dailyCompetition?.weekly_tournament_id) {
-        console.error('❌ Competição diária não vinculada a uma competição semanal');
+        logger.error('Competição diária não vinculada a uma competição semanal', { 
+          competitionId 
+        }, 'DAILY_COMPETITION_CORE');
         return createErrorResponse('Competição diária deve estar vinculada a uma competição semanal');
       }
 
@@ -88,12 +96,17 @@ export class DailyCompetitionCoreService {
         .limit(100);
 
       if (participationsError) {
-        console.error('❌ Erro ao buscar participações:', participationsError);
+        logger.error('Erro ao buscar participações', { 
+          weeklyTournamentId: dailyCompetition.weekly_tournament_id,
+          error: participationsError 
+        }, 'DAILY_COMPETITION_CORE');
         throw participationsError;
       }
 
       if (!participations || participations.length === 0) {
-        console.log('📊 Nenhuma participação encontrada para a competição semanal vinculada');
+        logger.info('Nenhuma participação encontrada para a competição semanal vinculada', { 
+          weeklyTournamentId: dailyCompetition.weekly_tournament_id 
+        }, 'DAILY_COMPETITION_CORE');
         return createSuccessResponse([]);
       }
 
@@ -105,7 +118,7 @@ export class DailyCompetitionCoreService {
         .in('id', userIds);
 
       if (profilesError) {
-        console.error('❌ Erro ao buscar perfis:', profilesError);
+        logger.error('Erro ao buscar perfis', { error: profilesError }, 'DAILY_COMPETITION_CORE');
         throw profilesError;
       }
 
@@ -121,10 +134,15 @@ export class DailyCompetitionCoreService {
         };
       });
 
-      console.log('✅ Ranking da competição semanal vinculada carregado:', rankingData.length);
+      logger.info('Ranking da competição semanal vinculada carregado', { 
+        entriesCount: rankingData.length 
+      }, 'DAILY_COMPETITION_CORE');
       return createSuccessResponse(rankingData);
     } catch (error) {
-      console.error('❌ Erro ao carregar ranking:', error);
+      logger.error('Erro ao carregar ranking', { 
+        competitionId, 
+        error 
+      }, 'DAILY_COMPETITION_CORE');
       return createErrorResponse(handleServiceError(error, 'GET_WEEKLY_COMPETITION_RANKING'));
     }
   }

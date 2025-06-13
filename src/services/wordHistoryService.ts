@@ -1,352 +1,284 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { DIFFICULTY_DISTRIBUTION } from '@/utils/levelConfiguration';
 import { logger } from '@/utils/logger';
 
-interface WordUsageRecord {
+interface WordHistoryRecord {
   user_id: string;
   word: string;
-  competition_id?: string;
-  level: number;
-  category: string;
+  level_used: number;
   used_at: string;
 }
 
-interface WordSelectionCriteria {
-  userId: string;
-  level: number;
-  competitionId?: string;
-  excludeCategories?: string[];
-  maxWordsNeeded: number;
-}
-
 class WordHistoryService {
-  // CORREÇÃO: Obter user_id real e tornar registro opcional
-  async recordWordsUsage(
-    userId: string, 
-    words: string[], 
-    level: number, 
-    competitionId?: string
-  ): Promise<void> {
+  async recordWordsUsage(userId: string, words: string[], level: number): Promise<void> {
     try {
-      // CORREÇÃO: Verificar se temos um user_id válido
-      if (!userId || userId === 'system' || !this.isValidUUID(userId)) {
-        logger.warn('User ID inválido para registro de histórico de palavras', { userId, words: words.length }, 'WORD_HISTORY_SERVICE');
-        
-        // Tentar obter o user_id do usuário autenticado
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          logger.warn('Usuário não autenticado - ignorando registro de histórico', { words: words.length }, 'WORD_HISTORY_SERVICE');
-          return; // Retornar sem falhar
-        }
-        userId = user.id;
-      }
+      logger.debug('Registrando uso de palavras no histórico', { 
+        userId, 
+        wordsCount: words.length, 
+        level 
+      }, 'WORD_HISTORY_SERVICE');
 
-      logger.debug(`Registrando uso de ${words.length} palavras para usuário ${userId}`, undefined, 'WORD_HISTORY_SERVICE');
-      
-      // Buscar categorias das palavras
-      const { data: wordCategories, error } = await supabase
-        .from('level_words')
-        .select('word, category')
-        .in('word', words)
-        .eq('is_active', true);
-
-      if (error) {
-        logger.error('Erro ao buscar categorias das palavras', { error }, 'WORD_HISTORY_SERVICE');
-        return; // Continuar sem registrar histórico
-      }
-
-      const categoryMap = new Map(
-        wordCategories?.map(wc => [wc.word, wc.category]) || []
-      );
-
-      // Preparar registros de uso
-      const usageRecords = words.map(word => ({
+      const historyRecords = words.map(word => ({
         user_id: userId,
         word: word.toUpperCase(),
-        competition_id: competitionId,
-        level,
-        category: categoryMap.get(word) || 'unknown',
+        level_used: level,
         used_at: new Date().toISOString()
       }));
 
-      // Inserir no histórico
-      const { error: insertError } = await supabase
+      const { error } = await supabase
         .from('user_word_history')
-        .insert(usageRecords);
-
-      if (insertError) {
-        logger.error('Erro ao registrar histórico de palavras', { error: insertError }, 'WORD_HISTORY_SERVICE');
-        // Não falhar - apenas logar o erro
-      } else {
-        logger.debug(`Histórico de ${words.length} palavras registrado com sucesso`, undefined, 'WORD_HISTORY_SERVICE');
-      }
-    } catch (error) {
-      logger.error('Erro inesperado ao registrar palavras', { error }, 'WORD_HISTORY_SERVICE');
-      // Não falhar - apenas logar o erro
-    }
-  }
-
-  // CORREÇÃO: Função para validar UUID
-  private isValidUUID(uuid: string): boolean {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(uuid);
-  }
-
-  // Buscar palavras já usadas por um jogador
-  async getUserWordHistory(
-    userId: string, 
-    daysBack: number = 7
-  ): Promise<Set<string>> {
-    try {
-      if (!userId || !this.isValidUUID(userId)) {
-        logger.warn('User ID inválido para busca de histórico', { userId }, 'WORD_HISTORY_SERVICE');
-        return new Set();
-      }
-
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - daysBack);
-
-      const { data: history, error } = await supabase
-        .from('user_word_history')
-        .select('word')
-        .eq('user_id', userId)
-        .gte('used_at', cutoffDate.toISOString());
+        .insert(historyRecords);
 
       if (error) {
-        logger.error('Erro ao buscar histórico do usuário', { error }, 'WORD_HISTORY_SERVICE');
-        return new Set();
+        logger.error('Erro ao registrar histórico de palavras no banco de dados', { 
+          userId, 
+          wordsCount: words.length, 
+          level, 
+          error 
+        }, 'WORD_HISTORY_SERVICE');
+        throw error;
       }
 
-      const usedWords = new Set(history?.map(h => h.word.toUpperCase()) || []);
-      logger.debug(`Usuário já usou ${usedWords.size} palavras nos últimos ${daysBack} dias`, undefined, 'WORD_HISTORY_SERVICE');
-      
-      return usedWords;
+      logger.info('Histórico de palavras registrado com sucesso', { 
+        userId, 
+        wordsCount: words.length, 
+        level 
+      }, 'WORD_HISTORY_SERVICE');
     } catch (error) {
-      logger.error('Erro ao buscar histórico', { error }, 'WORD_HISTORY_SERVICE');
-      return new Set();
+      logger.warn('Erro não crítico ao registrar histórico', { 
+        userId, 
+        wordsCount: words.length, 
+        level, 
+        error 
+      }, 'WORD_HISTORY_SERVICE');
     }
   }
 
-  // Buscar palavras usadas globalmente em uma competição
-  async getCompetitionWordHistory(competitionId: string): Promise<Set<string>> {
+  async getUserWordFrequency(userId: string): Promise<Record<string, number>> {
     try {
-      const { data: history, error } = await supabase
+      logger.debug('Buscando frequência de palavras do usuário', { userId }, 'WORD_HISTORY_SERVICE');
+
+      const { data, error } = await supabase
         .from('user_word_history')
         .select('word')
-        .eq('competition_id', competitionId);
+        .eq('user_id', userId);
 
       if (error) {
-        logger.error('Erro ao buscar histórico da competição', { error }, 'WORD_HISTORY_SERVICE');
-        return new Set();
+        logger.error('Erro ao buscar frequência de palavras no banco de dados', { 
+          userId, 
+          error 
+        }, 'WORD_HISTORY_SERVICE');
+        throw error;
       }
 
-      const usedWords = new Set(history?.map(h => h.word.toUpperCase()) || []);
-      logger.debug(`Competição já usou ${usedWords.size} palavras únicas`, undefined, 'WORD_HISTORY_SERVICE');
-      
-      return usedWords;
+      const frequency: Record<string, number> = {};
+      data?.forEach(record => {
+        frequency[record.word] = (frequency[record.word] || 0) + 1;
+      });
+
+      logger.debug('Frequência de palavras calculada', { 
+        userId, 
+        uniqueWords: Object.keys(frequency).length 
+      }, 'WORD_HISTORY_SERVICE');
+
+      return frequency;
     } catch (error) {
-      logger.error('Erro ao buscar histórico da competição', { error }, 'WORD_HISTORY_SERVICE');
-      return new Set();
+      logger.warn('Erro ao calcular frequência - retornando objeto vazio', { 
+        userId, 
+        error 
+      }, 'WORD_HISTORY_SERVICE');
+      return {};
     }
   }
 
-  // Selecionar palavras com máxima randomização
-  async selectRandomizedWords(criteria: WordSelectionCriteria): Promise<string[]> {
+  async selectRandomizedWords(options: {
+    userId: string;
+    level: number;
+    maxWordsNeeded: number;
+  }): Promise<string[]> {
     try {
-      const { userId, level, competitionId, excludeCategories = [], maxWordsNeeded } = criteria;
-      
-      if (!this.isValidUUID(userId)) {
-        logger.warn('User ID inválido para seleção de palavras', { userId }, 'WORD_HISTORY_SERVICE');
-        return this.selectBasicWords(maxWordsNeeded);
-      }
+      logger.debug('Iniciando seleção randomizada de palavras', { 
+        userId: options.userId, 
+        level: options.level, 
+        maxWordsNeeded: options.maxWordsNeeded 
+      }, 'WORD_HISTORY_SERVICE');
 
-      logger.debug(`Iniciando seleção randomizada para usuário ${userId}, nível ${level}`, undefined, 'WORD_HISTORY_SERVICE');
-
-      // Buscar histórico pessoal (últimos 14 dias)
-      const userHistory = await this.getUserWordHistory(userId, 14);
-      
-      // Buscar histórico da competição se especificada
-      const competitionHistory = competitionId 
-        ? await this.getCompetitionWordHistory(competitionId)
-        : new Set<string>();
-
-      // Combinar exclusões
-      const excludedWords = new Set([...userHistory, ...competitionHistory]);
-      
-      logger.debug(`Excluindo ${excludedWords.size} palavras já usadas`, undefined, 'WORD_HISTORY_SERVICE');
+      // Buscar frequência do usuário
+      const userFrequency = await this.getUserWordFrequency(options.userId);
 
       // Buscar todas as palavras disponíveis
-      let query = supabase
+      const { data: allWords, error } = await supabase
         .from('level_words')
-        .select('word, category, difficulty')
+        .select('word, difficulty, category')
         .eq('is_active', true);
 
-      // Excluir categorias se especificado
-      if (excludeCategories.length > 0) {
-        query = query.not('category', 'in', `(${excludeCategories.join(',')})`);
-      }
-
-      const { data: allWords, error } = await query;
-
       if (error) {
-        logger.error('Erro ao buscar palavras', { error }, 'WORD_HISTORY_SERVICE');
-        return [];
+        logger.error('Erro ao buscar palavras para seleção randomizada', { error }, 'WORD_HISTORY_SERVICE');
+        throw error;
       }
 
       if (!allWords || allWords.length === 0) {
-        logger.warn('Nenhuma palavra encontrada', undefined, 'WORD_HISTORY_SERVICE');
+        logger.warn('Nenhuma palavra encontrada para seleção', undefined, 'WORD_HISTORY_SERVICE');
         return [];
       }
 
-      // Filtrar palavras não usadas
-      const availableWords = allWords.filter(w => 
-        !excludedWords.has(w.word.toUpperCase())
+      logger.debug('Palavras carregadas para seleção', { 
+        totalWords: allWords.length 
+      }, 'WORD_HISTORY_SERVICE');
+
+      // Aplicar algoritmo de seleção
+      const selectedWords = this.selectWordsByFrequencyAndDifficulty(
+        allWords,
+        userFrequency,
+        options.maxWordsNeeded
       );
 
-      logger.debug(`${availableWords.length}/${allWords.length} palavras disponíveis após filtros`, undefined, 'WORD_HISTORY_SERVICE');
+      logger.info('Seleção randomizada concluída', { 
+        selectedCount: selectedWords.length,
+        requestedCount: options.maxWordsNeeded 
+      }, 'WORD_HISTORY_SERVICE');
 
-      // Se poucas palavras disponíveis, relaxar critérios
-      if (availableWords.length < maxWordsNeeded * 2) {
-        logger.warn('Poucas palavras disponíveis, relaxando critérios...', undefined, 'WORD_HISTORY_SERVICE');
-        
-        // Usar apenas histórico pessoal dos últimos 3 dias
-        const recentHistory = await this.getUserWordHistory(userId, 3);
-        const relaxedWords = allWords.filter(w => 
-          !recentHistory.has(w.word.toUpperCase())
-        );
-        
-        if (relaxedWords.length >= maxWordsNeeded) {
-          return this.randomizeSelection(relaxedWords, maxWordsNeeded);
-        }
-      }
-
-      // Seleção normal com máxima randomização
-      return this.randomizeSelection(availableWords, maxWordsNeeded);
-      
+      return selectedWords;
     } catch (error) {
-      logger.error('Erro na seleção randomizada', { error }, 'WORD_HISTORY_SERVICE');
-      return this.selectBasicWords(criteria.maxWordsNeeded);
-    }
-  }
-
-  // Fallback para seleção básica sem histórico
-  private async selectBasicWords(count: number): Promise<string[]> {
-    try {
-      logger.warn('Usando seleção básica de palavras (sem histórico)', undefined, 'WORD_HISTORY_SERVICE');
-      
-      const { data: words, error } = await supabase
-        .from('level_words')
-        .select('word')
-        .eq('is_active', true)
-        .limit(count * 3); // Buscar mais para ter opções
-
-      if (error || !words) {
-        logger.error('Erro ao buscar palavras básicas', { error }, 'WORD_HISTORY_SERVICE');
-        return [];
-      }
-
-      // Embaralhar e selecionar
-      const shuffled = this.shuffleArray(words);
-      return shuffled.slice(0, count).map(w => w.word.toUpperCase());
-    } catch (error) {
-      logger.error('Erro na seleção básica de palavras', { error }, 'WORD_HISTORY_SERVICE');
+      logger.error('Erro crítico na seleção randomizada', { 
+        userId: options.userId, 
+        error 
+      }, 'WORD_HISTORY_SERVICE');
       return [];
     }
   }
 
-  // Algoritmo de randomização avançada
-  private randomizeSelection(words: Array<{word: string, category: string, difficulty: string}>, count: number): string[] {
-    if (words.length === 0) return [];
-    
-    // Agrupar por categoria para garantir diversidade
-    const wordsByCategory = words.reduce((acc, word) => {
-      const category = word.category || 'geral';
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(word);
-      return acc;
-    }, {} as Record<string, typeof words>);
-
-    const categories = Object.keys(wordsByCategory);
-    const selectedWords: string[] = [];
-    
-    // Primeira passada: uma palavra de cada categoria
-    const shuffledCategories = this.shuffleArray([...categories]);
-    
-    for (const category of shuffledCategories) {
-      if (selectedWords.length >= count) break;
-      
-      const categoryWords = this.shuffleArray([...wordsByCategory[category]]);
-      if (categoryWords.length > 0) {
-        selectedWords.push(categoryWords[0].word.toUpperCase());
-      }
-    }
-    
-    // Segunda passada: completar com palavras aleatórias restantes
-    const remainingWords = words.filter(w => 
-      !selectedWords.includes(w.word.toUpperCase())
-    );
-    
-    const shuffledRemaining = this.shuffleArray(remainingWords);
-    
-    for (const word of shuffledRemaining) {
-      if (selectedWords.length >= count) break;
-      selectedWords.push(word.word.toUpperCase());
-    }
-    
-    logger.debug(`Selecionadas ${selectedWords.length} palavras com máxima diversidade`, undefined, 'WORD_HISTORY_SERVICE');
-    logger.debug(`Distribuição por categoria:`, this.analyzeSelection(selectedWords, wordsByCategory), 'WORD_HISTORY_SERVICE');
-    
-    return selectedWords.slice(0, count);
-  }
-
-  // Analisar distribuição da seleção
-  private analyzeSelection(
-    selectedWords: string[], 
-    wordsByCategory: Record<string, Array<{word: string, category: string}>>
-  ): Record<string, number> {
-    const distribution: Record<string, number> = {};
-    
-    for (const [category, words] of Object.entries(wordsByCategory)) {
-      const count = words.filter(w => 
-        selectedWords.includes(w.word.toUpperCase())
-      ).length;
-      
-      if (count > 0) {
-        distribution[category] = count;
-      }
-    }
-    
-    return distribution;
-  }
-
-  // Embaralhar array usando Fisher-Yates
-  private shuffleArray<T>(array: T[]): T[] {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }
-
-  // Limpar histórico antigo (manutenção)
-  async cleanOldHistory(daysToKeep: number = 30): Promise<void> {
+  private selectWordsByFrequencyAndDifficulty(
+    words: Array<{ word: string; difficulty: string; category: string }>,
+    userFrequency: Record<string, number>,
+    maxWords: number
+  ): string[] {
     try {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+      logger.debug('Aplicando algoritmo de seleção por frequência e dificuldade', { 
+        totalWords: words.length,
+        maxWords,
+        userFrequencyEntries: Object.keys(userFrequency).length 
+      }, 'WORD_HISTORY_SERVICE');
 
-      const { error } = await supabase
+      const selected: string[] = [];
+      const wordsByDifficulty = {
+        easy: words.filter(w => w.difficulty === 'easy'),
+        medium: words.filter(w => w.difficulty === 'medium'),
+        hard: words.filter(w => w.difficulty === 'hard'),
+        expert: words.filter(w => w.difficulty === 'expert')
+      };
+
+      // Aplicar distribuição de dificuldade
+      for (const [difficulty, targetCount] of Object.entries(DIFFICULTY_DISTRIBUTION)) {
+        const availableWords = wordsByDifficulty[difficulty as keyof typeof wordsByDifficulty] || [];
+        
+        if (availableWords.length === 0) continue;
+
+        // Ordenar por frequência (menos usadas primeiro)
+        const sortedWords = availableWords.sort((a, b) => {
+          const freqA = userFrequency[a.word.toUpperCase()] || 0;
+          const freqB = userFrequency[b.word.toUpperCase()] || 0;
+          return freqA - freqB;
+        });
+
+        // Selecionar palavras com randomização controlada
+        const wordsToSelect = Math.min(targetCount, sortedWords.length);
+        for (let i = 0; i < wordsToSelect && selected.length < maxWords; i++) {
+          // Usar algoritmo de seleção weighted para favorecer palavras menos usadas
+          const candidateIndex = this.getWeightedRandomIndex(sortedWords.length, i);
+          const candidate = sortedWords[candidateIndex];
+          
+          if (candidate && !selected.includes(candidate.word.toUpperCase())) {
+            selected.push(candidate.word.toUpperCase());
+          }
+        }
+      }
+
+      logger.debug('Seleção por algoritmo concluída', { 
+        selectedCount: selected.length 
+      }, 'WORD_HISTORY_SERVICE');
+
+      return selected;
+    } catch (error) {
+      logger.error('Erro no algoritmo de seleção', { error }, 'WORD_HISTORY_SERVICE');
+      return [];
+    }
+  }
+
+  private getWeightedRandomIndex(totalLength: number, baseIndex: number): number {
+    // Algoritmo para favorecer índices menores (palavras menos usadas)
+    const weight = Math.random();
+    if (weight < 0.6) {
+      // 60% de chance de pegar uma das primeiras palavras (menos usadas)
+      return Math.floor(Math.random() * Math.min(totalLength, 3));
+    } else if (weight < 0.9) {
+      // 30% de chance de pegar do meio
+      const start = Math.min(totalLength, 3);
+      const range = Math.max(1, totalLength - start);
+      return start + Math.floor(Math.random() * Math.min(range, 5));
+    } else {
+      // 10% de chance de pegar qualquer uma
+      return Math.floor(Math.random() * totalLength);
+    }
+  }
+
+  async getWordUsageStats(userId: string): Promise<{
+    totalWordsUsed: number;
+    uniqueWords: number;
+    mostUsedWord: string | null;
+    recentWords: string[];
+  }> {
+    try {
+      logger.debug('Calculando estatísticas de uso de palavras', { userId }, 'WORD_HISTORY_SERVICE');
+
+      const { data, error } = await supabase
         .from('user_word_history')
-        .delete()
-        .lt('used_at', cutoffDate.toISOString());
+        .select('word, used_at')
+        .eq('user_id', userId)
+        .order('used_at', { ascending: false });
 
       if (error) {
-        logger.error('Erro ao limpar histórico antigo', { error }, 'WORD_HISTORY_SERVICE');
-      } else {
-        logger.info(`Histórico antigo limpo (mantidos últimos ${daysToKeep} dias)`, undefined, 'WORD_HISTORY_SERVICE');
+        logger.error('Erro ao buscar estatísticas de palavras', { 
+          userId, 
+          error 
+        }, 'WORD_HISTORY_SERVICE');
+        throw error;
       }
+
+      const frequency: Record<string, number> = {};
+      data?.forEach(record => {
+        frequency[record.word] = (frequency[record.word] || 0) + 1;
+      });
+
+      const mostUsedWord = Object.entries(frequency)
+        .sort(([,a], [,b]) => b - a)[0]?.[0] || null;
+
+      const recentWords = [...new Set(data?.slice(0, 10).map(r => r.word) || [])];
+
+      const stats = {
+        totalWordsUsed: data?.length || 0,
+        uniqueWords: Object.keys(frequency).length,
+        mostUsedWord,
+        recentWords
+      };
+
+      logger.debug('Estatísticas calculadas', { 
+        userId, 
+        stats 
+      }, 'WORD_HISTORY_SERVICE');
+
+      return stats;
     } catch (error) {
-      logger.error('Erro na limpeza do histórico', { error }, 'WORD_HISTORY_SERVICE');
+      logger.error('Erro ao calcular estatísticas', { 
+        userId, 
+        error 
+      }, 'WORD_HISTORY_SERVICE');
+      return {
+        totalWordsUsed: 0,
+        uniqueWords: 0,
+        mostUsedWord: null,
+        recentWords: []
+      };
     }
   }
 }

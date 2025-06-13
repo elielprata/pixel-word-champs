@@ -1,128 +1,175 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { logger } from '@/utils/logger';
 
-interface RankingParticipant {
-  user_position: number;
-  user_score: number;
+export interface WeeklyRankingEntry {
+  id: string;
   user_id: string;
+  score: number;
+  position: number;
+  week_start: string;
+  week_end: string;
   created_at: string;
-  profiles: {
+  profiles?: {
     username: string;
-    avatar_url?: string;
-  } | null;
+    avatar_url: string;
+  };
+  prize?: number;
+  payment_status?: 'pending' | 'completed' | 'failed';
 }
 
-export class WeeklyRankingService {
-  async getCompetitionRanking(competitionId: string) {
+class WeeklyRankingService {
+  async getCurrentWeekRanking(): Promise<WeeklyRankingEntry[]> {
     try {
-      console.log('📊 Buscando ranking da competição:', competitionId);
+      logger.debug('Buscando ranking da semana atual', undefined, 'WEEKLY_RANKING_SERVICE');
 
-      const { data: participations, error: participationsError } = await supabase
-        .from('competition_participations')
-        .select('user_id, user_score, user_position, created_at')
-        .eq('competition_id', competitionId)
-        .order('user_position', { ascending: true });
+      const startOfWeek = this.getStartOfWeek(new Date());
+      const endOfWeek = this.getEndOfWeek(startOfWeek);
 
-      if (participationsError) {
-        console.error('❌ Erro ao buscar participações:', participationsError);
-        throw participationsError;
+      const { data, error } = await supabase
+        .from('weekly_rankings')
+        .select(`
+          *,
+          profiles (
+            username,
+            avatar_url
+          )
+        `)
+        .gte('week_start', startOfWeek.toISOString().split('T')[0])
+        .lte('week_end', endOfWeek.toISOString().split('T')[0])
+        .order('position', { ascending: true });
+
+      if (error) {
+        logger.error('Erro ao buscar ranking semanal no banco de dados', { error }, 'WEEKLY_RANKING_SERVICE');
+        throw error;
       }
 
-      if (!participations || participations.length === 0) {
-        console.log('ℹ️ Nenhuma participação encontrada');
-        return createSuccessResponse([]);
-      }
+      logger.debug('Ranking semanal carregado', { 
+        entriesCount: data?.length || 0 
+      }, 'WEEKLY_RANKING_SERVICE');
 
-      const userIds = participations.map(p => p.user_id);
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', userIds);
-
-      if (profilesError) {
-        console.error('❌ Erro ao buscar perfis:', profilesError);
-        throw profilesError;
-      }
-
-      const ranking: RankingParticipant[] = participations.map(participation => {
-        const profile = profiles?.find(p => p.id === participation.user_id);
-        
-        return {
-          user_position: participation.user_position || 0,
-          user_score: participation.user_score || 0,
-          user_id: participation.user_id || '',
-          created_at: participation.created_at || '',
-          profiles: profile ? {
-            username: profile.username || 'Usuário',
-            avatar_url: profile.avatar_url
-          } : null
-        };
-      });
-
-      console.log('✅ Ranking carregado:', ranking.length, 'participantes');
-      return createSuccessResponse(ranking);
-
+      return data || [];
     } catch (error) {
-      console.error('❌ Erro no serviço de ranking:', error);
-      return createErrorResponse(handleServiceError(error, 'RANKING_GET'));
+      logger.error('Erro crítico ao buscar ranking semanal', { error }, 'WEEKLY_RANKING_SERVICE');
+      return [];
     }
   }
 
-  async getTopParticipants(competitionId: string, limit: number = 10) {
+  async getUserWeeklyPosition(userId: string): Promise<WeeklyRankingEntry | null> {
     try {
-      console.log('🏆 Buscando top participantes:', competitionId);
+      logger.debug('Buscando posição semanal do usuário', { userId }, 'WEEKLY_RANKING_SERVICE');
 
-      const { data: participations, error: participationsError } = await supabase
-        .from('competition_participations')
-        .select('user_id, user_score, user_position')
-        .eq('competition_id', competitionId)
-        .not('user_position', 'is', null)
-        .order('user_position', { ascending: true })
-        .limit(limit);
+      const startOfWeek = this.getStartOfWeek(new Date());
+      const endOfWeek = this.getEndOfWeek(startOfWeek);
 
-      if (participationsError) {
-        console.error('❌ Erro ao buscar participações:', participationsError);
-        throw participationsError;
+      const { data, error } = await supabase
+        .from('weekly_rankings')
+        .select(`
+          *,
+          profiles (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('user_id', userId)
+        .gte('week_start', startOfWeek.toISOString().split('T')[0])
+        .lte('week_end', endOfWeek.toISOString().split('T')[0])
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          logger.debug('Usuário não está no ranking semanal', { userId }, 'WEEKLY_RANKING_SERVICE');
+          return null;
+        }
+        logger.error('Erro ao buscar posição semanal do usuário', { 
+          userId, 
+          error 
+        }, 'WEEKLY_RANKING_SERVICE');
+        throw error;
       }
 
-      if (!participations || participations.length === 0) {
-        console.log('ℹ️ Nenhuma participação encontrada no top');
-        return createSuccessResponse([]);
-      }
+      logger.debug('Posição semanal do usuário encontrada', { 
+        userId, 
+        position: data.position 
+      }, 'WEEKLY_RANKING_SERVICE');
 
-      const userIds = participations.map(p => p.user_id);
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', userIds);
-
-      if (profilesError) {
-        console.error('❌ Erro ao buscar perfis:', profilesError);
-        throw profilesError;
-      }
-
-      const topParticipants = participations.map(participation => {
-        const profile = profiles?.find(p => p.id === participation.user_id);
-        
-        return {
-          user_id: participation.user_id,
-          user_score: participation.user_score,
-          user_position: participation.user_position,
-          profiles: profile ? {
-            username: profile.username,
-            avatar_url: profile.avatar_url
-          } : null
-        };
-      });
-
-      console.log('✅ Top participantes carregados:', topParticipants.length);
-      return createSuccessResponse(topParticipants);
-
+      return data;
     } catch (error) {
-      console.error('❌ Erro ao buscar top participantes:', error);
-      return createErrorResponse(handleServiceError(error, 'TOP_PARTICIPANTS_GET'));
+      logger.error('Erro crítico ao buscar posição semanal do usuário', { 
+        userId, 
+        error 
+      }, 'WEEKLY_RANKING_SERVICE');
+      return null;
     }
+  }
+
+  async updateWeeklyRanking(): Promise<boolean> {
+    try {
+      logger.info('Iniciando atualização do ranking semanal', undefined, 'WEEKLY_RANKING_SERVICE');
+
+      const { error } = await supabase.rpc('update_weekly_ranking');
+
+      if (error) {
+        logger.error('Erro ao executar atualização do ranking semanal', { error }, 'WEEKLY_RANKING_SERVICE');
+        throw error;
+      }
+
+      logger.info('Ranking semanal atualizado com sucesso', undefined, 'WEEKLY_RANKING_SERVICE');
+      return true;
+    } catch (error) {
+      logger.error('Erro crítico ao atualizar ranking semanal', { error }, 'WEEKLY_RANKING_SERVICE');
+      return false;
+    }
+  }
+
+  async getHistoricalRanking(weekStart: Date): Promise<WeeklyRankingEntry[]> {
+    try {
+      logger.debug('Buscando ranking histórico', { weekStart }, 'WEEKLY_RANKING_SERVICE');
+
+      const { data, error } = await supabase
+        .from('weekly_rankings')
+        .select(`
+          *,
+          profiles (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('week_start', weekStart.toISOString().split('T')[0])
+        .order('position', { ascending: true });
+
+      if (error) {
+        logger.error('Erro ao buscar ranking histórico no banco de dados', { 
+          weekStart, 
+          error 
+        }, 'WEEKLY_RANKING_SERVICE');
+        throw error;
+      }
+
+      logger.debug('Ranking histórico carregado', { 
+        weekStart, 
+        entriesCount: data?.length || 0 
+      }, 'WEEKLY_RANKING_SERVICE');
+
+      return data || [];
+    } catch (error) {
+      logger.error('Erro crítico ao buscar ranking histórico', { 
+        weekStart, 
+        error 
+      }, 'WEEKLY_RANKING_SERVICE');
+      return [];
+    }
+  }
+
+  private getStartOfWeek(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+    return new Date(d.setDate(diff));
+  }
+
+  private getEndOfWeek(startOfWeek: Date): Date {
+    const d = new Date(startOfWeek);
+    return new Date(d.setDate(d.getDate() + 6)); // Sunday
   }
 }
 

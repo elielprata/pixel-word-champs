@@ -1,7 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { logger } from '@/utils/logger';
 
 interface CompetitionFormData {
   title: string;
@@ -14,6 +14,32 @@ interface CompetitionFormData {
   theme?: string;
   rules?: any;
   status?: string;
+}
+
+interface CompetitionCreateData {
+  title: string;
+  description: string;
+  competition_type: string;
+  start_date: string;
+  end_date: string;
+  max_participants: number;
+  prize_pool: number;
+  theme?: string;
+  rules?: any;
+  status?: string;
+}
+
+interface CompetitionFilters {
+  status?: string;
+  competition_type?: string;
+  created_by?: string;
+}
+
+interface CompetitionStats {
+  totalParticipants: number;
+  averageScore: number;
+  highestScore: number;
+  competition: any;
 }
 
 export class CustomCompetitionManagementService {
@@ -153,6 +179,246 @@ export class CustomCompetitionManagementService {
     } catch (error) {
       console.error('❌ Erro ao excluir competição:', error);
       return createErrorResponse(handleServiceError(error, 'DELETE_COMPETITION'));
+    }
+  }
+
+  async createCompetition(data: CompetitionCreateData): Promise<ApiResponse<any>> {
+    try {
+      logger.info('Criando nova competição', { 
+        title: data.title,
+        type: data.competition_type,
+        hasStartDate: !!data.start_date,
+        hasEndDate: !!data.end_date 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        logger.warn('Tentativa de criar competição sem usuário autenticado', undefined, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+        return createErrorResponse('Usuário não autenticado');
+      }
+
+      const { data: competition, error } = await supabase
+        .from('custom_competitions')
+        .insert({
+          ...data,
+          created_by: user.id,
+          status: 'scheduled'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Erro ao criar competição no banco de dados', { error }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+        throw error;
+      }
+
+      logger.info('Competição criada com sucesso', { 
+        competitionId: competition.id,
+        title: competition.title 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+
+      return createSuccessResponse(competition);
+    } catch (error) {
+      logger.error('Erro crítico ao criar competição', { error }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'CREATE_COMPETITION'));
+    }
+  }
+
+  async updateCompetition(id: string, data: Partial<CompetitionCreateData>): Promise<ApiResponse<any>> {
+    try {
+      logger.info('Atualizando competição', { 
+        competitionId: id,
+        updateFields: Object.keys(data) 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+
+      const { data: competition, error } = await supabase
+        .from('custom_competitions')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Erro ao atualizar competição no banco de dados', { 
+          competitionId: id, 
+          error 
+        }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+        throw error;
+      }
+
+      logger.info('Competição atualizada com sucesso', { 
+        competitionId: id,
+        title: competition.title 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+
+      return createSuccessResponse(competition);
+    } catch (error) {
+      logger.error('Erro crítico ao atualizar competição', { 
+        competitionId: id, 
+        error 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'UPDATE_COMPETITION'));
+    }
+  }
+
+  async deleteCompetition(id: string): Promise<ApiResponse<boolean>> {
+    try {
+      logger.info('Removendo competição', { competitionId: id }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+
+      // Verificar se pode ser removida (não pode ter participantes)
+      const { count, error: countError } = await supabase
+        .from('competition_participations')
+        .select('*', { count: 'exact', head: true })
+        .eq('competition_id', id);
+
+      if (countError) {
+        logger.error('Erro ao verificar participantes antes da remoção', { 
+          competitionId: id, 
+          error: countError 
+        }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+        throw countError;
+      }
+
+      if ((count || 0) > 0) {
+        logger.warn('Tentativa de remover competição com participantes', { 
+          competitionId: id, 
+          participantsCount: count 
+        }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+        return createErrorResponse('Não é possível remover competição com participantes');
+      }
+
+      const { error } = await supabase
+        .from('custom_competitions')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        logger.error('Erro ao remover competição no banco de dados', { 
+          competitionId: id, 
+          error 
+        }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+        throw error;
+      }
+
+      logger.info('Competição removida com sucesso', { 
+        competitionId: id 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+
+      return createSuccessResponse(true);
+    } catch (error) {
+      logger.error('Erro crítico ao remover competição', { 
+        competitionId: id, 
+        error 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'DELETE_COMPETITION'));
+    }
+  }
+
+  async getAllCompetitions(filters?: CompetitionFilters): Promise<ApiResponse<any[]>> {
+    try {
+      logger.debug('Buscando todas as competições', { filters }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+
+      let query = supabase.from('custom_competitions').select('*');
+
+      if (filters?.status) {
+        query = query.eq('status', filters.status);
+      }
+
+      if (filters?.competition_type) {
+        query = query.eq('competition_type', filters.competition_type);
+      }
+
+      if (filters?.created_by) {
+        query = query.eq('created_by', filters.created_by);
+      }
+
+      const { data: competitions, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        logger.error('Erro ao buscar competições no banco de dados', { 
+          filters, 
+          error 
+        }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+        throw error;
+      }
+
+      logger.debug('Competições carregadas', { 
+        count: competitions?.length || 0,
+        filters 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+
+      return createSuccessResponse(competitions || []);
+    } catch (error) {
+      logger.error('Erro crítico ao buscar competições', { 
+        filters, 
+        error 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'GET_ALL_COMPETITIONS'));
+    }
+  }
+
+  async getCompetitionStats(id: string): Promise<ApiResponse<CompetitionStats>> {
+    try {
+      logger.debug('Calculando estatísticas da competição', { competitionId: id }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+
+      // Buscar informações da competição
+      const { data: competition, error: compError } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (compError) {
+        logger.error('Erro ao buscar competição para estatísticas', { 
+          competitionId: id, 
+          error: compError 
+        }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+        throw compError;
+      }
+
+      // Buscar participações
+      const { data: participations, error: partError } = await supabase
+        .from('competition_participations')
+        .select('user_score, joined_at')
+        .eq('competition_id', id);
+
+      if (partError) {
+        logger.error('Erro ao buscar participações para estatísticas', { 
+          competitionId: id, 
+          error: partError 
+        }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+        throw partError;
+      }
+
+      const totalParticipants = participations?.length || 0;
+      const averageScore = totalParticipants > 0 
+        ? (participations?.reduce((sum, p) => sum + p.user_score, 0) || 0) / totalParticipants 
+        : 0;
+      const highestScore = participations?.reduce((max, p) => Math.max(max, p.user_score), 0) || 0;
+
+      const stats: CompetitionStats = {
+        totalParticipants,
+        averageScore: Math.round(averageScore),
+        highestScore,
+        competition
+      };
+
+      logger.debug('Estatísticas da competição calculadas', { 
+        competitionId: id, 
+        stats 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+
+      return createSuccessResponse(stats);
+    } catch (error) {
+      logger.error('Erro crítico ao calcular estatísticas da competição', { 
+        competitionId: id, 
+        error 
+      }, 'CUSTOM_COMPETITION_MANAGEMENT_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'GET_COMPETITION_STATS'));
     }
   }
 }
