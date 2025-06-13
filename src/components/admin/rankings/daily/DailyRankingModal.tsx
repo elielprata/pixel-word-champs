@@ -3,7 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Trophy, Calendar, Clock, Users } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { useDailyRanking } from '@/hooks/useDailyRanking';
+import { useDailyRanking } from '@/hooks/ranking/useDailyRanking';
 
 interface DailyRankingModalProps {
   open: boolean;

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Calendar } from 'lucide-react';
 import { DailyCompetitionCard } from './DailyCompetitionCard';
-import { useDailyCompetitionsLogic } from '@/hooks/useDailyCompetitionsLogic';
+import { useDailyCompetitionsLogic } from '@/hooks/competitions/useDailyCompetitionsLogic';
 
 interface DailyCompetition {
   id: string;
