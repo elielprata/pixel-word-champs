@@ -13,6 +13,22 @@ export interface PaymentData {
   updated_at: string;
 }
 
+export interface PaymentRecord {
+  id: string;
+  user_id: string;
+  amount: number;
+  pix_key: string;
+  pix_holder_name?: string;
+  competition_id?: string;
+  payment_status: 'pending' | 'completed' | 'failed';
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    username: string;
+    avatar_url?: string;
+  };
+}
+
 class PaymentService {
   async createPayment(amount: number, pixKey: string, competitionId?: string): Promise<PaymentData | null> {
     try {
@@ -138,12 +154,12 @@ class PaymentService {
     }
   }
 
-  async getPendingPayments(): Promise<PaymentData[]> {
+  async getPendingPayments(): Promise<PaymentRecord[]> {
     try {
       logger.debug('Buscando pagamentos pendentes (admin)', undefined, 'PAYMENT_SERVICE');
 
       const { data: payments, error } = await supabase
-        .from('payments')
+        .from('payment_history')
         .select(`
           *,
           profiles (

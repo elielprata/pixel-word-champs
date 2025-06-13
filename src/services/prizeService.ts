@@ -2,220 +2,153 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
-export interface Prize {
+export interface PrizeConfiguration {
   id: string;
-  competition_id: string;
-  position: number;
-  amount: number;
-  description?: string;
+  type: 'individual' | 'group';
+  position?: number;
+  position_range?: string;
+  group_name?: string;
+  prize_amount: number;
+  total_winners: number;
+  active: boolean;
   created_at: string;
-}
-
-export interface PrizeWinner {
-  id: string;
-  prize_id: string;
-  user_id: string;
-  awarded_at: string;
-  payment_status: 'pending' | 'completed' | 'failed';
+  updated_at: string;
 }
 
 class PrizeService {
-  async createPrize(competitionId: string, position: number, amount: number, description?: string): Promise<Prize | null> {
+  async getPrizeConfigurations(): Promise<PrizeConfiguration[]> {
     try {
-      logger.info('Criando novo prêmio', { 
-        competitionId, 
-        position, 
-        amount,
-        hasDescription: !!description 
-      }, 'PRIZE_SERVICE');
+      logger.debug('Buscando configurações de prêmios', undefined, 'PRIZE_SERVICE');
 
-      const prizeData = {
-        competition_id: competitionId,
-        position,
-        amount,
-        description: description || null
-      };
-
-      const { data: prize, error } = await supabase
-        .from('prizes')
-        .insert(prizeData)
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('Erro ao criar prêmio no banco de dados', { error }, 'PRIZE_SERVICE');
-        throw error;
-      }
-
-      logger.info('Prêmio criado com sucesso', { 
-        prizeId: prize.id,
-        competitionId,
-        position,
-        amount 
-      }, 'PRIZE_SERVICE');
-
-      return prize;
-    } catch (error) {
-      logger.error('Erro crítico ao criar prêmio', { error }, 'PRIZE_SERVICE');
-      return null;
-    }
-  }
-
-  async getCompetitionPrizes(competitionId: string): Promise<Prize[]> {
-    try {
-      logger.debug('Buscando prêmios da competição', { competitionId }, 'PRIZE_SERVICE');
-
-      const { data: prizes, error } = await supabase
-        .from('prizes')
+      const { data: configs, error } = await supabase
+        .from('prize_configurations')
         .select('*')
-        .eq('competition_id', competitionId)
+        .eq('active', true)
+        .order('type', { ascending: true })
         .order('position', { ascending: true });
 
       if (error) {
-        logger.error('Erro ao buscar prêmios no banco de dados', { 
-          competitionId, 
+        logger.error('Erro ao buscar configurações de prêmios no banco de dados', { error }, 'PRIZE_SERVICE');
+        throw error;
+      }
+
+      logger.debug('Configurações de prêmios carregadas com sucesso', { 
+        count: configs?.length || 0 
+      }, 'PRIZE_SERVICE');
+
+      return configs || [];
+    } catch (error) {
+      logger.error('Erro crítico ao buscar configurações de prêmios', { error }, 'PRIZE_SERVICE');
+      return [];
+    }
+  }
+
+  async updatePrizeConfiguration(id: string, updates: Partial<PrizeConfiguration>): Promise<boolean> {
+    try {
+      logger.info('Atualizando configuração de prêmio', { id, updates }, 'PRIZE_SERVICE');
+
+      const { error } = await supabase
+        .from('prize_configurations')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) {
+        logger.error('Erro ao atualizar configuração de prêmio no banco de dados', { 
+          id, 
           error 
         }, 'PRIZE_SERVICE');
         throw error;
       }
 
-      logger.debug('Prêmios carregados com sucesso', { 
-        competitionId, 
-        count: prizes?.length || 0 
-      }, 'PRIZE_SERVICE');
-
-      return prizes || [];
+      logger.info('Configuração de prêmio atualizada com sucesso', { id }, 'PRIZE_SERVICE');
+      return true;
     } catch (error) {
-      logger.error('Erro crítico ao buscar prêmios', { 
-        competitionId, 
-        error 
-      }, 'PRIZE_SERVICE');
-      return [];
+      logger.error('Erro crítico ao atualizar configuração de prêmio', { id, error }, 'PRIZE_SERVICE');
+      return false;
     }
   }
 
-  async awardPrize(prizeId: string, userId: string): Promise<PrizeWinner | null> {
+  async createPrizeConfiguration(config: Omit<PrizeConfiguration, 'id' | 'created_at' | 'updated_at'>): Promise<PrizeConfiguration | null> {
     try {
-      logger.info('Concedendo prêmio ao usuário', { 
-        prizeId, 
-        userId 
-      }, 'PRIZE_SERVICE');
+      logger.info('Criando nova configuração de prêmio', { config }, 'PRIZE_SERVICE');
 
-      const winnerData = {
-        prize_id: prizeId,
-        user_id: userId,
-        awarded_at: new Date().toISOString(),
-        payment_status: 'pending' as const
-      };
-
-      const { data: winner, error } = await supabase
-        .from('prize_winners')
-        .insert(winnerData)
+      const { data: newConfig, error } = await supabase
+        .from('prize_configurations')
+        .insert({
+          ...config,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
         .select()
         .single();
 
       if (error) {
-        logger.error('Erro ao conceder prêmio no banco de dados', { 
-          prizeId, 
-          userId, 
-          error 
-        }, 'PRIZE_SERVICE');
+        logger.error('Erro ao criar configuração de prêmio no banco de dados', { error }, 'PRIZE_SERVICE');
         throw error;
       }
 
-      logger.info('Prêmio concedido com sucesso', { 
-        winnerId: winner.id,
-        prizeId,
-        userId 
+      logger.info('Configuração de prêmio criada com sucesso', { 
+        id: newConfig.id 
       }, 'PRIZE_SERVICE');
 
-      return winner;
+      return newConfig;
     } catch (error) {
-      logger.error('Erro crítico ao conceder prêmio', { 
-        prizeId, 
-        userId, 
-        error 
-      }, 'PRIZE_SERVICE');
+      logger.error('Erro crítico ao criar configuração de prêmio', { error }, 'PRIZE_SERVICE');
       return null;
     }
   }
 
-  async getUserPrizes(userId: string): Promise<PrizeWinner[]> {
+  async calculateDynamicPrize(position: number, totalParticipants: number): Promise<number> {
     try {
-      logger.debug('Buscando prêmios do usuário', { userId }, 'PRIZE_SERVICE');
+      logger.debug('Calculando prêmio dinâmico', { position, totalParticipants }, 'PRIZE_SERVICE');
 
-      const { data: winners, error } = await supabase
-        .from('prize_winners')
-        .select(`
-          *,
-          prizes (
-            amount,
-            description,
-            position,
-            competition_id
-          )
-        `)
-        .eq('user_id', userId)
-        .order('awarded_at', { ascending: false });
-
-      if (error) {
-        logger.error('Erro ao buscar prêmios do usuário no banco de dados', { 
-          userId, 
-          error 
+      // Buscar configuração para a posição
+      const configs = await this.getPrizeConfigurations();
+      
+      // Procurar por configuração individual
+      const individualConfig = configs.find(c => c.type === 'individual' && c.position === position);
+      if (individualConfig) {
+        logger.debug('Prêmio individual encontrado', { 
+          position, 
+          prize: individualConfig.prize_amount 
         }, 'PRIZE_SERVICE');
-        throw error;
+        return individualConfig.prize_amount;
       }
 
-      logger.debug('Prêmios do usuário carregados com sucesso', { 
-        userId, 
-        count: winners?.length || 0 
-      }, 'PRIZE_SERVICE');
+      // Procurar por configuração de grupo
+      const groupConfig = configs.find(c => 
+        c.type === 'group' && 
+        c.position_range && 
+        this.isPositionInRange(position, c.position_range)
+      );
+      
+      if (groupConfig) {
+        logger.debug('Prêmio de grupo encontrado', { 
+          position, 
+          prize: groupConfig.prize_amount 
+        }, 'PRIZE_SERVICE');
+        return groupConfig.prize_amount;
+      }
 
-      return winners || [];
+      logger.debug('Nenhum prêmio configurado para a posição', { position }, 'PRIZE_SERVICE');
+      return 0;
     } catch (error) {
-      logger.error('Erro crítico ao buscar prêmios do usuário', { 
-        userId, 
+      logger.error('Erro crítico ao calcular prêmio dinâmico', { 
+        position, 
+        totalParticipants, 
         error 
       }, 'PRIZE_SERVICE');
-      return [];
+      return 0;
     }
   }
 
-  async updatePrizePaymentStatus(winnerId: string, status: 'pending' | 'completed' | 'failed'): Promise<boolean> {
-    try {
-      logger.info('Atualizando status de pagamento do prêmio', { 
-        winnerId, 
-        status 
-      }, 'PRIZE_SERVICE');
-
-      const { error } = await supabase
-        .from('prize_winners')
-        .update({ payment_status: status })
-        .eq('id', winnerId);
-
-      if (error) {
-        logger.error('Erro ao atualizar status de pagamento no banco de dados', { 
-          winnerId, 
-          status, 
-          error 
-        }, 'PRIZE_SERVICE');
-        throw error;
-      }
-
-      logger.info('Status de pagamento do prêmio atualizado com sucesso', { 
-        winnerId, 
-        status 
-      }, 'PRIZE_SERVICE');
-
-      return true;
-    } catch (error) {
-      logger.error('Erro crítico ao atualizar status de pagamento', { 
-        winnerId, 
-        status, 
-        error 
-      }, 'PRIZE_SERVICE');
-      return false;
-    }
+  private isPositionInRange(position: number, range: string): boolean {
+    // Exemplo: "4-10" ou "11-20"
+    const [start, end] = range.split('-').map(Number);
+    return position >= start && position <= end;
   }
 }
 

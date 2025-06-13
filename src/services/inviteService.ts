@@ -12,6 +12,21 @@ export interface InviteCode {
   created_at: string;
 }
 
+export interface InvitedFriend {
+  id: string;
+  username: string;
+  avatar_url?: string;
+  invited_at: string;
+  level: number;
+  score: number;
+}
+
+export interface InviteStats {
+  totalInvites: number;
+  successfulInvites: number;
+  totalRewards: number;
+}
+
 class InviteService {
   async generateInviteCode(): Promise<string | null> {
     try {
@@ -173,6 +188,105 @@ class InviteService {
     } catch (error) {
       logger.error('Erro crítico ao buscar convites', { error }, 'INVITE_SERVICE');
       return [];
+    }
+  }
+
+  async getInvitedFriends(): Promise<InvitedFriend[]> {
+    try {
+      logger.debug('Buscando amigos convidados', undefined, 'INVITE_SERVICE');
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        logger.warn('Tentativa de buscar amigos convidados sem usuário autenticado', undefined, 'INVITE_SERVICE');
+        return [];
+      }
+
+      const { data: invites, error } = await supabase
+        .from('invites')
+        .select(`
+          *,
+          profiles:used_by (
+            username,
+            avatar_url,
+            total_score
+          )
+        `)
+        .eq('invited_by', user.id)
+        .not('used_by', 'is', null);
+
+      if (error) {
+        logger.error('Erro ao buscar amigos convidados no banco de dados', { 
+          userId: user.id, 
+          error 
+        }, 'INVITE_SERVICE');
+        throw error;
+      }
+
+      const friends: InvitedFriend[] = (invites || []).map(invite => ({
+        id: invite.used_by!,
+        username: invite.profiles?.username || 'Usuário',
+        avatar_url: invite.profiles?.avatar_url,
+        invited_at: invite.used_at!,
+        level: invite.invited_user_level || 0,
+        score: invite.invited_user_score || 0
+      }));
+
+      logger.debug('Amigos convidados carregados com sucesso', { 
+        userId: user.id, 
+        count: friends.length 
+      }, 'INVITE_SERVICE');
+
+      return friends;
+    } catch (error) {
+      logger.error('Erro crítico ao buscar amigos convidados', { error }, 'INVITE_SERVICE');
+      return [];
+    }
+  }
+
+  async getInviteStats(): Promise<InviteStats> {
+    try {
+      logger.debug('Buscando estatísticas de convites', undefined, 'INVITE_SERVICE');
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        logger.warn('Tentativa de buscar estatísticas sem usuário autenticado', undefined, 'INVITE_SERVICE');
+        return { totalInvites: 0, successfulInvites: 0, totalRewards: 0 };
+      }
+
+      const { data: invites, error } = await supabase
+        .from('invites')
+        .select('*')
+        .eq('invited_by', user.id);
+
+      if (error) {
+        logger.error('Erro ao buscar estatísticas de convites no banco de dados', { 
+          userId: user.id, 
+          error 
+        }, 'INVITE_SERVICE');
+        throw error;
+      }
+
+      const totalInvites = invites?.length || 0;
+      const successfulInvites = invites?.filter(invite => invite.used_by).length || 0;
+      const totalRewards = invites?.reduce((sum, invite) => sum + (invite.rewards_earned || 0), 0) || 0;
+
+      const stats: InviteStats = {
+        totalInvites,
+        successfulInvites,
+        totalRewards
+      };
+
+      logger.debug('Estatísticas de convites carregadas com sucesso', { 
+        userId: user.id, 
+        stats 
+      }, 'INVITE_SERVICE');
+
+      return stats;
+    } catch (error) {
+      logger.error('Erro crítico ao buscar estatísticas de convites', { error }, 'INVITE_SERVICE');
+      return { totalInvites: 0, successfulInvites: 0, totalRewards: 0 };
     }
   }
 

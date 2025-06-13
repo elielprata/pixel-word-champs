@@ -1,202 +1,153 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
-// Interfaces para tipagem
-interface RankingDebugInfo {
-  weeklyRankingsCount: number;
-  activeProfilesCount: number;
-  recentParticipationsCount: number;
-  updateFunctionStatus: 'working' | 'error' | 'unknown';
-  weekRange: { start: string; end: string };
-  topScores: { username: string; score: number }[];
-  errors: string[];
-}
-
-interface ValidationResult {
-  test: string;
-  passed: boolean;
-  message: string;
-}
-
 class RankingDebugService {
-  async getRankingDebugInfo(): Promise<RankingDebugInfo> {
+  async checkDataConsistency(): Promise<{ isConsistent: boolean; issues: string[] }> {
     try {
-      logger.debug('Coletando informações de debug do ranking', undefined, 'RANKING_DEBUG_SERVICE');
+      logger.info('Verificando consistência dos dados de ranking', undefined, 'RANKING_DEBUG_SERVICE');
 
-      const startOfWeek = this.getStartOfWeek(new Date());
-      const endOfWeek = this.getEndOfWeek(startOfWeek);
+      const issues: string[] = [];
 
-      // Verificar rankings semanais
-      const { data: weeklyRankings, error: weeklyError } = await supabase
+      // Verificar duplicatas no ranking semanal
+      const { data: duplicateRankings, error: duplicateError } = await supabase
+        .from('weekly_rankings')
+        .select('week_start, user_id, count(*)')
+        .group('week_start, user_id')
+        .having('count(*) > 1');
+
+      if (duplicateError) {
+        logger.error('Erro ao verificar duplicatas no ranking', { error: duplicateError }, 'RANKING_DEBUG_SERVICE');
+        issues.push('Erro ao verificar duplicatas no ranking');
+      } else if (duplicateRankings && duplicateRankings.length > 0) {
+        issues.push(`Encontradas ${duplicateRankings.length} entradas duplicadas no ranking semanal`);
+      }
+
+      // Verificar posições inconsistentes
+      const { data: rankings, error: rankingsError } = await supabase
         .from('weekly_rankings')
         .select('*')
-        .gte('week_start', startOfWeek.toISOString().split('T')[0])
-        .lte('week_end', endOfWeek.toISOString().split('T')[0])
-        .order('position', { ascending: true });
+        .order('week_start', { ascending: false })
+        .limit(100);
 
-      if (weeklyError) {
-        logger.error('Erro ao buscar rankings semanais para debug', { error: weeklyError }, 'RANKING_DEBUG_SERVICE');
-      }
+      if (rankingsError) {
+        logger.error('Erro ao verificar posições', { error: rankingsError }, 'RANKING_DEBUG_SERVICE');
+        issues.push('Erro ao verificar posições do ranking');
+      } else if (rankings) {
+        // Agrupar por semana e verificar sequência de posições
+        const weekGroups = rankings.reduce((acc, ranking) => {
+          const week = ranking.week_start;
+          if (!acc[week]) acc[week] = [];
+          acc[week].push(ranking);
+          return acc;
+        }, {} as Record<string, any[]>);
 
-      // Verificar perfis ativos
-      const { data: activeProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, total_score')
-        .gt('total_score', 0)
-        .order('total_score', { ascending: false })
-        .limit(20);
-
-      if (profilesError) {
-        logger.error('Erro ao buscar perfis ativos para debug', { error: profilesError }, 'RANKING_DEBUG_SERVICE');
-      }
-
-      // Verificar participações em competições
-      const { data: recentParticipations, error: participationsError } = await supabase
-        .from('competition_participations')
-        .select('competition_id, user_score, created_at')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (participationsError) {
-        logger.error('Erro ao buscar participações para debug', { error: participationsError }, 'RANKING_DEBUG_SERVICE');
-      }
-
-      // Status da função de atualização
-      let updateFunctionStatus = 'unknown';
-      try {
-        const { error: functionError } = await supabase.rpc('update_weekly_ranking');
-        updateFunctionStatus = functionError ? 'error' : 'working';
-        if (functionError) {
-          logger.warn('Função update_weekly_ranking com erro', { error: functionError }, 'RANKING_DEBUG_SERVICE');
+        for (const [week, weekRankings] of Object.entries(weekGroups)) {
+          const positions = weekRankings.map(r => r.position).sort((a, b) => a - b);
+          for (let i = 0; i < positions.length; i++) {
+            if (positions[i] !== i + 1) {
+              issues.push(`Posições inconsistentes na semana ${week}: esperado ${i + 1}, encontrado ${positions[i]}`);
+              break;
+            }
+          }
         }
-      } catch (error) {
-        logger.warn('Erro ao testar função update_weekly_ranking', { error }, 'RANKING_DEBUG_SERVICE');
-        updateFunctionStatus = 'error';
       }
 
-      const debugInfo: RankingDebugInfo = {
-        weeklyRankingsCount: weeklyRankings?.length || 0,
-        activeProfilesCount: activeProfiles?.length || 0,
-        recentParticipationsCount: recentParticipations?.length || 0,
-        updateFunctionStatus,
-        weekRange: {
-          start: startOfWeek.toISOString().split('T')[0],
-          end: endOfWeek.toISOString().split('T')[0]
-        },
-        topScores: activeProfiles?.slice(0, 5).map(p => ({
-          username: p.username || 'N/A',
-          score: p.total_score || 0
-        })) || [],
-        errors: [
-          ...(weeklyError ? [`Weekly rankings: ${weeklyError.message}`] : []),
-          ...(profilesError ? [`Profiles: ${profilesError.message}`] : []),
-          ...(participationsError ? [`Participations: ${participationsError.message}`] : [])
-        ]
+      const isConsistent = issues.length === 0;
+      
+      logger.info('Verificação de consistência concluída', { 
+        isConsistent, 
+        issuesCount: issues.length 
+      }, 'RANKING_DEBUG_SERVICE');
+
+      return { isConsistent, issues };
+    } catch (error) {
+      logger.error('Erro crítico ao verificar consistência dos dados', { error }, 'RANKING_DEBUG_SERVICE');
+      return { 
+        isConsistent: false, 
+        issues: ['Erro crítico durante verificação de consistência'] 
       };
+    }
+  }
+
+  async testFunctionDirectly(functionName: string): Promise<{ success: boolean; result?: any; error?: string }> {
+    try {
+      logger.info('Testando função diretamente', { functionName }, 'RANKING_DEBUG_SERVICE');
+
+      let result;
+      let error;
+
+      switch (functionName) {
+        case 'update_weekly_ranking':
+          const { data, error: rpcError } = await supabase.rpc('update_weekly_ranking');
+          result = data;
+          error = rpcError;
+          break;
+
+        default:
+          logger.warn('Função não reconhecida para teste', { functionName }, 'RANKING_DEBUG_SERVICE');
+          return { success: false, error: 'Função não reconhecida' };
+      }
+
+      if (error) {
+        logger.error('Erro ao executar função', { functionName, error }, 'RANKING_DEBUG_SERVICE');
+        return { success: false, error: error.message };
+      }
+
+      logger.info('Função executada com sucesso', { functionName, result }, 'RANKING_DEBUG_SERVICE');
+      return { success: true, result };
+    } catch (error) {
+      logger.error('Erro crítico ao testar função', { functionName, error }, 'RANKING_DEBUG_SERVICE');
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      };
+    }
+  }
+
+  async getDebugInfo(): Promise<Record<string, any>> {
+    try {
+      logger.debug('Coletando informações de debug', undefined, 'RANKING_DEBUG_SERVICE');
+
+      const debugInfo: Record<string, any> = {};
+
+      // Informações básicas do ranking
+      const { data: totalRankings, error: totalError } = await supabase
+        .from('weekly_rankings')
+        .select('*', { count: 'exact', head: true });
+
+      if (!totalError) {
+        debugInfo.totalRankings = totalRankings;
+      }
+
+      // Última atualização
+      const { data: lastRanking, error: lastError } = await supabase
+        .from('weekly_rankings')
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!lastError && lastRanking) {
+        debugInfo.lastUpdate = lastRanking.created_at;
+      }
+
+      // Verificar se há dados da semana atual
+      const startOfWeek = this.getStartOfWeek(new Date());
+      const { data: currentWeek, error: currentError } = await supabase
+        .from('weekly_rankings')
+        .select('*', { count: 'exact', head: true })
+        .eq('week_start', startOfWeek.toISOString().split('T')[0]);
+
+      if (!currentError) {
+        debugInfo.currentWeekParticipants = currentWeek;
+      }
 
       logger.debug('Informações de debug coletadas', { debugInfo }, 'RANKING_DEBUG_SERVICE');
-
       return debugInfo;
     } catch (error) {
       logger.error('Erro crítico ao coletar informações de debug', { error }, 'RANKING_DEBUG_SERVICE');
-      return {
-        weeklyRankingsCount: 0,
-        activeProfilesCount: 0,
-        recentParticipationsCount: 0,
-        updateFunctionStatus: 'error',
-        weekRange: { start: '', end: '' },
-        topScores: [],
-        errors: [`Critical error: ${error instanceof Error ? error.message : 'Unknown error'}`]
-      };
-    }
-  }
-
-  async forceRankingUpdate(): Promise<{ success: boolean; message: string }> {
-    try {
-      logger.info('Forçando atualização do ranking', undefined, 'RANKING_DEBUG_SERVICE');
-
-      const { error } = await supabase.rpc('update_weekly_ranking');
-
-      if (error) {
-        logger.error('Erro ao forçar atualização do ranking', { error }, 'RANKING_DEBUG_SERVICE');
-        return {
-          success: false,
-          message: `Erro: ${error.message}`
-        };
-      }
-
-      logger.info('Atualização forçada do ranking executada com sucesso', undefined, 'RANKING_DEBUG_SERVICE');
-
-      return {
-        success: true,
-        message: 'Ranking atualizado com sucesso'
-      };
-    } catch (error) {
-      logger.error('Erro crítico ao forçar atualização do ranking', { error }, 'RANKING_DEBUG_SERVICE');
-      return {
-        success: false,
-        message: `Erro crítico: ${error instanceof Error ? error.message : 'Unknown error'}`
-      };
-    }
-  }
-
-  async validateRankingData(): Promise<ValidationResult[]> {
-    try {
-      logger.debug('Validando dados do ranking', undefined, 'RANKING_DEBUG_SERVICE');
-
-      const validations: ValidationResult[] = [];
-      const startOfWeek = this.getStartOfWeek(new Date());
-      const endOfWeek = this.getEndOfWeek(startOfWeek);
-
-      // Validação 1: Verificar posições duplicadas
-      const { data: duplicatePositions, error: duplicateError } = await supabase
-        .from('weekly_rankings')
-        .select('position')
-        .gte('week_start', startOfWeek.toISOString().split('T')[0])
-        .lte('week_end', endOfWeek.toISOString().split('T')[0]);
-
-      if (!duplicateError) {
-        const positions = duplicatePositions?.map(r => r.position) || [];
-        const uniquePositions = new Set(positions);
-        validations.push({
-          test: 'Posições únicas',
-          passed: positions.length === uniquePositions.size,
-          message: positions.length !== uniquePositions.size ? 'Existem posições duplicadas' : 'Todas as posições são únicas'
-        });
-      }
-
-      // Validação 2: Verificar sequência de posições
-      const { data: rankings, error: rankingsError } = await supabase
-        .from('weekly_rankings')
-        .select('position')
-        .gte('week_start', startOfWeek.toISOString().split('T')[0])
-        .lte('week_end', endOfWeek.toISOString().split('T')[0])
-        .order('position', { ascending: true });
-
-      if (!rankingsError && rankings) {
-        const expectedSequence = rankings.map((_, index) => index + 1);
-        const actualSequence = rankings.map(r => r.position);
-        const sequenceValid = JSON.stringify(expectedSequence) === JSON.stringify(actualSequence);
-        
-        validations.push({
-          test: 'Sequência de posições',
-          passed: sequenceValid,
-          message: sequenceValid ? 'Sequência de posições correta' : 'Sequência de posições incorreta'
-        });
-      }
-
-      logger.debug('Validação de dados do ranking concluída', { 
-        validationsCount: validations.length 
-      }, 'RANKING_DEBUG_SERVICE');
-
-      return validations;
-    } catch (error) {
-      logger.error('Erro crítico ao validar dados do ranking', { error }, 'RANKING_DEBUG_SERVICE');
-      return [{
-        test: 'Validação geral',
-        passed: false,
-        message: `Erro crítico: ${error instanceof Error ? error.message : 'Unknown error'}`
-      }];
+      return { error: 'Erro ao coletar informações de debug' };
     }
   }
 
@@ -205,11 +156,6 @@ class RankingDebugService {
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
     return new Date(d.setDate(diff));
-  }
-
-  private getEndOfWeek(startOfWeek: Date): Date {
-    const d = new Date(startOfWeek);
-    return new Date(d.setDate(d.getDate() + 6)); // Sunday
   }
 }
 

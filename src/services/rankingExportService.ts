@@ -1,176 +1,104 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
-interface WeeklyRankingData {
-  position: number;
-  username: string;
-  score: number;
-  prize: number;
-  avatar_url: string | null;
-}
-
-const CSV_HEADERS = {
-  WEEKLY_RANKING: 'Position,Username,Score,Prize,Payment Status',
-  COMPETITION_RESULTS: 'Position,Username,Score,Joined At',
-  PLAYER_STATS: 'Username,Total Score,Games Played,Created At'
-};
-
 class RankingExportService {
-  async exportWeeklyRanking(weekStart?: Date): Promise<string> {
+  async exportWeeklyRanking(weekStart: Date): Promise<string> {
     try {
-      logger.info('Iniciando exportação do ranking semanal', { 
-        hasWeekStart: !!weekStart 
-      }, 'RANKING_EXPORT_SERVICE');
+      logger.info('Exportando ranking semanal', { weekStart }, 'RANKING_EXPORT_SERVICE');
 
-      const targetWeekStart = weekStart || this.getStartOfWeek(new Date());
-      const targetWeekEnd = this.getEndOfWeek(targetWeekStart);
-
-      const { data, error } = await supabase
+      const { data: rankings, error } = await supabase
         .from('weekly_rankings')
         .select(`
-          position,
-          score,
-          prize,
-          payment_status,
+          *,
           profiles (
             username,
-            email
+            avatar_url
           )
         `)
-        .eq('week_start', targetWeekStart.toISOString().split('T')[0])
-        .eq('week_end', targetWeekEnd.toISOString().split('T')[0])
+        .eq('week_start', weekStart.toISOString().split('T')[0])
         .order('position', { ascending: true });
 
       if (error) {
-        logger.error('Erro ao buscar dados para exportação', { error }, 'RANKING_EXPORT_SERVICE');
+        logger.error('Erro ao buscar ranking para exportação', { error }, 'RANKING_EXPORT_SERVICE');
         throw error;
       }
 
-      const csvContent = this.generateCSV(data || []);
-
-      logger.info('Exportação do ranking semanal concluída', { 
-        recordsCount: data?.length || 0 
+      const csvContent = this.convertToCSV(rankings || []);
+      
+      logger.info('Ranking semanal exportado com sucesso', { 
+        weekStart, 
+        recordCount: rankings?.length || 0 
       }, 'RANKING_EXPORT_SERVICE');
 
       return csvContent;
     } catch (error) {
-      logger.error('Erro crítico ao exportar ranking semanal', { error }, 'RANKING_EXPORT_SERVICE');
+      logger.error('Erro crítico ao exportar ranking semanal', { weekStart, error }, 'RANKING_EXPORT_SERVICE');
       throw error;
     }
   }
 
-  async exportCompetitionResults(competitionId: string): Promise<string> {
+  async exportWeeklyRankings(startDate: Date, endDate: Date): Promise<string> {
     try {
-      logger.info('Iniciando exportação de resultados da competição', { 
-        competitionId 
-      }, 'RANKING_EXPORT_SERVICE');
+      logger.info('Exportando rankings semanais em período', { startDate, endDate }, 'RANKING_EXPORT_SERVICE');
 
-      const { data, error } = await supabase
-        .from('competition_participations')
+      const { data: rankings, error } = await supabase
+        .from('weekly_rankings')
         .select(`
-          user_score,
-          user_position,
-          joined_at,
+          *,
           profiles (
             username,
-            email
+            avatar_url
           )
         `)
-        .eq('competition_id', competitionId)
-        .order('user_score', { ascending: false });
+        .gte('week_start', startDate.toISOString().split('T')[0])
+        .lte('week_end', endDate.toISOString().split('T')[0])
+        .order('week_start', { ascending: false })
+        .order('position', { ascending: true });
 
       if (error) {
-        logger.error('Erro ao buscar resultados da competição para exportação', { 
-          competitionId, 
-          error 
-        }, 'RANKING_EXPORT_SERVICE');
+        logger.error('Erro ao buscar rankings para exportação em período', { error }, 'RANKING_EXPORT_SERVICE');
         throw error;
       }
 
-      const csvContent = this.generateCompetitionCSV(data || []);
-
-      logger.info('Exportação de resultados da competição concluída', { 
-        competitionId, 
-        recordsCount: data?.length || 0 
+      const csvContent = this.convertToCSV(rankings || []);
+      
+      logger.info('Rankings semanais exportados com sucesso', { 
+        startDate, 
+        endDate, 
+        recordCount: rankings?.length || 0 
       }, 'RANKING_EXPORT_SERVICE');
 
       return csvContent;
     } catch (error) {
-      logger.error('Erro crítico ao exportar resultados da competição', { 
-        competitionId, 
-        error 
-      }, 'RANKING_EXPORT_SERVICE');
+      logger.error('Erro crítico ao exportar rankings semanais', { startDate, endDate, error }, 'RANKING_EXPORT_SERVICE');
       throw error;
     }
   }
 
-  async exportPlayerStats(): Promise<string> {
-    try {
-      logger.info('Iniciando exportação de estatísticas dos jogadores', undefined, 'RANKING_EXPORT_SERVICE');
+  exportToCSV(data: any[]): string {
+    return this.convertToCSV(data);
+  }
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, total_score, games_played, created_at')
-        .order('total_score', { ascending: false });
-
-      if (error) {
-        logger.error('Erro ao buscar estatísticas dos jogadores para exportação', { error }, 'RANKING_EXPORT_SERVICE');
-        throw error;
-      }
-
-      const csvContent = this.generatePlayerStatsCSV(data || []);
-
-      logger.info('Exportação de estatísticas dos jogadores concluída', { 
-        recordsCount: data?.length || 0 
-      }, 'RANKING_EXPORT_SERVICE');
-
-      return csvContent;
-    } catch (error) {
-      logger.error('Erro crítico ao exportar estatísticas dos jogadores', { error }, 'RANKING_EXPORT_SERVICE');
-      throw error;
+  private convertToCSV(data: any[]): string {
+    if (!data || data.length === 0) {
+      return 'Nenhum dado disponível para exportação';
     }
-  }
 
-  private generateCSV(data: any[]): string {
-    if (data.length === 0) return CSV_HEADERS.WEEKLY_RANKING;
+    const headers = Object.keys(data[0]);
+    const csvRows = [headers.join(',')];
 
-    const rows = data.map(entry => 
-      `${entry.position},${entry.profiles?.username || 'N/A'},${entry.score},${entry.prize || 0},${entry.payment_status || 'N/A'}`
-    );
+    for (const row of data) {
+      const values = headers.map(header => {
+        const value = row[header];
+        if (value === null || value === undefined) return '';
+        if (typeof value === 'object') return JSON.stringify(value);
+        return `"${value.toString().replace(/"/g, '""')}"`;
+      });
+      csvRows.push(values.join(','));
+    }
 
-    return [CSV_HEADERS.WEEKLY_RANKING, ...rows].join('\n');
-  }
-
-  private generateCompetitionCSV(data: any[]): string {
-    if (data.length === 0) return CSV_HEADERS.COMPETITION_RESULTS;
-
-    const rows = data.map((entry, index) => 
-      `${index + 1},${entry.profiles?.username || 'N/A'},${entry.user_score},${entry.joined_at || 'N/A'}`
-    );
-
-    return [CSV_HEADERS.COMPETITION_RESULTS, ...rows].join('\n');
-  }
-
-  private generatePlayerStatsCSV(data: any[]): string {
-    if (data.length === 0) return CSV_HEADERS.PLAYER_STATS;
-
-    const rows = data.map(entry => 
-      `${entry.username || 'N/A'},${entry.total_score || 0},${entry.games_played || 0},${entry.created_at || 'N/A'}`
-    );
-
-    return [CSV_HEADERS.PLAYER_STATS, ...rows].join('\n');
-  }
-
-  private getStartOfWeek(date: Date): Date {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
-    return new Date(d.setDate(diff));
-  }
-
-  private getEndOfWeek(startOfWeek: Date): Date {
-    const d = new Date(startOfWeek);
-    return new Date(d.setDate(d.getDate() + 6)); // Sunday
+    return csvRows.join('\n');
   }
 }
 

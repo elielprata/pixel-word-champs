@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
 class AvatarService {
-  async uploadAvatar(file: File): Promise<string | null> {
+  async uploadAvatar(file: File): Promise<{ success: boolean; data?: string; error?: string }> {
     try {
       logger.info('Iniciando upload de avatar', { 
         fileName: file.name,
@@ -15,7 +15,7 @@ class AvatarService {
       
       if (!user) {
         logger.warn('Tentativa de upload de avatar sem usuário autenticado', undefined, 'AVATAR_SERVICE');
-        return null;
+        return { success: false, error: 'Usuário não autenticado' };
       }
 
       // Gerar nome único para o arquivo
@@ -40,7 +40,7 @@ class AvatarService {
           filePath,
           error: uploadError 
         }, 'AVATAR_SERVICE');
-        throw uploadError;
+        return { success: false, error: uploadError.message };
       }
 
       // Obter URL pública do arquivo
@@ -54,10 +54,13 @@ class AvatarService {
         userId: user.id 
       }, 'AVATAR_SERVICE');
 
-      return publicUrl;
+      return { success: true, data: publicUrl };
     } catch (error) {
       logger.error('Erro crítico ao fazer upload de avatar', { error }, 'AVATAR_SERVICE');
-      return null;
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      };
     }
   }
 
@@ -88,7 +91,7 @@ class AvatarService {
     }
   }
 
-  async updateProfileAvatar(avatarUrl: string): Promise<boolean> {
+  async updateProfileAvatar(avatarUrl: string): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
       logger.info('Atualizando URL do avatar no perfil', { avatarUrl }, 'AVATAR_SERVICE');
 
@@ -96,16 +99,18 @@ class AvatarService {
       
       if (!user) {
         logger.warn('Tentativa de atualizar avatar no perfil sem usuário autenticado', undefined, 'AVATAR_SERVICE');
-        return false;
+        return { success: false, error: 'Usuário não autenticado' };
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({ 
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString()
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select()
+        .single();
 
       if (error) {
         logger.error('Erro ao atualizar avatar no perfil', { 
@@ -113,7 +118,7 @@ class AvatarService {
           avatarUrl, 
           error 
         }, 'AVATAR_SERVICE');
-        throw error;
+        return { success: false, error: error.message };
       }
 
       logger.info('Avatar atualizado no perfil com sucesso', { 
@@ -121,13 +126,16 @@ class AvatarService {
         avatarUrl 
       }, 'AVATAR_SERVICE');
 
-      return true;
+      return { success: true, data };
     } catch (error) {
       logger.error('Erro crítico ao atualizar avatar no perfil', { 
         avatarUrl, 
         error 
       }, 'AVATAR_SERVICE');
-      return false;
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      };
     }
   }
 }
