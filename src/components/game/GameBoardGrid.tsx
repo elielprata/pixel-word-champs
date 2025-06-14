@@ -55,16 +55,6 @@ const GameBoardGrid = ({
     padding: isMobile ? '4px' : '6px'
   };
 
-  // Função simplificada para finalizar seleção
-  const handleEnd = (e: React.TouchEvent | React.MouseEvent) => {
-    e.preventDefault();
-    logger.debug('Finalizando seleção no grid 12x8', { 
-      isMobile,
-      selectedCellsCount: selectedCells.length 
-    }, 'GAME_BOARD_GRID');
-    handleCellEndWithValidation();
-  };
-
   return (
     <div 
       ref={boardRef}
@@ -76,11 +66,11 @@ const GameBoardGrid = ({
         maxWidth: gridConfig.maxWidth,
         width: '100%',
         touchAction: 'none',
-        padding: gridConfig.padding
+        padding: gridConfig.padding,
+        pointerEvents: 'auto', // Garantir que o grid permita eventos
+        position: 'relative',
+        zIndex: 0 // Base z-index
       }}
-      onTouchEnd={handleEnd}
-      onMouseUp={handleEnd}
-      onMouseLeave={handleEnd}
     >
       {boardData.board.map((row, rowIndex) =>
         row.map((letter, colIndex) => (

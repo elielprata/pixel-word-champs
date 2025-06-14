@@ -28,26 +28,42 @@ export const useBoardInteraction = () => {
       
       const newPath = [...prev, newPosition];
       
-      // Se há validação de direção, aplicá-la
-      if (isValidWordDirection && !isValidWordDirection(newPath)) {
-        // Se a direção não é válida, retornar apenas a nova posição (recomeçar seleção)
-        return [prev[0], newPosition];
-      }
-      
-      logger.debug('Adicionando célula à seleção', { 
+      // NOVA LÓGICA: Não aplicar validação durante o movimento
+      // Permitir seleção livre durante o arrastar
+      logger.debug('Adicionando célula à seleção (sem validação)', { 
         newPosition,
-        pathLength: newPath.length 
+        pathLength: newPath.length,
+        currentPath: newPath
       }, 'BOARD_INTERACTION');
       
       return newPath;
     });
   }, [isSelecting]);
 
-  const handleCellEnd = useCallback(() => {
+  const handleCellEnd = useCallback((isValidWordDirection?: (positions: Position[]) => boolean) => {
     logger.debug('Finalizando seleção', { 
-      selectedCellsCount: selectedCells.length 
+      selectedCellsCount: selectedCells.length,
+      finalPath: selectedCells
     }, 'BOARD_INTERACTION');
     setIsSelecting(false);
+    
+    // NOVA LÓGICA: Aplicar validação apenas no final
+    if (isValidWordDirection && selectedCells.length >= 2) {
+      const isValidDirection = isValidWordDirection(selectedCells);
+      logger.debug('Validação final de direção', {
+        isValid: isValidDirection,
+        pathLength: selectedCells.length
+      }, 'BOARD_INTERACTION');
+      
+      if (!isValidDirection) {
+        logger.warn('Seleção rejeitada por direção inválida', { 
+          path: selectedCells 
+        }, 'BOARD_INTERACTION');
+        setSelectedCells([]);
+        return [];
+      }
+    }
+    
     const finalSelection = [...selectedCells];
     setSelectedCells([]);
     return finalSelection;

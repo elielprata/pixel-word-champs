@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
@@ -138,24 +137,24 @@ const GameBoardLogic = ({
   );
 
   const handleCellEndWithValidation = () => {
-    const finalSelection = handleCellEnd();
+    // NOVA LÓGICA: Passar validação para o handleCellEnd
+    const finalSelection = handleCellEnd(isValidWordDirection);
     
     if (finalSelection.length >= 3) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
-      logger.debug('🔍 Tentativa de palavra', {
+      logger.debug('🔍 Tentativa de palavra (com validação final)', {
         word,
         level,
         isMobile,
         selectionLength: finalSelection.length,
         isInWordList: levelWords.includes(word),
         alreadyFound: foundWords.some(fw => fw.word === word),
-        validDirection: isValidWordDirection(finalSelection)
+        finalPath: finalSelection
       }, 'GAME_BOARD_LOGIC');
       
       if (levelWords.includes(word) && 
-          !foundWords.some(fw => fw.word === word) && 
-          isValidWordDirection(finalSelection)) {
+          !foundWords.some(fw => fw.word === word)) {
         logger.info('✅ Palavra encontrada', { 
           word, 
           level,
@@ -164,12 +163,19 @@ const GameBoardLogic = ({
           selectionLength: finalSelection.length 
         }, 'GAME_BOARD_LOGIC');
         addFoundWord(word, finalSelection);
+      } else {
+        logger.debug('❌ Palavra rejeitada', {
+          word,
+          isInWordList: levelWords.includes(word),
+          alreadyFound: foundWords.some(fw => fw.word === word)
+        }, 'GAME_BOARD_LOGIC');
       }
     }
   };
 
   const handleCellMoveWithValidation = (row: number, col: number) => {
-    handleCellMove(row, col, isValidWordDirection);
+    // NOVA LÓGICA: Não passar validação durante movimento
+    handleCellMove(row, col);
   };
 
   // Paleta expandida de cores em formato oval como na imagem

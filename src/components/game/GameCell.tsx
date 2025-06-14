@@ -47,40 +47,61 @@ const GameCell = ({
     return 'text-slate-700 bg-white/50 hover:bg-white/70 border border-slate-200/50';
   };
 
-  // Função simplificada para iniciar seleção
+  // Função para iniciar seleção
   const handleStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
-    logger.debug('Célula selecionada (início)', { 
+    e.stopPropagation();
+    logger.debug('EVENTO: Célula selecionada (início)', { 
       rowIndex, 
       colIndex, 
       letter,
-      isMobile 
+      isMobile,
+      eventType: 'touches' in e ? 'touch' : 'mouse'
     }, 'GAME_CELL');
     onCellStart(rowIndex, colIndex);
   }, [rowIndex, colIndex, letter, isMobile, onCellStart]);
 
-  // Função simplificada para movimento
+  // Função melhorada para movimento com detecção robusta
   const handleMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     if (!isSelecting) return;
     
     e.preventDefault();
+    e.stopPropagation();
     
-    let targetElement;
+    let clientX: number, clientY: number;
     
     if ('touches' in e && e.touches[0]) {
-      // Touch event
-      const touch = e.touches[0];
-      targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if ('clientX' in e) {
+      clientX = e.clientX;
+      clientY = e.clientY;
     } else {
-      // Mouse event
-      targetElement = e.target as Element;
+      return;
     }
     
-    // Encontrar a célula mais próxima
+    logger.debug('EVENTO: Movimento detectado', { 
+      coordinates: { clientX, clientY },
+      currentCell: { rowIndex, colIndex },
+      eventType: 'touches' in e ? 'touch' : 'mouse'
+    }, 'GAME_CELL');
+    
+    // Detecção robusta do elemento alvo
+    let targetElement = document.elementFromPoint(clientX, clientY);
+    
+    if (!targetElement) {
+      logger.warn('EVENTO: Nenhum elemento encontrado nas coordenadas', { 
+        clientX, clientY 
+      }, 'GAME_CELL');
+      return;
+    }
+    
+    // Buscar célula mais próxima com fallback robusto
     let cellElement = targetElement;
     let attempts = 0;
+    const maxAttempts = 10;
     
-    while (cellElement && !cellElement.hasAttribute('data-cell') && attempts < 5) {
+    while (cellElement && !cellElement.hasAttribute('data-cell') && attempts < maxAttempts) {
       cellElement = cellElement.parentElement;
       attempts++;
     }
@@ -89,32 +110,75 @@ const GameCell = ({
       const row = parseInt(cellElement.getAttribute('data-row') || '0');
       const col = parseInt(cellElement.getAttribute('data-col') || '0');
       
-      logger.debug('Movimento detectado', { 
+      logger.debug('EVENTO: Célula alvo encontrada', { 
         from: { rowIndex, colIndex },
         to: { row, col },
-        isMobile 
+        attempts,
+        elementFound: true
       }, 'GAME_CELL');
       
       onCellMove(row, col);
+    } else {
+      logger.warn('EVENTO: Célula alvo não encontrada', { 
+        attempts,
+        maxAttempts,
+        targetElementTag: targetElement.tagName,
+        targetElementClass: targetElement.className
+      }, 'GAME_CELL');
+      
+      // Fallback: usar coordenadas para tentar detectar célula próxima
+      const cells = document.querySelectorAll('[data-cell="true"]');
+      let closestCell: Element | null = null;
+      let minDistance = Infinity;
+      
+      cells.forEach(cell => {
+        const rect = cell.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const distance = Math.sqrt(
+          Math.pow(clientX - centerX, 2) + Math.pow(clientY - centerY, 2)
+        );
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestCell = cell;
+        }
+      });
+      
+      if (closestCell && minDistance < cellSize) {
+        const row = parseInt(closestCell.getAttribute('data-row') || '0');
+        const col = parseInt(closestCell.getAttribute('data-col') || '0');
+        
+        logger.debug('EVENTO: Célula encontrada por proximidade', { 
+          from: { rowIndex, colIndex },
+          to: { row, col },
+          distance: minDistance,
+          cellSize
+        }, 'GAME_CELL');
+        
+        onCellMove(row, col);
+      }
     }
-  }, [rowIndex, colIndex, isSelecting, onCellMove, isMobile]);
+  }, [rowIndex, colIndex, isSelecting, onCellMove, cellSize]);
 
-  // Função para enter do mouse
+  // Função para enter do mouse (apenas desktop)
   const handleMouseEnter = useCallback((e: React.MouseEvent) => {
     if (isSelecting && !isMobile) {
+      logger.debug('EVENTO: Mouse enter durante seleção', { 
+        rowIndex, 
+        colIndex 
+      }, 'GAME_CELL');
       onCellMove(rowIndex, colIndex);
     }
   }, [isSelecting, isMobile, onCellMove, rowIndex, colIndex]);
 
-  // Estilos otimizados para mobile com formato oval
+  // Estilos otimizados com correções CSS (item 4)
   const fontSize = isMobile ? 
     Math.max(cellSize * 0.45, 12) : 
     Math.max(cellSize * 0.5, 14);
 
-  // Formato oval/cápsula mais pronunciado
   const borderRadius = isPermanent || isSelected ? '50%' : (isMobile ? '8px' : '10px');
   
-  // Efeitos especiais para palavras encontradas
   const specialEffects = isPermanent ? {
     transform: 'scale(1.05)',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
@@ -138,11 +202,14 @@ const GameCell = ({
         userSelect: 'none',
         WebkitUserSelect: 'none',
         WebkitTouchCallout: 'none',
+        pointerEvents: 'auto', // Garantir que eventos funcionem
+        zIndex: 1, // Evitar sobreposições
         ...specialEffects
       }}
       onTouchStart={handleStart}
       onTouchMove={handleMove}
       onMouseDown={handleStart}
+      onMouseMove={handleMove}
       onMouseEnter={handleMouseEnter}
       data-cell="true"
       data-row={rowIndex}
@@ -160,6 +227,14 @@ const GameCell = ({
       <span className="relative z-10 font-extrabold tracking-tight">
         {letter}
       </span>
+      
+      {/* Debug visual para seleção */}
+      {isSelected && (
+        <div 
+          className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full pointer-events-none opacity-75"
+          style={{ zIndex: 10 }}
+        />
+      )}
     </div>
   );
 };
