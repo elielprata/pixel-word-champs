@@ -1,4 +1,5 @@
 
+
 -- Corrigir apenas as funções com search_path mutável para segurança
 -- (A extensão pg_net precisa permanecer no schema public)
 
@@ -68,3 +69,4 @@ BEGIN
   RETURN NEW;
 END;
 $function$;
+
