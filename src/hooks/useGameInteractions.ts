@@ -24,78 +24,68 @@ export const useGameInteractions = (
 ) => {
   const { getPointsForWord } = useGamePointsConfig();
 
-  // Identificar apenas a palavra com maior pontuação (palavra oculta)
-  const getHiddenWords = () => {
+  // "Palavra extra" com maior pontuação (não pode receber dica)
+  const getExtraWord = (): string | null => {
     const wordsWithPoints = levelWords.map(word => ({
       word,
       points: getPointsForWord(word)
     }));
-    
-    const sortedByPoints = [...wordsWithPoints].sort((a, b) => b.points - a.points);
-    // Retornar apenas a primeira palavra (maior pontuação)
-    return new Set([sortedByPoints[0]?.word]);
+    const sorted = [...wordsWithPoints].sort((a, b) => b.points - a.points);
+    return sorted[0]?.word || null;
   };
 
   const useHint = () => {
-    if (hintsUsed >= 1) return;
-    
-    const hiddenWords = getHiddenWords();
-    
-    // Filtrar palavras restantes, excluindo a palavra oculta
-    const remainingWords = levelWords.filter(word => 
-      !foundWords.some(fw => fw.word === word) && !hiddenWords.has(word)
-    );
-    
-    // Verificar se só resta a palavra oculta
-    const allRemainingWords = levelWords.filter(word => 
-      !foundWords.some(fw => fw.word === word)
-    );
-    
-    const onlyHiddenWordsLeft = allRemainingWords.every(word => hiddenWords.has(word));
-    
-    if (onlyHiddenWordsLeft && allRemainingWords.length > 0) {
+    if (hintsUsed >= 1) {
       toast({
-        title: "Dica não disponível",
+        title: "Dica indisponível",
+        description: "Você já usou sua dica neste nível.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const extraWord = getExtraWord();
+
+    // Encontrar primeira palavra não encontrada que NÃO é a extra
+    const hintWord = levelWords.find(
+      (word) =>
+        !foundWords.some(fw => fw.word === word) &&
+        word !== extraWord
+    );
+
+    if (!hintWord) {
+      toast({
+        title: "Dica indisponível",
         description: "A dica não pode ser usada na palavra de Desafio Extra. Tente encontrá-la por conta própria!",
         variant: "destructive"
       });
       return;
     }
-    
-    if (remainingWords.length > 0) {
-      setHintsUsed(prev => prev + 1);
-      
-      // Encontrar a primeira palavra não encontrada (excluindo oculta) e destacar suas posições
-      const hintWord = remainingWords[0];
-      const wordPlacement = boardData.placedWords.find(pw => pw.word === hintWord);
-      
-      if (wordPlacement) {
-        setHintHighlightedCells(wordPlacement.positions);
-        
-        // Remover o destaque após 3 segundos
-        setTimeout(() => {
-          setHintHighlightedCells([]);
-        }, 3000);
-      }
-      
+
+    setHintsUsed(prev => prev + 1);
+
+    const wordPlacement = boardData.placedWords.find(pw => pw.word === hintWord);
+
+    if (wordPlacement && Array.isArray(wordPlacement.positions)) {
+      setHintHighlightedCells(wordPlacement.positions);
       logger.info('Dica utilizada', { word: hintWord, hintsUsed: hintsUsed + 1 }, 'GAME_INTERACTIONS');
+      setTimeout(() => {
+        setHintHighlightedCells([]);
+      }, 3000);
     } else {
       toast({
-        title: "Dica não disponível",
-        description: "A dica não pode ser usada na palavra de Desafio Extra. Tente encontrá-la por conta própria!",
+        title: "Dica não pôde ser aplicada",
+        description: "Não foi possível encontrar a posição da palavra no tabuleiro.",
         variant: "destructive"
       });
+      logger.warn('Dica não pode ser aplicada (sem positions)', { word: hintWord }, 'GAME_INTERACTIONS');
     }
   };
 
   const handleRevive = () => {
     if (!canRevive) return;
-    
-    // Simular assistir anúncio (em produção seria integrado com sistema de anúncios)
     setCanRevive(false);
     setShowGameOver(false);
-    
-    // Adicionar 30 segundos (isso seria feito no componente pai)
     logger.info('Revive ativado', { canRevive }, 'GAME_INTERACTIONS');
   };
 
