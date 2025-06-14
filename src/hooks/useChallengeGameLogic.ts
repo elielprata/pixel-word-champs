@@ -13,6 +13,7 @@ export const useChallengeGameLogic = (challengeId: string) => {
   const [hasMarkedParticipation, setHasMarkedParticipation] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingStep, setLoadingStep] = useState<string>('Iniciando...');
 
   const maxLevels = 20;
 
@@ -24,9 +25,11 @@ export const useChallengeGameLogic = (challengeId: string) => {
     try {
       setIsLoading(true);
       setError(null);
+      setLoadingStep('Preparando sessão...');
       
       console.log('🎮 Inicializando sessão de jogo para competição:', challengeId);
       
+      setLoadingStep('Validando competição...');
       // Primeiro, descobrir em qual tabela a competição existe
       const competitionTable = await competitionValidationService.getCompetitionTable(challengeId);
       console.log('🔍 Tabela da competição:', competitionTable);
@@ -47,6 +50,7 @@ export const useChallengeGameLogic = (challengeId: string) => {
       }
 
       console.log('✅ Competição validada, criando sessão de jogo...');
+      setLoadingStep('Criando sessão de jogo...');
       
       // Criar uma nova sessão de jogo para esta competição
       const sessionResponse = await gameService.createGameSession({
@@ -68,6 +72,7 @@ export const useChallengeGameLogic = (challengeId: string) => {
       setCurrentLevel(session.level || 1);
       setTotalScore(session.total_score || 0);
       setIsGameStarted(true);
+      setLoadingStep('Sessão criada com sucesso!');
       
     } catch (error) {
       console.error('❌ Erro inesperado ao inicializar sessão:', error);
@@ -143,6 +148,7 @@ export const useChallengeGameLogic = (challengeId: string) => {
     gameCompleted,
     isLoading,
     error,
+    loadingStep,
     handleWordFound,
     handleTimeUp,
     handleLevelComplete,
