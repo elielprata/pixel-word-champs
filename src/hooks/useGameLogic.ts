@@ -47,11 +47,11 @@ export const useGameLogic = (
     }
   }, [timeLeft, showGameOver]);
 
-  // Verifica se completou o nível e AGORA registra os pontos
+  // Verifica se completou o nível - corrigido para usar levelWords.length
   useEffect(() => {
-    if (foundWords.length === 5 && !showLevelComplete && !isLevelCompleted) {
+    if (foundWords.length === levelWords.length && levelWords.length > 0 && !showLevelComplete && !isLevelCompleted) {
       const levelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
-      logger.log(`Level ${level} completed with score ${levelScore} - NOW registering points in database`);
+      logger.log(`Level ${level} completed with score ${levelScore} - NOW registering points in database. Words found: ${foundWords.length}/${levelWords.length}`);
       
       setShowLevelComplete(true);
       setIsLevelCompleted(true);
@@ -60,7 +60,7 @@ export const useGameLogic = (
       updateUserScore(levelScore);
       onLevelComplete(levelScore);
     }
-  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete, level, isLevelCompleted]);
+  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete, level, isLevelCompleted, levelWords.length]);
 
   const updateUserScore = async (points: number) => {
     try {
@@ -121,15 +121,32 @@ export const useGameLogic = (
   };
 
   const addFoundWord = async (word: string, positions: Position[]) => {
+    // PROTEÇÃO: Verificar se a palavra já foi encontrada
+    const isAlreadyFound = foundWords.some(fw => fw.word === word);
+    if (isAlreadyFound) {
+      logger.warn(`⚠️ Tentativa de adicionar palavra duplicada: "${word}" - IGNORANDO`, 'GAME_LOGIC');
+      return;
+    }
+
     const points = getPointsForWord(word);
     const newFoundWord = { word, positions: [...positions], points };
     
-    logger.log(`📝 Palavra encontrada: "${word}" = ${points} pontos (acumulando para registrar quando nível completar)`);
+    logger.log(`📝 Adicionando palavra única: "${word}" = ${points} pontos (${foundWords.length + 1}/${levelWords.length})`);
     
-    setFoundWords(prev => [...prev, newFoundWord]);
+    setFoundWords(prev => {
+      // Verificação adicional antes de adicionar
+      if (prev.some(fw => fw.word === word)) {
+        logger.warn(`⚠️ Palavra já existe no array: "${word}" - não adicionando duplicata`);
+        return prev;
+      }
+      const newArray = [...prev, newFoundWord];
+      logger.log(`📊 Array de palavras atualizado. Total: ${newArray.length} palavras encontradas`);
+      return newArray;
+    });
+    
     setPermanentlyMarkedCells(prev => [...prev, ...positions]);
     
-    // NÃO registra pontos aqui - apenas chama callback para UI
+    // Chama callback para UI - NÃO registra pontos aqui
     onWordFound(word, points);
   };
 

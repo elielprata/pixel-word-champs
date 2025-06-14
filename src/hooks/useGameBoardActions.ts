@@ -64,7 +64,7 @@ export const useGameBoardActions = ({
     if (finalSelection.length >= 3 && isLinearPath(finalSelection)) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
 
-      // Log explicando a validação
+      // Log detalhado da tentativa
       logger.info('🔍 Tentativa de palavra', {
         word,
         level,
@@ -73,24 +73,35 @@ export const useGameBoardActions = ({
         isLinear: true,
         isInWordList: levelWords.includes(word),
         alreadyFound: foundWords.some(fw => fw.word === word),
-        positions: finalSelection
+        positions: finalSelection,
+        foundWordsCount: foundWords.length,
+        totalWords: levelWords.length
       }, 'GAME_BOARD_LOGIC');
 
-      if (levelWords.includes(word) && !foundWords.some(fw => fw.word === word)) {
-        logger.info('✅ Palavra encontrada (movimento linear)', {
+      // Verificação rigorosa: palavra na lista E não encontrada ainda
+      const isValidWord = levelWords.includes(word);
+      const isAlreadyFound = foundWords.some(fw => fw.word === word);
+
+      if (isValidWord && !isAlreadyFound) {
+        logger.info('✅ Palavra aceita (movimento linear)', {
           word,
           level,
           isMobile,
-          positions: finalSelection
+          positions: finalSelection,
+          newCount: foundWords.length + 1,
+          totalWords: levelWords.length
         }, 'GAME_BOARD_LOGIC');
+        
+        // ÚNICA chamada para addFoundWord
         addFoundWord(word, finalSelection);
       } else {
         logger.warn('❌ Palavra rejeitada', {
           word,
           reasons: {
-            notInWordList: !levelWords.includes(word),
-            alreadyFound: foundWords.some(fw => fw.word === word)
-          }
+            notInWordList: !isValidWord,
+            alreadyFound: isAlreadyFound
+          },
+          currentFoundWords: foundWords.map(fw => fw.word)
         }, 'GAME_BOARD_LOGIC');
       }
     } else {
