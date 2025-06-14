@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
@@ -10,7 +9,6 @@ export const useBoardInteraction = () => {
 
   const handleCellStart = useCallback((row: number, col: number) => {
     logger.info('🎯 Iniciando seleção', { row, col }, 'BOARD_INTERACTION');
-    
     setIsSelecting(true);
     setSelectedCells([{ row, col }]);
     setPreviewCells([{ row, col }]);
@@ -23,47 +21,22 @@ export const useBoardInteraction = () => {
     fillIntermediateCells: (start: Position, end: Position) => Position[]
   ) => {
     if (!isSelecting) return;
-    
     const newPosition = { row, col };
-    
+
     setSelectedCells(prev => {
       if (prev.length === 0) return [newPosition];
-      
-      // Para múltiplas células, usar preenchimento automático
-      if (prev.length >= 1) {
-        if (!isInLineWithSelection(newPosition, prev)) {
-          logger.debug('❌ Posição fora da linha de visão', { 
-            newPosition,
-            currentSelection: prev.length,
-            firstPos: prev[0],
-            lastPos: prev[prev.length - 1]
-          }, 'BOARD_INTERACTION');
-          return prev;
-        }
-        
-        // Preencher células intermediárias automaticamente
-        const first = prev[0];
-        const filledPath = fillIntermediateCells(first, newPosition);
-        
-        logger.debug('✅ Caminho inteligente criado', { 
-          newPosition,
-          pathLength: filledPath.length,
-          filled: filledPath.length - prev.length
-        }, 'BOARD_INTERACTION');
-        
-        setPreviewCells(filledPath);
-        return filledPath;
-      }
-      
-      const newPath = [...prev, newPosition];
-      setPreviewCells(newPath);
-      
-      logger.debug('✅ Adicionando posição à seleção', { 
+
+      // MAIS SIMPLES: só preenche caminho, não trava se não for linha exata
+      const first = prev[0];
+      const filledPath = fillIntermediateCells(first, newPosition);
+
+      setPreviewCells(filledPath);
+      logger.debug('✨ Seleção em andamento (relaxada)', {
         newPosition,
-        pathLength: newPath.length 
+        pathLength: filledPath.length,
+        selection: filledPath
       }, 'BOARD_INTERACTION');
-      
-      return newPath;
+      return filledPath;
     });
   }, [isSelecting]);
 
@@ -72,13 +45,10 @@ export const useBoardInteraction = () => {
       selectedCellsCount: selectedCells.length,
       hasSelection: selectedCells.length > 0
     }, 'BOARD_INTERACTION');
-    
     setIsSelecting(false);
     const finalSelection = [...selectedCells];
     setSelectedCells([]);
     setPreviewCells([]);
-    
-    // Log da seleção final
     if (finalSelection.length > 0) {
       logger.info('📝 Seleção finalizada', {
         length: finalSelection.length,
@@ -87,7 +57,6 @@ export const useBoardInteraction = () => {
         positions: finalSelection
       }, 'BOARD_INTERACTION');
     }
-    
     return finalSelection;
   }, [selectedCells]);
 
