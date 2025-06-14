@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
 
@@ -88,7 +87,6 @@ const OptimizedChallengeLoadingScreen = ({ level, loadingStep, metrics }: Optimi
         
         {/* Info de otimização */}
         <div className="text-gray-500 text-xs space-y-1">
-          <p>Otimizado para 2.000+ palavras ⚡</p>
           {metrics && (
             <p>
               {metrics.cacheHit ? 'Cache Global' : 'Processamento Híbrido'} • 
