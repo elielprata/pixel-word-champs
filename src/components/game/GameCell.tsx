@@ -90,8 +90,31 @@ const GameCell = ({
     }
   }, [isMobile, onCellMove, rowIndex, colIndex]);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isSelecting && !isMobile) {
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isMobile) return;
+    
+    e.preventDefault();
+    logger.debug('Desktop mouse down detectado', { 
+      rowIndex, 
+      colIndex, 
+      letter,
+      isSelecting 
+    }, 'GAME_CELL');
+    
+    onCellStart(rowIndex, colIndex);
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    if (isMobile) return;
+    
+    if (isSelecting) {
+      logger.debug('Desktop mouse enter durante seleção', { 
+        rowIndex, 
+        colIndex, 
+        letter,
+        isSelecting 
+      }, 'GAME_CELL');
+      
       onCellMove(rowIndex, colIndex);
     }
   };
@@ -132,7 +155,9 @@ const GameCell = ({
         WebkitUserSelect: 'none',
         WebkitTouchCallout: 'none'
       }}
+      // Mobile events
       onTouchStart={(e) => {
+        if (!isMobile) return;
         e.preventDefault();
         logger.debug('Touch start detectado', { 
           rowIndex, 
@@ -142,13 +167,9 @@ const GameCell = ({
         handleCellStart();
       }}
       onTouchMove={handleTouchMove}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        if (!isMobile) {
-          handleCellStart();
-        }
-      }}
-      onMouseEnter={handleMouseMove}
+      // Desktop events
+      onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
       data-cell="true"
       data-row={rowIndex}
       data-col={colIndex}

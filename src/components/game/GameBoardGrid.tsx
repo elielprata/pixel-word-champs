@@ -55,6 +55,28 @@ const GameBoardGrid = ({
     padding: isMobile ? '4px' : '6px'
   };
 
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (isMobile) return;
+    
+    e.preventDefault();
+    logger.debug('Desktop mouse up detectado no grid', { isSelecting }, 'GAME_BOARD_GRID');
+    
+    if (isSelecting) {
+      handleCellEndWithValidation();
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    
+    e.preventDefault();
+    logger.debug('Touch end detectado no grid', { isSelecting }, 'GAME_BOARD_GRID');
+    
+    if (isSelecting) {
+      handleCellEndWithValidation();
+    }
+  };
+
   return (
     <div 
       ref={boardRef}
@@ -68,15 +90,9 @@ const GameBoardGrid = ({
         padding: gridConfig.padding,
         overflowX: isMobile && size > 12 ? 'auto' : 'visible'
       }}
-      onTouchEnd={(e) => {
-        e.preventDefault();
-        logger.debug('Touch end detectado no grid', { isMobile }, 'GAME_BOARD_GRID');
-        handleCellEndWithValidation();
-      }}
-      onMouseUp={(e) => {
-        e.preventDefault();
-        handleCellEndWithValidation();
-      }}
+      onTouchEnd={handleTouchEnd}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp} // Finalizar seleção se o mouse sair do grid
     >
       {boardData.board.map((row, rowIndex) =>
         row.map((letter, colIndex) => (
