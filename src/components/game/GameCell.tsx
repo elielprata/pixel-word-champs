@@ -58,28 +58,35 @@ const GameCell = ({
     return element;
   }, []);
   
-  // APARÊNCIA MINIMALISTA: célula sem quadrante, só letra centralizada e grande
+  // APARÊNCIA MAIS MINIMALISTA (FASE 2): 
+  // - Fundo branco, sem gradientes, sem sombra, sem animação
+  // - Letras pretas, NENHUM efeito luminoso
+  // - Só borda fina cinza MUITO sutil em célula selecionada ou permanente
+  // - Destaques de palavra encontrada/preview apenas se necessário: cor de fundo leve
+  
   const getCellClasses = useMemo(() => {
     let base =
-      "flex items-center justify-center font-bold relative transition-all duration-200 select-none " +
-      "bg-white text-gray-900 " +
-      (isSelected || isPermanent || isPreview || isHintHighlighted
-        ? "outline-none ring-2 ring-primary/50"
-        : "hover:bg-gray-50");
-
-    // Remove bordas, sombras, gradientes explícitos!
+      "flex items-center justify-center font-extrabold relative transition-all duration-150 select-none " +
+      "bg-white text-black";
+    // Menor destaque possível para seleção/permanente
+    if (isSelected || isPermanent || isPreview || isHintHighlighted) {
+      base += " ring-1 ring-gray-300";
+    } else {
+      base += " hover:bg-gray-100";
+    }
+    // Sem sombra, sem animação, sem gradiente
     return base;
   }, [isSelected, isPermanent, isPreview, isHintHighlighted]);
 
-  // Tamanho da fonte e célula para dar destaque à letra
+  // Fonte um pouco maior, destaca letra
   const fontSize = isMobile
-    ? Math.max(cellSize * 0.75, 18)
-    : Math.max(cellSize * 0.80, 22);
+    ? Math.max(cellSize * 0.8, 22)
+    : Math.max(cellSize * 0.9, 26);
 
-  // Bordas sempre arredondadas pequenas, NÃO em círculo/quadrante
-  const borderRadius = isMobile ? "6px" : "8px";
+  // Bordas bem leves, só um arredondamento sutil
+  const borderRadius = isMobile ? "5px" : "7px";
 
-  // Nenhum efeito especial (sombras/gradientes) para célula
+  // Nenhum efeito especial!
   const specialEffects = {};
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
@@ -193,6 +200,7 @@ const GameCell = ({
         WebkitTouchCallout: "none",
         padding: 0,
         margin: 0,
+        boxShadow: "none",
         ...specialEffects
       }}
       onTouchStart={(e) => {
@@ -219,37 +227,10 @@ const GameCell = ({
       data-row={rowIndex}
       data-col={colIndex}
     >
-      {/* Efeito de brilho interno para palavras encontradas */}
-      {isPermanent && (
-        <div 
-          className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"
-          style={{ borderRadius }}
-        />
-      )}
-      
-      {/* Indicador visual para preview */}
-      {isPreview && (
-        <div 
-          className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none animate-pulse"
-          style={{ borderRadius }}
-        />
-      )}
-      
-      {/* Letra */}
-      <span className="relative z-10 font-extrabold tracking-tight">
-        {letter}
-      </span>
-      
-      {/* Feedback visual adicional para seleções */}
-      {(isSelected || isPreview) && (
-        <div 
-          className="absolute -inset-1 bg-gradient-to-br from-white/10 to-transparent pointer-events-none rounded-full animate-ping"
-          style={{ 
-            animationDuration: isSelected ? '1s' : '2s',
-            animationIterationCount: isSelected ? 'infinite' : '1'
-          }}
-        />
-      )}
+      {/* Retira todos overlays extras! */}
+      {/* Letra centralizada */}
+      <span className="relative z-10 font-extrabold tracking-tight">{letter}</span>
+      {/* Nenhum ping, gradient ou pulse */}
     </div>
   );
 };

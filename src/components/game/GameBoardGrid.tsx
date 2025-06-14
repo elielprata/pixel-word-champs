@@ -42,9 +42,9 @@ const GameBoardGrid = ({
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
-  // VISUAL LIMPO: gap mínimo, sem padding/grandezas
+  // VISUAL ULTRA LIMPO PARA FASE 2:
   const gridConfig = {
-    gap: '0.5px',
+    gap: '1px', // minúsculo para leve respiro das células
     maxWidth: isMobile ? '340px' : '400px',
     padding: '0px'
   };
@@ -52,7 +52,7 @@ const GameBoardGrid = ({
   return (
     <div
       ref={boardRef}
-      className="grid mx-auto"
+      className="grid mx-auto bg-white"
       style={{
         gridTemplateColumns: `repeat(${boardWidth}, 1fr)`,
         gridTemplateRows: `repeat(${size}, 1fr)`,
@@ -60,7 +60,8 @@ const GameBoardGrid = ({
         maxWidth: gridConfig.maxWidth,
         width: '100%',
         touchAction: 'none',
-        padding: gridConfig.padding
+        padding: gridConfig.padding,
+        background: "white"
       }}
       onTouchEnd={e => {
         e.preventDefault();
@@ -84,7 +85,7 @@ const GameBoardGrid = ({
             isHintHighlighted={isCellHintHighlighted(rowIndex, colIndex)}
             cellSize={cellSize}
             onCellStart={handleCellStart}
-            onCellMove={(row, col) => handleCellMove(row, col)}
+            onCellMove={handleCellMove}
             isSelecting={isSelecting}
             isMobile={isMobile}
             wordColorClass={undefined}
