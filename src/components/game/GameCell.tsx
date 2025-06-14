@@ -49,7 +49,6 @@ const GameCell = ({
     return 'text-slate-700 bg-white/50 hover:bg-white/70 border border-slate-200/50';
   };
 
-  // Função otimizada para touch move com debounce
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
     
@@ -60,8 +59,8 @@ const GameCell = ({
       clearTimeout(touchMoveTimeoutRef.current);
     }
     
-    // Debounce para melhor performance
-    touchMoveTimeoutRef.current = setTimeout(() => {
+    // Usar requestAnimationFrame para melhor performance
+    requestAnimationFrame(() => {
       const touch = e.touches[0];
       if (!touch) return;
       
@@ -72,14 +71,16 @@ const GameCell = ({
         colIndex
       }, 'GAME_CELL');
       
-      // Algoritmo melhorado para encontrar elemento
+      // Algoritmo otimizado para encontrar elemento
       const element = document.elementFromPoint(touch.clientX, touch.clientY);
       
+      if (!element) return;
+      
+      // Buscar o elemento célula mais próximo
       let targetCell = element;
       let attempts = 0;
-      const maxAttempts = 3; // Reduzido para melhor performance
+      const maxAttempts = 5;
       
-      // Buscar o elemento célula
       while (targetCell && !targetCell.hasAttribute('data-cell') && attempts < maxAttempts) {
         targetCell = targetCell.parentElement;
         attempts++;
@@ -98,7 +99,7 @@ const GameCell = ({
           hasDataCell: targetCell?.hasAttribute('data-cell')
         }, 'GAME_CELL');
       }
-    }, 10); // Debounce de 10ms
+    });
   }, [isMobile, isSelecting, onCellMove, rowIndex, colIndex]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -117,7 +118,7 @@ const GameCell = ({
       isPermanent
     }, 'GAME_CELL');
     
-    if (!isPermanent) { // Só permitir início se não for permanente
+    if (!isPermanent) {
       onCellStart(rowIndex, colIndex);
     }
   }, [rowIndex, colIndex, letter, isMobile, isPermanent, onCellStart]);

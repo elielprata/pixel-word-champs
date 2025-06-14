@@ -28,15 +28,17 @@ export const useBoardInteraction = () => {
         return prev;
       }
       
-      // Verificar se a nova posição está em linha reta com a seleção atual
-      if (!isInLineWithSelection(newPosition, prev)) {
-        logger.debug('❌ Posição fora da linha reta', { 
-          newPosition,
-          currentSelection: prev.length,
-          firstPos: prev[0],
-          lastPos: prev[prev.length - 1]
-        }, 'BOARD_INTERACTION');
-        return prev;
+      // Para seleção de 2+ células, verificar se está em linha reta
+      if (prev.length >= 1) {
+        if (!isInLineWithSelection(newPosition, prev)) {
+          logger.debug('❌ Posição fora da linha reta', { 
+            newPosition,
+            currentSelection: prev.length,
+            firstPos: prev[0],
+            lastPos: prev[prev.length - 1]
+          }, 'BOARD_INTERACTION');
+          return prev;
+        }
       }
       
       const newPath = [...prev, newPosition];
