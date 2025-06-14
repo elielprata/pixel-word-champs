@@ -29,7 +29,7 @@ const GameBoardHeader = ({
   onUseHint
 }: GameBoardHeaderProps) => {
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
+    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-2 shadow-lg border border-white/20">
       <GameProgressBar 
         level={level}
         foundWords={foundWords.length}
