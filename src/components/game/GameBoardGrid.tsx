@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import GameCell from './GameCell';
 import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from '@/utils/boardUtils';
@@ -24,7 +23,7 @@ interface GameBoardGridProps {
 
 const GameBoardGrid = ({
   boardData,
-  size, // altura (12)
+  size,
   selectedCells,
   previewCells,
   isSelecting,
@@ -41,44 +40,33 @@ const GameBoardGrid = ({
   const boardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const cellSize = getCellSize(size, isMobile);
-  const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1); // largura (8)
+  const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
-  logger.debug('Renderizando GameBoardGrid 12x8 com preview', { 
-    height: size, 
-    width: boardWidth,
-    selectedCellsCount: selectedCells.length,
-    previewCellsCount: previewCells.length,
-    isSelecting,
-    isMobile,
-    cellSize
-  }, 'GAME_BOARD_GRID');
-
-  // Configurações específicas para tabuleiro 12x8
+  // VISUAL LIMPO: gap mínimo, sem padding/grandezas
   const gridConfig = {
-    gap: isMobile ? '1px' : '2px',
+    gap: '0.5px',
     maxWidth: isMobile ? '340px' : '400px',
-    padding: isMobile ? '4px' : '6px'
+    padding: '0px'
   };
 
   return (
-    <div 
+    <div
       ref={boardRef}
       className="grid mx-auto"
-      style={{ 
-        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`, // 8 colunas
-        gridTemplateRows: `repeat(${size}, 1fr)`, // 12 linhas
+      style={{
+        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`,
+        gridTemplateRows: `repeat(${size}, 1fr)`,
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: '100%',
         touchAction: 'none',
         padding: gridConfig.padding
       }}
-      onTouchEnd={(e) => {
+      onTouchEnd={e => {
         e.preventDefault();
-        logger.debug('Touch end detectado no grid 12x8', { isMobile }, 'GAME_BOARD_GRID');
         handleCellEndWithValidation();
       }}
-      onMouseUp={(e) => {
+      onMouseUp={e => {
         e.preventDefault();
         handleCellEndWithValidation();
       }}
@@ -99,10 +87,7 @@ const GameBoardGrid = ({
             onCellMove={(row, col) => handleCellMove(row, col)}
             isSelecting={isSelecting}
             isMobile={isMobile}
-            wordColorClass={isCellPermanentlyMarked(rowIndex, colIndex) 
-              ? getWordColor(getCellWordIndex(rowIndex, colIndex))
-              : undefined
-            }
+            wordColorClass={undefined}
           />
         ))
       )}

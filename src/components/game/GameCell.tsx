@@ -1,4 +1,3 @@
-
 import React, { useCallback, useRef, useMemo } from 'react';
 import { logger } from '@/utils/logger';
 
@@ -59,24 +58,29 @@ const GameCell = ({
     return element;
   }, []);
   
+  // APARÊNCIA MINIMALISTA: célula sem quadrante, só letra centralizada e grande
   const getCellClasses = useMemo(() => {
-    if (isPermanent && wordColorClass) {
-      return `${wordColorClass} text-white shadow-lg animate-word-reveal border-2 border-white/20`;
-    }
-    if (isPermanent) {
-      return 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg animate-word-reveal border-2 border-white/20';
-    }
-    if (isSelected) {
-      return 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md border-2 border-white/30 scale-105';
-    }
-    if (isPreview) {
-      return 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-sm border-2 border-white/40 opacity-80';
-    }
-    if (isHintHighlighted) {
-      return 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white animate-pulse shadow-md border-2 border-white/30';
-    }
-    return 'text-slate-700 bg-white/50 hover:bg-white/70 border border-slate-200/50 hover:scale-102';
-  }, [isPermanent, isSelected, isPreview, isHintHighlighted, wordColorClass]);
+    let base =
+      "flex items-center justify-center font-bold relative transition-all duration-200 select-none " +
+      "bg-white text-gray-900 " +
+      (isSelected || isPermanent || isPreview || isHintHighlighted
+        ? "outline-none ring-2 ring-primary/50"
+        : "hover:bg-gray-50");
+
+    // Remove bordas, sombras, gradientes explícitos!
+    return base;
+  }, [isSelected, isPermanent, isPreview, isHintHighlighted]);
+
+  // Tamanho da fonte e célula para dar destaque à letra
+  const fontSize = isMobile
+    ? Math.max(cellSize * 0.75, 18)
+    : Math.max(cellSize * 0.80, 22);
+
+  // Bordas sempre arredondadas pequenas, NÃO em círculo/quadrante
+  const borderRadius = isMobile ? "6px" : "8px";
+
+  // Nenhum efeito especial (sombras/gradientes) para célula
+  const specialEffects = {};
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
@@ -175,53 +179,20 @@ const GameCell = ({
     }
   }, [rowIndex, colIndex, letter, isMobile, isPermanent, isSelected, isPreview, onCellStart]);
 
-  // Estilos otimizados
-  const fontSize = isMobile ? 
-    Math.max(cellSize * 0.45, 12) : 
-    Math.max(cellSize * 0.5, 14);
-
-  const borderRadius = isPermanent || isSelected || isPreview ? '50%' : (isMobile ? '8px' : '10px');
-  
-  const specialEffects = useMemo(() => {
-    if (isPermanent) {
-      return {
-        transform: 'scale(1.05)',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-      };
-    }
-    if (isSelected) {
-      return {
-        transform: 'scale(1.1)',
-        boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
-      };
-    }
-    if (isPreview) {
-      return {
-        transform: 'scale(1.05)',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-      };
-    }
-    return {};
-  }, [isPermanent, isSelected, isPreview]);
-
   return (
     <div
-      className={`
-        flex items-center justify-center cursor-pointer
-        transition-all duration-200 select-none font-bold relative
-        ${isMobile ? 'active:scale-95' : 'hover:scale-105'}
-        ${getCellClasses}
-      `}
-      style={{ 
-        width: `${cellSize}px`, 
+      className={getCellClasses}
+      style={{
+        width: `${cellSize}px`,
         height: `${cellSize}px`,
         fontSize: `${fontSize}px`,
-        touchAction: 'none',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        background: "white",
         borderRadius,
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        WebkitTouchCallout: 'none',
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        WebkitTouchCallout: "none",
+        padding: 0,
+        margin: 0,
         ...specialEffects
       }}
       onTouchStart={(e) => {
