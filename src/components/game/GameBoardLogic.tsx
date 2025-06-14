@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useGameBoardLogicState } from '@/hooks/useGameBoardLogicState';
 import { useGameBoardActions } from '@/hooks/useGameBoardActions';
@@ -25,13 +26,11 @@ interface GameBoardLogicProps {
     foundWords: FoundWord[];
     hintsUsed: number;
     selectedCells: Position[];
-    previewCells: Position[];
-    isSelecting: boolean;
+    isDragging: boolean;
     handleCellStart: (row: number, col: number) => void;
     handleCellMoveWithValidation: (row: number, col: number) => void;
     handleCellEndWithValidation: () => void;
     isCellSelected: (row: number, col: number) => boolean;
-    isCellPreviewed: (row: number, col: number) => boolean;
     isCellPermanentlyMarked: (row: number, col: number) => boolean;
     isCellHintHighlighted: (row: number, col: number) => boolean;
     useHint: () => void;
@@ -79,10 +78,16 @@ const GameBoardLogic = ({
     setHintsUsed: state.setHintsUsed,
     setHintHighlightedCells: state.setHintHighlightedCells,
     setShowGameOver: state.setShowGameOver,
-    handleCellEnd: state.handleCellEnd,
-    handleCellMove: state.handleCellMove,
+    handleCellEnd: state.handleEnd,
+    handleCellMove: state.handleDrag,
     addFoundWord: state.addFoundWord
   });
+
+  // Novo: cálculo dinâmico da seleção real
+  let selectedCells: Position[] = [];
+  if (state.isDragging && state.startCell && state.currentCell) {
+    selectedCells = state.getLinearPath(state.startCell, state.currentCell);
+  }
 
   // Calcular pontuação atual do nível (palavras encontradas)
   const currentLevelScore = state.foundWords.reduce((sum, fw) => sum + fw.points, 0);
@@ -95,9 +100,8 @@ const GameBoardLogic = ({
     levelWordsCount: state.levelWords.length,
     foundWordsCount: state.foundWords.length,
     currentLevelScore,
-    selectedCellsCount: state.selectedCells.length,
-    previewCellsCount: state.previewCells.length,
-    isSelecting: state.isSelecting
+    selectedCellsCount: selectedCells.length,
+    isDragging: state.isDragging
   }, 'GAME_BOARD_LOGIC');
 
   return (
@@ -108,14 +112,12 @@ const GameBoardLogic = ({
         levelWords: state.levelWords,
         foundWords: state.foundWords,
         hintsUsed: state.hintsUsed,
-        selectedCells: state.selectedCells,
-        previewCells: state.previewCells,
-        isSelecting: state.isSelecting,
-        handleCellStart: state.handleCellStart,
+        selectedCells,
+        isDragging: state.isDragging,
+        handleCellStart: state.handleStart,
         handleCellMoveWithValidation: actions.handleCellMoveWithValidation,
         handleCellEndWithValidation: actions.handleCellEndWithValidation,
         isCellSelected: state.isCellSelected,
-        isCellPreviewed: state.isCellPreviewed,
         isCellPermanentlyMarked: state.isCellPermanentlyMarked,
         isCellHintHighlighted: state.isCellHintHighlighted,
         useHint: actions.useHint,

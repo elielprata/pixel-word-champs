@@ -1,4 +1,3 @@
-
 import React from 'react';
 import GameBoardGrid from './GameBoardGrid';
 import WordsList from './WordsList';
@@ -15,12 +14,10 @@ interface GameBoardMainContentProps {
   boardData: { board: string[][]; placedWords: any[] };
   size: number;
   selectedCells: Position[];
-  previewCells: Position[];
-  isSelecting: boolean;
+  isDragging: boolean;
   foundWords: FoundWord[];
   levelWords: string[];
   isCellSelected: (row: number, col: number) => boolean;
-  isCellPreviewed: (row: number, col: number) => boolean;
   isCellPermanentlyMarked: (row: number, col: number) => boolean;
   isCellHintHighlighted: (row: number, col: number) => boolean;
   handleCellStart: (row: number, col: number) => void;
@@ -34,12 +31,10 @@ const GameBoardMainContent = ({
   boardData,
   size,
   selectedCells,
-  previewCells,
-  isSelecting,
+  isDragging,
   foundWords,
   levelWords,
   isCellSelected,
-  isCellPreviewed,
   isCellPermanentlyMarked,
   isCellHintHighlighted,
   handleCellStart,
@@ -61,15 +56,13 @@ const GameBoardMainContent = ({
           boardData={boardData}
           size={size}
           selectedCells={selectedCells}
-          previewCells={previewCells}
-          isSelecting={isSelecting}
+          isDragging={isDragging}
           isCellSelected={isCellSelected}
-          isCellPreviewed={isCellPreviewed}
           isCellPermanentlyMarked={isCellPermanentlyMarked}
           isCellHintHighlighted={isCellHintHighlighted}
           handleCellStart={handleCellStart}
           handleCellMove={handleCellMoveWithValidation}
-          handleCellEndWithValidation={handleCellEndWithValidation}
+          handleCellEnd={handleCellEndWithValidation}
           getWordColor={getWordColor}
           getCellWordIndex={getCellWordIndex}
         />

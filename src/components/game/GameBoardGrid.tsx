@@ -7,25 +7,31 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface GameBoardGridProps {
   boardData: { board: string[][] };
   size: number;
-  startCell: Position | null;
-  currentCell: Position | null;
+  selectedCells: Position[];
   isDragging: boolean;
   isCellSelected: (row: number, col: number) => boolean;
-  handleStart: (row: number, col: number) => void;
-  handleDrag: (row: number, col: number) => void;
-  handleEnd: () => void;
+  isCellPermanentlyMarked: (row: number, col: number) => boolean;
+  isCellHintHighlighted: (row: number, col: number) => boolean;
+  handleCellStart: (row: number, col: number) => void;
+  handleCellMove: (row: number, col: number) => void;
+  handleCellEnd: () => void;
+  getWordColor: (wordIndex: number) => string;
+  getCellWordIndex: (row: number, col: number) => number;
 }
 
 const GameBoardGrid = ({
   boardData,
   size,
-  startCell,
-  currentCell,
+  selectedCells,
   isDragging,
   isCellSelected,
-  handleStart,
-  handleDrag,
-  handleEnd,
+  isCellPermanentlyMarked,
+  isCellHintHighlighted,
+  handleCellStart,
+  handleCellMove,
+  handleCellEnd,
+  getWordColor,
+  getCellWordIndex
 }: GameBoardGridProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -38,6 +44,10 @@ const GameBoardGrid = ({
     maxWidth: isMobile ? "340px" : "400px",
     padding: "0px",
   };
+
+  // Função que indica se a célula está atualmente selecionada na linha visual
+  const isCellCurrentlySelected = (row: number, col: number) =>
+    selectedCells.some((pos) => pos.row === row && pos.col === col);
 
   return (
     <div
@@ -55,11 +65,11 @@ const GameBoardGrid = ({
       }}
       onTouchEnd={(e) => {
         e.preventDefault();
-        handleEnd();
+        handleCellEnd();
       }}
       onMouseUp={(e) => {
         e.preventDefault();
-        handleEnd();
+        handleCellEnd();
       }}
     >
       {boardData.board.map((row, rowIndex) =>
@@ -69,11 +79,11 @@ const GameBoardGrid = ({
             letter={letter}
             rowIndex={rowIndex}
             colIndex={colIndex}
-            isSelected={isCellSelected(rowIndex, colIndex)}
+            isSelected={isCellCurrentlySelected(rowIndex, colIndex)}
             cellSize={cellSize}
-            onCellStart={handleStart}
-            onCellMove={handleDrag}
-            onCellEnd={handleEnd}
+            onCellStart={handleCellStart}
+            onCellMove={handleCellMove}
+            onCellEnd={handleCellEnd}
             isDragging={isDragging}
             isMobile={isMobile}
           />
