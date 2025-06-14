@@ -82,12 +82,10 @@ const GameBoardContent = ({
             boardData={logicProps.boardData}
             size={logicProps.size}
             selectedCells={logicProps.selectedCells}
-            previewCells={logicProps.previewCells}
-            isSelecting={logicProps.isSelecting}
+            isDragging={logicProps.isDragging}
             foundWords={logicProps.foundWords}
             levelWords={logicProps.levelWords}
             isCellSelected={logicProps.isCellSelected}
-            isCellPreviewed={logicProps.isCellPreviewed}
             isCellPermanentlyMarked={logicProps.isCellPermanentlyMarked}
             isCellHintHighlighted={logicProps.isCellHintHighlighted}
             handleCellStart={logicProps.handleCellStart}
@@ -116,3 +114,4 @@ const GameBoardContent = ({
 };
 
 export default GameBoardContent;
+
