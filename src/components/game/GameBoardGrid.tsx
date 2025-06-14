@@ -1,52 +1,42 @@
-import React, { useRef } from 'react';
-import GameCell from './GameCell';
-import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from '@/utils/boardUtils';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { logger } from '@/utils/logger';
+
+import React, { useRef } from "react";
+import GameCell from "./GameCell";
+import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from "@/utils/boardUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GameBoardGridProps {
   boardData: { board: string[][] };
-  size: number; // altura (12)
-  selectedCells: Position[];
-  previewCells: Position[];
-  isSelecting: boolean;
+  size: number;
+  startCell: Position | null;
+  currentCell: Position | null;
+  isDragging: boolean;
   isCellSelected: (row: number, col: number) => boolean;
-  isCellPreviewed: (row: number, col: number) => boolean;
-  isCellPermanentlyMarked: (row: number, col: number) => boolean;
-  isCellHintHighlighted: (row: number, col: number) => boolean;
-  handleCellStart: (row: number, col: number) => void;
-  handleCellMove: (row: number, col: number) => void;
-  handleCellEndWithValidation: () => void;
-  getWordColor: (wordIndex: number) => string;
-  getCellWordIndex: (row: number, col: number) => number;
+  handleStart: (row: number, col: number) => void;
+  handleDrag: (row: number, col: number) => void;
+  handleEnd: () => void;
 }
 
 const GameBoardGrid = ({
   boardData,
   size,
-  selectedCells,
-  previewCells,
-  isSelecting,
+  startCell,
+  currentCell,
+  isDragging,
   isCellSelected,
-  isCellPreviewed,
-  isCellPermanentlyMarked,
-  isCellHintHighlighted,
-  handleCellStart,
-  handleCellMove,
-  handleCellEndWithValidation,
-  getWordColor,
-  getCellWordIndex
+  handleStart,
+  handleDrag,
+  handleEnd,
 }: GameBoardGridProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
-  // VISUAL ULTRA LIMPO PARA FASE 2:
+  // Layout limpo
   const gridConfig = {
-    gap: '1px', // minúsculo para leve respiro das células
-    maxWidth: isMobile ? '340px' : '400px',
-    padding: '0px'
+    gap: "1px",
+    maxWidth: isMobile ? "340px" : "400px",
+    padding: "0px",
   };
 
   return (
@@ -58,18 +48,18 @@ const GameBoardGrid = ({
         gridTemplateRows: `repeat(${size}, 1fr)`,
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
-        width: '100%',
-        touchAction: 'none',
+        width: "100%",
+        touchAction: "none",
         padding: gridConfig.padding,
-        background: "white"
+        background: "white",
       }}
-      onTouchEnd={e => {
+      onTouchEnd={(e) => {
         e.preventDefault();
-        handleCellEndWithValidation();
+        handleEnd();
       }}
-      onMouseUp={e => {
+      onMouseUp={(e) => {
         e.preventDefault();
-        handleCellEndWithValidation();
+        handleEnd();
       }}
     >
       {boardData.board.map((row, rowIndex) =>
@@ -80,15 +70,12 @@ const GameBoardGrid = ({
             rowIndex={rowIndex}
             colIndex={colIndex}
             isSelected={isCellSelected(rowIndex, colIndex)}
-            isPreview={isCellPreviewed(rowIndex, colIndex)}
-            isPermanent={isCellPermanentlyMarked(rowIndex, colIndex)}
-            isHintHighlighted={isCellHintHighlighted(rowIndex, colIndex)}
             cellSize={cellSize}
-            onCellStart={handleCellStart}
-            onCellMove={handleCellMove}
-            isSelecting={isSelecting}
+            onCellStart={handleStart}
+            onCellMove={handleDrag}
+            onCellEnd={handleEnd}
+            isDragging={isDragging}
             isMobile={isMobile}
-            wordColorClass={undefined}
           />
         ))
       )}

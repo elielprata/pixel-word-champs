@@ -1,13 +1,11 @@
 
-import { useEffect } from 'react';
-import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
-import { useBoardInteraction } from '@/hooks/useBoardInteraction';
-// Removido: import { useWordValidation } from '@/hooks/useWordValidation';
-import { useGameLogic } from '@/hooks/useGameLogic';
-import { useGameInteractions } from '@/hooks/useGameInteractions';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { type Position } from '@/utils/boardUtils';
-import { logger } from '@/utils/logger';
+import { useEffect } from "react";
+import { useOptimizedBoard } from "@/hooks/useOptimizedBoard";
+import { useSimpleSelection } from "@/hooks/useSimpleSelection";
+import { useGameLogic } from "@/hooks/useGameLogic";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { logger } from "@/utils/logger";
+import { type Position } from "@/utils/boardUtils";
 
 interface FoundWord {
   word: string;
@@ -34,10 +32,9 @@ export const useGameBoardLogicState = ({
 }: GameBoardLogicStateProps) => {
   const isMobile = useIsMobile();
   const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
-  
-  // Log detalhado do estado dos dados
+
   useEffect(() => {
-    logger.info('🎮 GameBoardLogic renderizado', { 
+    logger.info("🎮 GameBoardLogic renderizado", {
       level,
       isMobile,
       isLoading,
@@ -45,36 +42,34 @@ export const useGameBoardLogicState = ({
       boardSize: boardData.board.length,
       levelWordsCount: levelWords.length,
       placedWordsCount: boardData.placedWords.length,
-      timeLeft
-    }, 'GAME_BOARD_LOGIC');
+      timeLeft,
+    }, "GAME_BOARD_LOGIC");
   }, [level, isMobile, isLoading, error, boardData, levelWords, timeLeft]);
 
-  // Log quando os dados mudam
   useEffect(() => {
     if (boardData.board.length > 0) {
-      logger.info('📋 Dados do tabuleiro recebidos', {
+      logger.info("📋 Dados do tabuleiro recebidos", {
         level,
         isMobile,
         boardSize: boardData.board.length,
         levelWords,
-        placedWords: boardData.placedWords.map(pw => pw.word),
-        boardPreview: boardData.board.slice(0, 2).map(row => row.join(''))
-      }, 'GAME_BOARD_LOGIC');
+        placedWords: boardData.placedWords.map((pw) => pw.word),
+        boardPreview: boardData.board.slice(0, 2).map((row) => row.join("")),
+      }, "GAME_BOARD_LOGIC");
     }
   }, [boardData, levelWords, level, isMobile]);
-  
-  const { 
-    selectedCells,
-    previewCells,
-    isSelecting, 
-    handleCellStart, 
-    handleCellMove, 
-    handleCellEnd, 
-    isCellSelected,
-    isCellPreviewed
-  } = useBoardInteraction();
 
-  // Removido: const { isValidWordDirection, isInLineWithSelection, fillIntermediateCells } = useWordValidation();
+  // NOVO: Usa ultra-simples
+  const {
+    startCell,
+    currentCell,
+    isDragging,
+    handleStart,
+    handleDrag,
+    handleEnd,
+    isCellSelected,
+    getLinearPath
+  } = useSimpleSelection();
 
   const {
     foundWords,
@@ -88,57 +83,46 @@ export const useGameBoardLogicState = ({
     addFoundWord,
     isCellPermanentlyMarked,
     isCellHintHighlighted,
-    closeGameOver
+    closeGameOver,
   } = useGameLogic(level, timeLeft, levelWords, onWordFound, (levelScore) => {
-    logger.info('🎉 Nível completado', { 
-      level, 
+    logger.info("🎉 Nível completado", {
+      level,
       levelScore,
       foundWordsCount: foundWords.length,
-      isMobile
-    }, 'GAME_BOARD_LOGIC');
+      isMobile,
+    }, "GAME_BOARD_LOGIC");
     onLevelComplete(levelScore);
   });
 
   return {
-    // Board data
     boardData,
     size,
     levelWords,
     isLoading,
     error,
     isMobile,
-    
-    // Selection state
-    selectedCells,
-    previewCells,
-    isSelecting,
-    
-    // Game state
+
+    // Ultra-simples:
+    startCell,
+    currentCell,
+    isDragging,
+    handleStart,
+    handleDrag,
+    handleEnd,
+    isCellSelected,
+    getLinearPath,
+
     foundWords,
     hintsUsed,
     showGameOver,
     showLevelComplete,
     isLevelCompleted,
-    
-    // Interaction handlers
-    handleCellStart,
-    handleCellMove,
-    handleCellEnd,
-    isCellSelected,
-    isCellPreviewed,
-    isCellPermanentlyMarked,
-    isCellHintHighlighted,
-    
-    // Validation functions DESABILITADAS
-    // isValidWordDirection,
-    // isInLineWithSelection,
-    // fillIntermediateCells,
-    
-    // State setters
     setHintsUsed,
     setShowGameOver,
     setHintHighlightedCells,
     addFoundWord,
-    closeGameOver
+    isCellPermanentlyMarked,
+    isCellHintHighlighted,
+    closeGameOver,
   };
 };
