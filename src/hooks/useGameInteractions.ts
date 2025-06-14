@@ -72,10 +72,16 @@ export const useGameInteractions = (
       if (wordPlacement) {
         setHintHighlightedCells(wordPlacement.positions);
         
-        // Remover o destaque após 3 segundos
+        // Manter o destaque por mais tempo para melhor visibilidade
         setTimeout(() => {
           setHintHighlightedCells([]);
-        }, 3000);
+        }, 5000);
+        
+        toast({
+          title: "Dica ativada!",
+          description: `Palavra destacada: ${hintWord}`,
+          variant: "default"
+        });
       }
       
       logger.info('Dica utilizada', { word: hintWord, hintsUsed: hintsUsed + 1 }, 'GAME_INTERACTIONS');

@@ -39,15 +39,22 @@ const GameCell = ({
       return 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg animate-word-reveal border-2 border-white/20';
     }
     if (isSelected) {
-      return 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md border-2 border-white/30';
+      return 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md border-2 border-white/30 animate-pulse';
     }
     if (isHintHighlighted) {
-      return 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white animate-pulse shadow-md border-2 border-white/30';
+      return 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white animate-pulse shadow-md border-2 border-yellow-300/50';
     }
     return 'text-slate-700 bg-white/50 hover:bg-white/70 border border-slate-200/50';
   };
 
   const handleStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    // Não permitir iniciar seleção em células já permanentemente marcadas
+    if (isPermanent) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    
     e.preventDefault();
     e.stopPropagation();
     logger.debug('EVENTO: Célula selecionada (início)', { 
@@ -57,7 +64,7 @@ const GameCell = ({
       eventType: 'touches' in e ? 'touch' : 'mouse'
     }, 'GAME_CELL');
     onCellStart(rowIndex, colIndex);
-  }, [rowIndex, colIndex, letter, onCellStart]);
+  }, [rowIndex, colIndex, letter, onCellStart, isPermanent]);
 
   const handleMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     if (!isSelecting) return;
@@ -121,6 +128,9 @@ const GameCell = ({
   const specialEffects = isPermanent ? {
     transform: 'scale(1.05)',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+  } : isSelected ? {
+    transform: 'scale(1.02)',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
   } : {};
 
   return (
@@ -130,6 +140,7 @@ const GameCell = ({
         transition-all duration-300 select-none font-bold relative
         ${isMobile ? 'active:scale-95' : 'hover:scale-105'}
         ${getCellClasses()}
+        ${isPermanent ? 'cursor-default' : ''}
       `}
       style={{ 
         width: `${cellSize}px`, 
@@ -142,7 +153,7 @@ const GameCell = ({
         WebkitUserSelect: 'none',
         WebkitTouchCallout: 'none',
         pointerEvents: 'auto',
-        zIndex: 1,
+        zIndex: isSelected || isPermanent ? 2 : 1,
         ...specialEffects
       }}
       onTouchStart={handleStart}
@@ -154,7 +165,7 @@ const GameCell = ({
       data-row={rowIndex}
       data-col={colIndex}
     >
-      {isPermanent && (
+      {(isPermanent || isHintHighlighted) && (
         <div 
           className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"
           style={{ borderRadius }}

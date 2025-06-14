@@ -104,10 +104,15 @@ export const useBoardInteraction = () => {
     }, 'BOARD_INTERACTION');
     setIsSelecting(false);
     
+    // Não limpar a seleção imediatamente - deixar para o componente pai decidir
     const finalSelection = [...selectedCells];
-    setSelectedCells([]);
     return finalSelection;
   }, [selectedCells]);
+
+  const clearSelection = useCallback(() => {
+    logger.debug('Limpando seleção manualmente', {}, 'BOARD_INTERACTION');
+    setSelectedCells([]);
+  }, []);
 
   const isCellSelected = useCallback((row: number, col: number) => {
     return selectedCells.some(pos => pos.row === row && pos.col === col);
@@ -119,6 +124,7 @@ export const useBoardInteraction = () => {
     handleCellStart,
     handleCellMove,
     handleCellEnd,
+    clearSelection,
     isCellSelected
   };
 };

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
@@ -66,6 +67,7 @@ const GameBoardLogic = ({
     handleCellStart, 
     handleCellMove, 
     handleCellEnd, 
+    clearSelection,
     isCellSelected 
   } = useBoardInteraction();
 
@@ -127,7 +129,16 @@ const GameBoardLogic = ({
           wordLength: word.length,
           selectionLength: finalSelection.length 
         }, 'GAME_BOARD_LOGIC');
+        
+        // Adicionar palavra encontrada antes de limpar seleção
         addFoundWord(word, finalSelection);
+        
+        // Aguardar um pouco antes de limpar para permitir transição visual suave
+        setTimeout(() => {
+          clearSelection();
+        }, 200);
+        
+        return;
       } else {
         logger.debug('❌ Palavra rejeitada', {
           word,
@@ -136,9 +147,16 @@ const GameBoardLogic = ({
         }, 'GAME_BOARD_LOGIC');
       }
     }
+    
+    // Se não foi uma palavra válida, limpar seleção imediatamente
+    clearSelection();
   };
 
   const handleCellMoveWithValidation = (row: number, col: number) => {
+    // Não permitir seleção de células já permanentemente marcadas
+    if (isCellPermanentlyMarked(row, col)) {
+      return;
+    }
     handleCellMove(row, col);
   };
 
