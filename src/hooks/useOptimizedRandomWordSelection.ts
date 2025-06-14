@@ -153,7 +153,7 @@ export const useOptimizedRandomWordSelection = (level: number): OptimizedRandomW
           }
 
           // Atualizar cache global
-          const latestUpdate = Math.max(...words.map(w => new Date(w.updated_at || w.created_at || Date.now()).getTime()));
+          const latestUpdate = Math.max(...words.map(w => new Date(w.updated_at || Date.now()).getTime()));
           globalWordsCache = {
             words: words,
             timestamp: Date.now(),
