@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
@@ -99,7 +98,7 @@ const GameBoardLogic = ({
     isCellSelected 
   } = useBoardInteraction();
   
-  const { isValidWordDirection } = useWordValidation();
+  const { isValidWordDirection, isInLineWithSelection } = useWordValidation();
 
   const {
     foundWords,
@@ -143,50 +142,66 @@ const GameBoardLogic = ({
     if (finalSelection.length >= 3) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
-      logger.debug('🔍 Tentativa de palavra', {
+      logger.info('🔍 Tentativa de palavra', {
         word,
         level,
         isMobile,
         selectionLength: finalSelection.length,
         isInWordList: levelWords.includes(word),
         alreadyFound: foundWords.some(fw => fw.word === word),
-        validDirection: isValidWordDirection(finalSelection)
+        validDirection: isValidWordDirection(finalSelection),
+        positions: finalSelection
       }, 'GAME_BOARD_LOGIC');
       
       if (levelWords.includes(word) && 
           !foundWords.some(fw => fw.word === word) && 
           isValidWordDirection(finalSelection)) {
-        logger.info('✅ Palavra encontrada', { 
+        logger.info('✅ Palavra encontrada com sucesso', { 
           word, 
           level,
           isMobile,
           wordLength: word.length,
-          selectionLength: finalSelection.length 
+          selectionLength: finalSelection.length,
+          positions: finalSelection
         }, 'GAME_BOARD_LOGIC');
         addFoundWord(word, finalSelection);
+      } else {
+        logger.warn('❌ Palavra rejeitada', {
+          word,
+          reasons: {
+            notInWordList: !levelWords.includes(word),
+            alreadyFound: foundWords.some(fw => fw.word === word),
+            invalidDirection: !isValidWordDirection(finalSelection)
+          }
+        }, 'GAME_BOARD_LOGIC');
       }
+    } else {
+      logger.debug('⚠️ Seleção muito curta', { 
+        selectionLength: finalSelection.length,
+        minimum: 3 
+      }, 'GAME_BOARD_LOGIC');
     }
   };
 
   const handleCellMoveWithValidation = (row: number, col: number) => {
-    handleCellMove(row, col, isValidWordDirection);
+    handleCellMove(row, col, isInLineWithSelection);
   };
 
   // Paleta expandida de cores em formato oval como na imagem
   const getWordColor = (wordIndex: number) => {
     const colors = [
-      'bg-gradient-to-br from-blue-500 to-blue-600',      // Azul vibrante
-      'bg-gradient-to-br from-purple-500 to-violet-600',  // Roxo
-      'bg-gradient-to-br from-emerald-500 to-green-600',  // Verde
-      'bg-gradient-to-br from-orange-500 to-amber-600',   // Laranja
-      'bg-gradient-to-br from-pink-500 to-rose-600',      // Rosa
-      'bg-gradient-to-br from-cyan-500 to-teal-600',      // Ciano
-      'bg-gradient-to-br from-red-500 to-pink-600',       // Vermelho
-      'bg-gradient-to-br from-indigo-500 to-purple-600',  // Índigo
-      'bg-gradient-to-br from-yellow-500 to-orange-500',  // Amarelo
-      'bg-gradient-to-br from-lime-500 to-green-500',     // Lima
-      'bg-gradient-to-br from-fuchsia-500 to-pink-600',   // Fúcsia
-      'bg-gradient-to-br from-slate-500 to-gray-600'      // Cinza
+      'bg-gradient-to-br from-blue-500 to-blue-600',      
+      'bg-gradient-to-br from-purple-500 to-violet-600',  
+      'bg-gradient-to-br from-emerald-500 to-green-600',  
+      'bg-gradient-to-br from-orange-500 to-amber-600',   
+      'bg-gradient-to-br from-pink-500 to-rose-600',      
+      'bg-gradient-to-br from-cyan-500 to-teal-600',      
+      'bg-gradient-to-br from-red-500 to-pink-600',       
+      'bg-gradient-to-br from-indigo-500 to-purple-600',  
+      'bg-gradient-to-br from-yellow-500 to-orange-500',  
+      'bg-gradient-to-br from-lime-500 to-green-500',     
+      'bg-gradient-to-br from-fuchsia-500 to-pink-600',   
+      'bg-gradient-to-br from-slate-500 to-gray-600'      
     ];
     return colors[wordIndex % colors.length];
   };
@@ -208,7 +223,9 @@ const GameBoardLogic = ({
     boardDataReady: boardData.board.length > 0,
     levelWordsCount: levelWords.length,
     foundWordsCount: foundWords.length,
-    currentLevelScore
+    currentLevelScore,
+    selectedCellsCount: selectedCells.length,
+    isSelecting
   }, 'GAME_BOARD_LOGIC');
 
   return (

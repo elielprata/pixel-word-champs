@@ -3,9 +3,15 @@ import { type Position } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
 
 export const useWordValidation = () => {
-  // Função para validar se as células formam uma linha válida (horizontal, vertical ou diagonal)
+  // Função melhorada para validar direções - permite seleções não-adjacentes em linha reta
   const isValidWordDirection = (positions: Position[]): boolean => {
     if (positions.length < 2) return true;
+
+    // Log da tentativa de validação
+    logger.debug('🔍 Validando direção da palavra', { 
+      positionsCount: positions.length,
+      positions: positions.slice(0, 3) // Apenas as primeiras 3 para não sobrecarregar o log
+    }, 'WORD_VALIDATION');
 
     const first = positions[0];
     const second = positions[1];
@@ -13,46 +19,69 @@ export const useWordValidation = () => {
     const deltaRow = second.row - first.row;
     const deltaCol = second.col - first.col;
     
-    // Verificar se é horizontal, vertical ou diagonal
-    const isHorizontal = deltaRow === 0 && Math.abs(deltaCol) === 1;
-    const isVertical = deltaCol === 0 && Math.abs(deltaRow) === 1;
-    const isDiagonal = Math.abs(deltaRow) === 1 && Math.abs(deltaCol) === 1;
+    // Permitir qualquer direção em linha reta (não apenas adjacente)
+    const isHorizontal = deltaRow === 0 && deltaCol !== 0;
+    const isVertical = deltaCol === 0 && deltaRow !== 0;
+    const isDiagonal = Math.abs(deltaRow) === Math.abs(deltaCol) && deltaRow !== 0 && deltaCol !== 0;
     
     if (!isHorizontal && !isVertical && !isDiagonal) {
-      logger.debug('Direção inválida detectada', { 
+      logger.debug('❌ Direção inválida - não é linha reta', { 
         deltaRow, 
-        deltaCol, 
-        positionsCount: positions.length 
+        deltaCol,
+        isHorizontal,
+        isVertical,
+        isDiagonal
       }, 'WORD_VALIDATION');
       return false;
     }
     
-    // Verificar se todas as posições seguem a mesma direção
-    for (let i = 2; i < positions.length; i++) {
-      const curr = positions[i];
-      const prev = positions[i - 1];
+    // Normalizar direção para +1, 0 ou -1
+    const normalizedDeltaRow = deltaRow === 0 ? 0 : deltaRow > 0 ? 1 : -1;
+    const normalizedDeltaCol = deltaCol === 0 ? 0 : deltaCol > 0 ? 1 : -1;
+    
+    // Verificar se todas as posições seguem a mesma direção normalizada
+    for (let i = 1; i < positions.length - 1; i++) {
+      const curr = positions[i + 1];
+      const prev = positions[i];
       
       const currDeltaRow = curr.row - prev.row;
       const currDeltaCol = curr.col - prev.col;
       
-      if (currDeltaRow !== deltaRow || currDeltaCol !== deltaCol) {
-        logger.debug('Inconsistência na direção detectada', { 
-          expectedDelta: { deltaRow, deltaCol },
-          actualDelta: { currDeltaRow, currDeltaCol },
-          position: i
+      const currNormalizedDeltaRow = currDeltaRow === 0 ? 0 : currDeltaRow > 0 ? 1 : -1;
+      const currNormalizedDeltaCol = currDeltaCol === 0 ? 0 : currDeltaCol > 0 ? 1 : -1;
+      
+      if (currNormalizedDeltaRow !== normalizedDeltaRow || currNormalizedDeltaCol !== normalizedDeltaCol) {
+        logger.debug('❌ Inconsistência na direção', { 
+          expectedNormalized: { row: normalizedDeltaRow, col: normalizedDeltaCol },
+          actualNormalized: { row: currNormalizedDeltaRow, col: currNormalizedDeltaCol },
+          position: i + 1
         }, 'WORD_VALIDATION');
         return false;
       }
     }
     
-    logger.debug('Direção válida confirmada', { 
-      direction: isHorizontal ? 'horizontal' : isVertical ? 'vertical' : 'diagonal',
-      positionsCount: positions.length
+    const direction = isHorizontal ? 'horizontal' : isVertical ? 'vertical' : 'diagonal';
+    logger.debug('✅ Direção válida confirmada', { 
+      direction,
+      positionsCount: positions.length,
+      normalizedDirection: { row: normalizedDeltaRow, col: normalizedDeltaCol }
     }, 'WORD_VALIDATION');
+    
     return true;
   };
 
+  // Função auxiliar para verificar se uma posição está em linha reta com as existentes
+  const isInLineWithSelection = (newPosition: Position, selectedPositions: Position[]): boolean => {
+    if (selectedPositions.length === 0) return true;
+    if (selectedPositions.length === 1) return true; // Qualquer posição é válida para a segunda
+
+    // Criar array temporário com a nova posição
+    const testPositions = [...selectedPositions, newPosition];
+    return isValidWordDirection(testPositions);
+  };
+
   return {
-    isValidWordDirection
+    isValidWordDirection,
+    isInLineWithSelection
   };
 };

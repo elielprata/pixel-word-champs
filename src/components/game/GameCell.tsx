@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { logger } from '@/utils/logger';
 
 interface GameCellProps {
@@ -31,6 +31,8 @@ const GameCell = ({
   isMobile = false,
   wordColorClass
 }: GameCellProps) => {
+  const touchMoveTimeoutRef = useRef<NodeJS.Timeout>();
+  
   const getCellClasses = () => {
     if (isPermanent && wordColorClass) {
       return `${wordColorClass} text-white shadow-lg animate-word-reveal border-2 border-white/20`;
@@ -47,29 +49,37 @@ const GameCell = ({
     return 'text-slate-700 bg-white/50 hover:bg-white/70 border border-slate-200/50';
   };
 
-  // Debounced touch move para melhor performance em mobile
+  // Função otimizada para touch move com debounce
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
     
-    if (!isMobile) return;
+    if (!isMobile || !isSelecting) return;
     
-    const touch = e.touches[0];
-    if (touch) {
-      logger.debug('Touch move detectado', { 
+    // Limpar timeout anterior
+    if (touchMoveTimeoutRef.current) {
+      clearTimeout(touchMoveTimeoutRef.current);
+    }
+    
+    // Debounce para melhor performance
+    touchMoveTimeoutRef.current = setTimeout(() => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      
+      logger.debug('📱 Touch move processado', { 
         clientX: touch.clientX, 
         clientY: touch.clientY,
         rowIndex,
         colIndex
       }, 'GAME_CELL');
       
-      // Melhor detecção de elemento em mobile
+      // Algoritmo melhorado para encontrar elemento
       const element = document.elementFromPoint(touch.clientX, touch.clientY);
       
       let targetCell = element;
       let attempts = 0;
-      const maxAttempts = 5;
+      const maxAttempts = 3; // Reduzido para melhor performance
       
-      // Buscar o elemento célula com limite de tentativas
+      // Buscar o elemento célula
       while (targetCell && !targetCell.hasAttribute('data-cell') && attempts < maxAttempts) {
         targetCell = targetCell.parentElement;
         attempts++;
@@ -79,42 +89,46 @@ const GameCell = ({
         const row = parseInt(targetCell.getAttribute('data-row') || '0');
         const col = parseInt(targetCell.getAttribute('data-col') || '0');
         
-        logger.debug('Célula encontrada via touch', { row, col }, 'GAME_CELL');
+        logger.debug('✅ Célula encontrada via touch', { row, col }, 'GAME_CELL');
         onCellMove(row, col);
       } else {
-        logger.warn('Célula não encontrada via touch', { 
+        logger.debug('⚠️ Célula não encontrada via touch', { 
           element: element?.tagName,
-          attempts 
+          attempts,
+          hasDataCell: targetCell?.hasAttribute('data-cell')
         }, 'GAME_CELL');
       }
-    }
-  }, [isMobile, onCellMove, rowIndex, colIndex]);
+    }, 10); // Debounce de 10ms
+  }, [isMobile, isSelecting, onCellMove, rowIndex, colIndex]);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isSelecting && !isMobile) {
+      logger.debug('🖱️ Mouse move detectado', { rowIndex, colIndex }, 'GAME_CELL');
       onCellMove(rowIndex, colIndex);
     }
-  };
+  }, [isSelecting, isMobile, onCellMove, rowIndex, colIndex]);
 
-  const handleCellStart = () => {
-    logger.debug('Célula selecionada', { 
+  const handleCellStart = useCallback(() => {
+    logger.debug('🎯 Célula iniciada', { 
       rowIndex, 
       colIndex, 
       letter,
-      isMobile 
+      isMobile,
+      isPermanent
     }, 'GAME_CELL');
-    onCellStart(rowIndex, colIndex);
-  };
+    
+    if (!isPermanent) { // Só permitir início se não for permanente
+      onCellStart(rowIndex, colIndex);
+    }
+  }, [rowIndex, colIndex, letter, isMobile, isPermanent, onCellStart]);
 
-  // Estilos otimizados para mobile com formato oval
+  // Estilos otimizados
   const fontSize = isMobile ? 
     Math.max(cellSize * 0.45, 12) : 
     Math.max(cellSize * 0.5, 14);
 
-  // Formato oval/cápsula mais pronunciado
   const borderRadius = isPermanent || isSelected ? '50%' : (isMobile ? '8px' : '10px');
   
-  // Efeitos especiais para palavras encontradas
   const specialEffects = isPermanent ? {
     transform: 'scale(1.05)',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
@@ -142,10 +156,11 @@ const GameCell = ({
       }}
       onTouchStart={(e) => {
         e.preventDefault();
-        logger.debug('Touch start detectado', { 
+        logger.debug('📱 Touch start detectado', { 
           rowIndex, 
           colIndex,
-          isMobile 
+          isMobile,
+          isPermanent
         }, 'GAME_CELL');
         handleCellStart();
       }}
@@ -153,6 +168,7 @@ const GameCell = ({
       onMouseDown={(e) => {
         e.preventDefault();
         if (!isMobile) {
+          logger.debug('🖱️ Mouse down detectado', { rowIndex, colIndex }, 'GAME_CELL');
           handleCellStart();
         }
       }}
