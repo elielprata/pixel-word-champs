@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
-import { useWordValidation } from '@/hooks/useWordValidation';
+// Removido: import { useWordValidation } from '@/hooks/useWordValidation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useGameInteractions } from '@/hooks/useGameInteractions';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -73,8 +73,8 @@ export const useGameBoardLogicState = ({
     isCellSelected,
     isCellPreviewed
   } = useBoardInteraction();
-  
-  const { isValidWordDirection, isInLineWithSelection, fillIntermediateCells } = useWordValidation();
+
+  // Removido: const { isValidWordDirection, isInLineWithSelection, fillIntermediateCells } = useWordValidation();
 
   const {
     foundWords,
@@ -129,10 +129,10 @@ export const useGameBoardLogicState = ({
     isCellPermanentlyMarked,
     isCellHintHighlighted,
     
-    // Validation functions
-    isValidWordDirection,
-    isInLineWithSelection,
-    fillIntermediateCells,
+    // Validation functions DESABILITADAS
+    // isValidWordDirection,
+    // isInLineWithSelection,
+    // fillIntermediateCells,
     
     // State setters
     setHintsUsed,
