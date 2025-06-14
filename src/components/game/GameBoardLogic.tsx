@@ -172,17 +172,21 @@ const GameBoardLogic = ({
     handleCellMove(row, col, isValidWordDirection);
   };
 
-  // Função para obter a cor específica de uma palavra encontrada
+  // Paleta expandida de cores em formato oval como na imagem
   const getWordColor = (wordIndex: number) => {
     const colors = [
-      'from-emerald-400 to-green-500',
-      'from-blue-400 to-indigo-500', 
-      'from-purple-400 to-violet-500',
-      'from-pink-400 to-rose-500',
-      'from-orange-400 to-amber-500',
-      'from-cyan-400 to-teal-500',
-      'from-red-400 to-pink-500',
-      'from-lime-400 to-green-500'
+      'bg-gradient-to-br from-blue-500 to-blue-600',      // Azul vibrante
+      'bg-gradient-to-br from-purple-500 to-violet-600',  // Roxo
+      'bg-gradient-to-br from-emerald-500 to-green-600',  // Verde
+      'bg-gradient-to-br from-orange-500 to-amber-600',   // Laranja
+      'bg-gradient-to-br from-pink-500 to-rose-600',      // Rosa
+      'bg-gradient-to-br from-cyan-500 to-teal-600',      // Ciano
+      'bg-gradient-to-br from-red-500 to-pink-600',       // Vermelho
+      'bg-gradient-to-br from-indigo-500 to-purple-600',  // Índigo
+      'bg-gradient-to-br from-yellow-500 to-orange-500',  // Amarelo
+      'bg-gradient-to-br from-lime-500 to-green-500',     // Lima
+      'bg-gradient-to-br from-fuchsia-500 to-pink-600',   // Fúcsia
+      'bg-gradient-to-br from-slate-500 to-gray-600'      // Cinza
     ];
     return colors[wordIndex % colors.length];
   };

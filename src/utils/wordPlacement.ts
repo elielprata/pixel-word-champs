@@ -1,6 +1,5 @@
 
 import { type Position, type PlacedWord } from '@/utils/boardUtils';
-import { logger } from '@/utils/logger';
 
 export interface WordPlacementResult {
   board: string[][];
@@ -9,40 +8,45 @@ export interface WordPlacementResult {
 
 export class WordPlacer {
   private board: string[][];
-  private size: number;
-  private placedWords: PlacedWord[] = [];
+  private placedWords: PlacedWord[];
+  private height: number;
+  private width: number;
 
-  constructor(size: number) {
-    this.size = size;
-    this.board = Array(size).fill(null).map(() => Array(size).fill(''));
+  constructor(height: number, width: number = height) {
+    this.height = height;
+    this.width = width;
+    this.board = Array(height).fill(null).map(() => Array(width).fill(''));
+    this.placedWords = [];
   }
 
-  canPlaceWord(word: string, startRow: number, startCol: number, direction: 'horizontal' | 'vertical' | 'diagonal'): boolean {
-    const positions = this.getWordPositions(word, startRow, startCol, direction);
+  canPlaceWord(word: string, row: number, col: number, direction: 'horizontal' | 'vertical' | 'diagonal'): boolean {
+    const positions = this.getWordPositions(word, row, col, direction);
     
     // Verificar se todas as posições estão dentro dos limites
-    if (!positions.every(pos => pos.row >= 0 && pos.row < this.size && pos.col >= 0 && pos.col < this.size)) {
-      return false;
-    }
-    
-    // Verificar conflitos com letras existentes
-    for (let i = 0; i < positions.length; i++) {
-      const pos = positions[i];
-      const existingLetter = this.board[pos.row][pos.col];
-      
-      // Se há uma letra e não é a mesma, há conflito
-      if (existingLetter !== '' && existingLetter !== word[i]) {
+    for (const pos of positions) {
+      if (pos.row < 0 || pos.row >= this.height || pos.col < 0 || pos.col >= this.width) {
         return false;
       }
     }
-    
+
+    // Verificar se as posições estão vazias ou têm a mesma letra
+    for (let i = 0; i < positions.length; i++) {
+      const pos = positions[i];
+      const currentLetter = this.board[pos.row][pos.col];
+      const requiredLetter = word[i];
+      
+      if (currentLetter !== '' && currentLetter !== requiredLetter) {
+        return false;
+      }
+    }
+
     return true;
   }
 
-  placeWord(word: string, startRow: number, startCol: number, direction: 'horizontal' | 'vertical' | 'diagonal'): Position[] {
-    const positions = this.getWordPositions(word, startRow, startCol, direction);
+  placeWord(word: string, row: number, col: number, direction: 'horizontal' | 'vertical' | 'diagonal'): void {
+    const positions = this.getWordPositions(word, row, col, direction);
     
-    // Colocar cada letra da palavra no tabuleiro
+    // Colocar as letras no tabuleiro
     for (let i = 0; i < positions.length; i++) {
       const pos = positions[i];
       this.board[pos.row][pos.col] = word[i];
@@ -51,101 +55,61 @@ export class WordPlacer {
     // Adicionar à lista de palavras colocadas
     this.placedWords.push({
       word,
-      startRow,
-      startCol,
+      startRow: row,
+      startCol: col,
       direction,
-      positions
+      positions: [...positions]
     });
-    
-    logger.log(`📍 Palavra "${word}" colocada em ${direction} (${startRow}, ${startCol})`);
-    return positions;
   }
 
-  // Nova função para tentar colocar palavra priorizando o centro
   tryPlaceWordCentered(word: string): boolean {
-    logger.log(`🎯 Tentando colocar palavra "${word}" no centro do tabuleiro...`);
+    const centerRow = Math.floor(this.height / 2);
+    const centerCol = Math.floor(this.width / 2);
     
-    // Calcular área central (terço médio do tabuleiro)
-    const centerStart = Math.floor(this.size * 0.33);
-    const centerEnd = Math.floor(this.size * 0.67);
-    
-    // Gerar posições centrais ordenadas por proximidade ao centro absoluto
-    const centerPositions = this.generateCenteredPositions(centerStart, centerEnd);
-    
-    // Tentar colocar a palavra nas posições centrais primeiro
-    for (const { row, col } of centerPositions) {
-      // Tentar horizontalmente
-      if (col + word.length <= this.size) {
-        if (this.canPlaceWord(word, row, col, 'horizontal')) {
-          this.placeWord(word, row, col, 'horizontal');
-          logger.log(`✅ "${word}" colocada horizontalmente no centro em (${row}, ${col})`);
-          return true;
-        }
-      }
-      
-      // Tentar verticalmente
-      if (row + word.length <= this.size) {
-        if (this.canPlaceWord(word, row, col, 'vertical')) {
-          this.placeWord(word, row, col, 'vertical');
-          logger.log(`✅ "${word}" colocada verticalmente no centro em (${row}, ${col})`);
-          return true;
-        }
-      }
-      
-      // Tentar diagonalmente
-      if (row + word.length <= this.size && col + word.length <= this.size) {
-        if (this.canPlaceWord(word, row, col, 'diagonal')) {
-          this.placeWord(word, row, col, 'diagonal');
-          logger.log(`✅ "${word}" colocada diagonalmente no centro em (${row}, ${col})`);
-          return true;
-        }
+    // Tentar posições próximas ao centro
+    const attempts = [
+      { row: centerRow, col: centerCol - Math.floor(word.length / 2), dir: 'horizontal' as const },
+      { row: centerRow - Math.floor(word.length / 2), col: centerCol, dir: 'vertical' as const },
+      { row: centerRow - Math.floor(word.length / 2), col: centerCol - Math.floor(word.length / 2), dir: 'diagonal' as const },
+      // Posições alternativas próximas ao centro
+      { row: centerRow - 1, col: centerCol - Math.floor(word.length / 2), dir: 'horizontal' as const },
+      { row: centerRow + 1, col: centerCol - Math.floor(word.length / 2), dir: 'horizontal' as const },
+      { row: centerRow - Math.floor(word.length / 2), col: centerCol - 1, dir: 'vertical' as const },
+      { row: centerRow - Math.floor(word.length / 2), col: centerCol + 1, dir: 'vertical' as const }
+    ];
+
+    for (const attempt of attempts) {
+      if (this.canPlaceWord(word, attempt.row, attempt.col, attempt.dir)) {
+        this.placeWord(word, attempt.row, attempt.col, attempt.dir);
+        console.log(`✅ "${word}" colocada ${attempt.dir} no centro em (${attempt.row}, ${attempt.col})`);
+        return true;
       }
     }
-    
-    logger.log(`⚠️ Não foi possível colocar "${word}" no centro, tentando em toda área...`);
+
     return false;
   }
 
-  // Gerar posições ordenadas por proximidade ao centro
-  private generateCenteredPositions(centerStart: number, centerEnd: number): Array<{row: number, col: number}> {
-    const positions: Array<{row: number, col: number, distance: number}> = [];
-    const absoluteCenter = Math.floor(this.size / 2);
-    
-    for (let row = centerStart; row <= centerEnd; row++) {
-      for (let col = centerStart; col <= centerEnd; col++) {
-        // Calcular distância ao centro absoluto
-        const distance = Math.sqrt(Math.pow(row - absoluteCenter, 2) + Math.pow(col - absoluteCenter, 2));
-        positions.push({ row, col, distance });
-      }
-    }
-    
-    // Ordenar por distância ao centro (mais próximo primeiro)
-    return positions
-      .sort((a, b) => a.distance - b.distance)
-      .map(({ row, col }) => ({ row, col }));
-  }
-
-  private getWordPositions(word: string, startRow: number, startCol: number, direction: 'horizontal' | 'vertical' | 'diagonal'): Position[] {
+  private getWordPositions(word: string, row: number, col: number, direction: 'horizontal' | 'vertical' | 'diagonal'): Position[] {
     const positions: Position[] = [];
     
     for (let i = 0; i < word.length; i++) {
-      let row = startRow;
-      let col = startCol;
+      let newRow = row;
+      let newCol = col;
       
       switch (direction) {
         case 'horizontal':
-          col += i;
+          newCol = col + i;
           break;
         case 'vertical':
-          row += i;
+          newRow = row + i;
           break;
         case 'diagonal':
-          row += i;
-          col += i;
+          newRow = row + i;
+          newCol = col + i;
           break;
       }
       
-      positions.push({ row, col });
+      positions.push({ row: newRow, col: newCol });
     }
     
     return positions;
@@ -156,13 +120,5 @@ export class WordPlacer {
       board: this.board.map(row => [...row]),
       placedWords: [...this.placedWords]
     };
-  }
-
-  getBoard(): string[][] {
-    return this.board;
-  }
-
-  getPlacedWords(): PlacedWord[] {
-    return this.placedWords;
   }
 }
