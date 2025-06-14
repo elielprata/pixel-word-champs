@@ -47,7 +47,6 @@ const GameCell = ({
     return 'text-slate-700 bg-white/50 hover:bg-white/70 border border-slate-200/50';
   };
 
-  // Função para iniciar seleção
   const handleStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -55,13 +54,11 @@ const GameCell = ({
       rowIndex, 
       colIndex, 
       letter,
-      isMobile,
       eventType: 'touches' in e ? 'touch' : 'mouse'
     }, 'GAME_CELL');
     onCellStart(rowIndex, colIndex);
-  }, [rowIndex, colIndex, letter, isMobile, onCellStart]);
+  }, [rowIndex, colIndex, letter, onCellStart]);
 
-  // Função melhorada para movimento com detecção robusta
   const handleMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     if (!isSelecting) return;
     
@@ -80,26 +77,12 @@ const GameCell = ({
       return;
     }
     
-    logger.debug('EVENTO: Movimento detectado', { 
-      coordinates: { clientX, clientY },
-      currentCell: { rowIndex, colIndex },
-      eventType: 'touches' in e ? 'touch' : 'mouse'
-    }, 'GAME_CELL');
+    const targetElement = document.elementFromPoint(clientX, clientY);
+    if (!targetElement) return;
     
-    // Detecção robusta do elemento alvo
-    let targetElement = document.elementFromPoint(clientX, clientY);
-    
-    if (!targetElement) {
-      logger.warn('EVENTO: Nenhum elemento encontrado nas coordenadas', { 
-        clientX, clientY 
-      }, 'GAME_CELL');
-      return;
-    }
-    
-    // Buscar célula mais próxima com fallback robusto
     let cellElement = targetElement;
     let attempts = 0;
-    const maxAttempts = 10;
+    const maxAttempts = 5;
     
     while (cellElement && !cellElement.hasAttribute('data-cell') && attempts < maxAttempts) {
       cellElement = cellElement.parentElement;
@@ -110,58 +93,15 @@ const GameCell = ({
       const row = parseInt(cellElement.getAttribute('data-row') || '0');
       const col = parseInt(cellElement.getAttribute('data-col') || '0');
       
-      logger.debug('EVENTO: Célula alvo encontrada', { 
+      logger.debug('EVENTO: Célula detectada no movimento', { 
         from: { rowIndex, colIndex },
-        to: { row, col },
-        attempts,
-        elementFound: true
+        to: { row, col }
       }, 'GAME_CELL');
       
       onCellMove(row, col);
-    } else {
-      logger.warn('EVENTO: Célula alvo não encontrada', { 
-        attempts,
-        maxAttempts,
-        targetElementTag: targetElement.tagName,
-        targetElementClass: targetElement.className
-      }, 'GAME_CELL');
-      
-      // Fallback: usar coordenadas para tentar detectar célula próxima
-      const cells = document.querySelectorAll('[data-cell="true"]');
-      let closestCell: Element | null = null;
-      let minDistance = Infinity;
-      
-      cells.forEach(cell => {
-        const rect = cell.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const distance = Math.sqrt(
-          Math.pow(clientX - centerX, 2) + Math.pow(clientY - centerY, 2)
-        );
-        
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestCell = cell;
-        }
-      });
-      
-      if (closestCell && minDistance < cellSize) {
-        const row = parseInt(closestCell.getAttribute('data-row') || '0');
-        const col = parseInt(closestCell.getAttribute('data-col') || '0');
-        
-        logger.debug('EVENTO: Célula encontrada por proximidade', { 
-          from: { rowIndex, colIndex },
-          to: { row, col },
-          distance: minDistance,
-          cellSize
-        }, 'GAME_CELL');
-        
-        onCellMove(row, col);
-      }
     }
-  }, [rowIndex, colIndex, isSelecting, onCellMove, cellSize]);
+  }, [rowIndex, colIndex, isSelecting, onCellMove]);
 
-  // Função para enter do mouse (apenas desktop)
   const handleMouseEnter = useCallback((e: React.MouseEvent) => {
     if (isSelecting && !isMobile) {
       logger.debug('EVENTO: Mouse enter durante seleção', { 
@@ -172,7 +112,6 @@ const GameCell = ({
     }
   }, [isSelecting, isMobile, onCellMove, rowIndex, colIndex]);
 
-  // Estilos otimizados com correções CSS (item 4)
   const fontSize = isMobile ? 
     Math.max(cellSize * 0.45, 12) : 
     Math.max(cellSize * 0.5, 14);
@@ -202,8 +141,8 @@ const GameCell = ({
         userSelect: 'none',
         WebkitUserSelect: 'none',
         WebkitTouchCallout: 'none',
-        pointerEvents: 'auto', // Garantir que eventos funcionem
-        zIndex: 1, // Evitar sobreposições
+        pointerEvents: 'auto',
+        zIndex: 1,
         ...specialEffects
       }}
       onTouchStart={handleStart}
@@ -215,7 +154,6 @@ const GameCell = ({
       data-row={rowIndex}
       data-col={colIndex}
     >
-      {/* Efeito de brilho interno para palavras encontradas */}
       {isPermanent && (
         <div 
           className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"
@@ -223,18 +161,9 @@ const GameCell = ({
         />
       )}
       
-      {/* Letra */}
       <span className="relative z-10 font-extrabold tracking-tight">
         {letter}
       </span>
-      
-      {/* Debug visual para seleção */}
-      {isSelected && (
-        <div 
-          className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full pointer-events-none opacity-75"
-          style={{ zIndex: 10 }}
-        />
-      )}
     </div>
   );
 };

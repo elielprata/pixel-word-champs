@@ -13,56 +13,96 @@ export const useBoardInteraction = () => {
     setSelectedCells([{ row, col }]);
   }, []);
 
-  const handleCellMove = useCallback((row: number, col: number, isValidWordDirection?: (positions: Position[]) => boolean) => {
+  const isValidDirection = useCallback((positions: Position[]): boolean => {
+    if (positions.length < 2) return true;
+
+    const first = positions[0];
+    const second = positions[1];
+    
+    const deltaRow = second.row - first.row;
+    const deltaCol = second.col - first.col;
+    
+    // Verificar se é horizontal, vertical ou diagonal
+    const isHorizontal = deltaRow === 0 && Math.abs(deltaCol) === 1;
+    const isVertical = deltaCol === 0 && Math.abs(deltaRow) === 1;
+    const isDiagonal = Math.abs(deltaRow) === 1 && Math.abs(deltaCol) === 1;
+    
+    if (!isHorizontal && !isVertical && !isDiagonal) {
+      return false;
+    }
+    
+    // Verificar se todas as posições seguem a mesma direção
+    for (let i = 2; i < positions.length; i++) {
+      const curr = positions[i];
+      const prev = positions[i - 1];
+      
+      const currDeltaRow = curr.row - prev.row;
+      const currDeltaCol = curr.col - prev.col;
+      
+      if (currDeltaRow !== deltaRow || currDeltaCol !== deltaCol) {
+        return false;
+      }
+    }
+    
+    return true;
+  }, []);
+
+  const isValidNextCell = useCallback((newPosition: Position, currentPath: Position[]): boolean => {
+    if (currentPath.length === 0) return true;
+    
+    // Verificar se já está selecionada
+    const isAlreadySelected = currentPath.some(p => p.row === newPosition.row && p.col === newPosition.col);
+    if (isAlreadySelected) return false;
+
+    // Para o primeiro movimento, aceitar qualquer direção válida
+    if (currentPath.length === 1) {
+      const first = currentPath[0];
+      const deltaRow = Math.abs(newPosition.row - first.row);
+      const deltaCol = Math.abs(newPosition.col - first.col);
+      
+      // Verificar se é adjacente e em direção válida
+      return (deltaRow <= 1 && deltaCol <= 1 && (deltaRow + deltaCol) > 0);
+    }
+
+    // Para movimentos subsequentes, verificar se continua na mesma direção
+    const testPath = [...currentPath, newPosition];
+    return isValidDirection(testPath);
+  }, [isValidDirection]);
+
+  const handleCellMove = useCallback((row: number, col: number) => {
     if (!isSelecting) return;
     
     const newPosition = { row, col };
+    
     setSelectedCells(prev => {
       if (prev.length === 0) return [newPosition];
       
-      // Verificar se a nova posição já está selecionada
-      const isAlreadySelected = prev.some(p => p.row === row && p.col === col);
-      if (isAlreadySelected) {
+      // Verificar se é um movimento válido
+      if (!isValidNextCell(newPosition, prev)) {
+        logger.debug('Movimento inválido rejeitado', { 
+          newPosition,
+          currentPath: prev
+        }, 'BOARD_INTERACTION');
         return prev;
       }
       
       const newPath = [...prev, newPosition];
       
-      // NOVA LÓGICA: Não aplicar validação durante o movimento
-      // Permitir seleção livre durante o arrastar
-      logger.debug('Adicionando célula à seleção (sem validação)', { 
+      logger.debug('Célula adicionada à seleção', { 
         newPosition,
-        pathLength: newPath.length,
-        currentPath: newPath
+        pathLength: newPath.length
       }, 'BOARD_INTERACTION');
       
       return newPath;
     });
-  }, [isSelecting]);
+  }, [isSelecting, isValidNextCell]);
 
-  const handleCellEnd = useCallback((isValidWordDirection?: (positions: Position[]) => boolean) => {
+  const handleCellEnd = useCallback(() => {
     logger.debug('Finalizando seleção', { 
       selectedCellsCount: selectedCells.length,
       finalPath: selectedCells
     }, 'BOARD_INTERACTION');
     setIsSelecting(false);
-    
-    // NOVA LÓGICA: Aplicar validação apenas no final
-    if (isValidWordDirection && selectedCells.length >= 2) {
-      const isValidDirection = isValidWordDirection(selectedCells);
-      logger.debug('Validação final de direção', {
-        isValid: isValidDirection,
-        pathLength: selectedCells.length
-      }, 'BOARD_INTERACTION');
-      
-      if (!isValidDirection) {
-        logger.warn('Seleção rejeitada por direção inválida', { 
-          path: selectedCells 
-        }, 'BOARD_INTERACTION');
-        setSelectedCells([]);
-        return [];
-      }
-    }
     
     const finalSelection = [...selectedCells];
     setSelectedCells([]);
