@@ -1,117 +1,167 @@
 
 import { IntelligentWordService } from '@/services/intelligentWordService';
 import { LocalWordCacheManager } from './localWordCache';
+import { warmOptimizedCacheV2 } from '@/hooks/useOptimizedRandomWordSelection';
 import { logger } from './logger';
 
-// CACHE WARMING INTELIGENTE OTIMIZADO
+// SISTEMA DE CACHE WARMING UNIFICADO E OTIMIZADO
 export const initializeCacheWarming = () => {
   // Inicializar cache local
   LocalWordCacheManager.initializeCache();
   
-  // Warm cache inteligente quando a aplicação carrega (mais agressivo)
+  // Warm cache híbrido inicial (mais rápido)
   setTimeout(() => {
-    warmIntelligentCache().catch(error => {
-      logger.warn('⚠️ Erro no cache warming inteligente inicial', { error }, 'CACHE_WARMING');
+    warmHybridCache().catch(error => {
+      logger.warn('⚠️ Erro no cache warming híbrido inicial', { error }, 'CACHE_WARMING_UNIFIED');
     });
-  }, 500); // Reduzido para 500ms
+  }, 300); // Reduzido para 300ms
 
-  // Warm cache periodicamente (a cada 10 minutos em vez de 15)
+  // Warm cache periódico otimizado (a cada 8 minutos)
   setInterval(() => {
-    warmIntelligentCache().catch(error => {
-      logger.warn('⚠️ Erro no cache warming inteligente periódico', { error }, 'CACHE_WARMING');
+    warmHybridCache().catch(error => {
+      logger.warn('⚠️ Erro no cache warming híbrido periódico', { error }, 'CACHE_WARMING_UNIFIED');
     });
-  }, 10 * 60 * 1000); // 10 minutos
+  }, 8 * 60 * 1000); // 8 minutos
 
-  // Limpeza de cache expirado (a cada 30 minutos em vez de 1 hora)
+  // Limpeza otimizada (a cada 20 minutos)
   setInterval(() => {
     LocalWordCacheManager.cleanExpiredCache();
-  }, 30 * 60 * 1000); // 30 minutos
+  }, 20 * 60 * 1000); // 20 minutos
 
-  // Cache warming adicional baseado em uso
+  // Cache warming inteligente baseado em uso (a cada 4 minutos)
   setInterval(() => {
     intelligentCacheWarming().catch(error => {
-      logger.warn('⚠️ Erro no cache warming baseado em uso', { error }, 'CACHE_WARMING');
+      logger.warn('⚠️ Erro no cache warming inteligente', { error }, 'CACHE_WARMING_UNIFIED');
     });
-  }, 5 * 60 * 1000); // 5 minutos
+  }, 4 * 60 * 1000); // 4 minutos
 };
 
-// PRÉ-AQUECIMENTO INTELIGENTE OTIMIZADO
-export const warmIntelligentCache = async (): Promise<boolean> => {
+// PRÉ-AQUECIMENTO HÍBRIDO UNIFICADO
+export const warmHybridCache = async (): Promise<boolean> => {
   try {
-    logger.info('🔥 Iniciando cache warming inteligente otimizado', undefined, 'CACHE_WARMING');
+    logger.info('🔥 Iniciando cache warming híbrido unificado', undefined, 'CACHE_WARMING_UNIFIED');
     
-    // Pré-carregar para diferentes tamanhos de palavra comuns (expandido)
-    const commonLengths = [5, 6, 7, 8, 9];
-    const promises = [];
+    // Executar ambos os sistemas em paralelo para máxima eficiência
+    const [intelligentResult, optimizedResult] = await Promise.allSettled([
+      warmIntelligentCache(),
+      warmOptimizedCacheV2()
+    ]);
     
-    for (const maxLength of commonLengths) {
-      // Executar em paralelo para melhor performance
-      promises.push(
-        IntelligentWordService.preloadCache(maxLength).catch(error => {
-          logger.warn(`⚠️ Erro no preload para length ${maxLength}`, { error }, 'CACHE_WARMING');
-        })
-      );
-    }
+    const intelligentSuccess = intelligentResult.status === 'fulfilled' && intelligentResult.value;
+    const optimizedSuccess = optimizedResult.status === 'fulfilled';
     
-    await Promise.allSettled(promises);
+    const overallSuccess = intelligentSuccess || optimizedSuccess;
     
-    logger.info('✅ Cache warming inteligente otimizado concluído', { 
-      lengths: commonLengths 
-    }, 'CACHE_WARMING');
+    logger.info('✅ Cache warming híbrido concluído', { 
+      intelligentSuccess,
+      optimizedSuccess,
+      overallSuccess
+    }, 'CACHE_WARMING_UNIFIED');
     
-    return true;
+    return overallSuccess;
   } catch (error) {
-    logger.error('❌ Erro no cache warming inteligente', { error }, 'CACHE_WARMING');
+    logger.error('❌ Erro no cache warming híbrido', { error }, 'CACHE_WARMING_UNIFIED');
     return false;
   }
 };
 
-// CACHE WARMING BASEADO EM USO
+// PRÉ-AQUECIMENTO INTELIGENTE OTIMIZADO (mantido para compatibilidade)
+export const warmIntelligentCache = async (): Promise<boolean> => {
+  try {
+    logger.info('🔥 Cache warming inteligente otimizado', undefined, 'CACHE_WARMING_INTELLIGENT');
+    
+    // Pré-carregar para tamanhos mais comuns (otimizado)
+    const priorityLengths = [6, 7, 8]; // Tamanhos mais usados primeiro
+    const secondaryLengths = [5, 9]; // Tamanhos secundários
+    
+    // Priorizar tamanhos mais comuns
+    const priorityPromises = priorityLengths.map(length => 
+      IntelligentWordService.preloadCache(length).catch(error => {
+        logger.warn(`⚠️ Erro no preload prioritário para length ${length}`, { error }, 'CACHE_WARMING_INTELLIGENT');
+      })
+    );
+    
+    await Promise.allSettled(priorityPromises);
+    
+    // Carregar tamanhos secundários em background
+    setTimeout(() => {
+      const secondaryPromises = secondaryLengths.map(length => 
+        IntelligentWordService.preloadCache(length).catch(error => {
+          logger.warn(`⚠️ Erro no preload secundário para length ${length}`, { error }, 'CACHE_WARMING_INTELLIGENT');
+        })
+      );
+      Promise.allSettled(secondaryPromises);
+    }, 1000);
+    
+    logger.info('✅ Cache warming inteligente concluído', { 
+      priorityLengths,
+      secondaryLengths
+    }, 'CACHE_WARMING_INTELLIGENT');
+    
+    return true;
+  } catch (error) {
+    logger.error('❌ Erro no cache warming inteligente', { error }, 'CACHE_WARMING_INTELLIGENT');
+    return false;
+  }
+};
+
+// CACHE WARMING ADAPTATIVO BASEADO EM USO
 export const intelligentCacheWarming = async (): Promise<boolean> => {
   try {
-    const stats = getCacheStatus();
+    const status = getCacheStatus();
     
-    // Se o cache está muito vazio, fazer warm mais agressivo
-    if (stats.stats.totalWords < 50) {
-      logger.info('🔥 Cache warming agressivo - cache com poucas palavras', { 
-        totalWords: stats.stats.totalWords 
-      }, 'CACHE_WARMING');
+    // Estratégia adaptativa baseada na saúde do cache
+    if (status.health === 'critical' || status.stats.totalWords < 30) {
+      logger.info('🔥 Cache warming agressivo - estado crítico', { 
+        health: status.health,
+        totalWords: status.stats.totalWords 
+      }, 'CACHE_WARMING_ADAPTIVE');
       
-      return await warmIntelligentCache();
+      return await warmHybridCache();
     }
     
-    // Se o cache é antigo, renovar gradualmente
-    if (stats.age && stats.age > 30) { // 30 minutos
-      logger.info('🔄 Cache warming gradual - cache antigo', { 
-        age: stats.age 
-      }, 'CACHE_WARMING');
+    if (status.health === 'poor' || (status.age && status.age > 25)) {
+      logger.info('🔄 Cache warming gradual - estado pobre/antigo', { 
+        health: status.health,
+        age: status.age 
+      }, 'CACHE_WARMING_ADAPTIVE');
       
-      // Renovar apenas um tamanho por vez
-      const targetLength = Math.floor(Math.random() * 5) + 5; // 5-9
+      // Renovar apenas um tamanho específico
+      const targetLength = 6 + Math.floor(Math.random() * 3); // 6-8
       await IntelligentWordService.preloadCache(targetLength);
       return true;
     }
     
+    // Cache saudável - apenas manutenção leve
+    if (status.health === 'good') {
+      logger.debug('💚 Cache saudável - manutenção leve', { 
+        health: status.health 
+      }, 'CACHE_WARMING_ADAPTIVE');
+      
+      // Limpeza suave sem recarregamento
+      LocalWordCacheManager.cleanExpiredCache();
+    }
+    
     return true;
   } catch (error) {
-    logger.error('❌ Erro no cache warming baseado em uso', { error }, 'CACHE_WARMING');
+    logger.error('❌ Erro no cache warming adaptativo', { error }, 'CACHE_WARMING_ADAPTIVE');
     return false;
   }
 };
 
-// PRÉ-AQUECIMENTO MANUAL INTELIGENTE
+// PRÉ-AQUECIMENTO MANUAL UNIFICADO
 export const preWarmCache = async (): Promise<boolean> => {
   try {
-    await warmIntelligentCache();
-    logger.info('✅ Cache inteligente pré-aquecido manualmente', undefined, 'CACHE_WARMING');
-    return true;
+    const result = await warmHybridCache();
+    logger.info('✅ Cache híbrido pré-aquecido manualmente', { success: result }, 'CACHE_WARMING_MANUAL');
+    return result;
   } catch (error) {
-    logger.error('❌ Erro no pré-aquecimento manual inteligente', { error }, 'CACHE_WARMING');
+    logger.error('❌ Erro no pré-aquecimento manual híbrido', { error }, 'CACHE_WARMING_MANUAL');
     return false;
   }
 };
 
-// VERIFICAR STATUS DO CACHE INTELIGENTE MELHORADO
+// VERIFICAR STATUS DO CACHE UNIFICADO
 export const getCacheStatus = (): { 
   isWarmed: boolean; 
   age?: number; 
@@ -123,42 +173,53 @@ export const getCacheStatus = (): {
   };
   health: 'excellent' | 'good' | 'poor' | 'critical';
   recommendations: string[];
+  efficiency: number;
 } => {
   try {
-    const stats = LocalWordCacheManager.getCacheStats();
-    const age = stats.newestEntry > 0 ? 
-      Math.round((Date.now() - stats.newestEntry) / (1000 * 60)) : undefined;
+    const detailedStats = LocalWordCacheManager.getDetailedMetrics();
+    const age = detailedStats.newestEntry > 0 ? 
+      Math.round((Date.now() - detailedStats.newestEntry) / (1000 * 60)) : undefined;
     
-    // Avaliar saúde do cache
+    // Avaliação de saúde mais rigorosa
     let health: 'excellent' | 'good' | 'poor' | 'critical' = 'critical';
     const recommendations: string[] = [];
     
-    if (stats.totalWords >= 100) {
+    if (detailedStats.totalWords >= 80 && detailedStats.efficiency >= 70) {
       health = 'excellent';
-    } else if (stats.totalWords >= 50) {
+    } else if (detailedStats.totalWords >= 50 && detailedStats.efficiency >= 50) {
       health = 'good';
-      recommendations.push('Considere fazer warm cache para mais palavras');
-    } else if (stats.totalWords >= 20) {
+      recommendations.push('Cache funcionando bem');
+    } else if (detailedStats.totalWords >= 25) {
       health = 'poor';
-      recommendations.push('Cache com poucas palavras - recomenda warm cache');
+      recommendations.push('Cache com poucas palavras - warm recomendado');
     } else {
       health = 'critical';
-      recommendations.push('Cache crítico - execute warm cache imediatamente');
+      recommendations.push('Cache crítico - warm urgente necessário');
     }
     
-    if (age && age > 60) {
-      recommendations.push('Cache muito antigo - considere refresh');
+    if (age && age > 45) {
+      recommendations.push('Cache muito antigo - refresh recomendado');
+    }
+    
+    if (detailedStats.efficiency < 40) {
+      recommendations.push('Baixa eficiência de cache - otimização necessária');
     }
     
     return { 
-      isWarmed: stats.totalWords > 0,
+      isWarmed: detailedStats.totalWords > 0,
       age,
-      stats,
+      stats: {
+        totalEntries: detailedStats.totalEntries,
+        totalWords: detailedStats.totalWords,
+        oldestEntry: detailedStats.oldestEntry,
+        newestEntry: detailedStats.newestEntry
+      },
       health,
-      recommendations
+      recommendations,
+      efficiency: detailedStats.efficiency
     };
   } catch (error) {
-    logger.warn('⚠️ Erro ao verificar status do cache', { error }, 'CACHE_WARMING');
+    logger.warn('⚠️ Erro ao verificar status do cache unificado', { error }, 'CACHE_WARMING_STATUS');
     return {
       isWarmed: false,
       stats: {
@@ -168,56 +229,63 @@ export const getCacheStatus = (): {
         newestEntry: 0
       },
       health: 'critical',
-      recommendations: ['Erro ao verificar cache - reinicialize o sistema']
+      recommendations: ['Erro ao verificar cache - reinicialize o sistema'],
+      efficiency: 0
     };
   }
 };
 
-// FORÇA ATUALIZAÇÃO DO CACHE MELHORADA
+// FORÇA ATUALIZAÇÃO COMPLETA DO SISTEMA
 export const forceRefreshCache = async (): Promise<boolean> => {
   try {
-    logger.info('🔄 Forçando atualização completa do cache', undefined, 'CACHE_WARMING');
+    logger.info('🔄 Forçando atualização completa do sistema de cache', undefined, 'CACHE_WARMING_FORCE_REFRESH');
     
-    // Limpar cache atual
+    // Limpar todos os caches
     if (typeof window !== 'undefined') {
       localStorage.removeItem('word_cache_v2');
     }
     
-    // Reinicializar e pré-aquecer de forma mais robusta
+    // Reinicializar sistema
     LocalWordCacheManager.initializeCache();
-    const result = await warmIntelligentCache();
     
-    // Verificar se realmente funcionou
+    // Warm híbrido completo
+    const result = await warmHybridCache();
+    
+    // Verificar resultado
     const newStatus = getCacheStatus();
     const success = result && newStatus.stats.totalWords > 0;
     
-    logger.info('✅ Cache forçadamente atualizado', { 
+    logger.info('✅ Sistema de cache completamente atualizado', { 
       success, 
       newTotalWords: newStatus.stats.totalWords,
-      health: newStatus.health
-    }, 'CACHE_WARMING');
+      health: newStatus.health,
+      efficiency: newStatus.efficiency
+    }, 'CACHE_WARMING_FORCE_REFRESH');
     
     return success;
   } catch (error) {
-    logger.error('❌ Erro na atualização forçada do cache', { error }, 'CACHE_WARMING');
+    logger.error('❌ Erro na atualização forçada do sistema', { error }, 'CACHE_WARMING_FORCE_REFRESH');
     return false;
   }
 };
 
-// MÉTRICAS AVANÇADAS DO SISTEMA
-export const getSystemMetrics = () => {
+// MÉTRICAS AVANÇADAS DO SISTEMA UNIFICADO
+export const getUnifiedSystemMetrics = () => {
   const cacheStatus = getCacheStatus();
   
   return {
     cache: cacheStatus,
     performance: {
-      uptime: performance.now(),
+      uptime: Math.round(performance.now()),
       memory: (performance as any).memory ? {
         used: Math.round((performance as any).memory.usedJSHeapSize / 1024 / 1024),
         total: Math.round((performance as any).memory.totalJSHeapSize / 1024 / 1024),
         limit: Math.round((performance as any).memory.jsHeapSizeLimit / 1024 / 1024)
-      } : null
+      } : null,
+      cacheEfficiency: cacheStatus.efficiency
     },
-    timestamp: new Date().toISOString()
+    recommendations: cacheStatus.recommendations,
+    timestamp: new Date().toISOString(),
+    systemVersion: '2.0.0'
   };
 };
