@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useGameBoardLogicState } from '@/hooks/useGameBoardLogicState';
 import { useGameBoardActions } from '@/hooks/useGameBoardActions';
@@ -82,9 +81,6 @@ const GameBoardLogic = ({
     setShowGameOver: state.setShowGameOver,
     handleCellEnd: state.handleCellEnd,
     handleCellMove: state.handleCellMove,
-    isValidWordDirection: state.isValidWordDirection,
-    isInLineWithSelection: state.isInLineWithSelection,
-    fillIntermediateCells: state.fillIntermediateCells,
     addFoundWord: state.addFoundWord
   });
 
