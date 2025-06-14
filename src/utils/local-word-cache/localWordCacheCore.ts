@@ -26,7 +26,7 @@ export const localWordCacheCore = {
         const entries = Object.values(cache || {});
         const hasOldVersion = entries.some(entry => entry.version !== CACHE_VERSION);
         
-        if (hasOl dVersion) {
+        if (hasOldVersion) {
           logger.info('🔄 Atualizando versão do cache local', { 
             oldEntries: entries.length 
           }, 'LOCAL_CACHE');
@@ -162,11 +162,11 @@ export const localWordCacheCore = {
     }
   },
 
-  private generateCacheKey(maxLength: number, difficulty?: string): string {
+  generateCacheKey(maxLength: number, difficulty?: string): string {
     return `words_${maxLength}_${difficulty || 'any'}`;
   },
 
-  private isCacheValid(cacheData: CachedWordData, CACHE_VERSION: string, CACHE_DURATION: number): boolean {
+  isCacheValid(cacheData: CachedWordData, CACHE_VERSION: string, CACHE_DURATION: number): boolean {
     if (!cacheData) return false;
     
     const age = Date.now() - cacheData.timestamp;
@@ -177,7 +177,7 @@ export const localWordCacheCore = {
     return !isExpired && isValidVersion && hasWords;
   },
 
-  private limitCacheSize(cache: LocalWordCache, MAX_CACHE_ENTRIES: number): void {
+  limitCacheSize(cache: LocalWordCache, MAX_CACHE_ENTRIES: number): void {
     const entries = Object.entries(cache);
     if (entries.length <= MAX_CACHE_ENTRIES) return;
     
