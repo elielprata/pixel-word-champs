@@ -12,13 +12,23 @@ export interface PlacedWord {
 }
 
 export const getBoardSize = (level: number): number => {
-  // Sempre retorna 10x10 independente do nível
-  return 10;
+  // Sempre retorna 12 (altura)
+  return 12;
 };
 
 export const getMobileBoardSize = (level: number): number => {
-  // Sempre retorna 10x10 em mobile também
-  return 10;
+  // Sempre retorna 12 (altura) em mobile também
+  return 12;
+};
+
+export const getBoardWidth = (level: number): number => {
+  // Sempre retorna 8 (largura)
+  return 8;
+};
+
+export const getMobileBoardWidth = (level: number): number => {
+  // Sempre retorna 8 (largura) em mobile também
+  return 8;
 };
 
 export const getLevelWords = (level: number): string[] => {
@@ -29,34 +39,12 @@ export const getLevelWords = (level: number): string[] => {
 
 export const getCellSize = (boardSize: number, isMobile: boolean = false): number => {
   if (isMobile) {
-    // Tamanhos otimizados para mobile com mínimos maiores
-    if (boardSize <= 5) return 48;  // Aumentado de 42 para 48
-    if (boardSize <= 6) return 42;  // Aumentado de 36 para 42
-    if (boardSize <= 7) return 36;  // Aumentado de 31 para 36
-    if (boardSize <= 8) return 32;  // Aumentado de 27 para 32
-    if (boardSize <= 9) return 28;  // Aumentado de 24 para 28
-    if (boardSize <= 10) return 26; // Aumentado de 22 para 26
-    if (boardSize <= 11) return 24; // Aumentado de 20 para 24
-    if (boardSize <= 12) return 22; // Aumentado de 18 para 22
-    if (boardSize <= 14) return 20; // Aumentado de 16 para 20
-    if (boardSize <= 16) return 18; // Aumentado de 14 para 18
-    return 16; // Mínimo 16px em mobile (era 8px)
+    // Tamanhos otimizados para mobile considerando tabuleiro 12x8
+    return 24; // Tamanho fixo para mobile
   }
   
-  // Tamanhos originais para desktop
-  if (boardSize <= 5) return 42;
-  if (boardSize <= 6) return 36;
-  if (boardSize <= 7) return 31;
-  if (boardSize <= 8) return 27;
-  if (boardSize <= 9) return 24;
-  if (boardSize <= 10) return 22;
-  if (boardSize <= 11) return 20;
-  if (boardSize <= 12) return 18;
-  if (boardSize <= 14) return 16;
-  if (boardSize <= 16) return 14;
-  if (boardSize <= 18) return 12;
-  if (boardSize <= 20) return 10;
-  return 8;
+  // Tamanhos para desktop considerando tabuleiro 12x8
+  return 28; // Tamanho fixo para desktop
 };
 
 // Esta função está DEPRECADA - use useGamePointsConfig hook em vez disso
