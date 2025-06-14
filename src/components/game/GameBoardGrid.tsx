@@ -1,4 +1,5 @@
 
+
 import React, { useRef } from "react";
 import GameCell from "./GameCell";
 import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from "@/utils/boardUtils";
@@ -49,6 +50,13 @@ const GameBoardGrid = ({
   const isCellCurrentlySelected = (row: number, col: number) =>
     selectedCells.some((pos) => pos.row === row && pos.col === col);
 
+  // Função para obter a cor da palavra se a célula estiver marcada permanentemente
+  const getCellWordColor = (row: number, col: number) => {
+    if (!isCellPermanentlyMarked(row, col)) return undefined;
+    const wordIndex = getCellWordIndex(row, col);
+    return wordIndex >= 0 ? getWordColor(wordIndex) : undefined;
+  };
+
   return (
     <div
       ref={boardRef}
@@ -81,6 +89,8 @@ const GameBoardGrid = ({
             colIndex={colIndex}
             isSelected={isCellCurrentlySelected(rowIndex, colIndex)}
             isHintHighlighted={isCellHintHighlighted(rowIndex, colIndex)}
+            isPermanentlyMarked={isCellPermanentlyMarked(rowIndex, colIndex)}
+            wordColor={getCellWordColor(rowIndex, colIndex)}
             cellSize={cellSize}
             onCellStart={handleCellStart}
             onCellMove={handleCellMove}
@@ -95,3 +105,4 @@ const GameBoardGrid = ({
 };
 
 export default GameBoardGrid;
+

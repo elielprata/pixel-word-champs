@@ -1,4 +1,5 @@
 
+
 import React from "react";
 
 interface GameCellProps {
@@ -7,6 +8,8 @@ interface GameCellProps {
   colIndex: number;
   isSelected: boolean;
   isHintHighlighted: boolean;
+  isPermanentlyMarked: boolean;
+  wordColor?: string;
   cellSize: number;
   onCellStart: (row: number, col: number) => void;
   onCellMove: (row: number, col: number) => void;
@@ -21,6 +24,8 @@ const GameCell = ({
   colIndex,
   isSelected,
   isHintHighlighted,
+  isPermanentlyMarked,
+  wordColor,
   cellSize,
   onCellStart,
   onCellMove,
@@ -28,10 +33,13 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
-  // Priorizar destaque da dica sobre seleção normal
+  // Hierarquia visual: Dica > Palavra encontrada > Seleção atual > Normal
   const getCellBackground = () => {
     if (isHintHighlighted) {
       return "bg-gradient-to-br from-yellow-200 to-amber-300 animate-pulse";
+    }
+    if (isPermanentlyMarked && wordColor) {
+      return wordColor;
     }
     if (isSelected) {
       return "bg-blue-100";
@@ -86,7 +94,7 @@ const GameCell = ({
       data-row={rowIndex}
       data-col={colIndex}
     >
-      <span className="relative z-10 font-medium tracking-tight">
+      <span className={`relative z-10 font-medium tracking-tight ${isPermanentlyMarked ? 'text-white font-bold' : ''}`}>
         {letter}
       </span>
     </div>
@@ -94,3 +102,4 @@ const GameCell = ({
 };
 
 export default GameCell;
+
