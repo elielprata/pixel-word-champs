@@ -3,28 +3,28 @@ import { type Position } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
 
 export const useWordValidation = () => {
-  // Função melhorada para validar direções - permite seleções em linha reta com qualquer espaçamento
+  // Função avançada para validar direções - linha de visão em vez de célula-por-célula
   const isValidWordDirection = (positions: Position[]): boolean => {
     if (positions.length < 2) return true;
 
-    logger.debug('🔍 Validando direção da palavra', { 
+    logger.debug('🔍 Validando direção com linha de visão', { 
       positionsCount: positions.length,
-      positions: positions.slice(0, 3)
+      positions 
     }, 'WORD_VALIDATION');
 
     const first = positions[0];
-    const second = positions[1];
+    const last = positions[positions.length - 1];
     
-    const deltaRow = second.row - first.row;
-    const deltaCol = second.col - first.col;
+    const deltaRow = last.row - first.row;
+    const deltaCol = last.col - first.col;
     
-    // Permitir qualquer direção em linha reta
+    // Verificar se é uma linha reta (horizontal, vertical ou diagonal)
     const isHorizontal = deltaRow === 0 && deltaCol !== 0;
     const isVertical = deltaCol === 0 && deltaRow !== 0;
     const isDiagonal = Math.abs(deltaRow) === Math.abs(deltaCol) && deltaRow !== 0 && deltaCol !== 0;
     
     if (!isHorizontal && !isVertical && !isDiagonal) {
-      logger.debug('❌ Direção inválida - não é linha reta', { 
+      logger.debug('❌ Não é uma linha reta', { 
         deltaRow, 
         deltaCol,
         isHorizontal,
@@ -34,79 +34,141 @@ export const useWordValidation = () => {
       return false;
     }
     
-    // Normalizar direção para +1, 0 ou -1
-    const normalizedDeltaRow = deltaRow === 0 ? 0 : Math.sign(deltaRow);
-    const normalizedDeltaCol = deltaCol === 0 ? 0 : Math.sign(deltaCol);
+    // Para linhas retas, verificar se todos os pontos estão na mesma linha
+    const direction = isHorizontal ? 'horizontal' : isVertical ? 'vertical' : 'diagonal';
     
-    // Verificar se todas as posições seguem a mesma direção normalizada
+    // Verificar se todos os pontos intermediários estão na linha reta
     for (let i = 1; i < positions.length - 1; i++) {
-      const curr = positions[i + 1];
-      const prev = positions[i];
+      const curr = positions[i];
       
-      const currDeltaRow = curr.row - prev.row;
-      const currDeltaCol = curr.col - prev.col;
-      
-      const currNormalizedDeltaRow = currDeltaRow === 0 ? 0 : Math.sign(currDeltaRow);
-      const currNormalizedDeltaCol = currDeltaCol === 0 ? 0 : Math.sign(currDeltaCol);
-      
-      if (currNormalizedDeltaRow !== normalizedDeltaRow || currNormalizedDeltaCol !== normalizedDeltaCol) {
-        logger.debug('❌ Inconsistência na direção', { 
-          expectedNormalized: { row: normalizedDeltaRow, col: normalizedDeltaCol },
-          actualNormalized: { row: currNormalizedDeltaRow, col: currNormalizedDeltaCol },
-          position: i + 1
+      if (isHorizontal && curr.row !== first.row) {
+        logger.debug('❌ Ponto fora da linha horizontal', { 
+          expectedRow: first.row,
+          actualRow: curr.row,
+          position: i
         }, 'WORD_VALIDATION');
         return false;
       }
+      
+      if (isVertical && curr.col !== first.col) {
+        logger.debug('❌ Ponto fora da linha vertical', { 
+          expectedCol: first.col,
+          actualCol: curr.col,
+          position: i
+        }, 'WORD_VALIDATION');
+        return false;
+      }
+      
+      if (isDiagonal) {
+        const expectedRow = first.row + (Math.sign(deltaRow) * (curr.col - first.col));
+        if (curr.row !== expectedRow) {
+          logger.debug('❌ Ponto fora da linha diagonal', { 
+            expectedRow,
+            actualRow: curr.row,
+            position: i
+          }, 'WORD_VALIDATION');
+          return false;
+        }
+      }
     }
     
-    const direction = isHorizontal ? 'horizontal' : isVertical ? 'vertical' : 'diagonal';
     logger.debug('✅ Direção válida confirmada', { 
       direction,
       positionsCount: positions.length,
-      normalizedDirection: { row: normalizedDeltaRow, col: normalizedDeltaCol }
+      lineOfSight: { deltaRow, deltaCol }
     }, 'WORD_VALIDATION');
     
     return true;
   };
 
-  // Função auxiliar melhorada para verificar se uma posição está em linha reta
+  // Função para preencher células intermediárias automaticamente
+  const fillIntermediateCells = (start: Position, end: Position): Position[] => {
+    const cells: Position[] = [start];
+    
+    const deltaRow = end.row - start.row;
+    const deltaCol = end.col - start.col;
+    
+    const stepRow = deltaRow === 0 ? 0 : Math.sign(deltaRow);
+    const stepCol = deltaCol === 0 ? 0 : Math.sign(deltaCol);
+    
+    const steps = Math.max(Math.abs(deltaRow), Math.abs(deltaCol));
+    
+    for (let i = 1; i < steps; i++) {
+      cells.push({
+        row: start.row + (stepRow * i),
+        col: start.col + (stepCol * i)
+      });
+    }
+    
+    cells.push(end);
+    
+    logger.debug('🔗 Células intermediárias preenchidas', {
+      start,
+      end,
+      steps,
+      totalCells: cells.length,
+      direction: { stepRow, stepCol }
+    }, 'WORD_VALIDATION');
+    
+    return cells;
+  };
+
+  // Função melhorada para verificar linha de visão
   const isInLineWithSelection = (newPosition: Position, selectedPositions: Position[]): boolean => {
     if (selectedPositions.length === 0) return true;
     if (selectedPositions.length === 1) return true; // Qualquer posição é válida para a segunda
 
-    // Usar apenas os dois primeiros pontos para determinar a direção
     const first = selectedPositions[0];
+    const deltaRow = newPosition.row - first.row;
+    const deltaCol = newPosition.col - first.col;
+    
+    // Verificar se é linha reta do primeiro ponto
+    const isHorizontal = deltaRow === 0 && deltaCol !== 0;
+    const isVertical = deltaCol === 0 && deltaRow !== 0;
+    const isDiagonal = Math.abs(deltaRow) === Math.abs(deltaCol) && deltaRow !== 0 && deltaCol !== 0;
+    
+    const isValidLine = isHorizontal || isVertical || isDiagonal;
+    
+    if (!isValidLine) {
+      logger.debug('❌ Nova posição não está em linha reta', {
+        newPosition,
+        first,
+        deltaRow,
+        deltaCol,
+        isHorizontal,
+        isVertical,
+        isDiagonal
+      }, 'WORD_VALIDATION');
+      return false;
+    }
+    
+    // Verificar se segue a mesma direção estabelecida
     const second = selectedPositions[1];
+    const establishedDeltaRow = second.row - first.row;
+    const establishedDeltaCol = second.col - first.col;
     
-    const deltaRow = second.row - first.row;
-    const deltaCol = second.col - first.col;
+    const establishedStepRow = establishedDeltaRow === 0 ? 0 : Math.sign(establishedDeltaRow);
+    const establishedStepCol = establishedDeltaCol === 0 ? 0 : Math.sign(establishedDeltaCol);
     
-    const normalizedDeltaRow = deltaRow === 0 ? 0 : Math.sign(deltaRow);
-    const normalizedDeltaCol = deltaCol === 0 ? 0 : Math.sign(deltaCol);
+    const newStepRow = deltaRow === 0 ? 0 : Math.sign(deltaRow);
+    const newStepCol = deltaCol === 0 ? 0 : Math.sign(deltaCol);
     
-    // Verificar se a nova posição segue a mesma direção em relação à última selecionada
-    const lastPos = selectedPositions[selectedPositions.length - 1];
-    const newDeltaRow = newPosition.row - lastPos.row;
-    const newDeltaCol = newPosition.col - lastPos.col;
+    const isSameDirection = newStepRow === establishedStepRow && newStepCol === establishedStepCol;
     
-    const newNormalizedDeltaRow = newDeltaRow === 0 ? 0 : Math.sign(newDeltaRow);
-    const newNormalizedDeltaCol = newDeltaCol === 0 ? 0 : Math.sign(newDeltaCol);
-    
-    const isValid = newNormalizedDeltaRow === normalizedDeltaRow && newNormalizedDeltaCol === normalizedDeltaCol;
-    
-    logger.debug('🎯 Verificando linha reta', {
+    logger.debug('🎯 Verificando linha de visão', {
       newPosition,
-      lastPos,
-      expectedDirection: { row: normalizedDeltaRow, col: normalizedDeltaCol },
-      actualDirection: { row: newNormalizedDeltaRow, col: newNormalizedDeltaCol },
-      isValid
+      first,
+      establishedDirection: { row: establishedStepRow, col: establishedStepCol },
+      newDirection: { row: newStepRow, col: newStepCol },
+      isSameDirection
     }, 'WORD_VALIDATION');
     
-    return isValid;
+    return isSameDirection;
   };
 
   return {
     isValidWordDirection,
-    isInLineWithSelection
+    isInLineWithSelection,
+    fillIntermediateCells
   };
 };

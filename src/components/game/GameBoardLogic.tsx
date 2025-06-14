@@ -29,11 +29,14 @@ interface GameBoardLogicProps {
     foundWords: FoundWord[];
     hintsUsed: number;
     selectedCells: Position[];
+    previewCells: Position[];
     isSelecting: boolean;
+    selectionMetrics: any;
     handleCellStart: (row: number, col: number) => void;
     handleCellMoveWithValidation: (row: number, col: number) => void;
     handleCellEndWithValidation: () => void;
     isCellSelected: (row: number, col: number) => boolean;
+    isCellPreviewed: (row: number, col: number) => boolean;
     isCellPermanentlyMarked: (row: number, col: number) => boolean;
     isCellHintHighlighted: (row: number, col: number) => boolean;
     useHint: () => void;
@@ -90,15 +93,18 @@ const GameBoardLogic = ({
   }, [boardData, levelWords, level, isMobile]);
   
   const { 
-    selectedCells, 
+    selectedCells,
+    previewCells,
     isSelecting, 
+    metrics: selectionMetrics,
     handleCellStart, 
     handleCellMove, 
     handleCellEnd, 
-    isCellSelected 
+    isCellSelected,
+    isCellPreviewed
   } = useBoardInteraction();
   
-  const { isValidWordDirection, isInLineWithSelection } = useWordValidation();
+  const { isValidWordDirection, isInLineWithSelection, fillIntermediateCells } = useWordValidation();
 
   const {
     foundWords,
@@ -118,7 +124,8 @@ const GameBoardLogic = ({
       level, 
       levelScore,
       foundWordsCount: foundWords.length,
-      isMobile 
+      isMobile,
+      selectionMetrics
     }, 'GAME_BOARD_LOGIC');
     onLevelComplete(levelScore);
   });
@@ -142,37 +149,53 @@ const GameBoardLogic = ({
     if (finalSelection.length >= 3) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
-      logger.info('🔍 Tentativa de palavra', {
+      // Determinar direção para métricas avançadas
+      const first = finalSelection[0];
+      const last = finalSelection[finalSelection.length - 1];
+      const deltaRow = last.row - first.row;
+      const deltaCol = last.col - first.col;
+      
+      let direction = 'horizontal';
+      if (deltaCol === 0) direction = 'vertical';
+      else if (Math.abs(deltaRow) === Math.abs(deltaCol)) direction = 'diagonal';
+      
+      logger.info('🔍 Tentativa de palavra com métricas', {
         word,
         level,
         isMobile,
         selectionLength: finalSelection.length,
+        direction,
         isInWordList: levelWords.includes(word),
         alreadyFound: foundWords.some(fw => fw.word === word),
         validDirection: isValidWordDirection(finalSelection),
-        positions: finalSelection
+        positions: finalSelection,
+        currentMetrics: selectionMetrics
       }, 'GAME_BOARD_LOGIC');
       
       if (levelWords.includes(word) && 
           !foundWords.some(fw => fw.word === word) && 
           isValidWordDirection(finalSelection)) {
-        logger.info('✅ Palavra encontrada com sucesso', { 
+        logger.info('✅ Palavra encontrada com sucesso e métricas', { 
           word, 
           level,
           isMobile,
+          direction,
           wordLength: word.length,
           selectionLength: finalSelection.length,
-          positions: finalSelection
+          positions: finalSelection,
+          successMetrics: selectionMetrics
         }, 'GAME_BOARD_LOGIC');
         addFoundWord(word, finalSelection);
       } else {
-        logger.warn('❌ Palavra rejeitada', {
+        logger.warn('❌ Palavra rejeitada com contexto', {
           word,
+          direction,
           reasons: {
             notInWordList: !levelWords.includes(word),
             alreadyFound: foundWords.some(fw => fw.word === word),
             invalidDirection: !isValidWordDirection(finalSelection)
-          }
+          },
+          failureMetrics: selectionMetrics
         }, 'GAME_BOARD_LOGIC');
       }
     } else {
@@ -184,7 +207,7 @@ const GameBoardLogic = ({
   };
 
   const handleCellMoveWithValidation = (row: number, col: number) => {
-    handleCellMove(row, col, isInLineWithSelection);
+    handleCellMove(row, col, isInLineWithSelection, fillIntermediateCells);
   };
 
   // Paleta expandida de cores em formato oval como na imagem
@@ -225,7 +248,9 @@ const GameBoardLogic = ({
     foundWordsCount: foundWords.length,
     currentLevelScore,
     selectedCellsCount: selectedCells.length,
-    isSelecting
+    previewCellsCount: previewCells.length,
+    isSelecting,
+    selectionMetrics
   }, 'GAME_BOARD_LOGIC');
 
   return (
@@ -237,11 +262,14 @@ const GameBoardLogic = ({
         foundWords,
         hintsUsed,
         selectedCells,
+        previewCells,
         isSelecting,
+        selectionMetrics,
         handleCellStart,
         handleCellMoveWithValidation,
         handleCellEndWithValidation,
         isCellSelected,
+        isCellPreviewed,
         isCellPermanentlyMarked,
         isCellHintHighlighted,
         useHint,

@@ -82,10 +82,12 @@ const GameBoardContent = ({
             boardData={logicProps.boardData}
             size={logicProps.size}
             selectedCells={logicProps.selectedCells}
+            previewCells={logicProps.previewCells}
             isSelecting={logicProps.isSelecting}
             foundWords={logicProps.foundWords}
             levelWords={logicProps.levelWords}
             isCellSelected={logicProps.isCellSelected}
+            isCellPreviewed={logicProps.isCellPreviewed}
             isCellPermanentlyMarked={logicProps.isCellPermanentlyMarked}
             isCellHintHighlighted={logicProps.isCellHintHighlighted}
             handleCellStart={logicProps.handleCellStart}
@@ -93,6 +95,7 @@ const GameBoardContent = ({
             handleCellEndWithValidation={logicProps.handleCellEndWithValidation}
             getWordColor={logicProps.getWordColor}
             getCellWordIndex={logicProps.getCellWordIndex}
+            selectionMetrics={logicProps.selectionMetrics}
           />
 
           {/* Modais do jogo */}

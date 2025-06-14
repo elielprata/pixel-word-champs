@@ -15,10 +15,12 @@ interface GameBoardMainContentProps {
   boardData: { board: string[][]; placedWords: any[] };
   size: number;
   selectedCells: Position[];
+  previewCells: Position[];
   isSelecting: boolean;
   foundWords: FoundWord[];
   levelWords: string[];
   isCellSelected: (row: number, col: number) => boolean;
+  isCellPreviewed: (row: number, col: number) => boolean;
   isCellPermanentlyMarked: (row: number, col: number) => boolean;
   isCellHintHighlighted: (row: number, col: number) => boolean;
   handleCellStart: (row: number, col: number) => void;
@@ -26,23 +28,27 @@ interface GameBoardMainContentProps {
   handleCellEndWithValidation: () => void;
   getWordColor: (wordIndex: number) => string;
   getCellWordIndex: (row: number, col: number) => number;
+  selectionMetrics: any;
 }
 
 const GameBoardMainContent = ({
   boardData,
   size,
   selectedCells,
+  previewCells,
   isSelecting,
   foundWords,
   levelWords,
   isCellSelected,
+  isCellPreviewed,
   isCellPermanentlyMarked,
   isCellHintHighlighted,
   handleCellStart,
   handleCellMoveWithValidation,
   handleCellEndWithValidation,
   getWordColor,
-  getCellWordIndex
+  getCellWordIndex,
+  selectionMetrics
 }: GameBoardMainContentProps) => {
   const isMobile = useIsMobile();
 
@@ -57,8 +63,10 @@ const GameBoardMainContent = ({
           boardData={boardData}
           size={size}
           selectedCells={selectedCells}
+          previewCells={previewCells}
           isSelecting={isSelecting}
           isCellSelected={isCellSelected}
+          isCellPreviewed={isCellPreviewed}
           isCellPermanentlyMarked={isCellPermanentlyMarked}
           isCellHintHighlighted={isCellHintHighlighted}
           handleCellStart={handleCellStart}
@@ -67,6 +75,17 @@ const GameBoardMainContent = ({
           getWordColor={getWordColor}
           getCellWordIndex={getCellWordIndex}
         />
+        
+        {/* Indicador de métricas de seleção (debug) */}
+        {process.env.NODE_ENV === 'development' && selectionMetrics && (
+          <div className={`mt-2 text-xs text-slate-500 ${isMobile ? 'text-center' : ''}`}>
+            Tentativas: {selectionMetrics.attempts} | 
+            Sucessos: {selectionMetrics.successes} | 
+            H: {selectionMetrics.horizontalAttempts} | 
+            V: {selectionMetrics.verticalAttempts} | 
+            D: {selectionMetrics.diagonalAttempts}
+          </div>
+        )}
       </div>
 
       {/* Lista de palavras sem scroll - layout flexível */}

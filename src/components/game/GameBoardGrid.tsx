@@ -9,8 +9,10 @@ interface GameBoardGridProps {
   boardData: { board: string[][] };
   size: number; // altura (12)
   selectedCells: Position[];
+  previewCells: Position[];
   isSelecting: boolean;
   isCellSelected: (row: number, col: number) => boolean;
+  isCellPreviewed: (row: number, col: number) => boolean;
   isCellPermanentlyMarked: (row: number, col: number) => boolean;
   isCellHintHighlighted: (row: number, col: number) => boolean;
   handleCellStart: (row: number, col: number) => void;
@@ -24,8 +26,10 @@ const GameBoardGrid = ({
   boardData,
   size, // altura (12)
   selectedCells,
+  previewCells,
   isSelecting,
   isCellSelected,
+  isCellPreviewed,
   isCellPermanentlyMarked,
   isCellHintHighlighted,
   handleCellStart,
@@ -39,10 +43,11 @@ const GameBoardGrid = ({
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1); // largura (8)
 
-  logger.debug('Renderizando GameBoardGrid 12x8', { 
+  logger.debug('Renderizando GameBoardGrid 12x8 com preview', { 
     height: size, 
     width: boardWidth,
-    selectedCellsCount: selectedCells.length, 
+    selectedCellsCount: selectedCells.length,
+    previewCellsCount: previewCells.length,
     isSelecting,
     isMobile,
     cellSize
@@ -86,6 +91,7 @@ const GameBoardGrid = ({
             rowIndex={rowIndex}
             colIndex={colIndex}
             isSelected={isCellSelected(rowIndex, colIndex)}
+            isPreview={isCellPreviewed(rowIndex, colIndex)}
             isPermanent={isCellPermanentlyMarked(rowIndex, colIndex)}
             isHintHighlighted={isCellHintHighlighted(rowIndex, colIndex)}
             cellSize={cellSize}
