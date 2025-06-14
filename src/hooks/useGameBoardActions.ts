@@ -1,6 +1,8 @@
+
 import { useGameInteractions } from '@/hooks/useGameInteractions';
 import { type Position } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
+import { isLinearPath } from './word-selection/validateLinearPath';
 
 interface FoundWord {
   word: string;
@@ -55,32 +57,30 @@ export const useGameBoardActions = ({
     onTimeUp
   );
 
-  // Novo: Função simples, ignora validação de direção/linearidade
+  // Etapa 3: Validação - só aceita seleção linear (reta)
   const handleCellEndWithValidation = () => {
     const finalSelection = handleCellEnd();
 
-    if (finalSelection.length >= 3) {
+    if (finalSelection.length >= 3 && isLinearPath(finalSelection)) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
 
-      // Logando informações
-      logger.info('🔍 Tentativa de palavra (verificação simplificada)', {
+      // Log explicando a validação
+      logger.info('🔍 Tentativa de palavra', {
         word,
         level,
         isMobile,
         selectionLength: finalSelection.length,
+        isLinear: true,
         isInWordList: levelWords.includes(word),
         alreadyFound: foundWords.some(fw => fw.word === word),
         positions: finalSelection
       }, 'GAME_BOARD_LOGIC');
 
-      // Removida validação de direção e linearidade:
       if (levelWords.includes(word) && !foundWords.some(fw => fw.word === word)) {
-        logger.info('✅ Palavra encontrada (modo demolição)', {
+        logger.info('✅ Palavra encontrada (movimento linear)', {
           word,
           level,
           isMobile,
-          wordLength: word.length,
-          selectionLength: finalSelection.length,
           positions: finalSelection
         }, 'GAME_BOARD_LOGIC');
         addFoundWord(word, finalSelection);
@@ -94,8 +94,9 @@ export const useGameBoardActions = ({
         }, 'GAME_BOARD_LOGIC');
       }
     } else {
-      logger.debug('⚠️ Seleção muito curta', {
+      logger.debug('⚠️ Seleção inválida ou caminho não linear', {
         selectionLength: finalSelection.length,
+        isLinear: isLinearPath(finalSelection),
         minimum: 3
       }, 'GAME_BOARD_LOGIC');
     }
