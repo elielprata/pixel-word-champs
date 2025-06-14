@@ -39,6 +39,8 @@ class WeeklyCompetitionFinalizationService {
 
       if (!participations || participations.length === 0) {
         logger.log('⚠️ Nenhuma participação encontrada para finalizar');
+        // Mesmo sem participações, marcar como finalizada
+        await this.markCompetitionAsCompleted(competitionId);
         return;
       }
 
@@ -96,25 +98,54 @@ class WeeklyCompetitionFinalizationService {
         }
       }
 
-      // 7. Zerar pontuações de todos os participantes para próxima competição
+      // 7. CORREÇÃO: Zerar pontuações de todos os participantes de forma mais robusta
       logger.log('🔄 Zerando pontuações dos participantes...');
       
       const userIds = participations.map(p => p.user_id);
       
-      const { error: resetError } = await supabase
-        .from('profiles')
-        .update({ total_score: 0 })
-        .in('id', userIds);
+      // Atualizar um por um para garantir que funcione
+      let resetCount = 0;
+      for (const userId of userIds) {
+        try {
+          const { error: resetError } = await supabase
+            .from('profiles')
+            .update({ 
+              total_score: 0,
+              games_played: 0 
+            })
+            .eq('id', userId);
 
-      if (resetError) {
-        logger.error('❌ Erro ao zerar pontuações:', resetError);
-        // Não falhar a finalização por causa disso, apenas logar
-      } else {
-        logger.log('✅ Pontuações dos participantes zeradas com sucesso');
+          if (resetError) {
+            logger.error(`❌ Erro ao zerar pontuação do usuário ${userId}:`, resetError);
+          } else {
+            resetCount++;
+            logger.debug(`✅ Pontuação zerada para usuário ${userId}`);
+          }
+        } catch (error) {
+          logger.error(`❌ Erro ao processar usuário ${userId}:`, error);
+        }
       }
 
+      logger.log(`✅ Pontuações zeradas para ${resetCount}/${userIds.length} participantes`);
+
       // 8. Marcar competição como finalizada
-      await supabase
+      await this.markCompetitionAsCompleted(competitionId);
+
+      logger.log('✅ Competição semanal finalizada com sucesso');
+      logger.log(`📈 Histórico salvo para ${participations.length} participantes`);
+      logger.log(`💰 Total de prêmios distribuídos: R$ ${participantsWithPrizes.reduce((sum, p) => sum + p.prize, 0)}`);
+      logger.log(`🏆 Ganhadores: ${participantsWithPrizes.filter(p => p.prize > 0).length}`);
+      logger.log(`🔄 ${resetCount} participantes prontos para nova competição`);
+
+    } catch (error) {
+      logger.error('❌ Erro ao finalizar competição semanal:', error);
+      throw error;
+    }
+  }
+
+  private async markCompetitionAsCompleted(competitionId: string): Promise<void> {
+    try {
+      const { error } = await supabase
         .from('custom_competitions')
         .update({ 
           status: 'completed',
@@ -122,14 +153,14 @@ class WeeklyCompetitionFinalizationService {
         })
         .eq('id', competitionId);
 
-      logger.log('✅ Competição semanal finalizada com sucesso');
-      logger.log(`📈 Histórico salvo para ${participations.length} participantes`);
-      logger.log(`💰 Total de prêmios distribuídos: R$ ${participantsWithPrizes.reduce((sum, p) => sum + p.prize, 0)}`);
-      logger.log(`🏆 Ganhadores: ${participantsWithPrizes.filter(p => p.prize > 0).length}`);
-      logger.log('🔄 Participantes prontos para nova competição');
+      if (error) {
+        logger.error('❌ Erro ao marcar competição como finalizada:', error);
+        throw error;
+      }
 
+      logger.log('✅ Competição marcada como finalizada');
     } catch (error) {
-      logger.error('❌ Erro ao finalizar competição semanal:', error);
+      logger.error('❌ Erro ao atualizar status da competição:', error);
       throw error;
     }
   }
@@ -138,19 +169,80 @@ class WeeklyCompetitionFinalizationService {
     try {
       logger.log('🔄 Zerando pontuações para nova competição...');
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({ total_score: 0 })
-        .in('id', userIds);
+      let resetCount = 0;
+      for (const userId of userIds) {
+        try {
+          const { error } = await supabase
+            .from('profiles')
+            .update({ 
+              total_score: 0,
+              games_played: 0 
+            })
+            .eq('id', userId);
 
-      if (error) {
-        logger.error('❌ Erro ao zerar pontuações:', error);
-        throw error;
+          if (error) {
+            logger.error(`❌ Erro ao zerar pontuação do usuário ${userId}:`, error);
+          } else {
+            resetCount++;
+          }
+        } catch (error) {
+          logger.error(`❌ Erro ao processar usuário ${userId}:`, error);
+        }
       }
 
-      logger.log(`✅ Pontuações zeradas para ${userIds.length} usuários`);
+      logger.log(`✅ Pontuações zeradas para ${resetCount}/${userIds.length} usuários`);
     } catch (error) {
       logger.error('❌ Erro no reset de pontuações:', error);
+      throw error;
+    }
+  }
+
+  // Método auxiliar para forçar reset manual se necessário
+  async forceResetAllScores(): Promise<void> {
+    try {
+      logger.log('🔄 Forçando reset de todas as pontuações...');
+
+      // Buscar todos os usuários com pontuação > 0
+      const { data: usersWithScore, error: fetchError } = await supabase
+        .from('profiles')
+        .select('id, total_score')
+        .gt('total_score', 0);
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      if (!usersWithScore || usersWithScore.length === 0) {
+        logger.log('ℹ️ Nenhum usuário com pontuação para resetar');
+        return;
+      }
+
+      logger.log(`🔄 Resetando ${usersWithScore.length} usuários com pontuação`);
+
+      let resetCount = 0;
+      for (const user of usersWithScore) {
+        try {
+          const { error } = await supabase
+            .from('profiles')
+            .update({ 
+              total_score: 0,
+              games_played: 0 
+            })
+            .eq('id', user.id);
+
+          if (error) {
+            logger.error(`❌ Erro ao resetar usuário ${user.id}:`, error);
+          } else {
+            resetCount++;
+          }
+        } catch (error) {
+          logger.error(`❌ Erro ao processar usuário ${user.id}:`, error);
+        }
+      }
+
+      logger.log(`✅ Reset forçado concluído: ${resetCount}/${usersWithScore.length} usuários`);
+    } catch (error) {
+      logger.error('❌ Erro no reset forçado:', error);
       throw error;
     }
   }

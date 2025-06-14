@@ -1,6 +1,12 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Trophy, Edit, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Eye, Edit, Trash2, MoreVertical, RotateCcw } from 'lucide-react';
+import { weeklyCompetitionFinalizationService } from '@/services/weeklyCompetitionFinalizationService';
+import { useToast } from "@/hooks/use-toast";
+import { logger } from '@/utils/logger';
 
 interface WeeklyCompetition {
   id: string;
@@ -11,7 +17,7 @@ interface WeeklyCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  total_participants?: number; // Made optional to match other components
+  total_participants?: number;
 }
 
 interface WeeklyCompetitionActionsProps {
@@ -20,8 +26,8 @@ interface WeeklyCompetitionActionsProps {
   onEdit: (competition: WeeklyCompetition) => void;
   onDelete: (competition: WeeklyCompetition) => void;
   deletingId: string | null;
-  size?: 'sm' | 'default';
   className?: string;
+  size?: 'default' | 'sm' | 'lg';
 }
 
 export const WeeklyCompetitionActions = ({
@@ -30,70 +36,117 @@ export const WeeklyCompetitionActions = ({
   onEdit,
   onDelete,
   deletingId,
-  size = 'sm',
-  className = ''
+  className = "",
+  size = "default"
 }: WeeklyCompetitionActionsProps) => {
-  const buttonSize = size === 'sm' ? 'h-8 w-8 p-0' : 'h-7 w-7 p-0';
-  const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-3 w-3';
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const { toast } = useToast();
 
-  const handleViewRanking = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('🏆 Clicando em Ver Ranking para competição:', competition.id);
-    onViewRanking(competition);
+  const handleForceReset = async () => {
+    try {
+      setIsResetting(true);
+      logger.log('🔄 Iniciando reset forçado de pontuações...');
+      
+      await weeklyCompetitionFinalizationService.forceResetAllScores();
+      
+      toast({
+        title: "Reset concluído",
+        description: "Todas as pontuações foram zeradas com sucesso.",
+      });
+      
+      logger.log('✅ Reset forçado concluído com sucesso');
+    } catch (error) {
+      logger.error('❌ Erro no reset forçado:', error);
+      toast({
+        title: "Erro no reset",
+        description: "Ocorreu um erro ao zerar as pontuações. Verifique o console.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetting(false);
+      setShowResetDialog(false);
+    }
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('✏️ Clicando em Editar para competição:', competition.id);
-    onEdit(competition);
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('🗑️ Clicando em Excluir para competição:', competition.id);
-    onDelete(competition);
-  };
+  const isDeleting = deletingId === competition.id;
 
   return (
-    <div className={`flex gap-2 ${className}`}>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleViewRanking}
-        className={`${buttonSize} hover:bg-green-50`}
-        title="Ver ranking"
-        type="button"
-      >
-        <Trophy className={iconSize} />
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleEdit}
-        className={`${buttonSize} hover:bg-blue-50`}
-        title="Editar competição"
-        type="button"
-      >
-        <Edit className={iconSize} />
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleDelete}
-        disabled={deletingId === competition.id}
-        className={`${buttonSize} hover:bg-red-50 hover:text-red-600`}
-        title="Excluir competição"
-        type="button"
-      >
-        {deletingId === competition.id ? (
-          <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
-        ) : (
-          <Trash2 className={iconSize} />
-        )}
-      </Button>
-    </div>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size={size}
+            className={`h-8 w-8 p-0 ${className}`}
+            disabled={isDeleting}
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem 
+            onClick={() => onViewRanking(competition)}
+            className="flex items-center gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            Ver Ranking
+          </DropdownMenuItem>
+          
+          <DropdownMenuItem 
+            onClick={() => onEdit(competition)}
+            className="flex items-center gap-2"
+          >
+            <Edit className="h-4 w-4" />
+            Editar
+          </DropdownMenuItem>
+          
+          {competition.status === 'completed' && (
+            <DropdownMenuItem 
+              onClick={() => setShowResetDialog(true)}
+              className="flex items-center gap-2 text-orange-600"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset Pontuações
+            </DropdownMenuItem>
+          )}
+          
+          <DropdownMenuItem 
+            onClick={() => onDelete(competition)}
+            disabled={isDeleting}
+            className="flex items-center gap-2 text-red-600"
+          >
+            <Trash2 className="h-4 w-4" />
+            {isDeleting ? 'Excluindo...' : 'Excluir'}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Reset de Pontuações</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação irá zerar a pontuação total (total_score) e jogos jogados (games_played) 
+              de TODOS os usuários no sistema. Esta operação não pode ser desfeita.
+              <br /><br />
+              Use esta função apenas se a finalização automática não zerou as pontuações corretamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isResetting}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleForceReset}
+              disabled={isResetting}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {isResetting ? 'Resetando...' : 'Confirmar Reset'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
