@@ -29,7 +29,7 @@ export const useSimpleWordSelection = (level: number): SimpleWordSelectionResult
         isMobile 
       }, 'SIMPLE_WORD_SELECTION');
       
-      // Timeout de segurança
+      // Timeout de segurança adaptativo
       const timeoutMs = isMobile ? 3000 : 4000;
       timeoutRef.current = setTimeout(() => {
         logger.warn('⏰ Timeout na seleção simples - usando fallback', { 
@@ -56,7 +56,7 @@ export const useSimpleWordSelection = (level: number): SimpleWordSelectionResult
 
         setLevelWords(selectedWords);
         
-        // Registrar uso em background
+        // Registrar uso em background sem bloquear
         SimpleWordService.recordWordsUsage(selectedWords).catch(err => {
           logger.warn('Erro ao registrar uso (background)', { err }, 'SIMPLE_WORD_SELECTION');
         });
