@@ -33,18 +33,18 @@ const GameCell = ({
 }: GameCellProps) => {
   const getCellClasses = () => {
     if (isPermanent && wordColorClass) {
-      return `bg-gradient-to-br ${wordColorClass} text-white rounded-lg`;
+      return `${wordColorClass} text-white shadow-lg animate-word-reveal border-2 border-white/20`;
     }
     if (isPermanent) {
-      return 'bg-gradient-to-br from-emerald-400 to-green-500 text-white rounded-lg';
+      return 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg animate-word-reveal border-2 border-white/20';
     }
     if (isSelected) {
-      return 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg';
+      return 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md border-2 border-white/30';
     }
     if (isHintHighlighted) {
-      return 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white rounded-lg animate-pulse';
+      return 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white animate-pulse shadow-md border-2 border-white/30';
     }
-    return 'text-slate-700';
+    return 'text-slate-700 bg-white/50 hover:bg-white/70 border border-slate-200/50';
   };
 
   // Debounced touch move para melhor performance em mobile
@@ -106,18 +106,25 @@ const GameCell = ({
     onCellStart(rowIndex, colIndex);
   };
 
-  // Estilos otimizados para mobile
+  // Estilos otimizados para mobile com formato oval
   const fontSize = isMobile ? 
     Math.max(cellSize * 0.45, 12) : 
     Math.max(cellSize * 0.5, 14);
 
-  const borderRadius = isMobile ? '6px' : '8px';
+  // Formato oval/cápsula mais pronunciado
+  const borderRadius = isPermanent || isSelected ? '50%' : (isMobile ? '8px' : '10px');
+  
+  // Efeitos especiais para palavras encontradas
+  const specialEffects = isPermanent ? {
+    transform: 'scale(1.05)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+  } : {};
 
   return (
     <div
       className={`
         flex items-center justify-center cursor-pointer
-        transition-all duration-200 select-none font-bold
+        transition-all duration-300 select-none font-bold relative
         ${isMobile ? 'active:scale-95' : 'hover:scale-105'}
         ${getCellClasses()}
       `}
@@ -130,7 +137,8 @@ const GameCell = ({
         borderRadius,
         userSelect: 'none',
         WebkitUserSelect: 'none',
-        WebkitTouchCallout: 'none'
+        WebkitTouchCallout: 'none',
+        ...specialEffects
       }}
       onTouchStart={(e) => {
         e.preventDefault();
@@ -153,7 +161,18 @@ const GameCell = ({
       data-row={rowIndex}
       data-col={colIndex}
     >
-      {letter}
+      {/* Efeito de brilho interno para palavras encontradas */}
+      {isPermanent && (
+        <div 
+          className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"
+          style={{ borderRadius }}
+        />
+      )}
+      
+      {/* Letra */}
+      <span className="relative z-10 font-extrabold tracking-tight">
+        {letter}
+      </span>
     </div>
   );
 };
