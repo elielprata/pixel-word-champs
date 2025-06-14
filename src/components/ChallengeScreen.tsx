@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { useChallengeGameLogic } from '@/hooks/useChallengeGameLogic';
 import ChallengeErrorDisplay from './challenge/ChallengeErrorDisplay';
-import OptimizedChallengeLoadingScreen from './challenge/OptimizedChallengeLoadingScreen';
+import GameifiedLoadingScreen from './challenge/GameifiedLoadingScreen';
 import ChallengeCompletedScreen from './challenge/ChallengeCompletedScreen';
 import ChallengeGameSession from './challenge/ChallengeGameSession';
 import { logger } from '@/utils/logger';
@@ -99,9 +98,9 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     );
   }
 
-  // Tela de loading híbrida otimizada
+  // Tela de loading gamificada
   if (isLoading) {
-    return <OptimizedChallengeLoadingScreen level={currentLevel} loadingStep={loadingStep || 'Carregando...'} />;
+    return <GameifiedLoadingScreen level={currentLevel} loadingStep={loadingStep || 'Carregando...'} />;
   }
 
   // Tela de jogo completado
