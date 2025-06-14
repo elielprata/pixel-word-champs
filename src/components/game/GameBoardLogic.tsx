@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
 import { useGameLogic } from '@/hooks/useGameLogic';
@@ -107,7 +106,7 @@ const GameBoardLogic = ({
     onTimeUp
   );
 
-  const handleCellEndWithValidation = () => {
+  const handleCellEndWithValidation = useCallback(() => {
     const finalSelection = handleCellEnd();
     
     if (finalSelection.length >= 3) {
@@ -130,13 +129,13 @@ const GameBoardLogic = ({
           selectionLength: finalSelection.length 
         }, 'GAME_BOARD_LOGIC');
         
-        // Adicionar palavra encontrada antes de limpar seleção
+        // Adicionar palavra encontrada ANTES de limpar seleção
         addFoundWord(word, finalSelection);
         
-        // Aguardar um pouco antes de limpar para permitir transição visual suave
+        // Aguardar um pouco para permitir que a marcação permanente seja aplicada
         setTimeout(() => {
           clearSelection();
-        }, 200);
+        }, 300);
         
         return;
       } else {
@@ -150,15 +149,23 @@ const GameBoardLogic = ({
     
     // Se não foi uma palavra válida, limpar seleção imediatamente
     clearSelection();
-  };
+  }, [handleCellEnd, boardData.board, levelWords, foundWords, addFoundWord, clearSelection, level]);
 
-  const handleCellMoveWithValidation = (row: number, col: number) => {
+  const handleCellMoveWithValidation = useCallback((row: number, col: number) => {
     // Não permitir seleção de células já permanentemente marcadas
     if (isCellPermanentlyMarked(row, col)) {
       return;
     }
     handleCellMove(row, col);
-  };
+  }, [isCellPermanentlyMarked, handleCellMove]);
+
+  const handleCellStartWithValidation = useCallback((row: number, col: number) => {
+    // Não permitir iniciar seleção em células já permanentemente marcadas
+    if (isCellPermanentlyMarked(row, col)) {
+      return;
+    }
+    handleCellStart(row, col);
+  }, [isCellPermanentlyMarked, handleCellStart]);
 
   const getWordColor = (wordIndex: number) => {
     const colors = [
@@ -196,7 +203,7 @@ const GameBoardLogic = ({
         hintsUsed,
         selectedCells,
         isSelecting,
-        handleCellStart,
+        handleCellStart: handleCellStartWithValidation,
         handleCellMoveWithValidation,
         handleCellEndWithValidation,
         isCellSelected,

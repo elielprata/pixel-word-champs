@@ -102,9 +102,10 @@ export const useBoardInteraction = () => {
       selectedCellsCount: selectedCells.length,
       finalPath: selectedCells
     }, 'BOARD_INTERACTION');
+    
     setIsSelecting(false);
     
-    // Não limpar a seleção imediatamente - deixar para o componente pai decidir
+    // Retornar a seleção final, mas não limpar ainda
     const finalSelection = [...selectedCells];
     return finalSelection;
   }, [selectedCells]);
