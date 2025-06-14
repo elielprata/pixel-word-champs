@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getBoardSize } from '@/utils/boardUtils';
-import { DIFFICULTY_DISTRIBUTION, getDefaultWordsForSize, normalizeText, isValidGameWord } from '@/utils/levelConfiguration';
+import { getDefaultWordsForSize, normalizeText, isValidGameWord } from '@/utils/levelConfiguration';
 import { wordHistoryService } from '@/services/wordHistoryService';
 import { logger } from '@/utils/logger';
 import { useIsMobile } from './use-mobile';
@@ -111,56 +111,18 @@ export const useWordSelection = (level: number) => {
 
         setDebugInfo(`${validWords.length} palavras válidas encontradas`);
 
-        // Tentar usar seleção inteligente com histórico
-        let selectedWords: string[] = [];
-        
-        try {
-          setDebugInfo('Tentando seleção inteligente...');
-          
-          // Obter usuário atual
-          const { data: { user } } = await supabase.auth.getUser();
-          
-          if (user) {
-            selectedWords = await wordHistoryService.selectRandomizedWords({
-              userId: user.id,
-              level,
-              maxWordsNeeded: 5
-            });
-            
-            if (selectedWords.length >= 5) {
-              logger.info('🎯 Seleção inteligente bem-sucedida', { 
-                wordsCount: selectedWords.length,
-                isMobile 
-              }, 'WORD_SELECTION');
-              setDebugInfo(`Seleção inteligente: ${selectedWords.length} palavras`);
-              setLevelWords(selectedWords);
-              setIsLoading(false);
-              clearTimeout(timeoutRef.current);
-              return;
-            }
-          }
-        } catch (smartSelectionError) {
-          logger.warn('⚠️ Erro na seleção inteligente - usando seleção simples', { 
-            error: smartSelectionError,
-            isMobile 
-          }, 'WORD_SELECTION');
-          setDebugInfo('Seleção inteligente falhou - usando seleção simples');
-        }
-
-        // Fallback: seleção simples por distribuição de dificuldade
-        setDebugInfo('Usando seleção simples por dificuldade...');
-        selectedWords = selectWordsByDifficulty(validWords);
+        // Usar seleção aleatória simples
+        setDebugInfo('Usando seleção aleatória simples...');
+        const selectedWords = selectRandomWords(validWords, 5);
 
         if (selectedWords.length === 0) {
-          logger.warn('⚠️ Seleção por dificuldade falhou - usando seleção aleatória', { isMobile }, 'WORD_SELECTION');
-          setDebugInfo('Seleção por dificuldade falhou - seleção aleatória');
-          selectedWords = selectRandomWords(validWords, 5);
-        }
-
-        if (selectedWords.length === 0) {
-          logger.error('❌ Todas as seleções falharam - usando palavras padrão', { isMobile }, 'WORD_SELECTION');
-          setDebugInfo('Todas as seleções falharam - usando palavras padrão');
-          selectedWords = getDefaultWordsForSize(boardSize);
+          logger.error('❌ Seleção aleatória falhou - usando palavras padrão', { isMobile }, 'WORD_SELECTION');
+          setDebugInfo('Seleção aleatória falhou - usando palavras padrão');
+          const fallbackWords = getDefaultWordsForSize(boardSize);
+          setLevelWords(fallbackWords);
+          setIsLoading(false);
+          clearTimeout(timeoutRef.current);
+          return;
         }
 
         // Normalizar palavras finais
@@ -241,34 +203,6 @@ export const useWordSelection = (level: number) => {
   }, [level, isMobile]);
 
   return { levelWords, isLoading, error, debugInfo };
-};
-
-// Função para seleção por distribuição de dificuldade
-const selectWordsByDifficulty = (words: Array<{ normalizedWord: string; difficulty: string }>): string[] => {
-  const wordsByDifficulty = {
-    easy: words.filter(w => w.difficulty === 'easy'),
-    medium: words.filter(w => w.difficulty === 'medium'),
-    hard: words.filter(w => w.difficulty === 'hard'),
-    expert: words.filter(w => w.difficulty === 'expert')
-  };
-
-  const selected: string[] = [];
-
-  // Tentar seguir a distribuição ideal
-  for (const [difficulty, count] of Object.entries(DIFFICULTY_DISTRIBUTION)) {
-    const availableWords = wordsByDifficulty[difficulty as keyof typeof wordsByDifficulty] || [];
-    
-    for (let i = 0; i < count && selected.length < 5; i++) {
-      const candidateWords = availableWords.filter(w => !selected.includes(w.normalizedWord));
-      
-      if (candidateWords.length > 0) {
-        const randomWord = candidateWords[Math.floor(Math.random() * candidateWords.length)];
-        selected.push(randomWord.normalizedWord);
-      }
-    }
-  }
-
-  return selected;
 };
 
 // Função para seleção aleatória simples

@@ -37,15 +37,14 @@ const GameBoard = ({
     canRevive 
   }, 'GAME_BOARD');
 
-  const { levelWords, isLoading, error, loadingStep, metrics } = useOptimizedBoard(level);
+  const { levelWords, isLoading, error } = useOptimizedBoard(level);
 
   if (isLoading) {
     return (
       <GameBoardLayout>
         <GameBoardLoadingState 
           level={level} 
-          debugInfo={loadingStep} 
-          metrics={metrics}
+          debugInfo="Carregando palavras aleatórias..." 
         />
       </GameBoardLayout>
     );
@@ -56,8 +55,7 @@ const GameBoard = ({
       <GameBoardLayout>
         <GameBoardErrorState 
           error={error} 
-          debugInfo={loadingStep}
-          metrics={metrics}
+          debugInfo="Erro na seleção de palavras"
         />
       </GameBoardLayout>
     );
