@@ -11,19 +11,19 @@ interface BoardData {
 }
 
 export const useBoardGeneration = () => {
-  const generateBoard = useCallback((height: number, words: string[]): BoardData => {
-    logger.debug('Gerando tabuleiro 12x8', { height, wordsCount: words.length }, 'BOARD_GENERATION');
+  const generateBoard = useCallback((size: number, words: string[]): BoardData => {
+    logger.debug('Gerando tabuleiro', { size, wordsCount: words.length }, 'BOARD_GENERATION');
     
     // Sempre gerar um tabuleiro, mesmo se não houver palavras
     if (words.length === 0) {
-      logger.warn('Gerando tabuleiro com palavras padrão', { height }, 'BOARD_GENERATION');
-      const defaultWords = getDefaultWordsForSize(8); // usar largura máxima de 8
-      return BoardGenerator.generateSmartBoard(height, defaultWords);
+      logger.warn('Gerando tabuleiro com palavras padrão', { size }, 'BOARD_GENERATION');
+      const defaultWords = getDefaultWordsForSize(size);
+      return BoardGenerator.generateSmartBoard(size, defaultWords);
     }
     
-    const boardData = BoardGenerator.generateSmartBoard(height, words);
-    logger.info('Tabuleiro 12x8 gerado com sucesso', { 
-      height, 
+    const boardData = BoardGenerator.generateSmartBoard(size, words);
+    logger.info('Tabuleiro gerado com sucesso', { 
+      size, 
       wordsPlaced: boardData.placedWords.length 
     }, 'BOARD_GENERATION');
     

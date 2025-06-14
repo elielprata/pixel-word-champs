@@ -1,13 +1,13 @@
 
 import React, { useRef } from 'react';
 import GameCell from './GameCell';
-import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from '@/utils/boardUtils';
+import { getCellSize, type Position } from '@/utils/boardUtils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { logger } from '@/utils/logger';
 
 interface GameBoardGridProps {
   boardData: { board: string[][] };
-  size: number; // altura (12)
+  size: number;
   selectedCells: Position[];
   isSelecting: boolean;
   isCellSelected: (row: number, col: number) => boolean;
@@ -22,7 +22,7 @@ interface GameBoardGridProps {
 
 const GameBoardGrid = ({
   boardData,
-  size, // altura (12)
+  size,
   selectedCells,
   isSelecting,
   isCellSelected,
@@ -37,21 +37,21 @@ const GameBoardGrid = ({
   const boardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const cellSize = getCellSize(size, isMobile);
-  const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1); // largura (8)
 
-  logger.debug('Renderizando GameBoardGrid 12x8', { 
-    height: size, 
-    width: boardWidth,
+  logger.debug('Renderizando GameBoardGrid', { 
+    size, 
     selectedCellsCount: selectedCells.length, 
     isSelecting,
     isMobile,
     cellSize
   }, 'GAME_BOARD_GRID');
 
-  // Configurações específicas para tabuleiro 12x8
+  // Configurações específicas para mobile
   const gridConfig = {
-    gap: isMobile ? '1px' : '2px',
-    maxWidth: isMobile ? '340px' : '400px',
+    gap: isMobile ? (size > 10 ? '1px' : '2px') : (size > 8 ? '2px' : '3px'),
+    maxWidth: isMobile ? 
+      (size > 12 ? '320px' : size > 10 ? '350px' : '360px') : 
+      (size > 8 ? '380px' : '360px'),
     padding: isMobile ? '4px' : '6px'
   };
 
@@ -60,17 +60,17 @@ const GameBoardGrid = ({
       ref={boardRef}
       className="grid mx-auto"
       style={{ 
-        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`, // 8 colunas
-        gridTemplateRows: `repeat(${size}, 1fr)`, // 12 linhas
+        gridTemplateColumns: `repeat(${size}, 1fr)`,
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: '100%',
         touchAction: 'none',
-        padding: gridConfig.padding
+        padding: gridConfig.padding,
+        overflowX: isMobile && size > 12 ? 'auto' : 'visible'
       }}
       onTouchEnd={(e) => {
         e.preventDefault();
-        logger.debug('Touch end detectado no grid 12x8', { isMobile }, 'GAME_BOARD_GRID');
+        logger.debug('Touch end detectado no grid', { isMobile }, 'GAME_BOARD_GRID');
         handleCellEndWithValidation();
       }}
       onMouseUp={(e) => {
