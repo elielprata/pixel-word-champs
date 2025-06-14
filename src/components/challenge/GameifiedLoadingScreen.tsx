@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
-import GameCell from '@/components/game/GameCell';
 
 interface GameifiedLoadingScreenProps {
   level: number;
@@ -14,17 +13,37 @@ interface GameifiedLoadingScreenProps {
   } | null;
 }
 
-// Palavras que aparecem durante o loading
+// Palavras que aparecem durante o loading - estrutura corrigida
 const LOADING_WORDS = [
-  { word: 'CACHE', positions: [[0,0], [0,1], [0,2], [0,3]] },
-  { word: 'RAPID', positions: [[1,0], [1,1], [1,2], [1,3], [2,0]] },
-  { word: 'WORD', positions: [[2,1], [2,2], [2,3], [3,0]] },
-  { word: 'GAME', positions: [[3,1], [3,2], [3,3], [1,3]] }
+  { 
+    word: 'CACHE', 
+    positions: [
+      [0, 0], [0, 1], [0, 2], [0, 3], [0, 4]
+    ]
+  },
+  { 
+    word: 'RAPID', 
+    positions: [
+      [1, 0], [1, 1], [1, 2], [1, 3], [1, 4]
+    ]
+  },
+  { 
+    word: 'WORD', 
+    positions: [
+      [2, 0], [2, 1], [2, 2], [2, 3]
+    ]
+  },
+  { 
+    word: 'GAME', 
+    positions: [
+      [3, 0], [3, 1], [3, 2], [3, 3]
+    ]
+  }
 ];
 
-// Grid base 4x4
+// Grid base 4x5 para acomodar a palavra CACHE/RAPID
 const createBaseGrid = () => {
-  return Array(4).fill(null).map(() => Array(4).fill(''));
+  return Array(4).fill(null).map(() => Array(5).fill(''));
 };
 
 const GameifiedLoadingScreen = ({ level, loadingStep, metrics }: GameifiedLoadingScreenProps) => {
@@ -57,7 +76,7 @@ const GameifiedLoadingScreen = ({ level, loadingStep, metrics }: GameifiedLoadin
     return words;
   };
 
-  // Atualizar grid com palavras reveladas
+  // Atualizar grid com palavras reveladas - lógica corrigida
   useEffect(() => {
     const wordsToReveal = getWordsToReveal(progress);
     const newGrid = createBaseGrid();
@@ -65,12 +84,20 @@ const GameifiedLoadingScreen = ({ level, loadingStep, metrics }: GameifiedLoadin
 
     wordsToReveal.forEach(wordText => {
       const wordData = LOADING_WORDS.find(w => w.word === wordText);
-      if (wordData) {
+      if (wordData && wordData.positions) {
         newRevealedWords.push(wordText);
-        wordData.word.split('').forEach((letter, index) => {
-          const [row, col] = wordData.positions[index];
-          if (row < 4 && col < 4) {
-            newGrid[row][col] = letter;
+        
+        // Correção: iterar sobre as letras da palavra e suas posições correspondentes
+        const letters = wordData.word.split('');
+        letters.forEach((letter, index) => {
+          if (index < wordData.positions.length) {
+            const position = wordData.positions[index];
+            if (Array.isArray(position) && position.length === 2) {
+              const [row, col] = position;
+              if (row >= 0 && row < 4 && col >= 0 && col < 5) {
+                newGrid[row][col] = letter;
+              }
+            }
           }
         });
       }
@@ -88,14 +115,6 @@ const GameifiedLoadingScreen = ({ level, loadingStep, metrics }: GameifiedLoadin
     }
   }, [metrics?.cacheHit, celebrationMode]);
 
-  // Determinar cor do progresso baseada na performance
-  const getProgressColor = () => {
-    if (metrics?.cacheHit) return 'bg-green-500';
-    if (metrics && metrics.processingTime < 2000) return 'bg-blue-500';
-    if (metrics && metrics.processingTime < 5000) return 'bg-yellow-500';
-    return 'bg-indigo-500';
-  };
-
   // Determinar cor de fundo baseada na performance
   const getBackgroundGradient = () => {
     if (metrics?.cacheHit) {
@@ -107,7 +126,7 @@ const GameifiedLoadingScreen = ({ level, loadingStep, metrics }: GameifiedLoadin
     return 'from-indigo-50 via-purple-50 to-pink-50';
   };
 
-  const cellSize = 45;
+  const cellSize = 40; // Reduzido para acomodar 5 colunas
 
   return (
     <div className={`flex items-center justify-center min-h-screen bg-gradient-to-br ${getBackgroundGradient()} transition-all duration-1000`}>
@@ -144,9 +163,9 @@ const GameifiedLoadingScreen = ({ level, loadingStep, metrics }: GameifiedLoadin
           </p>
         </div>
 
-        {/* Grid gamificado 4x4 */}
+        {/* Grid gamificado 4x5 */}
         <div className="mb-6">
-          <div className="grid grid-cols-4 gap-1 justify-center mx-auto" style={{ width: `${cellSize * 4 + 12}px` }}>
+          <div className="grid grid-cols-5 gap-1 justify-center mx-auto" style={{ width: `${cellSize * 5 + 16}px` }}>
             {grid.map((row, rowIndex) =>
               row.map((letter, colIndex) => {
                 const cellKey = `${rowIndex}-${colIndex}`;
