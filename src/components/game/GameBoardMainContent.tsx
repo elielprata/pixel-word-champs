@@ -28,7 +28,6 @@ interface GameBoardMainContentProps {
   handleCellEndWithValidation: () => void;
   getWordColor: (wordIndex: number) => string;
   getCellWordIndex: (row: number, col: number) => number;
-  selectionMetrics: any;
 }
 
 const GameBoardMainContent = ({
@@ -47,8 +46,7 @@ const GameBoardMainContent = ({
   handleCellMoveWithValidation,
   handleCellEndWithValidation,
   getWordColor,
-  getCellWordIndex,
-  selectionMetrics
+  getCellWordIndex
 }: GameBoardMainContentProps) => {
   const isMobile = useIsMobile();
 
@@ -75,17 +73,6 @@ const GameBoardMainContent = ({
           getWordColor={getWordColor}
           getCellWordIndex={getCellWordIndex}
         />
-        
-        {/* Indicador de métricas de seleção (debug) */}
-        {process.env.NODE_ENV === 'development' && selectionMetrics && (
-          <div className={`mt-2 text-xs text-slate-500 ${isMobile ? 'text-center' : ''}`}>
-            Tentativas: {selectionMetrics.attempts} | 
-            Sucessos: {selectionMetrics.successes} | 
-            H: {selectionMetrics.horizontalAttempts} | 
-            V: {selectionMetrics.verticalAttempts} | 
-            D: {selectionMetrics.diagonalAttempts}
-          </div>
-        )}
       </div>
 
       {/* Lista de palavras sem scroll - layout flexível */}

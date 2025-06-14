@@ -14,7 +14,6 @@ interface GameBoardActionsProps {
   levelWords: string[];
   boardData: { board: string[][]; placedWords: any[] };
   hintsUsed: number;
-  selectionMetrics: any;
   level: number;
   isMobile: boolean;
   canRevive: boolean;
@@ -35,7 +34,6 @@ export const useGameBoardActions = ({
   levelWords,
   boardData,
   hintsUsed,
-  selectionMetrics,
   level,
   isMobile,
   canRevive,
@@ -70,53 +68,37 @@ export const useGameBoardActions = ({
     if (finalSelection.length >= 3) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
-      // Determinar direção para métricas avançadas
-      const first = finalSelection[0];
-      const last = finalSelection[finalSelection.length - 1];
-      const deltaRow = last.row - first.row;
-      const deltaCol = last.col - first.col;
-      
-      let direction = 'horizontal';
-      if (deltaCol === 0) direction = 'vertical';
-      else if (Math.abs(deltaRow) === Math.abs(deltaCol)) direction = 'diagonal';
-      
-      logger.info('🔍 Tentativa de palavra com métricas', {
+      logger.info('🔍 Tentativa de palavra', {
         word,
         level,
         isMobile,
         selectionLength: finalSelection.length,
-        direction,
         isInWordList: levelWords.includes(word),
         alreadyFound: foundWords.some(fw => fw.word === word),
         validDirection: isValidWordDirection(finalSelection),
-        positions: finalSelection,
-        currentMetrics: selectionMetrics
+        positions: finalSelection
       }, 'GAME_BOARD_LOGIC');
       
       if (levelWords.includes(word) && 
           !foundWords.some(fw => fw.word === word) && 
           isValidWordDirection(finalSelection)) {
-        logger.info('✅ Palavra encontrada com sucesso e métricas', { 
+        logger.info('✅ Palavra encontrada com sucesso', { 
           word, 
           level,
           isMobile,
-          direction,
           wordLength: word.length,
           selectionLength: finalSelection.length,
-          positions: finalSelection,
-          successMetrics: selectionMetrics
+          positions: finalSelection
         }, 'GAME_BOARD_LOGIC');
         addFoundWord(word, finalSelection);
       } else {
-        logger.warn('❌ Palavra rejeitada com contexto', {
+        logger.warn('❌ Palavra rejeitada', {
           word,
-          direction,
           reasons: {
             notInWordList: !levelWords.includes(word),
             alreadyFound: foundWords.some(fw => fw.word === word),
             invalidDirection: !isValidWordDirection(finalSelection)
-          },
-          failureMetrics: selectionMetrics
+          }
         }, 'GAME_BOARD_LOGIC');
       }
     } else {

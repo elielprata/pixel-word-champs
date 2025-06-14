@@ -37,7 +37,7 @@ export const useGameBoardLogicState = ({
   
   // Log detalhado do estado dos dados
   useEffect(() => {
-    logger.info('🎮 GameBoardLogic otimizado renderizado', { 
+    logger.info('🎮 GameBoardLogic renderizado', { 
       level,
       isMobile,
       isLoading,
@@ -52,7 +52,7 @@ export const useGameBoardLogicState = ({
   // Log quando os dados mudam
   useEffect(() => {
     if (boardData.board.length > 0) {
-      logger.info('📋 Dados do tabuleiro otimizado recebidos', {
+      logger.info('📋 Dados do tabuleiro recebidos', {
         level,
         isMobile,
         boardSize: boardData.board.length,
@@ -67,7 +67,6 @@ export const useGameBoardLogicState = ({
     selectedCells,
     previewCells,
     isSelecting, 
-    metrics: selectionMetrics,
     handleCellStart, 
     handleCellMove, 
     handleCellEnd, 
@@ -95,8 +94,7 @@ export const useGameBoardLogicState = ({
       level, 
       levelScore,
       foundWordsCount: foundWords.length,
-      isMobile,
-      selectionMetrics
+      isMobile
     }, 'GAME_BOARD_LOGIC');
     onLevelComplete(levelScore);
   });
@@ -114,7 +112,6 @@ export const useGameBoardLogicState = ({
     selectedCells,
     previewCells,
     isSelecting,
-    selectionMetrics,
     
     // Game state
     foundWords,

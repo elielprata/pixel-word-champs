@@ -28,7 +28,6 @@ interface GameBoardLogicProps {
     selectedCells: Position[];
     previewCells: Position[];
     isSelecting: boolean;
-    selectionMetrics: any;
     handleCellStart: (row: number, col: number) => void;
     handleCellMoveWithValidation: (row: number, col: number) => void;
     handleCellEndWithValidation: () => void;
@@ -74,7 +73,6 @@ const GameBoardLogic = ({
     levelWords: state.levelWords,
     boardData: state.boardData,
     hintsUsed: state.hintsUsed,
-    selectionMetrics: state.selectionMetrics,
     level,
     isMobile: state.isMobile,
     canRevive,
@@ -94,7 +92,7 @@ const GameBoardLogic = ({
   const currentLevelScore = state.foundWords.reduce((sum, fw) => sum + fw.points, 0);
 
   // Log final antes de retornar
-  logger.debug('🎯 GameBoardLogic otimizado props finais', {
+  logger.debug('🎯 GameBoardLogic props finais', {
     level,
     isMobile: state.isMobile,
     boardDataReady: state.boardData.board.length > 0,
@@ -103,8 +101,7 @@ const GameBoardLogic = ({
     currentLevelScore,
     selectedCellsCount: state.selectedCells.length,
     previewCellsCount: state.previewCells.length,
-    isSelecting: state.isSelecting,
-    selectionMetrics: state.selectionMetrics
+    isSelecting: state.isSelecting
   }, 'GAME_BOARD_LOGIC');
 
   return (
@@ -118,7 +115,6 @@ const GameBoardLogic = ({
         selectedCells: state.selectedCells,
         previewCells: state.previewCells,
         isSelecting: state.isSelecting,
-        selectionMetrics: state.selectionMetrics,
         handleCellStart: state.handleCellStart,
         handleCellMoveWithValidation: actions.handleCellMoveWithValidation,
         handleCellEndWithValidation: actions.handleCellEndWithValidation,

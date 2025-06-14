@@ -95,7 +95,6 @@ const GameBoardContent = ({
             handleCellEndWithValidation={logicProps.handleCellEndWithValidation}
             getWordColor={logicProps.getWordColor}
             getCellWordIndex={logicProps.getCellWordIndex}
-            selectionMetrics={logicProps.selectionMetrics}
           />
 
           {/* Modais do jogo */}

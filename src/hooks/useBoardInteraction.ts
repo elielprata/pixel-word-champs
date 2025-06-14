@@ -3,51 +3,18 @@ import { useState, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
 
-interface SelectionMetrics {
-  attempts: number;
-  successes: number;
-  horizontalAttempts: number;
-  verticalAttempts: number;
-  diagonalAttempts: number;
-  lastDirection: string | null;
-}
-
 export const useBoardInteraction = () => {
   const [selectedCells, setSelectedCells] = useState<Position[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [previewCells, setPreviewCells] = useState<Position[]>([]);
-  const [metrics, setMetrics] = useState<SelectionMetrics>({
-    attempts: 0,
-    successes: 0,
-    horizontalAttempts: 0,
-    verticalAttempts: 0,
-    diagonalAttempts: 0,
-    lastDirection: null
-  });
-
-  const updateMetrics = useCallback((direction: string, success: boolean = false) => {
-    setMetrics(prev => ({
-      ...prev,
-      attempts: prev.attempts + 1,
-      successes: success ? prev.successes + 1 : prev.successes,
-      horizontalAttempts: direction === 'horizontal' ? prev.horizontalAttempts + 1 : prev.horizontalAttempts,
-      verticalAttempts: direction === 'vertical' ? prev.verticalAttempts + 1 : prev.verticalAttempts,
-      diagonalAttempts: direction === 'diagonal' ? prev.diagonalAttempts + 1 : prev.diagonalAttempts,
-      lastDirection: direction
-    }));
-  }, []);
 
   const handleCellStart = useCallback((row: number, col: number) => {
-    logger.info('🎯 Iniciando seleção inteligente', { 
-      row, 
-      col,
-      metrics: metrics.attempts
-    }, 'BOARD_INTERACTION');
+    logger.info('🎯 Iniciando seleção', { row, col }, 'BOARD_INTERACTION');
     
     setIsSelecting(true);
     setSelectedCells([{ row, col }]);
     setPreviewCells([{ row, col }]);
-  }, [metrics.attempts]);
+  }, []);
 
   const handleCellMove = useCallback((
     row: number, 
@@ -78,19 +45,9 @@ export const useBoardInteraction = () => {
         const first = prev[0];
         const filledPath = fillIntermediateCells(first, newPosition);
         
-        // Determinar direção para métricas
-        const deltaRow = newPosition.row - first.row;
-        const deltaCol = newPosition.col - first.col;
-        let direction = 'horizontal';
-        if (deltaCol === 0) direction = 'vertical';
-        else if (Math.abs(deltaRow) === Math.abs(deltaCol)) direction = 'diagonal';
-        
-        updateMetrics(direction);
-        
         logger.debug('✅ Caminho inteligente criado', { 
           newPosition,
           pathLength: filledPath.length,
-          direction,
           filled: filledPath.length - prev.length
         }, 'BOARD_INTERACTION');
         
@@ -108,13 +65,12 @@ export const useBoardInteraction = () => {
       
       return newPath;
     });
-  }, [isSelecting, updateMetrics]);
+  }, [isSelecting]);
 
   const handleCellEnd = useCallback(() => {
-    logger.info('🏁 Finalizando seleção inteligente', { 
+    logger.info('🏁 Finalizando seleção', { 
       selectedCellsCount: selectedCells.length,
-      hasSelection: selectedCells.length > 0,
-      metrics
+      hasSelection: selectedCells.length > 0
     }, 'BOARD_INTERACTION');
     
     setIsSelecting(false);
@@ -122,33 +78,18 @@ export const useBoardInteraction = () => {
     setSelectedCells([]);
     setPreviewCells([]);
     
-    // Marcar como sucesso se seleção válida
-    if (finalSelection.length >= 3) {
-      const first = finalSelection[0];
-      const last = finalSelection[finalSelection.length - 1];
-      const deltaRow = last.row - first.row;
-      const deltaCol = last.col - first.col;
-      
-      let direction = 'horizontal';
-      if (deltaCol === 0) direction = 'vertical';
-      else if (Math.abs(deltaRow) === Math.abs(deltaCol)) direction = 'diagonal';
-      
-      updateMetrics(direction, true);
-    }
-    
-    // Log da seleção final com métricas
+    // Log da seleção final
     if (finalSelection.length > 0) {
-      logger.info('📝 Seleção finalizada com métricas', {
+      logger.info('📝 Seleção finalizada', {
         length: finalSelection.length,
         start: finalSelection[0],
         end: finalSelection[finalSelection.length - 1],
-        positions: finalSelection,
-        currentMetrics: metrics
+        positions: finalSelection
       }, 'BOARD_INTERACTION');
     }
     
     return finalSelection;
-  }, [selectedCells, metrics, updateMetrics]);
+  }, [selectedCells]);
 
   const isCellSelected = useCallback((row: number, col: number) => {
     return selectedCells.some(pos => pos.row === row && pos.col === col);
@@ -163,7 +104,6 @@ export const useBoardInteraction = () => {
     selectedCells,
     previewCells,
     isSelecting,
-    metrics,
     handleCellStart,
     handleCellMove,
     handleCellEnd,
