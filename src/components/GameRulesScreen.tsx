@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Clock, Trophy, Target, Zap, Star, Award, Timer } from 'lucide-react';
+import { ArrowLeft, Clock, Trophy, Target, Zap, Star, Award, Timer, AlertCircle } from 'lucide-react';
 
 interface GameRulesScreenProps {
   onBack: () => void;
@@ -47,7 +47,7 @@ const GameRulesScreen = ({
         </Card>
 
         {/* Grid de regras 2x2 */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           {/* Objetivo */}
           <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-sm">
             <CardContent className="p-3">
@@ -108,6 +108,23 @@ const GameRulesScreen = ({
             </CardContent>
           </Card>
         </div>
+
+        {/* Regra importante sobre pontuação */}
+        <Card className="mb-4 border-0 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+          <CardContent className="p-3">
+            <div className="flex items-start gap-2">
+              <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <AlertCircle className="w-3 h-3 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-800 text-sm mb-1">Regra Importante</h3>
+                <p className="text-xs text-amber-700">
+                  Os pontos só são contabilizados se você completar o nível encontrando todas as 5 palavras!
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Estatísticas compactas */}
         <div className="grid grid-cols-3 gap-2 mb-5">
