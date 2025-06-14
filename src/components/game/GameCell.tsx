@@ -1,3 +1,4 @@
+
 import React from "react";
 
 interface GameCellProps {
@@ -5,6 +6,7 @@ interface GameCellProps {
   rowIndex: number;
   colIndex: number;
   isSelected: boolean;
+  isHintHighlighted: boolean;
   cellSize: number;
   onCellStart: (row: number, col: number) => void;
   onCellMove: (row: number, col: number) => void;
@@ -18,6 +20,7 @@ const GameCell = ({
   rowIndex,
   colIndex,
   isSelected,
+  isHintHighlighted,
   cellSize,
   onCellStart,
   onCellMove,
@@ -25,10 +28,18 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
-  // Visual limpo: só fundo selecionado/neutro
-  const cellClass = `flex items-center justify-center font-medium relative transition-all duration-100 select-none ${
-    isSelected ? "bg-blue-100" : "bg-white"
-  } border border-gray-200`;
+  // Priorizar destaque da dica sobre seleção normal
+  const getCellBackground = () => {
+    if (isHintHighlighted) {
+      return "bg-gradient-to-br from-yellow-200 to-amber-300 animate-pulse";
+    }
+    if (isSelected) {
+      return "bg-blue-100";
+    }
+    return "bg-white";
+  };
+
+  const cellClass = `flex items-center justify-center font-medium relative transition-all duration-200 select-none ${getCellBackground()} border border-gray-200`;
 
   const fontSize = isMobile
     ? Math.max(cellSize * 0.6, 16)
@@ -36,7 +47,6 @@ const GameCell = ({
 
   const borderRadius = isMobile ? "5px" : "7px";
 
-  // Eventos ultra-limpos
   return (
     <div
       className={cellClass}
@@ -50,7 +60,7 @@ const GameCell = ({
         WebkitTouchCallout: "none",
         padding: 0,
         margin: 0,
-        boxShadow: "none",
+        boxShadow: isHintHighlighted ? "0 0 8px rgba(251, 191, 36, 0.6)" : "none",
       }}
       onMouseDown={() => onCellStart(rowIndex, colIndex)}
       onMouseEnter={() => isDragging && onCellMove(rowIndex, colIndex)}

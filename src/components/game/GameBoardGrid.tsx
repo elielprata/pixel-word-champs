@@ -80,6 +80,7 @@ const GameBoardGrid = ({
             rowIndex={rowIndex}
             colIndex={colIndex}
             isSelected={isCellCurrentlySelected(rowIndex, colIndex)}
+            isHintHighlighted={isCellHintHighlighted(rowIndex, colIndex)}
             cellSize={cellSize}
             onCellStart={handleCellStart}
             onCellMove={handleCellMove}
