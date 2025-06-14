@@ -3,7 +3,7 @@ import React from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { useChallengeGameLogic } from '@/hooks/useChallengeGameLogic';
 import ChallengeErrorDisplay from './challenge/ChallengeErrorDisplay';
-import ChallengeLoadingScreen from './challenge/ChallengeLoadingScreen';
+import OptimizedChallengeLoadingScreen from './challenge/OptimizedChallengeLoadingScreen';
 import ChallengeCompletedScreen from './challenge/ChallengeCompletedScreen';
 import ChallengeGameSession from './challenge/ChallengeGameSession';
 import { logger } from '@/utils/logger';
@@ -22,6 +22,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     gameCompleted,
     isLoading,
     error,
+    loadingStep,
     handleWordFound,
     handleTimeUp,
     handleLevelComplete,
@@ -98,9 +99,9 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     );
   }
 
-  // Tela de loading
+  // Tela de loading otimizada
   if (isLoading) {
-    return <ChallengeLoadingScreen />;
+    return <OptimizedChallengeLoadingScreen level={currentLevel} loadingStep={loadingStep || 'Carregando...'} />;
   }
 
   // Tela de jogo completado

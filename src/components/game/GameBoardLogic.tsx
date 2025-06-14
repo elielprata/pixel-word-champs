@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useBoard } from '@/hooks/useBoard';
+import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
 import { useWordValidation } from '@/hooks/useWordValidation';
 import { useGameLogic } from '@/hooks/useGameLogic';
@@ -60,11 +60,11 @@ const GameBoardLogic = ({
   children
 }: GameBoardLogicProps) => {
   const isMobile = useIsMobile();
-  const { boardData, size, levelWords, isLoading, error } = useBoard(level);
+  const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
   
   // Log detalhado do estado dos dados
   useEffect(() => {
-    logger.info('🎮 GameBoardLogic renderizado', { 
+    logger.info('🎮 GameBoardLogic otimizado renderizado', { 
       level,
       isMobile,
       isLoading,
@@ -79,7 +79,7 @@ const GameBoardLogic = ({
   // Log quando os dados mudam
   useEffect(() => {
     if (boardData.board.length > 0) {
-      logger.info('📋 Dados do tabuleiro recebidos', {
+      logger.info('📋 Dados do tabuleiro otimizado recebidos', {
         level,
         isMobile,
         boardSize: boardData.board.length,
@@ -198,7 +198,7 @@ const GameBoardLogic = ({
   const currentLevelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
 
   // Log final antes de retornar
-  logger.debug('🎯 GameBoardLogic props finais', {
+  logger.debug('🎯 GameBoardLogic otimizado props finais', {
     level,
     isMobile,
     boardDataReady: boardData.board.length > 0,

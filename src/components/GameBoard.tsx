@@ -5,7 +5,7 @@ import GameBoardHeader from './game/GameBoardHeader';
 import GameBoardContent from './game/GameBoardContent';
 import GameBoardLoadingState from './game/GameBoardLoadingState';
 import GameBoardErrorState from './game/GameBoardErrorState';
-import { useBoard } from '@/hooks/useBoard';
+import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { logger } from '@/utils/logger';
 
 interface GameBoardProps {
@@ -31,18 +31,18 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('Renderizando GameBoard', { 
+  logger.debug('Renderizando GameBoard otimizado', { 
     level, 
     timeLeft, 
     canRevive 
   }, 'GAME_BOARD');
 
-  const { levelWords, isLoading, error, debugInfo } = useBoard(level);
+  const { levelWords, isLoading, error, loadingStep } = useOptimizedBoard(level);
 
   if (isLoading) {
     return (
       <GameBoardLayout>
-        <GameBoardLoadingState level={level} debugInfo={debugInfo} />
+        <GameBoardLoadingState level={level} debugInfo={loadingStep} />
       </GameBoardLayout>
     );
   }
@@ -50,7 +50,7 @@ const GameBoard = ({
   if (error) {
     return (
       <GameBoardLayout>
-        <GameBoardErrorState error={error} debugInfo={debugInfo} />
+        <GameBoardErrorState error={error} debugInfo={loadingStep} />
       </GameBoardLayout>
     );
   }
