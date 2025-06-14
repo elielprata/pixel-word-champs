@@ -31,18 +31,22 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('Renderizando GameBoard otimizado', { 
+  logger.debug('Renderizando GameBoard híbrido otimizado', { 
     level, 
     timeLeft, 
     canRevive 
   }, 'GAME_BOARD');
 
-  const { levelWords, isLoading, error, loadingStep } = useOptimizedBoard(level);
+  const { levelWords, isLoading, error, loadingStep, metrics } = useOptimizedBoard(level);
 
   if (isLoading) {
     return (
       <GameBoardLayout>
-        <GameBoardLoadingState level={level} debugInfo={loadingStep} />
+        <GameBoardLoadingState 
+          level={level} 
+          debugInfo={loadingStep} 
+          metrics={metrics}
+        />
       </GameBoardLayout>
     );
   }
@@ -50,7 +54,11 @@ const GameBoard = ({
   if (error) {
     return (
       <GameBoardLayout>
-        <GameBoardErrorState error={error} debugInfo={loadingStep} />
+        <GameBoardErrorState 
+          error={error} 
+          debugInfo={loadingStep}
+          metrics={metrics}
+        />
       </GameBoardLayout>
     );
   }

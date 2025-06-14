@@ -14,30 +14,32 @@ interface BoardData {
 export const useOptimizedBoard = (level: number) => {
   const [boardData, setBoardData] = useState<BoardData>({ board: [], placedWords: [] });
   const [boardError, setBoardError] = useState<string | null>(null);
-  const { levelWords, isLoading: wordsLoading, error: wordsError, loadingStep } = useOptimizedWordSelection(level);
+  const { levelWords, isLoading: wordsLoading, error: wordsError, loadingStep, metrics } = useOptimizedWordSelection(level);
   const { generateBoard } = useBoardGeneration();
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    logger.info('🎮 Board otimizado inicializado', { 
+    logger.info('🎮 Board otimizado híbrido inicializado', { 
       level, 
       isMobile,
       wordsLoading,
-      levelWordsCount: levelWords.length
+      levelWordsCount: levelWords.length,
+      metrics
     }, 'OPTIMIZED_BOARD');
-  }, [level, isMobile]);
+  }, [level, isMobile, metrics]);
 
   // Gerar tabuleiro quando as palavras estiverem prontas
   useEffect(() => {
     if (!wordsLoading && levelWords.length > 0) {
       const size = isMobile ? getMobileBoardSize(level) : getBoardSize(level);
       
-      logger.info('🚀 Gerando tabuleiro otimizado', { 
+      logger.info('🚀 Gerando tabuleiro híbrido otimizado', { 
         level, 
         size, 
         isMobile,
         wordsCount: levelWords.length,
-        words: levelWords
+        words: levelWords,
+        metrics
       }, 'OPTIMIZED_BOARD');
       
       try {
@@ -45,23 +47,26 @@ export const useOptimizedBoard = (level: number) => {
         setBoardData(newBoardData);
         setBoardError(null);
         
-        logger.info('✅ Tabuleiro otimizado gerado', { 
+        logger.info('✅ Tabuleiro híbrido gerado', { 
           wordsPlaced: newBoardData.placedWords.length,
           boardSize: newBoardData.board.length,
-          isMobile
+          isMobile,
+          cacheHit: metrics?.cacheHit || false,
+          processingTime: metrics?.processingTime || 0
         }, 'OPTIMIZED_BOARD');
         
       } catch (error) {
-        logger.error('❌ Erro na geração do tabuleiro otimizado', { 
+        logger.error('❌ Erro na geração do tabuleiro híbrido', { 
           error, 
           isMobile,
           level,
-          levelWords
+          levelWords,
+          metrics
         }, 'OPTIMIZED_BOARD');
         setBoardError(error instanceof Error ? error.message : 'Erro na geração do tabuleiro');
       }
     }
-  }, [levelWords, wordsLoading, generateBoard, level, isMobile]);
+  }, [levelWords, wordsLoading, generateBoard, level, isMobile, metrics]);
 
   const size = isMobile ? getMobileBoardSize(level) : getBoardSize(level);
   const isLoading = wordsLoading || (levelWords.length > 0 && boardData.board.length === 0);
@@ -73,6 +78,7 @@ export const useOptimizedBoard = (level: number) => {
     levelWords,
     isLoading,
     error,
-    loadingStep
+    loadingStep,
+    metrics
   };
 };

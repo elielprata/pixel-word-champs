@@ -99,7 +99,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     );
   }
 
-  // Tela de loading otimizada
+  // Tela de loading híbrida otimizada
   if (isLoading) {
     return <OptimizedChallengeLoadingScreen level={currentLevel} loadingStep={loadingStep || 'Carregando...'} />;
   }
