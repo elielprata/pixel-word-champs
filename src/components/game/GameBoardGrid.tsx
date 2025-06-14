@@ -55,6 +55,16 @@ const GameBoardGrid = ({
     padding: isMobile ? '4px' : '6px'
   };
 
+  // Função simplificada para finalizar seleção
+  const handleEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    logger.debug('Finalizando seleção no grid 12x8', { 
+      isMobile,
+      selectedCellsCount: selectedCells.length 
+    }, 'GAME_BOARD_GRID');
+    handleCellEndWithValidation();
+  };
+
   return (
     <div 
       ref={boardRef}
@@ -68,15 +78,9 @@ const GameBoardGrid = ({
         touchAction: 'none',
         padding: gridConfig.padding
       }}
-      onTouchEnd={(e) => {
-        e.preventDefault();
-        logger.debug('Touch end detectado no grid 12x8', { isMobile }, 'GAME_BOARD_GRID');
-        handleCellEndWithValidation();
-      }}
-      onMouseUp={(e) => {
-        e.preventDefault();
-        handleCellEndWithValidation();
-      }}
+      onTouchEnd={handleEnd}
+      onMouseUp={handleEnd}
+      onMouseLeave={handleEnd}
     >
       {boardData.board.map((row, rowIndex) =>
         row.map((letter, colIndex) => (
@@ -90,7 +94,7 @@ const GameBoardGrid = ({
             isHintHighlighted={isCellHintHighlighted(rowIndex, colIndex)}
             cellSize={cellSize}
             onCellStart={handleCellStart}
-            onCellMove={(row, col) => handleCellMove(row, col)}
+            onCellMove={handleCellMove}
             isSelecting={isSelecting}
             isMobile={isMobile}
             wordColorClass={isCellPermanentlyMarked(rowIndex, colIndex) 

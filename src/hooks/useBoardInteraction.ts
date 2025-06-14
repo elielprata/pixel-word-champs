@@ -13,7 +13,7 @@ export const useBoardInteraction = () => {
     setSelectedCells([{ row, col }]);
   }, []);
 
-  const handleCellMove = useCallback((row: number, col: number, isValidWordDirection: (positions: Position[]) => boolean) => {
+  const handleCellMove = useCallback((row: number, col: number, isValidWordDirection?: (positions: Position[]) => boolean) => {
     if (!isSelecting) return;
     
     const newPosition = { row, col };
@@ -28,10 +28,16 @@ export const useBoardInteraction = () => {
       
       const newPath = [...prev, newPosition];
       
-      // Validar se o caminho forma uma direção válida
-      if (!isValidWordDirection(newPath)) {
-        return prev;
+      // Se há validação de direção, aplicá-la
+      if (isValidWordDirection && !isValidWordDirection(newPath)) {
+        // Se a direção não é válida, retornar apenas a nova posição (recomeçar seleção)
+        return [prev[0], newPosition];
       }
+      
+      logger.debug('Adicionando célula à seleção', { 
+        newPosition,
+        pathLength: newPath.length 
+      }, 'BOARD_INTERACTION');
       
       return newPath;
     });

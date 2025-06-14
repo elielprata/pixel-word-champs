@@ -47,64 +47,64 @@ const GameCell = ({
     return 'text-slate-700 bg-white/50 hover:bg-white/70 border border-slate-200/50';
   };
 
-  // Debounced touch move para melhor performance em mobile
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  // Função simplificada para iniciar seleção
+  const handleStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
-    
-    if (!isMobile) return;
-    
-    const touch = e.touches[0];
-    if (touch) {
-      logger.debug('Touch move detectado', { 
-        clientX: touch.clientX, 
-        clientY: touch.clientY,
-        rowIndex,
-        colIndex
-      }, 'GAME_CELL');
-      
-      // Melhor detecção de elemento em mobile
-      const element = document.elementFromPoint(touch.clientX, touch.clientY);
-      
-      let targetCell = element;
-      let attempts = 0;
-      const maxAttempts = 5;
-      
-      // Buscar o elemento célula com limite de tentativas
-      while (targetCell && !targetCell.hasAttribute('data-cell') && attempts < maxAttempts) {
-        targetCell = targetCell.parentElement;
-        attempts++;
-      }
-      
-      if (targetCell && targetCell.hasAttribute('data-cell')) {
-        const row = parseInt(targetCell.getAttribute('data-row') || '0');
-        const col = parseInt(targetCell.getAttribute('data-col') || '0');
-        
-        logger.debug('Célula encontrada via touch', { row, col }, 'GAME_CELL');
-        onCellMove(row, col);
-      } else {
-        logger.warn('Célula não encontrada via touch', { 
-          element: element?.tagName,
-          attempts 
-        }, 'GAME_CELL');
-      }
-    }
-  }, [isMobile, onCellMove, rowIndex, colIndex]);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isSelecting && !isMobile) {
-      onCellMove(rowIndex, colIndex);
-    }
-  };
-
-  const handleCellStart = () => {
-    logger.debug('Célula selecionada', { 
+    logger.debug('Célula selecionada (início)', { 
       rowIndex, 
       colIndex, 
       letter,
       isMobile 
     }, 'GAME_CELL');
     onCellStart(rowIndex, colIndex);
-  };
+  }, [rowIndex, colIndex, letter, isMobile, onCellStart]);
+
+  // Função simplificada para movimento
+  const handleMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (!isSelecting) return;
+    
+    e.preventDefault();
+    
+    let targetElement;
+    
+    if ('touches' in e && e.touches[0]) {
+      // Touch event
+      const touch = e.touches[0];
+      targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+    } else {
+      // Mouse event
+      targetElement = e.target as Element;
+    }
+    
+    // Encontrar a célula mais próxima
+    let cellElement = targetElement;
+    let attempts = 0;
+    
+    while (cellElement && !cellElement.hasAttribute('data-cell') && attempts < 5) {
+      cellElement = cellElement.parentElement;
+      attempts++;
+    }
+    
+    if (cellElement && cellElement.hasAttribute('data-cell')) {
+      const row = parseInt(cellElement.getAttribute('data-row') || '0');
+      const col = parseInt(cellElement.getAttribute('data-col') || '0');
+      
+      logger.debug('Movimento detectado', { 
+        from: { rowIndex, colIndex },
+        to: { row, col },
+        isMobile 
+      }, 'GAME_CELL');
+      
+      onCellMove(row, col);
+    }
+  }, [rowIndex, colIndex, isSelecting, onCellMove, isMobile]);
+
+  // Função para enter do mouse
+  const handleMouseEnter = useCallback((e: React.MouseEvent) => {
+    if (isSelecting && !isMobile) {
+      onCellMove(rowIndex, colIndex);
+    }
+  }, [isSelecting, isMobile, onCellMove, rowIndex, colIndex]);
 
   // Estilos otimizados para mobile com formato oval
   const fontSize = isMobile ? 
@@ -140,23 +140,10 @@ const GameCell = ({
         WebkitTouchCallout: 'none',
         ...specialEffects
       }}
-      onTouchStart={(e) => {
-        e.preventDefault();
-        logger.debug('Touch start detectado', { 
-          rowIndex, 
-          colIndex,
-          isMobile 
-        }, 'GAME_CELL');
-        handleCellStart();
-      }}
-      onTouchMove={handleTouchMove}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        if (!isMobile) {
-          handleCellStart();
-        }
-      }}
-      onMouseEnter={handleMouseMove}
+      onTouchStart={handleStart}
+      onTouchMove={handleMove}
+      onMouseDown={handleStart}
+      onMouseEnter={handleMouseEnter}
       data-cell="true"
       data-row={rowIndex}
       data-col={colIndex}
