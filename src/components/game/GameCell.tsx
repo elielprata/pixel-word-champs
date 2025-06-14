@@ -33,114 +33,93 @@ const GameCell = ({
 }: GameCellProps) => {
   const getCellClasses = () => {
     if (isPermanent && wordColorClass) {
-      return `${wordColorClass} text-white shadow-lg animate-word-reveal border-2 border-white/20`;
+      return `bg-gradient-to-br ${wordColorClass} text-white rounded-lg`;
     }
     if (isPermanent) {
-      return 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg animate-word-reveal border-2 border-white/20';
+      return 'bg-gradient-to-br from-emerald-400 to-green-500 text-white rounded-lg';
     }
     if (isSelected) {
-      return 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md border-2 border-white/30 animate-pulse';
+      return 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg';
     }
     if (isHintHighlighted) {
-      return 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white animate-pulse shadow-md border-2 border-yellow-300/50';
+      return 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white rounded-lg animate-pulse';
     }
-    return 'text-slate-700 bg-white/50 hover:bg-white/70 border border-slate-200/50';
+    return 'text-slate-700';
   };
 
-  const handleStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    // Não permitir iniciar seleção em células já permanentemente marcadas
-    if (isPermanent) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-    
+  // Debounced touch move para melhor performance em mobile
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    logger.debug('EVENTO: Célula selecionada (início)', { 
+    
+    if (!isMobile) return;
+    
+    const touch = e.touches[0];
+    if (touch) {
+      logger.debug('Touch move detectado', { 
+        clientX: touch.clientX, 
+        clientY: touch.clientY,
+        rowIndex,
+        colIndex
+      }, 'GAME_CELL');
+      
+      // Melhor detecção de elemento em mobile
+      const element = document.elementFromPoint(touch.clientX, touch.clientY);
+      
+      let targetCell = element;
+      let attempts = 0;
+      const maxAttempts = 5;
+      
+      // Buscar o elemento célula com limite de tentativas
+      while (targetCell && !targetCell.hasAttribute('data-cell') && attempts < maxAttempts) {
+        targetCell = targetCell.parentElement;
+        attempts++;
+      }
+      
+      if (targetCell && targetCell.hasAttribute('data-cell')) {
+        const row = parseInt(targetCell.getAttribute('data-row') || '0');
+        const col = parseInt(targetCell.getAttribute('data-col') || '0');
+        
+        logger.debug('Célula encontrada via touch', { row, col }, 'GAME_CELL');
+        onCellMove(row, col);
+      } else {
+        logger.warn('Célula não encontrada via touch', { 
+          element: element?.tagName,
+          attempts 
+        }, 'GAME_CELL');
+      }
+    }
+  }, [isMobile, onCellMove, rowIndex, colIndex]);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isSelecting && !isMobile) {
+      onCellMove(rowIndex, colIndex);
+    }
+  };
+
+  const handleCellStart = () => {
+    logger.debug('Célula selecionada', { 
       rowIndex, 
       colIndex, 
       letter,
-      eventType: 'touches' in e ? 'touch' : 'mouse'
+      isMobile 
     }, 'GAME_CELL');
     onCellStart(rowIndex, colIndex);
-  }, [rowIndex, colIndex, letter, onCellStart, isPermanent]);
+  };
 
-  const handleMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    if (!isSelecting) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    let clientX: number, clientY: number;
-    
-    if ('touches' in e && e.touches[0]) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else if ('clientX' in e) {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    } else {
-      return;
-    }
-    
-    const targetElement = document.elementFromPoint(clientX, clientY);
-    if (!targetElement) return;
-    
-    let cellElement = targetElement;
-    let attempts = 0;
-    const maxAttempts = 5;
-    
-    while (cellElement && !cellElement.hasAttribute('data-cell') && attempts < maxAttempts) {
-      cellElement = cellElement.parentElement;
-      attempts++;
-    }
-    
-    if (cellElement && cellElement.hasAttribute('data-cell')) {
-      const row = parseInt(cellElement.getAttribute('data-row') || '0');
-      const col = parseInt(cellElement.getAttribute('data-col') || '0');
-      
-      logger.debug('EVENTO: Célula detectada no movimento', { 
-        from: { rowIndex, colIndex },
-        to: { row, col }
-      }, 'GAME_CELL');
-      
-      onCellMove(row, col);
-    }
-  }, [rowIndex, colIndex, isSelecting, onCellMove]);
-
-  const handleMouseEnter = useCallback((e: React.MouseEvent) => {
-    if (isSelecting && !isMobile) {
-      logger.debug('EVENTO: Mouse enter durante seleção', { 
-        rowIndex, 
-        colIndex 
-      }, 'GAME_CELL');
-      onCellMove(rowIndex, colIndex);
-    }
-  }, [isSelecting, isMobile, onCellMove, rowIndex, colIndex]);
-
+  // Estilos otimizados para mobile
   const fontSize = isMobile ? 
     Math.max(cellSize * 0.45, 12) : 
     Math.max(cellSize * 0.5, 14);
 
-  const borderRadius = isPermanent || isSelected ? '50%' : (isMobile ? '8px' : '10px');
-  
-  const specialEffects = isPermanent ? {
-    transform: 'scale(1.05)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-  } : isSelected ? {
-    transform: 'scale(1.02)',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-  } : {};
+  const borderRadius = isMobile ? '6px' : '8px';
 
   return (
     <div
       className={`
         flex items-center justify-center cursor-pointer
-        transition-all duration-300 select-none font-bold relative
+        transition-all duration-200 select-none font-bold
         ${isMobile ? 'active:scale-95' : 'hover:scale-105'}
         ${getCellClasses()}
-        ${isPermanent ? 'cursor-default' : ''}
       `}
       style={{ 
         width: `${cellSize}px`, 
@@ -151,30 +130,30 @@ const GameCell = ({
         borderRadius,
         userSelect: 'none',
         WebkitUserSelect: 'none',
-        WebkitTouchCallout: 'none',
-        pointerEvents: 'auto',
-        zIndex: isSelected || isPermanent ? 2 : 1,
-        ...specialEffects
+        WebkitTouchCallout: 'none'
       }}
-      onTouchStart={handleStart}
-      onTouchMove={handleMove}
-      onMouseDown={handleStart}
-      onMouseMove={handleMove}
-      onMouseEnter={handleMouseEnter}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        logger.debug('Touch start detectado', { 
+          rowIndex, 
+          colIndex,
+          isMobile 
+        }, 'GAME_CELL');
+        handleCellStart();
+      }}
+      onTouchMove={handleTouchMove}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        if (!isMobile) {
+          handleCellStart();
+        }
+      }}
+      onMouseEnter={handleMouseMove}
       data-cell="true"
       data-row={rowIndex}
       data-col={colIndex}
     >
-      {(isPermanent || isHintHighlighted) && (
-        <div 
-          className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"
-          style={{ borderRadius }}
-        />
-      )}
-      
-      <span className="relative z-10 font-extrabold tracking-tight">
-        {letter}
-      </span>
+      {letter}
     </div>
   );
 };

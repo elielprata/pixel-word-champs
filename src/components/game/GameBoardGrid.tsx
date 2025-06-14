@@ -66,10 +66,16 @@ const GameBoardGrid = ({
         maxWidth: gridConfig.maxWidth,
         width: '100%',
         touchAction: 'none',
-        padding: gridConfig.padding,
-        pointerEvents: 'auto', // Garantir que o grid permita eventos
-        position: 'relative',
-        zIndex: 0 // Base z-index
+        padding: gridConfig.padding
+      }}
+      onTouchEnd={(e) => {
+        e.preventDefault();
+        logger.debug('Touch end detectado no grid 12x8', { isMobile }, 'GAME_BOARD_GRID');
+        handleCellEndWithValidation();
+      }}
+      onMouseUp={(e) => {
+        e.preventDefault();
+        handleCellEndWithValidation();
       }}
     >
       {boardData.board.map((row, rowIndex) =>
@@ -84,7 +90,7 @@ const GameBoardGrid = ({
             isHintHighlighted={isCellHintHighlighted(rowIndex, colIndex)}
             cellSize={cellSize}
             onCellStart={handleCellStart}
-            onCellMove={handleCellMove}
+            onCellMove={(row, col) => handleCellMove(row, col)}
             isSelecting={isSelecting}
             isMobile={isMobile}
             wordColorClass={isCellPermanentlyMarked(rowIndex, colIndex) 

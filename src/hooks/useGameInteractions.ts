@@ -1,5 +1,4 @@
 
-import { useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { toast } from '@/hooks/use-toast';
 import { useGamePointsConfig } from './useGamePointsConfig';
@@ -26,7 +25,7 @@ export const useGameInteractions = (
   const { getPointsForWord } = useGamePointsConfig();
 
   // Identificar apenas a palavra com maior pontuação (palavra oculta)
-  const getHiddenWords = useCallback(() => {
+  const getHiddenWords = () => {
     const wordsWithPoints = levelWords.map(word => ({
       word,
       points: getPointsForWord(word)
@@ -35,9 +34,9 @@ export const useGameInteractions = (
     const sortedByPoints = [...wordsWithPoints].sort((a, b) => b.points - a.points);
     // Retornar apenas a primeira palavra (maior pontuação)
     return new Set([sortedByPoints[0]?.word]);
-  }, [levelWords, getPointsForWord]);
+  };
 
-  const useHint = useCallback(() => {
+  const useHint = () => {
     if (hintsUsed >= 1) return;
     
     const hiddenWords = getHiddenWords();
@@ -73,16 +72,10 @@ export const useGameInteractions = (
       if (wordPlacement) {
         setHintHighlightedCells(wordPlacement.positions);
         
-        // Manter o destaque por mais tempo para melhor visibilidade
+        // Remover o destaque após 3 segundos
         setTimeout(() => {
           setHintHighlightedCells([]);
-        }, 8000); // Aumentado para 8 segundos
-        
-        toast({
-          title: "Dica ativada!",
-          description: `Palavra destacada: ${hintWord}`,
-          variant: "default"
-        });
+        }, 3000);
       }
       
       logger.info('Dica utilizada', { word: hintWord, hintsUsed: hintsUsed + 1 }, 'GAME_INTERACTIONS');
@@ -93,9 +86,9 @@ export const useGameInteractions = (
         variant: "destructive"
       });
     }
-  }, [hintsUsed, getHiddenWords, levelWords, foundWords, boardData.placedWords, setHintsUsed, setHintHighlightedCells]);
+  };
 
-  const handleRevive = useCallback(() => {
+  const handleRevive = () => {
     if (!canRevive) return;
     
     // Simular assistir anúncio (em produção seria integrado com sistema de anúncios)
@@ -104,11 +97,11 @@ export const useGameInteractions = (
     
     // Adicionar 30 segundos (isso seria feito no componente pai)
     logger.info('Revive ativado', { canRevive }, 'GAME_INTERACTIONS');
-  }, [canRevive, setCanRevive, setShowGameOver]);
+  };
 
-  const handleGoHome = useCallback(() => {
+  const handleGoHome = () => {
     onTimeUp();
-  }, [onTimeUp]);
+  };
 
   return {
     useHint,

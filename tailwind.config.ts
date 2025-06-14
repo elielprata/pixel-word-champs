@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -124,27 +123,16 @@ export default {
 				},
 				'word-reveal': {
 					'0%': {
-						transform: 'scale(0.8) rotate(-5deg)',
-						opacity: '0',
-						filter: 'blur(2px)'
+						transform: 'scale(0) rotate(180deg)',
+						opacity: '0'
 					},
 					'50%': {
-						transform: 'scale(1.1) rotate(0deg)',
-						opacity: '0.8',
-						filter: 'blur(0px)'
+						transform: 'scale(1.2) rotate(0deg)',
+						opacity: '0.8'
 					},
 					'100%': {
-						transform: 'scale(1.05) rotate(0deg)',
-						opacity: '1',
-						filter: 'blur(0px)'
-					}
-				},
-				'oval-glow': {
-					'0%, 100%': {
-						boxShadow: '0 0 8px rgba(59, 130, 246, 0.4), 0 0 16px rgba(59, 130, 246, 0.2)'
-					},
-					'50%': {
-						boxShadow: '0 0 16px rgba(59, 130, 246, 0.6), 0 0 32px rgba(59, 130, 246, 0.3)'
+						transform: 'scale(1) rotate(0deg)',
+						opacity: '1'
 					}
 				},
 				'cell-glow': {
@@ -164,23 +152,6 @@ export default {
 						transform: 'translateY(-20px) rotate(360deg)',
 						opacity: '0'
 					}
-				},
-				'color-shift': {
-					'0%': {
-						filter: 'hue-rotate(0deg) saturate(1)'
-					},
-					'25%': {
-						filter: 'hue-rotate(5deg) saturate(1.1)'
-					},
-					'50%': {
-						filter: 'hue-rotate(0deg) saturate(1.2)'
-					},
-					'75%': {
-						filter: 'hue-rotate(-5deg) saturate(1.1)'
-					},
-					'100%': {
-						filter: 'hue-rotate(0deg) saturate(1)'
-					}
 				}
 			},
 			animation: {
@@ -189,11 +160,9 @@ export default {
 				'fade-in': 'fade-in 0.3s ease-out',
 				'scale-in': 'scale-in 0.2s ease-out',
 				'bounce-in': 'bounce-in 0.6s ease-out',
-				'word-reveal': 'word-reveal 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-				'oval-glow': 'oval-glow 2s ease-in-out infinite',
+				'word-reveal': 'word-reveal 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
 				'cell-glow': 'cell-glow 2s ease-in-out infinite',
-				'celebration-sparkle': 'celebration-sparkle 1.5s ease-out infinite',
-				'color-shift': 'color-shift 3s ease-in-out infinite'
+				'celebration-sparkle': 'celebration-sparkle 1.5s ease-out infinite'
 			}
 		}
 	},

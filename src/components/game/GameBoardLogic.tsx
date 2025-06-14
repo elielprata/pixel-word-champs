@@ -1,6 +1,8 @@
-import React, { useEffect, useCallback } from 'react';
+
+import React, { useEffect } from 'react';
 import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useBoardInteraction } from '@/hooks/useBoardInteraction';
+import { useWordValidation } from '@/hooks/useWordValidation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useGameInteractions } from '@/hooks/useGameInteractions';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -60,15 +62,44 @@ const GameBoardLogic = ({
   const isMobile = useIsMobile();
   const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
   
+  // Log detalhado do estado dos dados
+  useEffect(() => {
+    logger.info('🎮 GameBoardLogic otimizado renderizado', { 
+      level,
+      isMobile,
+      isLoading,
+      hasError: !!error,
+      boardSize: boardData.board.length,
+      levelWordsCount: levelWords.length,
+      placedWordsCount: boardData.placedWords.length,
+      timeLeft
+    }, 'GAME_BOARD_LOGIC');
+  }, [level, isMobile, isLoading, error, boardData, levelWords, timeLeft]);
+
+  // Log quando os dados mudam
+  useEffect(() => {
+    if (boardData.board.length > 0) {
+      logger.info('📋 Dados do tabuleiro otimizado recebidos', {
+        level,
+        isMobile,
+        boardSize: boardData.board.length,
+        levelWords,
+        placedWords: boardData.placedWords.map(pw => pw.word),
+        boardPreview: boardData.board.slice(0, 2).map(row => row.join(''))
+      }, 'GAME_BOARD_LOGIC');
+    }
+  }, [boardData, levelWords, level, isMobile]);
+  
   const { 
     selectedCells, 
     isSelecting, 
     handleCellStart, 
     handleCellMove, 
     handleCellEnd, 
-    clearSelection,
     isCellSelected 
   } = useBoardInteraction();
+  
+  const { isValidWordDirection } = useWordValidation();
 
   const {
     foundWords,
@@ -106,7 +137,7 @@ const GameBoardLogic = ({
     onTimeUp
   );
 
-  const handleCellEndWithValidation = useCallback(() => {
+  const handleCellEndWithValidation = () => {
     const finalSelection = handleCellEnd();
     
     if (finalSelection.length >= 3) {
@@ -115,83 +146,66 @@ const GameBoardLogic = ({
       logger.debug('🔍 Tentativa de palavra', {
         word,
         level,
+        isMobile,
         selectionLength: finalSelection.length,
         isInWordList: levelWords.includes(word),
-        alreadyFound: foundWords.some(fw => fw.word === word)
+        alreadyFound: foundWords.some(fw => fw.word === word),
+        validDirection: isValidWordDirection(finalSelection)
       }, 'GAME_BOARD_LOGIC');
       
       if (levelWords.includes(word) && 
-          !foundWords.some(fw => fw.word === word)) {
+          !foundWords.some(fw => fw.word === word) && 
+          isValidWordDirection(finalSelection)) {
         logger.info('✅ Palavra encontrada', { 
           word, 
           level,
+          isMobile,
           wordLength: word.length,
           selectionLength: finalSelection.length 
         }, 'GAME_BOARD_LOGIC');
-        
-        // Adicionar palavra encontrada ANTES de limpar seleção
         addFoundWord(word, finalSelection);
-        
-        // Aguardar um pouco para permitir que a marcação permanente seja aplicada
-        setTimeout(() => {
-          clearSelection();
-        }, 300);
-        
-        return;
-      } else {
-        logger.debug('❌ Palavra rejeitada', {
-          word,
-          isInWordList: levelWords.includes(word),
-          alreadyFound: foundWords.some(fw => fw.word === word)
-        }, 'GAME_BOARD_LOGIC');
       }
     }
-    
-    // Se não foi uma palavra válida, limpar seleção imediatamente
-    clearSelection();
-  }, [handleCellEnd, boardData.board, levelWords, foundWords, addFoundWord, clearSelection, level]);
+  };
 
-  const handleCellMoveWithValidation = useCallback((row: number, col: number) => {
-    // Não permitir seleção de células já permanentemente marcadas
-    if (isCellPermanentlyMarked(row, col)) {
-      return;
-    }
-    handleCellMove(row, col);
-  }, [isCellPermanentlyMarked, handleCellMove]);
+  const handleCellMoveWithValidation = (row: number, col: number) => {
+    handleCellMove(row, col, isValidWordDirection);
+  };
 
-  const handleCellStartWithValidation = useCallback((row: number, col: number) => {
-    // Não permitir iniciar seleção em células já permanentemente marcadas
-    if (isCellPermanentlyMarked(row, col)) {
-      return;
-    }
-    handleCellStart(row, col);
-  }, [isCellPermanentlyMarked, handleCellStart]);
-
+  // Função para obter a cor específica de uma palavra encontrada
   const getWordColor = (wordIndex: number) => {
     const colors = [
-      'bg-gradient-to-br from-blue-500 to-blue-600',
-      'bg-gradient-to-br from-purple-500 to-violet-600',
-      'bg-gradient-to-br from-emerald-500 to-green-600',
-      'bg-gradient-to-br from-orange-500 to-amber-600',
-      'bg-gradient-to-br from-pink-500 to-rose-600',
-      'bg-gradient-to-br from-cyan-500 to-teal-600',
-      'bg-gradient-to-br from-red-500 to-pink-600',
-      'bg-gradient-to-br from-indigo-500 to-purple-600',
-      'bg-gradient-to-br from-yellow-500 to-orange-500',
-      'bg-gradient-to-br from-lime-500 to-green-500',
-      'bg-gradient-to-br from-fuchsia-500 to-pink-600',
-      'bg-gradient-to-br from-slate-500 to-gray-600'
+      'from-emerald-400 to-green-500',
+      'from-blue-400 to-indigo-500', 
+      'from-purple-400 to-violet-500',
+      'from-pink-400 to-rose-500',
+      'from-orange-400 to-amber-500',
+      'from-cyan-400 to-teal-500',
+      'from-red-400 to-pink-500',
+      'from-lime-400 to-green-500'
     ];
     return colors[wordIndex % colors.length];
   };
 
+  // Função para verificar se uma célula pertence a uma palavra específica
   const getCellWordIndex = (row: number, col: number) => {
     return foundWords.findIndex(fw => 
       fw.positions.some(pos => pos.row === row && pos.col === col)
     );
   };
 
+  // Calcular pontuação atual do nível (palavras encontradas)
   const currentLevelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
+
+  // Log final antes de retornar
+  logger.debug('🎯 GameBoardLogic otimizado props finais', {
+    level,
+    isMobile,
+    boardDataReady: boardData.board.length > 0,
+    levelWordsCount: levelWords.length,
+    foundWordsCount: foundWords.length,
+    currentLevelScore
+  }, 'GAME_BOARD_LOGIC');
 
   return (
     <>
@@ -203,7 +217,7 @@ const GameBoardLogic = ({
         hintsUsed,
         selectedCells,
         isSelecting,
-        handleCellStart: handleCellStartWithValidation,
+        handleCellStart,
         handleCellMoveWithValidation,
         handleCellEndWithValidation,
         isCellSelected,
