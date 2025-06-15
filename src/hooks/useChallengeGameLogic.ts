@@ -101,11 +101,6 @@ export const useChallengeGameLogic = (challengeId: string) => {
     }
   };
 
-  const handleWordFound = async (word: string, points: number) => {
-    console.log(`Palavra encontrada: ${word} com ${points} pontos (pontos serão registrados apenas quando nível completar)`);
-    // Pontos não são mais registrados aqui - apenas quando o nível for completado
-  };
-
   const handleTimeUp = () => {
     console.log('Tempo esgotado!');
   };
@@ -149,7 +144,6 @@ export const useChallengeGameLogic = (challengeId: string) => {
     isLoading,
     error,
     loadingStep,
-    handleWordFound,
     handleTimeUp,
     handleLevelComplete,
     handleAdvanceLevel,

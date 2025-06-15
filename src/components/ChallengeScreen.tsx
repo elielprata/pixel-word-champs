@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import { useChallengeGameLogic } from '@/hooks/useChallengeGameLogic';
@@ -22,7 +23,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     isLoading,
     error,
     loadingStep,
-    handleWordFound,
     handleTimeUp,
     handleLevelComplete,
     handleAdvanceLevel,
@@ -128,7 +128,6 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     <ChallengeGameSession
       currentLevel={currentLevel}
       timeRemaining={timeRemaining}
-      onWordFound={handleWordFound}
       onTimeUp={handleTimeUp}
       onLevelComplete={handleLevelComplete}
       onAdvanceLevel={handleAdvanceLevelWithReset}

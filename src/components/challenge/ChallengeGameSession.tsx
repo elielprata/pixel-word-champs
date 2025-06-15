@@ -8,7 +8,6 @@ import { logger } from '@/utils/logger';
 interface ChallengeGameSessionProps {
   currentLevel: number;
   timeRemaining: number;
-  onWordFound: (word: string, points: number) => void;
   onTimeUp: () => void;
   onLevelComplete: (levelScore: number) => void;
   onAdvanceLevel: () => void;
@@ -19,7 +18,6 @@ interface ChallengeGameSessionProps {
 const ChallengeGameSession = ({
   currentLevel,
   timeRemaining,
-  onWordFound,
   onTimeUp,
   onLevelComplete,
   onAdvanceLevel,
@@ -52,7 +50,6 @@ const ChallengeGameSession = ({
       <GameBoard
         level={currentLevel}
         timeLeft={timeRemaining}
-        onWordFound={onWordFound}
         onTimeUp={onTimeUp}
         onLevelComplete={onLevelComplete}
         onAdvanceLevel={onAdvanceLevel}
