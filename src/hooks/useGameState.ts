@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGameScoring } from '@/hooks/useGameScoring';
@@ -97,7 +98,7 @@ export const useGameState = (level: number, timeLeft: number) => {
       return;
     }
 
-    logger.info(`📝 ADICIONANDO PALAVRA - "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
+    logger.info(`📝 ÚNICA FONTE - Adicionando palavra "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
       word: newFoundWord.word,
       points: newFoundWord.points,
       beforeCount: state.foundWords.length,
@@ -112,9 +113,10 @@ export const useGameState = (level: number, timeLeft: number) => {
         permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
       };
       
-      logger.info(`✅ ESTADO ATUALIZADO - Total de palavras: ${newState.foundWords.length}`, {
+      logger.info(`✅ ESTADO FINAL - Total de palavras: ${newState.foundWords.length}`, {
         totalWords: newState.foundWords.length,
-        words: newState.foundWords.map(fw => fw.word)
+        words: newState.foundWords.map(fw => fw.word),
+        isCompleted: newState.foundWords.length >= TOTAL_WORDS_REQUIRED
       }, 'GAME_STATE');
       
       return newState;

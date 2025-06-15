@@ -12,8 +12,7 @@ interface FoundWord {
 
 export const useGameValidation = (
   foundWords: FoundWord[],
-  levelWords: string[],
-  onWordFound: (word: string, points: number) => void
+  levelWords: string[]
 ) => {
   const { getPointsForWord } = useGamePointsConfig();
 
@@ -41,9 +40,6 @@ export const useGameValidation = (
       validatedWord,
       totalFoundWords: foundWords.length + 1 
     }, 'GAME_VALIDATION');
-    
-    // CORREÇÃO: Removida a chamada duplicada onWordFound(word, points)
-    // O callback será chamado apenas pelo useGameState quando addFoundWord for executado
     
     return validatedWord;
   };

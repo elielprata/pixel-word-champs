@@ -1,3 +1,4 @@
+
 import { useMemo, useCallback } from 'react';
 import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useSimpleSelection } from '@/hooks/useSimpleSelection';
@@ -33,18 +34,9 @@ export const useGameBoard = ({
   
   // Estado do jogo consolidado
   const gameState = useGameState(level, timeLeft);
-  
-  // CORREÇÃO: Criar callback que chama onWordFound apenas uma vez
-  const handleWordFoundCallback = useCallback((word: string, points: number) => {
-    logger.info(`🎯 CALLBACK - Palavra encontrada: "${word}" = ${points} pontos`, { 
-      word, 
-      points,
-      currentCount: gameState.foundWords.length 
-    }, 'GAME_BOARD');
-    onWordFound(word, points);
-  }, [onWordFound, gameState.foundWords.length]);
 
-  const { validateAndAddWord } = useGameValidation(gameState.foundWords, levelWords, handleWordFoundCallback);
+  // CORREÇÃO DEFINITIVA: Removido handleWordFoundCallback
+  const { validateAndAddWord } = useGameValidation(gameState.foundWords, levelWords);
   const cellInteractions = useCellInteractions(
     gameState.foundWords,
     gameState.permanentlyMarkedCells,
@@ -62,7 +54,7 @@ export const useGameBoard = ({
     getLinearPath
   } = useSimpleSelection();
 
-  // Finalizar seleção com validação - CORREÇÃO CRÍTICA: Apenas uma adição por palavra
+  // Finalizar seleção com validação - CORREÇÃO DEFINITIVA: Apenas UMA adição por palavra
   const handleCellEnd = useCallback(() => {
     const finalSelection = handleEnd();
 
@@ -77,24 +69,21 @@ export const useGameBoard = ({
       
       const validatedWord = validateAndAddWord(word, finalSelection);
       if (validatedWord) {
-        logger.info(`✅ ADICIONANDO - Palavra validada: "${word}"`, { 
+        logger.info(`✅ ÚNICA ADIÇÃO - Palavra validada: "${word}"`, { 
           beforeCount: gameState.foundWords.length,
           word: validatedWord.word,
           points: validatedWord.points
         }, 'GAME_BOARD');
         
-        // CORREÇÃO: Apenas UMA chamada para addFoundWord - não chamamos onWordFound aqui
+        // CORREÇÃO DEFINITIVA: Apenas UMA chamada - addFoundWord irá notificar o callback internamente
         gameState.addFoundWord(validatedWord);
         
-        // O callback onWordFound será chamado automaticamente pelo useGameState
-        handleWordFoundCallback(validatedWord.word, validatedWord.points);
-        
-        logger.info(`📊 APÓS ADIÇÃO - Contagem atual: ${gameState.foundWords.length + 1}`, { 
+        logger.info(`📊 APÓS ÚNICA ADIÇÃO - Contagem atual: ${gameState.foundWords.length + 1}`, { 
           newCount: gameState.foundWords.length + 1
         }, 'GAME_BOARD');
       }
     }
-  }, [handleEnd, boardData.board, validateAndAddWord, gameState, handleWordFoundCallback]);
+  }, [handleEnd, boardData.board, validateAndAddWord, gameState]);
 
   // Memoizar seleção atual
   const selectedCells: Position[] = useMemo(() => {
