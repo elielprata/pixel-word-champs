@@ -18,6 +18,9 @@ interface WordsListProps {
 const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => {
   const { getPointsForWord } = useGamePointsConfig();
 
+  // ETAPA 2: Sempre exibir contagem como "X/5 palavras"
+  const TOTAL_WORDS = 5;
+
   // Identificar apenas a palavra com maior pontuação
   const wordsWithPoints = levelWords.map(word => ({
     word,
@@ -30,7 +33,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
 
   return (
     <div className="p-1.5 space-y-1.5">
-      {/* Header compacto */}
+      {/* Header compacto - SEMPRE mostra X/5 */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-1">
           <Target className="w-3 h-3 text-primary" />
@@ -39,7 +42,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
         <div className="px-1.5 py-0.5 bg-muted rounded-full">
           <span className="text-xs font-bold text-primary">{foundWords.length}</span>
           <span className="text-xs text-muted-foreground mx-0.5">/</span>
-          <span className="text-xs text-muted-foreground">{levelWords.length}</span>
+          <span className="text-xs text-muted-foreground">{TOTAL_WORDS}</span>
         </div>
       </div>
       
@@ -98,8 +101,8 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
         })}
       </div>
       
-      {/* Status de conclusão compacto */}
-      {foundWords.length === levelWords.length && (
+      {/* Status de conclusão compacto - SEMPRE verifica se encontrou 5 palavras */}
+      {foundWords.length === TOTAL_WORDS && (
         <div className="flex items-center justify-center gap-1 px-2 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-primary-foreground rounded-md">
           <Star className="w-3 h-3" />
           <span className="text-xs font-semibold">Nível Completo!</span>

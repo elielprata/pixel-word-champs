@@ -6,16 +6,18 @@ import { logger } from '@/utils/logger';
 interface GameProgressBarProps {
   level: number;
   foundWords: number;
-  totalWords: number;
+  totalWords: number; // Este prop será ignorado, sempre usaremos 5
 }
 
 const GameProgressBar = ({ level, foundWords, totalWords }: GameProgressBarProps) => {
-  const progress = (foundWords / totalWords) * 100;
+  // ETAPA 2: Sempre usar 5 como total de palavras, independente do prop
+  const TOTAL_WORDS = 5;
+  const progress = (foundWords / TOTAL_WORDS) * 100;
 
   logger.debug('Renderizando GameProgressBar', { 
     level, 
     foundWords, 
-    totalWords, 
+    totalWords: TOTAL_WORDS, // Log com valor fixo
     progress 
   }, 'GAME_PROGRESS_BAR');
 
@@ -27,7 +29,7 @@ const GameProgressBar = ({ level, foundWords, totalWords }: GameProgressBarProps
           <span className="text-sm font-bold text-gray-800">Nível {level}</span>
         </div>
         <div className="text-sm font-medium text-gray-600">
-          {foundWords}/{totalWords} palavras
+          {foundWords}/{TOTAL_WORDS} palavras
         </div>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
