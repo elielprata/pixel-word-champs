@@ -18,15 +18,15 @@ interface WordsListProps {
 const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => {
   const { getPointsForWord } = useGamePointsConfig();
 
-  // Identificar apenas a palavra com maior pontuação
+  // Identificar apenas a palavra com maior pontuação (para mostrar como dica)
   const wordsWithPoints = levelWords.map(word => ({
     word,
     points: getPointsForWord(word)
   }));
   
   const sortedByPoints = [...wordsWithPoints].sort((a, b) => b.points - a.points);
-  // Apenas a primeira palavra (maior pontuação) é oculta
-  const hiddenWords = new Set([sortedByPoints[0]?.word]);
+  // Apenas a primeira palavra (maior pontuação) é mostrada como dica
+  const hintWords = new Set([sortedByPoints[0]?.word]);
 
   return (
     <div className="p-1.5 space-y-1.5">
@@ -43,13 +43,13 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
         </div>
       </div>
       
-      {/* Grid de palavras sem scroll - layout flexível */}
+      {/* Grid de palavras - todas as 5 palavras são contabilizadas */}
       <div className="grid grid-cols-1 gap-1">
         {levelWords.map((word, index) => {
           const foundWordIndex = foundWords.findIndex(fw => fw.word === word);
           const isFound = foundWordIndex !== -1;
           const foundWord = foundWords[foundWordIndex];
-          const isHidden = hiddenWords.has(word);
+          const isHint = hintWords.has(word); // É uma dica visual, mas ainda conta
           
           return (
             <div 
@@ -58,7 +58,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
                 relative flex items-center justify-between px-2 py-1 rounded-md transition-all duration-200
                 ${isFound 
                   ? `bg-gradient-to-r ${getWordColor(foundWordIndex)} text-primary-foreground shadow-sm` 
-                  : isHidden
+                  : isHint
                     ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-primary-foreground'
                     : 'bg-muted border border-border text-muted-foreground'
                 }
@@ -69,11 +69,11 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
                 {isFound && (
                   <CheckCircle className="w-3 h-3 text-primary-foreground/90 flex-shrink-0" />
                 )}
-                {isHidden && !isFound && (
+                {isHint && !isFound && (
                   <Lock className="w-3 h-3 text-primary-foreground/90 flex-shrink-0" />
                 )}
                 <span className="text-xs font-medium truncate">
-                  {isHidden && !isFound 
+                  {isHint && !isFound 
                     ? `${word.length} letras` 
                     : word
                   }
@@ -87,7 +87,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
                     +{foundWord.points}
                   </span>
                 )}
-                {isHidden && !isFound && (
+                {isHint && !isFound && (
                   <span className="text-[10px] font-semibold text-primary-foreground/90 bg-black/10 px-1 py-0.5 rounded">
                     Extra
                   </span>
@@ -98,7 +98,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
         })}
       </div>
       
-      {/* Status de conclusão compacto */}
+      {/* Status de conclusão - agora usa o total correto */}
       {foundWords.length === levelWords.length && (
         <div className="flex items-center justify-center gap-1 px-2 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-primary-foreground rounded-md">
           <Star className="w-3 h-3" />
