@@ -249,38 +249,55 @@ export const useGameBoard = ({
 
   const currentLevelScore = state.foundWords.reduce((sum, fw) => sum + fw.points, 0);
 
-  return {
-    // Board data
+  // Agrupar props relacionadas em objetos
+  const boardProps = {
     boardData,
     size,
-    levelWords,
-    isLoading,
-    error,
-    isMobile,
-
-    // Game state
-    foundWords: state.foundWords,
-    hintsUsed: state.hintsUsed,
-    showGameOver: state.showGameOver,
-    showLevelComplete: state.showLevelComplete,
-    currentLevelScore,
-
-    // Selection
     selectedCells,
-    isDragging,
+    isDragging
+  };
+
+  const gameStateProps = {
+    foundWords: state.foundWords,
+    levelWords,
+    hintsUsed: state.hintsUsed,
+    currentLevelScore
+  };
+
+  const modalProps = {
+    showGameOver: state.showGameOver,
+    showLevelComplete: state.showLevelComplete
+  };
+
+  const cellInteractionProps = {
     handleCellStart: handleStart,
     handleCellMove: handleDrag,
     handleCellEnd,
     isCellSelected,
     isCellPermanentlyMarked,
     isCellHintHighlighted,
+    getWordColor,
+    getCellWordIndex
+  };
 
-    // Actions
+  const gameActions = {
     useHint,
     handleRevive,
     handleGoHome,
-    getWordColor,
-    getCellWordIndex,
     closeGameOver
+  };
+
+  return {
+    // Board data
+    isLoading,
+    error,
+    isMobile,
+
+    // Grouped props
+    boardProps,
+    gameStateProps,
+    modalProps,
+    cellInteractionProps,
+    gameActions
   };
 };

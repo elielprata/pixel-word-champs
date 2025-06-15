@@ -28,7 +28,15 @@ const GameBoardContent = ({
   canRevive,
   onRevive
 }: GameBoardContentProps) => {
-  const gameBoard = useGameBoard({
+  const {
+    isLoading,
+    error,
+    boardProps,
+    gameStateProps,
+    modalProps,
+    cellInteractionProps,
+    gameActions
+  } = useGameBoard({
     level,
     timeLeft,
     onWordFound,
@@ -40,11 +48,11 @@ const GameBoardContent = ({
   const handleReviveClick = () => {
     if (onRevive) {
       onRevive();
-      gameBoard.closeGameOver();
+      gameActions.closeGameOver();
     }
   };
 
-  if (gameBoard.isLoading || gameBoard.error) {
+  if (isLoading || error) {
     return null; // Será tratado no componente pai
   }
 
@@ -53,38 +61,28 @@ const GameBoardContent = ({
       <GameBoardHeader
         level={level}
         timeLeft={timeLeft}
-        foundWords={gameBoard.foundWords}
-        levelWords={gameBoard.levelWords}
-        hintsUsed={gameBoard.hintsUsed}
-        currentLevelScore={gameBoard.currentLevelScore}
-        onUseHint={gameBoard.useHint}
+        foundWords={gameStateProps.foundWords}
+        levelWords={gameStateProps.levelWords}
+        hintsUsed={gameStateProps.hintsUsed}
+        currentLevelScore={gameStateProps.currentLevelScore}
+        onUseHint={gameActions.useHint}
       />
 
       <GameBoardMainContent
-        boardData={gameBoard.boardData}
-        size={gameBoard.size}
-        selectedCells={gameBoard.selectedCells}
-        isDragging={gameBoard.isDragging}
-        foundWords={gameBoard.foundWords}
-        levelWords={gameBoard.levelWords}
-        isCellSelected={gameBoard.isCellSelected}
-        isCellPermanentlyMarked={gameBoard.isCellPermanentlyMarked}
-        isCellHintHighlighted={gameBoard.isCellHintHighlighted}
-        handleCellStart={gameBoard.handleCellStart}
-        handleCellMoveWithValidation={gameBoard.handleCellMove}
-        handleCellEndWithValidation={gameBoard.handleCellEnd}
-        getWordColor={gameBoard.getWordColor}
-        getCellWordIndex={gameBoard.getCellWordIndex}
+        boardProps={boardProps}
+        gameStateProps={gameStateProps}
+        cellInteractionProps={cellInteractionProps}
       />
 
       <GameModals
-        showGameOver={gameBoard.showGameOver}
-        showLevelComplete={gameBoard.showLevelComplete}
-        foundWords={gameBoard.foundWords}
+        showGameOver={modalProps.showGameOver}
+        showLevelComplete={modalProps.showLevelComplete}
+        foundWords={gameStateProps.foundWords}
+        totalWords={gameStateProps.levelWords.length}
         level={level}
         canRevive={canRevive}
         onRevive={handleReviveClick}
-        onGoHome={gameBoard.handleGoHome}
+        onGoHome={gameActions.handleGoHome}
         onAdvanceLevel={onAdvanceLevel}
         onStopGame={onStopGame}
       />

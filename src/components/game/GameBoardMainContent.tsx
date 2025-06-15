@@ -1,3 +1,4 @@
+
 import React from 'react';
 import GameBoardGrid from './GameBoardGrid';
 import WordsList from './WordsList';
@@ -10,38 +11,41 @@ interface FoundWord {
   points: number;
 }
 
-interface GameBoardMainContentProps {
+interface BoardProps {
   boardData: { board: string[][]; placedWords: any[] };
   size: number;
   selectedCells: Position[];
   isDragging: boolean;
+}
+
+interface GameStateProps {
   foundWords: FoundWord[];
   levelWords: string[];
+  hintsUsed: number;
+  currentLevelScore: number;
+}
+
+interface CellInteractionProps {
+  handleCellStart: (row: number, col: number) => void;
+  handleCellMove: (row: number, col: number) => void;
+  handleCellEnd: () => void;
   isCellSelected: (row: number, col: number) => boolean;
   isCellPermanentlyMarked: (row: number, col: number) => boolean;
   isCellHintHighlighted: (row: number, col: number) => boolean;
-  handleCellStart: (row: number, col: number) => void;
-  handleCellMoveWithValidation: (row: number, col: number) => void;
-  handleCellEndWithValidation: () => void;
   getWordColor: (wordIndex: number) => string;
   getCellWordIndex: (row: number, col: number) => number;
 }
 
+interface GameBoardMainContentProps {
+  boardProps: BoardProps;
+  gameStateProps: GameStateProps;
+  cellInteractionProps: CellInteractionProps;
+}
+
 const GameBoardMainContent = ({
-  boardData,
-  size,
-  selectedCells,
-  isDragging,
-  foundWords,
-  levelWords,
-  isCellSelected,
-  isCellPermanentlyMarked,
-  isCellHintHighlighted,
-  handleCellStart,
-  handleCellMoveWithValidation,
-  handleCellEndWithValidation,
-  getWordColor,
-  getCellWordIndex
+  boardProps,
+  gameStateProps,
+  cellInteractionProps
 }: GameBoardMainContentProps) => {
   const isMobile = useIsMobile();
 
@@ -53,27 +57,27 @@ const GameBoardMainContent = ({
         ${isMobile ? 'p-3' : 'p-6'}
       `}>
         <GameBoardGrid
-          boardData={boardData}
-          size={size}
-          selectedCells={selectedCells}
-          isDragging={isDragging}
-          isCellSelected={isCellSelected}
-          isCellPermanentlyMarked={isCellPermanentlyMarked}
-          isCellHintHighlighted={isCellHintHighlighted}
-          handleCellStart={handleCellStart}
-          handleCellMove={handleCellMoveWithValidation}
-          handleCellEnd={handleCellEndWithValidation}
-          getWordColor={getWordColor}
-          getCellWordIndex={getCellWordIndex}
+          boardData={boardProps.boardData}
+          size={boardProps.size}
+          selectedCells={boardProps.selectedCells}
+          isDragging={boardProps.isDragging}
+          isCellSelected={cellInteractionProps.isCellSelected}
+          isCellPermanentlyMarked={cellInteractionProps.isCellPermanentlyMarked}
+          isCellHintHighlighted={cellInteractionProps.isCellHintHighlighted}
+          handleCellStart={cellInteractionProps.handleCellStart}
+          handleCellMove={cellInteractionProps.handleCellMove}
+          handleCellEnd={cellInteractionProps.handleCellEnd}
+          getWordColor={cellInteractionProps.getWordColor}
+          getCellWordIndex={cellInteractionProps.getCellWordIndex}
         />
       </div>
 
       {/* Lista de palavras sem scroll - layout flexível */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20">
         <WordsList 
-          levelWords={levelWords}
-          foundWords={foundWords}
-          getWordColor={getWordColor}
+          levelWords={gameStateProps.levelWords}
+          foundWords={gameStateProps.foundWords}
+          getWordColor={cellInteractionProps.getWordColor}
         />
       </div>
     </>

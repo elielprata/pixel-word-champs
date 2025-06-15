@@ -14,6 +14,7 @@ interface GameModalsProps {
   showGameOver: boolean;
   showLevelComplete: boolean;
   foundWords: FoundWord[];
+  totalWords: number;
   level: number;
   canRevive: boolean;
   onRevive: () => void;
@@ -26,6 +27,7 @@ const GameModals = ({
   showGameOver,
   showLevelComplete,
   foundWords,
+  totalWords,
   level,
   canRevive,
   onRevive,
@@ -41,6 +43,7 @@ const GameModals = ({
     totalScore, 
     level,
     foundWordsCount: foundWords.length,
+    totalWords,
     foundWords: foundWords.map(fw => fw.word)
   }, 'GAME_MODALS');
 
@@ -81,7 +84,8 @@ const GameModals = ({
     logger.info('🏆 Modal de nível completado deve estar visível', {
       level,
       totalScore,
-      foundWordsCount: foundWords.length
+      foundWordsCount: foundWords.length,
+      totalWords
     }, 'GAME_MODALS');
   }
 
@@ -91,7 +95,7 @@ const GameModals = ({
         isOpen={showGameOver}
         score={totalScore}
         wordsFound={foundWords.length}
-        totalWords={5}
+        totalWords={totalWords}
         onRevive={handleRevive}
         onGoHome={handleGameOverStop}
         canRevive={canRevive}
