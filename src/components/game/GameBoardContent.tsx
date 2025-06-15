@@ -4,13 +4,6 @@ import GameBoardHeader from './GameBoardHeader';
 import GameBoardMainContent from './GameBoardMainContent';
 import GameModals from './GameModals';
 import GameBoardLogic from './GameBoardLogic';
-import { logger } from '@/utils/logger';
-
-interface FoundWord {
-  word: string;
-  positions: Array<{row: number, col: number}>;
-  points: number;
-}
 
 interface GameBoardContentProps {
   level: number;
@@ -37,21 +30,9 @@ const GameBoardContent = ({
 }: GameBoardContentProps) => {
   const handleReviveClick = (closeGameOver: () => void) => {
     if (onRevive) {
-      logger.info('Revive ativado', { 
-        level,
-        timeLeft 
-      }, 'GAME_BOARD_CONTENT');
       onRevive();
       closeGameOver();
     }
-  };
-
-  const handleUseHintClick = (useHint: () => void) => {
-    logger.info('Dica utilizada', { 
-      level,
-      timeLeft 
-    }, 'GAME_BOARD_CONTENT');
-    useHint();
   };
 
   return (
@@ -66,7 +47,6 @@ const GameBoardContent = ({
     >
       {(logicProps) => (
         <>
-          {/* Header do jogo com estatísticas */}
           <GameBoardHeader
             level={level}
             timeLeft={timeLeft}
@@ -74,10 +54,9 @@ const GameBoardContent = ({
             levelWords={logicProps.levelWords}
             hintsUsed={logicProps.hintsUsed}
             currentLevelScore={logicProps.currentLevelScore}
-            onUseHint={() => handleUseHintClick(logicProps.useHint)}
+            onUseHint={logicProps.useHint}
           />
 
-          {/* Conteúdo principal do tabuleiro */}
           <GameBoardMainContent
             boardData={logicProps.boardData}
             size={logicProps.size}
@@ -89,13 +68,12 @@ const GameBoardContent = ({
             isCellPermanentlyMarked={logicProps.isCellPermanentlyMarked}
             isCellHintHighlighted={logicProps.isCellHintHighlighted}
             handleCellStart={logicProps.handleCellStart}
-            handleCellMoveWithValidation={logicProps.handleCellMoveWithValidation}
-            handleCellEndWithValidation={logicProps.handleCellEndWithValidation}
+            handleCellMoveWithValidation={logicProps.handleCellMove}
+            handleCellEndWithValidation={logicProps.handleCellEnd}
             getWordColor={logicProps.getWordColor}
             getCellWordIndex={logicProps.getCellWordIndex}
           />
 
-          {/* Modais do jogo */}
           <GameModals
             showGameOver={logicProps.showGameOver}
             showLevelComplete={logicProps.showLevelComplete}
@@ -114,4 +92,3 @@ const GameBoardContent = ({
 };
 
 export default GameBoardContent;
-

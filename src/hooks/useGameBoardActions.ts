@@ -1,4 +1,3 @@
-
 import { useGameInteractions } from '@/hooks/useGameInteractions';
 import { type Position } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';

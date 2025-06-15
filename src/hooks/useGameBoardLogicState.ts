@@ -7,12 +7,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { logger } from "@/utils/logger";
 import { type Position } from "@/utils/boardUtils";
 
-interface FoundWord {
-  word: string;
-  positions: Position[];
-  points: number;
-}
-
 interface GameBoardLogicStateProps {
   level: number;
   timeLeft: number;
@@ -33,33 +27,6 @@ export const useGameBoardLogicState = ({
   const isMobile = useIsMobile();
   const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
 
-  useEffect(() => {
-    logger.info("🎮 GameBoardLogic renderizado", {
-      level,
-      isMobile,
-      isLoading,
-      hasError: !!error,
-      boardSize: boardData.board.length,
-      levelWordsCount: levelWords.length,
-      placedWordsCount: boardData.placedWords.length,
-      timeLeft,
-    }, "GAME_BOARD_LOGIC");
-  }, [level, isMobile, isLoading, error, boardData, levelWords, timeLeft]);
-
-  useEffect(() => {
-    if (boardData.board.length > 0) {
-      logger.info("📋 Dados do tabuleiro recebidos", {
-        level,
-        isMobile,
-        boardSize: boardData.board.length,
-        levelWords,
-        placedWords: boardData.placedWords.map((pw) => pw.word),
-        boardPreview: boardData.board.slice(0, 2).map((row) => row.join("")),
-      }, "GAME_BOARD_LOGIC");
-    }
-  }, [boardData, levelWords, level, isMobile]);
-
-  // NOVO: Usa ultra-simples
   const {
     startCell,
     currentCell,
@@ -76,7 +43,6 @@ export const useGameBoardLogicState = ({
     hintsUsed,
     showGameOver,
     showLevelComplete,
-    isLevelCompleted,
     setHintsUsed,
     setShowGameOver,
     setHintHighlightedCells,
@@ -84,17 +50,26 @@ export const useGameBoardLogicState = ({
     isCellPermanentlyMarked,
     isCellHintHighlighted,
     closeGameOver,
-  } = useGameLogic(level, timeLeft, levelWords, onWordFound, (levelScore) => {
-    logger.info("🎉 Nível completado", {
+  } = useGameLogic(level, timeLeft, levelWords, onWordFound, onLevelComplete);
+
+  // Calcular seleção atual
+  let selectedCells: Position[] = [];
+  if (isDragging && startCell && currentCell) {
+    selectedCells = getLinearPath(startCell, currentCell);
+  }
+
+  useEffect(() => {
+    logger.info("🎮 GameBoardLogic inicializado", {
       level,
-      levelScore,
-      foundWordsCount: foundWords.length,
       isMobile,
+      boardSize: boardData.board.length,
+      levelWordsCount: levelWords.length,
+      timeLeft,
     }, "GAME_BOARD_LOGIC");
-    onLevelComplete(levelScore);
-  });
+  }, [level, isMobile, boardData, levelWords, timeLeft]);
 
   return {
+    // Board data
     boardData,
     size,
     levelWords,
@@ -102,21 +77,19 @@ export const useGameBoardLogicState = ({
     error,
     isMobile,
 
-    // Ultra-simples:
-    startCell,
-    currentCell,
+    // Selection state
+    selectedCells,
     isDragging,
     handleStart,
     handleDrag,
     handleEnd,
     isCellSelected,
-    getLinearPath,
 
+    // Game state
     foundWords,
     hintsUsed,
     showGameOver,
     showLevelComplete,
-    isLevelCompleted,
     setHintsUsed,
     setShowGameOver,
     setHintHighlightedCells,

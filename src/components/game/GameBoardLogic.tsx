@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { useGameBoardLogicState } from '@/hooks/useGameBoardLogicState';
-import { useGameBoardActions } from '@/hooks/useGameBoardActions';
+import { useGameInteractions } from '@/hooks/useGameInteractions';
 import { type Position } from '@/utils/boardUtils';
+import { isLinearPath } from '@/hooks/word-selection/validateLinearPath';
 import { logger } from '@/utils/logger';
 
 interface FoundWord {
@@ -28,8 +29,8 @@ interface GameBoardLogicProps {
     selectedCells: Position[];
     isDragging: boolean;
     handleCellStart: (row: number, col: number) => void;
-    handleCellMoveWithValidation: (row: number, col: number) => void;
-    handleCellEndWithValidation: () => void;
+    handleCellMove: (row: number, col: number) => void;
+    handleCellEnd: () => void;
     isCellSelected: (row: number, col: number) => boolean;
     isCellPermanentlyMarked: (row: number, col: number) => boolean;
     isCellHintHighlighted: (row: number, col: number) => boolean;
@@ -55,7 +56,6 @@ const GameBoardLogic = ({
   onRevive,
   children
 }: GameBoardLogicProps) => {
-  // Use the state management hook
   const state = useGameBoardLogicState({
     level,
     timeLeft,
@@ -65,44 +65,62 @@ const GameBoardLogic = ({
     onRevive
   });
 
-  // Use the actions hook
-  const actions = useGameBoardActions({
-    foundWords: state.foundWords,
-    levelWords: state.levelWords,
-    boardData: state.boardData,
-    hintsUsed: state.hintsUsed,
-    level,
-    isMobile: state.isMobile,
+  const { useHint, handleRevive, handleGoHome } = useGameInteractions(
+    state.foundWords,
+    state.levelWords,
+    state.boardData,
+    state.hintsUsed,
+    state.setHintsUsed,
+    state.setHintHighlightedCells,
     canRevive,
-    onTimeUp,
-    setHintsUsed: state.setHintsUsed,
-    setHintHighlightedCells: state.setHintHighlightedCells,
-    setShowGameOver: state.setShowGameOver,
-    handleCellEnd: state.handleEnd,
-    handleCellMove: state.handleDrag,
-    addFoundWord: state.addFoundWord
-  });
+    () => {},
+    state.setShowGameOver,
+    onTimeUp
+  );
 
-  // Novo: cálculo dinâmico da seleção real
-  let selectedCells: Position[] = [];
-  if (state.isDragging && state.startCell && state.currentCell) {
-    selectedCells = state.getLinearPath(state.startCell, state.currentCell);
-  }
+  // Validação e processamento de fim de seleção
+  const handleCellEnd = () => {
+    const finalSelection = state.handleEnd();
 
-  // Calcular pontuação atual do nível (palavras encontradas)
+    if (finalSelection.length >= 3 && isLinearPath(finalSelection)) {
+      const word = finalSelection.map(pos => state.boardData.board[pos.row][pos.col]).join('');
+      
+      const isValidWord = state.levelWords.includes(word);
+      const isAlreadyFound = state.foundWords.some(fw => fw.word === word);
+
+      logger.info('🔍 Tentativa de palavra', {
+        word,
+        level,
+        isValid: isValidWord && !isAlreadyFound,
+        alreadyFound: isAlreadyFound
+      }, 'GAME_BOARD_LOGIC');
+
+      if (isValidWord && !isAlreadyFound) {
+        state.addFoundWord(word, finalSelection);
+      }
+    }
+  };
+
+  // Cores para palavras encontradas
+  const getWordColor = (wordIndex: number) => {
+    const colors = [
+      'bg-gradient-to-br from-blue-500 to-blue-600',
+      'bg-gradient-to-br from-purple-500 to-violet-600',
+      'bg-gradient-to-br from-emerald-500 to-green-600',
+      'bg-gradient-to-br from-orange-500 to-amber-600',
+      'bg-gradient-to-br from-pink-500 to-rose-600',
+      'bg-gradient-to-br from-cyan-500 to-teal-600',
+    ];
+    return colors[wordIndex % colors.length];
+  };
+
+  const getCellWordIndex = (row: number, col: number) => {
+    return state.foundWords.findIndex(fw =>
+      fw.positions.some(pos => pos.row === row && pos.col === col)
+    );
+  };
+
   const currentLevelScore = state.foundWords.reduce((sum, fw) => sum + fw.points, 0);
-
-  // Log final antes de retornar
-  logger.debug('🎯 GameBoardLogic props finais', {
-    level,
-    isMobile: state.isMobile,
-    boardDataReady: state.boardData.board.length > 0,
-    levelWordsCount: state.levelWords.length,
-    foundWordsCount: state.foundWords.length,
-    currentLevelScore,
-    selectedCellsCount: selectedCells.length,
-    isDragging: state.isDragging
-  }, 'GAME_BOARD_LOGIC');
 
   return (
     <>
@@ -112,19 +130,19 @@ const GameBoardLogic = ({
         levelWords: state.levelWords,
         foundWords: state.foundWords,
         hintsUsed: state.hintsUsed,
-        selectedCells,
+        selectedCells: state.selectedCells,
         isDragging: state.isDragging,
         handleCellStart: state.handleStart,
-        handleCellMoveWithValidation: actions.handleCellMoveWithValidation,
-        handleCellEndWithValidation: actions.handleCellEndWithValidation,
+        handleCellMove: state.handleDrag,
+        handleCellEnd,
         isCellSelected: state.isCellSelected,
         isCellPermanentlyMarked: state.isCellPermanentlyMarked,
         isCellHintHighlighted: state.isCellHintHighlighted,
-        useHint: actions.useHint,
-        handleRevive: actions.handleRevive,
-        handleGoHome: actions.handleGoHome,
-        getWordColor: actions.getWordColor,
-        getCellWordIndex: actions.getCellWordIndex,
+        useHint,
+        handleRevive,
+        handleGoHome,
+        getWordColor,
+        getCellWordIndex,
         currentLevelScore,
         showGameOver: state.showGameOver,
         showLevelComplete: state.showLevelComplete,
