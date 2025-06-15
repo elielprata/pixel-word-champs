@@ -28,18 +28,22 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
   // Apenas a primeira palavra (maior pontuação) é oculta
   const hiddenWords = new Set([sortedByPoints[0]?.word]);
 
+  // Contar apenas palavras encontradas que NÃO são ocultas
+  const visibleFoundWords = foundWords.filter(fw => !hiddenWords.has(fw.word));
+  const actualFoundCount = visibleFoundWords.length;
+
   return (
     <div className="p-1.5 space-y-1.5">
-      {/* Header compacto */}
+      {/* Header compacto com contagem corrigida */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-1">
           <Target className="w-3 h-3 text-primary" />
           <span className="text-xs font-semibold text-foreground">Palavras</span>
         </div>
         <div className="px-1.5 py-0.5 bg-muted rounded-full">
-          <span className="text-xs font-bold text-primary">{foundWords.length}</span>
+          <span className="text-xs font-bold text-primary">{actualFoundCount}</span>
           <span className="text-xs text-muted-foreground mx-0.5">/</span>
-          <span className="text-xs text-muted-foreground">{levelWords.length}</span>
+          <span className="text-xs text-muted-foreground">{levelWords.length - hiddenWords.size}</span>
         </div>
       </div>
       
@@ -98,8 +102,8 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
         })}
       </div>
       
-      {/* Status de conclusão compacto */}
-      {foundWords.length === levelWords.length && (
+      {/* Status de conclusão compacto - corrigido para excluir palavras ocultas */}
+      {actualFoundCount === (levelWords.length - hiddenWords.size) && (
         <div className="flex items-center justify-center gap-1 px-2 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-primary-foreground rounded-md">
           <Star className="w-3 h-3" />
           <span className="text-xs font-semibold">Nível Completo!</span>
