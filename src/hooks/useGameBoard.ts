@@ -4,7 +4,6 @@ import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useSimpleSelection } from '@/hooks/useSimpleSelection';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useGameValidation } from '@/hooks/useGameValidation';
-import { useGameScore } from '@/hooks/useGameScore';
 import { useGameState } from '@/hooks/useGameState';
 import { useCellInteractions } from '@/hooks/useCellInteractions';
 import { useGameBoardProps } from '@/hooks/useGameBoardProps';
@@ -33,9 +32,8 @@ export const useGameBoard = ({
   const isMobile = useIsMobile();
   const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
   
-  // Usar hooks especializados
+  // CORREÇÃO: Usar APENAS o useGameState consolidado
   const gameState = useGameState(level, timeLeft);
-  const { currentLevelScore } = useGameScore(gameState.foundWords);
   const { validateAndAddWord } = useGameValidation(gameState.foundWords, levelWords, onWordFound);
   const cellInteractions = useCellInteractions(
     gameState.foundWords,
@@ -54,18 +52,26 @@ export const useGameBoard = ({
     getLinearPath
   } = useSimpleSelection();
 
-  // ETAPA 3: REMOVIDA lógica duplicada de level complete
-  // A lógica de level complete agora fica apenas no useGameState
-
-  // Finalizar seleção com validação
+  // Finalizar seleção com validação - CORREÇÃO: Apenas uma adição por palavra
   const handleCellEnd = useCallback(() => {
     const finalSelection = handleEnd();
 
     if (finalSelection.length >= 3 && isLinearPath(finalSelection)) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
+      logger.info(`🔍 Tentativa de seleção: "${word}"`, { 
+        word, 
+        currentFoundCount: gameState.foundWords.length 
+      }, 'GAME_BOARD');
+      
       const validatedWord = validateAndAddWord(word, finalSelection);
       if (validatedWord) {
+        logger.info(`✅ Adicionando palavra única: "${word}"`, { 
+          beforeCount: gameState.foundWords.length,
+          word: validatedWord.word
+        }, 'GAME_BOARD');
+        
+        // CORREÇÃO CRÍTICA: Apenas UMA chamada para addFoundWord
         gameState.addFoundWord(validatedWord);
       }
     }
@@ -88,7 +94,7 @@ export const useGameBoard = ({
     foundWords: gameState.foundWords,
     levelWords,
     hintsUsed: gameState.hintsUsed,
-    currentLevelScore,
+    currentLevelScore: gameState.currentLevelScore,
     showGameOver: gameState.showGameOver,
     showLevelComplete: gameState.showLevelComplete
   });

@@ -1,5 +1,5 @@
 
-import { useCallback, useMemo } from 'react';
+import { useState } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGamePointsConfig } from './useGamePointsConfig';
 import { logger } from '@/utils/logger';
@@ -17,47 +17,38 @@ export const useGameValidation = (
 ) => {
   const { getPointsForWord } = useGamePointsConfig();
 
-  // Memoizar set de palavras encontradas para O(1) lookup
-  const foundWordsSet = useMemo(() => {
-    return new Set(foundWords.map(fw => fw.word));
-  }, [foundWords]);
-
-  // Memoizar set de palavras válidas para O(1) lookup
-  const levelWordsSet = useMemo(() => {
-    return new Set(levelWords);
-  }, [levelWords]);
-
-  const isWordAlreadyFound = useCallback((word: string) => {
-    return foundWordsSet.has(word);
-  }, [foundWordsSet]);
-
-  const isValidWord = useCallback((word: string) => {
-    return levelWordsSet.has(word);
-  }, [levelWordsSet]);
-
-  const validateAndAddWord = useCallback((word: string, positions: Position[]) => {
-    if (isWordAlreadyFound(word)) {
-      logger.warn(`Palavra já encontrada: "${word}"`, 'GAME_VALIDATION');
+  const validateAndAddWord = (word: string, positions: Position[]) => {
+    // Verificar se é uma palavra válida do nível
+    if (!levelWords.includes(word)) {
+      logger.warn(`❌ Palavra "${word}" não está na lista do nível`, { word, levelWords }, 'GAME_VALIDATION');
       return null;
     }
 
-    if (!isValidWord(word)) {
-      logger.debug(`Palavra inválida: "${word}"`, 'GAME_VALIDATION');
+    // Verificar se já foi encontrada - PROTEÇÃO CRÍTICA
+    const isAlreadyFound = foundWords.some(fw => fw.word === word);
+    if (isAlreadyFound) {
+      logger.warn(`⚠️ Palavra "${word}" já foi encontrada - IGNORANDO`, { 
+        word, 
+        foundWords: foundWords.map(fw => fw.word) 
+      }, 'GAME_VALIDATION');
       return null;
     }
 
     const points = getPointsForWord(word);
-    const newFoundWord = { word, positions: [...positions], points };
+    const validatedWord = { word, positions: [...positions], points };
     
-    logger.info(`Palavra validada: "${word}" = ${points} pontos`, 'GAME_VALIDATION');
+    logger.info(`✅ Palavra validada: "${word}" = ${points} pontos`, { 
+      validatedWord,
+      totalFoundWords: foundWords.length + 1 
+    }, 'GAME_VALIDATION');
+    
+    // Chamar callback para UI
     onWordFound(word, points);
     
-    return newFoundWord;
-  }, [isWordAlreadyFound, isValidWord, getPointsForWord, onWordFound]);
+    return validatedWord;
+  };
 
   return {
-    validateAndAddWord,
-    isWordAlreadyFound,
-    isValidWord
+    validateAndAddWord
   };
 };
