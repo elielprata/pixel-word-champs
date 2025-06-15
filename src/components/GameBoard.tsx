@@ -4,7 +4,7 @@ import GameBoardLayout from './game/GameBoardLayout';
 import GameBoardContent from './game/GameBoardContent';
 import GameBoardLoadingState from './game/GameBoardLoadingState';
 import GameBoardErrorState from './game/GameBoardErrorState';
-import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
+import { useSimpleGameBoard } from '@/hooks/useSimpleGameBoard';
 import { logger } from '@/utils/logger';
 
 interface GameBoardProps {
@@ -30,31 +30,32 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('🎮 Renderizando GameBoard otimizado', { 
-    level, 
-    timeLeft, 
-    canRevive 
-  }, 'GAME_BOARD');
+  logger.debug('🎮 GameBoard simplificado', { level, timeLeft }, 'GAME_BOARD');
 
-  const { isLoading, error } = useOptimizedBoard(level);
+  const gameBoard = useSimpleGameBoard({
+    level,
+    timeLeft,
+    onWordFound,
+    onLevelComplete
+  });
 
-  if (isLoading) {
+  if (gameBoard.isLoading) {
     return (
       <GameBoardLayout>
         <GameBoardLoadingState 
           level={level} 
-          debugInfo="Carregando palavras otimizadas..." 
+          debugInfo="Carregando jogo simplificado..." 
         />
       </GameBoardLayout>
     );
   }
 
-  if (error) {
+  if (gameBoard.error) {
     return (
       <GameBoardLayout>
         <GameBoardErrorState 
-          error={error} 
-          debugInfo="Erro no sistema otimizado de palavras"
+          error={gameBoard.error} 
+          debugInfo="Erro no sistema simplificado"
         />
       </GameBoardLayout>
     );
