@@ -1,14 +1,12 @@
 
 import { useState, useEffect } from 'react';
-import { useBoardGeneration } from './useBoardGeneration';
+import { generateBoard } from '@/utils/boardUtils';
 import { useSimpleWordSelection } from './useSimpleWordSelection';
-import { getBoardSize, getMobileBoardSize, type PlacedWord } from '@/utils/boardUtils';
-import { useIsMobile } from './use-mobile';
 import { logger } from '@/utils/logger';
 
 interface BoardData {
   board: string[][];
-  placedWords: PlacedWord[];
+  placedWords: any[];
 }
 
 interface OptimizedBoardResult {
@@ -21,51 +19,43 @@ interface OptimizedBoardResult {
 
 export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
   const [boardData, setBoardData] = useState<BoardData>({ board: [], placedWords: [] });
-  const [error, setError] = useState<string | null>(null);
-  const isMobile = useIsMobile();
+  const [size, setSize] = useState<number>(0);
   
-  // Usar seleção aleatória simples
-  const { levelWords, isLoading: wordsLoading, error: wordsError } = useSimpleWordSelection(level);
-  const { generateBoard } = useBoardGeneration();
-
-  const size = isMobile ? getMobileBoardSize(level) : getBoardSize(level);
+  const { levelWords, isLoading, error } = useSimpleWordSelection(level);
 
   useEffect(() => {
-    if (wordsLoading || levelWords.length === 0) return;
+    if (levelWords.length === 0 || isLoading) return;
 
-    logger.info('🏗️ Gerando tabuleiro otimizado com palavras aleatórias', {
-      level,
-      isMobile,
-      size,
-      wordsCount: levelWords.length,
-      words: levelWords
+    logger.info('🎲 Gerando tabuleiro otimizado', { 
+      level, 
+      wordsCount: levelWords.length 
     }, 'OPTIMIZED_BOARD');
 
     try {
-      const newBoardData = generateBoard(size, levelWords);
-      setBoardData(newBoardData);
-      setError(null);
+      const result = generateBoard(levelWords, level);
       
-      logger.info('✅ Tabuleiro otimizado gerado', {
-        level,
-        placedWords: newBoardData.placedWords.length,
-        totalWords: levelWords.length
-      }, 'OPTIMIZED_BOARD');
-      
-    } catch (err) {
-      logger.error('❌ Erro ao gerar tabuleiro otimizado', { err }, 'OPTIMIZED_BOARD');
-      setError(err instanceof Error ? err.message : 'Erro na geração do tabuleiro');
+      if (result) {
+        setBoardData(result.boardData);
+        setSize(result.size);
+        
+        logger.info('✅ Tabuleiro gerado com sucesso', { 
+          level,
+          size: result.size,
+          wordsPlaced: result.boardData.placedWords.length
+        }, 'OPTIMIZED_BOARD');
+      } else {
+        throw new Error('Falha na geração do tabuleiro');
+      }
+    } catch (error) {
+      logger.error('❌ Erro na geração do tabuleiro', { error, level }, 'OPTIMIZED_BOARD');
     }
-  }, [levelWords, wordsLoading, level, size, isMobile, generateBoard]);
-
-  // Combinar erros de palavras e tabuleiro
-  const combinedError = wordsError || error;
+  }, [levelWords, level, isLoading]);
 
   return {
     boardData,
     size,
     levelWords,
-    isLoading: wordsLoading,
-    error: combinedError
+    isLoading,
+    error
   };
 };
