@@ -13,20 +13,9 @@ import AuthProvider from '@/components/auth/AuthProvider';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { logger } from '@/utils/logger';
-import { initializeCacheWarming } from '@/utils/cacheWarming';
 
 function App() {
   logger.debug('Aplicação inicializada', undefined, 'APP');
-
-  // Inicializar cache warming automático
-  useEffect(() => {
-    try {
-      initializeCacheWarming();
-      logger.info('✅ Cache warming automático inicializado', undefined, 'APP');
-    } catch (error) {
-      logger.error('❌ Erro ao inicializar cache warming', { error }, 'APP');
-    }
-  }, []);
 
   return (
     <ErrorBoundary>
