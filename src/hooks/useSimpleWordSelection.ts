@@ -22,7 +22,7 @@ export const useSimpleWordSelection = (level: number): SimpleWordSelectionResult
       setIsLoading(true);
       setError(null);
       
-      logger.info('🎲 Iniciando seleção de palavras', { level }, 'SIMPLE_WORD_SELECTION');
+      logger.info('🎲 Iniciando seleção simples de palavras', { level }, 'SIMPLE_WORD_SELECTION');
       
       try {
         const boardSize = getBoardSize(level);
@@ -39,7 +39,7 @@ export const useSimpleWordSelection = (level: number): SimpleWordSelectionResult
           // Registrar uso das palavras
           await SimpleWordService.recordWordsUsage(words);
           
-          logger.info('✅ Seleção concluída com sucesso', { 
+          logger.info('✅ Seleção simples concluída', { 
             wordsCount: words.length,
             level,
             words 
@@ -49,9 +49,9 @@ export const useSimpleWordSelection = (level: number): SimpleWordSelectionResult
         }
 
       } catch (error) {
-        logger.error('❌ Erro na seleção - usando emergência', { error, level }, 'SIMPLE_WORD_SELECTION');
+        logger.error('❌ Erro na seleção simples - usando emergência', { error, level }, 'SIMPLE_WORD_SELECTION');
         
-        // Fallback para palavras de emergência
+        // Fallback direto para palavras de emergência
         const emergencyWords = ['CASA', 'AMOR', 'VIDA', 'TEMPO', 'MUNDO'];
         setLevelWords(emergencyWords);
         setSource('emergency');
