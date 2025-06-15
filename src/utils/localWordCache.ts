@@ -45,4 +45,25 @@ export class LocalWordCacheManager {
     simpleCache = [];
     cacheTimestamp = 0;
   }
+
+  // Métodos adicionais para compatibilidade com cache-warming
+  static initializeCache(): void {
+    logger.info('Cache inicializado (modo simples)', undefined, 'LOCAL_CACHE');
+  }
+
+  static cleanExpiredCache(): void {
+    if (Date.now() - cacheTimestamp > CACHE_DURATION) {
+      this.clearCache();
+      logger.info('Cache expirado limpo', undefined, 'LOCAL_CACHE');
+    }
+  }
+
+  static getDetailedMetrics() {
+    return {
+      ...this.getCacheStats(),
+      hitRate: 0,
+      missRate: 0,
+      avgResponseTime: 0
+    };
+  }
 }
