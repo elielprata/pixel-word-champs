@@ -38,6 +38,9 @@ export const useGameBoardProps = ({
   showGameOver,
   showLevelComplete
 }: UseGameBoardPropsParams) => {
+  // ETAPA 4: Props otimizadas com constante de palavras alvo
+  const GAME_TARGET_WORDS = 5;
+
   // Memoizar props agrupadas
   const boardProps = useMemo(() => ({
     boardData,
@@ -50,17 +53,20 @@ export const useGameBoardProps = ({
     foundWords,
     levelWords,
     hintsUsed,
-    currentLevelScore
+    currentLevelScore,
+    targetWords: GAME_TARGET_WORDS // ETAPA 4: Sempre 5 palavras como objetivo
   }), [foundWords, levelWords, hintsUsed, currentLevelScore]);
 
   const modalProps = useMemo(() => ({
     showGameOver,
-    showLevelComplete
-  }), [showGameOver, showLevelComplete]);
+    showLevelComplete,
+    gameCompleted: foundWords.length >= GAME_TARGET_WORDS // ETAPA 4: Verificação otimizada
+  }), [showGameOver, showLevelComplete, foundWords.length]);
 
   return {
     boardProps,
     gameStateProps,
-    modalProps
+    modalProps,
+    GAME_TARGET_WORDS // ETAPA 4: Exportar constante para uso externo
   };
 };
