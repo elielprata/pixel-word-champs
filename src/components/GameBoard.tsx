@@ -1,7 +1,6 @@
 
 import React from 'react';
 import GameBoardLayout from './game/GameBoardLayout';
-import GameBoardHeader from './game/GameBoardHeader';
 import GameBoardContent from './game/GameBoardContent';
 import GameBoardLoadingState from './game/GameBoardLoadingState';
 import GameBoardErrorState from './game/GameBoardErrorState';
@@ -31,20 +30,20 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('Renderizando GameBoard híbrido otimizado', { 
+  logger.debug('Renderizando GameBoard simplificado', { 
     level, 
     timeLeft, 
     canRevive 
   }, 'GAME_BOARD');
 
-  const { levelWords, isLoading, error } = useOptimizedBoard(level);
+  const { isLoading, error } = useOptimizedBoard(level);
 
   if (isLoading) {
     return (
       <GameBoardLayout>
         <GameBoardLoadingState 
           level={level} 
-          debugInfo="Carregando palavras aleatórias..." 
+          debugInfo="Carregando palavras..." 
         />
       </GameBoardLayout>
     );
