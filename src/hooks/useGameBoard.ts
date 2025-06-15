@@ -1,4 +1,3 @@
-
 import { useMemo, useCallback } from 'react';
 import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useSimpleSelection } from '@/hooks/useSimpleSelection';
@@ -32,9 +31,20 @@ export const useGameBoard = ({
   const isMobile = useIsMobile();
   const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
   
-  // CORREÇÃO: Usar APENAS o useGameState consolidado
+  // Estado do jogo consolidado
   const gameState = useGameState(level, timeLeft);
-  const { validateAndAddWord } = useGameValidation(gameState.foundWords, levelWords, onWordFound);
+  
+  // CORREÇÃO: Criar callback que chama onWordFound apenas uma vez
+  const handleWordFoundCallback = useCallback((word: string, points: number) => {
+    logger.info(`🎯 CALLBACK - Palavra encontrada: "${word}" = ${points} pontos`, { 
+      word, 
+      points,
+      currentCount: gameState.foundWords.length 
+    }, 'GAME_BOARD');
+    onWordFound(word, points);
+  }, [onWordFound, gameState.foundWords.length]);
+
+  const { validateAndAddWord } = useGameValidation(gameState.foundWords, levelWords, handleWordFoundCallback);
   const cellInteractions = useCellInteractions(
     gameState.foundWords,
     gameState.permanentlyMarkedCells,
@@ -52,30 +62,39 @@ export const useGameBoard = ({
     getLinearPath
   } = useSimpleSelection();
 
-  // Finalizar seleção com validação - CORREÇÃO: Apenas uma adição por palavra
+  // Finalizar seleção com validação - CORREÇÃO CRÍTICA: Apenas uma adição por palavra
   const handleCellEnd = useCallback(() => {
     const finalSelection = handleEnd();
 
     if (finalSelection.length >= 3 && isLinearPath(finalSelection)) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
-      logger.info(`🔍 Tentativa de seleção: "${word}"`, { 
+      logger.info(`🔍 TENTATIVA - Seleção de palavra: "${word}"`, { 
         word, 
-        currentFoundCount: gameState.foundWords.length 
+        beforeCount: gameState.foundWords.length,
+        foundWords: gameState.foundWords.map(fw => fw.word)
       }, 'GAME_BOARD');
       
       const validatedWord = validateAndAddWord(word, finalSelection);
       if (validatedWord) {
-        logger.info(`✅ Adicionando palavra única: "${word}"`, { 
+        logger.info(`✅ ADICIONANDO - Palavra validada: "${word}"`, { 
           beforeCount: gameState.foundWords.length,
-          word: validatedWord.word
+          word: validatedWord.word,
+          points: validatedWord.points
         }, 'GAME_BOARD');
         
-        // CORREÇÃO CRÍTICA: Apenas UMA chamada para addFoundWord
+        // CORREÇÃO: Apenas UMA chamada para addFoundWord - não chamamos onWordFound aqui
         gameState.addFoundWord(validatedWord);
+        
+        // O callback onWordFound será chamado automaticamente pelo useGameState
+        handleWordFoundCallback(validatedWord.word, validatedWord.points);
+        
+        logger.info(`📊 APÓS ADIÇÃO - Contagem atual: ${gameState.foundWords.length + 1}`, { 
+          newCount: gameState.foundWords.length + 1
+        }, 'GAME_BOARD');
       }
     }
-  }, [handleEnd, boardData.board, validateAndAddWord, gameState]);
+  }, [handleEnd, boardData.board, validateAndAddWord, gameState, handleWordFoundCallback]);
 
   // Memoizar seleção atual
   const selectedCells: Position[] = useMemo(() => {
@@ -117,12 +136,9 @@ export const useGameBoard = ({
   });
 
   return {
-    // Board data
     isLoading,
     error,
     isMobile,
-
-    // Grouped props
     boardProps,
     gameStateProps,
     modalProps,

@@ -42,8 +42,8 @@ export const useGameValidation = (
       totalFoundWords: foundWords.length + 1 
     }, 'GAME_VALIDATION');
     
-    // Chamar callback para UI
-    onWordFound(word, points);
+    // CORREÇÃO: Removida a chamada duplicada onWordFound(word, points)
+    // O callback será chamado apenas pelo useGameState quando addFoundWord for executado
     
     return validatedWord;
   };

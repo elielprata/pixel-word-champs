@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGameScoring } from '@/hooks/useGameScoring';
@@ -88,20 +87,38 @@ export const useGameState = (level: number, timeLeft: number) => {
   }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, level, currentLevelScore, updateUserScore, TOTAL_WORDS_REQUIRED]);
 
   const addFoundWord = (newFoundWord: FoundWord) => {
-    // PROTEÇÃO: Verificar se a palavra já foi encontrada
+    // PROTEÇÃO CRÍTICA: Verificar se a palavra já foi encontrada antes de adicionar
     const isAlreadyFound = state.foundWords.some(fw => fw.word === newFoundWord.word);
     if (isAlreadyFound) {
-      logger.warn(`⚠️ Tentativa de adicionar palavra duplicada: "${newFoundWord.word}" - IGNORANDO`, 'GAME_STATE');
+      logger.warn(`⚠️ DUPLICAÇÃO EVITADA - Palavra "${newFoundWord.word}" já existe no estado - IGNORANDO`, {
+        word: newFoundWord.word,
+        currentWords: state.foundWords.map(fw => fw.word)
+      }, 'GAME_STATE');
       return;
     }
 
-    logger.info(`📝 Adicionando palavra: "${newFoundWord.word}" = ${newFoundWord.points} pontos (${state.foundWords.length + 1}/${TOTAL_WORDS_REQUIRED})`);
+    logger.info(`📝 ADICIONANDO PALAVRA - "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
+      word: newFoundWord.word,
+      points: newFoundWord.points,
+      beforeCount: state.foundWords.length,
+      afterCount: state.foundWords.length + 1,
+      targetWords: TOTAL_WORDS_REQUIRED
+    }, 'GAME_STATE');
     
-    setState(prev => ({
-      ...prev,
-      foundWords: [...prev.foundWords, newFoundWord],
-      permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
-    }));
+    setState(prev => {
+      const newState = {
+        ...prev,
+        foundWords: [...prev.foundWords, newFoundWord],
+        permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
+      };
+      
+      logger.info(`✅ ESTADO ATUALIZADO - Total de palavras: ${newState.foundWords.length}`, {
+        totalWords: newState.foundWords.length,
+        words: newState.foundWords.map(fw => fw.word)
+      }, 'GAME_STATE');
+      
+      return newState;
+    });
   };
 
   const setHintsUsed = (value: number | ((prev: number) => number)) => {
