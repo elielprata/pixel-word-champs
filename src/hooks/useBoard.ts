@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { getBoardSize, getMobileBoardSize, type PlacedWord, validateBoardContainsWords } from '@/utils/boardUtils';
-import { useWordSelection } from './useWordSelection';
 import { useBoardGeneration } from './useBoardGeneration';
 import { useIsMobile } from './use-mobile';
+import { useOptimizedBoard } from './useOptimizedBoard';
 import { logger } from '@/utils/logger';
 
 interface BoardData {
@@ -14,7 +14,7 @@ interface BoardData {
 export const useBoard = (level: number) => {
   const [boardData, setBoardData] = useState<BoardData>({ board: [], placedWords: [] });
   const [boardError, setBoardError] = useState<string | null>(null);
-  const { levelWords, isLoading: wordsLoading, error: wordsError, debugInfo } = useWordSelection(level);
+  const { levelWords, isLoading: wordsLoading, error: wordsError } = useOptimizedBoard(level);
   const { generateBoard } = useBoardGeneration();
   const isMobile = useIsMobile();
 
@@ -37,8 +37,7 @@ export const useBoard = (level: number) => {
       isMobile,
       wordsLoading,
       levelWordsCount: levelWords.length,
-      hasWordsError: !!wordsError,
-      debugInfo
+      hasWordsError: !!wordsError
     }, 'USE_BOARD');
 
     // Só tentar gerar se não estiver carregando palavras
@@ -213,6 +212,6 @@ export const useBoard = (level: number) => {
     levelWords,
     isLoading,
     error,
-    debugInfo
+    debugInfo: `Otimizado: ${levelWords.length} palavras carregadas`
   };
 };
