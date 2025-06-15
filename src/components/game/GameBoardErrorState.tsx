@@ -3,6 +3,7 @@ import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import WordSelectionError from './WordSelectionError';
 
 interface ProcessingMetrics {
   totalWords: number;
@@ -15,9 +16,31 @@ interface GameBoardErrorStateProps {
   error: string;
   debugInfo?: string;
   metrics?: ProcessingMetrics | null;
+  level?: number;
+  isWordSelectionError?: boolean;
+  onRetry?: () => void;
 }
 
-const GameBoardErrorState = ({ error, debugInfo, metrics }: GameBoardErrorStateProps) => {
+const GameBoardErrorState = ({ 
+  error, 
+  debugInfo, 
+  metrics, 
+  level = 1,
+  isWordSelectionError = false,
+  onRetry
+}: GameBoardErrorStateProps) => {
+  // Se for erro de seleção de palavras, usar componente específico
+  if (isWordSelectionError) {
+    return (
+      <WordSelectionError
+        error={error}
+        level={level}
+        processingTime={metrics?.processingTime || 0}
+        onRetry={onRetry}
+      />
+    );
+  }
+
   return (
     <Alert variant="destructive">
       <AlertTriangle className="h-4 w-4" />

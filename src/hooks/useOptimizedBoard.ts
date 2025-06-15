@@ -17,6 +17,7 @@ interface OptimizedBoardResult {
   levelWords: string[];
   isLoading: boolean;
   error: string | null;
+  isWordSelectionError: boolean;
 }
 
 export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
@@ -24,7 +25,7 @@ export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
   const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
-  // Usar seleção aleatória simples
+  // Usar seleção simples sem fallbacks
   const { levelWords, isLoading: wordsLoading, error: wordsError } = useSimpleWordSelection(level);
   const { generateBoard } = useBoardGeneration();
 
@@ -33,7 +34,7 @@ export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
   useEffect(() => {
     if (wordsLoading || levelWords.length === 0) return;
 
-    logger.info('🏗️ Gerando tabuleiro otimizado com palavras aleatórias', {
+    logger.info('🏗️ Gerando tabuleiro otimizado', {
       level,
       isMobile,
       size,
@@ -60,12 +61,14 @@ export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
 
   // Combinar erros de palavras e tabuleiro
   const combinedError = wordsError || error;
+  const isWordSelectionError = !!wordsError;
 
   return {
     boardData,
     size,
     levelWords,
     isLoading: wordsLoading,
-    error: combinedError
+    error: combinedError,
+    isWordSelectionError
   };
 };

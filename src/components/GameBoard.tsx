@@ -36,7 +36,7 @@ const GameBoard = ({
     canRevive 
   }, 'GAME_BOARD');
 
-  const { isLoading, error } = useOptimizedBoard(level);
+  const { isLoading, error, isWordSelectionError } = useOptimizedBoard(level);
 
   if (isLoading) {
     return (
@@ -54,7 +54,10 @@ const GameBoard = ({
       <GameBoardLayout>
         <GameBoardErrorState 
           error={error} 
-          debugInfo="Erro na seleção de palavras"
+          debugInfo={isWordSelectionError ? "Erro na seleção de palavras" : "Erro na geração do tabuleiro"}
+          level={level}
+          isWordSelectionError={isWordSelectionError}
+          onRetry={() => window.location.reload()}
         />
       </GameBoardLayout>
     );
