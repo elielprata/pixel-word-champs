@@ -1,5 +1,5 @@
 
-import { useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useSimpleSelection } from '@/hooks/useSimpleSelection';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -35,7 +35,7 @@ export const useGameBoard = ({
   
   // Usar hooks especializados
   const gameState = useGameState(level, timeLeft);
-  const { currentLevelScore, updateUserScore } = useGameScore(gameState.foundWords);
+  const { currentLevelScore } = useGameScore(gameState.foundWords);
   const { validateAndAddWord } = useGameValidation(gameState.foundWords, levelWords, onWordFound);
   const cellInteractions = useCellInteractions(
     gameState.foundWords,
@@ -54,23 +54,8 @@ export const useGameBoard = ({
     getLinearPath
   } = useSimpleSelection();
 
-  // Level Complete quando todas as palavras são encontradas
-  useEffect(() => {
-    if (gameState.foundWords.length === levelWords.length && 
-        levelWords.length > 0 && 
-        !gameState.showLevelComplete && 
-        !gameState.isLevelCompleted) {
-      
-      logger.info(`Level ${level} completed with score ${currentLevelScore}`);
-      
-      gameState.setShowLevelComplete(true);
-      gameState.setIsLevelCompleted(true);
-      
-      updateUserScore(currentLevelScore);
-      onLevelComplete(currentLevelScore);
-    }
-  }, [gameState.foundWords.length, levelWords.length, gameState.showLevelComplete, 
-      gameState.isLevelCompleted, level, onLevelComplete, currentLevelScore, updateUserScore]);
+  // ETAPA 3: REMOVIDA lógica duplicada de level complete
+  // A lógica de level complete agora fica apenas no useGameState
 
   // Finalizar seleção com validação
   const handleCellEnd = useCallback(() => {

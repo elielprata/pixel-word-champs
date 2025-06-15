@@ -28,9 +28,12 @@ export const useGameLogic = (
   
   const { getPointsForWord } = useGamePointsConfig();
 
+  // ETAPA 3: Sempre verificar se completou 5 palavras para level complete
+  const TOTAL_WORDS = 5;
+
   // Reset state when level changes
   useEffect(() => {
-    logger.log(`Resetting game state for level ${level}`);
+    logger.info(`🔄 Resetando estado do jogo para nível ${level}`, { level }, 'GAME_LOGIC');
     setFoundWords([]);
     setPermanentlyMarkedCells([]);
     setHintsUsed(0);
@@ -40,27 +43,35 @@ export const useGameLogic = (
     setIsLevelCompleted(false);
   }, [level]);
 
-  // Detecta quando o tempo acaba - removido log repetitivo
+  // Detecta quando o tempo acaba
   useEffect(() => {
-    if (timeLeft === 0 && !showGameOver) {
+    if (timeLeft === 0 && !showGameOver && !isLevelCompleted) {
+      logger.info('⏰ Tempo esgotado - Game Over', { level, foundWords: foundWords.length }, 'GAME_LOGIC');
       setShowGameOver(true);
     }
-  }, [timeLeft, showGameOver]);
+  }, [timeLeft, showGameOver, isLevelCompleted]);
 
-  // Verifica se completou o nível - corrigido para usar levelWords.length
+  // ETAPA 3: Lógica corrigida - verificar se completou 5 palavras
   useEffect(() => {
-    if (foundWords.length === levelWords.length && levelWords.length > 0 && !showLevelComplete && !isLevelCompleted) {
+    if (foundWords.length === TOTAL_WORDS && !showLevelComplete && !isLevelCompleted) {
       const levelScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
-      logger.log(`Level ${level} completed with score ${levelScore} - NOW registering points in database. Words found: ${foundWords.length}/${levelWords.length}`);
+      
+      logger.info(`🎉 Nível ${level} COMPLETADO! Score: ${levelScore}`, {
+        level,
+        foundWordsCount: foundWords.length,
+        totalWordsRequired: TOTAL_WORDS,
+        foundWords: foundWords.map(fw => fw.word),
+        levelScore
+      }, 'GAME_LOGIC');
       
       setShowLevelComplete(true);
       setIsLevelCompleted(true);
       
-      // Só agora registra os pontos no banco de dados
+      // Registra pontos no banco de dados quando completa o nível
       updateUserScore(levelScore);
       onLevelComplete(levelScore);
     }
-  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete, level, isLevelCompleted, levelWords.length]);
+  }, [foundWords.length, showLevelComplete, foundWords, onLevelComplete, level, isLevelCompleted]);
 
   const updateUserScore = async (points: number) => {
     try {
@@ -70,7 +81,7 @@ export const useGameLogic = (
         return;
       }
 
-      logger.log(`🔄 Registrando pontuação do nível completado para usuário ${user.id}: +${points} pontos`);
+      logger.info(`🔄 Registrando pontuação do nível completado para usuário ${user.id}: +${points} pontos`);
 
       // Buscar pontuação atual do usuário
       const { data: profile, error: fetchError } = await supabase
@@ -92,7 +103,7 @@ export const useGameLogic = (
         .from('profiles')
         .update({ 
           total_score: newScore,
-          games_played: (profile?.games_played || 0) + 1 // Incrementa games_played quando completa nível
+          games_played: (profile?.games_played || 0) + 1
         })
         .eq('id', user.id);
 
@@ -101,7 +112,7 @@ export const useGameLogic = (
         throw updateError;
       }
 
-      logger.log(`✅ Pontuação do nível completado registrada: ${currentScore} → ${newScore} (+${points})`);
+      logger.info(`✅ Pontuação do nível completado registrada: ${currentScore} → ${newScore} (+${points})`);
 
       // Forçar atualização do ranking semanal
       try {
@@ -109,7 +120,7 @@ export const useGameLogic = (
         if (rankingError) {
           logger.warn('⚠️ Erro ao atualizar ranking semanal:', rankingError);
         } else {
-          logger.log('✅ Ranking semanal atualizado após completar nível');
+          logger.info('✅ Ranking semanal atualizado após completar nível');
         }
       } catch (rankingUpdateError) {
         logger.warn('⚠️ Erro ao forçar atualização do ranking:', rankingUpdateError);
@@ -131,7 +142,7 @@ export const useGameLogic = (
     const points = getPointsForWord(word);
     const newFoundWord = { word, positions: [...positions], points };
     
-    logger.log(`📝 Adicionando palavra única: "${word}" = ${points} pontos (${foundWords.length + 1}/${levelWords.length})`);
+    logger.info(`📝 Adicionando palavra única: "${word}" = ${points} pontos (${foundWords.length + 1}/${TOTAL_WORDS})`);
     
     setFoundWords(prev => {
       // Verificação adicional antes de adicionar
@@ -140,7 +151,7 @@ export const useGameLogic = (
         return prev;
       }
       const newArray = [...prev, newFoundWord];
-      logger.log(`📊 Array de palavras atualizado. Total: ${newArray.length} palavras encontradas`);
+      logger.info(`📊 Array de palavras atualizado. Total: ${newArray.length} palavras encontradas`);
       return newArray;
     });
     
