@@ -1,78 +1,71 @@
 
 import { useState, useEffect } from 'react';
-import { generateBoard, getBoardSize, getBoardWidth } from '@/utils/boardUtils';
+import { useBoardGeneration } from './useBoardGeneration';
 import { useSimpleWordSelection } from './useSimpleWordSelection';
+import { getBoardSize, getMobileBoardSize, type PlacedWord } from '@/utils/boardUtils';
 import { useIsMobile } from './use-mobile';
 import { logger } from '@/utils/logger';
 
 interface BoardData {
   board: string[][];
-  placedWords: any[];
+  placedWords: PlacedWord[];
 }
 
 interface OptimizedBoardResult {
   boardData: BoardData;
   size: number;
-  width: number;
   levelWords: string[];
   isLoading: boolean;
   error: string | null;
-  source: 'database' | 'emergency';
 }
 
 export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
   const [boardData, setBoardData] = useState<BoardData>({ board: [], placedWords: [] });
+  const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
-  const { levelWords, isLoading: wordsLoading, error: wordsError, source } = useSimpleWordSelection(level);
+  // Usar seleção aleatória simples
+  const { levelWords, isLoading: wordsLoading, error: wordsError } = useSimpleWordSelection(level);
+  const { generateBoard } = useBoardGeneration();
 
-  // Dimensões fixas do tabuleiro
-  const size = getBoardSize(level); // 12 altura
-  const width = getBoardWidth(level); // 8 largura
+  const size = isMobile ? getMobileBoardSize(level) : getBoardSize(level);
 
   useEffect(() => {
     if (wordsLoading || levelWords.length === 0) return;
 
-    logger.info('🎲 Gerando tabuleiro consolidado', { 
-      level, 
+    logger.info('🏗️ Gerando tabuleiro otimizado com palavras aleatórias', {
+      level,
+      isMobile,
       size,
-      width,
       wordsCount: levelWords.length,
-      source,
-      isMobile
+      words: levelWords
     }, 'OPTIMIZED_BOARD');
 
     try {
-      const result = generateBoard(levelWords, level);
+      const newBoardData = generateBoard(size, levelWords);
+      setBoardData(newBoardData);
+      setError(null);
       
-      if (result) {
-        setBoardData(result.boardData);
-        
-        logger.info('✅ Tabuleiro consolidado gerado', { 
-          level,
-          size,
-          width,
-          wordsPlaced: result.boardData.placedWords.length,
-          source,
-          isMobile
-        }, 'OPTIMIZED_BOARD');
-      } else {
-        throw new Error('Falha na geração do tabuleiro consolidado');
-      }
-    } catch (error) {
-      logger.error('❌ Erro na geração consolidada', { error, level, source, isMobile }, 'OPTIMIZED_BOARD');
+      logger.info('✅ Tabuleiro otimizado gerado', {
+        level,
+        placedWords: newBoardData.placedWords.length,
+        totalWords: levelWords.length
+      }, 'OPTIMIZED_BOARD');
+      
+    } catch (err) {
+      logger.error('❌ Erro ao gerar tabuleiro otimizado', { err }, 'OPTIMIZED_BOARD');
+      setError(err instanceof Error ? err.message : 'Erro na geração do tabuleiro');
     }
-  }, [levelWords, level, wordsLoading, source, size, width, isMobile]);
+  }, [levelWords, wordsLoading, level, size, isMobile, generateBoard]);
 
-  const isLoading = wordsLoading || boardData.board.length === 0;
+  // Combinar erros de palavras e tabuleiro
+  const combinedError = wordsError || error;
 
   return {
     boardData,
     size,
-    width,
     levelWords,
-    isLoading,
-    error: wordsError,
-    source
+    isLoading: wordsLoading,
+    error: combinedError
   };
 };

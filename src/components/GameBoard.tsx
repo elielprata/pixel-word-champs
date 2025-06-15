@@ -4,7 +4,7 @@ import GameBoardLayout from './game/GameBoardLayout';
 import GameBoardContent from './game/GameBoardContent';
 import GameBoardLoadingState from './game/GameBoardLoadingState';
 import GameBoardErrorState from './game/GameBoardErrorState';
-import { useBoard } from '@/hooks/useBoard';
+import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { logger } from '@/utils/logger';
 
 interface GameBoardProps {
@@ -30,35 +30,31 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('🎮 GameBoard refatorado', { level, timeLeft }, 'GAME_BOARD');
+  logger.debug('Renderizando GameBoard simplificado', { 
+    level, 
+    timeLeft, 
+    canRevive 
+  }, 'GAME_BOARD');
 
-  const board = useBoard({
-    level,
-    timeLeft,
-    onWordFound,
-    onLevelComplete,
-    canRevive,
-    onRevive,
-    onTimeUp
-  });
+  const { isLoading, error } = useOptimizedBoard(level);
 
-  if (board.isLoading) {
+  if (isLoading) {
     return (
       <GameBoardLayout>
         <GameBoardLoadingState 
           level={level} 
-          debugInfo="Carregando jogo refatorado..." 
+          debugInfo="Carregando palavras..." 
         />
       </GameBoardLayout>
     );
   }
 
-  if (board.error) {
+  if (error) {
     return (
       <GameBoardLayout>
         <GameBoardErrorState 
-          error={board.error} 
-          debugInfo="Erro no sistema refatorado"
+          error={error} 
+          debugInfo="Erro na seleção de palavras"
         />
       </GameBoardLayout>
     );

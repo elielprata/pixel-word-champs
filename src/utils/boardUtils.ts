@@ -1,4 +1,3 @@
-
 export interface Position {
   row: number;
   col: number;
@@ -46,88 +45,6 @@ export const getCellSize = (boardSize: number, isMobile: boolean = false): numbe
   
   // Tamanhos para desktop considerando tabuleiro 12x8
   return 28; // Tamanho fixo para desktop
-};
-
-// Função simplificada para gerar tabuleiro
-export const generateBoard = (words: string[], level: number) => {
-  const height = getBoardSize(level);
-  const width = getBoardWidth(level);
-  
-  // Criar tabuleiro vazio
-  const board = Array(height).fill(null).map(() => 
-    Array(width).fill(null).map(() => 
-      String.fromCharCode(65 + Math.floor(Math.random() * 26))
-    )
-  );
-  
-  const placedWords: PlacedWord[] = [];
-  
-  // Tentar colocar cada palavra no tabuleiro
-  words.forEach((word, index) => {
-    if (word && word.length <= Math.min(height, width)) {
-      const placed = placeWordSimple(board, word, height, width);
-      if (placed) {
-        placedWords.push(placed);
-      }
-    }
-  });
-  
-  return {
-    boardData: {
-      board,
-      placedWords
-    },
-    size: height
-  };
-};
-
-// Função auxiliar para colocar palavra no tabuleiro
-const placeWordSimple = (board: string[][], word: string, height: number, width: number): PlacedWord | null => {
-  const directions = [
-    { row: 0, col: 1, name: 'horizontal' as const },
-    { row: 1, col: 0, name: 'vertical' as const },
-    { row: 1, col: 1, name: 'diagonal' as const }
-  ];
-  
-  // Tentar colocar a palavra em diferentes posições e direções
-  for (let attempts = 0; attempts < 50; attempts++) {
-    const direction = directions[Math.floor(Math.random() * directions.length)];
-    const startRow = Math.floor(Math.random() * (height - (direction.row * (word.length - 1))));
-    const startCol = Math.floor(Math.random() * (width - (direction.col * (word.length - 1))));
-    
-    // Verificar se a palavra cabe
-    let canPlace = true;
-    const positions: Position[] = [];
-    
-    for (let i = 0; i < word.length; i++) {
-      const row = startRow + i * direction.row;
-      const col = startCol + i * direction.col;
-      
-      if (row < 0 || row >= height || col < 0 || col >= width) {
-        canPlace = false;
-        break;
-      }
-      
-      positions.push({ row, col });
-    }
-    
-    if (canPlace) {
-      // Colocar a palavra
-      positions.forEach((pos, i) => {
-        board[pos.row][pos.col] = word[i];
-      });
-      
-      return {
-        word,
-        startRow,
-        startCol,
-        direction: direction.name,
-        positions
-      };
-    }
-  }
-  
-  return null;
 };
 
 // Esta função está DEPRECADA - use useGamePointsConfig hook em vez disso
