@@ -2,12 +2,13 @@
 import { useMemo, useCallback, useEffect } from 'react';
 import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { useSimpleSelection } from '@/hooks/useSimpleSelection';
-import { useGameInteractions } from '@/hooks/useGameInteractions';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useCellInteractions } from '@/hooks/useCellInteractions';
 import { useGameValidation } from '@/hooks/useGameValidation';
 import { useGameScore } from '@/hooks/useGameScore';
 import { useGameState } from '@/hooks/useGameState';
+import { useCellInteractions } from '@/hooks/useCellInteractions';
+import { useGameBoardProps } from '@/hooks/useGameBoardProps';
+import { useGameBoardInteractions } from '@/hooks/useGameBoardInteractions';
 import { logger } from '@/utils/logger';
 import { isLinearPath } from '@/hooks/word-selection/validateLinearPath';
 import { type Position } from '@/utils/boardUtils';
@@ -93,58 +94,36 @@ export const useGameBoard = ({
     return [];
   }, [isDragging, startCell, currentCell, getLinearPath]);
 
-  // Interações do jogo (dicas, revive, etc.)
-  const { useHint, handleRevive, handleGoHome } = useGameInteractions(
-    gameState.foundWords,
-    levelWords,
-    boardData,
-    gameState.hintsUsed,
-    gameState.setHintsUsed,
-    gameState.setHintHighlightedCells,
-    canRevive,
-    () => {},
-    gameState.setShowGameOver,
-    () => {}
-  );
-
-  const closeGameOver = useCallback(() => {
-    gameState.setShowGameOver(false);
-  }, [gameState]);
-
-  // Memoizar props agrupadas
-  const boardProps = useMemo(() => ({
+  // Props agrupadas usando hook especializado
+  const { boardProps, gameStateProps, modalProps } = useGameBoardProps({
     boardData,
     size,
     selectedCells,
-    isDragging
-  }), [boardData, size, selectedCells, isDragging]);
-
-  const gameStateProps = useMemo(() => ({
+    isDragging,
     foundWords: gameState.foundWords,
     levelWords,
     hintsUsed: gameState.hintsUsed,
-    currentLevelScore
-  }), [gameState.foundWords, levelWords, gameState.hintsUsed, currentLevelScore]);
-
-  const modalProps = useMemo(() => ({
+    currentLevelScore,
     showGameOver: gameState.showGameOver,
     showLevelComplete: gameState.showLevelComplete
-  }), [gameState.showGameOver, gameState.showLevelComplete]);
+  });
 
-  const cellInteractionProps = useMemo(() => ({
-    handleCellStart: handleStart,
-    handleCellMove: handleDrag,
+  // Interações usando hook especializado
+  const { cellInteractionProps, gameActions } = useGameBoardInteractions({
+    foundWords: gameState.foundWords,
+    levelWords,
+    boardData,
+    hintsUsed: gameState.hintsUsed,
+    setHintsUsed: gameState.setHintsUsed,
+    setHintHighlightedCells: gameState.setHintHighlightedCells,
+    canRevive,
+    setShowGameOver: gameState.setShowGameOver,
+    handleStart,
+    handleDrag,
     handleCellEnd,
     isCellSelected,
-    ...cellInteractions
-  }), [handleStart, handleDrag, handleCellEnd, isCellSelected, cellInteractions]);
-
-  const gameActions = useMemo(() => ({
-    useHint,
-    handleRevive,
-    handleGoHome,
-    closeGameOver
-  }), [useHint, handleRevive, handleGoHome, closeGameOver]);
+    cellInteractions
+  });
 
   return {
     // Board data
