@@ -30,7 +30,7 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('Renderizando GameBoard simplificado', { 
+  logger.debug('🎮 Renderizando GameBoard otimizado', { 
     level, 
     timeLeft, 
     canRevive 
@@ -43,7 +43,7 @@ const GameBoard = ({
       <GameBoardLayout>
         <GameBoardLoadingState 
           level={level} 
-          debugInfo="Carregando palavras..." 
+          debugInfo="Carregando palavras otimizadas..." 
         />
       </GameBoardLayout>
     );
@@ -54,7 +54,7 @@ const GameBoard = ({
       <GameBoardLayout>
         <GameBoardErrorState 
           error={error} 
-          debugInfo="Erro na seleção de palavras"
+          debugInfo="Erro no sistema otimizado de palavras"
         />
       </GameBoardLayout>
     );

@@ -11,9 +11,6 @@ interface SimpleWordSelectionResult {
   source: 'database' | 'emergency';
 }
 
-// Palavras de emergência otimizadas
-const EMERGENCY_WORDS = ['CASA', 'AMOR', 'VIDA', 'TEMPO', 'MUNDO'];
-
 export const useSimpleWordSelection = (level: number): SimpleWordSelectionResult => {
   const [levelWords, setLevelWords] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,35 +22,38 @@ export const useSimpleWordSelection = (level: number): SimpleWordSelectionResult
       setIsLoading(true);
       setError(null);
       
-      logger.info('🎲 Iniciando seleção simplificada', { level }, 'SIMPLE_WORD_SELECTION');
+      logger.info('🎲 Iniciando seleção de palavras', { level }, 'SIMPLE_WORD_SELECTION');
       
       try {
         const boardSize = getBoardSize(level);
         const maxWordLength = Math.min(boardSize - 1, 8);
         
-        // Usar serviço simplificado
+        // Sempre solicitar exatamente 5 palavras
         const words = await SimpleWordService.getRandomWordsForToday(5, maxWordLength);
         
-        if (words.length >= 5) {
+        // Verificar se conseguimos palavras válidas
+        if (words.length === 5) {
           setLevelWords(words);
           setSource('database');
           
           // Registrar uso das palavras
           await SimpleWordService.recordWordsUsage(words);
           
-          logger.info('✅ Palavras selecionadas com sucesso', { 
+          logger.info('✅ Seleção concluída com sucesso', { 
             wordsCount: words.length,
             level,
             words 
           }, 'SIMPLE_WORD_SELECTION');
         } else {
-          throw new Error('Poucas palavras válidas encontradas');
+          throw new Error(`Retornadas ${words.length} palavras, esperado 5`);
         }
 
       } catch (error) {
         logger.error('❌ Erro na seleção - usando emergência', { error, level }, 'SIMPLE_WORD_SELECTION');
         
-        setLevelWords(EMERGENCY_WORDS);
+        // Fallback para palavras de emergência
+        const emergencyWords = ['CASA', 'AMOR', 'VIDA', 'TEMPO', 'MUNDO'];
+        setLevelWords(emergencyWords);
         setSource('emergency');
         setError('Usando palavras offline');
       } finally {
