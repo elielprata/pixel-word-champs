@@ -2,59 +2,68 @@
 import { logger } from './logger';
 
 // Cache simples em memória
-let simpleCache: string[] = [];
+let wordCache: string[] = [];
 let cacheTimestamp = 0;
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutos
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 export class LocalWordCacheManager {
-  // Obter palavras do cache simples
+  // Obter palavras do cache
   static getCachedWords(maxLength: number, count: number = 5): string[] | null {
-    if (!simpleCache.length || Date.now() - cacheTimestamp > CACHE_DURATION) {
+    if (!this.isValidCache()) {
       return null;
     }
     
-    const validWords = simpleCache.filter(word => word.length <= maxLength);
-    return validWords.slice(0, count);
+    const validWords = wordCache
+      .filter(word => word.length <= maxLength && word.length >= 3)
+      .slice(0, count);
+    
+    return validWords.length >= count ? validWords : null;
   }
 
-  // Armazenar palavras no cache simples
+  // Armazenar palavras no cache
   static setCachedWords(words: string[]): void {
     if (words && words.length > 0) {
-      simpleCache = [...words];
+      wordCache = [...words];
       cacheTimestamp = Date.now();
+      logger.info(`📦 Cache atualizado: ${words.length} palavras`, undefined, 'LOCAL_CACHE');
     }
   }
 
-  // Fallback de emergência simples
+  // Palavras de emergência
   static getEmergencyFallback(count: number = 5): string[] {
-    const emergencyWords = ['CASA', 'AMOR', 'VIDA', 'TEMPO', 'MUNDO', 'FORMA', 'PARTE'];
-    return emergencyWords.slice(0, count);
+    const emergency = ['CASA', 'AMOR', 'VIDA', 'TEMPO', 'MUNDO', 'FORMA', 'PARTE'];
+    return emergency.slice(0, count);
+  }
+
+  // Verificar se cache é válido
+  static isValidCache(): boolean {
+    return wordCache.length > 0 && Date.now() - cacheTimestamp < CACHE_DURATION;
+  }
+
+  // Limpar cache
+  static clearCache(): void {
+    wordCache = [];
+    cacheTimestamp = 0;
+    logger.info('🗑️ Cache limpo', undefined, 'LOCAL_CACHE');
   }
 
   // Estatísticas básicas
   static getCacheStats() {
     return {
-      totalWords: simpleCache.length,
+      totalWords: wordCache.length,
       cacheAge: cacheTimestamp > 0 ? Date.now() - cacheTimestamp : 0,
-      isValid: simpleCache.length > 0 && Date.now() - cacheTimestamp < CACHE_DURATION
+      isValid: this.isValidCache()
     };
   }
 
-  // Limpar cache
-  static clearCache(): void {
-    simpleCache = [];
-    cacheTimestamp = 0;
-  }
-
-  // Métodos adicionais para compatibilidade com cache-warming
+  // Métodos de compatibilidade (vazios para manter interface)
   static initializeCache(): void {
     logger.info('Cache inicializado (modo simples)', undefined, 'LOCAL_CACHE');
   }
 
   static cleanExpiredCache(): void {
-    if (Date.now() - cacheTimestamp > CACHE_DURATION) {
+    if (!this.isValidCache()) {
       this.clearCache();
-      logger.info('Cache expirado limpo', undefined, 'LOCAL_CACHE');
     }
   }
 

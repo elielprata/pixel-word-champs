@@ -1,9 +1,8 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { LocalWordCacheManager } from '@/utils/localWordCache';
 import { getBoardSize } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
-import { useIsMobile } from './use-mobile';
 
 interface LocalFallbackResult {
   fallbackWords: string[];
@@ -12,45 +11,33 @@ interface LocalFallbackResult {
 
 export const useLocalWordFallback = (level: number): LocalFallbackResult => {
   const [fallbackWords, setFallbackWords] = useState<string[]>([]);
-  const [fallbackSource, setFallbackSource] = useState<'cache' | 'emergency'>('cache');
-  const isMobile = useIsMobile();
-  const initRef = useRef(false);
+  const [fallbackSource, setFallbackSource] = useState<'cache' | 'emergency'>('emergency');
 
   useEffect(() => {
-    if (initRef.current) return;
-    initRef.current = true;
+    const boardSize = getBoardSize(level);
+    const maxWordLength = Math.min(boardSize - 1, 8);
 
-    const initializeFallback = () => {
-      logger.info('🔄 Inicializando fallback local simples', { level, isMobile }, 'LOCAL_FALLBACK');
-
-      const boardSize = getBoardSize(level);
-      const maxWordLength = Math.min(boardSize - 1, 8);
-
-      // Tentar cache local primeiro
-      const cachedWords = LocalWordCacheManager.getCachedWords(maxWordLength, 5);
+    // Tentar cache primeiro
+    const cachedWords = LocalWordCacheManager.getCachedWords(maxWordLength, 5);
+    
+    if (cachedWords) {
+      setFallbackWords(cachedWords);
+      setFallbackSource('cache');
       
-      if (cachedWords && cachedWords.length >= 5) {
-        setFallbackWords(cachedWords);
-        setFallbackSource('cache');
-        
-        logger.info('✅ Fallback usando cache local', { 
-          wordsCount: cachedWords.length,
-          maxWordLength 
-        }, 'LOCAL_FALLBACK');
-      } else {
-        // Fallback de emergência
-        const emergencyWords = LocalWordCacheManager.getEmergencyFallback(5);
-        setFallbackWords(emergencyWords);
-        setFallbackSource('emergency');
-        
-        logger.info('🆘 Fallback de emergência', { 
-          wordsCount: emergencyWords.length 
-        }, 'LOCAL_FALLBACK');
-      }
-    };
-
-    initializeFallback();
-  }, [level, isMobile]);
+      logger.info('✅ Fallback usando cache', { 
+        wordsCount: cachedWords.length 
+      }, 'LOCAL_FALLBACK');
+    } else {
+      // Usar palavras de emergência
+      const emergencyWords = LocalWordCacheManager.getEmergencyFallback(5);
+      setFallbackWords(emergencyWords);
+      setFallbackSource('emergency');
+      
+      logger.info('🆘 Fallback de emergência', { 
+        wordsCount: emergencyWords.length 
+      }, 'LOCAL_FALLBACK');
+    }
+  }, [level]);
 
   return {
     fallbackWords,

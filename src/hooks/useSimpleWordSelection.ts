@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { SimpleWordService } from '@/services/simpleWordService';
 import { getBoardSize } from '@/utils/boardUtils';
-import { normalizeText, isValidGameWord } from '@/utils/levelConfiguration';
 import { logger } from '@/utils/logger';
 
 interface SimpleWordSelectionResult {
@@ -12,7 +11,7 @@ interface SimpleWordSelectionResult {
   source: 'database' | 'emergency';
 }
 
-// Palavras de emergência simples
+// Palavras de emergência otimizadas
 const EMERGENCY_WORDS = ['CASA', 'AMOR', 'VIDA', 'TEMPO', 'MUNDO'];
 
 export const useSimpleWordSelection = (level: number): SimpleWordSelectionResult => {
@@ -26,49 +25,34 @@ export const useSimpleWordSelection = (level: number): SimpleWordSelectionResult
       setIsLoading(true);
       setError(null);
       
-      logger.info('🎲 Seleção simples iniciada', { level }, 'SIMPLE_WORD_SELECTION');
+      logger.info('🎲 Iniciando seleção simplificada', { level }, 'SIMPLE_WORD_SELECTION');
       
       try {
         const boardSize = getBoardSize(level);
         const maxWordLength = Math.min(boardSize - 1, 8);
         
-        // Tentar buscar do banco de dados
-        const { data: words, error: dbError } = await supabase
-          .from('level_words')
-          .select('word')
-          .eq('is_active', true)
-          .limit(50);
-
-        if (dbError || !words || words.length === 0) {
-          throw new Error('Falha ao carregar palavras do banco de dados');
-        }
-
-        // Processar palavras válidas
-        const validWords = words
-          .map(w => normalizeText(w.word))
-          .filter(word => isValidGameWord(word, maxWordLength))
-          .filter(word => word.length >= 3);
-
-        if (validWords.length < 5) {
+        // Usar serviço simplificado
+        const words = await SimpleWordService.getRandomWordsForToday(5, maxWordLength);
+        
+        if (words.length >= 5) {
+          setLevelWords(words);
+          setSource('database');
+          
+          // Registrar uso das palavras
+          await SimpleWordService.recordWordsUsage(words);
+          
+          logger.info('✅ Palavras selecionadas com sucesso', { 
+            wordsCount: words.length,
+            level,
+            words 
+          }, 'SIMPLE_WORD_SELECTION');
+        } else {
           throw new Error('Poucas palavras válidas encontradas');
         }
-
-        // Selecionar 5 palavras aleatórias
-        const shuffled = validWords.sort(() => Math.random() - 0.5);
-        const selected = shuffled.slice(0, 5);
-
-        setLevelWords(selected);
-        setSource('database');
-        
-        logger.info('✅ Palavras selecionadas do banco', { 
-          wordsCount: selected.length,
-          level
-        }, 'SIMPLE_WORD_SELECTION');
 
       } catch (error) {
         logger.error('❌ Erro na seleção - usando emergência', { error, level }, 'SIMPLE_WORD_SELECTION');
         
-        // Fallback para palavras de emergência
         setLevelWords(EMERGENCY_WORDS);
         setSource('emergency');
         setError('Usando palavras offline');

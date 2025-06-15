@@ -15,20 +15,22 @@ interface OptimizedBoardResult {
   levelWords: string[];
   isLoading: boolean;
   error: string | null;
+  source: 'database' | 'emergency';
 }
 
 export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
   const [boardData, setBoardData] = useState<BoardData>({ board: [], placedWords: [] });
   const [size, setSize] = useState<number>(0);
   
-  const { levelWords, isLoading, error } = useSimpleWordSelection(level);
+  const { levelWords, isLoading, error, source } = useSimpleWordSelection(level);
 
   useEffect(() => {
     if (levelWords.length === 0 || isLoading) return;
 
     logger.info('🎲 Gerando tabuleiro otimizado', { 
       level, 
-      wordsCount: levelWords.length 
+      wordsCount: levelWords.length,
+      source 
     }, 'OPTIMIZED_BOARD');
 
     try {
@@ -41,21 +43,23 @@ export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
         logger.info('✅ Tabuleiro gerado com sucesso', { 
           level,
           size: result.size,
-          wordsPlaced: result.boardData.placedWords.length
+          wordsPlaced: result.boardData.placedWords.length,
+          source
         }, 'OPTIMIZED_BOARD');
       } else {
         throw new Error('Falha na geração do tabuleiro');
       }
     } catch (error) {
-      logger.error('❌ Erro na geração do tabuleiro', { error, level }, 'OPTIMIZED_BOARD');
+      logger.error('❌ Erro na geração do tabuleiro', { error, level, source }, 'OPTIMIZED_BOARD');
     }
-  }, [levelWords, level, isLoading]);
+  }, [levelWords, level, isLoading, source]);
 
   return {
     boardData,
     size,
     levelWords,
     isLoading,
-    error
+    error,
+    source
   };
 };
