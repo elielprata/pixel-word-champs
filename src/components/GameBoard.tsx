@@ -4,7 +4,7 @@ import GameBoardLayout from './game/GameBoardLayout';
 import GameBoardContent from './game/GameBoardContent';
 import GameBoardLoadingState from './game/GameBoardLoadingState';
 import GameBoardErrorState from './game/GameBoardErrorState';
-import { useSimpleGameBoard } from '@/hooks/useSimpleGameBoard';
+import { useBoard } from '@/hooks/useBoard';
 import { logger } from '@/utils/logger';
 
 interface GameBoardProps {
@@ -30,32 +30,35 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('🎮 GameBoard simplificado', { level, timeLeft }, 'GAME_BOARD');
+  logger.debug('🎮 GameBoard refatorado', { level, timeLeft }, 'GAME_BOARD');
 
-  const gameBoard = useSimpleGameBoard({
+  const board = useBoard({
     level,
     timeLeft,
     onWordFound,
-    onLevelComplete
+    onLevelComplete,
+    canRevive,
+    onRevive,
+    onTimeUp
   });
 
-  if (gameBoard.isLoading) {
+  if (board.isLoading) {
     return (
       <GameBoardLayout>
         <GameBoardLoadingState 
           level={level} 
-          debugInfo="Carregando jogo simplificado..." 
+          debugInfo="Carregando jogo refatorado..." 
         />
       </GameBoardLayout>
     );
   }
 
-  if (gameBoard.error) {
+  if (board.error) {
     return (
       <GameBoardLayout>
         <GameBoardErrorState 
-          error={gameBoard.error} 
-          debugInfo="Erro no sistema simplificado"
+          error={board.error} 
+          debugInfo="Erro no sistema refatorado"
         />
       </GameBoardLayout>
     );
