@@ -10,14 +10,12 @@ interface GameProgressBarProps {
 }
 
 const GameProgressBar = ({ level, foundWords, totalWords }: GameProgressBarProps) => {
-  // Ajustar para excluir palavras ocultas (sempre há 1 palavra oculta)
-  const visibleTotalWords = Math.max(totalWords - 1, 1);
-  const progress = (foundWords / visibleTotalWords) * 100;
+  const progress = (foundWords / totalWords) * 100;
 
   logger.debug('Renderizando GameProgressBar', { 
     level, 
     foundWords, 
-    totalWords: visibleTotalWords, 
+    totalWords, 
     progress 
   }, 'GAME_PROGRESS_BAR');
 
@@ -29,7 +27,7 @@ const GameProgressBar = ({ level, foundWords, totalWords }: GameProgressBarProps
           <span className="text-sm font-bold text-gray-800">Nível {level}</span>
         </div>
         <div className="text-sm font-medium text-gray-600">
-          {foundWords}/{visibleTotalWords} palavras
+          {foundWords}/{totalWords} palavras
         </div>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-2 mb-1">

@@ -20,11 +20,9 @@ export const useGameBoardState = ({
   const gameState = useGameState(level, timeLeft);
   const { currentLevelScore, updateUserScore } = useGameScore(gameState.foundWords);
 
-  // Check level completion - excluir palavra oculta (sempre há 1)
+  // Check level completion
   useEffect(() => {
-    const visibleWordsTarget = Math.max(levelWords.length - 1, 1);
-    
-    if (gameState.foundWords.length === visibleWordsTarget && 
+    if (gameState.foundWords.length === levelWords.length && 
         levelWords.length > 0 && 
         !gameState.showLevelComplete) {
       
