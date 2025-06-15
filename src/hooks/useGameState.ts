@@ -20,7 +20,11 @@ interface GameState {
   isLevelCompleted: boolean;
 }
 
-export const useGameState = (level: number, timeLeft: number) => {
+export const useGameState = (
+  level: number, 
+  timeLeft: number,
+  onLevelComplete?: (levelScore: number) => void
+) => {
   const [state, setState] = useState<GameState>({
     foundWords: [],
     hintsUsed: 0,
@@ -65,7 +69,7 @@ export const useGameState = (level: number, timeLeft: number) => {
     }
   }, [timeLeft, state.showGameOver, state.isLevelCompleted, level, state.foundWords.length, TOTAL_WORDS_REQUIRED]);
 
-  // ETAPA 4: Lógica de level complete consolidada e otimizada
+  // CORREÇÃO DEFINITIVA: Lógica de level complete consolidada e otimizada
   useEffect(() => {
     if (isLevelCompleted && !state.showLevelComplete && !state.isLevelCompleted) {
       logger.info(`🎉 Nível ${level} COMPLETADO!`, {
@@ -82,10 +86,19 @@ export const useGameState = (level: number, timeLeft: number) => {
         isLevelCompleted: true 
       }));
       
+      // CORREÇÃO DEFINITIVA: Notificar level complete via callback se fornecido
+      if (onLevelComplete) {
+        logger.info(`📞 CALLBACK - Notificando level complete: ${currentLevelScore} pontos`, {
+          level,
+          score: currentLevelScore
+        }, 'GAME_STATE');
+        onLevelComplete(currentLevelScore);
+      }
+      
       // Registrar pontos no banco quando completa o nível
       updateUserScore(currentLevelScore);
     }
-  }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, level, currentLevelScore, updateUserScore, TOTAL_WORDS_REQUIRED]);
+  }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, level, currentLevelScore, updateUserScore, TOTAL_WORDS_REQUIRED, onLevelComplete]);
 
   const addFoundWord = (newFoundWord: FoundWord) => {
     // PROTEÇÃO CRÍTICA: Verificar se a palavra já foi encontrada antes de adicionar
@@ -98,7 +111,7 @@ export const useGameState = (level: number, timeLeft: number) => {
       return;
     }
 
-    logger.info(`📝 ÚNICA FONTE - Adicionando palavra "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
+    logger.info(`📝 ÚNICA FONTE DE VERDADE - Adicionando palavra "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
       word: newFoundWord.word,
       points: newFoundWord.points,
       beforeCount: state.foundWords.length,
@@ -113,10 +126,11 @@ export const useGameState = (level: number, timeLeft: number) => {
         permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
       };
       
-      logger.info(`✅ ESTADO FINAL - Total de palavras: ${newState.foundWords.length}`, {
+      logger.info(`✅ ESTADO FINAL ÚNICO - Total de palavras: ${newState.foundWords.length}`, {
         totalWords: newState.foundWords.length,
         words: newState.foundWords.map(fw => fw.word),
-        isCompleted: newState.foundWords.length >= TOTAL_WORDS_REQUIRED
+        isCompleted: newState.foundWords.length >= TOTAL_WORDS_REQUIRED,
+        justAdded: newFoundWord.word
       }, 'GAME_STATE');
       
       return newState;
@@ -150,10 +164,23 @@ export const useGameState = (level: number, timeLeft: number) => {
     ...state,
     currentLevelScore, // ETAPA 4: Pontuação vem do hook especializado
     addFoundWord,
-    setHintsUsed,
-    setHintHighlightedCells,
-    setShowGameOver,
-    setShowLevelComplete,
-    setIsLevelCompleted
+    setHintsUsed: (value: number | ((prev: number) => number)) => {
+      setState(prev => ({ 
+        ...prev, 
+        hintsUsed: typeof value === 'function' ? value(prev.hintsUsed) : value 
+      }));
+    },
+    setHintHighlightedCells: (positions: Position[]) => {
+      setState(prev => ({ ...prev, hintHighlightedCells: positions }));
+    },
+    setShowGameOver: (value: boolean) => {
+      setState(prev => ({ ...prev, showGameOver: value }));
+    },
+    setShowLevelComplete: (value: boolean) => {
+      setState(prev => ({ ...prev, showLevelComplete: value }));
+    },
+    setIsLevelCompleted: (value: boolean) => {
+      setState(prev => ({ ...prev, isLevelCompleted: value }));
+    }
   };
 };

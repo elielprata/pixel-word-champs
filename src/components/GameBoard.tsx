@@ -10,7 +10,6 @@ import { logger } from '@/utils/logger';
 interface GameBoardProps {
   level: number;
   timeLeft: number;
-  onWordFound: (word: string, points: number) => void;
   onTimeUp: () => void;
   onLevelComplete: (levelScore: number) => void;
   onAdvanceLevel: () => void;
@@ -22,7 +21,6 @@ interface GameBoardProps {
 const GameBoard = ({ 
   level, 
   timeLeft, 
-  onWordFound, 
   onTimeUp, 
   onLevelComplete, 
   onAdvanceLevel, 
@@ -30,7 +28,7 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('Renderizando GameBoard simplificado', { 
+  logger.debug('🎮 Renderizando GameBoard DEFINITIVO (sem onWordFound)', { 
     level, 
     timeLeft, 
     canRevive 
@@ -68,7 +66,6 @@ const GameBoard = ({
       <GameBoardContent
         level={level}
         timeLeft={timeLeft}
-        onWordFound={onWordFound}
         onTimeUp={onTimeUp}
         onLevelComplete={onLevelComplete}
         onAdvanceLevel={onAdvanceLevel}

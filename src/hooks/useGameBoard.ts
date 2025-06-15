@@ -15,7 +15,6 @@ import { type Position } from '@/utils/boardUtils';
 interface GameBoardProps {
   level: number;
   timeLeft: number;
-  onWordFound: (word: string, points: number) => void;
   onLevelComplete: (levelScore: number) => void;
   canRevive: boolean;
   onRevive?: () => void;
@@ -24,7 +23,6 @@ interface GameBoardProps {
 export const useGameBoard = ({
   level,
   timeLeft,
-  onWordFound,
   onLevelComplete,
   canRevive,
   onRevive
@@ -32,10 +30,10 @@ export const useGameBoard = ({
   const isMobile = useIsMobile();
   const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
   
-  // Estado do jogo consolidado
-  const gameState = useGameState(level, timeLeft);
+  // CORREÇÃO DEFINITIVA: Estado do jogo consolidado com callback integrado
+  const gameState = useGameState(level, timeLeft, onLevelComplete);
 
-  // CORREÇÃO DEFINITIVA: Removido handleWordFoundCallback
+  // CORREÇÃO DEFINITIVA: Validação sem callback
   const { validateAndAddWord } = useGameValidation(gameState.foundWords, levelWords);
   const cellInteractions = useCellInteractions(
     gameState.foundWords,
@@ -54,14 +52,14 @@ export const useGameBoard = ({
     getLinearPath
   } = useSimpleSelection();
 
-  // Finalizar seleção com validação - CORREÇÃO DEFINITIVA: Apenas UMA adição por palavra
+  // CORREÇÃO DEFINITIVA: Finalizar seleção com validação - APENAS UMA FONTE DE VERDADE
   const handleCellEnd = useCallback(() => {
     const finalSelection = handleEnd();
 
     if (finalSelection.length >= 3 && isLinearPath(finalSelection)) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
-      logger.info(`🔍 TENTATIVA - Seleção de palavra: "${word}"`, { 
+      logger.info(`🔍 TENTATIVA ÚNICA - Seleção de palavra: "${word}"`, { 
         word, 
         beforeCount: gameState.foundWords.length,
         foundWords: gameState.foundWords.map(fw => fw.word)
@@ -69,17 +67,17 @@ export const useGameBoard = ({
       
       const validatedWord = validateAndAddWord(word, finalSelection);
       if (validatedWord) {
-        logger.info(`✅ ÚNICA ADIÇÃO - Palavra validada: "${word}"`, { 
+        logger.info(`✅ PALAVRA VALIDADA ÚNICA - "${word}"`, { 
           beforeCount: gameState.foundWords.length,
           word: validatedWord.word,
           points: validatedWord.points
         }, 'GAME_BOARD');
         
-        // CORREÇÃO DEFINITIVA: Apenas UMA chamada - addFoundWord irá notificar o callback internamente
+        // CORREÇÃO DEFINITIVA: APENAS UMA CHAMADA - sem callbacks redundantes
         gameState.addFoundWord(validatedWord);
         
-        logger.info(`📊 APÓS ÚNICA ADIÇÃO - Contagem atual: ${gameState.foundWords.length + 1}`, { 
-          newCount: gameState.foundWords.length + 1
+        logger.info(`📊 PÓS-ADIÇÃO ÚNICA - Contagem esperada: ${gameState.foundWords.length + 1}`, { 
+          expectedCount: gameState.foundWords.length + 1
         }, 'GAME_BOARD');
       }
     }

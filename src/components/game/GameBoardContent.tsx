@@ -9,7 +9,6 @@ import { logger } from '@/utils/logger';
 interface GameBoardContentProps {
   level: number;
   timeLeft: number;
-  onWordFound: (word: string, points: number) => void;
   onTimeUp: () => void;
   onLevelComplete: (levelScore: number) => void;
   onAdvanceLevel: () => void;
@@ -21,7 +20,6 @@ interface GameBoardContentProps {
 const GameBoardContent = ({
   level,
   timeLeft,
-  onWordFound,
   onTimeUp,
   onLevelComplete,
   onAdvanceLevel,
@@ -29,7 +27,7 @@ const GameBoardContent = ({
   canRevive,
   onRevive
 }: GameBoardContentProps) => {
-  // ETAPA 4: Hook consolidado com lógica de 5 palavras
+  // CORREÇÃO DEFINITIVA: Hook consolidado sem callback onWordFound
   const {
     isLoading,
     error,
@@ -41,7 +39,6 @@ const GameBoardContent = ({
   } = useGameBoard({
     level,
     timeLeft,
-    onWordFound,
     onLevelComplete,
     canRevive,
     onRevive
@@ -64,8 +61,8 @@ const GameBoardContent = ({
     return null; // Será tratado no componente pai
   }
 
-  // ETAPA 4: Log do estado do jogo
-  logger.debug('🎮 Renderizando GameBoardContent', {
+  // CORREÇÃO DEFINITIVA: Log do estado do jogo
+  logger.debug('🎮 Renderizando GameBoardContent (SEM CALLBACK onWordFound)', {
     level,
     timeLeft,
     foundWordsCount: gameStateProps.foundWords.length,
