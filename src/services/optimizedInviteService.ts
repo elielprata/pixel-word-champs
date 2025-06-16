@@ -60,8 +60,8 @@ class OptimizedInviteService {
         return createErrorResponse(error.message);
       }
 
-      // Type assertion para o tipo correto
-      const rpcData = data as RpcResponse;
+      // Type assertion segura para o tipo correto
+      const rpcData = data as unknown as RpcResponse;
 
       const optimizedData: OptimizedInviteData = {
         inviteCode: rpcData.inviteCode || '',
