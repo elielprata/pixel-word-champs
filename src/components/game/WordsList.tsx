@@ -82,7 +82,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
                   isFound || isHidden ? 'text-white' : 'text-gray-700'
                 }`}>
                   {isHidden && !isFound 
-                    ? `${word.length}L` 
+                    ? `(${word.length} Letras)` 
                     : word
                   }
                 </span>
