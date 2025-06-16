@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.10'
 
 const corsHeaders = {
@@ -12,7 +13,6 @@ interface AutomationConfig {
   time: string;
   dayOfWeek?: number;
   dayOfMonth?: number;
-  requiresPassword: boolean;
   resetOnCompetitionEnd: boolean;
 }
 
@@ -22,14 +22,31 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabase = createClient(
-    'https://oqzpkqbmcnpxpegshlcm.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xenBrcWJtY25weHBlZ3NobGNtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTE0NjkzNywiZXhwIjoyMDY0NzIyOTM3fQ.DP7vHYKgRAcBHe4Dd_5k2YwCE0IVpZTaclWgFUvmIE8'
-  );
+  // Usar variáveis de ambiente do Supabase
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('❌ Variáveis de ambiente não configuradas');
+    return new Response(JSON.stringify({ 
+      error: 'Configuração do servidor incompleta' 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
     const requestBody = await req.json().catch(() => ({}));
     const { manual_execution, competition_finalization, competition_id, competition_title } = requestBody;
+
+    console.log('🔄 Processando requisição:', { 
+      manual_execution, 
+      competition_finalization,
+      competition_id 
+    });
 
     // Se for execução por finalização de competição
     if (competition_finalization) {
@@ -50,7 +67,10 @@ Deno.serve(async (req) => {
   } catch (error: any) {
     console.error('❌ Erro geral:', error);
     
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: 'Erro interno do servidor'
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -86,6 +106,8 @@ async function executeResetByCompetitionFinalization(supabase: any, competitionI
       .from('profiles')
       .select('*', { count: 'exact', head: true })
       .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    console.log(`📊 Resetando pontuações de ${userCount || 0} usuários`);
 
     // Executar reset de pontuações para todos os usuários
     const { error: resetError } = await supabase
@@ -153,7 +175,10 @@ async function executeResetByCompetitionFinalization(supabase: any, competitionI
         .eq('id', logData.id);
     }
 
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      context: 'reset_by_competition_finalization'
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -162,6 +187,8 @@ async function executeResetByCompetitionFinalization(supabase: any, competitionI
 
 async function executeManualReset(supabase: any) {
   const scheduledTime = new Date();
+  
+  console.log('🚀 Iniciando reset manual...');
   
   const { data: logData, error: logError } = await supabase
     .from('automation_logs')
@@ -174,11 +201,17 @@ async function executeManualReset(supabase: any) {
     .select()
     .single();
 
+  if (logError) {
+    console.error('❌ Erro ao criar log:', logError);
+  }
+
   try {
     const { count: userCount } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
       .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    console.log(`📊 Resetando pontuações de ${userCount || 0} usuários`);
 
     const { error: resetError } = await supabase
       .from('profiles')
@@ -189,6 +222,7 @@ async function executeManualReset(supabase: any) {
       .neq('id', '00000000-0000-0000-0000-000000000000');
 
     if (resetError) {
+      console.error('❌ Erro no reset:', resetError);
       throw new Error(`Erro no reset: ${resetError.message}`);
     }
 
@@ -214,6 +248,8 @@ async function executeManualReset(supabase: any) {
     });
 
   } catch (error: any) {
+    console.error('❌ Erro durante reset manual:', error);
+    
     if (logData) {
       await supabase
         .from('automation_logs')
@@ -225,7 +261,10 @@ async function executeManualReset(supabase: any) {
         .eq('id', logData.id);
     }
 
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      context: 'manual_reset'
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -242,7 +281,10 @@ async function executeScheduledReset(supabase: any) {
 
   if (settingsError) {
     console.error('❌ Erro ao buscar configurações:', settingsError);
-    return new Response(JSON.stringify({ error: 'Erro ao buscar configurações' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Erro ao buscar configurações',
+      details: settingsError.message 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -378,7 +420,10 @@ async function executeScheduledReset(supabase: any) {
         .eq('id', logData.id);
     }
 
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      context: 'scheduled_reset'
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
