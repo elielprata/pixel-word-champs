@@ -42,6 +42,7 @@ export interface Competition {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  competition_type: string; // Adicionar propriedade necessária para o hook
 }
 
 export interface CompetitionParticipation {

@@ -7,6 +7,7 @@ import { RankingsTab } from "@/components/admin/RankingsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
+import { DataRecoveryPanel } from '@/components/admin/data/DataRecoveryPanel';
 import { logger } from '@/utils/logger';
 
 export const AdminPanelContent = () => {
@@ -36,6 +37,10 @@ export const AdminPanelContent = () => {
 
       <TabsContent value="integrations">
         <IntegrationsTab />
+      </TabsContent>
+
+      <TabsContent value="data-recovery">
+        <DataRecoveryPanel />
       </TabsContent>
     </>
   );

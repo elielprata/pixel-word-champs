@@ -20,7 +20,7 @@ interface WeeklyCompetition {
   prize_pool: number;
   max_participants: number;
   total_participants?: number;
-  competition_type: string;
+  competition_type: string; // Adicionar propriedade necessária
 }
 
 interface WeeklyCompetitionsViewProps {
