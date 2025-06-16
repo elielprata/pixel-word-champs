@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,7 @@ import { DailyCompetitionsView } from './rankings/DailyCompetitionsView';
 import { useRankings } from '@/hooks/useRankings';
 import { useCompetitions } from '@/hooks/useCompetitions';
 
+// Use the same interface as WeeklyCompetitionsView expects
 interface WeeklyCompetition {
   id: string;
   title: string;
@@ -57,7 +59,15 @@ export const RankingsTab = () => {
 
   // Garantir que weeklyCompetitions tenham a propriedade competition_type
   const weeklyCompetitionsWithType: WeeklyCompetition[] = weeklyCompetitions.map(comp => ({
-    ...comp,
+    id: comp.id,
+    title: comp.title,
+    description: comp.description,
+    start_date: comp.start_date,
+    end_date: comp.end_date,
+    status: comp.status,
+    prize_pool: comp.prize_pool,
+    max_participants: comp.max_participants,
+    total_participants: comp.total_participants,
     competition_type: 'tournament' // Garantir que existe para competições semanais
   }));
 
@@ -208,3 +218,4 @@ export const RankingsTab = () => {
     </div>
   );
 };
+
