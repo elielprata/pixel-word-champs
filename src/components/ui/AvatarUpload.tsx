@@ -1,8 +1,7 @@
 
 import React, { useRef, useState } from 'react';
-import { Camera, Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { avatarService } from '@/services/avatarService';
 import { profileService } from '@/services/profileService';
@@ -91,21 +90,6 @@ const AvatarUpload = ({ currentAvatar, fallback, onAvatarUpdate, size = 'lg' }: 
           )}
         </AvatarFallback>
       </Avatar>
-      
-      {currentAvatar && (
-        <Button
-          onClick={handleUploadClick}
-          disabled={isUploading}
-          size="sm"
-          className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full p-0 bg-blue-500 hover:bg-blue-600"
-        >
-          {isUploading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Camera className="w-4 h-4" />
-          )}
-        </Button>
-      )}
 
       <input
         ref={fileInputRef}
