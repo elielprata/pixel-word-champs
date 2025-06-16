@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,7 @@ interface WeeklyCompetition {
   prize_pool: number;
   max_participants: number;
   total_participants?: number;
-  competition_type: string; // Adicionar propriedade necessária
+  competition_type: string;
 }
 
 export const RankingsTab = () => {
@@ -55,9 +56,9 @@ export const RankingsTab = () => {
   const dailyCompetitions = customCompetitions.filter(comp => comp.competition_type === 'challenge');
 
   // Garantir que weeklyCompetitions tenham a propriedade competition_type
-  const weeklyCompetitionsWithType = weeklyCompetitions.map(comp => ({
+  const weeklyCompetitionsWithType: WeeklyCompetition[] = weeklyCompetitions.map(comp => ({
     ...comp,
-    competition_type: comp.competition_type || 'tournament' // Garantir que existe
+    competition_type: 'tournament' // Garantir que existe para competições semanais
   }));
 
   // Log das competições semanais que serão enviadas para o WeeklyCompetitionsView
