@@ -30,17 +30,36 @@ export const GAME_CONSTANTS = {
   // Timing
   SELECTION_DEBOUNCE_MS: 100,
   
-  // Cores para palavras encontradas
+  // Cores gamificadas para palavras encontradas
   WORD_COLORS: [
-    '#ef4444', // red-500
-    '#3b82f6', // blue-500
-    '#10b981', // emerald-500
-    '#f59e0b', // amber-500
-    '#8b5cf6', // violet-500
-    '#06b6d4', // cyan-500
-    '#84cc16', // lime-500
-    '#f97316', // orange-500
+    'from-red-500 to-red-600', // Vermelho vibrante
+    'from-blue-500 to-blue-600', // Azul vibrante
+    'from-emerald-500 to-emerald-600', // Verde esmeralda
+    'from-amber-500 to-amber-600', // Âmbar dourado
+    'from-violet-500 to-violet-600', // Violeta
+    'from-cyan-500 to-cyan-600', // Ciano
+    'from-lime-500 to-lime-600', // Verde lima
+    'from-orange-500 to-orange-600', // Laranja
+    'from-pink-500 to-pink-600', // Rosa
+    'from-indigo-500 to-indigo-600', // Índigo
+  ] as const,
+
+  // Cores de seleção gamificadas
+  SELECTION_COLORS: {
+    CURRENT: 'from-yellow-400 to-yellow-500',
+    HINT: 'from-purple-400 to-purple-500',
+    FOUND: 'from-green-400 to-green-500'
+  } as const,
+
+  // Temas de fundo gamificados
+  BACKGROUND_THEMES: [
+    'from-indigo-600 via-purple-600 to-pink-600',
+    'from-blue-600 via-cyan-600 to-teal-600',
+    'from-purple-600 via-violet-600 to-fuchsia-600',
+    'from-green-600 via-emerald-600 to-cyan-600'
   ] as const
 };
 
 export type WordColor = typeof GAME_CONSTANTS.WORD_COLORS[number];
+export type SelectionColor = typeof GAME_CONSTANTS.SELECTION_COLORS[keyof typeof GAME_CONSTANTS.SELECTION_COLORS];
+export type BackgroundTheme = typeof GAME_CONSTANTS.BACKGROUND_THEMES[number];
