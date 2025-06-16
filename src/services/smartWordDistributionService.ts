@@ -1,4 +1,3 @@
-
 import { type Position, type PlacedWord } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
 
@@ -25,7 +24,7 @@ export class SmartWordDistributionService {
   private board: string[][];
   private placedWords: PlacedWord[] = [];
 
-  constructor(height: number, width: number = 8) {
+  constructor(height: number, width: number = 12) {
     this.height = height;
     this.width = width;
     this.board = Array(height).fill(null).map(() => Array(width).fill(''));

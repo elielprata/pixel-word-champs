@@ -14,19 +14,19 @@ export interface PlacedWord {
 }
 
 export const getBoardSize = (level: number): number => {
-  return GAME_CONSTANTS.BOARD_HEIGHT;
+  return GAME_CONSTANTS.BOARD_HEIGHT; // Agora retorna 8
 };
 
 export const getMobileBoardSize = (level: number): number => {
-  return GAME_CONSTANTS.BOARD_HEIGHT;
+  return GAME_CONSTANTS.BOARD_HEIGHT; // Agora retorna 8
 };
 
 export const getBoardWidth = (level: number): number => {
-  return GAME_CONSTANTS.BOARD_WIDTH;
+  return GAME_CONSTANTS.BOARD_WIDTH; // Agora retorna 12
 };
 
 export const getMobileBoardWidth = (level: number): number => {
-  return GAME_CONSTANTS.BOARD_WIDTH;
+  return GAME_CONSTANTS.BOARD_WIDTH; // Agora retorna 12
 };
 
 export const getLevelWords = (level: number): string[] => {
@@ -50,7 +50,8 @@ export const getPointsForWord = (word: string): number => {
 
 // Função para validar se o tabuleiro contém todas as palavras
 export const validateBoardContainsWords = (board: string[][], words: string[]): boolean => {
-  const size = board.length;
+  const height = board.length;
+  const width = board[0]?.length || 0;
   const directions = [
     { row: 0, col: 1 },   // horizontal
     { row: 1, col: 0 },   // vertical
@@ -66,10 +67,10 @@ export const validateBoardContainsWords = (board: string[][], words: string[]): 
     let found = false;
     
     // Procurar a palavra em todas as posições e direções
-    for (let row = 0; row < size && !found; row++) {
-      for (let col = 0; col < size && !found; col++) {
+    for (let row = 0; row < height && !found; row++) {
+      for (let col = 0; col < width && !found; col++) {
         for (const dir of directions) {
-          if (checkWordAtPosition(board, word, row, col, dir.row, dir.col, size)) {
+          if (checkWordAtPosition(board, word, row, col, dir.row, dir.col, height, width)) {
             found = true;
             break;
           }
@@ -93,13 +94,14 @@ const checkWordAtPosition = (
   startCol: number, 
   deltaRow: number, 
   deltaCol: number,
-  size: number
+  height: number,
+  width: number
 ): boolean => {
   for (let i = 0; i < word.length; i++) {
     const row = startRow + i * deltaRow;
     const col = startCol + i * deltaCol;
     
-    if (row < 0 || row >= size || col < 0 || col >= size) {
+    if (row < 0 || row >= height || col < 0 || col >= width) {
       return false;
     }
     

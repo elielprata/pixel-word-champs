@@ -1,4 +1,3 @@
-
 import { SmartWordDistributionService } from '@/services/smartWordDistributionService';
 import { type Position, getBoardWidth, getMobileBoardWidth } from '@/utils/boardUtils';
 import { isValidGameWord, normalizeText } from '@/utils/levelConfiguration';
@@ -17,14 +16,14 @@ export interface WordPlacementResult {
 
 export class BoardGenerator {
   static generateSmartBoard(height: number, words: string[]): WordPlacementResult {
-    const width = 8; // largura fixa
+    const width = 12; // largura fixa agora é 12
     logger.log(`🚀 Iniciando geração do tabuleiro ${height}x${width} com distribuição inteligente:`, words);
     
-    // Normalizar e validar palavras
+    // Normalizar e validar palavras - ajustar para nova largura máxima
     const normalizedWords = words
       .map(word => normalizeText(word))
       .filter(word => {
-        const isValid = isValidGameWord(word, Math.min(height, width));
+        const isValid = isValidGameWord(word, Math.max(height, width)); // Usar a dimensão maior
         if (!isValid) {
           logger.warn(`⚠️ Palavra "${word}" rejeitada na validação`);
         }

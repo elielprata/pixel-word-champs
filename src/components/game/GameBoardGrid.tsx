@@ -1,5 +1,3 @@
-
-
 import React, { useRef } from "react";
 import GameCell from "./GameCell";
 import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from "@/utils/boardUtils";
@@ -39,10 +37,10 @@ const GameBoardGrid = ({
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
-  // Layout limpo
+  // Layout limpo - ajustado para 8x12
   const gridConfig = {
     gap: "1px",
-    maxWidth: isMobile ? "340px" : "400px",
+    maxWidth: isMobile ? "360px" : "480px", // Aumentado para acomodar 12 colunas
     padding: "0px",
   };
 
@@ -62,8 +60,8 @@ const GameBoardGrid = ({
       ref={boardRef}
       className="grid mx-auto bg-white"
       style={{
-        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`,
-        gridTemplateRows: `repeat(${size}, 1fr)`,
+        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`, // 12 colunas
+        gridTemplateRows: `repeat(${size}, 1fr)`, // 8 linhas
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: "100%",
@@ -105,4 +103,3 @@ const GameBoardGrid = ({
 };
 
 export default GameBoardGrid;
-

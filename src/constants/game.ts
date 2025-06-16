@@ -1,19 +1,18 @@
-
 export const GAME_CONSTANTS = {
   // Palavras obrigatórias por nível
   TOTAL_WORDS_REQUIRED: 5,
   
-  // Tamanhos do tabuleiro
-  BOARD_HEIGHT: 12,
-  BOARD_WIDTH: 8,
+  // Tamanhos do tabuleiro - MUDANÇA: 8x12 (altura x largura)
+  BOARD_HEIGHT: 8,
+  BOARD_WIDTH: 12,
   
   // Tamanhos das células
   DESKTOP_CELL_SIZE: 28,
   MOBILE_CELL_SIZE: 24,
   
   // Larguras do tabuleiro
-  DESKTOP_BOARD_WIDTH: 400,
-  MOBILE_BOARD_WIDTH: 340,
+  DESKTOP_BOARD_WIDTH: 480, // Aumentado para acomodar 12 colunas
+  MOBILE_BOARD_WIDTH: 360,   // Aumentado proporcionalmente
   
   // Pontuação base por tamanho de palavra
   POINTS_BY_LENGTH: {
