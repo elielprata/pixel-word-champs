@@ -77,7 +77,15 @@ export const useAutomationSettings = () => {
 
       if (error) throw error;
 
-      setLogs(data || []);
+      // Fazer o parse correto do settings_snapshot
+      const parsedLogs: AutomationLog[] = (data || []).map(log => ({
+        ...log,
+        settings_snapshot: typeof log.settings_snapshot === 'string' 
+          ? JSON.parse(log.settings_snapshot) 
+          : log.settings_snapshot || {}
+      }));
+
+      setLogs(parsedLogs);
     } catch (error: any) {
       logger.error('Erro ao carregar logs de automação', { error: error.message }, 'AUTOMATION_SETTINGS');
     }
