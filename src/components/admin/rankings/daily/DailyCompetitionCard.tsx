@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Trophy, Clock } from 'lucide-react';
+import { Calendar, Users, Clock } from 'lucide-react';
 import { CompetitionActions } from './CompetitionActions';
 import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 
@@ -12,11 +13,11 @@ interface DailyCompetition {
   start_date: string;
   end_date: string;
   status: string;
-  prize_pool: number;
   max_participants: number;
   total_participants: number;
   theme: string;
   rules: any;
+  // Nota: prize_pool removido - competições diárias não têm prêmios
 }
 
 interface DailyCompetitionCardProps {
@@ -111,6 +112,11 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
                 <Users className="h-3 w-3 text-green-600" />
                 <span className="text-green-600 font-medium">Participação Livre</span>
               </div>
+            </div>
+
+            {/* Aviso sobre ausência de prêmios */}
+            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+              <span className="text-blue-700">📝 Competição diária - Sem premiação em dinheiro</span>
             </div>
           </div>
           

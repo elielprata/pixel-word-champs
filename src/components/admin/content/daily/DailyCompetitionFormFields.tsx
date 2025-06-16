@@ -46,6 +46,16 @@ export const DailyCompetitionFormFields: React.FC<DailyCompetitionFormFieldsProp
 
   return (
     <div className="space-y-4">
+      {/* Aviso sobre competições diárias */}
+      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-blue-600 font-semibold">📝 Competição Diária</span>
+        </div>
+        <p className="text-sm text-blue-700">
+          Competições diárias não possuem premiação em dinheiro. O foco é na diversão e engajamento dos usuários.
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="title">Título *</Label>

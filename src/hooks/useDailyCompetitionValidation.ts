@@ -10,15 +10,21 @@ export const useDailyCompetitionValidation = () => {
     try {
       console.log('🔍 Hook: Validação diária SIMPLIFICADA:', formData);
       
+      // IMPORTANTE: Garantir que competições diárias não tenham prêmios
+      const dataWithNoPrizes = {
+        ...formData,
+        prize_pool: 0 // Forçar prize_pool = 0 para competições diárias
+      };
+      
       // Aplicar validação simplificada (sem conversões de timezone)
-      const validatedData = validateDailyCompetitionData(formData);
+      const validatedData = validateDailyCompetitionData(dataWithNoPrizes);
       
       console.log('✅ Hook: Dados validados (SISTEMA SIMPLIFICADO):', validatedData);
       
       // Informar ao usuário sobre o sistema simplificado
       toast({
         title: "Sistema Simplificado Ativo",
-        description: "Horários automáticos: 00:00:00 às 23:59:59 (Brasília). O banco ajusta o timezone.",
+        description: "Competições diárias não possuem premiação. Horários: 00:00:00 às 23:59:59 (Brasília).",
         duration: 3000,
       });
       
@@ -46,6 +52,17 @@ export const useDailyCompetitionValidation = () => {
         toast({
           title: "Sistema Simplificado Detectou Inconsistência",
           description: "Esta competição será automaticamente corrigida pelo novo sistema.",
+          variant: "destructive",
+        });
+      }
+      
+      // Verificar se tem prêmios (não deveria ter)
+      if (competition.prize_pool && competition.prize_pool > 0) {
+        console.warn('⚠️ Competição diária com prêmios detectada - será corrigida:', competition.id);
+        
+        toast({
+          title: "Prêmios Removidos",
+          description: "Competições diárias não podem ter prêmios. Os prêmios foram automaticamente removidos.",
           variant: "destructive",
         });
       }
