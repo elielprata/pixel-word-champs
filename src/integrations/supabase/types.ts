@@ -960,6 +960,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      reset_weekly_scores_and_positions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_competition_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -969,6 +973,10 @@ export type Database = {
         Returns: undefined
       }
       update_daily_ranking: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_user_best_weekly_position: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

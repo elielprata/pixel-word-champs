@@ -10,7 +10,7 @@ class WeeklyPositionService {
     try {
       logger.info('Iniciando atualização das melhores posições semanais', undefined, 'WEEKLY_POSITION_SERVICE');
 
-      const { error } = await supabase.rpc('update_user_best_weekly_position');
+      const { error } = await supabase.rpc('update_user_best_weekly_position' as any);
 
       if (error) {
         logger.error('Erro ao atualizar melhores posições semanais', { error }, 'WEEKLY_POSITION_SERVICE');
@@ -31,7 +31,7 @@ class WeeklyPositionService {
     try {
       logger.info('Iniciando reset semanal de pontuações e posições', undefined, 'WEEKLY_POSITION_SERVICE');
 
-      const { error } = await supabase.rpc('reset_weekly_scores_and_positions');
+      const { error } = await supabase.rpc('reset_weekly_scores_and_positions' as any);
 
       if (error) {
         logger.error('Erro ao resetar pontuações e posições semanais', { error }, 'WEEKLY_POSITION_SERVICE');
