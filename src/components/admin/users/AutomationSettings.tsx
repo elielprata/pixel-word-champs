@@ -340,7 +340,8 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
                       <>
                         <Play className="h-4 w-4 mr-2" />
                         Executar Reset Agora
-                      </Button>
+                      </>
+                    )}
                   </Button>
                   <Button
                     variant="outline"
