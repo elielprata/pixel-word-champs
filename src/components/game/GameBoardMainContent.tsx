@@ -53,8 +53,8 @@ const GameBoardMainContent = ({
     <>
       {/* Tabuleiro principal com design gamificado */}
       <div className={`
-        relative bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border-2 border-white/40 overflow-hidden
-        ${isMobile ? 'p-4' : 'p-6'}
+        relative bg-white/95 backdrop-blur-md rounded-xl shadow-xl border-2 border-white/40 overflow-hidden
+        ${isMobile ? 'p-2' : 'p-3'}
       `}>
         {/* Gradiente de fundo sutil */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30" />
@@ -85,7 +85,7 @@ const GameBoardMainContent = ({
       </div>
 
       {/* Lista de palavras com design mais vibrante */}
-      <div className="relative bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border-2 border-white/40 overflow-hidden">
+      <div className="relative bg-white/95 backdrop-blur-md rounded-xl shadow-lg border-2 border-white/40 overflow-hidden">
         {/* Gradiente de fundo */}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/40 to-purple-50/40" />
         

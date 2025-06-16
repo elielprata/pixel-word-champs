@@ -29,12 +29,12 @@ const GameBoardHeader = ({
   onUseHint
 }: GameBoardHeaderProps) => {
   return (
-    <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3 shadow-2xl border-2 border-white/30 relative overflow-hidden animate-fade-in">
+    <div className="bg-white/95 backdrop-blur-md rounded-xl p-2 shadow-xl border-2 border-white/30 relative overflow-hidden animate-fade-in">
       {/* Gradiente de fundo sutil */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-purple-50/50 rounded-2xl" />
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-purple-50/50 rounded-xl" />
       
       {/* Brilho sutil no topo */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-t-2xl" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-t-xl" />
       
       <div className="relative z-10">
         <GameProgressBar 
