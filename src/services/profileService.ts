@@ -1,4 +1,5 @@
 
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -36,7 +37,7 @@ class ProfileService {
     }
   }
 
-  async updateProfile(updates: Partial<{ username: string; avatar_url: string }>): Promise<ApiResponse<User>> {
+  async updateProfile(updates: Partial<{ username: string; avatar_url: string; phone: string }>): Promise<ApiResponse<User>> {
     try {
       logger.info('Atualizando perfil do usuário', { updates }, 'PROFILE_SERVICE');
       
@@ -97,3 +98,4 @@ class ProfileService {
 }
 
 export const profileService = new ProfileService();
+

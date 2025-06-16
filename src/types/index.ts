@@ -1,3 +1,4 @@
+
 // Corrigir tipagem inconsistente da interface User
 export interface User {
   id: string;
@@ -10,6 +11,7 @@ export interface User {
   best_weekly_position?: number;
   pix_key?: string;
   pix_holder_name?: string;
+  phone?: string; // Adicionar campo de telefone
   experience_points?: number; // Adicionar campo de XP
   created_at: string;
   updated_at: string;

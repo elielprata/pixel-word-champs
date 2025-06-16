@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from 'react';
 import { profileService } from '@/services/profileService';
 import { User } from '@/types';
@@ -37,7 +38,7 @@ export const useProfile = () => {
     }
   };
 
-  const updateProfile = async (updates: Partial<{ username: string; avatar_url: string }>) => {
+  const updateProfile = async (updates: Partial<{ username: string; avatar_url: string; phone: string }>) => {
     try {
       const response = await profileService.updateProfile(updates);
       if (response.success && response.data) {
@@ -71,3 +72,4 @@ export const useProfile = () => {
     refetch: fetchProfile
   };
 };
+

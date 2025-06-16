@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from '@/hooks/useAuth';
@@ -8,6 +9,7 @@ import DataSectionHeader from './sections/DataSectionHeader';
 import AvatarSection from './sections/AvatarSection';
 import UsernameSection from './sections/UsernameSection';
 import EmailSection from './sections/EmailSection';
+import PhoneSection from './sections/PhoneSection';
 import PixConfigSection from './sections/PixConfigSection';
 
 const MyDataSection = () => {
@@ -18,6 +20,7 @@ const MyDataSection = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     username: user?.username || '',
+    phone: user?.phone || '',
     pixKey: user?.pix_key || '',
     pixHolderName: user?.pix_holder_name || '',
     pixType: 'cpf' as 'cpf' | 'email' | 'phone' | 'random'
@@ -32,6 +35,7 @@ const MyDataSection = () => {
   const handleStartEdit = () => {
     setEditData({
       username: user?.username || '',
+      phone: user?.phone || '',
       pixKey: user?.pix_key || '',
       pixHolderName: user?.pix_holder_name || '',
       pixType: 'cpf'
@@ -43,6 +47,7 @@ const MyDataSection = () => {
     setIsEditing(false);
     setEditData({
       username: user?.username || '',
+      phone: user?.phone || '',
       pixKey: user?.pix_key || '',
       pixHolderName: user?.pix_holder_name || '',
       pixType: 'cpf'
@@ -63,7 +68,7 @@ const MyDataSection = () => {
     try {
       const result = await updateProfile({
         username: editData.username,
-        // Note: PIX data seria atualizado através de um serviço específico
+        phone: editData.phone,
       });
 
       if (result.success) {
@@ -128,6 +133,13 @@ const MyDataSection = () => {
 
         <EmailSection email={user?.email || ''} />
 
+        <PhoneSection
+          phone={user?.phone || ''}
+          editPhone={editData.phone}
+          isEditing={isEditing}
+          onPhoneChange={(phone) => setEditData(prev => ({ ...prev, phone }))}
+        />
+
         <PixConfigSection
           isEditing={isEditing}
           pixHolderName={user?.pix_holder_name || ''}
@@ -157,3 +169,4 @@ const MyDataSection = () => {
 };
 
 export default MyDataSection;
+
