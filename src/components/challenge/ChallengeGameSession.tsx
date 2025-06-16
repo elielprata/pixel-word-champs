@@ -35,28 +35,30 @@ const ChallengeGameSession = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-      <div className="absolute top-0 left-0 z-10 p-2">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative">
+      <div className="absolute top-4 left-4 z-50">
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={handleStopGame}
-          className="rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white"
+          className="rounded-full bg-white/90 backdrop-blur-sm shadow-xl hover:bg-white hover:shadow-2xl border-2 border-white/50 transition-all duration-300 transform hover:scale-105"
         >
-          <ArrowLeft className="w-6 h-6" />
+          <ArrowLeft className="w-5 h-5 text-gray-700" />
         </Button>
       </div>
 
-      <GameBoard
-        level={currentLevel}
-        timeLeft={timeRemaining}
-        onTimeUp={onTimeUp}
-        onLevelComplete={onLevelComplete}
-        onAdvanceLevel={onAdvanceLevel}
-        onStopGame={onStopGame}
-        canRevive={true}
-        onRevive={onRevive}
-      />
+      <div className="pt-4">
+        <GameBoard
+          level={currentLevel}
+          timeLeft={timeRemaining}
+          onTimeUp={onTimeUp}
+          onLevelComplete={onLevelComplete}
+          onAdvanceLevel={onAdvanceLevel}
+          onStopGame={onStopGame}
+          canRevive={true}
+          onRevive={onRevive}
+        />
+      </div>
     </div>
   );
 };
