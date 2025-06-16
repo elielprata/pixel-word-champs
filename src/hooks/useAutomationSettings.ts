@@ -13,11 +13,25 @@ interface AutomationConfig {
   requiresPassword: boolean;
 }
 
+interface AutomationLog {
+  id: string;
+  automation_type: string;
+  execution_status: string;
+  scheduled_time: string;
+  executed_at?: string;
+  error_message?: string;
+  settings_snapshot: AutomationConfig;
+  affected_users: number;
+  created_at: string;
+}
+
 export const useAutomationSettings = () => {
   const { toast } = useToast();
   const [settings, setSettings] = useState<AutomationConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [logs, setLogs] = useState<AutomationLog[]>([]);
+  const [isExecuting, setIsExecuting] = useState(false);
 
   const loadSettings = async () => {
     try {
@@ -49,6 +63,23 @@ export const useAutomationSettings = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadLogs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('automation_logs')
+        .select('*')
+        .eq('automation_type', 'score_reset')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      setLogs(data || []);
+    } catch (error: any) {
+      logger.error('Erro ao carregar logs de automação', { error: error.message }, 'AUTOMATION_SETTINGS');
     }
   };
 
@@ -93,6 +124,57 @@ export const useAutomationSettings = () => {
     }
   };
 
+  const executeManualReset = async (adminPassword?: string) => {
+    if (!settings) return false;
+
+    if (settings.requiresPassword && !adminPassword) {
+      toast({
+        title: "Senha necessária",
+        description: "Esta automação requer senha de administrador",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    setIsExecuting(true);
+    try {
+      logger.info('Executando reset manual via automação', undefined, 'AUTOMATION_SETTINGS');
+
+      // Verificar senha se necessário
+      if (settings.requiresPassword && adminPassword !== 'admin123') {
+        throw new Error('Senha de administrador incorreta');
+      }
+
+      // Chamar a Edge Function diretamente
+      const { data, error } = await supabase.functions.invoke('automation-reset-checker', {
+        body: { manual_execution: true, admin_password: adminPassword }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Reset executado!",
+        description: "O reset de pontuações foi executado manualmente",
+      });
+
+      // Recarregar logs
+      await loadLogs();
+      
+      logger.info('Reset manual executado com sucesso', { result: data }, 'AUTOMATION_SETTINGS');
+      return true;
+    } catch (error: any) {
+      logger.error('Erro no reset manual', { error: error.message }, 'AUTOMATION_SETTINGS');
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao executar reset manual",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
   const checkAutomationSchedule = async () => {
     if (!settings?.enabled) return false;
 
@@ -100,7 +182,6 @@ export const useAutomationSettings = () => {
       const now = new Date();
       const [hours, minutes] = settings.time.split(':').map(Number);
       
-      // Verificar se é o momento certo para executar
       const shouldExecute = checkIfShouldExecute(now, settings, hours, minutes);
       
       if (shouldExecute) {
@@ -119,21 +200,17 @@ export const useAutomationSettings = () => {
     const currentHours = now.getHours();
     const currentMinutes = now.getMinutes();
     
-    // Verificar se é o horário correto (com tolerância de 1 minuto)
     if (currentHours !== targetHours || Math.abs(currentMinutes - targetMinutes) > 1) {
       return false;
     }
 
     switch (config.frequency) {
       case 'daily':
-        return true; // Executa todo dia no horário correto
-      
+        return true;
       case 'weekly':
         return now.getDay() === (config.dayOfWeek || 1);
-      
       case 'monthly':
         return now.getDate() === (config.dayOfMonth || 1);
-      
       default:
         return false;
     }
@@ -141,14 +218,19 @@ export const useAutomationSettings = () => {
 
   useEffect(() => {
     loadSettings();
+    loadLogs();
   }, []);
 
   return {
     settings,
+    logs,
     isLoading,
     isSaving,
+    isExecuting,
     saveSettings,
     loadSettings,
+    loadLogs,
+    executeManualReset,
     checkAutomationSchedule
   };
 };

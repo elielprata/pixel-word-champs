@@ -36,6 +36,42 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_logs: {
+        Row: {
+          affected_users: number | null
+          automation_type: string
+          created_at: string
+          error_message: string | null
+          executed_at: string | null
+          execution_status: string
+          id: string
+          scheduled_time: string
+          settings_snapshot: Json | null
+        }
+        Insert: {
+          affected_users?: number | null
+          automation_type: string
+          created_at?: string
+          error_message?: string | null
+          executed_at?: string | null
+          execution_status?: string
+          id?: string
+          scheduled_time: string
+          settings_snapshot?: Json | null
+        }
+        Update: {
+          affected_users?: number | null
+          automation_type?: string
+          created_at?: string
+          error_message?: string | null
+          executed_at?: string | null
+          execution_status?: string
+          id?: string
+          scheduled_time?: string
+          settings_snapshot?: Json | null
+        }
+        Relationships: []
+      }
       challenge_progress: {
         Row: {
           challenge_id: number

@@ -6,8 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Calendar, Clock, Settings, AlertTriangle } from 'lucide-react';
+import { Calendar, Clock, Settings, AlertTriangle, Play, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AutomationLogs } from './AutomationLogs';
+import { useAutomationSettings } from '@/hooks/useAutomationSettings';
 
 interface AutomationSettingsProps {
   onSaveSettings: (settings: AutomationConfig) => void;
@@ -17,26 +19,37 @@ interface AutomationSettingsProps {
 interface AutomationConfig {
   enabled: boolean;
   frequency: 'daily' | 'weekly' | 'monthly';
-  time: string; // HH:MM format
-  dayOfWeek?: number; // 0-6 for weekly (0 = Sunday)
-  dayOfMonth?: number; // 1-31 for monthly
+  time: string;
+  dayOfWeek?: number;
+  dayOfMonth?: number;
   requiresPassword: boolean;
 }
 
 export const AutomationSettings = ({ onSaveSettings, currentSettings }: AutomationSettingsProps) => {
+  const { logs, isExecuting, executeManualReset } = useAutomationSettings();
   const [settings, setSettings] = useState<AutomationConfig>(
     currentSettings || {
       enabled: false,
       frequency: 'weekly',
       time: '03:00',
-      dayOfWeek: 1, // Monday
+      dayOfWeek: 1,
       dayOfMonth: 1,
       requiresPassword: true
     }
   );
+  const [testPassword, setTestPassword] = useState('');
+  const [showTestSection, setShowTestSection] = useState(false);
 
   const handleSave = () => {
     onSaveSettings(settings);
+  };
+
+  const handleManualTest = async () => {
+    const success = await executeManualReset(settings.requiresPassword ? testPassword : undefined);
+    if (success) {
+      setTestPassword('');
+      setShowTestSection(false);
+    }
   };
 
   const getNextExecution = () => {
@@ -78,153 +91,222 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
   const weekDays = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
   return (
-    <Card className="border-orange-200">
-      <CardHeader className="bg-gradient-to-r from-orange-50 to-yellow-50">
-        <CardTitle className="flex items-center gap-2 text-orange-800">
-          <Settings className="h-5 w-5" />
-          Automação de Reset de Pontuações
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <Label htmlFor="automation-enabled" className="text-base font-medium">
-              Automação Ativada
-            </Label>
-            <p className="text-sm text-slate-600">
-              Ativar reset automático de pontuações
-            </p>
+    <div className="space-y-6">
+      <Card className="border-orange-200">
+        <CardHeader className="bg-gradient-to-r from-orange-50 to-yellow-50">
+          <CardTitle className="flex items-center gap-2 text-orange-800">
+            <Settings className="h-5 w-5" />
+            Automação de Reset de Pontuações
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent className="p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label htmlFor="automation-enabled" className="text-base font-medium">
+                Automação Ativada
+              </Label>
+              <p className="text-sm text-slate-600">
+                Ativar reset automático de pontuações
+              </p>
+            </div>
+            <Switch
+              id="automation-enabled"
+              checked={settings.enabled}
+              onCheckedChange={(enabled) => setSettings({ ...settings, enabled })}
+            />
           </div>
-          <Switch
-            id="automation-enabled"
-            checked={settings.enabled}
-            onCheckedChange={(enabled) => setSettings({ ...settings, enabled })}
-          />
-        </div>
 
-        {settings.enabled && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Frequência</Label>
-                <Select
-                  value={settings.frequency}
-                  onValueChange={(frequency: 'daily' | 'weekly' | 'monthly') =>
-                    setSettings({ ...settings, frequency })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Diário</SelectItem>
-                    <SelectItem value="weekly">Semanal</SelectItem>
-                    <SelectItem value="monthly">Mensal</SelectItem>
-                  </SelectContent>
-                </Select>
+          {settings.enabled && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Frequência</Label>
+                  <Select
+                    value={settings.frequency}
+                    onValueChange={(frequency: 'daily' | 'weekly' | 'monthly') =>
+                      setSettings({ ...settings, frequency })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Diário</SelectItem>
+                      <SelectItem value="weekly">Semanal</SelectItem>
+                      <SelectItem value="monthly">Mensal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Horário</Label>
+                  <Input
+                    type="time"
+                    value={settings.time}
+                    onChange={(e) => setSettings({ ...settings, time: e.target.value })}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Horário</Label>
-                <Input
-                  type="time"
-                  value={settings.time}
-                  onChange={(e) => setSettings({ ...settings, time: e.target.value })}
+              {settings.frequency === 'weekly' && (
+                <div className="space-y-2">
+                  <Label>Dia da Semana</Label>
+                  <Select
+                    value={settings.dayOfWeek?.toString()}
+                    onValueChange={(day) =>
+                      setSettings({ ...settings, dayOfWeek: parseInt(day) })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {weekDays.map((day, index) => (
+                        <SelectItem key={index} value={index.toString()}>
+                          {day}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {settings.frequency === 'monthly' && (
+                <div className="space-y-2">
+                  <Label>Dia do Mês</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={settings.dayOfMonth}
+                    onChange={(e) =>
+                      setSettings({ ...settings, dayOfMonth: parseInt(e.target.value) })
+                    }
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="requires-password" className="text-base font-medium">
+                    Requer Senha de Confirmação
+                  </Label>
+                  <p className="text-sm text-slate-600">
+                    Exigir senha do admin antes de executar
+                  </p>
+                </div>
+                <Switch
+                  id="requires-password"
+                  checked={settings.requiresPassword}
+                  onCheckedChange={(requiresPassword) =>
+                    setSettings({ ...settings, requiresPassword })
+                  }
                 />
               </div>
-            </div>
 
-            {settings.frequency === 'weekly' && (
-              <div className="space-y-2">
-                <Label>Dia da Semana</Label>
-                <Select
-                  value={settings.dayOfWeek?.toString()}
-                  onValueChange={(day) =>
-                    setSettings({ ...settings, dayOfWeek: parseInt(day) })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {weekDays.map((day, index) => (
-                      <SelectItem key={index} value={index.toString()}>
-                        {day}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+              {nextExecution && (
+                <Alert className="border-green-200 bg-green-50">
+                  <Calendar className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    <strong>Próxima execução:</strong>{' '}
+                    {nextExecution.toLocaleDateString('pt-BR', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </AlertDescription>
+                </Alert>
+              )}
 
-            {settings.frequency === 'monthly' && (
-              <div className="space-y-2">
-                <Label>Dia do Mês</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="31"
-                  value={settings.dayOfMonth}
-                  onChange={(e) =>
-                    setSettings({ ...settings, dayOfMonth: parseInt(e.target.value) })
-                  }
-                />
-              </div>
-            )}
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="requires-password" className="text-base font-medium">
-                  Requer Senha de Confirmação
-                </Label>
-                <p className="text-sm text-slate-600">
-                  Exigir senha do admin antes de executar
-                </p>
-              </div>
-              <Switch
-                id="requires-password"
-                checked={settings.requiresPassword}
-                onCheckedChange={(requiresPassword) =>
-                  setSettings({ ...settings, requiresPassword })
-                }
-              />
-            </div>
-
-            {nextExecution && (
-              <Alert className="border-green-200 bg-green-50">
-                <Calendar className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  <strong>Próxima execução:</strong>{' '}
-                  {nextExecution.toLocaleDateString('pt-BR', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Atenção:</strong> O reset automático zeará a pontuação de todos os usuários.
+                  Esta ação é irreversível e será executada automaticamente no horário configurado.
                 </AlertDescription>
               </Alert>
-            )}
+            </>
+          )}
 
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Atenção:</strong> O reset automático zeará a pontuação de todos os usuários.
-                Esta ação é irreversível e será executada automaticamente no horário configurado.
-              </AlertDescription>
-            </Alert>
-          </>
-        )}
+          <div className="flex justify-between items-center pt-4 border-t">
+            <div className="space-x-2">
+              <Button onClick={handleSave} className="bg-orange-600 hover:bg-orange-700">
+                <Settings className="h-4 w-4 mr-2" />
+                Salvar Configurações
+              </Button>
+              
+              {settings.enabled && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTestSection(!showTestSection)}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Testar Agora
+                </Button>
+              )}
+            </div>
+          </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button onClick={handleSave} className="bg-orange-600 hover:bg-orange-700">
-            <Settings className="h-4 w-4 mr-2" />
-            Salvar Configurações
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          {showTestSection && (
+            <div className="border-t pt-4 space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-2">Executar Reset Manual</h4>
+                <p className="text-sm text-blue-800 mb-4">
+                  Teste a automação executando o reset manualmente agora.
+                </p>
+                
+                {settings.requiresPassword && (
+                  <div className="space-y-2 mb-4">
+                    <Label htmlFor="test-password">Senha de Administrador</Label>
+                    <Input
+                      id="test-password"
+                      type="password"
+                      value={testPassword}
+                      onChange={(e) => setTestPassword(e.target.value)}
+                      placeholder="Digite sua senha atual"
+                      disabled={isExecuting}
+                    />
+                  </div>
+                )}
+                
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleManualTest}
+                    disabled={isExecuting || (settings.requiresPassword && !testPassword.trim())}
+                    variant="destructive"
+                  >
+                    {isExecuting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Executando...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4 mr-2" />
+                        Executar Reset Agora
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowTestSection(false)}
+                    disabled={isExecuting}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AutomationLogs logs={logs} />
+    </div>
   );
 };
