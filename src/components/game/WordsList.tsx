@@ -49,7 +49,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
         </div>
       </div>
       
-      {/* Grid horizontal compacto - palavras como chips */}
+      {/* Grid horizontal compacto - palavras como chips sem truncamento */}
       <div className="grid grid-cols-2 gap-1">
         {levelWords.map((word, index) => {
           const foundWordIndex = foundWords.findIndex(fw => fw.word === word);
@@ -70,7 +70,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
                 }
               `}
             >
-              {/* Ícone e palavra */}
+              {/* Ícone e palavra - sem truncamento */}
               <div className="flex items-center gap-1 flex-1 min-w-0">
                 {isFound && (
                   <CheckCircle className="w-2.5 h-2.5 text-white flex-shrink-0" />
@@ -78,18 +78,18 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
                 {isHidden && !isFound && (
                   <Lock className="w-2.5 h-2.5 text-white/90 flex-shrink-0" />
                 )}
-                <span className={`font-bold truncate text-xs ${
+                <span className={`font-bold text-xs whitespace-nowrap ${
                   isFound || isHidden ? 'text-white' : 'text-gray-700'
                 }`}>
                   {isHidden && !isFound 
                     ? `${word.length}L` 
-                    : word.length > 6 ? word.substring(0, 6) + '...' : word
+                    : word
                   }
                 </span>
               </div>
               
               {/* Pontos ou indicador ultra compacto */}
-              <div className="flex items-center flex-shrink-0">
+              <div className="flex items-center flex-shrink-0 ml-1">
                 {isFound && foundWord && (
                   <span className="text-xs font-bold text-white bg-black/20 px-1 py-0.5 rounded-full border border-white/20">
                     +{foundWord.points}
