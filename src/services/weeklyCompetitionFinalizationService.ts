@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { competitionHistoryService } from './competitionHistoryService';
 import { dynamicPrizeService } from './dynamicPrizeService';
+import { weeklyPositionService } from './weeklyPositionService';
 import { logger } from '@/utils/logger';
 
 class WeeklyCompetitionFinalizationService {
@@ -105,7 +106,15 @@ class WeeklyCompetitionFinalizationService {
         })
         .eq('id', competitionId);
 
-      // 8. Verificar se deve executar reset automático
+      // 8. Executar reset automático das melhores posições semanais
+      try {
+        await weeklyPositionService.resetWeeklyScoresAndPositions();
+        logger.log('✅ Reset das pontuações e melhores posições semanais executado');
+      } catch (resetError) {
+        logger.error('❌ Erro ao executar reset das melhores posições:', resetError);
+      }
+
+      // 9. Verificar se deve executar reset automático
       await this.checkAndExecuteAutomaticReset(competition);
 
       logger.log('✅ Competição semanal finalizada com sucesso');

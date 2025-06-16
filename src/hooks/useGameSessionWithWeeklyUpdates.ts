@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useWeeklyCompetitionAutoParticipation } from './useWeeklyCompetitionAutoParticipation';
+import { weeklyPositionService } from '@/services/weeklyPositionService';
 import { logger } from '@/utils/logger';
 
 export const useGameSessionWithWeeklyUpdates = () => {
@@ -135,6 +136,14 @@ export const useGameSessionWithWeeklyUpdates = () => {
       // Atualizar pontuação na competição semanal se estiver participando
       if (activeWeeklyCompetition) {
         await updateWeeklyScore(newTotalScore);
+      }
+
+      // Atualizar melhores posições semanais após mudança de pontuação
+      try {
+        await weeklyPositionService.updateBestWeeklyPositions();
+        logger.info('✅ Melhores posições semanais atualizadas após sessão de jogo');
+      } catch (positionUpdateError) {
+        logger.warn('⚠️ Erro ao atualizar melhores posições semanais:', positionUpdateError);
       }
 
       logger.info('Pontuação total do usuário atualizada', { 

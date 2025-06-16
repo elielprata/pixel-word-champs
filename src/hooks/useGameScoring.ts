@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { weeklyPositionService } from '@/services/weeklyPositionService';
 import { logger } from '@/utils/logger';
 
 interface FoundWord {
@@ -79,6 +80,14 @@ export const useGameScoring = (foundWords: FoundWord[], level: number) => {
         }
       } catch (rankingUpdateError) {
         logger.warn('⚠️ Erro ao forçar atualização do ranking:', rankingUpdateError);
+      }
+
+      // Atualizar melhores posições semanais após mudança de pontuação
+      try {
+        await weeklyPositionService.updateBestWeeklyPositions();
+        logger.info('✅ Melhores posições semanais atualizadas após mudança de pontuação');
+      } catch (positionUpdateError) {
+        logger.warn('⚠️ Erro ao atualizar melhores posições semanais:', positionUpdateError);
       }
 
     } catch (error) {

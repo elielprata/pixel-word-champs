@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import AvatarUpload from '@/components/ui/AvatarUpload';
 import { usePlayerLevel } from '@/hooks/usePlayerLevel';
+import { useWeeklyPositionManager } from '@/hooks/useWeeklyPositionManager';
 import { logger } from '@/utils/logger';
 
 interface ProfileScreenProps {
@@ -24,6 +24,9 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   // Usar o novo sistema de XP
   const { currentLevel, nextLevel, progress } = usePlayerLevel(user?.total_score || 0);
   const LevelIcon = currentLevel.icon;
+
+  // Integrar gerenciamento automático das melhores posições
+  const { forceUpdatePositions } = useWeeklyPositionManager();
 
   logger.debug('Renderizando ProfileScreen', { userId: user?.id }, 'PROFILE_SCREEN');
 
