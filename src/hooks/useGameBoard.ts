@@ -6,6 +6,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useGameValidation } from '@/hooks/useGameValidation';
 import { useGameState } from '@/hooks/useGameState';
 import { useCellInteractions } from '@/hooks/useCellInteractions';
+import { useSelectionLock } from '@/hooks/useSelectionLock';
 import { logger } from '@/utils/logger';
 import { isLinearPath } from '@/hooks/word-selection/validateLinearPath';
 import { type Position } from '@/utils/boardUtils';
@@ -32,6 +33,9 @@ export const useGameBoard = ({
   // Estado do jogo consolidado
   const gameState = useGameState(level, timeLeft, onLevelComplete);
 
+  // Sistema de lock para evitar duplicação
+  const { isProcessing, acquireLock, releaseLock } = useSelectionLock();
+
   // Validação de palavras (única fonte de verdade)
   const { validateAndAddWord } = useGameValidation(gameState.foundWords, levelWords);
 
@@ -54,33 +58,48 @@ export const useGameBoard = ({
     getLinearPath
   } = useSimpleSelection();
 
-  // CORREÇÃO DEFINITIVA: Finalizar seleção com validação - PROTEÇÃO CONTRA DUPLICAÇÃO
+  // CORREÇÃO DEFINITIVA: Finalizar seleção com LOCK PROTECTION
   const handleCellEnd = useCallback(() => {
     const finalSelection = handleEnd();
 
     if (finalSelection.length >= 3 && isLinearPath(finalSelection)) {
       const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
       
-      logger.info(`🔍 TENTATIVA DE SELEÇÃO - Palavra: "${word}"`, { 
+      logger.info(`🔍 TENTATIVA DE SELEÇÃO COM LOCK - Palavra: "${word}"`, { 
         word, 
         positions: finalSelection,
+        isProcessing,
         beforeCount: gameState.foundWords.length,
         foundWords: gameState.foundWords.map(fw => fw.word)
       }, 'GAME_BOARD');
       
-      const validatedWord = validateAndAddWord(word, finalSelection);
-      if (validatedWord) {
-        logger.info(`✅ PALAVRA VALIDADA - "${word}" = ${validatedWord.points} pontos`, { 
-          word: validatedWord.word,
-          points: validatedWord.points,
-          beforeCount: gameState.foundWords.length
+      // PROTEÇÃO CRÍTICA: Tentar adquirir lock antes de processar
+      if (!acquireLock(word)) {
+        logger.warn(`⚠️ SELEÇÃO BLOQUEADA - Lock não pôde ser adquirido para "${word}"`, { 
+          word,
+          isProcessing 
         }, 'GAME_BOARD');
-        
-        // ÚNICA chamada para adicionar palavra
-        gameState.addFoundWord(validatedWord);
+        return;
+      }
+
+      try {
+        const validatedWord = validateAndAddWord(word, finalSelection);
+        if (validatedWord) {
+          logger.info(`✅ PALAVRA VALIDADA COM LOCK - "${word}" = ${validatedWord.points} pontos`, { 
+            word: validatedWord.word,
+            points: validatedWord.points,
+            beforeCount: gameState.foundWords.length
+          }, 'GAME_BOARD');
+          
+          // ÚNICA chamada para adicionar palavra
+          gameState.addFoundWord(validatedWord);
+        }
+      } finally {
+        // SEMPRE liberar o lock, mesmo em caso de erro
+        releaseLock();
       }
     }
-  }, [handleEnd, boardData.board, validateAndAddWord, gameState]);
+  }, [handleEnd, boardData.board, validateAndAddWord, gameState, acquireLock, releaseLock, isProcessing]);
 
   // Seleção atual em tempo real
   const selectedCells: Position[] = useMemo(() => {
@@ -154,7 +173,7 @@ export const useGameBoard = ({
       boardData,
       size,
       selectedCells,
-      isDragging
+      isDragging: isDragging && !isProcessing // Disable dragging when processing
     },
     // Props do estado do jogo
     gameStateProps: {
@@ -170,9 +189,9 @@ export const useGameBoard = ({
     },
     // Props de interação com células
     cellInteractionProps: {
-      handleCellStart: handleStart,
-      handleCellMove: handleDrag,
-      handleCellEnd,
+      handleCellStart: isProcessing ? () => {} : handleStart, // Disable start when processing
+      handleCellMove: isProcessing ? () => {} : handleDrag,   // Disable move when processing
+      handleCellEnd: isProcessing ? () => {} : handleCellEnd, // Disable end when processing
       isCellSelected,
       isCellPermanentlyMarked: cellInteractions.isCellPermanentlyMarked,
       isCellHintHighlighted: cellInteractions.isCellHintHighlighted,

@@ -101,12 +101,13 @@ export const useGameState = (
   }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, level, currentLevelScore, updateUserScore, onLevelComplete]);
 
   const addFoundWord = (newFoundWord: FoundWord) => {
-    // PROTEÇÃO CRÍTICA: Verificar duplicação antes de adicionar
+    // PROTEÇÃO FINAL: Verificar duplicação uma última vez antes de adicionar ao estado
     const isAlreadyFound = state.foundWords.some(fw => fw.word === newFoundWord.word);
     if (isAlreadyFound) {
-      logger.warn(`⚠️ DUPLICAÇÃO EVITADA NO ESTADO - Palavra "${newFoundWord.word}" já existe`, {
+      logger.error(`🚨 DUPLICAÇÃO EVITADA NO ESTADO FINAL - Palavra "${newFoundWord.word}" já existe`, {
         word: newFoundWord.word,
-        existingWords: state.foundWords.map(fw => fw.word)
+        existingWords: state.foundWords.map(fw => fw.word),
+        attemptedWord: newFoundWord
       }, 'GAME_STATE');
       return;
     }
@@ -115,7 +116,8 @@ export const useGameState = (
       word: newFoundWord.word,
       points: newFoundWord.points,
       beforeCount: state.foundWords.length,
-      afterCount: state.foundWords.length + 1
+      afterCount: state.foundWords.length + 1,
+      allWordsAfter: [...state.foundWords.map(fw => fw.word), newFoundWord.word]
     }, 'GAME_STATE');
     
     setState(prev => ({

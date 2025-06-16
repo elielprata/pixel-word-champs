@@ -16,18 +16,25 @@ export const useGameValidation = (
   const { getPointsForWord } = useGamePointsConfig();
 
   const validateAndAddWord = (word: string, positions: Position[]) => {
+    logger.info(`🔍 VALIDAÇÃO INICIADA - Palavra: "${word}"`, { 
+      word, 
+      existingWords: foundWords.map(fw => fw.word),
+      totalFound: foundWords.length 
+    }, 'GAME_VALIDATION');
+
     // Verificação 1: Palavra deve estar na lista do nível
     if (!levelWords.includes(word)) {
       logger.warn(`❌ Palavra "${word}" não está na lista do nível`, { word, levelWords }, 'GAME_VALIDATION');
       return null;
     }
 
-    // Verificação 2: Palavra não pode ter sido encontrada antes (PROTEÇÃO CRÍTICA)
+    // Verificação 2: PROTEÇÃO CRÍTICA - Palavra não pode ter sido encontrada antes
     const isAlreadyFound = foundWords.some(fw => fw.word === word);
     if (isAlreadyFound) {
-      logger.warn(`⚠️ DUPLICAÇÃO EVITADA - Palavra "${word}" já foi encontrada`, { 
+      logger.warn(`⚠️ DUPLICAÇÃO EVITADA NA VALIDAÇÃO - Palavra "${word}" já foi encontrada`, { 
         word, 
-        existingWords: foundWords.map(fw => fw.word) 
+        existingWords: foundWords.map(fw => fw.word),
+        totalFound: foundWords.length
       }, 'GAME_VALIDATION');
       return null;
     }
@@ -35,7 +42,7 @@ export const useGameValidation = (
     const points = getPointsForWord(word);
     const validatedWord = { word, positions: [...positions], points };
     
-    logger.info(`✅ Palavra validada: "${word}" = ${points} pontos`, { 
+    logger.info(`✅ Palavra validada com sucesso: "${word}" = ${points} pontos`, { 
       validatedWord,
       totalFoundWords: foundWords.length 
     }, 'GAME_VALIDATION');
