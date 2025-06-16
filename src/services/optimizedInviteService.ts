@@ -23,6 +23,12 @@ export interface InviteStats {
   totalInvites: number;
 }
 
+interface RpcResponse {
+  inviteCode: string;
+  invitedFriends: InvitedFriend[];
+  stats: InviteStats;
+}
+
 class OptimizedInviteService {
   private cache: Map<string, { data: OptimizedInviteData; timestamp: number }> = new Map();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutos
@@ -54,10 +60,13 @@ class OptimizedInviteService {
         return createErrorResponse(error.message);
       }
 
+      // Type assertion para o tipo correto
+      const rpcData = data as RpcResponse;
+
       const optimizedData: OptimizedInviteData = {
-        inviteCode: data.inviteCode || '',
-        invitedFriends: data.invitedFriends || [],
-        stats: data.stats || { totalPoints: 0, activeFriends: 0, totalInvites: 0 }
+        inviteCode: rpcData.inviteCode || '',
+        invitedFriends: rpcData.invitedFriends || [],
+        stats: rpcData.stats || { totalPoints: 0, activeFriends: 0, totalInvites: 0 }
       };
 
       // Atualizar cache
