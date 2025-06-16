@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -182,7 +183,10 @@ export const RankingsTab = () => {
                 
                 <WeeklyCompetitionsView 
                   competitions={weeklyCompetitionsWithType} 
-                  activeCompetition={activeWeeklyCompetition} 
+                  activeCompetition={activeWeeklyCompetition ? {
+                    ...activeWeeklyCompetition,
+                    competition_type: 'tournament'
+                  } : null} 
                   isLoading={isRankingsLoading} 
                   onRefresh={refreshData} 
                 />
