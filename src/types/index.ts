@@ -9,6 +9,8 @@ export interface User {
   games_played: number;
   best_daily_position?: number;
   best_weekly_position?: number;
+  pix_key?: string;
+  pix_holder_name?: string;
   created_at: string;
   updated_at: string;
 }
