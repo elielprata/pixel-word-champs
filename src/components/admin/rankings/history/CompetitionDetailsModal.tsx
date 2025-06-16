@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -91,14 +90,22 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
     setIsLoading(true);
     try {
       console.log('🏆 Buscando ranking semanal para competição:', competition.id);
+      console.log('📅 Período da competição:', {
+        start: competition.start_date,
+        end: competition.end_date
+      });
 
-      const weekStart = getWeekDatesFromCompetition(competition.start_date, competition.end_date);
+      // Converter datas da competição para formato de busca
+      const competitionStart = new Date(competition.start_date);
+      const competitionEnd = new Date(competition.end_date);
 
-      // Buscar ranking semanal baseado no período da competição
-      const { data: weeklyData, error: weeklyError } = await supabase
+      // Buscar rankings que estejam dentro do período da competição
+      // Primeiro, tentar buscar por sobreposição de datas
+      let { data: weeklyData, error: weeklyError } = await supabase
         .from('weekly_rankings')
-        .select('user_id, username, position, total_score, prize_amount')
-        .eq('week_start', weekStart)
+        .select('user_id, username, position, total_score, prize_amount, week_start, week_end')
+        .gte('week_end', competition.start_date.split('T')[0])
+        .lte('week_start', competition.end_date.split('T')[0])
         .order('position', { ascending: true });
 
       if (weeklyError) {
@@ -106,13 +113,74 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
         throw weeklyError;
       }
 
+      // Se não encontrou dados por sobreposição, tentar buscar por data mais próxima
       if (!weeklyData || weeklyData.length === 0) {
-        console.log('ℹ️ Nenhum ranking semanal encontrado para o período');
+        console.log('🔍 Nenhum ranking encontrado por sobreposição, buscando por proximidade de datas...');
+        
+        // Buscar rankings que estejam próximos ao período da competição
+        const { data: proximityData, error: proximityError } = await supabase
+          .from('weekly_rankings')
+          .select('user_id, username, position, total_score, prize_amount, week_start, week_end')
+          .order('week_start', { ascending: false })
+          .limit(200); // Pegar uma amostra maior para filtrar
+
+        if (proximityError) {
+          console.error('❌ Erro ao buscar ranking por proximidade:', proximityError);
+          throw proximityError;
+        }
+
+        if (proximityData && proximityData.length > 0) {
+          // Filtrar rankings que estejam mais próximos do período da competição
+          const competitionStartTime = competitionStart.getTime();
+          const competitionEndTime = competitionEnd.getTime();
+          
+          const rankedByProximity = proximityData
+            .map(ranking => {
+              const weekStart = new Date(ranking.week_start).getTime();
+              const weekEnd = new Date(ranking.week_end).getTime();
+              
+              // Calcular a distância temporal entre o ranking e a competição
+              const distance = Math.min(
+                Math.abs(weekStart - competitionStartTime),
+                Math.abs(weekEnd - competitionEndTime),
+                Math.abs(weekStart - competitionEndTime),
+                Math.abs(weekEnd - competitionStartTime)
+              );
+              
+              return { ...ranking, distance };
+            })
+            .sort((a, b) => a.distance - b.distance);
+
+          // Pegar apenas os rankings da semana mais próxima
+          if (rankedByProximity.length > 0) {
+            const closestWeekStart = rankedByProximity[0].week_start;
+            weeklyData = rankedByProximity
+              .filter(r => r.week_start === closestWeekStart)
+              .sort((a, b) => a.position - b.position);
+            
+            console.log('📊 Usando ranking da semana mais próxima:', {
+              weekStart: closestWeekStart,
+              count: weeklyData.length
+            });
+          }
+        }
+      }
+
+      if (!weeklyData || weeklyData.length === 0) {
+        console.log('ℹ️ Nenhum ranking semanal encontrado para o período ou proximidade');
         setWeeklyRanking([]);
         return;
       }
 
-      console.log('✅ Ranking semanal carregado:', weeklyData.length, 'participantes');
+      console.log('✅ Ranking semanal carregado:', {
+        count: weeklyData.length,
+        sample: weeklyData.slice(0, 3).map(r => ({
+          username: r.username,
+          position: r.position,
+          week: `${r.week_start} a ${r.week_end}`
+        }))
+      });
+      
       setWeeklyRanking(weeklyData);
 
     } catch (error) {
@@ -306,8 +374,8 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
                 <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
                   <p className="text-sm text-purple-700">
                     <strong>💡 Competição Semanal:</strong> Este ranking mostra a pontuação total acumulada 
-                    de todos os jogadores durante a semana da competição. É um ranking global onde todos 
-                    os jogadores competem baseado em sua pontuação total.
+                    de todos os jogadores durante o período específico desta competição semanal. O sistema 
+                    busca dados de ranking que correspondam às datas exatas configuradas para esta competição.
                   </p>
                 </div>
               )}
@@ -346,7 +414,7 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Trophy className="h-5 w-5" />
-                {isWeeklyCompetition ? 'Ranking Semanal Global' : 'Ranking Final'} ({totalParticipants} participantes)
+                {isWeeklyCompetition ? 'Ranking Semanal do Período' : 'Ranking Final'} ({totalParticipants} participantes)
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -420,7 +488,7 @@ export const CompetitionDetailsModal: React.FC<CompetitionDetailsModalProps> = (
                   <p>Nenhum participante encontrado nesta competição</p>
                   {isWeeklyCompetition && (
                     <p className="text-sm mt-2">
-                      O ranking semanal pode ainda não ter sido gerado para este período.
+                      O ranking semanal pode ainda não ter sido gerado para este período específico.
                     </p>
                   )}
                 </div>
