@@ -36,8 +36,8 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
       bgColor: 'bg-blue-50'
     },
     { 
-      label: 'Melhor Posição', 
-      value: user?.best_daily_position ? `#${user.best_daily_position}` : '-', 
+      label: 'Melhor Posição Semanal', 
+      value: user?.best_weekly_position ? `#${user.best_weekly_position}` : '-', 
       icon: Award,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-50'
