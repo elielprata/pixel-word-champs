@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCompetitionStatusChecker } from '@/hooks/useCompetitionStatusChecker';
 import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
+import { useCompetitionFinalization } from '@/hooks/useCompetitionFinalization';
 import { TIMING_CONFIG } from '@/constants/app';
 import { Competition } from '@/types';
 import HomeHeader from './home/HomeHeader';
@@ -32,6 +33,9 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   // Adicionar participação automática e atualização de ranking semanal
   useWeeklyCompetitionAutoParticipation();
   useWeeklyRankingUpdater();
+
+  // Adicionar hook de finalização automática para competições diárias
+  useCompetitionFinalization(competitions);
 
   const loadCompetitions = async () => {
     try {
@@ -67,7 +71,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
             max_participants: comp.max_participants || 1000,
             is_active: comp.status === 'active',
             created_at: comp.created_at || '',
-            updated_at: comp.updated_at || ''
+            updated_at: comp.updated_at || '',
+            competition_type: comp.competition_type // Adicionar para o hook de finalização
           }));
         
         setCompetitions(mappedCompetitions);

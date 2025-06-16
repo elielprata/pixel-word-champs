@@ -7,6 +7,7 @@ import { EditCompetitionModal } from './EditCompetitionModal';
 import { WeeklyRankingModal } from './WeeklyRankingModal';
 import { useWeeklyCompetitionsActions } from '@/hooks/useWeeklyCompetitionsActions';
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
+import { useCompetitionFinalization } from '@/hooks/useCompetitionFinalization';
 import { competitionStatusService } from '@/services/competitionStatusService';
 
 interface WeeklyCompetition {
@@ -19,6 +20,7 @@ interface WeeklyCompetition {
   prize_pool: number;
   max_participants: number;
   total_participants?: number;
+  competition_type: string;
 }
 
 interface WeeklyCompetitionsViewProps {
@@ -38,6 +40,9 @@ export const WeeklyCompetitionsView: React.FC<WeeklyCompetitionsViewProps> = ({
   
   // Adicionar atualização automática do ranking semanal
   useWeeklyRankingUpdater();
+  
+  // Adicionar hook de finalização automática
+  useCompetitionFinalization(competitions);
   
   const {
     editingCompetition,
