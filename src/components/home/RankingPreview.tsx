@@ -10,15 +10,15 @@ interface RankingPreviewProps {
 }
 
 const RankingPreview = ({ onViewFullRanking }: RankingPreviewProps) => {
-  const { dailyRanking, isLoading } = useRankingData();
+  const { weeklyRanking, isLoading } = useRankingData();
   
-  const topPlayers = dailyRanking.slice(0, 3);
+  const topPlayers = weeklyRanking.slice(0, 3);
 
   return (
     <Card className="mt-8 border-0 shadow-lg">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-bold text-gray-900">Top Players Hoje</CardTitle>
+          <CardTitle className="text-lg font-bold text-gray-900">Top Players da Semana</CardTitle>
           <TrendingUp className="w-5 h-5 text-purple-600" />
         </div>
       </CardHeader>
