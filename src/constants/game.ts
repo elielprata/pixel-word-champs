@@ -3,7 +3,7 @@ export const GAME_CONSTANTS = {
   // Palavras obrigatórias por nível
   TOTAL_WORDS_REQUIRED: 5,
   
-  // Tamanhos do tabuleiro
+  // Tamanhos do tabuleiro - ALTERADO: 12 de altura x 8 de largura
   BOARD_HEIGHT: 12,
   BOARD_WIDTH: 8,
   

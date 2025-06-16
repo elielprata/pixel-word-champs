@@ -11,6 +11,7 @@ interface BoardData {
 }
 
 export const useBoardGeneration = () => {
+  // ATUALIZADO: Agora gera tabuleiro 12x8 (altura x largura)
   const generateBoard = useCallback((height: number, words: string[]): BoardData => {
     logger.debug('Gerando tabuleiro 12x8', { height, wordsCount: words.length }, 'BOARD_GENERATION');
     
