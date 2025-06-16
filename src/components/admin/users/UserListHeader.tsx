@@ -4,6 +4,7 @@ import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Users, RotateCcw, Download } from 'lucide-react';
+import { AutomationToggle } from './AutomationToggle';
 
 interface UserListHeaderProps {
   userCount: number;
@@ -37,16 +38,20 @@ export const UserListHeader = ({
         </CardTitle>
         
         <div className="flex flex-col gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onResetScores}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-            disabled={isResettingScores}
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Zerar Pontuação Geral
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onResetScores}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+              disabled={isResettingScores}
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Zerar Pontuação Geral
+            </Button>
+            
+            <AutomationToggle />
+          </div>
           
           <Button
             variant="outline"
