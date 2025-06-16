@@ -15,15 +15,12 @@ export class DailyCompetitionValidationService {
       // OBRIGATÓRIO: Validar e corrigir dados antes de salvar
       const validatedData = validateDailyCompetitionData(formData);
       
-      // IMPORTANTE: Garantir que não há prêmios em competições diárias
-      validatedData.prize_pool = 0;
-      
-      console.log('✅ Service: Dados validados e corrigidos (SEM PRÊMIOS):', validatedData);
+      console.log('✅ Service: Dados validados (SEM PRÊMIOS):', validatedData);
       
       // Obter o usuário atual
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Inserir no banco - o trigger garantirá 23:59:59 e prize_pool = 0
+      // Inserir no banco - o trigger garantirá prize_pool = 0
       const { data, error } = await supabase
         .from('custom_competitions')
         .insert({
@@ -34,7 +31,7 @@ export class DailyCompetitionValidationService {
           end_date: validatedData.end_date,
           competition_type: validatedData.competition_type,
           max_participants: formData.max_participants || null,
-          prize_pool: 0, // SEMPRE 0 para competições diárias
+          prize_pool: 0, // SEMPRE 0 para competições diárias (trigger do banco garante)
           created_by: user?.id
         })
         .select()
@@ -63,12 +60,9 @@ export class DailyCompetitionValidationService {
       // OBRIGATÓRIO: Validar e corrigir dados antes de atualizar
       const validatedData = validateDailyCompetitionData(formData);
       
-      // IMPORTANTE: Garantir que não há prêmios em competições diárias
-      validatedData.prize_pool = 0;
-      
       console.log('✅ Service: Dados validados para atualização (SEM PRÊMIOS):', validatedData);
       
-      // Atualizar no banco - o trigger garantirá 23:59:59 e prize_pool = 0
+      // Atualizar no banco - o trigger garantirá prize_pool = 0
       const { data, error } = await supabase
         .from('custom_competitions')
         .update({
@@ -77,7 +71,7 @@ export class DailyCompetitionValidationService {
           theme: validatedData.theme,
           start_date: validatedData.start_date,
           end_date: validatedData.end_date,
-          prize_pool: 0, // SEMPRE 0 para competições diárias
+          prize_pool: 0, // SEMPRE 0 para competições diárias (trigger do banco garante)
           updated_at: new Date().toISOString()
         })
         .eq('id', competitionId)
