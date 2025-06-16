@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +25,7 @@ interface WeeklyCompetition {
   prize_pool: number;
   max_participants: number;
   total_participants?: number;
-  competition_type: string;
+  competition_type: string; // Add the missing property
 }
 
 export const RankingsTab = () => {
@@ -218,4 +216,3 @@ export const RankingsTab = () => {
     </div>
   );
 };
-
