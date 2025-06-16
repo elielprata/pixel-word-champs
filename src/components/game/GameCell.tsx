@@ -37,19 +37,19 @@ const GameCell = ({
     const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95";
     
     if (isHintHighlighted) {
-      return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse border-2 border-purple-300`;
+      return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse`;
     }
     
     if (isPermanentlyMarked && wordColor) {
-      return `${baseClasses} bg-gradient-to-br ${wordColor} text-white shadow-lg border-2 border-white/30 animate-bounce-in`;
+      return `${baseClasses} bg-gradient-to-br ${wordColor} text-white shadow-lg animate-bounce-in`;
     }
     
     if (isSelected) {
-      return `${baseClasses} bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-800 shadow-lg shadow-yellow-500/50 border-2 border-yellow-200 animate-pulse`;
+      return `${baseClasses} bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-800 shadow-lg shadow-yellow-500/50 animate-pulse`;
     }
     
     // Estado normal com gradiente sutil
-    return `${baseClasses} bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 border-2 border-gray-300 hover:from-gray-100 hover:to-gray-200 hover:border-gray-400 shadow-md`;
+    return `${baseClasses} bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 hover:from-gray-100 hover:to-gray-200 shadow-md`;
   };
 
   const fontSize = isMobile
@@ -100,7 +100,7 @@ const GameCell = ({
       data-col={colIndex}
     >
       {/* Letra principal */}
-      <span className="relative z-10 font-bold tracking-tight drop-shadow-sm">
+      <span className="relative z-10 font-bold tracking-tight">
         {letter}
       </span>
       
@@ -120,7 +120,7 @@ const GameCell = ({
       
       {/* Borda brilhante para seleção */}
       {isSelected && (
-        <div className="absolute inset-0 rounded-lg border-2 border-yellow-300 shadow-lg shadow-yellow-400/30 animate-pulse" />
+        <div className="absolute inset-0 rounded-lg shadow-lg shadow-yellow-400/30 animate-pulse" />
       )}
     </div>
   );
