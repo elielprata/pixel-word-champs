@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Trophy, Calendar, Settings, HelpCircle, LogOut, Award, ChevronRight, Star, Zap, Target, Crown } from 'lucide-react';
+import { User, Calendar, Settings, HelpCircle, LogOut, Award, ChevronRight, Star } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import AvatarUpload from '@/components/ui/AvatarUpload';
+import { usePlayerLevel } from '@/hooks/usePlayerLevel';
 import { logger } from '@/utils/logger';
 
 interface ProfileScreenProps {
@@ -20,43 +21,11 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   const navigate = useNavigate();
   const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url);
 
+  // Usar o novo sistema de XP
+  const { currentLevel, nextLevel, progress } = usePlayerLevel(user?.total_score || 0);
+  const LevelIcon = currentLevel.icon;
+
   logger.debug('Renderizando ProfileScreen', { userId: user?.id }, 'PROFILE_SCREEN');
-
-  const getPlayerLevel = () => {
-    const score = user?.total_score || 0;
-    if (score >= 10000) return { level: 10, title: "Lenda", icon: Crown, color: "from-yellow-400 to-orange-500" };
-    if (score >= 5000) return { level: 9, title: "Mestre", icon: Trophy, color: "from-purple-500 to-pink-500" };
-    if (score >= 2500) return { level: 8, title: "Expert", icon: Star, color: "from-blue-500 to-cyan-500" };
-    if (score >= 1000) return { level: 7, title: "Avançado", icon: Target, color: "from-green-500 to-emerald-500" };
-    if (score >= 500) return { level: 6, title: "Experiente", icon: Zap, color: "from-indigo-500 to-purple-500" };
-    if (score >= 250) return { level: 5, title: "Veterano", icon: Award, color: "from-orange-500 to-red-500" };
-    if (score >= 100) return { level: 4, title: "Competente", icon: Trophy, color: "from-teal-500 to-blue-500" };
-    if (score >= 50) return { level: 3, title: "Intermediário", icon: Star, color: "from-purple-400 to-pink-400" };
-    if (score >= 25) return { level: 2, title: "Iniciante", icon: Target, color: "from-green-400 to-blue-400" };
-    return { level: 1, title: "Novato", icon: User, color: "from-gray-400 to-gray-500" };
-  };
-
-  const getNextLevelProgress = () => {
-    const score = user?.total_score || 0;
-    const thresholds = [0, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
-    const currentLevel = getPlayerLevel().level;
-    
-    if (currentLevel >= 10) return { current: score, next: score, progress: 100 };
-    
-    const currentThreshold = thresholds[currentLevel - 1];
-    const nextThreshold = thresholds[currentLevel];
-    const progress = ((score - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
-    
-    return { 
-      current: score - currentThreshold, 
-      next: nextThreshold - currentThreshold, 
-      progress: Math.min(progress, 100) 
-    };
-  };
-
-  const playerLevel = getPlayerLevel();
-  const nextLevel = getNextLevelProgress();
-  const LevelIcon = playerLevel.icon;
 
   const stats = [
     { 
@@ -69,12 +38,12 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
     { 
       label: 'Melhor Posição', 
       value: user?.best_daily_position ? `#${user.best_daily_position}` : '-', 
-      icon: Trophy,
+      icon: Award,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-50'
     },
     { 
-      label: 'Pontos', 
+      label: 'XP Total', 
       value: user?.total_score?.toLocaleString() || '0', 
       icon: Star,
       color: 'text-purple-600',
@@ -160,6 +129,12 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
     setCurrentAvatar(newAvatarUrl);
   };
 
+  const formatXP = (xp: number) => {
+    if (xp >= 1000000) return `${(xp / 1000000).toFixed(1)}M`;
+    if (xp >= 1000) return `${(xp / 1000).toFixed(1)}K`;
+    return xp.toString();
+  };
+
   return (
     <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
       {/* Header */}
@@ -168,8 +143,8 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
         <p className="text-sm text-gray-600">Estatísticas e progressão</p>
       </div>
 
-      {/* Card principal do jogador */}
-      <Card className={`mb-4 bg-gradient-to-r ${playerLevel.color} text-white border-0 shadow-lg`}>
+      {/* Card principal do jogador com novo sistema XP */}
+      <Card className={`mb-4 bg-gradient-to-r ${currentLevel.color} text-white border-0 shadow-lg`}>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -188,23 +163,37 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-lg font-bold">{user?.username || 'Jogador'}</h2>
                 <Badge className="bg-white/20 text-white text-xs">
-                  Nível {playerLevel.level}
+                  Nível {currentLevel.level}
                 </Badge>
               </div>
-              <p className="text-sm opacity-90 mb-2">{playerLevel.title}</p>
+              <p className="text-sm opacity-90 mb-2">{currentLevel.title}</p>
               
               {/* Barra de progresso para próximo nível */}
-              {playerLevel.level < 10 && (
+              {nextLevel && (
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs opacity-90">
-                    <span>{nextLevel.current} / {nextLevel.next} XP</span>
-                    <span>Nível {playerLevel.level + 1}</span>
+                    <span>{formatXP(progress.current)} / {formatXP(progress.next)} XP</span>
+                    <span>{nextLevel.title}</span>
                   </div>
                   <div className="bg-white/20 rounded-full h-2">
                     <div 
                       className="bg-white rounded-full h-2 transition-all duration-500"
-                      style={{ width: `${nextLevel.progress}%` }}
+                      style={{ width: `${progress.progress}%` }}
                     />
+                  </div>
+                </div>
+              )}
+              
+              {/* Jogador máximo - Lenda da Linguagem */}
+              {!nextLevel && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-4 h-4 text-yellow-300" />
+                    <span className="text-sm font-bold">NÍVEL MÁXIMO ATINGIDO!</span>
+                    <Star className="w-4 h-4 text-yellow-300" />
+                  </div>
+                  <div className="bg-white/20 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-yellow-300 to-orange-300 rounded-full h-2 animate-pulse" style={{ width: '100%' }} />
                   </div>
                 </div>
               )}
