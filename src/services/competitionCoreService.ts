@@ -25,6 +25,7 @@ export class CompetitionCoreService {
               comp.competition_type === 'tournament' ? 'weekly' as const : 'challenge' as const,
         title: comp.title,
         description: comp.description || '',
+        theme: comp.theme || '',
         start_date: comp.start_date,
         end_date: comp.end_date,
         status: comp.status,
@@ -33,7 +34,8 @@ export class CompetitionCoreService {
         max_participants: comp.max_participants || 1000,
         is_active: comp.status === 'active',
         created_at: comp.created_at || '',
-        updated_at: comp.updated_at || ''
+        updated_at: comp.updated_at || '',
+        competition_type: comp.competition_type // Adicionar propriedade necessária
       })) || [];
 
       logger.debug('Competições mapeadas com sucesso', { count: competitions.length }, 'COMPETITION_CORE_SERVICE');
@@ -63,6 +65,7 @@ export class CompetitionCoreService {
         type: 'daily',
         title: data.title,
         description: data.description || '',
+        theme: data.theme || '',
         start_date: data.start_date,
         end_date: data.end_date,
         status: data.status,
@@ -71,7 +74,8 @@ export class CompetitionCoreService {
         max_participants: data.max_participants || 1000,
         prize_pool: Number(data.prize_pool) || 0,
         created_at: data.created_at || '',
-        updated_at: data.updated_at || ''
+        updated_at: data.updated_at || '',
+        competition_type: data.competition_type // Adicionar propriedade necessária
       };
 
       logger.info('Competição diária encontrada', { title: competition.title }, 'COMPETITION_CORE_SERVICE');
@@ -100,6 +104,7 @@ export class CompetitionCoreService {
         type: 'weekly',
         title: data.title,
         description: data.description || '',
+        theme: data.theme || '',
         start_date: data.start_date,
         end_date: data.end_date,
         status: data.status,
@@ -108,7 +113,8 @@ export class CompetitionCoreService {
         max_participants: data.max_participants || 1000,
         prize_pool: Number(data.prize_pool) || 0,
         created_at: data.created_at || '',
-        updated_at: data.updated_at || ''
+        updated_at: data.updated_at || '',
+        competition_type: data.competition_type // Adicionar propriedade necessária
       };
 
       logger.info('Competição semanal encontrada', { title: competition.title }, 'COMPETITION_CORE_SERVICE');

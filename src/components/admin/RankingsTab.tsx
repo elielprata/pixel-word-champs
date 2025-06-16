@@ -42,8 +42,14 @@ export const RankingsTab = () => {
   // Filtrar competições diárias (tipo 'challenge')
   const dailyCompetitions = customCompetitions.filter(comp => comp.competition_type === 'challenge');
 
+  // Garantir que weeklyCompetitions tenham a propriedade competition_type
+  const weeklyCompetitionsWithType = weeklyCompetitions.map(comp => ({
+    ...comp,
+    competition_type: comp.competition_type || 'tournament' // Garantir que existe
+  }));
+
   // Log das competições semanais que serão enviadas para o WeeklyCompetitionsView
-  console.log('📋 [RankingsTab] Competições semanais que serão enviadas:', weeklyCompetitions.map(comp => ({
+  console.log('📋 [RankingsTab] Competições semanais que serão enviadas:', weeklyCompetitionsWithType.map(comp => ({
     id: comp.id,
     title: comp.title,
     status: comp.status,
@@ -154,7 +160,7 @@ export const RankingsTab = () => {
                 </div>
                 
                 <WeeklyCompetitionsView 
-                  competitions={weeklyCompetitions} 
+                  competitions={weeklyCompetitionsWithType} 
                   activeCompetition={activeWeeklyCompetition} 
                   isLoading={isRankingsLoading} 
                   onRefresh={refreshData} 
