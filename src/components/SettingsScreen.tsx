@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Bell, Globe, Volume2, Shield, User, Smartphone, Palette, Moon } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import LanguageSelectionScreen from './LanguageSelectionScreen';
-import ChangeUsernameScreen from './ChangeUsernameScreen';
 import DeleteAccountScreen from './DeleteAccountScreen';
 import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 import TermsOfServiceScreen from './TermsOfServiceScreen';
@@ -20,14 +19,10 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const [sounds, setSounds] = useState(true);
   const [vibration, setVibration] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [currentScreen, setCurrentScreen] = useState<'settings' | 'language' | 'username' | 'delete' | 'privacy' | 'terms' | 'pix'>('settings');
+  const [currentScreen, setCurrentScreen] = useState<'settings' | 'language' | 'delete' | 'privacy' | 'terms' | 'pix'>('settings');
 
   if (currentScreen === 'language') {
     return <LanguageSelectionScreen onBack={() => setCurrentScreen('settings')} />;
-  }
-
-  if (currentScreen === 'username') {
-    return <ChangeUsernameScreen onBack={() => setCurrentScreen('settings')} />;
   }
 
   if (currentScreen === 'delete') {
@@ -96,11 +91,6 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
       color: "text-green-600",
       bgColor: "bg-green-50",
       actions: [
-        {
-          label: "Alterar nome",
-          description: "Escolha um novo nome de usuário",
-          action: () => setCurrentScreen('username')
-        },
         {
           label: "PIX para prêmios",
           description: "Configure sua chave PIX",
