@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import AvatarUpload from '@/components/ui/AvatarUpload';
 import { usePlayerLevel } from '@/hooks/usePlayerLevel';
 import { useWeeklyPositionManager } from '@/hooks/useWeeklyPositionManager';
 import { logger } from '@/utils/logger';
+import MyDataSection from './profile/MyDataSection';
 
 interface ProfileScreenProps {
   onNavigateToSettings?: () => void;
@@ -20,6 +22,7 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url);
+  const [showMyData, setShowMyData] = useState(false);
 
   // Usar o novo sistema de XP
   const { currentLevel, nextLevel, progress } = usePlayerLevel(user?.total_score || 0);
@@ -54,11 +57,9 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
     },
   ];
 
-  const handleSettings = () => {
-    logger.info('Navegando para configurações', undefined, 'PROFILE_SCREEN');
-    if (onNavigateToSettings) {
-      onNavigateToSettings();
-    }
+  const handleMyData = () => {
+    logger.info('Abrindo seção Meus Dados', undefined, 'PROFILE_SCREEN');
+    setShowMyData(true);
   };
 
   const handleHelp = () => {
@@ -86,6 +87,13 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
 
   const menuItems = [
     { 
+      label: 'Meus Dados', 
+      icon: User, 
+      action: handleMyData,
+      description: 'Editar perfil e informações PIX',
+      color: 'text-blue-600'
+    },
+    { 
       label: 'Conquistas (em breve)', 
       icon: Award, 
       action: handleAchievements,
@@ -96,8 +104,8 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
     { 
       label: 'Configurações', 
       icon: Settings, 
-      action: handleSettings,
-      description: 'Personalize sua conta',
+      action: onNavigateToSettings,
+      description: 'Preferências do app',
       color: 'text-gray-600'
     },
     { 
@@ -137,6 +145,25 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
     if (xp >= 1000) return `${(xp / 1000).toFixed(1)}K`;
     return xp.toString();
   };
+
+  if (showMyData) {
+    return (
+      <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
+        {/* Header com botão voltar */}
+        <div className="flex items-center gap-3 mb-6">
+          <Button variant="ghost" size="icon" onClick={() => setShowMyData(false)}>
+            <ChevronRight className="w-5 h-5 rotate-180" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Meus Dados</h1>
+            <p className="text-sm text-gray-600">Gerencie suas informações pessoais</p>
+          </div>
+        </div>
+
+        <MyDataSection />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
