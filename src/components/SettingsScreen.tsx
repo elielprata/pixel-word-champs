@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,6 @@ import LanguageSelectionScreen from './LanguageSelectionScreen';
 import DeleteAccountScreen from './DeleteAccountScreen';
 import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 import TermsOfServiceScreen from './TermsOfServiceScreen';
-import PixConfigScreen from './PixConfigScreen';
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -19,7 +17,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const [sounds, setSounds] = useState(true);
   const [vibration, setVibration] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [currentScreen, setCurrentScreen] = useState<'settings' | 'language' | 'delete' | 'privacy' | 'terms' | 'pix'>('settings');
+  const [currentScreen, setCurrentScreen] = useState<'settings' | 'language' | 'delete' | 'privacy' | 'terms'>('settings');
 
   if (currentScreen === 'language') {
     return <LanguageSelectionScreen onBack={() => setCurrentScreen('settings')} />;
@@ -35,10 +33,6 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
 
   if (currentScreen === 'terms') {
     return <TermsOfServiceScreen onBack={() => setCurrentScreen('settings')} />;
-  }
-
-  if (currentScreen === 'pix') {
-    return <PixConfigScreen onBack={() => setCurrentScreen('settings')} />;
   }
 
   const settingsGroups = [
@@ -85,19 +79,6 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   ];
 
   const actionGroups = [
-    {
-      title: "Conta",
-      icon: User,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      actions: [
-        {
-          label: "PIX para prêmios",
-          description: "Configure sua chave PIX",
-          action: () => setCurrentScreen('pix')
-        }
-      ]
-    },
     {
       title: "Sistema",
       icon: Globe,
