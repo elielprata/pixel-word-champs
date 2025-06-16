@@ -25,8 +25,8 @@ const GameBoardLayout = ({ children }: GameBoardLayoutProps) => {
       <div className="absolute top-20 right-4 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse" />
       <div className="absolute bottom-20 left-4 w-40 h-40 bg-white/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
       
-      {/* Conteúdo principal */}
-      <div className="relative z-10 max-w-md mx-auto space-y-6">
+      {/* Conteúdo principal com margem superior para evitar sobreposição */}
+      <div className="relative z-10 max-w-md mx-auto space-y-6 pt-16">
         {children}
       </div>
     </div>

@@ -3,6 +3,7 @@ import React from 'react';
 import GameBoardHeader from './GameBoardHeader';
 import GameBoardMainContent from './GameBoardMainContent';
 import GameModals from './GameModals';
+import GameBackButton from './GameBackButton';
 import { useGameBoard } from '@/hooks/useGameBoard';
 import { logger } from '@/utils/logger';
 import { GAME_CONSTANTS } from '@/constants/game';
@@ -74,6 +75,9 @@ const GameBoardContent = ({
 
   return (
     <>
+      {/* Botão voltar com posicionamento fixo e z-index alto */}
+      <GameBackButton onBack={onStopGame} />
+
       <GameBoardHeader
         level={level}
         timeLeft={timeLeft}
