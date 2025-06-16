@@ -677,6 +677,7 @@ export type Database = {
           best_daily_position: number | null
           best_weekly_position: number | null
           created_at: string | null
+          experience_points: number | null
           games_played: number | null
           id: string
           is_banned: boolean | null
@@ -694,6 +695,7 @@ export type Database = {
           best_daily_position?: number | null
           best_weekly_position?: number | null
           created_at?: string | null
+          experience_points?: number | null
           games_played?: number | null
           id: string
           is_banned?: boolean | null
@@ -711,6 +713,7 @@ export type Database = {
           best_daily_position?: number | null
           best_weekly_position?: number | null
           created_at?: string | null
+          experience_points?: number | null
           games_played?: number | null
           id?: string
           is_banned?: boolean | null
@@ -933,6 +936,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_invite_data_optimized: {
+        Args: { user_uuid: string }
+        Returns: Json
+      }
       get_users_with_real_emails: {
         Args: Record<PropertyKey, never>
         Returns: {

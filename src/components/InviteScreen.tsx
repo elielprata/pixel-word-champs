@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Copy, Users, Gift, Star, Trophy } from 'lucide-react';
+import { Copy, Users, Gift, Star, Trophy, Zap } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,12 +28,12 @@ const InviteScreen = () => {
     navigator.clipboard.writeText(inviteCode);
     logger.info('Código de convite copiado', { 
       userId: user?.id,
-      inviteCode: inviteCode?.substring(0, 4) + '***' // Log parcial por segurança
+      inviteCode: inviteCode?.substring(0, 4) + '***'
     }, 'INVITE_SCREEN');
     
     toast({
       title: "Código copiado!",
-      description: "Compartilhe com seus amigos para ganhar recompensas.",
+      description: "Compartilhe com seus amigos para ambos ganharem 50XP!",
     });
   };
 
@@ -75,13 +75,6 @@ const InviteScreen = () => {
     );
   }
 
-  logger.debug('Tela de convites renderizada', { 
-    userId: user?.id,
-    statsTotal: stats.totalPoints,
-    activeFriends: stats.activeFriends,
-    hasInviteCode: !!inviteCode
-  }, 'INVITE_SCREEN');
-
   return (
     <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen">
       {/* Header */}
@@ -89,16 +82,19 @@ const InviteScreen = () => {
         <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl mb-4 animate-bounce-in">
           <Gift className="w-8 h-8 text-white" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Convide & Ganhe</h1>
-        <p className="text-gray-600">Transforme amizades em recompensas</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Convide & Ganhe XP</h1>
+        <p className="text-gray-600">Ambos ganham 50XP quando se cadastram!</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <Card className="text-center border-0 bg-white/80 backdrop-blur-sm shadow-sm">
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-purple-600">{stats.totalPoints}</div>
-            <div className="text-xs text-gray-600 mt-1">Pontos Ganhos</div>
+            <div className="flex items-center justify-center mb-2">
+              <Zap className="w-5 h-5 text-purple-600 mr-1" />
+              <div className="text-2xl font-bold text-purple-600">{stats.totalPoints}</div>
+            </div>
+            <div className="text-xs text-gray-600">XP Ganho</div>
           </CardContent>
         </Card>
         <Card className="text-center border-0 bg-white/80 backdrop-blur-sm shadow-sm">
@@ -129,7 +125,7 @@ const InviteScreen = () => {
           </div>
           <Progress value={progressToNextReward} className="h-2 mb-2" />
           <p className="text-sm text-gray-600">
-            Convide mais {Math.max(0, nextRewardAt - stats.activeFriends)} amigos para ganhar <span className="font-semibold text-yellow-600">100 pontos bônus!</span>
+            Convide mais {Math.max(0, nextRewardAt - stats.activeFriends)} amigos para ganhar <span className="font-semibold text-yellow-600">100 XP bônus!</span>
           </p>
         </CardContent>
       </Card>
@@ -177,7 +173,12 @@ const InviteScreen = () => {
           </div>
           <div className="flex items-center gap-4">
             <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
-            <p className="text-sm text-gray-700">Ambos ganham 50 pontos após 3 dias</p>
+            <div className="flex items-center gap-1">
+              <p className="text-sm text-gray-700">Ambos ganham</p>
+              <Zap className="w-4 h-4 text-purple-600" />
+              <span className="font-semibold text-purple-600">50 XP</span>
+              <p className="text-sm text-gray-700">instantaneamente!</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -222,8 +223,11 @@ const InviteScreen = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-purple-600">+{friend.reward}</p>
-                    <p className="text-xs text-gray-500">pontos</p>
+                    <div className="flex items-center gap-1">
+                      <Zap className="w-4 h-4 text-purple-600" />
+                      <p className="font-bold text-purple-600">+{friend.reward}</p>
+                    </div>
+                    <p className="text-xs text-gray-500">XP</p>
                   </div>
                 </div>
               ))}
@@ -234,7 +238,7 @@ const InviteScreen = () => {
                 <Users className="w-8 h-8 text-gray-400" />
               </div>
               <p className="font-medium mb-1">Nenhum convite ainda</p>
-              <p className="text-sm">Copie seu código e convide amigos!</p>
+              <p className="text-sm">Copie seu código e convide amigos para ganharem XP!</p>
             </div>
           )}
         </CardContent>

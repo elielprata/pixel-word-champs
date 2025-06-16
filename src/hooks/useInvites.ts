@@ -1,19 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { inviteService, type InvitedFriend } from '@/services/inviteService';
+import { optimizedInviteService, type OptimizedInviteData } from '@/services/optimizedInviteService';
 import { useAuth } from './useAuth';
 
 export const useInvites = () => {
-  const [inviteCode, setInviteCode] = useState<string>('');
-  const [invitedFriends, setInvitedFriends] = useState<InvitedFriend[]>([]);
-  const [stats, setStats] = useState({
-    totalPoints: 0,
-    activeFriends: 0,
-    totalInvites: 0
-  });
+  const [data, setData] = useState<OptimizedInviteData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const loadInviteData = async () => {
     if (!isAuthenticated) {
@@ -25,22 +19,14 @@ export const useInvites = () => {
     setError(null);
 
     try {
-      // Carregar código de convite
-      const codeResponse = await inviteService.generateInviteCode();
-      if (codeResponse.success && codeResponse.data) {
-        setInviteCode((codeResponse.data as { code: string }).code);
-      }
-
-      // Carregar amigos convidados
-      const friendsResponse = await inviteService.getInvitedFriends();
-      if (friendsResponse.success && friendsResponse.data) {
-        setInvitedFriends(friendsResponse.data as InvitedFriend[]);
-      }
-
-      // Carregar estatísticas
-      const statsResponse = await inviteService.getInviteStats();
-      if (statsResponse.success && statsResponse.data) {
-        setStats(statsResponse.data as { totalPoints: number; activeFriends: number; totalInvites: number; });
+      const response = await optimizedInviteService.getOptimizedInviteData();
+      
+      if (response.success && response.data) {
+        setData(response.data);
+        setError(null);
+      } else {
+        setError(response.error || 'Erro ao carregar dados de convites');
+        setData(null);
       }
     } catch (err) {
       setError('Erro ao carregar dados de convites');
@@ -51,7 +37,7 @@ export const useInvites = () => {
   };
 
   const useInviteCode = async (code: string) => {
-    const response = await inviteService.useInviteCode(code);
+    const response = await optimizedInviteService.useInviteCode(code);
     if (response.success) {
       // Recarregar dados após usar código
       await loadInviteData();
@@ -63,10 +49,21 @@ export const useInvites = () => {
     loadInviteData();
   }, [isAuthenticated]);
 
+  // Auto-refresh a cada 2 minutos
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      loadInviteData();
+    }, 2 * 60 * 1000); // 2 minutos
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   return {
-    inviteCode,
-    invitedFriends,
-    stats,
+    inviteCode: data?.inviteCode || '',
+    invitedFriends: data?.invitedFriends || [],
+    stats: data?.stats || { totalPoints: 0, activeFriends: 0, totalInvites: 0 },
     isLoading,
     error,
     useInviteCode,
