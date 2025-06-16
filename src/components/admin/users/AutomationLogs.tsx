@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Calendar, Clock, Users, AlertCircle, CheckCircle, Loader2, Trophy, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -37,13 +37,32 @@ export const AutomationLogs = ({ logs, isLoading }: AutomationLogsProps) => {
     }
   };
 
-  const getFrequencyText = (frequency: string) => {
-    switch (frequency) {
-      case 'daily': return 'Diário';
-      case 'weekly': return 'Semanal';
-      case 'monthly': return 'Mensal';
-      default: return frequency;
+  const getTriggerIcon = (snapshot: any) => {
+    if (snapshot?.triggerType === 'competition_finalization') {
+      return <Trophy className="h-4 w-4 text-purple-600" />;
     }
+    if (snapshot?.triggerType === 'manual') {
+      return <User className="h-4 w-4 text-blue-600" />;
+    }
+    return <Clock className="h-4 w-4 text-slate-500" />;
+  };
+
+  const getTriggerText = (snapshot: any) => {
+    if (snapshot?.triggerType === 'competition_finalization') {
+      return `Finalização: ${snapshot.competitionTitle || 'Competição'}`;
+    }
+    if (snapshot?.triggerType === 'manual') {
+      return 'Execução Manual';
+    }
+    if (snapshot?.frequency) {
+      switch (snapshot.frequency) {
+        case 'daily': return 'Agendamento Diário';
+        case 'weekly': return 'Agendamento Semanal';
+        case 'monthly': return 'Agendamento Mensal';
+        default: return 'Agendamento';
+      }
+    }
+    return 'Agendamento';
   };
 
   if (isLoading) {
@@ -119,13 +138,17 @@ export const AutomationLogs = ({ logs, isLoading }: AutomationLogsProps) => {
                   </div>
 
                   <div className="space-y-2">
-                    {log.settings_snapshot && (
+                    <div className="flex items-center gap-2">
+                      {getTriggerIcon(log.settings_snapshot)}
+                      <span className="font-medium">Trigger:</span>
+                      <Badge variant="outline" className="text-xs">
+                        {getTriggerText(log.settings_snapshot)}
+                      </Badge>
+                    </div>
+                    {log.settings_snapshot?.time && log.settings_snapshot?.triggerType === 'schedule' && (
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">Frequência:</span>
-                        <Badge variant="outline" className="text-xs">
-                          {getFrequencyText(log.settings_snapshot.frequency)}
-                        </Badge>
-                        <span className="text-slate-600">às {log.settings_snapshot.time}</span>
+                        <span className="font-medium">Horário:</span>
+                        <span className="text-slate-600">{log.settings_snapshot.time}</span>
                       </div>
                     )}
                   </div>

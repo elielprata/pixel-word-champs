@@ -6,11 +6,13 @@ import { logger } from '@/utils/logger';
 
 interface AutomationConfig {
   enabled: boolean;
+  triggerType: 'schedule' | 'competition_finalization'; // Nova opção
   frequency: 'daily' | 'weekly' | 'monthly';
   time: string;
   dayOfWeek?: number;
   dayOfMonth?: number;
   requiresPassword: boolean;
+  resetOnCompetitionEnd: boolean; // Nova flag específica
 }
 
 interface AutomationLog {
@@ -49,8 +51,14 @@ export const useAutomationSettings = () => {
 
       if (data?.setting_value) {
         const config = JSON.parse(data.setting_value);
-        setSettings(config);
-        logger.info('Configurações carregadas', { config }, 'AUTOMATION_SETTINGS');
+        // Garantir compatibilidade com configurações antigas
+        const updatedConfig = {
+          ...config,
+          triggerType: config.triggerType || 'schedule',
+          resetOnCompetitionEnd: config.resetOnCompetitionEnd || false
+        };
+        setSettings(updatedConfig);
+        logger.info('Configurações carregadas', { config: updatedConfig }, 'AUTOMATION_SETTINGS');
       } else {
         logger.info('Nenhuma configuração encontrada, usando padrões', undefined, 'AUTOMATION_SETTINGS');
       }
@@ -73,7 +81,7 @@ export const useAutomationSettings = () => {
         .select('*')
         .eq('automation_type', 'score_reset')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(15); // Aumentar para mostrar mais logs
 
       if (error) throw error;
 
@@ -112,10 +120,14 @@ export const useAutomationSettings = () => {
 
       setSettings(newSettings);
       
+      const triggerDescription = newSettings.triggerType === 'competition_finalization' 
+        ? 'por finalização de competição' 
+        : 'por agendamento';
+      
       toast({
         title: "Sucesso!",
         description: newSettings.enabled 
-          ? "Automação ativada com sucesso"
+          ? `Automação ativada com sucesso (${triggerDescription})`
           : "Automação desativada com sucesso",
       });
 
@@ -155,7 +167,11 @@ export const useAutomationSettings = () => {
 
       // Chamar a Edge Function diretamente
       const { data, error } = await supabase.functions.invoke('automation-reset-checker', {
-        body: { manual_execution: true, admin_password: adminPassword }
+        body: { 
+          manual_execution: true, 
+          admin_password: adminPassword,
+          trigger_type: 'manual'
+        }
       });
 
       if (error) throw error;

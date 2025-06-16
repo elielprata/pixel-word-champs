@@ -96,24 +96,7 @@ class WeeklyCompetitionFinalizationService {
         }
       }
 
-      // 7. Zerar pontuações de todos os participantes para próxima competição
-      logger.log('🔄 Zerando pontuações dos participantes...');
-      
-      const userIds = participations.map(p => p.user_id);
-      
-      const { error: resetError } = await supabase
-        .from('profiles')
-        .update({ total_score: 0 })
-        .in('id', userIds);
-
-      if (resetError) {
-        logger.error('❌ Erro ao zerar pontuações:', resetError);
-        // Não falhar a finalização por causa disso, apenas logar
-      } else {
-        logger.log('✅ Pontuações dos participantes zeradas com sucesso');
-      }
-
-      // 8. Marcar competição como finalizada
+      // 7. Marcar competição como finalizada
       await supabase
         .from('custom_competitions')
         .update({ 
@@ -122,15 +105,63 @@ class WeeklyCompetitionFinalizationService {
         })
         .eq('id', competitionId);
 
+      // 8. Verificar se deve executar reset automático
+      await this.checkAndExecuteAutomaticReset(competition);
+
       logger.log('✅ Competição semanal finalizada com sucesso');
       logger.log(`📈 Histórico salvo para ${participations.length} participantes`);
       logger.log(`💰 Total de prêmios distribuídos: R$ ${participantsWithPrizes.reduce((sum, p) => sum + p.prize, 0)}`);
       logger.log(`🏆 Ganhadores: ${participantsWithPrizes.filter(p => p.prize > 0).length}`);
-      logger.log('🔄 Participantes prontos para nova competição');
 
     } catch (error) {
       logger.error('❌ Erro ao finalizar competição semanal:', error);
       throw error;
+    }
+  }
+
+  private async checkAndExecuteAutomaticReset(competition: any): Promise<void> {
+    try {
+      logger.log('🔍 Verificando configurações de reset automático...');
+
+      // Buscar configurações de automação
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('game_settings')
+        .select('setting_value')
+        .eq('setting_key', 'reset_automation_config')
+        .maybeSingle();
+
+      if (settingsError || !settingsData?.setting_value) {
+        logger.log('ℹ️ Nenhuma configuração de automação encontrada');
+        return;
+      }
+
+      const config = JSON.parse(settingsData.setting_value);
+      
+      // Verificar se deve fazer reset por finalização de competição
+      if (!config.enabled || config.triggerType !== 'competition_finalization') {
+        logger.log('ℹ️ Reset por finalização de competição não está ativado');
+        return;
+      }
+
+      logger.log('🚀 Executando reset automático por finalização de competição...');
+
+      // Chamar a Edge Function para fazer o reset
+      const { data, error } = await supabase.functions.invoke('automation-reset-checker', {
+        body: { 
+          competition_finalization: true,
+          competition_id: competition.id,
+          competition_title: competition.title
+        }
+      });
+
+      if (error) {
+        logger.error('❌ Erro ao executar reset automático:', error);
+      } else {
+        logger.log('✅ Reset automático executado com sucesso:', data);
+      }
+
+    } catch (error) {
+      logger.error('❌ Erro ao verificar/executar reset automático:', error);
     }
   }
 
