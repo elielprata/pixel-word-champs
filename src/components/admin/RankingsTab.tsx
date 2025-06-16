@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +13,19 @@ import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
 import { DailyCompetitionsView } from './rankings/DailyCompetitionsView';
 import { useRankings } from '@/hooks/useRankings';
 import { useCompetitions } from '@/hooks/useCompetitions';
+
+interface WeeklyCompetition {
+  id: string;
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  prize_pool: number;
+  max_participants: number;
+  total_participants?: number;
+  competition_type: string; // Adicionar propriedade necessária
+}
 
 export const RankingsTab = () => {
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
