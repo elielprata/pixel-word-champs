@@ -60,14 +60,11 @@ export const useRankingData = () => {
   };
 
   return {
-    dailyRanking: weeklyRanking.slice(0, weeklyLimit), // Retorna ranking semanal
     weeklyRanking: weeklyRanking.slice(0, weeklyLimit),
     historicalCompetitions,
     isLoading,
     error,
-    canLoadMoreDaily: false, // Não há mais ranking diário
     canLoadMoreWeekly: canLoadMoreWeekly(weeklyRanking.length),
-    loadMoreDaily: () => {}, // Função vazia
     loadMoreWeekly,
     getUserPosition,
     refetch

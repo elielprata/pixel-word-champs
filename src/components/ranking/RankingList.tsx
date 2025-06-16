@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy, Crown, Medal, Award } from 'lucide-react';
 
 interface RankingPlayer {
-  position: number;
+  pos: number;
   user_id: string;
-  username: string;
+  name: string;
   avatar_url?: string;
   score: number;
   prize?: number;
@@ -16,11 +16,10 @@ interface RankingListProps {
   weeklyRanking: RankingPlayer[];
   user: any;
   totalWeeklyPlayers: number;
-  weeklyCompetition: any;
   getPrizeAmount: (position: number) => number;
 }
 
-const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetition, getPrizeAmount }: RankingListProps) => {
+const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, getPrizeAmount }: RankingListProps) => {
   const getRankIcon = (position: number) => {
     switch (position) {
       case 1: return <Crown className="w-4 h-4 text-yellow-500" />;
@@ -47,7 +46,7 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
     }
   };
 
-  // Filtrar duplicatas baseado no user_id E position para evitar duplicações
+  // Filtrar duplicatas baseado no user_id para evitar duplicações
   const uniqueRanking = weeklyRanking.filter((player, index, self) => 
     index === self.findIndex(p => p.user_id === player.user_id)
   );
@@ -59,8 +58,11 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
     <Card className="shadow-sm border border-gray-200">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-semibold text-gray-900">
-          📊 Classificação
+          📊 Ranking Semanal Global
         </CardTitle>
+        <p className="text-sm text-gray-600">
+          Baseado na pontuação total acumulada de todos os jogadores
+        </p>
       </CardHeader>
       
       <CardContent className="p-0">
@@ -74,24 +76,24 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, weeklyCompetitio
           <div className="divide-y divide-gray-100">
             {uniqueRanking.slice(0, 50).map((player, index) => {
               const isCurrentUser = user?.id === player.user_id;
-              const prizeAmount = getPrizeAmount(player.position);
+              const prizeAmount = getPrizeAmount(player.pos);
               
               return (
                 <div 
                   key={`${player.user_id}-${index}`}
-                  className={`flex items-center justify-between p-3 ${getRowStyle(player.position, isCurrentUser)}`}
+                  className={`flex items-center justify-between p-3 ${getRowStyle(player.pos, isCurrentUser)}`}
                 >
                   <div className="flex items-center gap-3">
-                    {getRankIcon(player.position)}
+                    {getRankIcon(player.pos)}
                     <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                      {player.username?.charAt(0).toUpperCase() || 'U'}
+                      {player.name?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">
-                        {isCurrentUser ? 'Você' : player.username}
+                        {isCurrentUser ? 'Você' : player.name}
                       </p>
                       <p className="text-sm text-gray-500">
-                        #{player.position} • {player.score.toLocaleString()} pts
+                        #{player.pos} • {player.score.toLocaleString()} pts total
                       </p>
                     </div>
                   </div>

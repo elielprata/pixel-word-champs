@@ -5,9 +5,9 @@ import { Trophy, Star, TrendingUp } from 'lucide-react';
 import { logger } from '@/utils/logger';
 
 interface RankingPlayer {
-  position: number;
+  pos: number;
   user_id: string;
-  username: string;
+  name: string;
   avatar_url?: string;
   score: number;
   prize?: number;
@@ -21,7 +21,7 @@ interface UserPositionCardProps {
 }
 
 const UserPositionCard = ({ userWeeklyPosition, weeklyRanking, user, getPrizeAmount }: UserPositionCardProps) => {
-  logger.debug('Renderizando UserPositionCard do ranking', { 
+  logger.debug('Renderizando UserPositionCard do ranking semanal', { 
     userWeeklyPosition, 
     userId: user?.id 
   }, 'RANKING_USER_POSITION_CARD');
@@ -45,12 +45,12 @@ const UserPositionCard = ({ userWeeklyPosition, weeklyRanking, user, getPrizeAmo
             {getIcon()}
             <div>
               <div className="font-bold text-gray-900">#{userWeeklyPosition}</div>
-              <div className="text-sm text-gray-600">Sua posição</div>
+              <div className="text-sm text-gray-600">Sua posição no ranking semanal</div>
             </div>
           </div>
           <div className="text-right">
             <div className="font-bold text-gray-900">{userScore.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">pontos</div>
+            <div className="text-sm text-gray-600">pontos totais</div>
             {prizeAmount > 0 && (
               <div className="text-xs text-green-600 font-semibold">
                 R$ {prizeAmount.toFixed(2)}

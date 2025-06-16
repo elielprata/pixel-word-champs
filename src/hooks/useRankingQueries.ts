@@ -13,8 +13,9 @@ export const useRankingQueries = () => {
 
   const loadWeeklyRanking = async () => {
     try {
-      logger.debug('Carregando ranking semanal', undefined, 'RANKING_QUERIES');
+      logger.debug('Carregando ranking semanal global', undefined, 'RANKING_QUERIES');
       
+      // Tentar atualizar o ranking primeiro
       try {
         await rankingService.updateWeeklyRanking();
         logger.info('Ranking semanal atualizado com sucesso', undefined, 'RANKING_QUERIES');
@@ -45,14 +46,12 @@ export const useRankingQueries = () => {
   };
 
   return {
-    dailyRanking: weeklyRanking, // Retorna ranking semanal no lugar do diário
     weeklyRanking,
     historicalCompetitions,
     isLoading,
     error,
     setIsLoading,
     setError,
-    loadDailyRanking: loadWeeklyRanking, // Aponta para o ranking semanal
     loadWeeklyRanking,
     loadHistoricalRanking
   };
