@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGameScoring } from '@/hooks/useGameScoring';
 import { logger } from '@/utils/logger';
+import { GAME_CONSTANTS } from '@/constants/game';
 
 interface FoundWord {
   word: string;
@@ -35,11 +36,10 @@ export const useGameState = (
     isLevelCompleted: false
   });
 
-  // ETAPA 4: Usar hook especializado de pontuação
+  // Usar hook especializado de pontuação
   const { 
     currentLevelScore, 
     isLevelCompleted, 
-    TOTAL_WORDS_REQUIRED, 
     updateUserScore 
   } = useGameScoring(state.foundWords, level);
 
@@ -57,25 +57,25 @@ export const useGameState = (
     });
   }, [level]);
 
-  // Game Over quando tempo acaba (só se não completou o nível)
+  // Game Over quando tempo acaba
   useEffect(() => {
     if (timeLeft === 0 && !state.showGameOver && !state.isLevelCompleted) {
       logger.info('⏰ Tempo esgotado - Game Over', { 
         level, 
         foundWords: state.foundWords.length,
-        targetWords: TOTAL_WORDS_REQUIRED 
+        targetWords: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED 
       }, 'GAME_STATE');
       setState(prev => ({ ...prev, showGameOver: true }));
     }
-  }, [timeLeft, state.showGameOver, state.isLevelCompleted, level, state.foundWords.length, TOTAL_WORDS_REQUIRED]);
+  }, [timeLeft, state.showGameOver, state.isLevelCompleted, level, state.foundWords.length]);
 
-  // CORREÇÃO DEFINITIVA: Lógica de level complete consolidada e otimizada
+  // Level complete quando atinge o número necessário de palavras
   useEffect(() => {
     if (isLevelCompleted && !state.showLevelComplete && !state.isLevelCompleted) {
       logger.info(`🎉 Nível ${level} COMPLETADO!`, {
         level,
         foundWordsCount: state.foundWords.length,
-        totalWordsRequired: TOTAL_WORDS_REQUIRED,
+        totalWordsRequired: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
         foundWords: state.foundWords.map(fw => fw.word),
         levelScore: currentLevelScore
       }, 'GAME_STATE');
@@ -86,7 +86,7 @@ export const useGameState = (
         isLevelCompleted: true 
       }));
       
-      // CORREÇÃO DEFINITIVA: Notificar level complete via callback se fornecido
+      // Notificar level complete via callback
       if (onLevelComplete) {
         logger.info(`📞 CALLBACK - Notificando level complete: ${currentLevelScore} pontos`, {
           level,
@@ -95,74 +95,39 @@ export const useGameState = (
         onLevelComplete(currentLevelScore);
       }
       
-      // Registrar pontos no banco quando completa o nível
+      // Registrar pontos no banco
       updateUserScore(currentLevelScore);
     }
-  }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, level, currentLevelScore, updateUserScore, TOTAL_WORDS_REQUIRED, onLevelComplete]);
+  }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, level, currentLevelScore, updateUserScore, onLevelComplete]);
 
   const addFoundWord = (newFoundWord: FoundWord) => {
-    // PROTEÇÃO CRÍTICA: Verificar se a palavra já foi encontrada antes de adicionar
+    // PROTEÇÃO CRÍTICA: Verificar duplicação antes de adicionar
     const isAlreadyFound = state.foundWords.some(fw => fw.word === newFoundWord.word);
     if (isAlreadyFound) {
-      logger.warn(`⚠️ DUPLICAÇÃO EVITADA - Palavra "${newFoundWord.word}" já existe no estado - IGNORANDO`, {
+      logger.warn(`⚠️ DUPLICAÇÃO EVITADA NO ESTADO - Palavra "${newFoundWord.word}" já existe`, {
         word: newFoundWord.word,
-        currentWords: state.foundWords.map(fw => fw.word)
+        existingWords: state.foundWords.map(fw => fw.word)
       }, 'GAME_STATE');
       return;
     }
 
-    logger.info(`📝 ÚNICA FONTE DE VERDADE - Adicionando palavra "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
+    logger.info(`📝 ADICIONANDO PALAVRA AO ESTADO - "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
       word: newFoundWord.word,
       points: newFoundWord.points,
       beforeCount: state.foundWords.length,
-      afterCount: state.foundWords.length + 1,
-      targetWords: TOTAL_WORDS_REQUIRED
+      afterCount: state.foundWords.length + 1
     }, 'GAME_STATE');
     
-    setState(prev => {
-      const newState = {
-        ...prev,
-        foundWords: [...prev.foundWords, newFoundWord],
-        permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
-      };
-      
-      logger.info(`✅ ESTADO FINAL ÚNICO - Total de palavras: ${newState.foundWords.length}`, {
-        totalWords: newState.foundWords.length,
-        words: newState.foundWords.map(fw => fw.word),
-        isCompleted: newState.foundWords.length >= TOTAL_WORDS_REQUIRED,
-        justAdded: newFoundWord.word
-      }, 'GAME_STATE');
-      
-      return newState;
-    });
-  };
-
-  const setHintsUsed = (value: number | ((prev: number) => number)) => {
-    setState(prev => ({ 
-      ...prev, 
-      hintsUsed: typeof value === 'function' ? value(prev.hintsUsed) : value 
+    setState(prev => ({
+      ...prev,
+      foundWords: [...prev.foundWords, newFoundWord],
+      permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
     }));
-  };
-
-  const setHintHighlightedCells = (positions: Position[]) => {
-    setState(prev => ({ ...prev, hintHighlightedCells: positions }));
-  };
-
-  const setShowGameOver = (value: boolean) => {
-    setState(prev => ({ ...prev, showGameOver: value }));
-  };
-
-  const setShowLevelComplete = (value: boolean) => {
-    setState(prev => ({ ...prev, showLevelComplete: value }));
-  };
-
-  const setIsLevelCompleted = (value: boolean) => {
-    setState(prev => ({ ...prev, isLevelCompleted: value }));
   };
 
   return {
     ...state,
-    currentLevelScore, // ETAPA 4: Pontuação vem do hook especializado
+    currentLevelScore,
     addFoundWord,
     setHintsUsed: (value: number | ((prev: number) => number)) => {
       setState(prev => ({ 

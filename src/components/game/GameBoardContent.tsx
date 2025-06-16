@@ -5,6 +5,7 @@ import GameBoardMainContent from './GameBoardMainContent';
 import GameModals from './GameModals';
 import { useGameBoard } from '@/hooks/useGameBoard';
 import { logger } from '@/utils/logger';
+import { GAME_CONSTANTS } from '@/constants/game';
 
 interface GameBoardContentProps {
   level: number;
@@ -27,7 +28,7 @@ const GameBoardContent = ({
   canRevive,
   onRevive
 }: GameBoardContentProps) => {
-  // CORREÇÃO DEFINITIVA: Hook consolidado sem callback onWordFound
+  // Hook consolidado e simplificado
   const {
     isLoading,
     error,
@@ -48,7 +49,7 @@ const GameBoardContent = ({
     logger.info('💖 Revive solicitado pelo usuário', { 
       level,
       foundWords: gameStateProps.foundWords.length,
-      targetWords: 5 // ETAPA 4: Sempre 5 palavras como objetivo
+      targetWords: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED
     }, 'GAME_BOARD_CONTENT');
     
     if (onRevive) {
@@ -61,12 +62,11 @@ const GameBoardContent = ({
     return null; // Será tratado no componente pai
   }
 
-  // CORREÇÃO DEFINITIVA: Log do estado do jogo
-  logger.debug('🎮 Renderizando GameBoardContent (SEM CALLBACK onWordFound)', {
+  logger.debug('🎮 Renderizando GameBoardContent SIMPLIFICADO', {
     level,
     timeLeft,
     foundWordsCount: gameStateProps.foundWords.length,
-    targetWords: 5, // Sempre 5 palavras
+    targetWords: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
     currentScore: gameStateProps.currentLevelScore,
     showGameOver: modalProps.showGameOver,
     showLevelComplete: modalProps.showLevelComplete
@@ -94,7 +94,7 @@ const GameBoardContent = ({
         showGameOver={modalProps.showGameOver}
         showLevelComplete={modalProps.showLevelComplete}
         foundWords={gameStateProps.foundWords}
-        totalWords={5} // ETAPA 4: Sempre passar 5 como total de palavras
+        totalWords={GAME_CONSTANTS.TOTAL_WORDS_REQUIRED}
         level={level}
         canRevive={canRevive}
         onRevive={handleReviveClick}

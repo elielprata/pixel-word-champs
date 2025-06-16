@@ -1,3 +1,5 @@
+import { GAME_CONSTANTS } from '@/constants/game';
+
 export interface Position {
   row: number;
   col: number;
@@ -12,53 +14,37 @@ export interface PlacedWord {
 }
 
 export const getBoardSize = (level: number): number => {
-  // Sempre retorna 12 (altura)
-  return 12;
+  return GAME_CONSTANTS.BOARD_HEIGHT;
 };
 
 export const getMobileBoardSize = (level: number): number => {
-  // Sempre retorna 12 (altura) em mobile também
-  return 12;
+  return GAME_CONSTANTS.BOARD_HEIGHT;
 };
 
 export const getBoardWidth = (level: number): number => {
-  // Sempre retorna 8 (largura)
-  return 8;
+  return GAME_CONSTANTS.BOARD_WIDTH;
 };
 
 export const getMobileBoardWidth = (level: number): number => {
-  // Sempre retorna 8 (largura) em mobile também
-  return 8;
+  return GAME_CONSTANTS.BOARD_WIDTH;
 };
 
 export const getLevelWords = (level: number): string[] => {
-  // Como as palavras não são organizadas por nível, retornamos um array genérico
-  // que será preenchido com palavras do banco de dados baseadas na dificuldade
   return [];
 };
 
 export const getCellSize = (boardSize: number, isMobile: boolean = false): number => {
-  if (isMobile) {
-    // Tamanhos otimizados para mobile considerando tabuleiro 12x8
-    return 24; // Tamanho fixo para mobile
-  }
-  
-  // Tamanhos para desktop considerando tabuleiro 12x8
-  return 28; // Tamanho fixo para desktop
+  return isMobile ? GAME_CONSTANTS.MOBILE_CELL_SIZE : GAME_CONSTANTS.DESKTOP_CELL_SIZE;
 };
 
-// Esta função está DEPRECADA - use useGamePointsConfig hook em vez disso
+// DEPRECATED - usar useGamePointsConfig hook
 export const getPointsForWord = (word: string): number => {
   console.warn('⚠️ getPointsForWord deprecated - use useGamePointsConfig hook instead');
-  console.warn('⚠️ Esta função não deve mais ser usada. Use o hook useGamePointsConfig para pontuação baseada no banco de dados.');
   
-  // Valores de fallback apenas para compatibilidade
   const length = word.length;
-  if (length === 3) return 10;
-  if (length === 4) return 20;
-  if (length === 5) return 30;
-  if (length === 6) return 40;
-  if (length === 7) return 50;
+  if (length <= 7) {
+    return GAME_CONSTANTS.POINTS_BY_LENGTH[length as keyof typeof GAME_CONSTANTS.POINTS_BY_LENGTH] || 50;
+  }
   return 50 + Math.max(0, length - 7) * 10;
 };
 
