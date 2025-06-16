@@ -16,16 +16,15 @@ export interface WordPlacementResult {
 }
 
 export class BoardGenerator {
-  // ATUALIZADO: Agora usa height=12 e width=8
   static generateSmartBoard(height: number, words: string[]): WordPlacementResult {
-    const width = 8; // largura fixa - mantida em 8
+    const width = 8; // largura fixa
     logger.log(`🚀 Iniciando geração do tabuleiro ${height}x${width} com distribuição inteligente:`, words);
     
-    // Normalizar e validar palavras - agora considera largura máxima de 8
+    // Normalizar e validar palavras
     const normalizedWords = words
       .map(word => normalizeText(word))
       .filter(word => {
-        const isValid = isValidGameWord(word, Math.min(height, width)); // min(12,8) = 8
+        const isValid = isValidGameWord(word, Math.min(height, width));
         if (!isValid) {
           logger.warn(`⚠️ Palavra "${word}" rejeitada na validação`);
         }
@@ -35,7 +34,7 @@ export class BoardGenerator {
     if (normalizedWords.length === 0) {
       logger.error(`❌ CRÍTICO: Nenhuma palavra válida para tabuleiro ${height}x${width}`);
       
-      // Gerar tabuleiro vazio mas funcional (12x8)
+      // Gerar tabuleiro vazio mas funcional
       const emptyBoard = Array(height).fill(null).map(() => 
         Array(width).fill(null).map(() => 
           String.fromCharCode(65 + Math.floor(Math.random() * 26))
@@ -48,7 +47,7 @@ export class BoardGenerator {
       };
     }
     
-    // Usar serviço de distribuição inteligente (12x8)
+    // Usar serviço de distribuição inteligente
     const distributionService = new SmartWordDistributionService(height, width);
     const result = distributionService.distributeWords(normalizedWords);
     

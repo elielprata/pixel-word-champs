@@ -1,4 +1,3 @@
-
 import { GAME_CONSTANTS } from '@/constants/game';
 
 export interface Position {
@@ -14,22 +13,18 @@ export interface PlacedWord {
   positions: Position[];
 }
 
-// ATUALIZADO: Retorna altura do tabuleiro (12)
 export const getBoardSize = (level: number): number => {
   return GAME_CONSTANTS.BOARD_HEIGHT;
 };
 
-// ATUALIZADO: Retorna altura do tabuleiro para mobile (12)
 export const getMobileBoardSize = (level: number): number => {
   return GAME_CONSTANTS.BOARD_HEIGHT;
 };
 
-// ATUALIZADO: Retorna largura do tabuleiro (8)
 export const getBoardWidth = (level: number): number => {
   return GAME_CONSTANTS.BOARD_WIDTH;
 };
 
-// ATUALIZADO: Retorna largura do tabuleiro para mobile (8)
 export const getMobileBoardWidth = (level: number): number => {
   return GAME_CONSTANTS.BOARD_WIDTH;
 };
@@ -53,10 +48,9 @@ export const getPointsForWord = (word: string): number => {
   return 50 + Math.max(0, length - 7) * 10;
 };
 
-// ATUALIZADO: Função para validar se o tabuleiro contém todas as palavras (agora 12x8)
+// Função para validar se o tabuleiro contém todas as palavras
 export const validateBoardContainsWords = (board: string[][], words: string[]): boolean => {
-  const height = board.length; // 12
-  const width = board[0]?.length || 0; // 8
+  const size = board.length;
   const directions = [
     { row: 0, col: 1 },   // horizontal
     { row: 1, col: 0 },   // vertical
@@ -72,10 +66,10 @@ export const validateBoardContainsWords = (board: string[][], words: string[]): 
     let found = false;
     
     // Procurar a palavra em todas as posições e direções
-    for (let row = 0; row < height && !found; row++) {
-      for (let col = 0; col < width && !found; col++) {
+    for (let row = 0; row < size && !found; row++) {
+      for (let col = 0; col < size && !found; col++) {
         for (const dir of directions) {
-          if (checkWordAtPosition(board, word, row, col, dir.row, dir.col, height, width)) {
+          if (checkWordAtPosition(board, word, row, col, dir.row, dir.col, size)) {
             found = true;
             break;
           }
@@ -92,7 +86,6 @@ export const validateBoardContainsWords = (board: string[][], words: string[]): 
   return true;
 };
 
-// ATUALIZADO: Função que agora considera altura e largura separadamente
 const checkWordAtPosition = (
   board: string[][], 
   word: string, 
@@ -100,14 +93,13 @@ const checkWordAtPosition = (
   startCol: number, 
   deltaRow: number, 
   deltaCol: number,
-  height: number,
-  width: number
+  size: number
 ): boolean => {
   for (let i = 0; i < word.length; i++) {
     const row = startRow + i * deltaRow;
     const col = startCol + i * deltaCol;
     
-    if (row < 0 || row >= height || col < 0 || col >= width) {
+    if (row < 0 || row >= size || col < 0 || col >= size) {
       return false;
     }
     
