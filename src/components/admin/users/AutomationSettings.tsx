@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,6 @@ interface AutomationConfig {
   time: string;
   dayOfWeek?: number;
   dayOfMonth?: number;
-  requiresPassword: boolean;
   resetOnCompetitionEnd: boolean;
 }
 
@@ -37,11 +35,9 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
       time: '03:00',
       dayOfWeek: 1,
       dayOfMonth: 1,
-      requiresPassword: true,
       resetOnCompetitionEnd: false
     }
   );
-  const [testPassword, setTestPassword] = useState('');
   const [showTestSection, setShowTestSection] = useState(false);
 
   const handleSave = () => {
@@ -49,9 +45,8 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
   };
 
   const handleManualTest = async () => {
-    const success = await executeManualReset(settings.requiresPassword ? testPassword : undefined);
+    const success = await executeManualReset();
     if (success) {
-      setTestPassword('');
       setShowTestSection(false);
     }
   };
@@ -311,24 +306,10 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
                   Teste a automação executando o reset manualmente agora.
                 </p>
                 
-                {settings.requiresPassword && (
-                  <div className="space-y-2 mb-4">
-                    <Label htmlFor="test-password">Senha de Administrador</Label>
-                    <Input
-                      id="test-password"
-                      type="password"
-                      value={testPassword}
-                      onChange={(e) => setTestPassword(e.target.value)}
-                      placeholder="Digite sua senha atual"
-                      disabled={isExecuting}
-                    />
-                  </div>
-                )}
-                
                 <div className="flex gap-2">
                   <Button
                     onClick={handleManualTest}
-                    disabled={isExecuting || (settings.requiresPassword && !testPassword.trim())}
+                    disabled={isExecuting}
                     variant="destructive"
                   >
                     {isExecuting ? (

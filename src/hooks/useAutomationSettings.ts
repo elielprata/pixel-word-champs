@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -6,13 +5,12 @@ import { logger } from '@/utils/logger';
 
 interface AutomationConfig {
   enabled: boolean;
-  triggerType: 'schedule' | 'competition_finalization'; // Nova opção
+  triggerType: 'schedule' | 'competition_finalization';
   frequency: 'daily' | 'weekly' | 'monthly';
   time: string;
   dayOfWeek?: number;
   dayOfMonth?: number;
-  requiresPassword: boolean;
-  resetOnCompetitionEnd: boolean; // Nova flag específica
+  resetOnCompetitionEnd: boolean;
 }
 
 interface AutomationLog {
@@ -144,32 +142,17 @@ export const useAutomationSettings = () => {
     }
   };
 
-  const executeManualReset = async (adminPassword?: string) => {
+  const executeManualReset = async () => {
     if (!settings) return false;
-
-    if (settings.requiresPassword && !adminPassword) {
-      toast({
-        title: "Senha necessária",
-        description: "Esta automação requer senha de administrador",
-        variant: "destructive",
-      });
-      return false;
-    }
 
     setIsExecuting(true);
     try {
       logger.info('Executando reset manual via automação', undefined, 'AUTOMATION_SETTINGS');
 
-      // Verificar senha se necessário
-      if (settings.requiresPassword && adminPassword !== 'admin123') {
-        throw new Error('Senha de administrador incorreta');
-      }
-
       // Chamar a Edge Function diretamente
       const { data, error } = await supabase.functions.invoke('automation-reset-checker', {
         body: { 
-          manual_execution: true, 
-          admin_password: adminPassword,
+          manual_execution: true,
           trigger_type: 'manual'
         }
       });
