@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Server, Shield, Clock, Zap } from 'lucide-react';
+import { Activity, Server, Shield, Clock } from 'lucide-react';
 import { SystemHealthMonitor } from './SystemHealthMonitor';
+import { UserSystemStatus } from './UserSystemStatus';
 import { AdminAuditLog } from './AdminAuditLog';
 import { logger } from '@/utils/logger';
 
@@ -10,82 +11,82 @@ export const MonitoringTab = () => {
   logger.debug('Renderizando aba de monitoramento', undefined, 'MONITORING_TAB');
 
   return (
-    <div className="space-y-6">
-      {/* Header principal */}
-      <div className="text-center">
-        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-4 rounded-2xl shadow-lg">
-          <Activity className="h-8 w-8" />
-          <div className="text-left">
-            <h2 className="text-2xl font-bold">Centro de Monitoramento</h2>
-            <p className="text-indigo-100 text-sm">Acompanhe a saúde da plataforma em tempo real</p>
-          </div>
+    <div className="space-y-8">
+      {/* Header da aba */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="bg-gradient-to-r from-purple-500 to-blue-500 p-3 rounded-lg">
+          <Activity className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">Monitoramento do Sistema</h2>
+          <p className="text-slate-600">Monitore a saúde e performance da plataforma em tempo real</p>
         </div>
       </div>
 
-      {/* Grid principal - Sistema de saúde */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Monitoramento otimizado */}
-        <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-green-800">
-              <Zap className="h-5 w-5 text-green-600" />
-              Sistema Otimizado
+      {/* Sistema de saúde em tempo real */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-1 w-8 bg-green-500 rounded"></div>
+            <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <Server className="h-5 w-5 text-green-600" />
+              Status Otimizado
+            </h3>
+          </div>
+          <SystemHealthMonitor />
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-1 w-8 bg-blue-500 rounded"></div>
+            <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <Server className="h-5 w-5 text-blue-600" />
+              Status Detalhado
+            </h3>
+          </div>
+          <UserSystemStatus />
+        </div>
+      </div>
+
+      {/* Métricas essenciais de performance */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-orange-500" />
+              Tempo de Resposta Médio
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <SystemHealthMonitor />
+            <div className="text-2xl font-bold text-slate-800">~150ms</div>
+            <p className="text-xs text-green-600">Performance excelente</p>
           </CardContent>
         </Card>
 
-        {/* Métricas essenciais */}
-        <div className="space-y-4">
-          <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700 flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Tempo de Resposta
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-800">~150ms</div>
-              <p className="text-xs text-orange-600">Performance excelente</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-purple-700 flex items-center gap-2">
-                <Server className="h-4 w-4" />
-                Uptime do Sistema
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-purple-800">99.9%</div>
-              <p className="text-xs text-purple-600">Últimos 30 dias</p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
+              <Activity className="h-4 w-4 text-purple-500" />
+              Uptime do Sistema
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-800">99.9%</div>
+            <p className="text-xs text-green-600">Últimos 30 dias</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Seção de auditoria */}
-      <Card className="border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-gray-50">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-slate-800">
-            <Shield className="h-5 w-5 text-purple-600" />
-            Log de Auditoria Administrativa
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AdminAuditLog />
-        </CardContent>
-      </Card>
-
-      {/* Footer informativo */}
-      <div className="text-center py-4 border-t border-slate-200">
-        <p className="text-sm text-slate-500">
-          🔄 Atualização automática a cada 30 segundos • 
-          🛡️ Monitoramento em tempo real ativo
-        </p>
+      {/* Log de auditoria administrativa */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="h-1 w-8 bg-purple-500 rounded"></div>
+          <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+            <Shield className="h-4 w-4 text-purple-600" />
+            Auditoria Administrativa
+          </h3>
+        </div>
+        <AdminAuditLog />
       </div>
     </div>
   );
