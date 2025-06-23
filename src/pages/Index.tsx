@@ -60,6 +60,26 @@ const Index = () => {
     setCurrentScreen('admin');
   };
 
+  const handleBottomNavigation = (screen: 'home' | 'ranking' | 'fullRanking' | 'profile' | 'settings' | 'invite' | 'achievements') => {
+    logger.debug('Mudança de tela via navegação', { from: currentScreen, to: screen }, 'INDEX');
+    
+    // Map BottomNavigation screens to our Screen type
+    switch (screen) {
+      case 'home':
+        setCurrentScreen('home');
+        break;
+      case 'ranking':
+        setCurrentScreen('ranking');
+        break;
+      case 'profile':
+        setCurrentScreen('profile');
+        break;
+      default:
+        // For other screens not in our main navigation, stay on current screen
+        break;
+    }
+  };
+
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'home':
@@ -114,11 +134,8 @@ const Index = () => {
             
             {currentScreen !== 'admin' && currentScreen !== 'game' && (
               <BottomNavigation 
-                currentScreen={currentScreen}
-                onScreenChange={(screen) => {
-                  logger.debug('Mudança de tela via navegação', { from: currentScreen, to: screen }, 'INDEX');
-                  setCurrentScreen(screen);
-                }}
+                currentScreen={currentScreen === 'challenge' ? 'home' : currentScreen as 'home' | 'ranking' | 'profile'}
+                onScreenChange={handleBottomNavigation}
               />
             )}
           </div>
