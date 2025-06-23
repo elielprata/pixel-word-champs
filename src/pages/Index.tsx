@@ -108,7 +108,10 @@ const Index = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50">
         {renderScreen()}
-        <BottomNavigation currentScreen={currentScreen} onScreenChange={handleScreenChange} />
+        <BottomNavigation 
+          currentScreen={currentScreen} 
+          onScreenChange={handleScreenChange} 
+        />
       </div>
     </ProtectedRoute>
   );
