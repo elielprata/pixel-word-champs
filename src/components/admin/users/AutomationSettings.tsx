@@ -2,17 +2,14 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Clock } from 'lucide-react';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Settings, Clock, AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AutomationLogs } from './AutomationLogs';
 import { useAutomationSettings } from '@/hooks/useAutomationSettings';
 import { AutomationConfig, AutomationSettingsProps } from './automation/types';
 import { getNextExecution, getDefaultSettings } from './automation/utils';
-import { AutomationToggle } from './automation/AutomationToggle';
-import { TriggerTypeSelector } from './automation/TriggerTypeSelector';
-import { ScheduleConfiguration } from './automation/ScheduleConfiguration';
-import { CompetitionFinalizationInfo } from './automation/CompetitionFinalizationInfo';
-import { NextExecutionAlert } from './automation/NextExecutionAlert';
-import { WarningAlert } from './automation/WarningAlert';
 import { AutomationActions } from './automation/AutomationActions';
 import { ManualTestSection } from './automation/ManualTestSection';
 
@@ -33,8 +30,6 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
       setShowTestSection(false);
     }
   };
-
-  const nextExecution = getNextExecution(settings);
 
   return (
     <Tabs defaultValue="settings" className="w-full">
@@ -59,30 +54,44 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
           </CardHeader>
           
           <CardContent className="p-6 space-y-6">
-            <AutomationToggle 
-              settings={settings} 
-              onSettingsChange={setSettings} 
-            />
+            {/* Switch de Automação */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="automation-enabled" className="text-base font-medium">
+                  Automação Ativada
+                </Label>
+                <p className="text-sm text-slate-600">
+                  Ativar reset automático de pontuações
+                </p>
+              </div>
+              <Switch
+                id="automation-enabled"
+                checked={settings.enabled}
+                onCheckedChange={(enabled) => setSettings({ ...settings, enabled })}
+              />
+            </div>
 
             {settings.enabled && (
               <>
-                <div className="space-y-4">
-                  <TriggerTypeSelector 
-                    settings={settings} 
-                    onSettingsChange={setSettings} 
-                  />
-
-                  <ScheduleConfiguration 
-                    settings={settings} 
-                    onSettingsChange={setSettings} 
-                  />
-
-                  <CompetitionFinalizationInfo settings={settings} />
+                {/* Informação sobre o tipo de trigger */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-blue-800">
+                    <Clock className="h-4 w-4" />
+                    <span className="font-medium">Reset por Finalização de Competição</span>
+                  </div>
+                  <p className="text-sm text-blue-700 mt-1">
+                    O reset será executado automaticamente quando uma competição semanal for finalizada.
+                  </p>
                 </div>
 
-                <NextExecutionAlert nextExecution={nextExecution} />
-
-                <WarningAlert settings={settings} />
+                {/* Alerta de aviso */}
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Atenção:</strong> O reset automático zeará a pontuação de todos os usuários.
+                    Esta ação é irreversível e será executada automaticamente quando uma competição semanal for finalizada.
+                  </AlertDescription>
+                </Alert>
               </>
             )}
 
