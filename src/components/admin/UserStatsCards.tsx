@@ -1,12 +1,12 @@
-
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2, Activity } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Users, UserCheck, UserPlus, Shield, TrendingUp, Gamepad2 } from 'lucide-react';
 import { useRealUserStats } from '@/hooks/useRealUserStats';
+import { AdminLoadingState } from './ui/AdminLoadingState';
 import { logger } from '@/utils/logger';
 
 export const UserStatsCards = () => {
-  const { data: stats, isLoading, refetch } = useRealUserStats();
+  const { data: stats, isLoading } = useRealUserStats();
 
   logger.debug('Renderizando cards de estatísticas de usuários', { 
     isLoading,
@@ -14,17 +14,7 @@ export const UserStatsCards = () => {
   }, 'USER_STATS_CARDS');
 
   if (isLoading || !stats) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {[...Array(6)].map((_, index) => (
-          <Card key={index} className="border-slate-200 shadow-sm animate-pulse">
-            <CardContent className="p-4">
-              <div className="h-16 bg-slate-200 rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+    return <AdminLoadingState showCards={true} cardsCount={6} />;
   }
 
   const cards = [
