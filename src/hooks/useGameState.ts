@@ -1,153 +1,125 @@
 
-import { useState, useEffect } from 'react';
-import { type Position } from '@/utils/boardUtils';
-import { useGameScoring } from '@/hooks/useGameScoring';
+import { useState, useCallback, useEffect } from 'react';
+import { GameCell } from '@/types/game';
+import { useToast } from "@/hooks/use-toast";
 import { logger } from '@/utils/logger';
-import { GAME_CONSTANTS } from '@/constants/game';
-
-interface FoundWord {
-  word: string;
-  positions: Position[];
-  points: number;
-}
 
 interface GameState {
-  foundWords: FoundWord[];
-  hintsUsed: number;
-  showGameOver: boolean;
-  showLevelComplete: boolean;
-  hintHighlightedCells: Position[];
-  permanentlyMarkedCells: Position[];
-  isLevelCompleted: boolean;
+  selectedCells: GameCell[];
+  foundWords: string[];
+  score: number;
+  timeLeft: number;
+  gameStatus: 'playing' | 'paused' | 'completed' | 'failed';
+  currentWord: string;
+  isSelecting: boolean;
 }
 
-export const useGameState = (
-  level: number, 
-  timeLeft: number,
-  onLevelComplete?: (levelScore: number) => void
-) => {
-  const [state, setState] = useState<GameState>({
-    foundWords: [],
-    hintsUsed: 0,
-    showGameOver: false,
-    showLevelComplete: false,
-    hintHighlightedCells: [],
-    permanentlyMarkedCells: [],
-    isLevelCompleted: false
-  });
+const initialState: GameState = {
+  selectedCells: [],
+  foundWords: [],
+  score: 0,
+  timeLeft: 180,
+  gameStatus: 'playing',
+  currentWord: '',
+  isSelecting: false,
+};
 
-  // Usar hook especializado de pontuação
-  const { 
-    currentLevelScore, 
-    isLevelCompleted, 
-    updateUserScore 
-  } = useGameScoring(state.foundWords, level);
+export const useGameState = () => {
+  const [gameState, setGameState] = useState<GameState>(initialState);
+  const { toast } = useToast();
 
-  // Reset state quando muda o nível
-  useEffect(() => {
-    logger.info(`🔄 Resetando estado do jogo para nível ${level}`, { level }, 'GAME_STATE');
-    setState({
-      foundWords: [],
-      hintsUsed: 0,
-      showGameOver: false,
-      showLevelComplete: false,
-      hintHighlightedCells: [],
-      permanentlyMarkedCells: [],
-      isLevelCompleted: false
+  const updateGameState = useCallback((updates: Partial<GameState>) => {
+    logger.debug('Atualizando estado do jogo', { updates }, 'GAME_STATE');
+    setGameState(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  const addFoundWord = useCallback((word: string, points: number) => {
+    logger.info('Palavra encontrada', { word, points }, 'GAME_STATE');
+    setGameState(prev => ({
+      ...prev,
+      foundWords: [...prev.foundWords, word],
+      score: prev.score + points,
+      selectedCells: [],
+      currentWord: '',
+      isSelecting: false,
+    }));
+
+    toast({
+      title: "Palavra encontrada!",
+      description: `${word} (+${points} pontos)`,
     });
-  }, [level]);
+  }, [toast]);
 
-  // Game Over quando tempo acaba
-  useEffect(() => {
-    if (timeLeft === 0 && !state.showGameOver && !state.isLevelCompleted) {
-      logger.info('⏰ Tempo esgotado - Game Over', { 
-        level, 
-        foundWords: state.foundWords.length,
-        targetWords: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED 
-      }, 'GAME_STATE');
-      setState(prev => ({ ...prev, showGameOver: true }));
-    }
-  }, [timeLeft, state.showGameOver, state.isLevelCompleted, level, state.foundWords.length]);
+  const clearSelection = useCallback(() => {
+    logger.debug('Limpando seleção', undefined, 'GAME_STATE');
+    setGameState(prev => ({
+      ...prev,
+      selectedCells: [],
+      currentWord: '',
+      isSelecting: false,
+    }));
+  }, []);
 
-  // Level complete quando atinge o número necessário de palavras
-  useEffect(() => {
-    if (isLevelCompleted && !state.showLevelComplete && !state.isLevelCompleted) {
-      logger.info(`🎉 Nível ${level} COMPLETADO!`, {
-        level,
-        foundWordsCount: state.foundWords.length,
-        totalWordsRequired: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
-        foundWords: state.foundWords.map(fw => fw.word),
-        levelScore: currentLevelScore
+  const startSelection = useCallback(() => {
+    logger.debug('Iniciando seleção', undefined, 'GAME_STATE');
+    setGameState(prev => ({ ...prev, isSelecting: true }));
+  }, []);
+
+  const addSelectedCell = useCallback((cell: GameCell) => {
+    setGameState(prev => {
+      const newWord = prev.currentWord + cell.letter;
+      logger.debug('Adicionando célula selecionada', { 
+        cell: { row: cell.row, col: cell.col, letter: cell.letter },
+        newWord 
       }, 'GAME_STATE');
       
-      setState(prev => ({ 
-        ...prev, 
-        showLevelComplete: true, 
-        isLevelCompleted: true 
-      }));
-      
-      // Notificar level complete via callback
-      if (onLevelComplete) {
-        logger.info(`📞 CALLBACK - Notificando level complete: ${currentLevelScore} pontos`, {
-          level,
-          score: currentLevelScore
-        }, 'GAME_STATE');
-        onLevelComplete(currentLevelScore);
+      return {
+        ...prev,
+        selectedCells: [...prev.selectedCells, cell],
+        currentWord: newWord,
+      };
+    });
+  }, []);
+
+  const updateTimer = useCallback((timeLeft: number) => {
+    setGameState(prev => {
+      if (prev.timeLeft !== timeLeft) {
+        logger.debug('Atualizando timer', { timeLeft }, 'GAME_STATE');
       }
-      
-      // Registrar pontos no banco
-      updateUserScore(currentLevelScore);
-    }
-  }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, level, currentLevelScore, updateUserScore, onLevelComplete]);
+      return { ...prev, timeLeft };
+    });
+  }, []);
 
-  const addFoundWord = (newFoundWord: FoundWord) => {
-    // PROTEÇÃO FINAL: Verificar duplicação uma última vez antes de adicionar ao estado
-    const isAlreadyFound = state.foundWords.some(fw => fw.word === newFoundWord.word);
-    if (isAlreadyFound) {
-      logger.error(`🚨 DUPLICAÇÃO EVITADA NO ESTADO FINAL - Palavra "${newFoundWord.word}" já existe`, {
-        word: newFoundWord.word,
-        existingWords: state.foundWords.map(fw => fw.word),
-        attemptedWord: newFoundWord
-      }, 'GAME_STATE');
-      return;
-    }
-
-    logger.info(`📝 ADICIONANDO PALAVRA AO ESTADO - "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
-      word: newFoundWord.word,
-      points: newFoundWord.points,
-      beforeCount: state.foundWords.length,
-      afterCount: state.foundWords.length + 1,
-      allWordsAfter: [...state.foundWords.map(fw => fw.word), newFoundWord.word]
+  const completeGame = useCallback(() => {
+    logger.info('Jogo completado', { 
+      score: gameState.score, 
+      wordsFound: gameState.foundWords.length 
     }, 'GAME_STATE');
     
-    setState(prev => ({
-      ...prev,
-      foundWords: [...prev.foundWords, newFoundWord],
-      permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
-    }));
-  };
+    setGameState(prev => ({ ...prev, gameStatus: 'completed' }));
+  }, [gameState.score, gameState.foundWords.length]);
+
+  const resetGame = useCallback(() => {
+    logger.info('Resetando jogo', undefined, 'GAME_STATE');
+    setGameState(initialState);
+  }, []);
+
+  useEffect(() => {
+    if (gameState.timeLeft <= 0 && gameState.gameStatus === 'playing') {
+      logger.warn('Tempo esgotado', { finalScore: gameState.score }, 'GAME_STATE');
+      setGameState(prev => ({ ...prev, gameStatus: 'failed' }));
+    }
+  }, [gameState.timeLeft, gameState.gameStatus, gameState.score]);
 
   return {
-    ...state,
-    currentLevelScore,
+    gameState,
+    updateGameState,
     addFoundWord,
-    setHintsUsed: (value: number | ((prev: number) => number)) => {
-      setState(prev => ({ 
-        ...prev, 
-        hintsUsed: typeof value === 'function' ? value(prev.hintsUsed) : value 
-      }));
-    },
-    setHintHighlightedCells: (positions: Position[]) => {
-      setState(prev => ({ ...prev, hintHighlightedCells: positions }));
-    },
-    setShowGameOver: (value: boolean) => {
-      setState(prev => ({ ...prev, showGameOver: value }));
-    },
-    setShowLevelComplete: (value: boolean) => {
-      setState(prev => ({ ...prev, showLevelComplete: value }));
-    },
-    setIsLevelCompleted: (value: boolean) => {
-      setState(prev => ({ ...prev, isLevelCompleted: value }));
-    }
+    clearSelection,
+    startSelection,
+    addSelectedCell,
+    updateTimer,
+    completeGame,
+    resetGame,
   };
 };
