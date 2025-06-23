@@ -11,6 +11,7 @@ import { PrizeConfigurationSection } from './PrizeConfigurationSection';
 import { WeeklyTournamentSection } from './WeeklyTournamentSection';
 import { FormActions } from './FormActions';
 import { usePaymentData } from '@/hooks/usePaymentData';
+import { useCustomCompetitions } from '@/hooks/useCustomCompetitions';
 
 interface CreateCompetitionFormProps {
   onClose: () => void;
@@ -28,6 +29,7 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const paymentData = usePaymentData();
+  const { weeklyCompetitions } = useCustomCompetitions();
 
   const [formData, setFormData] = useState({
     type: 'weekly' as 'daily' | 'weekly',
@@ -98,13 +100,15 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
       {showBasicConfig && (
         <>
           <CompetitionTypeSection 
-            formData={formData}
-            onInputChange={handleInputChange}
+            type={formData.type}
+            onTypeChange={(type) => handleInputChange('type', type)}
           />
 
           <BasicInfoSection 
-            formData={formData}
-            onInputChange={handleInputChange}
+            title={formData.title}
+            description={formData.description}
+            onTitleChange={(title) => handleInputChange('title', title)}
+            onDescriptionChange={(description) => handleInputChange('description', description)}
           />
 
           <ScheduleSection 
@@ -116,15 +120,26 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
           {formData.type === 'weekly' && (
             <>
               <WeeklyTournamentSection 
-                formData={formData}
-                onInputChange={handleInputChange}
+                weeklyTournamentId={formData.weeklyTournamentId}
+                weeklyTournaments={weeklyCompetitions || []}
+                onTournamentChange={(tournamentId) => handleInputChange('weeklyTournamentId', tournamentId)}
+                competitionType={formData.type}
               />
               
               <ParticipantsSection 
-                formData={formData}
-                onInputChange={handleInputChange}
+                maxParticipants={formData.maxParticipants}
+                onMaxParticipantsChange={(maxParticipants) => handleInputChange('maxParticipants', maxParticipants)}
               />
             </>
+          )}
+
+          {formData.type === 'daily' && (
+            <WeeklyTournamentSection 
+              weeklyTournamentId={formData.weeklyTournamentId}
+              weeklyTournaments={weeklyCompetitions || []}
+              onTournamentChange={(tournamentId) => handleInputChange('weeklyTournamentId', tournamentId)}
+              competitionType={formData.type}
+            />
           )}
         </>
       )}
@@ -158,9 +173,9 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
       )}
 
       <FormActions 
-        isLoading={isLoading}
+        isSubmitting={isLoading}
+        hasTitle={!!formData.title}
         onCancel={onClose}
-        competitionType={formData.type}
       />
     </form>
   );
