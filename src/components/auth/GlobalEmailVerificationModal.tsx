@@ -104,8 +104,14 @@ export const GlobalEmailVerificationModal = () => {
             borderRadius: '8px',
             transition: 'background-color 0.2s'
           }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+          onMouseEnter={(e) => {
+            const target = e.target as HTMLButtonElement;
+            target.style.backgroundColor = '#f3f4f6';
+          }}
+          onMouseLeave={(e) => {
+            const target = e.target as HTMLButtonElement;
+            target.style.backgroundColor = 'transparent';
+          }}
         >
           <X className="h-5 w-5 text-gray-500" />
         </button>
@@ -197,7 +203,7 @@ export const GlobalEmailVerificationModal = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
