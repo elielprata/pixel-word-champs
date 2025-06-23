@@ -102,7 +102,7 @@ export const SystemHealthMonitor = () => {
             onClick={() => refetch()}
             className="h-6 w-6 p-0"
           >
-            <RefreshCw className="h-3 w-3"} />
+            <RefreshCw className="h-3 w-3" />
           </Button>
         </CardTitle>
       </CardHeader>
