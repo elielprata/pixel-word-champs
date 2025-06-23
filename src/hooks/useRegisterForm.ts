@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { RegisterForm as RegisterFormType } from '@/types';
-import { logger } from '@/utils/logger';
 import { useUsernameVerification } from '@/hooks/useUsernameVerification';
 import { useEmailVerification } from '@/hooks/useEmailVerification';
 
@@ -23,7 +22,6 @@ const registerSchema = z.object({
 export const useRegisterForm = () => {
   const { register, isLoading, error } = useAuth();
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState('');
   
   const form = useForm<RegisterFormType>({
     resolver: zodResolver(registerSchema),
@@ -55,35 +53,12 @@ export const useRegisterForm = () => {
     }
 
     try {
-      logger.info('Tentativa de registro iniciada', { 
-        email: data.email, 
-        username: data.username 
-      }, 'REGISTER_FORM');
-      
-      // Resetar estados do modal antes de tentar registro
-      setShowEmailModal(false);
-      setRegisteredEmail('');
-      
       await register(data);
-      
-      // Se chegou aqui, o registro foi bem-sucedido
-      logger.info('Registro bem-sucedido - exibindo modal', { 
-        email: data.email 
-      }, 'REGISTER_FORM');
-      
-      setRegisteredEmail(data.email);
+      // Se chegou aqui, registro foi bem-sucedido - mostrar modal
       setShowEmailModal(true);
-      
-      logger.info('Estados do modal atualizados', { 
-        showEmailModal: true,
-        registeredEmail: data.email 
-      }, 'REGISTER_FORM');
-      
     } catch (err: any) {
-      logger.error('Erro no registro', { error: err.message }, 'REGISTER_FORM');
-      // Em caso de erro, garantir que o modal não apareça
+      // Em caso de erro, não mostrar modal
       setShowEmailModal(false);
-      setRegisteredEmail('');
     }
   };
 
@@ -92,14 +67,6 @@ export const useRegisterForm = () => {
     (watchedEmail && !emailCheck.available) ||
     usernameCheck.checking ||
     emailCheck.checking;
-
-  // Log para debug dos estados
-  logger.debug('Estados do hook useRegisterForm', {
-    showEmailModal,
-    registeredEmail,
-    isLoading,
-    hasError: !!error
-  }, 'REGISTER_FORM');
 
   return {
     form,
@@ -112,7 +79,6 @@ export const useRegisterForm = () => {
     isFormDisabled,
     onSubmit,
     showEmailModal,
-    registeredEmail,
     setShowEmailModal
   };
 };

@@ -68,32 +68,22 @@ export const useAuthOperations = (
     setError('');
 
     try {
-      logger.info('Iniciando processo de registro', { email: userData.email, username: userData.username }, 'AUTH_OPERATIONS');
-      
       const response = await authService.register(userData);
       
       if (!isMountedRef.current) return;
 
       if (response.success && response.data) {
-        // MUDANÇA PRINCIPAL: Não definir como autenticado imediatamente
-        // O usuário só será autenticado após confirmar o email
         setUser(response.data.user);
         setIsAuthenticated(false); // Manter como false até confirmação
         setError('');
-        logger.info('Registro realizado com sucesso - aguardando confirmação de email', { 
-          userId: response.data.user.id,
-          email: userData.email 
-        }, 'AUTH_OPERATIONS');
-        
-        // IMPORTANTE: Não lançar exceção aqui, pois o registro foi bem-sucedido
-        return; // Retorna normalmente para permitir que o modal apareça
+        logger.info('Registro realizado com sucesso', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
+        return; // Retorna normalmente - sucesso
       } else {
         const errorMessage = response.error || 'Erro no registro';
         setError(errorMessage);
         setIsAuthenticated(false);
         setUser(null);
-        logger.error('Falha no registro', { error: errorMessage }, 'AUTH_OPERATIONS');
-        throw new Error(errorMessage); // Lança exceção apenas em caso de erro
+        throw new Error(errorMessage);
       }
     } catch (error: any) {
       if (!isMountedRef.current) return;
@@ -102,8 +92,7 @@ export const useAuthOperations = (
       setError(errorMessage);
       setIsAuthenticated(false);
       setUser(null);
-      logger.error('Erro durante registro', { error: errorMessage }, 'AUTH_OPERATIONS');
-      throw error; // Re-lança a exceção para que useRegisterForm possa capturar
+      throw error;
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
