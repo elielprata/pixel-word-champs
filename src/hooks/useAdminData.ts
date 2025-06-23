@@ -2,7 +2,7 @@
 import { useUsersQuery } from './useUsersQuery';
 import { useAdminUsers } from './useAdminUsers';
 import { useRealUserStats } from './useRealUserStats';
-import { useSystemHealthCheck } from './useSystemHealthCheck';
+import { useOptimizedSystemHealth } from './useOptimizedSystemHealth';
 import { logger } from '@/utils/logger';
 import { type AdminData } from '@/types/admin';
 
@@ -11,7 +11,7 @@ export const useAdminData = (): AdminData => {
   const usersQuery = useUsersQuery();
   const adminUsersQuery = useAdminUsers();
   const userStatsQuery = useRealUserStats();
-  const systemHealthQuery = useSystemHealthCheck();
+  const systemHealthQuery = useOptimizedSystemHealth();
 
   const isLoading = usersQuery.isLoading || adminUsersQuery.isLoading || systemHealthQuery.isLoading;
   const hasError = usersQuery.error || systemHealthQuery.error;
