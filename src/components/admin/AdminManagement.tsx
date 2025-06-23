@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EnhancedCreateAdminForm } from './EnhancedCreateAdminForm';
+import { CreateAdminForm } from './CreateAdminForm';
 import { AdminUsersList } from './AdminUsersList';
 import { AdminAuditLog } from './AdminAuditLog';
 import { logger } from '@/utils/logger';
@@ -18,7 +18,7 @@ export const AdminManagement = () => {
             <div className="h-1 w-8 bg-blue-500 rounded"></div>
             <h3 className="text-lg font-semibold text-slate-800">Criar Novo Administrador</h3>
           </div>
-          <EnhancedCreateAdminForm />
+          <CreateAdminForm />
         </div>
         
         {/* Lista de admins existentes */}
