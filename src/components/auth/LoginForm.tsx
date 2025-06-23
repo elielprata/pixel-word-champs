@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,6 +10,7 @@ import { LoginForm as LoginFormType } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { logger } from '@/utils/logger';
+import { EmailVerificationModal } from './EmailVerificationModal';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
@@ -20,6 +20,8 @@ const loginSchema = z.object({
 const LoginForm = () => {
   const { login, isLoading, error } = useAuth();
   const navigate = useNavigate();
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
   
   const form = useForm<LoginFormType>({
     resolver: zodResolver(loginSchema),
@@ -39,66 +41,82 @@ const LoginForm = () => {
       navigate('/');
     } catch (err: any) {
       logger.error('Erro no login', { error: err.message }, 'LOGIN_FORM');
+      
+      // Verificar se o erro é relacionado a email não confirmado
+      if (err.message?.includes('Email not confirmed') || 
+          err.message?.includes('email not confirmed') ||
+          err.message?.includes('not confirmed')) {
+        setUnconfirmedEmail(data.email);
+        setShowEmailModal(true);
+      }
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="seu@email.com" 
-                  type="email"
-                  autoComplete="email"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="seu@email.com" 
+                    type="email"
+                    autoComplete="email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Senha</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="••••••••" 
+                    type="password"
+                    autoComplete="current-password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {error && !showEmailModal && (
+            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+              {error}
+            </div>
           )}
-        />
 
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Senha</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="••••••••" 
-                  type="password"
-                  autoComplete="current-password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading}
+          >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Entrar
+          </Button>
+        </form>
+      </Form>
 
-        {error && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-            {error}
-          </div>
-        )}
-
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isLoading}
-        >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Entrar
-        </Button>
-      </form>
-    </Form>
+      <EmailVerificationModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        userEmail={unconfirmedEmail}
+      />
+    </>
   );
 };
 
