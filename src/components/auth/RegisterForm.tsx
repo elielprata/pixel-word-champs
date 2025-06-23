@@ -24,9 +24,8 @@ const RegisterForm = () => {
 
   const { isModalOpen, modalEmail, hideEmailModal } = useEmailVerification();
 
-  // DEBUG: Log do estado do modal
-  console.log('🔍 [DEBUG] RegisterForm - isModalOpen:', isModalOpen);
-  console.log('🔍 [DEBUG] RegisterForm - modalEmail:', modalEmail);
+  // DEBUG: Log do estado do modal a cada render
+  console.log('🔍 [DEBUG] RegisterForm RENDER - isModalOpen:', isModalOpen, 'modalEmail:', modalEmail);
 
   return (
     <>
@@ -63,17 +62,12 @@ const RegisterForm = () => {
         <p className="text-xs">modalEmail: {modalEmail}</p>
       </div>
 
-      {/* MODAL USANDO CONTEXTO - ARQUITETURA ROBUSTA */}
-      {isModalOpen && modalEmail && (
-        <>
-          {console.log('🔍 [DEBUG] Renderizando EmailVerificationModal via contexto com email:', modalEmail)}
-          <EmailVerificationModal
-            isOpen={isModalOpen}
-            onClose={hideEmailModal}
-            userEmail={modalEmail}
-          />
-        </>
-      )}
+      {/* MODAL SEMPRE RENDERIZADO - CONTROLE APENAS POR isOpen */}
+      <EmailVerificationModal
+        isOpen={isModalOpen}
+        onClose={hideEmailModal}
+        userEmail={modalEmail}
+      />
     </>
   );
 };

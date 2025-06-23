@@ -42,7 +42,7 @@ export const useRegisterForm = () => {
   const emailCheck = useEmailCheck(watchedEmail);
 
   const onSubmit = async (data: RegisterFormType) => {
-    console.log('🔍 [DEBUG] onSubmit iniciado');
+    console.log('🔍 [DEBUG] onSubmit iniciado - ANTES do registro');
     
     if (!usernameCheck.available && watchedUsername) {
       form.setError('username', { message: 'Este nome de usuário já está em uso' });
@@ -56,16 +56,22 @@ export const useRegisterForm = () => {
 
     // CAPTURAR EMAIL ANTES DE QUALQUER OPERAÇÃO
     const emailForModal = data.email;
-    console.log('🔍 [DEBUG] Email capturado para modal:', emailForModal);
+    console.log('🔍 [DEBUG] Email capturado ANTES do registro:', emailForModal);
 
     try {
       console.log('🔍 [DEBUG] Chamando register...');
       await register(data);
-      console.log('🔍 [DEBUG] Register completou com sucesso!');
+      console.log('🔍 [DEBUG] Register completou com sucesso - AGORA VAMOS MOSTRAR O MODAL');
       
-      // MOSTRAR MODAL IMEDIATAMENTE APÓS SUCESSO
+      // MOSTRAR MODAL IMEDIATAMENTE APÓS SUCESSO - ANTES DE QUALQUER RESET
+      console.log('🔍 [DEBUG] Chamando showEmailModal IMEDIATAMENTE');
       showEmailModal(emailForModal);
-      console.log('🔍 [DEBUG] showEmailModal chamado com sucesso');
+      console.log('🔍 [DEBUG] showEmailModal chamado - modal deve aparecer agora');
+      
+      // Log adicional para verificar se o modal realmente foi acionado
+      setTimeout(() => {
+        console.log('🔍 [DEBUG] Verificação pós-registro - modal deve estar visível');
+      }, 100);
       
     } catch (err: any) {
       console.log('🔍 [DEBUG] Erro no registro:', err.message);
