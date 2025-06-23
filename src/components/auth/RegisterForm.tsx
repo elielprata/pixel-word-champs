@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -51,17 +50,6 @@ const RegisterForm = () => {
     } catch (err: any) {
       logger.error('Erro no registro', { error: err.message }, 'REGISTER_FORM');
     }
-  };
-
-  // Função para preencher dados de teste
-  const handleTestRegister = () => {
-    const randomNum = Math.floor(Math.random() * 10000);
-    form.setValue('username', `usuario${randomNum}`);
-    form.setValue('email', `teste${randomNum}@exemplo.com`);
-    form.setValue('password', '123456');
-    form.setValue('confirmPassword', '123456');
-    
-    logger.debug('Dados de teste preenchidos', { randomNum }, 'REGISTER_FORM');
   };
 
   return (
@@ -154,17 +142,6 @@ const RegisterForm = () => {
             </FormItem>
           )}
         />
-
-        <div className="flex items-center justify-center">
-          <Button
-            type="button"
-            variant="link"
-            className="px-0 font-normal text-sm"
-            onClick={handleTestRegister}
-          >
-            Preencher dados de teste
-          </Button>
-        </div>
 
         {error && (
           <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
