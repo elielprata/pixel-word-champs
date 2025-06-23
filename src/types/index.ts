@@ -3,7 +3,7 @@
 export interface User {
   id: string;
   email: string;
-  username?: string;
+  username: string; // Tornar obrigatório
   avatar_url?: string;
   total_score: number;
   games_played: number;
@@ -75,7 +75,7 @@ export interface RankingPlayer {
 }
 
 export interface Challenge {
-  id: string; // Alterar de number para string para consistência
+  id: string; // Padronizar como string para consistência
   title: string;
   description: string;
   prize: string;

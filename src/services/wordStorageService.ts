@@ -1,19 +1,20 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export const saveWordsToDatabase = async (
   words: string[], 
   categoryId: string, 
   categoryName: string
 ) => {
-  console.log('📝 Iniciando salvamento de palavras:', {
+  logger.debug('Iniciando salvamento de palavras', {
     category: categoryName,
     wordsReceived: words.length,
     words: words
-  });
+  }, 'WORD_STORAGE_SERVICE');
 
   if (!words || words.length === 0) {
-    console.log('ℹ️ Nenhuma palavra para salvar');
+    logger.info('Nenhuma palavra para salvar', undefined, 'WORD_STORAGE_SERVICE');
     return { words: [], count: 0 };
   }
 
@@ -22,20 +23,20 @@ export const saveWordsToDatabase = async (
     .map(word => word.trim().toUpperCase())
     .filter(word => word.length >= 3 && /^[A-Z]+$/.test(word));
 
-  console.log('📊 Palavras após normalização:', {
+  logger.debug('Palavras após normalização', {
     category: categoryName,
     original: words.length,
     normalized: normalizedWords.length,
     normalizedWords
-  });
+  }, 'WORD_STORAGE_SERVICE');
 
   if (normalizedWords.length === 0) {
-    console.log('⚠️ Nenhuma palavra válida após normalização');
+    logger.warn('Nenhuma palavra válida após normalização', undefined, 'WORD_STORAGE_SERVICE');
     return { words: [], count: 0 };
   }
 
   // VERIFICAÇÃO MELHORADA: Buscar palavras existentes APENAS nesta categoria
-  console.log(`🔍 Verificando palavras existentes na categoria "${categoryName}"...`);
+  logger.debug('Verificando palavras existentes na categoria', { categoryName }, 'WORD_STORAGE_SERVICE');
   
   const { data: existingWords, error: checkError } = await supabase
     .from('level_words')
@@ -45,14 +46,15 @@ export const saveWordsToDatabase = async (
     .eq('is_active', true);
 
   if (checkError) {
-    console.error('❌ Erro ao verificar palavras existentes:', checkError);
+    logger.error('Erro ao verificar palavras existentes', { error: checkError }, 'WORD_STORAGE_SERVICE');
     throw checkError;
   }
 
-  console.log(`📋 Palavras já existentes na categoria "${categoryName}":`, {
+  logger.debug('Palavras já existentes na categoria', {
+    categoryName,
     count: existingWords?.length || 0,
     words: existingWords?.map(w => w.word) || []
-  });
+  }, 'WORD_STORAGE_SERVICE');
 
   // Criar um Set das palavras que já existem NESTA CATEGORIA
   const existingWordsSet = new Set(
@@ -63,7 +65,7 @@ export const saveWordsToDatabase = async (
   const newWords = normalizedWords.filter(word => {
     const exists = existingWordsSet.has(word);
     if (exists) {
-      console.log(`⚠️ Palavra "${word}" já existe na categoria "${categoryName}" - pulando`);
+      logger.debug('Palavra já existe na categoria, pulando', { word, categoryName }, 'WORD_STORAGE_SERVICE');
     }
     return !exists;
   });
@@ -71,16 +73,17 @@ export const saveWordsToDatabase = async (
   // Remover duplicatas dentro do próprio array de palavras novas
   const uniqueNewWords = [...new Set(newWords)];
 
-  console.log(`📊 Análise final para categoria "${categoryName}":`, {
+  logger.info('Análise final para categoria', {
+    categoryName,
     palavrasOriginais: words.length,
     palavrasNormalizadas: normalizedWords.length,
     palavrasJaExistentes: normalizedWords.length - newWords.length,
     palavrasNovasUnicas: uniqueNewWords.length,
     palavrasParaInserir: uniqueNewWords
-  });
+  }, 'WORD_STORAGE_SERVICE');
 
   if (uniqueNewWords.length === 0) {
-    console.log(`ℹ️ Todas as palavras já existem na categoria "${categoryName}"`);
+    logger.info('Todas as palavras já existem na categoria', { categoryName }, 'WORD_STORAGE_SERVICE');
     return { words: [], count: 0 };
   }
 
@@ -94,14 +97,14 @@ export const saveWordsToDatabase = async (
       is_active: true
     };
     
-    console.log(`🎯 Preparando para inserir: "${word}" na categoria "${categoryName}" com dificuldade "${wordData.difficulty}"`);
+    logger.debug('Preparando palavra para inserção', { word, categoryName, difficulty: wordData.difficulty }, 'WORD_STORAGE_SERVICE');
     return wordData;
   });
 
-  console.log('💾 Iniciando inserção no banco de dados...', {
+  logger.debug('Iniciando inserção no banco de dados', {
     category: categoryName,
     totalToInsert: wordsToInsert.length
-  });
+  }, 'WORD_STORAGE_SERVICE');
 
   // INSERÇÃO MELHORADA: Usar upsert com melhor tratamento de erros
   const insertedWords = [];
@@ -111,7 +114,11 @@ export const saveWordsToDatabase = async (
 
   for (const [index, wordData] of wordsToInsert.entries()) {
     try {
-      console.log(`💽 [${index + 1}/${wordsToInsert.length}] Inserindo: "${wordData.word}" na categoria "${categoryName}"`);
+      logger.debug('Inserindo palavra', { 
+        progress: `${index + 1}/${wordsToInsert.length}`,
+        word: wordData.word,
+        category: categoryName 
+      }, 'WORD_STORAGE_SERVICE');
       
       const { data, error } = await supabase
         .from('level_words')
@@ -123,20 +130,33 @@ export const saveWordsToDatabase = async (
         if (error.code === '23505') {
           // Erro de duplicata - pode ser constraint única que não conhecemos
           duplicateCount++;
-          console.warn(`⚠️ DUPLICATA detectada: "${wordData.word}" na categoria "${categoryName}" (erro ${error.code})`);
-          console.warn('🔍 Detalhes do erro de duplicata:', error);
+          logger.warn('DUPLICATA detectada', { 
+            word: wordData.word, 
+            categoryName, 
+            errorCode: error.code 
+          }, 'WORD_STORAGE_SERVICE');
         } else {
           errorCount++;
-          console.error(`❌ Erro inesperado ao inserir "${wordData.word}":`, error);
+          logger.error('Erro inesperado ao inserir palavra', { 
+            word: wordData.word, 
+            error 
+          }, 'WORD_STORAGE_SERVICE');
         }
       } else {
         insertedWords.push(data);
         successCount++;
-        console.log(`✅ [${successCount}] Palavra inserida com sucesso: "${wordData.word}" na categoria "${categoryName}"`);
+        logger.debug('Palavra inserida com sucesso', { 
+          word: wordData.word, 
+          categoryName,
+          successCount 
+        }, 'WORD_STORAGE_SERVICE');
       }
     } catch (err) {
       errorCount++;
-      console.error(`❌ Erro inesperado ao inserir palavra "${wordData.word}":`, err);
+      logger.error('Erro inesperado ao inserir palavra', { 
+        word: wordData.word, 
+        error: err 
+      }, 'WORD_STORAGE_SERVICE');
     }
   }
 
@@ -151,7 +171,7 @@ export const saveWordsToDatabase = async (
     count: successCount
   };
 
-  console.log(`🎯 RESULTADO FINAL para categoria "${categoryName}":`, finalResult);
+  logger.info('RESULTADO FINAL para categoria', finalResult, 'WORD_STORAGE_SERVICE');
 
   return { words: insertedWords, count: successCount };
 };

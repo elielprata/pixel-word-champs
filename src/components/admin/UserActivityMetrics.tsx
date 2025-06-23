@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Activity } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface ActivityData {
   day: string;
@@ -16,7 +17,7 @@ const useUserActivity = () => {
   return useQuery({
     queryKey: ['userActivity'],
     queryFn: async (): Promise<ActivityData[]> => {
-      console.log('📊 Buscando dados de atividade dos usuários...');
+      logger.debug('Buscando dados de atividade dos usuários', undefined, 'USER_ACTIVITY_METRICS');
 
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -28,7 +29,7 @@ const useUserActivity = () => {
         .gte('started_at', sevenDaysAgo.toISOString());
 
       if (error) {
-        console.error('❌ Erro ao buscar sessões:', error);
+        logger.error('Erro ao buscar sessões', { error }, 'USER_ACTIVITY_METRICS');
         throw error;
       }
 
@@ -63,7 +64,7 @@ const useUserActivity = () => {
         activeUsers: dailyActivity[dateStr].users.size
       }));
 
-      console.log('📊 Dados de atividade corrigidos:', result);
+      logger.debug('Dados de atividade processados', { dataPoints: result.length }, 'USER_ACTIVITY_METRICS');
       return result;
     },
     retry: 2,
@@ -93,6 +94,8 @@ export const UserActivityMetrics = () => {
   }
 
   if (error) {
+    logger.error('Erro ao carregar dados de atividade', { error }, 'USER_ACTIVITY_METRICS');
+    
     return (
       <Card className="border-slate-200 shadow-lg">
         <CardHeader className="pb-3">

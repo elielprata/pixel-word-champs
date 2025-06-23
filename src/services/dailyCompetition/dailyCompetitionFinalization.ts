@@ -1,11 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { dailyCompetitionParticipationService } from './dailyCompetitionParticipation';
+import { logger } from '@/utils/logger';
 
 export class DailyCompetitionFinalizationService {
   async finalizeDailyCompetition(competitionId: string): Promise<void> {
     try {
-      console.log('🏁 Finalizando competição diária (nova dinâmica - sem ranking diário)...');
+      logger.info('Finalizando competição diária (nova dinâmica - sem ranking diário)', { competitionId }, 'DAILY_COMPETITION_FINALIZATION');
 
       // Buscar informações da competição diária
       const { data: competition, error: compError } = await supabase
@@ -15,19 +16,19 @@ export class DailyCompetitionFinalizationService {
         .single();
 
       if (compError || !competition) {
-        console.error('❌ Competição não encontrada:', compError);
+        logger.error('Competição não encontrada', { error: compError, competitionId }, 'DAILY_COMPETITION_FINALIZATION');
         return;
       }
 
       // Verificar se há competição semanal vinculada
       if (!competition.weekly_tournament_id) {
-        console.error('❌ Competição diária não está vinculada a uma competição semanal');
+        logger.error('Competição diária não está vinculada a uma competição semanal', { competitionId }, 'DAILY_COMPETITION_FINALIZATION');
         return;
       }
 
       // Como não há ranking diário separado, atualizar apenas os rankings da competição semanal
       await dailyCompetitionParticipationService.updateCompetitionRankings(competition.weekly_tournament_id);
-      console.log('✅ Rankings da competição semanal atualizados');
+      logger.info('Rankings da competição semanal atualizados', { weeklyTournamentId: competition.weekly_tournament_id }, 'DAILY_COMPETITION_FINALIZATION');
 
       // Finalizar a competição diária
       await supabase
@@ -38,15 +39,15 @@ export class DailyCompetitionFinalizationService {
         })
         .eq('id', competitionId);
 
-      console.log('✅ Competição diária finalizada com sucesso (pontos já na competição semanal)');
+      logger.info('Competição diária finalizada com sucesso (pontos já na competição semanal)', { competitionId }, 'DAILY_COMPETITION_FINALIZATION');
     } catch (error) {
-      console.error('❌ Erro ao finalizar competição diária:', error);
+      logger.error('Erro ao finalizar competição diária', { error, competitionId }, 'DAILY_COMPETITION_FINALIZATION');
     }
   }
 
   async transferScoresToWeeklyCompetition(dailyCompetitionId: string): Promise<void> {
     try {
-      console.log('ℹ️ Com a nova dinâmica, não há transferência de pontos - os pontos já são contabilizados diretamente na competição semanal');
+      logger.info('Com a nova dinâmica, não há transferência de pontos - os pontos já são contabilizados diretamente na competição semanal', { dailyCompetitionId }, 'DAILY_COMPETITION_FINALIZATION');
 
       // Buscar competição diária e sua vinculação semanal para validação
       const { data: dailyCompetition, error: dailyError } = await supabase
@@ -56,14 +57,17 @@ export class DailyCompetitionFinalizationService {
         .single();
 
       if (dailyError || !dailyCompetition?.weekly_tournament_id) {
-        console.log('⚠️ Competição diária não vinculada a competição semanal');
+        logger.warn('Competição diária não vinculada a competição semanal', { dailyCompetitionId, error: dailyError }, 'DAILY_COMPETITION_FINALIZATION');
         return;
       }
 
-      console.log(`✅ Competição diária "${dailyCompetition.title || 'Sem título'}" está corretamente vinculada à competição semanal`);
-      console.log('ℹ️ Os pontos são transferidos automaticamente em tempo real durante o jogo');
+      logger.info('Competição diária está corretamente vinculada à competição semanal', { 
+        title: dailyCompetition.title || 'Sem título',
+        weeklyTournamentId: dailyCompetition.weekly_tournament_id 
+      }, 'DAILY_COMPETITION_FINALIZATION');
+      logger.info('Os pontos são transferidos automaticamente em tempo real durante o jogo', undefined, 'DAILY_COMPETITION_FINALIZATION');
     } catch (error) {
-      console.error('❌ Erro ao verificar vinculação:', error);
+      logger.error('Erro ao verificar vinculação', { error, dailyCompetitionId }, 'DAILY_COMPETITION_FINALIZATION');
     }
   }
 }

@@ -14,6 +14,7 @@ import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
 import { DailyCompetitionsView } from './rankings/DailyCompetitionsView';
 import { useRankings } from '@/hooks/useRankings';
 import { useCompetitions } from '@/hooks/useCompetitions';
+import { logger } from '@/utils/logger';
 
 // Use the same interface as WeeklyCompetitionsView expects
 interface WeeklyCompetition {
@@ -46,12 +47,12 @@ export const RankingsTab = () => {
     refetch: refetchCompetitions
   } = useCompetitions();
 
-  console.log('🎯 [RankingsTab] Dados carregados:', {
+  logger.debug('RankingsTab: Dados carregados', {
     weeklyCompetitions: weeklyCompetitions.length,
     customCompetitions: customCompetitions.length,
     isRankingsLoading,
     isCompetitionsLoading
-  });
+  }, 'RANKINGS_TAB');
 
   // Filtrar competições diárias (tipo 'challenge')
   const dailyCompetitions = customCompetitions.filter(comp => comp.competition_type === 'challenge');
@@ -71,22 +72,22 @@ export const RankingsTab = () => {
   }));
 
   // Log das competições semanais que serão enviadas para o WeeklyCompetitionsView
-  console.log('📋 [RankingsTab] Competições semanais que serão enviadas:', weeklyCompetitionsWithType.map(comp => ({
+  logger.debug('RankingsTab: Competições semanais processadas', weeklyCompetitionsWithType.map(comp => ({
     id: comp.id,
     title: comp.title,
     status: comp.status,
     startDate: comp.start_date,
     endDate: comp.end_date
-  })));
+  })), 'RANKINGS_TAB');
 
   const handleCompetitionCreated = () => {
-    console.log('🔄 Nova competição criada, atualizando dados...');
+    logger.info('Nova competição criada, atualizando dados', undefined, 'RANKINGS_TAB');
     refreshData();
     refetchCompetitions();
   };
 
   const handleRefreshCompetitions = () => {
-    console.log('🔄 Atualizando todas as competições...');
+    logger.info('Atualizando todas as competições', undefined, 'RANKINGS_TAB');
     refreshData();
     refetchCompetitions();
   };

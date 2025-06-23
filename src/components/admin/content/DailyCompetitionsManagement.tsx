@@ -12,6 +12,7 @@ import { DailyCompetitionForm } from './daily/DailyCompetitionForm';
 import { DailyCompetitionStats } from './daily/DailyCompetitionStats';
 import { DailyCompetitionTable } from './daily/DailyCompetitionTable';
 import { DailyCompetitionsHeader } from './daily/DailyCompetitionsHeader';
+import { logger } from '@/utils/logger';
 
 export const DailyCompetitionsManagement = () => {
   // Usar o hook de finalização automática
@@ -39,6 +40,13 @@ export const DailyCompetitionsManagement = () => {
     updateCompetition,
     handleEdit
   } = useDailyCompetitionForm(fetchCompetitions);
+
+  logger.debug('DailyCompetitionsManagement renderizado', {
+    competitionsCount: competitions.length,
+    loading,
+    isAddModalOpen,
+    hasEditingCompetition: !!editingCompetition
+  }, 'DAILY_COMPETITIONS_MANAGEMENT');
 
   return (
     <Card className="shadow-sm border-slate-200">
