@@ -18,9 +18,6 @@ export const TriggerTypeSelector = ({ settings, onSettingsChange }: TriggerTypeS
           <Trophy className="h-4 w-4" />
           <span className="font-medium">Reset por Finalização de Competição</span>
         </div>
-        <p className="text-sm text-blue-700 mt-1">
-          O reset será executado automaticamente sempre que uma competição semanal for finalizada.
-        </p>
       </div>
     </div>
   );

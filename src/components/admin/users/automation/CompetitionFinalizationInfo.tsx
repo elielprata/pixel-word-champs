@@ -15,9 +15,7 @@ export const CompetitionFinalizationInfo = ({ settings }: CompetitionFinalizatio
     <Alert className="border-blue-200 bg-blue-50">
       <Trophy className="h-4 w-4 text-blue-600" />
       <AlertDescription className="text-blue-800">
-        <strong>Reset por Finalização:</strong> O reset será executado automaticamente 
-        sempre que uma competição semanal for finalizada. Todos os usuários terão suas 
-        pontuações zeradas para começar a próxima competição.
+        <strong>Reset Automático:</strong> Ativado para finalização de competições semanais.
       </AlertDescription>
     </Alert>
   );
