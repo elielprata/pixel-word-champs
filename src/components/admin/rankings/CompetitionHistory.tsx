@@ -1,154 +1,251 @@
 
-import React, { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { CompetitionFilters } from './history/CompetitionFilters';
-import { CompetitionStats } from './history/CompetitionStats';
-import { CompetitionTable } from './history/CompetitionTable';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { History, Trophy, Users, Calendar, RefreshCw } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
-interface CompetitionHistoryItem {
+interface HistoricalCompetition {
   id: string;
   title: string;
-  competition_type: string;
+  description: string;
   start_date: string;
   end_date: string;
   status: string;
   prize_pool: number;
   max_participants: number;
   total_participants: number;
+  winner_id?: string;
   created_at: string;
 }
 
+const useCompetitionHistory = () => {
+  return useQuery({
+    queryKey: ['competitionHistory'],
+    queryFn: async (): Promise<HistoricalCompetition[]> => {
+      logger.debug('Buscando histórico de competições', undefined, 'COMPETITION_HISTORY');
+      
+      try {
+        const { data, error } = await supabase
+          .from('competitions')
+          .select(`
+            id,
+            title,
+            description,
+            start_date,
+            end_date,
+            status,
+            prize_pool,
+            max_participants,
+            winner_id,
+            created_at
+          `)
+          .eq('status', 'finished')
+          .order('end_date', { ascending: false })
+          .limit(20);
+
+        if (error) {
+          logger.error('Erro ao buscar histórico de competições', { error: error.message }, 'COMPETITION_HISTORY');
+          throw error;
+        }
+
+        // Buscar contagem de participantes para cada competição
+        const competitionsWithParticipants = await Promise.all(
+          (data || []).map(async (competition) => {
+            const { data: participantsData, error: participantsError } = await supabase
+              .from('competition_participations')
+              .select('id')
+              .eq('competition_id', competition.id);
+
+            if (participantsError) {
+              logger.warn('Erro ao buscar participantes da competição', { 
+                competitionId: competition.id,
+                error: participantsError.message 
+              }, 'COMPETITION_HISTORY');
+            }
+
+            return {
+              ...competition,
+              total_participants: participantsData?.length || 0
+            };
+          })
+        );
+
+        logger.info('Histórico de competições carregado', { 
+          count: competitionsWithParticipants.length 
+        }, 'COMPETITION_HISTORY');
+        
+        return competitionsWithParticipants;
+      } catch (error: any) {
+        logger.error('Erro ao carregar histórico de competições', { error: error.message }, 'COMPETITION_HISTORY');
+        throw error;
+      }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+};
+
 export const CompetitionHistory = () => {
-  const [competitions, setCompetitions] = useState<CompetitionHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const { toast } = useToast();
+  const { data: competitions, isLoading, error, refetch } = useCompetitionHistory();
 
-  useEffect(() => {
-    fetchCompetitionHistory();
-  }, []);
-
-  const fetchCompetitionHistory = async () => {
-    try {
-      setLoading(true);
-      console.log('🔍 Buscando histórico de competições no banco...');
-      
-      // Buscar competições customizadas finalizadas
-      const { data: customCompetitions, error: customError } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .eq('status', 'completed')
-        .order('end_date', { ascending: false });
-
-      if (customError) {
-        console.error('❌ Erro ao buscar competições customizadas:', customError);
-      }
-
-      // Buscar competições do sistema finalizadas
-      const { data: systemCompetitions, error: systemError } = await supabase
-        .from('competitions')
-        .select('*')
-        .eq('is_active', false)
-        .order('week_end', { ascending: false });
-
-      if (systemError) {
-        console.error('❌ Erro ao buscar competições do sistema:', systemError);
-      }
-
-      // Combinar e formatar os dados reais do banco
-      const formattedCompetitions: CompetitionHistoryItem[] = [
-        ...(customCompetitions || []).map(comp => ({
-          id: comp.id,
-          title: comp.title,
-          competition_type: comp.competition_type,
-          start_date: comp.start_date,
-          end_date: comp.end_date,
-          status: comp.status,
-          prize_pool: Number(comp.prize_pool) || 0,
-          max_participants: comp.max_participants || 0,
-          total_participants: 0, // TODO: calcular participantes reais baseado em game_sessions
-          created_at: comp.created_at
-        })),
-        ...(systemCompetitions || []).map(comp => ({
-          id: comp.id,
-          title: comp.title,
-          competition_type: comp.type,
-          start_date: comp.week_start || '',
-          end_date: comp.week_end || '',
-          status: 'completed',
-          prize_pool: Number(comp.prize_pool) || 0,
-          max_participants: 0,
-          total_participants: comp.total_participants || 0,
-          created_at: comp.created_at
-        }))
-      ];
-
-      console.log('📊 Competições do banco carregadas:', formattedCompetitions.length);
-      setCompetitions(formattedCompetitions);
-      
-      if (formattedCompetitions.length === 0) {
-        toast({
-          title: "Nenhuma competição encontrada",
-          description: "Não há competições finalizadas no histórico.",
-        });
-      } else {
-        toast({
-          title: "Histórico carregado",
-          description: `${formattedCompetitions.length} competição(ões) encontrada(s) no banco de dados.`,
-        });
-      }
-    } catch (error) {
-      console.error('❌ Erro ao carregar histórico:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar o histórico de competições",
-        variant: "destructive"
-      });
-      setCompetitions([]);
-    } finally {
-      setLoading(false);
-    }
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
-  const filteredCompetitions = competitions.filter(comp => {
-    const matchesSearch = comp.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || comp.status === statusFilter;
-    const matchesType = typeFilter === 'all' || comp.competition_type === typeFilter;
-    
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  const getDuration = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return `${diffDays} dias`;
+  };
 
-  if (loading) {
+  if (isLoading) {
+    logger.debug('Carregando histórico de competições...', undefined, 'COMPETITION_HISTORY');
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-b-2 border-orange-600 rounded-full mx-auto mb-4"></div>
-          <p className="text-slate-600">Carregando histórico do banco de dados...</p>
-        </div>
+      <div className="space-y-4">
+        {[1, 2, 3].map(i => (
+          <Card key={i} className="border-slate-200 shadow-sm animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-20 bg-slate-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }
 
+  if (error) {
+    logger.error('Erro ao renderizar histórico', { error }, 'COMPETITION_HISTORY');
+    return (
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="p-8 text-center">
+          <div className="text-red-600 mb-4">
+            Erro ao carregar histórico de competições
+          </div>
+          <Button onClick={() => refetch()} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Tentar Novamente
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!competitions || competitions.length === 0) {
+    logger.debug('Nenhuma competição finalizada encontrada', undefined, 'COMPETITION_HISTORY');
+    return (
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="p-8 text-center">
+          <History className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            Nenhum Histórico
+          </h3>
+          <p className="text-slate-600 mb-4">
+            Ainda não há competições finalizadas para exibir no histórico.
+          </p>
+          <Button onClick={() => refetch()} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Atualizar
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <CompetitionFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        typeFilter={typeFilter}
-        setTypeFilter={setTypeFilter}
-      />
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+          <History className="h-5 w-5 text-orange-600" />
+          Competições Finalizadas
+        </h3>
+        <Button onClick={() => refetch()} variant="outline" size="sm">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Atualizar
+        </Button>
+      </div>
 
-      <CompetitionStats competitions={competitions} />
+      {competitions.map((competition) => (
+        <Card key={competition.id} className="border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-lg font-semibold text-slate-900">
+                  {competition.title}
+                </CardTitle>
+                <p className="text-sm text-slate-600">
+                  {competition.description}
+                </p>
+              </div>
+              <Badge className="bg-gray-50 text-gray-700 border-gray-200">
+                Finalizada
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <div>
+                  <p className="text-slate-500">Período</p>
+                  <p className="font-medium text-slate-900">
+                    {formatDate(competition.start_date)} - {formatDate(competition.end_date)}
+                  </p>
+                </div>
+              </div>
 
-      <CompetitionTable 
-        competitions={filteredCompetitions}
-        onReload={fetchCompetitionHistory}
-      />
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-green-600" />
+                <div>
+                  <p className="text-slate-500">Participantes</p>
+                  <p className="font-medium text-slate-900">
+                    {competition.total_participants}/{competition.max_participants}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-yellow-600" />
+                <div>
+                  <p className="text-slate-500">Prêmio</p>
+                  <p className="font-medium text-slate-900">
+                    {competition.prize_pool} pts
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4 text-slate-600" />
+                <div>
+                  <p className="text-slate-500">Duração</p>
+                  <p className="font-medium text-slate-900">
+                    {getDuration(competition.start_date, competition.end_date)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {competition.winner_id && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-yellow-600" />
+                  <span className="text-sm font-medium text-yellow-800">
+                    Vencedor: {competition.winner_id.slice(0, 8)}...
+                  </span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };
