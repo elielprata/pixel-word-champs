@@ -12,6 +12,9 @@ interface GameState {
   gameStatus: 'playing' | 'paused' | 'completed' | 'failed';
   currentWord: string;
   isSelecting: boolean;
+  permanentlyMarkedCells: GameCell[];
+  hintHighlightedCells: GameCell[];
+  hintsUsed: number;
 }
 
 const initialState: GameState = {
@@ -22,6 +25,9 @@ const initialState: GameState = {
   gameStatus: 'playing',
   currentWord: '',
   isSelecting: false,
+  permanentlyMarkedCells: [],
+  hintHighlightedCells: [],
+  hintsUsed: 0,
 };
 
 export const useGameState = () => {

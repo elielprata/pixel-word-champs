@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { competitionService } from '@/services/competitionService';
-import { customCompetitionService } from '@/services/customCompetitionService';
+import { supabase } from '@/integrations/supabase/client';
 import { Competition } from '@/types';
 import { logger } from '@/utils/logger';
 
@@ -15,60 +14,93 @@ export const useCompetitionQueries = () => {
 
   const fetchActiveCompetitions = async () => {
     try {
-      const response = await competitionService.getActiveCompetitions();
+      logger.debug('Buscando competições ativas', undefined, 'COMPETITION_QUERIES');
       
-      if (response.success) {
-        setCompetitions(response.data);
-      } else {
-        throw new Error(response.error || 'Erro ao carregar competições');
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('status', 'active')
+        .order('start_date', { ascending: true });
+
+      if (error) {
+        logger.error('Erro ao carregar competições ativas', { error: error.message }, 'COMPETITION_QUERIES');
+        throw new Error(error.message);
       }
-    } catch (err) {
-      logger.error('Erro ao carregar competições ativas', { error: err }, 'COMPETITION_QUERIES');
+
+      setCompetitions(data || []);
+      logger.info('Competições ativas carregadas', { count: data?.length || 0 }, 'COMPETITION_QUERIES');
+    } catch (err: any) {
+      logger.error('Erro ao carregar competições ativas', { error: err.message }, 'COMPETITION_QUERIES');
       throw err;
     }
   };
 
   const fetchCustomCompetitions = async () => {
     try {
-      const response = await customCompetitionService.getCustomCompetitions();
+      logger.debug('Buscando competições customizadas', undefined, 'COMPETITION_QUERIES');
       
-      if (response.success) {
-        setCustomCompetitions(response.data);
-      } else {
-        throw new Error(response.error || 'Erro ao carregar competições customizadas');
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        logger.error('Erro ao carregar competições customizadas', { error: error.message }, 'COMPETITION_QUERIES');
+        throw new Error(error.message);
       }
-    } catch (err) {
-      logger.error('Erro ao carregar competições customizadas', { error: err }, 'COMPETITION_QUERIES');
+
+      setCustomCompetitions(data || []);
+      logger.info('Competições customizadas carregadas', { count: data?.length || 0 }, 'COMPETITION_QUERIES');
+    } catch (err: any) {
+      logger.error('Erro ao carregar competições customizadas', { error: err.message }, 'COMPETITION_QUERIES');
       throw err;
     }
   };
 
   const fetchDailyCompetition = async () => {
     try {
-      const response = await competitionService.getDailyCompetition();
+      logger.debug('Buscando competição diária', undefined, 'COMPETITION_QUERIES');
       
-      if (response.success) {
-        setDailyCompetition(response.data);
-      } else {
-        throw new Error(response.error || 'Erro ao carregar competição diária');
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('competition_type', 'challenge')
+        .eq('status', 'active')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        logger.error('Erro ao carregar competição diária', { error: error.message }, 'COMPETITION_QUERIES');
+        throw new Error(error.message);
       }
-    } catch (err) {
-      logger.error('Erro ao carregar competição diária', { error: err }, 'COMPETITION_QUERIES');
+
+      setDailyCompetition(data);
+      logger.info('Competição diária carregada', { found: !!data }, 'COMPETITION_QUERIES');
+    } catch (err: any) {
+      logger.error('Erro ao carregar competição diária', { error: err.message }, 'COMPETITION_QUERIES');
       throw err;
     }
   };
 
   const fetchWeeklyCompetition = async () => {
     try {
-      const response = await competitionService.getWeeklyCompetition();
+      logger.debug('Buscando competição semanal', undefined, 'COMPETITION_QUERIES');
       
-      if (response.success) {
-        setWeeklyCompetition(response.data);
-      } else {
-        throw new Error(response.error || 'Erro ao carregar competição semanal');
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('competition_type', 'tournament')
+        .eq('status', 'active')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        logger.error('Erro ao carregar competição semanal', { error: error.message }, 'COMPETITION_QUERIES');
+        throw new Error(error.message);
       }
-    } catch (err) {
-      logger.error('Erro ao carregar competição semanal', { error: err }, 'COMPETITION_QUERIES');
+
+      setWeeklyCompetition(data);
+      logger.info('Competição semanal carregada', { found: !!data }, 'COMPETITION_QUERIES');
+    } catch (err: any) {
+      logger.error('Erro ao carregar competição semanal', { error: err.message }, 'COMPETITION_QUERIES');
       throw err;
     }
   };

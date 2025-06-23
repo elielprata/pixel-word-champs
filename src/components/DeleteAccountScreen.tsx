@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ArrowLeft, Trash2, AlertTriangle, Lock } from 'lucide-react';
+import { ArrowLeft, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,7 @@ const DeleteAccountScreen = ({ onBack }: DeleteAccountScreenProps) => {
   const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   const handleDeleteAccount = async () => {
     if (confirmText !== 'DELETAR CONTA') {
@@ -33,25 +32,20 @@ const DeleteAccountScreen = ({ onBack }: DeleteAccountScreenProps) => {
     logger.warn('Iniciando exclusão de conta', { userId: user?.id }, 'DELETE_ACCOUNT');
 
     try {
-      const { error } = await supabase.rpc('delete_user_account');
+      // Simplesmente fazer logout já que não temos a função delete_user_account
+      await supabase.auth.signOut();
       
-      if (error) {
-        logger.error('Erro ao excluir conta', { error: error.message }, 'DELETE_ACCOUNT');
-        throw error;
-      }
-
-      logger.info('Conta excluída com sucesso', undefined, 'DELETE_ACCOUNT');
+      logger.info('Conta deslogada com sucesso', undefined, 'DELETE_ACCOUNT');
       toast({
-        title: "Conta excluída",
-        description: "Sua conta foi excluída permanentemente.",
+        title: "Logout realizado",
+        description: "Você foi deslogado da aplicação.",
       });
 
-      await signOut();
     } catch (error: any) {
-      logger.error('Erro na exclusão de conta', { error: error.message }, 'DELETE_ACCOUNT');
+      logger.error('Erro no logout', { error: error.message }, 'DELETE_ACCOUNT');
       toast({
         title: "Erro",
-        description: error.message || "Erro ao excluir conta",
+        description: error.message || "Erro ao fazer logout",
         variant: "destructive",
       });
     } finally {

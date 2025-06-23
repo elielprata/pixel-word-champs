@@ -1,15 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Trophy, Medal, Award, Target, Crown, Star } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useRankingData } from '@/hooks/useRankingData';
 import { useAuth } from '@/hooks/useAuth';
-import { RankingHeader } from '@/components/ranking/RankingHeader';
-import { RankingList } from '@/components/ranking/RankingList';
-import { UserPositionCard } from '@/components/ranking/UserPositionCard';
-import { PrizeDistribution } from '@/components/ranking/PrizeDistribution';
+import RankingHeader from '@/components/ranking/RankingHeader';
+import RankingList from '@/components/ranking/RankingList';
+import UserPositionCard from '@/components/ranking/UserPositionCard';
+import PrizeDistribution from '@/components/ranking/PrizeDistribution';
 import { logger } from '@/utils/logger';
 
 interface RankingScreenProps {
@@ -19,7 +17,7 @@ interface RankingScreenProps {
 const RankingScreen = ({ onBack }: RankingScreenProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly'>('daily');
   const { user } = useAuth();
-  const { ranking, userPosition, isLoading, error, refetch } = useRankingData(selectedPeriod);
+  const { weeklyRanking, isLoading, error, refetch } = useRankingData();
 
   useEffect(() => {
     logger.info('RankingScreen montado', { selectedPeriod, userId: user?.id }, 'RANKING_SCREEN');
@@ -61,21 +59,14 @@ const RankingScreen = ({ onBack }: RankingScreenProps) => {
 
       <div className="p-4 space-y-6">
         <RankingHeader 
-          selectedPeriod={selectedPeriod}
-          onPeriodChange={handlePeriodChange}
+          weeklyCompetition={null}
+          totalWeeklyPlayers={weeklyRanking?.length || 0}
         />
-
-        {userPosition && (
-          <UserPositionCard 
-            position={userPosition}
-            period={selectedPeriod}
-          />
-        )}
 
         <PrizeDistribution period={selectedPeriod} />
 
         <RankingList 
-          ranking={ranking}
+          ranking={weeklyRanking || []}
           isLoading={isLoading}
           currentUserId={user?.id}
           period={selectedPeriod}

@@ -30,7 +30,7 @@ export const useDailyCompetitions = () => {
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('type', 'daily')
+        .eq('competition_type', 'challenge')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -38,8 +38,23 @@ export const useDailyCompetitions = () => {
         throw error;
       }
 
-      logger.info('Competições diárias carregadas', { count: data?.length || 0 }, 'DAILY_COMPETITIONS');
-      return data || [];
+      // Mapear os dados para garantir que tenham todas as propriedades necessárias
+      const mappedData = (data || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description || '',
+        start_date: item.start_date,
+        end_date: item.end_date,
+        status: item.status,
+        prize_pool: item.prize_pool || 0,
+        max_participants: item.max_participants || 0,
+        total_participants: 0, // Calcular depois se necessário
+        theme: item.theme || '',
+        rules: item.rules || {}
+      }));
+
+      logger.info('Competições diárias carregadas', { count: mappedData.length }, 'DAILY_COMPETITIONS');
+      return mappedData;
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -52,7 +67,7 @@ export const useDailyCompetitions = () => {
         .from('custom_competitions')
         .insert({
           ...competitionData,
-          type: 'daily',
+          competition_type: 'challenge',
           status: 'active',
         })
         .select()
