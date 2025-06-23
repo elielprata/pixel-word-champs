@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,10 +21,9 @@ const registerSchema = z.object({
 });
 
 export const useRegisterForm = () => {
-  const { register, isLoading, error, user, isAuthenticated } = useAuth();
+  const { register, isLoading, error } = useAuth();
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
-  const [pendingModalShow, setPendingModalShow] = useState(false);
   
   const form = useForm<RegisterFormType>({
     resolver: zodResolver(registerSchema),
@@ -42,25 +41,6 @@ export const useRegisterForm = () => {
 
   const usernameCheck = useUsernameVerification(watchedUsername);
   const emailCheck = useEmailVerification(watchedEmail);
-
-  // Effect para controlar o modal com delay
-  useEffect(() => {
-    if (pendingModalShow && registeredEmail) {
-      // Aguardar 1 segundo para os estados sincronizarem
-      const timer = setTimeout(() => {
-        logger.info('Exibindo modal após delay de sincronização', { 
-          email: registeredEmail,
-          hasUser: !!user,
-          isAuthenticated
-        }, 'REGISTER_FORM');
-        
-        setShowEmailModal(true);
-        setPendingModalShow(false);
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [pendingModalShow, registeredEmail, user, isAuthenticated]);
 
   const onSubmit = async (data: RegisterFormType) => {
     // Verificar disponibilidade antes de enviar
@@ -82,15 +62,18 @@ export const useRegisterForm = () => {
       
       await register(data);
       
-      // Definir email e marcar para mostrar modal com delay
+      // Mostrar modal imediatamente após registro bem-sucedido
       setRegisteredEmail(data.email);
-      setPendingModalShow(true);
+      setShowEmailModal(true);
       
-      logger.info('Registro concluído - modal será exibido após delay', { 
+      logger.info('Registro concluído - modal exibido', { 
         email: data.email 
       }, 'REGISTER_FORM');
     } catch (err: any) {
       logger.error('Erro no registro', { error: err.message }, 'REGISTER_FORM');
+      // Não mostrar modal em caso de erro
+      setShowEmailModal(false);
+      setRegisteredEmail('');
     }
   };
 
