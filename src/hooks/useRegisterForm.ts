@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/components/auth/SimpleAuthProvider';
 import { RegisterForm as RegisterFormType } from '@/types';
 import { useUsernameVerification } from '@/hooks/useUsernameVerification';
 import { useEmailVerification as useEmailCheck } from '@/hooks/useEmailVerification';
@@ -18,7 +18,7 @@ const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-export const useRegisterForm = () => {
+export const useRegisterForm = (onSuccess?: (email: string) => void) => {
   const { register, isLoading, error } = useAuth();
   
   const form = useForm<RegisterFormType>({
@@ -39,7 +39,7 @@ export const useRegisterForm = () => {
   const emailCheck = useEmailCheck(watchedEmail);
 
   const onSubmit = async (data: RegisterFormType) => {
-    console.log('🔍 [DEBUG] useRegisterForm onSubmit iniciado');
+    console.log('🔍 [DEBUG] useRegisterForm onSubmit iniciado com callback:', !!onSuccess);
     
     if (!usernameCheck.available && watchedUsername) {
       form.setError('username', { message: 'Este nome de usuário já está em uso' });
@@ -51,9 +51,9 @@ export const useRegisterForm = () => {
       return;
     }
 
-    console.log('🔍 [DEBUG] Chamando register...');
-    await register(data);
-    console.log('🔍 [DEBUG] Register completou - sem erros lançados');
+    console.log('🔍 [DEBUG] Chamando register com callback...');
+    await register(data, onSuccess);
+    console.log('🔍 [DEBUG] Register completou');
   };
 
   const isFormDisabled = isLoading || 

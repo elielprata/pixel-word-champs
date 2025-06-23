@@ -9,7 +9,7 @@ import NotFound from './pages/NotFound';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import AuthScreen from '@/components/auth/AuthScreen';
-import AuthProvider from '@/components/auth/AuthProvider';
+import { SimpleAuthProvider } from '@/components/auth/SimpleAuthProvider';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { logger } from '@/utils/logger';
@@ -31,7 +31,7 @@ function App() {
   return (
     <ErrorBoundary>
       <TooltipProvider>
-        <AuthProvider>
+        <SimpleAuthProvider>
           <div className="App">
             <Routes>
               <Route path="/auth" element={<AuthScreen />} />
@@ -51,7 +51,7 @@ function App() {
             </Routes>
             <Toaster />
           </div>
-        </AuthProvider>
+        </SimpleAuthProvider>
       </TooltipProvider>
     </ErrorBoundary>
   );
