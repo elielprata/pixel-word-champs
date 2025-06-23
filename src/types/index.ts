@@ -1,4 +1,5 @@
 
+
 // Corrigir tipagem inconsistente da interface User
 export interface User {
   id: string;
@@ -141,3 +142,4 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   page: number;
   limit: number;
 }
+
