@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { TabsContent } from "@/components/ui/tabs";
-import { DashboardStats } from "@/components/admin/DashboardStats";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
@@ -15,10 +14,6 @@ export const AdminPanelContent = () => {
   
   return (
     <>
-      <TabsContent value="dashboard">
-        <DashboardStats />
-      </TabsContent>
-
       <TabsContent value="users">
         <UsersTab />
       </TabsContent>

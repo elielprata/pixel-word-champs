@@ -13,7 +13,7 @@ const AdminPanel = () => {
         <div className="container mx-auto px-4 py-8">
           <AdminPanelHeader />
 
-          <Tabs defaultValue="dashboard" className="w-full">
+          <Tabs defaultValue="users" className="w-full">
             <AdminPanelTabs />
             <AdminPanelContent />
           </Tabs>
