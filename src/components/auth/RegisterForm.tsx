@@ -5,6 +5,7 @@ import { useRegisterForm } from '@/hooks/useRegisterForm';
 import { RegisterFormFields } from './RegisterFormFields';
 import { RegisterFormSubmit } from './RegisterFormSubmit';
 import { EmailVerificationModal } from './EmailVerificationModal';
+import { logger } from '@/utils/logger';
 
 const RegisterForm = () => {
   const {
@@ -21,6 +22,13 @@ const RegisterForm = () => {
     registeredEmail,
     setShowEmailModal
   } = useRegisterForm();
+
+  // Log para debug no componente
+  logger.debug('Estados do RegisterForm', {
+    showEmailModal,
+    registeredEmail,
+    shouldRenderModal: showEmailModal && registeredEmail
+  }, 'REGISTER_FORM_COMPONENT');
 
   return (
     <>
@@ -46,6 +54,7 @@ const RegisterForm = () => {
         <EmailVerificationModal
           isOpen={true}
           onClose={() => {
+            logger.info('Modal fechado pelo usuário', undefined, 'REGISTER_FORM_COMPONENT');
             setShowEmailModal(false);
           }}
           userEmail={registeredEmail}

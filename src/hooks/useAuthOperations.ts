@@ -43,6 +43,7 @@ export const useAuthOperations = (
         setIsAuthenticated(false);
         setUser(null);
         logger.error('Falha no login', { error: errorMessage }, 'AUTH_OPERATIONS');
+        throw new Error(errorMessage);
       }
     } catch (error: any) {
       if (!isMountedRef.current) return;
@@ -52,6 +53,7 @@ export const useAuthOperations = (
       setIsAuthenticated(false);
       setUser(null);
       logger.error('Erro durante login', { error: errorMessage }, 'AUTH_OPERATIONS');
+      throw error;
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
@@ -78,13 +80,20 @@ export const useAuthOperations = (
         setUser(response.data.user);
         setIsAuthenticated(false); // Manter como false até confirmação
         setError('');
-        logger.info('Registro realizado com sucesso - aguardando confirmação de email', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
+        logger.info('Registro realizado com sucesso - aguardando confirmação de email', { 
+          userId: response.data.user.id,
+          email: userData.email 
+        }, 'AUTH_OPERATIONS');
+        
+        // IMPORTANTE: Não lançar exceção aqui, pois o registro foi bem-sucedido
+        return; // Retorna normalmente para permitir que o modal apareça
       } else {
         const errorMessage = response.error || 'Erro no registro';
         setError(errorMessage);
         setIsAuthenticated(false);
         setUser(null);
         logger.error('Falha no registro', { error: errorMessage }, 'AUTH_OPERATIONS');
+        throw new Error(errorMessage); // Lança exceção apenas em caso de erro
       }
     } catch (error: any) {
       if (!isMountedRef.current) return;
@@ -94,6 +103,7 @@ export const useAuthOperations = (
       setIsAuthenticated(false);
       setUser(null);
       logger.error('Erro durante registro', { error: errorMessage }, 'AUTH_OPERATIONS');
+      throw error; // Re-lança a exceção para que useRegisterForm possa capturar
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);

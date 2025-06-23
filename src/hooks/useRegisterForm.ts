@@ -60,18 +60,28 @@ export const useRegisterForm = () => {
         username: data.username 
       }, 'REGISTER_FORM');
       
+      // Resetar estados do modal antes de tentar registro
+      setShowEmailModal(false);
+      setRegisteredEmail('');
+      
       await register(data);
       
-      // Mostrar modal imediatamente após registro bem-sucedido
+      // Se chegou aqui, o registro foi bem-sucedido
+      logger.info('Registro bem-sucedido - exibindo modal', { 
+        email: data.email 
+      }, 'REGISTER_FORM');
+      
       setRegisteredEmail(data.email);
       setShowEmailModal(true);
       
-      logger.info('Registro concluído - modal exibido', { 
-        email: data.email 
+      logger.info('Estados do modal atualizados', { 
+        showEmailModal: true,
+        registeredEmail: data.email 
       }, 'REGISTER_FORM');
+      
     } catch (err: any) {
       logger.error('Erro no registro', { error: err.message }, 'REGISTER_FORM');
-      // Não mostrar modal em caso de erro
+      // Em caso de erro, garantir que o modal não apareça
       setShowEmailModal(false);
       setRegisteredEmail('');
     }
@@ -82,6 +92,14 @@ export const useRegisterForm = () => {
     (watchedEmail && !emailCheck.available) ||
     usernameCheck.checking ||
     emailCheck.checking;
+
+  // Log para debug dos estados
+  logger.debug('Estados do hook useRegisterForm', {
+    showEmailModal,
+    registeredEmail,
+    isLoading,
+    hasError: !!error
+  }, 'REGISTER_FORM');
 
   return {
     form,
