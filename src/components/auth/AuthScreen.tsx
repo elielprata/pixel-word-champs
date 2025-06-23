@@ -7,7 +7,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import SocialLogin from './SocialLogin';
-import { TutorialInfo } from './TutorialInfo';
 import { Gamepad2, Trophy, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -39,7 +38,7 @@ const AuthScreen = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl">
+      <div className="w-full max-w-md">
         {/* Logo e Título */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
@@ -93,17 +92,7 @@ const AuthScreen = () => {
               </TabsContent>
               
               <TabsContent value="register" className="space-y-4">
-                <div className="grid lg:grid-cols-2 gap-8">
-                  {/* Formulário de Cadastro */}
-                  <div className="order-2 lg:order-1">
-                    <RegisterForm onSuccess={() => setActiveTab('login')} />
-                  </div>
-                  
-                  {/* Tutorial Informativo */}
-                  <div className="order-1 lg:order-2">
-                    <TutorialInfo />
-                  </div>
-                </div>
+                <RegisterForm />
               </TabsContent>
             </Tabs>
 
