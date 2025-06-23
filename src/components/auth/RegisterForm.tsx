@@ -45,7 +45,7 @@ const RegisterForm = () => {
       <EmailVerificationModal
         isOpen={shouldShowModal}
         onClose={() => setShowEmailModal(false)}
-        userEmail={registeredEmail || ''}
+        userEmail={registeredEmail}
       />
     </>
   );
