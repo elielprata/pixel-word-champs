@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,7 +6,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { RegisterForm as RegisterFormType } from '@/types';
 import { useUsernameVerification } from '@/hooks/useUsernameVerification';
 import { useEmailVerification as useEmailCheck } from '@/hooks/useEmailVerification';
-import { useEmailVerification } from '@/contexts/EmailVerificationContext';
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
@@ -22,7 +20,6 @@ const registerSchema = z.object({
 
 export const useRegisterForm = () => {
   const { register, isLoading, error } = useAuth();
-  const { showEmailModal } = useEmailVerification();
   
   const form = useForm<RegisterFormType>({
     resolver: zodResolver(registerSchema),
@@ -42,7 +39,7 @@ export const useRegisterForm = () => {
   const emailCheck = useEmailCheck(watchedEmail);
 
   const onSubmit = async (data: RegisterFormType) => {
-    console.log('🔍 [DEBUG] onSubmit iniciado - ANTES do registro');
+    console.log('🔍 [DEBUG] useRegisterForm onSubmit iniciado');
     
     if (!usernameCheck.available && watchedUsername) {
       form.setError('username', { message: 'Este nome de usuário já está em uso' });
@@ -54,28 +51,9 @@ export const useRegisterForm = () => {
       return;
     }
 
-    // CAPTURAR EMAIL ANTES DE QUALQUER OPERAÇÃO
-    const emailForModal = data.email;
-    console.log('🔍 [DEBUG] Email capturado ANTES do registro:', emailForModal);
-
-    try {
-      console.log('🔍 [DEBUG] Chamando register...');
-      await register(data);
-      console.log('🔍 [DEBUG] Register completou com sucesso - AGORA VAMOS MOSTRAR O MODAL');
-      
-      // MOSTRAR MODAL IMEDIATAMENTE APÓS SUCESSO - ANTES DE QUALQUER RESET
-      console.log('🔍 [DEBUG] Chamando showEmailModal IMEDIATAMENTE');
-      showEmailModal(emailForModal);
-      console.log('🔍 [DEBUG] showEmailModal chamado - modal deve aparecer agora');
-      
-      // Log adicional para verificar se o modal realmente foi acionado
-      setTimeout(() => {
-        console.log('🔍 [DEBUG] Verificação pós-registro - modal deve estar visível');
-      }, 100);
-      
-    } catch (err: any) {
-      console.log('🔍 [DEBUG] Erro no registro:', err.message);
-    }
+    console.log('🔍 [DEBUG] Chamando register...');
+    await register(data);
+    console.log('🔍 [DEBUG] Register completou - sem erros lançados');
   };
 
   const isFormDisabled = isLoading || 
@@ -83,12 +61,6 @@ export const useRegisterForm = () => {
     (watchedEmail && !emailCheck.available) ||
     usernameCheck.checking ||
     emailCheck.checking;
-
-  // Função para testar o modal manualmente
-  const testModal = () => {
-    console.log('🔍 [DEBUG] Teste manual do modal');
-    showEmailModal('teste@email.com');
-  };
 
   return {
     form,
@@ -99,7 +71,6 @@ export const useRegisterForm = () => {
     isLoading,
     error,
     isFormDisabled,
-    onSubmit,
-    testModal
+    onSubmit
   };
 };
