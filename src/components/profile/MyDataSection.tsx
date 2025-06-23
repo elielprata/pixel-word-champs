@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from '@/hooks/useAuth';
@@ -169,4 +168,3 @@ const MyDataSection = () => {
 };
 
 export default MyDataSection;
-

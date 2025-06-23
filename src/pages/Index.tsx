@@ -16,6 +16,7 @@ type Screen = 'home' | 'challenge' | 'ranking' | 'profile' | 'settings';
 const Index = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
 
   useEffect(() => {
     logger.debug('Index montado', { isAuthenticated, isLoading }, 'INDEX');
@@ -29,6 +30,23 @@ const Index = () => {
   const handleBackToHome = () => {
     logger.debug('Voltando para home', undefined, 'INDEX');
     setCurrentScreen('home');
+    setSelectedChallengeId(null);
+  };
+
+  const handleStartChallenge = (challengeId: string) => {
+    logger.debug('Iniciando desafio', { challengeId }, 'INDEX');
+    setSelectedChallengeId(challengeId);
+    setCurrentScreen('challenge');
+  };
+
+  const handleViewFullRanking = () => {
+    logger.debug('Visualizando ranking completo', undefined, 'INDEX');
+    setCurrentScreen('ranking');
+  };
+
+  const handleViewChallengeRanking = (challengeId: string) => {
+    logger.debug('Visualizando ranking do desafio', { challengeId }, 'INDEX');
+    setCurrentScreen('ranking');
   };
 
   if (isLoading) {
@@ -46,9 +64,29 @@ const Index = () => {
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
-        return <HomeScreen />;
+        return (
+          <HomeScreen 
+            onStartChallenge={handleStartChallenge}
+            onViewFullRanking={handleViewFullRanking}
+            onViewChallengeRanking={handleViewChallengeRanking}
+          />
+        );
       case 'challenge':
-        return <ChallengeScreen onBack={handleBackToHome} />;
+        if (!selectedChallengeId) {
+          return (
+            <HomeScreen 
+              onStartChallenge={handleStartChallenge}
+              onViewFullRanking={handleViewFullRanking}
+              onViewChallengeRanking={handleViewChallengeRanking}
+            />
+          );
+        }
+        return (
+          <ChallengeScreen 
+            challengeId={selectedChallengeId}
+            onBack={handleBackToHome} 
+          />
+        );
       case 'ranking':
         return <RankingScreen onBack={handleBackToHome} />;
       case 'profile':
@@ -56,7 +94,13 @@ const Index = () => {
       case 'settings':
         return <SettingsScreen onBack={handleBackToHome} />;
       default:
-        return <HomeScreen />;
+        return (
+          <HomeScreen 
+            onStartChallenge={handleStartChallenge}
+            onViewFullRanking={handleViewFullRanking}
+            onViewChallengeRanking={handleViewChallengeRanking}
+          />
+        );
     }
   };
 
