@@ -62,7 +62,7 @@ export const useAdminData = () => {
   });
 
   const isLoading = usersQuery.isLoading || adminUsersQuery.isLoading || systemHealthQuery.isLoading;
-  const hasError = usersQuery.error || adminUsersQuery.error || systemHealthQuery.error;
+  const hasError = usersQuery.error || systemHealthQuery.error;
 
   return {
     users: usersQuery.data || [],
