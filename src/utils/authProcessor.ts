@@ -21,29 +21,11 @@ export const processUserAuthentication = async (
   try {
     logger.debug('Processando autenticação do usuário', { 
       userId: session.user?.id,
-      hasSession: !!session,
-      emailConfirmed: session.user?.email_confirmed_at
+      hasSession: !!session 
     }, 'AUTH_PROCESSOR');
 
     setIsLoading(true);
     setError(undefined);
-
-    // MUDANÇA PRINCIPAL: Verificar se o email foi confirmado
-    const isEmailConfirmed = !!session.user?.email_confirmed_at;
-    
-    if (!isEmailConfirmed) {
-      logger.info('Usuário com email não confirmado', { 
-        userId: session.user?.id,
-        email: session.user?.email 
-      }, 'AUTH_PROCESSOR');
-      
-      // Definir usuário mas não como autenticado
-      const fallbackUser = createFallbackUser(session);
-      setUser(fallbackUser);
-      setIsAuthenticated(false);
-      setError(undefined);
-      return;
-    }
 
     // Buscar perfil com timeout de 3 segundos
     const profilePromise = supabase

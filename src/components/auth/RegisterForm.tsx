@@ -1,154 +1,233 @@
 
-import React from 'react';
-import { Form } from "@/components/ui/form";
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from "@/components/ui/button";
-import { useRegisterForm } from '@/hooks/useRegisterForm';
-import { RegisterFormFields } from './RegisterFormFields';
-import { RegisterFormSubmit } from './RegisterFormSubmit';
-import { showEmailModal, getModalState } from '@/stores/emailModalStore';
-import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, Mail, Clock } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useAuth } from '@/hooks/useAuth';
+import { RegisterForm as RegisterFormType } from '@/types';
+import { Loader2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
+import { useUsernameVerification } from '@/hooks/useUsernameVerification';
+import { useEmailVerification } from '@/hooks/useEmailVerification';
+import { AvailabilityIndicator } from './AvailabilityIndicator';
+import { EmailVerificationModal } from './EmailVerificationModal';
+
+const registerSchema = z.object({
+  username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
+  email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  confirmPassword: z.string().min(6, 'Confirmação de senha é obrigatória'),
+  inviteCode: z.string().optional()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não coincidem",
+  path: ["confirmPassword"],
+});
 
 const RegisterForm = () => {
-  const { toast } = useToast();
-  const {
-    form,
-    watchedUsername,
-    watchedEmail,
-    usernameCheck,
-    emailCheck,
-    isLoading,
-    error,
-    isFormDisabled,
-    onSubmit
-  } = useRegisterForm();
+  const { register, isLoading, error } = useAuth();
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  
+  const form = useForm<RegisterFormType>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      inviteCode: ''
+    }
+  });
 
-  console.log('🔍 [REGISTER_FORM] Renderizado - usando store global');
+  const watchedUsername = form.watch('username');
+  const watchedEmail = form.watch('email');
 
-  // Função para testar o modal manualmente
-  const testModal = () => {
-    console.log('🧪 [REGISTER_FORM] Teste manual do modal global');
-    console.log('🧪 [REGISTER_FORM] Estado atual do store:', getModalState());
-    showEmailModal('teste@email.com');
-    
-    // Verificar se funcionou
-    setTimeout(() => {
-      console.log('🧪 [REGISTER_FORM] Estado após teste:', getModalState());
-    }, 200);
-  };
+  const usernameCheck = useUsernameVerification(watchedUsername);
+  const emailCheck = useEmailVerification(watchedEmail);
 
-  // Enhanced onSubmit with visual feedback
-  const handleEnhancedSubmit = async (data: any) => {
-    console.log('🎯 [REGISTER_FORM] Iniciando registro com feedback visual...');
-    
-    // Toast de início do processo
-    toast({
-      title: "Processando cadastro...",
-      description: "Aguarde enquanto criamos sua conta",
-      duration: 3000,
-    });
+  const onSubmit = async (data: RegisterFormType) => {
+    // Verificar disponibilidade antes de enviar
+    if (!usernameCheck.available && watchedUsername) {
+      form.setError('username', { message: 'Este nome de usuário já está em uso' });
+      return;
+    }
+
+    if (!emailCheck.available && watchedEmail) {
+      form.setError('email', { message: 'Este email já está cadastrado' });
+      return;
+    }
 
     try {
-      await onSubmit(data);
+      logger.info('Tentativa de registro iniciada', { 
+        email: data.email, 
+        username: data.username 
+      }, 'REGISTER_FORM');
       
-      // Toast de sucesso
-      toast({
-        title: "Cadastro realizado com sucesso! 🎉",
-        description: "Verifique seu email para ativar sua conta",
-        duration: 5000,
-      });
-
-      console.log('✅ [REGISTER_FORM] Registro completado com sucesso!');
+      await register(data);
       
-    } catch (error: any) {
-      console.error('❌ [REGISTER_FORM] Erro no registro:', error);
+      // Mostrar modal de verificação de email após registro bem-sucedido
+      setRegisteredEmail(data.email);
+      setShowEmailModal(true);
       
-      // Toast de erro
-      toast({
-        title: "Erro no cadastro",
-        description: error.message || "Tente novamente em alguns instantes",
-        variant: "destructive",
-        duration: 5000,
-      });
+      logger.info('Registro concluído com sucesso', { 
+        email: data.email 
+      }, 'REGISTER_FORM');
+    } catch (err: any) {
+      logger.error('Erro no registro', { error: err.message }, 'REGISTER_FORM');
     }
   };
 
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleEnhancedSubmit)} className="space-y-4">
-          <RegisterFormFields
-            form={form}
-            watchedUsername={watchedUsername}
-            watchedEmail={watchedEmail}
-            usernameCheck={usernameCheck}
-            emailCheck={emailCheck}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nome de usuário</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="meu_username" 
+                    {...field}
+                    className={
+                      watchedUsername && usernameCheck.exists 
+                        ? 'border-red-300 bg-red-50' 
+                        : watchedUsername && usernameCheck.available 
+                        ? 'border-green-300 bg-green-50' 
+                        : ''
+                    }
+                  />
+                </FormControl>
+                <AvailabilityIndicator
+                  checking={usernameCheck.checking}
+                  available={usernameCheck.available}
+                  exists={usernameCheck.exists}
+                  type="username"
+                  value={watchedUsername}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
-          <RegisterFormSubmit
-            isLoading={isLoading}
-            isFormDisabled={isFormDisabled}
-            error={error}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="seu@email.com" 
+                    type="email"
+                    {...field}
+                    className={
+                      watchedEmail && emailCheck.exists 
+                        ? 'border-red-300 bg-red-50' 
+                        : watchedEmail && emailCheck.available 
+                        ? 'border-green-300 bg-green-50' 
+                        : ''
+                    }
+                  />
+                </FormControl>
+                <AvailabilityIndicator
+                  checking={emailCheck.checking}
+                  available={emailCheck.available}
+                  exists={emailCheck.exists}
+                  type="email"
+                  value={watchedEmail}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
           />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Senha</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="••••••••" 
+                    type="password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirmar senha</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="••••••••" 
+                    type="password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="inviteCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Código de convite (opcional)</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="ABC123" 
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+              {error}
+            </div>
+          )}
+
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={
+              isLoading || 
+              (watchedUsername && !usernameCheck.available) ||
+              (watchedEmail && !emailCheck.available) ||
+              usernameCheck.checking ||
+              emailCheck.checking
+            }
+          >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Criar conta
+          </Button>
         </form>
       </Form>
 
-      {/* Status Visual do Processo */}
-      {isLoading && (
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center space-x-3">
-            <Clock className="h-5 w-5 text-blue-600 animate-spin" />
-            <div>
-              <p className="text-sm font-medium text-blue-800">Criando sua conta...</p>
-              <p className="text-xs text-blue-600">Isso pode levar alguns segundos</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Feedback de Verificação de Email */}
-      {watchedEmail && emailCheck.checking && (
-        <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <Clock className="h-4 w-4 text-yellow-600 animate-spin" />
-            <p className="text-sm text-yellow-800">Verificando disponibilidade do email...</p>
-          </div>
-        </div>
-      )}
-
-      {watchedEmail && !emailCheck.checking && !emailCheck.available && (
-        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <Mail className="h-4 w-4 text-red-600" />
-            <p className="text-sm text-red-800">Este email já está cadastrado</p>
-          </div>
-        </div>
-      )}
-
-      {watchedEmail && !emailCheck.checking && emailCheck.available && watchedEmail.length > 0 && (
-        <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <p className="text-sm text-green-800">Email disponível!</p>
-          </div>
-        </div>
-      )}
-
-      {/* Botão temporário para testar o modal global */}
-      <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded">
-        <p className="text-sm text-green-800 mb-2">DEBUG: Teste do Modal Global</p>
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm"
-          onClick={testModal}
-        >
-          Testar Modal Global
-        </Button>
-        <p className="text-xs mt-1 text-green-700">
-          Modal agora é controlado por store global JavaScript!
-        </p>
-      </div>
+      <EmailVerificationModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        userEmail={registeredEmail}
+      />
     </>
   );
 };

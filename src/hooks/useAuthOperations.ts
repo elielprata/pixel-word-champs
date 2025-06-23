@@ -43,7 +43,6 @@ export const useAuthOperations = (
         setIsAuthenticated(false);
         setUser(null);
         logger.error('Falha no login', { error: errorMessage }, 'AUTH_OPERATIONS');
-        throw new Error(errorMessage);
       }
     } catch (error: any) {
       if (!isMountedRef.current) return;
@@ -53,7 +52,6 @@ export const useAuthOperations = (
       setIsAuthenticated(false);
       setUser(null);
       logger.error('Erro durante login', { error: errorMessage }, 'AUTH_OPERATIONS');
-      throw error;
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
@@ -64,47 +62,38 @@ export const useAuthOperations = (
   const register = useCallback(async (userData: RegisterForm) => {
     if (!isMountedRef.current) return;
     
-    console.log('🔍 [DEBUG] useAuthOperations.register iniciado');
     setIsLoading(true);
     setError('');
 
     try {
-      console.log('🔍 [DEBUG] Chamando authService.register...');
+      logger.info('Iniciando processo de registro', { email: userData.email, username: userData.username }, 'AUTH_OPERATIONS');
+      
       const response = await authService.register(userData);
       
       if (!isMountedRef.current) return;
 
-      console.log('🔍 [DEBUG] Resposta do authService:', { success: response.success, hasUser: !!response.data?.user });
-
       if (response.success && response.data) {
-        console.log('🔍 [DEBUG] Registro bem-sucedido, definindo usuário...');
         setUser(response.data.user);
-        setIsAuthenticated(false); // Manter como false até confirmação
+        setIsAuthenticated(true);
         setError('');
         logger.info('Registro realizado com sucesso', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
-        console.log('🔍 [DEBUG] Estado definido, retornando normalmente (sem throw)');
-        // CORREÇÃO: NÃO lançar exceção para registros bem-sucedidos
-        return response.data; // Retorna dados normalmente
       } else {
         const errorMessage = response.error || 'Erro no registro';
-        console.log('🔍 [DEBUG] Erro na resposta:', errorMessage);
         setError(errorMessage);
         setIsAuthenticated(false);
         setUser(null);
-        throw new Error(errorMessage);
+        logger.error('Falha no registro', { error: errorMessage }, 'AUTH_OPERATIONS');
       }
     } catch (error: any) {
       if (!isMountedRef.current) return;
       
-      console.log('🔍 [DEBUG] Exceção capturada:', error.message);
       const errorMessage = error.message || 'Erro de conexão';
       setError(errorMessage);
       setIsAuthenticated(false);
       setUser(null);
-      throw error;
+      logger.error('Erro durante registro', { error: errorMessage }, 'AUTH_OPERATIONS');
     } finally {
       if (isMountedRef.current) {
-        console.log('🔍 [DEBUG] Finalizando register, setIsLoading(false)');
         setIsLoading(false);
       }
     }

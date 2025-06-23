@@ -108,15 +108,14 @@ class AuthService {
 
       logger.info('Tentativa de registro iniciada', { email: sanitizedEmail, username: sanitizedUsername }, 'AUTH_SERVICE');
 
-      // CORREÇÃO PRINCIPAL: Adicionar emailRedirectTo no signUp
+      // Criar usuário no Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: sanitizedEmail,
         password: userData.password,
         options: {
           data: {
             username: sanitizedUsername
-          },
-          emailRedirectTo: `${window.location.origin}/`
+          }
         }
       });
 
@@ -129,7 +128,7 @@ class AuthService {
         throw new Error('Erro no registro: usuário não criado');
       }
 
-      logger.info('Usuário criado no Supabase Auth', { userId: data.user.id, emailConfirmed: !!data.user.email_confirmed_at }, 'AUTH_SERVICE');
+      logger.info('Usuário criado no Supabase Auth', { userId: data.user.id }, 'AUTH_SERVICE');
 
       // Aguardar um momento para o trigger processar
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -233,8 +232,7 @@ class AuthService {
       logger.info('Registro realizado com sucesso', { 
         userId: user.id, 
         username: user.username,
-        hasProfile: !!profile,
-        emailConfirmed: !!data.user.email_confirmed_at
+        hasProfile: !!profile 
       }, 'AUTH_SERVICE');
 
       return createSuccessResponse({

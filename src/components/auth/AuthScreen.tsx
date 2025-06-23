@@ -8,7 +8,7 @@ import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import SocialLogin from './SocialLogin';
 import { Gamepad2, Trophy, Users } from 'lucide-react';
-import { useAuth } from '@/components/auth/SimpleAuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
 
 const AuthScreen = () => {
