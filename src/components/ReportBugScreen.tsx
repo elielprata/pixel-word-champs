@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +5,7 @@ import { ArrowLeft, Bug, Send, AlertTriangle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 interface ReportBugScreenProps {
   onBack: () => void;
@@ -55,6 +55,12 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
 
       if (error) throw error;
 
+      logger.info('Bug report enviado com sucesso', { 
+        bugType, 
+        userId: user.id,
+        reportLength: fullMessage.length 
+      }, 'BUG_REPORT');
+
       toast({
         title: "Bug reportado com sucesso!",
         description: "Obrigado por ajudar a melhorar o jogo. Nossa equipe irá analisar o report.",
@@ -62,7 +68,7 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
       
       onBack();
     } catch (error) {
-      console.error('Erro ao reportar bug:', error);
+      logger.error('Erro ao reportar bug', { error, userId: user?.id }, 'BUG_REPORT');
       toast({
         title: "Erro ao reportar bug",
         description: "Tente novamente mais tarde",

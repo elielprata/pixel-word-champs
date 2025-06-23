@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Trophy, Star, Medal, Award, Crown, Zap, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 
 interface RankingPlayer {
   pos: number;
@@ -28,7 +28,7 @@ const RankingScreen = () => {
 
   const loadPrizeConfigurations = async () => {
     try {
-      console.log('💰 Carregando configurações de prêmios...');
+      logger.debug('Carregando configurações de prêmios', undefined, 'RANKING_SCREEN');
       
       const { data, error } = await supabase
         .from('prize_configurations')
@@ -39,7 +39,7 @@ const RankingScreen = () => {
         .order('position', { ascending: true });
 
       if (error) {
-        console.error('❌ Erro ao carregar prêmios:', error);
+        logger.error('Erro ao carregar prêmios', { error }, 'RANKING_SCREEN');
         throw error;
       }
 
@@ -49,9 +49,9 @@ const RankingScreen = () => {
       }));
 
       setPrizeConfigs(prizes);
-      console.log('✅ Prêmios carregados:', prizes);
+      logger.info('Prêmios carregados com sucesso', { prizesCount: prizes.length }, 'RANKING_SCREEN');
     } catch (err) {
-      console.error('❌ Erro ao carregar configurações de prêmios:', err);
+      logger.error('Erro ao carregar configurações de prêmios', { error: err }, 'RANKING_SCREEN');
       // Define prêmios padrão em caso de erro
       setPrizeConfigs([
         { position: 1, prize_amount: 100 },
@@ -66,7 +66,7 @@ const RankingScreen = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log('📊 Carregando ranking...');
+      logger.debug('Carregando ranking', undefined, 'RANKING_SCREEN');
       
       const { data, error } = await supabase
         .from('profiles')
@@ -76,7 +76,7 @@ const RankingScreen = () => {
         .limit(50);
 
       if (error) {
-        console.error('❌ Erro ao carregar ranking:', error);
+        logger.error('Erro ao carregar ranking', { error }, 'RANKING_SCREEN');
         throw error;
       }
 
@@ -95,14 +95,17 @@ const RankingScreen = () => {
         setUserPosition(userRank?.pos || null);
         
         if (userRank) {
-          console.log(`🏆 Posição do usuário: #${userRank.pos} com ${userRank.score} pontos`);
+          logger.info('Posição do usuário encontrada', { 
+            position: userRank.pos, 
+            score: userRank.score 
+          }, 'RANKING_SCREEN');
         }
       }
 
-      console.log('✅ Ranking carregado:', players.length, 'jogadores');
+      logger.info('Ranking carregado com sucesso', { playersCount: players.length }, 'RANKING_SCREEN');
 
     } catch (err) {
-      console.error('❌ Erro ao carregar ranking:', err);
+      logger.error('Erro ao carregar ranking', { error: err }, 'RANKING_SCREEN');
       setError('Erro ao carregar ranking');
     } finally {
       setIsLoading(false);
@@ -118,7 +121,7 @@ const RankingScreen = () => {
 
   // Configurar atualizações em tempo real
   useEffect(() => {
-    console.log('🔄 Configurando monitoramento em tempo real...');
+    logger.debug('Configurando monitoramento em tempo real', undefined, 'RANKING_SCREEN');
 
     const profilesChannel = supabase
       .channel('profiles-ranking-changes')
@@ -130,7 +133,7 @@ const RankingScreen = () => {
           table: 'profiles'
         },
         (payload) => {
-          console.log('📡 Mudança detectada nos perfis:', payload);
+          logger.debug('Mudança detectada nos perfis', { payload }, 'RANKING_SCREEN');
           loadRanking();
         }
       )
@@ -138,12 +141,12 @@ const RankingScreen = () => {
 
     // Atualizar a cada 30 segundos
     const interval = setInterval(() => {
-      console.log('🔄 Atualização periódica do ranking...');
+      logger.debug('Atualização periódica do ranking', undefined, 'RANKING_SCREEN');
       loadRanking();
     }, 30000);
 
     return () => {
-      console.log('🔌 Desconectando canais de tempo real');
+      logger.debug('Desconectando canais de tempo real', undefined, 'RANKING_SCREEN');
       supabase.removeChannel(profilesChannel);
       clearInterval(interval);
     };

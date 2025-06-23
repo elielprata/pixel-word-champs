@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bug, RefreshCw, Eye, TestTube } from 'lucide-react';
 import { rankingDebugService } from '@/services/rankingDebugService';
+import { logger } from '@/utils/logger';
 
 const RankingDebugPanel = () => {
   const [isChecking, setIsChecking] = useState(false);
@@ -20,7 +20,7 @@ const RankingDebugPanel = () => {
       setLastResult(result);
     } catch (err) {
       setError('Erro ao verificar consistência');
-      console.error('Erro:', err);
+      logger.error('Erro ao verificar consistência do ranking', { error: err }, 'RANKING_DEBUG');
     } finally {
       setIsChecking(false);
     }
@@ -38,7 +38,7 @@ const RankingDebugPanel = () => {
       }, 1500);
     } catch (err: any) {
       setError(`Erro ao atualizar ranking: ${err.message || 'Erro desconhecido'}`);
-      console.error('Erro:', err);
+      logger.error('Erro ao forçar atualização do ranking', { error: err }, 'RANKING_DEBUG');
     } finally {
       setIsUpdating(false);
     }
@@ -49,13 +49,13 @@ const RankingDebugPanel = () => {
     setError(null);
     try {
       const result = await rankingDebugService.testFunctionDirectly();
-      console.log('🧪 Resultado do teste:', result);
+      logger.debug('Resultado do teste de função', { result }, 'RANKING_DEBUG');
       if (!result.success) {
         setError(`Erro no teste: ${result.error?.message || 'Erro desconhecido'}`);
       }
     } catch (err: any) {
       setError(`Erro no teste: ${err.message || 'Erro desconhecido'}`);
-      console.error('Erro:', err);
+      logger.error('Erro no teste de função do ranking', { error: err }, 'RANKING_DEBUG');
     } finally {
       setIsTesting(false);
     }

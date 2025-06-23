@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, AlertTriangle, Trash2, Shield, CheckCircle2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface DeleteAccountScreenProps {
   onBack: () => void;
@@ -20,11 +20,11 @@ const DeleteAccountScreen = ({ onBack }: DeleteAccountScreenProps) => {
     setIsDeleting(true);
     try {
       // Aqui seria implementada a lógica de exclusão
-      console.log('Conta excluída');
+      logger.info('Conta excluída', undefined, 'DELETE_ACCOUNT');
       await new Promise(resolve => setTimeout(resolve, 2000));
       onBack();
     } catch (error) {
-      console.error('Erro ao excluir conta:', error);
+      logger.error('Erro ao excluir conta', { error }, 'DELETE_ACCOUNT');
     } finally {
       setIsDeleting(false);
     }
