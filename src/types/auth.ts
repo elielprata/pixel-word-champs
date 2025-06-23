@@ -1,11 +1,5 @@
 
-import { User } from '@/types';
-
-export interface AuthResponse {
-  user: User;
-  token: string;
-  refreshToken: string;
-}
+import { User, AuthResponse } from '@/types';
 
 export interface AuthContextType {
   user: User | null;

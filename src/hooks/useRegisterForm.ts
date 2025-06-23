@@ -22,8 +22,10 @@ const registerSchema = z.object({
 export const useRegisterForm = () => {
   const { register, isLoading, error } = useAuth();
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [modalEmail, setModalEmail] = useState<string>(''); // Email para o modal
   
   console.log('🔍 [DEBUG] useRegisterForm - showEmailModal:', showEmailModal);
+  console.log('🔍 [DEBUG] useRegisterForm - modalEmail:', modalEmail);
   
   const form = useForm<RegisterFormType>({
     resolver: zodResolver(registerSchema),
@@ -55,28 +57,23 @@ export const useRegisterForm = () => {
       return;
     }
 
-    let registrationSuccessful = false;
+    // CORREÇÃO PRINCIPAL: Capturar o email ANTES de qualquer operação
+    const emailForModal = data.email;
+    console.log('🔍 [DEBUG] Email capturado para modal:', emailForModal);
 
     try {
       console.log('🔍 [DEBUG] Chamando register...');
       await register(data);
-      console.log('🔍 [DEBUG] Register completou sem exceção - sucesso!');
-      registrationSuccessful = true;
-    } catch (err: any) {
-      console.log('🔍 [DEBUG] Erro capturado no onSubmit:', err.message);
+      console.log('🔍 [DEBUG] Register completou com sucesso!');
       
-      // Verificar se é um erro real ou se o registro foi bem-sucedido mas houve alguma exceção
-      if (err.message && !err.message.includes('Email já está registrado') && !err.message.includes('invalid')) {
-        console.log('🔍 [DEBUG] Pode ser um registro bem-sucedido com exceção técnica');
-        registrationSuccessful = true;
-      }
-    }
-
-    // CORREÇÃO PRINCIPAL: Mostrar modal se o registro foi bem-sucedido
-    if (registrationSuccessful) {
-      console.log('🔍 [DEBUG] Registro bem-sucedido, definindo showEmailModal = true');
+      // Definir o email para o modal e mostrar modal
+      setModalEmail(emailForModal);
       setShowEmailModal(true);
-      console.log('🔍 [DEBUG] showEmailModal definido como true');
+      console.log('🔍 [DEBUG] Modal configurado - email:', emailForModal, 'show:', true);
+      
+    } catch (err: any) {
+      console.log('🔍 [DEBUG] Erro no registro:', err.message);
+      // Não mostrar modal em caso de erro
     }
   };
 
@@ -89,6 +86,7 @@ export const useRegisterForm = () => {
   // Função para testar o modal manualmente
   const testModal = () => {
     console.log('🔍 [DEBUG] Teste manual do modal');
+    setModalEmail('teste@email.com');
     setShowEmailModal(true);
   };
 
@@ -104,6 +102,7 @@ export const useRegisterForm = () => {
     onSubmit,
     showEmailModal,
     setShowEmailModal,
+    modalEmail, // Retornar o email do modal
     testModal
   };
 };
