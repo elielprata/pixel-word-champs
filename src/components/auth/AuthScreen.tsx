@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +22,11 @@ const AuthScreen = () => {
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
+
+  // Função para lidar com sucesso do registro
+  const handleRegistrationSuccess = () => {
+    setActiveTab('login');
+  };
 
   // Mostrar loading enquanto verifica autenticação
   if (isLoading) {
@@ -92,7 +96,7 @@ const AuthScreen = () => {
               </TabsContent>
               
               <TabsContent value="register" className="space-y-4">
-                <RegisterForm />
+                <RegisterForm onRegistrationSuccess={handleRegistrationSuccess} />
               </TabsContent>
             </Tabs>
 
