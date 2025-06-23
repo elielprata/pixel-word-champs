@@ -42,11 +42,13 @@ const RegisterForm = () => {
         </form>
       </Form>
 
-      <EmailVerificationModal
-        isOpen={shouldShowModal}
-        onClose={() => setShowEmailModal(false)}
-        userEmail={registeredEmail}
-      />
+      {shouldShowModal && (
+        <EmailVerificationModal
+          isOpen={shouldShowModal}
+          onClose={() => setShowEmailModal(false)}
+          userEmail={registeredEmail}
+        />
+      )}
     </>
   );
 };
