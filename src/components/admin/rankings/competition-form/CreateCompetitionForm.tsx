@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -18,13 +17,15 @@ interface CreateCompetitionFormProps {
   onCompetitionCreated?: () => void;
   showPrizeConfig?: boolean;
   showBasicConfig?: boolean;
+  onCompetitionTypeChange?: (type: 'daily' | 'weekly') => void;
 }
 
 export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
   onClose,
   onCompetitionCreated,
   showPrizeConfig = true,
-  showBasicConfig = true
+  showBasicConfig = true,
+  onCompetitionTypeChange
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -46,6 +47,11 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
   const handleInputChange = (field: string, value: any) => {
     console.log(`📝 Campo alterado: ${field} =`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Notify parent component about competition type changes
+    if (field === 'type' && onCompetitionTypeChange) {
+      onCompetitionTypeChange(value);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,19 +130,10 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
           />
 
           {formData.type === 'weekly' && (
-            <>
-              <WeeklyTournamentSection 
-                weeklyTournamentId={formData.weeklyTournamentId}
-                weeklyTournaments={customCompetitions || []}
-                onTournamentChange={(tournamentId) => handleInputChange('weeklyTournamentId', tournamentId)}
-                competitionType={formData.type}
-              />
-              
-              <ParticipantsSection 
-                maxParticipants={formData.maxParticipants}
-                onMaxParticipantsChange={(maxParticipants) => handleInputChange('maxParticipants', maxParticipants)}
-              />
-            </>
+            <ParticipantsSection 
+              maxParticipants={formData.maxParticipants}
+              onMaxParticipantsChange={(maxParticipants) => handleInputChange('maxParticipants', maxParticipants)}
+            />
           )}
 
           {formData.type === 'daily' && (
