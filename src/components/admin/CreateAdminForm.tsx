@@ -2,7 +2,6 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,14 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, UserPlus } from 'lucide-react';
 import { CreateAdminFormFields } from './CreateAdminFormFields';
 import { logger } from '@/utils/logger';
-
-const adminSchema = z.object({
-  email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
-  username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
-});
-
-type AdminFormData = z.infer<typeof adminSchema>;
+import { adminSchema, type AdminFormData } from '@/types/admin';
 
 export const CreateAdminForm = () => {
   const { toast } = useToast();
@@ -32,6 +24,43 @@ export const CreateAdminForm = () => {
     }
   });
 
+  const validateAdminPermissions = async () => {
+    try {
+      const { data: isAdmin } = await supabase.rpc('is_admin');
+      if (!isAdmin) {
+        throw new Error('Usuário atual não tem permissão de administrador');
+      }
+      return true;
+    } catch (error: any) {
+      logger.error('Erro na validação de permissões admin', { error: error.message }, 'CREATE_ADMIN_FORM');
+      throw error;
+    }
+  };
+
+  const verifyProfileCreation = async (userId: string, maxAttempts = 5): Promise<boolean> => {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      logger.debug(`Verificando criação do perfil - tentativa ${attempt}`, { userId }, 'CREATE_ADMIN_FORM');
+      
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (!error && profile) {
+        logger.info('Perfil criado com sucesso', { userId }, 'CREATE_ADMIN_FORM');
+        return true;
+      }
+
+      if (attempt < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+      }
+    }
+
+    logger.warn('Perfil não foi criado após múltiplas tentativas', { userId }, 'CREATE_ADMIN_FORM');
+    return false;
+  };
+
   const handleSubmit = async (data: AdminFormData) => {
     try {
       logger.info('Iniciando criação de usuário admin', { 
@@ -39,7 +68,10 @@ export const CreateAdminForm = () => {
         username: data.username 
       }, 'CREATE_ADMIN_FORM');
 
-      // 1. Criar usuário no Supabase Auth
+      // 1. Validar permissões do admin atual
+      await validateAdminPermissions();
+
+      // 2. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -61,10 +93,26 @@ export const CreateAdminForm = () => {
 
       logger.info('Usuário criado no Auth', { userId: authData.user.id }, 'CREATE_ADMIN_FORM');
 
-      // 2. Aguardar um momento para o trigger criar o perfil
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 3. Verificar se o perfil foi criado pelo trigger
+      const profileCreated = await verifyProfileCreation(authData.user.id);
+      
+      if (!profileCreated) {
+        logger.warn('Perfil não foi criado automaticamente, tentando criar manualmente', { userId: authData.user.id }, 'CREATE_ADMIN_FORM');
+        
+        // Tentar criar perfil manualmente se necessário
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            username: data.username
+          });
 
-      // 3. Adicionar role de admin
+        if (profileError) {
+          logger.error('Erro ao criar perfil manualmente', { error: profileError.message }, 'CREATE_ADMIN_FORM');
+        }
+      }
+
+      // 4. Adicionar role de admin
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({
@@ -100,6 +148,8 @@ export const CreateAdminForm = () => {
         errorMessage = "Este email já está registrado";
       } else if (error.message?.includes('invalid email')) {
         errorMessage = "Email inválido";
+      } else if (error.message?.includes('não tem permissão')) {
+        errorMessage = "Você não tem permissão para criar administradores";
       } else if (error.message) {
         errorMessage = error.message;
       }

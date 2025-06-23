@@ -4,12 +4,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Input } from "@/components/ui/input";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Mail, User, Key } from 'lucide-react';
-
-interface AdminFormData {
-  email: string;
-  username: string;
-  password: string;
-}
+import { type AdminFormData } from '@/types/admin';
 
 interface CreateAdminFormFieldsProps {
   form: UseFormReturn<AdminFormData>;

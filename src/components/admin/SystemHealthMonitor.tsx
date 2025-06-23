@@ -3,19 +3,42 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
-import { useAdminData } from '@/hooks/useAdminData';
+import { CheckCircle, XCircle, Clock, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useSystemHealthCheck } from '@/hooks/useSystemHealthCheck';
 
 export const SystemHealthMonitor = () => {
-  const { systemHealth, refetchAll } = useAdminData();
+  const { data: systemHealth, isLoading, refetch, error } = useSystemHealthCheck();
 
-  if (!systemHealth) {
+  if (isLoading) {
     return (
       <Card className="border-slate-200">
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 animate-spin text-blue-600" />
             <span className="text-sm text-slate-600">Verificando saúde do sistema...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !systemHealth) {
+    return (
+      <Card className="border-red-200">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <span className="text-sm text-red-600">Erro ao verificar sistema</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetch()}
+              className="h-6 w-6 p-0"
+            >
+              <RefreshCw className="h-3 w-3" />
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -44,15 +67,29 @@ export const SystemHealthMonitor = () => {
     return "text-red-600";
   };
 
+  const getOverallStatus = () => {
+    const { database, authentication, permissions } = systemHealth;
+    if (database && authentication && permissions) return "healthy";
+    if (database && authentication) return "warning";
+    return "critical";
+  };
+
+  const overallStatus = getOverallStatus();
+
   return (
-    <Card className="border-slate-200">
+    <Card className={`border-slate-200 ${overallStatus === 'critical' ? 'border-red-200 bg-red-50' : overallStatus === 'warning' ? 'border-yellow-200 bg-yellow-50' : 'border-green-200 bg-green-50'}`}>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium text-slate-700 flex items-center justify-between">
-          <span>Status do Sistema</span>
+          <div className="flex items-center gap-2">
+            <span>Status do Sistema</span>
+            <Badge variant={overallStatus === 'healthy' ? 'default' : overallStatus === 'warning' ? 'secondary' : 'destructive'} className="text-xs">
+              {overallStatus === 'healthy' ? 'SAUDÁVEL' : overallStatus === 'warning' ? 'ATENÇÃO' : 'CRÍTICO'}
+            </Badge>
+          </div>
           <Button
             variant="ghost"
             size="sm"
-            onClick={refetchAll}
+            onClick={() => refetch()}
             className="h-6 w-6 p-0"
           >
             <RefreshCw className="h-3 w-3" />
