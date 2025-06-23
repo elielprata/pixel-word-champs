@@ -936,6 +936,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_user_availability: {
+        Args: { check_username?: string; check_email?: string }
+        Returns: Json
+      }
       get_invite_data_optimized: {
         Args: { user_uuid: string }
         Returns: Json

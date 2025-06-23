@@ -4,39 +4,45 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface EmailCheckState {
   checking: boolean;
+  available: boolean;
   exists: boolean;
 }
 
 export const useEmailVerification = (email: string) => {
   const [emailCheck, setEmailCheck] = useState<EmailCheckState>({
     checking: false,
+    available: true,
     exists: false
   });
 
   useEffect(() => {
-    const checkEmailExists = async () => {
-      if (!email || email.length < 5) {
-        setEmailCheck({ checking: false, exists: false });
+    const checkEmailAvailability = async () => {
+      if (!email || email.length < 5 || !email.includes('@')) {
+        setEmailCheck({ checking: false, available: true, exists: false });
         return;
       }
 
-      setEmailCheck({ checking: true, exists: false });
+      setEmailCheck({ checking: true, available: true, exists: false });
       
       try {
-        // Verificar se email já existe (usando função que não requer auth)
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .limit(1);
-        
-        // Simular verificação - em produção seria uma função específica
-        setEmailCheck({ checking: false, exists: false });
+        const { data, error } = await supabase.functions.invoke('check-user-availability', {
+          body: { email }
+        });
+
+        if (error) throw error;
+
+        setEmailCheck({ 
+          checking: false, 
+          available: data.email_available || false,
+          exists: data.email_exists || false
+        });
       } catch (error) {
-        setEmailCheck({ checking: false, exists: false });
+        console.error('Erro ao verificar email:', error);
+        setEmailCheck({ checking: false, available: true, exists: false });
       }
     };
 
-    const debounceTimer = setTimeout(checkEmailExists, 500);
+    const debounceTimer = setTimeout(checkEmailAvailability, 500);
     return () => clearTimeout(debounceTimer);
   }, [email]);
 

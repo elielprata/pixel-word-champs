@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +10,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { RegisterForm as RegisterFormType } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/utils/logger';
+import { useUsernameVerification } from '@/hooks/useUsernameVerification';
+import { useEmailVerification } from '@/hooks/useEmailVerification';
+import { AvailabilityIndicator } from './AvailabilityIndicator';
+import { EmailVerificationModal } from './EmailVerificationModal';
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
@@ -23,6 +28,8 @@ const registerSchema = z.object({
 
 const RegisterForm = () => {
   const { register, isLoading, error } = useAuth();
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   
   const form = useForm<RegisterFormType>({
     resolver: zodResolver(registerSchema),
@@ -35,7 +42,24 @@ const RegisterForm = () => {
     }
   });
 
+  const watchedUsername = form.watch('username');
+  const watchedEmail = form.watch('email');
+
+  const usernameCheck = useUsernameVerification(watchedUsername);
+  const emailCheck = useEmailVerification(watchedEmail);
+
   const onSubmit = async (data: RegisterFormType) => {
+    // Verificar disponibilidade antes de enviar
+    if (!usernameCheck.available && watchedUsername) {
+      form.setError('username', { message: 'Este nome de usuário já está em uso' });
+      return;
+    }
+
+    if (!emailCheck.available && watchedEmail) {
+      form.setError('email', { message: 'Este email já está cadastrado' });
+      return;
+    }
+
     try {
       logger.info('Tentativa de registro iniciada', { 
         email: data.email, 
@@ -43,6 +67,10 @@ const RegisterForm = () => {
       }, 'REGISTER_FORM');
       
       await register(data);
+      
+      // Mostrar modal de verificação de email após registro bem-sucedido
+      setRegisteredEmail(data.email);
+      setShowEmailModal(true);
       
       logger.info('Registro concluído com sucesso', { 
         email: data.email 
@@ -53,112 +81,154 @@ const RegisterForm = () => {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nome de usuário</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="meu_username" 
-                  {...field}
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nome de usuário</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="meu_username" 
+                    {...field}
+                    className={
+                      watchedUsername && usernameCheck.exists 
+                        ? 'border-red-300 bg-red-50' 
+                        : watchedUsername && usernameCheck.available 
+                        ? 'border-green-300 bg-green-50' 
+                        : ''
+                    }
+                  />
+                </FormControl>
+                <AvailabilityIndicator
+                  checking={usernameCheck.checking}
+                  available={usernameCheck.available}
+                  exists={usernameCheck.exists}
+                  type="username"
+                  value={watchedUsername}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="seu@email.com" 
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="seu@email.com" 
+                    type="email"
+                    {...field}
+                    className={
+                      watchedEmail && emailCheck.exists 
+                        ? 'border-red-300 bg-red-50' 
+                        : watchedEmail && emailCheck.available 
+                        ? 'border-green-300 bg-green-50' 
+                        : ''
+                    }
+                  />
+                </FormControl>
+                <AvailabilityIndicator
+                  checking={emailCheck.checking}
+                  available={emailCheck.available}
+                  exists={emailCheck.exists}
                   type="email"
-                  {...field}
+                  value={watchedEmail}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Senha</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="••••••••" 
+                    type="password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirmar senha</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="••••••••" 
+                    type="password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="inviteCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Código de convite (opcional)</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="ABC123" 
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+              {error}
+            </div>
           )}
-        />
 
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Senha</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="••••••••" 
-                  type="password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={
+              isLoading || 
+              (watchedUsername && !usernameCheck.available) ||
+              (watchedEmail && !emailCheck.available) ||
+              usernameCheck.checking ||
+              emailCheck.checking
+            }
+          >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Criar conta
+          </Button>
+        </form>
+      </Form>
 
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Confirmar senha</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="••••••••" 
-                  type="password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="inviteCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Código de convite (opcional)</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="ABC123" 
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {error && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-            {error}
-          </div>
-        )}
-
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isLoading}
-        >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Criar conta
-        </Button>
-      </form>
-    </Form>
+      <EmailVerificationModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        userEmail={registeredEmail}
+      />
+    </>
   );
 };
 
