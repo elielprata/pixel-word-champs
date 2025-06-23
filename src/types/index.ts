@@ -3,14 +3,14 @@
 export interface User {
   id: string;
   email: string;
-  username?: string; // Tornar opcional para compatibilidade
+  username?: string;
   avatar_url?: string;
   total_score: number;
   games_played: number;
   best_daily_position?: number;
   best_weekly_position?: number;
-  pix_key?: string; // Adicionar campo PIX
-  pix_holder_name?: string; // Adicionar nome do titular PIX
+  pix_key?: string;
+  pix_holder_name?: string;
   phone?: string;
   experience_points?: number;
   created_at: string;
