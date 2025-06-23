@@ -20,7 +20,7 @@ const RegisterForm = () => {
     onSubmit,
     showEmailModal,
     setShowEmailModal,
-    modalEmail, // Usar modalEmail em vez de watchedEmail
+    modalEmail,
     testModal
   } = useRegisterForm();
 
@@ -64,17 +64,17 @@ const RegisterForm = () => {
         <p className="text-xs">modalEmail: {modalEmail}</p>
       </div>
 
-      {/* Modal usando modalEmail em vez de watchedEmail */}
+      {/* CORREÇÃO CRÍTICA: Modal aparece quando ambos os estados estão corretos */}
       {showEmailModal && modalEmail && (
         <>
           {console.log('🔍 [DEBUG] Renderizando EmailVerificationModal com email:', modalEmail)}
           <EmailVerificationModal
-            isOpen={true}
+            isOpen={showEmailModal}
             onClose={() => {
               console.log('🔍 [DEBUG] Modal sendo fechado');
               setShowEmailModal(false);
             }}
-            userEmail={modalEmail} // Usar modalEmail
+            userEmail={modalEmail}
           />
         </>
       )}
