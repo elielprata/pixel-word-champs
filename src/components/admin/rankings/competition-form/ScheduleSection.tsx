@@ -19,28 +19,24 @@ export const ScheduleSection = ({ formData, onInputChange, competitionType }: Sc
     onInputChange(field, value);
   };
 
-  const handleTimeChange = (field: string, value: string) => {
-    console.log(`🕐 RADICAL: Horário alterado - ${field}:`, value);
-    
-    // Se for horário de início, combinar com a data
-    if (field === 'startTime') {
-      const date = formData.startDate || new Date().toISOString().split('T')[0];
-      const combinedDateTime = `${date}T${value}:00`;
-      console.log('🕐 RADICAL: Data e horário combinados:', combinedDateTime);
-      onInputChange('startDate', combinedDateTime);
-    }
+  // Simplificado: apenas salvar o horário diretamente
+  const handleTimeChange = (value: string) => {
+    console.log('🕐 RADICAL: Horário alterado:', value);
+    onInputChange('startTime', value); // Salvar apenas o horário simples
   };
 
-  // Extrair horário da data para exibição
-  const getTimeFromDateTime = (dateTime: string) => {
-    if (!dateTime) return '08:00'; // Horário padrão
-    const date = new Date(dateTime);
-    return date.toTimeString().slice(0, 5); // HH:MM
-  };
-
-  const getDateFromDateTime = (dateTime: string) => {
+  // Extrair apenas a data da startDate se existir
+  const getDateOnly = (dateTime: string) => {
     if (!dateTime) return '';
-    return dateTime.split('T')[0]; // YYYY-MM-DD
+    if (dateTime.includes('T')) {
+      return dateTime.split('T')[0];
+    }
+    return dateTime;
+  };
+
+  // Pegar horário do formData.startTime ou usar padrão
+  const getTimeValue = () => {
+    return formData.startTime || '08:00';
   };
 
   if (competitionType === 'daily') {
@@ -54,12 +50,8 @@ export const ScheduleSection = ({ formData, onInputChange, competitionType }: Sc
             <Input
               id="startDate"
               type="date"
-              value={getDateFromDateTime(formData.startDate)}
-              onChange={(e) => {
-                const currentTime = getTimeFromDateTime(formData.startDate);
-                const combinedDateTime = `${e.target.value}T${currentTime}:00`;
-                handleDateChange('startDate', combinedDateTime);
-              }}
+              value={getDateOnly(formData.startDate)}
+              onChange={(e) => handleDateChange('startDate', e.target.value)}
               className="w-full"
             />
           </div>
@@ -72,8 +64,8 @@ export const ScheduleSection = ({ formData, onInputChange, competitionType }: Sc
             <Input
               id="startTime"
               type="time"
-              value={getTimeFromDateTime(formData.startDate)}
-              onChange={(e) => handleTimeChange('startTime', e.target.value)}
+              value={getTimeValue()}
+              onChange={(e) => handleTimeChange(e.target.value)}
               className="w-full"
             />
             <p className="text-xs text-blue-600">
@@ -106,12 +98,8 @@ export const ScheduleSection = ({ formData, onInputChange, competitionType }: Sc
             <Input
               id="startDate"
               type="date"
-              value={getDateFromDateTime(formData.startDate)}
-              onChange={(e) => {
-                const currentTime = getTimeFromDateTime(formData.startDate);
-                const combinedDateTime = `${e.target.value}T${currentTime}:00`;
-                handleDateChange('startDate', combinedDateTime);
-              }}
+              value={getDateOnly(formData.startDate)}
+              onChange={(e) => handleDateChange('startDate', e.target.value)}
               className="w-full"
             />
           </div>
@@ -124,8 +112,8 @@ export const ScheduleSection = ({ formData, onInputChange, competitionType }: Sc
             <Input
               id="startTime"
               type="time"
-              value={getTimeFromDateTime(formData.startDate)}
-              onChange={(e) => handleTimeChange('startTime', e.target.value)}
+              value={getTimeValue()}
+              onChange={(e) => handleTimeChange(e.target.value)}
               className="w-full"
             />
             <p className="text-xs text-blue-600">
@@ -139,7 +127,7 @@ export const ScheduleSection = ({ formData, onInputChange, competitionType }: Sc
           <Input
             id="endDate"
             type="date"
-            value={getDateFromDateTime(formData.endDate)}
+            value={getDateOnly(formData.endDate)}
             onChange={(e) => handleDateChange('endDate', e.target.value)}
             className="w-full"
           />

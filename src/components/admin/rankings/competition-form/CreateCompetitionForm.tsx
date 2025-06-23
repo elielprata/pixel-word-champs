@@ -37,6 +37,7 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
     description: '',
     category: '',
     startDate: '',
+    startTime: '08:00', // Campo separado para horário
     endDate: '',
     maxParticipants: 1000,
     weeklyTournamentId: ''
@@ -56,12 +57,17 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
 
       const totalPrizePool = paymentData.calculateTotalPrize();
       
+      // Combinar data e horário apenas no momento do envio
+      const startDateTime = formData.startDate && formData.startTime 
+        ? `${formData.startDate}T${formData.startTime}:00`
+        : formData.startDate;
+      
       const competitionData = {
         title: formData.title,
         description: formData.description,
         type: formData.type,
         category: formData.category,
-        startDate: formData.startDate,
+        startDate: startDateTime,
         endDate: formData.endDate,
         prizePool: totalPrizePool,
         maxParticipants: formData.maxParticipants,
