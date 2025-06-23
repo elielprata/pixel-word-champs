@@ -66,7 +66,14 @@ export const useDailyCompetitions = () => {
       const { data, error } = await supabase
         .from('custom_competitions')
         .insert({
-          ...competitionData,
+          title: competitionData.title,
+          description: competitionData.description,
+          start_date: competitionData.start_date,
+          end_date: competitionData.end_date,
+          prize_pool: competitionData.prize_pool,
+          max_participants: competitionData.max_participants,
+          theme: competitionData.theme,
+          rules: competitionData.rules,
           competition_type: 'challenge',
           status: 'active',
         })

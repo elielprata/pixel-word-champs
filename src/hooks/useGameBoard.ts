@@ -31,19 +31,19 @@ export const useGameBoard = ({
   const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
   
   // Estado do jogo consolidado
-  const gameState = useGameState(level, timeLeft, onLevelComplete);
+  const gameState = useGameState();
 
   // Sistema de lock para evitar duplicação
   const { isProcessing, acquireLock, releaseLock } = useSelectionLock();
 
   // Validação de palavras (única fonte de verdade)
-  const { validateAndAddWord } = useGameValidation(gameState.foundWords, levelWords);
+  const { validateAndAddWord } = useGameValidation(gameState.gameState.foundWords, levelWords);
 
   // Interações com células
   const cellInteractions = useCellInteractions(
-    gameState.foundWords,
-    gameState.permanentlyMarkedCells,
-    gameState.hintHighlightedCells
+    gameState.gameState.foundWords,
+    gameState.gameState.permanentlyMarkedCells,
+    gameState.gameState.hintHighlightedCells
   );
 
   // Seleção simples (única fonte de verdade)
@@ -69,8 +69,8 @@ export const useGameBoard = ({
         word, 
         positions: finalSelection,
         isProcessing,
-        beforeCount: gameState.foundWords.length,
-        foundWords: gameState.foundWords.map(fw => fw.word)
+        beforeCount: gameState.gameState.foundWords.length,
+        foundWords: gameState.gameState.foundWords.map(fw => fw.word)
       }, 'GAME_BOARD');
       
       // PROTEÇÃO CRÍTICA: Tentar adquirir lock antes de processar
@@ -88,11 +88,11 @@ export const useGameBoard = ({
           logger.info(`✅ PALAVRA VALIDADA COM LOCK - "${word}" = ${validatedWord.points} pontos`, { 
             word: validatedWord.word,
             points: validatedWord.points,
-            beforeCount: gameState.foundWords.length
+            beforeCount: gameState.gameState.foundWords.length
           }, 'GAME_BOARD');
           
           // ÚNICA chamada para adicionar palavra
-          gameState.addFoundWord(validatedWord);
+          gameState.addFoundWord(validatedWord.word, validatedWord.points);
         }
       } finally {
         // SEMPRE liberar o lock, mesmo em caso de erro
@@ -116,20 +116,20 @@ export const useGameBoard = ({
 
   // Verificar índice da palavra em uma célula
   const getCellWordIndex = useCallback((row: number, col: number) => {
-    return gameState.foundWords.findIndex(fw => 
+    return gameState.gameState.foundWords.findIndex(fw => 
       fw.positions.some(pos => pos.row === row && pos.col === col)
     );
-  }, [gameState.foundWords]);
+  }, [gameState.gameState.foundWords]);
 
   // Ações do jogo simplificadas
   const useHint = useCallback(() => {
-    if (gameState.hintsUsed >= GAME_CONSTANTS.MAX_HINTS_PER_LEVEL) {
-      logger.warn('⚠️ Limite de dicas atingido', { used: gameState.hintsUsed, max: GAME_CONSTANTS.MAX_HINTS_PER_LEVEL }, 'GAME_BOARD');
+    if (gameState.gameState.hintsUsed >= GAME_CONSTANTS.MAX_HINTS_PER_LEVEL) {
+      logger.warn('⚠️ Limite de dicas atingido', { used: gameState.gameState.hintsUsed, max: GAME_CONSTANTS.MAX_HINTS_PER_LEVEL }, 'GAME_BOARD');
       return;
     }
 
     const remainingWords = levelWords.filter(word => 
-      !gameState.foundWords.some(fw => fw.word === word)
+      !gameState.gameState.foundWords.some(fw => fw.word === word)
     );
 
     if (remainingWords.length === 0) {
@@ -141,17 +141,17 @@ export const useGameBoard = ({
     const placedWord = boardData.placedWords.find(pw => pw.word === randomWord);
     
     if (placedWord) {
-      gameState.setHintHighlightedCells(placedWord.positions);
-      gameState.setHintsUsed(prev => prev + 1);
+      gameState.updateGameState({ hintHighlightedCells: placedWord.positions });
+      gameState.updateGameState({ hintsUsed: gameState.gameState.hintsUsed + 1 });
       
       logger.info(`💡 Dica usada para palavra "${randomWord}"`, { 
         word: randomWord,
-        hintsUsed: gameState.hintsUsed + 1 
+        hintsUsed: gameState.gameState.hintsUsed + 1 
       }, 'GAME_BOARD');
 
       // Remover highlight após 3 segundos
       setTimeout(() => {
-        gameState.setHintHighlightedCells([]);
+        gameState.updateGameState({ hintHighlightedCells: [] });
       }, 3000);
     }
   }, [gameState, levelWords, boardData.placedWords]);
@@ -161,7 +161,7 @@ export const useGameBoard = ({
   }, []);
 
   const closeGameOver = useCallback(() => {
-    gameState.setShowGameOver(false);
+    gameState.updateGameState({ showGameOver: false });
   }, [gameState]);
 
   return {
@@ -177,15 +177,15 @@ export const useGameBoard = ({
     },
     // Props do estado do jogo
     gameStateProps: {
-      foundWords: gameState.foundWords,
+      foundWords: gameState.gameState.foundWords,
       levelWords,
-      hintsUsed: gameState.hintsUsed,
-      currentLevelScore: gameState.currentLevelScore
+      hintsUsed: gameState.gameState.hintsUsed,
+      currentLevelScore: gameState.gameState.score
     },
     // Props dos modais
     modalProps: {
-      showGameOver: gameState.showGameOver,
-      showLevelComplete: gameState.showLevelComplete
+      showGameOver: gameState.gameState.gameStatus === 'failed',
+      showLevelComplete: gameState.gameState.gameStatus === 'completed'
     },
     // Props de interação com células
     cellInteractionProps: {
