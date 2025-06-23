@@ -1,11 +1,9 @@
-
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, Trophy, Calendar, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { competitionStatusService } from '@/services/competitionStatusService';
-
 interface WeeklyCompetition {
   id: string;
   title: string;
@@ -17,26 +15,22 @@ interface WeeklyCompetition {
   max_participants: number;
   total_participants: number;
 }
-
 interface WeeklyTournamentSectionProps {
   weeklyTournamentId: string;
   weeklyTournaments: WeeklyCompetition[];
   onTournamentChange: (tournamentId: string) => void;
   competitionType?: string;
 }
-
-export const WeeklyTournamentSection = ({ 
-  weeklyTournamentId, 
-  weeklyTournaments, 
+export const WeeklyTournamentSection = ({
+  weeklyTournamentId,
+  weeklyTournaments,
   onTournamentChange,
   competitionType = 'daily'
 }: WeeklyTournamentSectionProps) => {
-  
   // Only show this section for daily competitions
   if (competitionType !== 'daily') {
     return null;
   }
-  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR', {
@@ -46,37 +40,40 @@ export const WeeklyTournamentSection = ({
       year: 'numeric'
     });
   };
-
   const getStatusText = (competition: WeeklyCompetition) => {
     const actualStatus = competitionStatusService.calculateCorrectStatus({
       start_date: competition.start_date,
       end_date: competition.end_date,
       competition_type: 'tournament'
     });
-    
     switch (actualStatus) {
-      case 'active': return 'Ativo';
-      case 'scheduled': return 'Agendado';
-      case 'completed': return 'Finalizado';
-      default: return 'Rascunho';
+      case 'active':
+        return 'Ativo';
+      case 'scheduled':
+        return 'Agendado';
+      case 'completed':
+        return 'Finalizado';
+      default:
+        return 'Rascunho';
     }
   };
-
   const getStatusColor = (competition: WeeklyCompetition) => {
     const actualStatus = competitionStatusService.calculateCorrectStatus({
       start_date: competition.start_date,
       end_date: competition.end_date,
       competition_type: 'tournament'
     });
-    
     switch (actualStatus) {
-      case 'active': return 'text-green-600';
-      case 'scheduled': return 'text-blue-600';
-      case 'completed': return 'text-purple-600';
-      default: return 'text-gray-600';
+      case 'active':
+        return 'text-green-600';
+      case 'scheduled':
+        return 'text-blue-600';
+      case 'completed':
+        return 'text-purple-600';
+      default:
+        return 'text-gray-600';
     }
   };
-
   const availableTournaments = weeklyTournaments.filter(tournament => {
     const actualStatus = competitionStatusService.calculateCorrectStatus({
       start_date: tournament.start_date,
@@ -85,40 +82,28 @@ export const WeeklyTournamentSection = ({
     });
     return actualStatus === 'active' || actualStatus === 'scheduled';
   });
-
-  return (
-    <div className="space-y-3">
+  return <div className="space-y-3">
       <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm font-medium">
         <Link className="h-3 w-3" />
         Vincular ao Torneio Semanal
         <span className="text-red-500">*</span>
       </Label>
       
-      <Alert>
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription className="text-sm">
-          <strong>Nova dinâmica:</strong> Todas as competições diárias devem estar vinculadas a uma competição semanal. 
-          Os pontos serão contabilizados automaticamente na competição semanal.
-        </AlertDescription>
-      </Alert>
+      
       
       <Select value={weeklyTournamentId} onValueChange={onTournamentChange}>
         <SelectTrigger className="h-9">
           <SelectValue placeholder="Selecione um torneio semanal (obrigatório)" />
         </SelectTrigger>
         <SelectContent>
-          {availableTournaments.length === 0 ? (
-            <SelectItem value="no-tournaments" disabled>
+          {availableTournaments.length === 0 ? <SelectItem value="no-tournaments" disabled>
               <div className="flex items-center gap-2 py-1">
                 <Trophy className="h-3 w-3 text-slate-400" />
                 <span className="text-slate-400 text-xs">
                   Nenhuma competição semanal ativa disponível
                 </span>
               </div>
-            </SelectItem>
-          ) : (
-            availableTournaments.map((tournament) => (
-              <SelectItem key={tournament.id} value={tournament.id}>
+            </SelectItem> : availableTournaments.map(tournament => <SelectItem key={tournament.id} value={tournament.id}>
                 <div className="flex flex-col py-1 w-full">
                   <div className="flex items-center gap-2">
                     <Trophy className="h-3 w-3 text-yellow-600" />
@@ -135,18 +120,12 @@ export const WeeklyTournamentSection = ({
                     <span>R$ {tournament.prize_pool.toFixed(2)}</span>
                   </div>
                 </div>
-              </SelectItem>
-            ))
-          )}
+              </SelectItem>)}
         </SelectContent>
       </Select>
       
       <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-        {availableTournaments.length === 0 
-          ? "É necessário ter uma competição semanal ativa para criar competições diárias."
-          : "Os pontos desta competição diária serão transferidos automaticamente para o torneio semanal selecionado em tempo real."
-        }
+        {availableTournaments.length === 0 ? "É necessário ter uma competição semanal ativa para criar competições diárias." : "Os pontos desta competição diária serão transferidos automaticamente para o torneio semanal selecionado em tempo real."}
       </p>
-    </div>
-  );
+    </div>;
 };
