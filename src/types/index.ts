@@ -1,4 +1,3 @@
-
 // Corrigir tipagem inconsistente da interface User
 export interface User {
   id: string;
