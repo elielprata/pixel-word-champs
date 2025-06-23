@@ -6,16 +6,23 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
+interface RankingMetrics {
+  activeCompetitions: number;
+  totalParticipations: number;
+  finishedCompetitions: number;
+  avgParticipationRate: number;
+}
+
 const useRankingMetrics = () => {
-  return useQuery({
+  return useQuery<RankingMetrics>({
     queryKey: ['rankingMetrics'],
-    queryFn: async () => {
+    queryFn: async (): Promise<RankingMetrics> => {
       logger.debug('Buscando métricas de ranking', undefined, 'RANKING_METRICS');
       
       try {
         // Buscar total de competições ativas
         const { data: activeCompetitions, error: activeError } = await supabase
-          .from('competitions')
+          .from('custom_competitions')
           .select('id')
           .eq('status', 'active');
 
@@ -36,16 +43,16 @@ const useRankingMetrics = () => {
 
         // Buscar competições finalizadas
         const { data: finishedCompetitions, error: finishedError } = await supabase
-          .from('competitions')
+          .from('custom_competitions')
           .select('id')
-          .eq('status', 'finished');
+          .eq('status', 'completed');
 
         if (finishedError) {
           logger.error('Erro ao buscar competições finalizadas', { error: finishedError.message }, 'RANKING_METRICS');
           throw finishedError;
         }
 
-        const metrics = {
+        const metrics: RankingMetrics = {
           activeCompetitions: activeCompetitions?.length || 0,
           totalParticipations: participations?.length || 0,
           finishedCompetitions: finishedCompetitions?.length || 0,
