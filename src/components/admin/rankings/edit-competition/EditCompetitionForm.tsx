@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,6 @@ import { customCompetitionService } from '@/services/customCompetitionService';
 import { CompetitionEditActions } from './CompetitionEditActions';
 import { PrizeConfigurationSection } from '../competition-form/PrizeConfigurationSection';
 import { usePaymentData } from '@/hooks/usePaymentData';
-
 interface BaseCompetition {
   id: string;
   title: string;
@@ -24,19 +22,19 @@ interface BaseCompetition {
   theme?: string;
   rules?: any;
 }
-
 interface EditCompetitionFormProps {
   competition: BaseCompetition | null;
   onClose: () => void;
   onCompetitionUpdated?: () => void;
 }
-
 export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
   competition,
   onClose,
   onCompetitionUpdated
 }) => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const paymentData = usePaymentData();
   const [formData, setFormData] = useState({
@@ -46,7 +44,6 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
     start_date: '',
     end_date: ''
   });
-
   useEffect(() => {
     if (competition) {
       console.log('📝 Carregando dados da competição para edição:', {
@@ -56,7 +53,6 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         originalEndDate: competition.end_date,
         originalStatus: competition.status
       });
-
       setFormData({
         title: competition.title,
         description: competition.description || '',
@@ -66,13 +62,10 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
       });
     }
   }, [competition]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!competition) return;
-
     setIsLoading(true);
-    
     try {
       console.log('💾 Salvando alterações da competição:', {
         id: competition.id,
@@ -81,13 +74,10 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         newTitle: formData.title,
         newDescription: formData.description
       });
-
-      const competitionType = competition.theme ? 'challenge' : 
-                             competition.competition_type === 'challenge' ? 'challenge' : 'tournament';
+      const competitionType = competition.theme ? 'challenge' : competition.competition_type === 'challenge' ? 'challenge' : 'tournament';
 
       // Calcular premiação total automaticamente
       const totalPrizePool = paymentData.calculateTotalPrize();
-
       const updateData = {
         title: formData.title,
         description: formData.description,
@@ -95,17 +85,16 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         start_date: formData.start_date,
         end_date: formData.end_date,
         prize_pool: totalPrizePool,
-        ...(competition.theme && { theme: formData.theme })
+        ...(competition.theme && {
+          theme: formData.theme
+        })
       };
-
       const response = await customCompetitionService.updateCompetition(competition.id, updateData);
-
       if (response.success) {
         toast({
           title: "Sucesso",
           description: "Competição atualizada com sucesso"
         });
-        
         if (onCompetitionUpdated) {
           onCompetitionUpdated();
         }
@@ -124,81 +113,52 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
       setIsLoading(false);
     }
   };
-
   if (!competition) return null;
-
   const isDailyCompetition = competition.theme || competition.competition_type === 'challenge';
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+  return <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div>
           <Label htmlFor="title">Título</Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            required
-          />
+          <Input id="title" value={formData.title} onChange={e => setFormData(prev => ({
+          ...prev,
+          title: e.target.value
+        }))} required />
         </div>
 
         <div>
           <Label htmlFor="description">Descrição</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            rows={3}
-          />
+          <Textarea id="description" value={formData.description} onChange={e => setFormData(prev => ({
+          ...prev,
+          description: e.target.value
+        }))} rows={3} />
         </div>
 
-        {isDailyCompetition && (
-          <div>
+        {isDailyCompetition && <div>
             <Label htmlFor="theme">Tema</Label>
-            <Input
-              id="theme"
-              value={formData.theme}
-              onChange={(e) => setFormData(prev => ({ ...prev, theme: e.target.value }))}
-              placeholder="Ex: Natureza, Tecnologia, Esportes..."
-            />
-          </div>
-        )}
+            <Input id="theme" value={formData.theme} onChange={e => setFormData(prev => ({
+          ...prev,
+          theme: e.target.value
+        }))} placeholder="Ex: Natureza, Tecnologia, Esportes..." />
+          </div>}
 
-        {isDailyCompetition && (
-          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-            <Label className="text-sm font-medium text-blue-800">Período da Competição</Label>
-            <div className="text-sm text-blue-700 mt-1">
-              <p>Data: {new Date(formData.start_date).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p>
-              <p>Horário: 00:00 às 23:59 (Horário de Brasília)</p>
-              <p className="text-xs text-blue-600 mt-1">
-                💡 As datas das competições diárias não podem ser alteradas durante a edição
-              </p>
-            </div>
-          </div>
-        )}
+        {isDailyCompetition}
 
-        {!isDailyCompetition && (
-          <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+        {!isDailyCompetition && <div className="bg-green-50 p-3 rounded-lg border border-green-200">
             <Label className="text-sm font-medium text-green-800">Configurações Automáticas</Label>
             <div className="text-sm text-green-700 mt-1 space-y-1">
-              <p>💰 Premiação Total: R$ {paymentData.calculateTotalPrize().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p>💰 Premiação Total: R$ {paymentData.calculateTotalPrize().toLocaleString('pt-BR', {
+              minimumFractionDigits: 2
+            })}</p>
               <p>🎯 Participação: Livre (todos os usuários podem participar)</p>
               <p className="text-xs text-green-600 mt-1">
                 💡 A premiação é calculada automaticamente com base na configuração de prêmios abaixo
               </p>
             </div>
-          </div>
-        )}
+          </div>}
       </div>
 
-      {!isDailyCompetition && (
-        <PrizeConfigurationSection paymentData={paymentData} />
-      )}
+      {!isDailyCompetition && <PrizeConfigurationSection paymentData={paymentData} />}
 
-      <CompetitionEditActions
-        isLoading={isLoading}
-        onCancel={onClose}
-      />
-    </form>
-  );
+      <CompetitionEditActions isLoading={isLoading} onCancel={onClose} />
+    </form>;
 };
