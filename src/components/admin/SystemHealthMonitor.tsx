@@ -3,11 +3,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Clock, RefreshCw, AlertTriangle } from 'lucide-react';
-import { useSystemHealthCheck } from '@/hooks/useSystemHealthCheck';
+import { CheckCircle, XCircle, Clock, RefreshCw, AlertTriangle, Activity } from 'lucide-react';
+import { useOptimizedSystemHealth } from '@/hooks/useOptimizedSystemHealth';
 
 export const SystemHealthMonitor = () => {
-  const { data: systemHealth, isLoading, refetch, error } = useSystemHealthCheck();
+  const { data: systemHealth, isLoading, refetch, error, dataUpdatedAt } = useOptimizedSystemHealth();
 
   if (isLoading) {
     return (
@@ -62,9 +62,17 @@ export const SystemHealthMonitor = () => {
   };
 
   const getPerformanceColor = (ms: number) => {
-    if (ms < 500) return "text-green-600";
-    if (ms < 1000) return "text-yellow-600";
+    if (ms < 200) return "text-green-600";
+    if (ms < 500) return "text-yellow-600";
+    if (ms < 1000) return "text-orange-600";
     return "text-red-600";
+  };
+
+  const getPerformanceLabel = (ms: number) => {
+    if (ms < 200) return "Excelente";
+    if (ms < 500) return "Bom";
+    if (ms < 1000) return "Regular";
+    return "Lento";
   };
 
   const getOverallStatus = () => {
@@ -75,13 +83,15 @@ export const SystemHealthMonitor = () => {
   };
 
   const overallStatus = getOverallStatus();
+  const lastUpdate = new Date(dataUpdatedAt || Date.now());
 
   return (
     <Card className={`border-slate-200 ${overallStatus === 'critical' ? 'border-red-200 bg-red-50' : overallStatus === 'warning' ? 'border-yellow-200 bg-yellow-50' : 'border-green-200 bg-green-50'}`}>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium text-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span>Status do Sistema</span>
+            <Activity className="h-4 w-4 text-blue-600" />
+            <span>Status do Sistema (Otimizado)</span>
             <Badge variant={overallStatus === 'healthy' ? 'default' : overallStatus === 'warning' ? 'secondary' : 'destructive'} className="text-xs">
               {overallStatus === 'healthy' ? 'SAUDÁVEL' : overallStatus === 'warning' ? 'ATENÇÃO' : 'CRÍTICO'}
             </Badge>
@@ -92,7 +102,7 @@ export const SystemHealthMonitor = () => {
             onClick={() => refetch()}
             className="h-6 w-6 p-0"
           >
-            <RefreshCw className="h-3 w-3" />
+            <RefreshCw className="h-3 w-3"} />
           </Button>
         </CardTitle>
       </CardHeader>
@@ -127,15 +137,21 @@ export const SystemHealthMonitor = () => {
               <Clock className="h-4 w-4 text-slate-400" />
               <span>Performance</span>
             </div>
-            <span className={`font-medium ${getPerformanceColor(systemHealth.performance)}`}>
-              {systemHealth.performance}ms
-            </span>
+            <div className="text-right">
+              <div className={`font-medium ${getPerformanceColor(systemHealth.performance)}`}>
+                {systemHealth.performance}ms
+              </div>
+              <div className={`text-xs ${getPerformanceColor(systemHealth.performance)}`}>
+                {getPerformanceLabel(systemHealth.performance)}
+              </div>
+            </div>
           </div>
         </div>
         
         <div className="pt-2 border-t border-slate-100">
-          <div className="text-xs text-slate-500 text-center">
-            Última verificação: {new Date().toLocaleTimeString()}
+          <div className="text-xs text-slate-500 text-center flex items-center justify-center gap-2">
+            <Clock className="h-3 w-3" />
+            <span>Última verificação: {lastUpdate.toLocaleTimeString()}</span>
           </div>
         </div>
       </CardContent>
