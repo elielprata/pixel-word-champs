@@ -92,15 +92,34 @@ export const ScheduleSection = ({ formData, onInputChange, competitionType }: Sc
       <h3 className="text-lg font-semibold">Período da Competição Semanal</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="startDate">Data de Início</Label>
-          <Input
-            id="startDate"
-            type="date"
-            value={getDateOnly(formData.startDate)}
-            onChange={(e) => handleDateChange('startDate', e.target.value)}
-            className="w-full"
-          />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="startDate">Data de Início</Label>
+            <Input
+              id="startDate"
+              type="date"
+              value={getDateOnly(formData.startDate)}
+              onChange={(e) => handleDateChange('startDate', e.target.value)}
+              className="w-full"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="startTime" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Horário de Início
+            </Label>
+            <Input
+              id="startTime"
+              type="time"
+              value={getTimeValue()}
+              onChange={(e) => handleTimeChange(e.target.value)}
+              className="w-full"
+            />
+            <p className="text-xs text-blue-600">
+              🎯 Novo: Defina o horário de início da competição
+            </p>
+          </div>
         </div>
         
         <div className="space-y-2">
