@@ -1,30 +1,47 @@
 
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import AuthScreen from '@/components/auth/AuthScreen';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { BottomNavigation } from '@/components/BottomNavigation';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import HomeScreen from '@/components/HomeScreen';
+import RankingScreen from '@/components/RankingScreen';
 import ProfileScreen from '@/components/ProfileScreen';
 import ChallengeScreen from '@/components/ChallengeScreen';
-import RankingScreen from '@/components/RankingScreen';
-import SettingsScreen from '@/components/SettingsScreen';
-import BottomNavigation from '@/components/BottomNavigation';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import GameBoard from '@/components/GameBoard';
+import { AdminPanel } from '@/components/admin/LazyAdminPanel';
+import { RobustAdminRoute } from '@/components/auth/RobustAdminRoute';
+import { AuthProvider } from '@/components/auth/AuthProvider';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from "@/components/ui/toaster";
 import { logger } from '@/utils/logger';
 
-type Screen = 'home' | 'challenge' | 'ranking' | 'profile' | 'settings';
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+type Screen = 'home' | 'ranking' | 'profile' | 'challenge' | 'game' | 'admin';
 
 const Index = () => {
-  const { isAuthenticated, isLoading } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
 
-  useEffect(() => {
-    logger.debug('Index montado', { isAuthenticated, isLoading }, 'INDEX');
-  }, [isAuthenticated, isLoading]);
+  logger.debug('Index renderizado', { currentScreen, selectedChallengeId }, 'INDEX');
 
-  const handleScreenChange = (screen: Screen) => {
-    logger.debug('Mudança de tela', { from: currentScreen, to: screen }, 'INDEX');
-    setCurrentScreen(screen);
+  const handleChallengeSelect = (challengeId: string) => {
+    logger.info('Challenge selecionado', { challengeId }, 'INDEX');
+    setSelectedChallengeId(challengeId);
+    setCurrentScreen('challenge');
+  };
+
+  const handleStartGame = (challengeId: string) => {
+    logger.info('Iniciando jogo', { challengeId }, 'INDEX');
+    setSelectedChallengeId(challengeId);
+    setCurrentScreen('game');
   };
 
   const handleBackToHome = () => {
@@ -33,87 +50,82 @@ const Index = () => {
     setSelectedChallengeId(null);
   };
 
-  const handleStartChallenge = (challengeId: string) => {
-    logger.debug('Iniciando desafio', { challengeId }, 'INDEX');
-    setSelectedChallengeId(challengeId);
+  const handleBackToChallenge = () => {
+    logger.debug('Voltando para challenge', undefined, 'INDEX');
     setCurrentScreen('challenge');
   };
 
-  const handleViewFullRanking = () => {
-    logger.debug('Visualizando ranking completo', undefined, 'INDEX');
-    setCurrentScreen('ranking');
+  const handleNavigateToAdmin = () => {
+    logger.info('Navegando para admin', undefined, 'INDEX');
+    setCurrentScreen('admin');
   };
 
-  const handleViewChallengeRanking = (challengeId: string) => {
-    logger.debug('Visualizando ranking do desafio', { challengeId }, 'INDEX');
-    setCurrentScreen('ranking');
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <AuthScreen />;
-  }
-
-  const renderScreen = () => {
+  const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'home':
         return (
           <HomeScreen 
-            onStartChallenge={handleStartChallenge}
-            onViewFullRanking={handleViewFullRanking}
-            onViewChallengeRanking={handleViewChallengeRanking}
-          />
-        );
-      case 'challenge':
-        if (!selectedChallengeId) {
-          return (
-            <HomeScreen 
-              onStartChallenge={handleStartChallenge}
-              onViewFullRanking={handleViewFullRanking}
-              onViewChallengeRanking={handleViewChallengeRanking}
-            />
-          );
-        }
-        return (
-          <ChallengeScreen 
-            challengeId={selectedChallengeId}
-            onBack={handleBackToHome} 
+            onChallengeSelect={handleChallengeSelect}
+            onNavigateToAdmin={handleNavigateToAdmin}
           />
         );
       case 'ranking':
         return <RankingScreen onBack={handleBackToHome} />;
       case 'profile':
         return <ProfileScreen onBack={handleBackToHome} />;
-      case 'settings':
-        return <SettingsScreen onBack={handleBackToHome} />;
+      case 'challenge':
+        return (
+          <ChallengeScreen 
+            challengeId={selectedChallengeId || ''}
+            onBack={handleBackToHome}
+            onStartGame={handleStartGame}
+          />
+        );
+      case 'game':
+        return (
+          <GameBoard 
+            challengeId={selectedChallengeId || ''}
+            onBack={handleBackToChallenge}
+            onComplete={handleBackToHome}
+          />
+        );
+      case 'admin':
+        return (
+          <RobustAdminRoute>
+            <AdminPanel onBack={handleBackToHome} />
+          </RobustAdminRoute>
+        );
       default:
         return (
           <HomeScreen 
-            onStartChallenge={handleStartChallenge}
-            onViewFullRanking={handleViewFullRanking}
-            onViewChallengeRanking={handleViewChallengeRanking}
+            onChallengeSelect={handleChallengeSelect}
+            onNavigateToAdmin={handleNavigateToAdmin}
           />
         );
     }
   };
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50">
-        {renderScreen()}
-        <BottomNavigation 
-          currentScreen={currentScreen as any} 
-          onScreenChange={handleScreenChange as any} 
-        />
-      </div>
-    </ProtectedRoute>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ErrorBoundary>
+          <div className="min-h-screen bg-gray-50">
+            {renderCurrentScreen()}
+            
+            {currentScreen !== 'admin' && currentScreen !== 'game' && (
+              <BottomNavigation 
+                currentScreen={currentScreen}
+                onScreenChange={(screen) => {
+                  logger.debug('Mudança de tela via navegação', { from: currentScreen, to: screen }, 'INDEX');
+                  setCurrentScreen(screen);
+                }}
+              />
+            )}
+          </div>
+          <Toaster />
+        </ErrorBoundary>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 

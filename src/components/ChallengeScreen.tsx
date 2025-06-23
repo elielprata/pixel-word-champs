@@ -1,154 +1,208 @@
 
-import React from 'react';
-import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Play, Users, Clock, Trophy, Star } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useChallengeGameLogic } from '@/hooks/useChallengeGameLogic';
-import ChallengeErrorDisplay from './challenge/ChallengeErrorDisplay';
-import GameifiedLoadingScreen from './challenge/GameifiedLoadingScreen';
-import ChallengeCompletedScreen from './challenge/ChallengeCompletedScreen';
-import ChallengeGameSession from './challenge/ChallengeGameSession';
+import { ChallengeLoadingScreen } from './challenge/ChallengeLoadingScreen';
+import { ChallengeErrorDisplay } from './challenge/ChallengeErrorDisplay';
 import { logger } from '@/utils/logger';
 
 interface ChallengeScreenProps {
   challengeId: string;
   onBack: () => void;
+  onStartGame: (challengeId: string) => void;
 }
 
-const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
-  // Create game config from challengeId
-  const gameConfig = {
-    level: 1,
-    competitionId: challengeId
-  };
-
+const ChallengeScreen: React.FC<ChallengeScreenProps> = ({ 
+  challengeId, 
+  onBack, 
+  onStartGame 
+}) => {
+  const [isJoining, setIsJoining] = useState(false);
+  
   const {
-    sessionId,
-    gameStarted,
-    gameCompleted,
-    currentScore,
-    wordsFound,
+    challenge,
     isLoading,
     error,
-    startGame,
-    completeGame,
-    resetGame
-  } = useChallengeGameLogic(gameConfig);
+    canJoin,
+    joinChallenge,
+    timeLeft
+  } = useChallengeGameLogic(challengeId);
 
-  const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(gameStarted);
+  logger.debug('ChallengeScreen renderizado', { 
+    challengeId, 
+    hasChallenge: !!challenge,
+    isLoading, 
+    canJoin 
+  }, 'CHALLENGE_SCREEN');
 
-  // Mock handlers for compatibility - these should be implemented properly
-  const handleTimeUp = async () => {
-    logger.info('Tempo esgotado', { challengeId, currentScore }, 'CHALLENGE_SCREEN');
-    await completeGame(currentScore, wordsFound);
-  };
+  useEffect(() => {
+    if (!challengeId) {
+      logger.warn('ChallengeScreen renderizado sem challengeId', undefined, 'CHALLENGE_SCREEN');
+    }
+  }, [challengeId]);
 
-  const handleLevelComplete = () => {
-    logger.info('Nível completado', { challengeId, currentScore }, 'CHALLENGE_SCREEN');
-  };
+  const handleJoinAndPlay = async () => {
+    if (!challenge) {
+      logger.error('Tentativa de jogar sem challenge carregado', undefined, 'CHALLENGE_SCREEN');
+      return;
+    }
 
-  const handleAdvanceLevel = () => {
-    logger.info('Avançando nível', { challengeId }, 'CHALLENGE_SCREEN');
-  };
+    setIsJoining(true);
+    logger.info('Tentando participar e jogar challenge', { challengeId }, 'CHALLENGE_SCREEN');
 
-  const handleRetry = () => {
-    logger.info('Tentando novamente', { challengeId }, 'CHALLENGE_SCREEN');
-    resetGame();
-    startGame();
-  };
-
-  const handleStopGame = async () => {
-    logger.info('Usuário parou o jogo', { 
-      challengeId, 
-      currentScore 
-    }, 'CHALLENGE_SCREEN');
-    onBack();
-  };
-
-  const handleRevive = () => {
-    const success = extendTime();
-    if (success) {
-      logger.info('Revive ativado', { 
-        challengeId, 
-        timeRemaining 
-      }, 'CHALLENGE_SCREEN');
-    } else {
-      logger.warn('Falha ao ativar revive', { 
-        challengeId 
-      }, 'CHALLENGE_SCREEN');
+    try {
+      const success = await joinChallenge();
+      if (success) {
+        logger.info('Participação no challenge bem-sucedida, iniciando jogo', { challengeId }, 'CHALLENGE_SCREEN');
+        onStartGame(challengeId);
+      } else {
+        logger.error('Falha ao participar do challenge', { challengeId }, 'CHALLENGE_SCREEN');
+      }
+    } catch (error) {
+      logger.error('Erro ao tentar participar do challenge', { error, challengeId }, 'CHALLENGE_SCREEN');
+    } finally {
+      setIsJoining(false);
     }
   };
 
-  const handleCompleteGame = async () => {
-    logger.info('Jogo finalizado', { 
-      challengeId, 
-      currentScore, 
-      gameCompleted: true
-    }, 'CHALLENGE_SCREEN');
-    onBack();
-  };
-
-  const handleBackToMenu = () => {
-    logger.info('Retorno ao menu principal', { 
-      challengeId,
-      currentScore 
-    }, 'CHALLENGE_SCREEN');
-    onBack();
-  };
-
-  const handleAdvanceLevelWithReset = () => {
-    logger.debug('Avançando nível com reset', { 
-      nextLevel: 2 
-    }, 'CHALLENGE_SCREEN');
-    handleAdvanceLevel();
-    resetTimer();
-  };
-
-  // Tela de erro com opções claras
-  if (error) {
-    return (
-      <ChallengeErrorDisplay
-        error={error}
-        onRetry={handleRetry}
-        onBackToMenu={handleBackToMenu}
-      />
-    );
-  }
-
-  // Tela de loading gamificada
   if (isLoading) {
-    return <GameifiedLoadingScreen level={1} loadingStep="Carregando..." />;
+    return <ChallengeLoadingScreen />;
   }
 
-  // Tela de jogo completado
-  if (gameCompleted) {
+  if (error || !challenge) {
     return (
-      <ChallengeCompletedScreen
-        totalScore={currentScore}
-        onCompleteGame={handleCompleteGame}
+      <ChallengeErrorDisplay 
+        error={error || 'Challenge não encontrado'} 
+        onBack={onBack} 
       />
     );
   }
 
-  // Verificar se temos uma sessão válida antes de renderizar o jogo
-  if (!sessionId) {
-    return (
-      <ChallengeErrorDisplay
-        error="Sessão de jogo não encontrada"
-        onRetry={handleRetry}
-        onBackToMenu={handleBackToMenu}
-      />
-    );
-  }
+  const difficultyColors = {
+    'Fácil': 'bg-green-100 text-green-800 border-green-200',
+    'Médio': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    'Difícil': 'bg-red-100 text-red-800 border-red-200'
+  };
 
   return (
-    <ChallengeGameSession
-      currentLevel={1}
-      timeRemaining={timeRemaining}
-      onTimeUp={handleTimeUp}
-      onLevelComplete={handleLevelComplete}
-      onAdvanceLevel={handleAdvanceLevelWithReset}
-      onStopGame={handleStopGame}
-      onRevive={handleRevive}
-    />
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50">
+      {/* Header */}
+      <div className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-purple-200 z-10">
+        <div className="flex items-center justify-between p-4">
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
+          <h1 className="text-xl font-bold text-purple-800">Desafio</h1>
+          <div className="w-10" />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 space-y-6">
+        {/* Challenge Card */}
+        <Card className="border-purple-200 shadow-lg">
+          <CardHeader className="text-center bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+            <CardTitle className="text-2xl flex items-center justify-center gap-2">
+              <Trophy className="w-6 h-6" />
+              {challenge.title}
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="p-6 space-y-4">
+            <p className="text-gray-600 text-center leading-relaxed">
+              {challenge.description}
+            </p>
+
+            {/* Challenge Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-purple-50 p-4 rounded-lg text-center">
+                <Users className="w-6 h-6 mx-auto mb-2 text-purple-600" />
+                <div className="text-sm text-gray-600">Participantes</div>
+                <div className="text-lg font-bold text-purple-800">
+                  {challenge.participants}
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 p-4 rounded-lg text-center">
+                <Trophy className="w-6 h-6 mx-auto mb-2 text-blue-600" />
+                <div className="text-sm text-gray-600">Prêmio</div>
+                <div className="text-lg font-bold text-blue-800">
+                  {challenge.prize}
+                </div>
+              </div>
+            </div>
+
+            {/* Challenge Details */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Categoria:</span>
+                <Badge variant="secondary">{challenge.category}</Badge>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Dificuldade:</span>
+                <Badge 
+                  className={`${difficultyColors[challenge.difficulty]} border`}
+                  variant="outline"
+                >
+                  <Star className="w-3 h-3 mr-1" />
+                  {challenge.difficulty}
+                </Badge>
+              </div>
+              
+              {timeLeft && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Tempo restante:</span>
+                  <div className="flex items-center gap-1 text-orange-600">
+                    <Clock className="w-4 h-4" />
+                    <span className="font-semibold">{timeLeft}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Button */}
+        <div className="space-y-4">
+          {canJoin ? (
+            <Button 
+              onClick={handleJoinAndPlay}
+              disabled={isJoining}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-4 text-lg font-semibold shadow-lg"
+            >
+              {isJoining ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Entrando...
+                </>
+              ) : (
+                <>
+                  <Play className="w-5 h-5 mr-2" />
+                  Participar e Jogar
+                </>
+              )}
+            </Button>
+          ) : (
+            <div className="text-center p-4 bg-gray-100 rounded-lg">
+              <p className="text-gray-600">
+                {challenge.status === 'completed' 
+                  ? 'Este desafio já foi concluído' 
+                  : 'Você não pode participar deste desafio no momento'
+                }
+              </p>
+            </div>
+          )}
+
+          <p className="text-xs text-gray-500 text-center">
+            Ao participar, você concorda com os termos e condições do desafio
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 
