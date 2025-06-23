@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
@@ -10,67 +10,82 @@ interface ProfileVerificationResult {
 }
 
 export const useProfileVerification = () => {
-  const verifyProfileCreation = useCallback(
-    async (userId: string, maxAttempts = 10): Promise<ProfileVerificationResult> => {
-      logger.debug('Iniciando verificação inteligente de perfil', { userId, maxAttempts }, 'PROFILE_VERIFICATION');
-      
-      const startTime = Date.now();
-      let attempts = 0;
+  const [isVerifying, setIsVerifying] = useState(false);
 
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        attempts = attempt;
-        logger.debug(`Verificação de perfil - tentativa ${attempt}`, { userId }, 'PROFILE_VERIFICATION');
+  const verifyProfileCreation = async (userId: string): Promise<ProfileVerificationResult> => {
+    setIsVerifying(true);
+    const startTime = Date.now();
+    let attempts = 0;
+    const maxAttempts = 5;
+    const delayMs = 1000;
+
+    try {
+      logger.info('Iniciando verificação de criação de perfil', { userId }, 'PROFILE_VERIFICATION');
+
+      while (attempts < maxAttempts) {
+        attempts++;
         
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('id, username, created_at')
-            .eq('id', userId)
-            .single();
+        logger.debug(`Tentativa ${attempts} de verificação de perfil`, { userId }, 'PROFILE_VERIFICATION');
 
-          if (!error && profile) {
-            const duration = Date.now() - startTime;
-            logger.info('Perfil verificado com sucesso', { 
-              userId, 
-              attempts, 
-              duration,
-              profileData: profile 
-            }, 'PROFILE_VERIFICATION');
-            
-            return { success: true, attempts, duration };
-          }
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .eq('id', userId)
+          .single();
 
-          // Se ainda não existe, aguardar antes da próxima tentativa
-          if (attempt < maxAttempts) {
-            // Intervalo inteligente: começa rápido e aumenta gradualmente
-            const waitTime = Math.min(300 * Math.pow(1.3, attempt - 1), 2000);
-            logger.debug(`Aguardando ${waitTime}ms antes da próxima tentativa`, { attempt }, 'PROFILE_VERIFICATION');
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-          }
-        } catch (verificationError: any) {
-          logger.warn('Erro durante verificação de perfil', { 
+        if (!error && profile) {
+          const duration = Date.now() - startTime;
+          logger.info('Perfil encontrado com sucesso', { 
             userId, 
-            attempt, 
-            error: verificationError.message 
+            attempts, 
+            duration,
+            username: profile.username 
           }, 'PROFILE_VERIFICATION');
           
-          // Em caso de erro, aguardar um pouco mais
-          if (attempt < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
+          setIsVerifying(false);
+          return { success: true, attempts, duration };
+        }
+
+        if (error && error.code !== 'PGRST116') {
+          logger.error('Erro inesperado na verificação de perfil', { 
+            error: error.message, 
+            userId, 
+            attempts 
+          }, 'PROFILE_VERIFICATION');
+        }
+
+        if (attempts < maxAttempts) {
+          logger.debug(`Aguardando ${delayMs}ms antes da próxima tentativa`, { userId }, 'PROFILE_VERIFICATION');
+          await new Promise(resolve => setTimeout(resolve, delayMs));
         }
       }
 
       const duration = Date.now() - startTime;
-      logger.error('Falha na verificação de perfil após múltiplas tentativas', { 
+      logger.warn('Perfil não foi encontrado após todas as tentativas', { 
         userId, 
-        attempts: maxAttempts, 
+        attempts, 
         duration 
       }, 'PROFILE_VERIFICATION');
       
+      setIsVerifying(false);
       return { success: false, attempts, duration };
-    }, []
-  );
 
-  return { verifyProfileCreation };
+    } catch (error: any) {
+      const duration = Date.now() - startTime;
+      logger.error('Erro durante verificação de perfil', { 
+        error: error.message, 
+        userId, 
+        attempts, 
+        duration 
+      }, 'PROFILE_VERIFICATION');
+      
+      setIsVerifying(false);
+      return { success: false, attempts, duration };
+    }
+  };
+
+  return {
+    verifyProfileCreation,
+    isVerifying
+  };
 };
