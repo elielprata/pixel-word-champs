@@ -21,6 +21,9 @@ export const EmailVerificationModal = ({
   const [isResending, setIsResending] = useState(false);
   const { toast } = useToast();
 
+  // DEBUG: Log quando o modal é renderizado
+  console.log('🔍 [DEBUG] EmailVerificationModal renderizado:', { isOpen, userEmail });
+
   const handleResendEmail = async () => {
     setIsResending(true);
     try {
@@ -54,7 +57,15 @@ export const EmailVerificationModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent 
+        className="sm:max-w-md"
+        style={{ 
+          zIndex: 9999,
+          position: 'fixed',
+          backgroundColor: 'white',
+          border: '2px solid red' // DEBUG: Border vermelho para visualizar
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-center justify-center">
             <CheckCircle className="h-6 w-6 text-green-600" />

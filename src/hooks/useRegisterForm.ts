@@ -23,6 +23,9 @@ export const useRegisterForm = () => {
   const { register, isLoading, error } = useAuth();
   const [showEmailModal, setShowEmailModal] = useState(false);
   
+  // DEBUG: Log quando o estado muda
+  console.log('🔍 [DEBUG] useRegisterForm - showEmailModal:', showEmailModal);
+  
   const form = useForm<RegisterFormType>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -41,7 +44,8 @@ export const useRegisterForm = () => {
   const emailCheck = useEmailVerification(watchedEmail);
 
   const onSubmit = async (data: RegisterFormType) => {
-    // Verificar disponibilidade antes de enviar
+    console.log('🔍 [DEBUG] onSubmit iniciado');
+    
     if (!usernameCheck.available && watchedUsername) {
       form.setError('username', { message: 'Este nome de usuário já está em uso' });
       return;
@@ -53,11 +57,13 @@ export const useRegisterForm = () => {
     }
 
     try {
+      console.log('🔍 [DEBUG] Chamando register...');
       await register(data);
-      // Se chegou aqui, registro foi bem-sucedido - mostrar modal
+      console.log('🔍 [DEBUG] Register bem-sucedido, definindo showEmailModal = true');
       setShowEmailModal(true);
+      console.log('🔍 [DEBUG] showEmailModal definido como true');
     } catch (err: any) {
-      // Em caso de erro, não mostrar modal
+      console.log('🔍 [DEBUG] Erro no register:', err);
       setShowEmailModal(false);
     }
   };
@@ -67,6 +73,12 @@ export const useRegisterForm = () => {
     (watchedEmail && !emailCheck.available) ||
     usernameCheck.checking ||
     emailCheck.checking;
+
+  // Função para testar o modal manualmente
+  const testModal = () => {
+    console.log('🔍 [DEBUG] Teste manual do modal');
+    setShowEmailModal(true);
+  };
 
   return {
     form,
@@ -79,6 +91,7 @@ export const useRegisterForm = () => {
     isFormDisabled,
     onSubmit,
     showEmailModal,
-    setShowEmailModal
+    setShowEmailModal,
+    testModal // Função temporária para debug
   };
 };
