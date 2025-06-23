@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Settings, Clock } from 'lucide-react';
 import { AutomationLogs } from './AutomationLogs';
 import { useAutomationSettings } from '@/hooks/useAutomationSettings';
 import { AutomationConfig, AutomationSettingsProps } from './automation/types';
@@ -36,60 +37,75 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
   const nextExecution = getNextExecution(settings);
 
   return (
-    <div className="space-y-6">
-      <Card className="border-orange-200">
-        <CardHeader className="bg-gradient-to-r from-orange-50 to-yellow-50">
-          <CardTitle className="flex items-center gap-2 text-orange-800">
-            <Settings className="h-5 w-5" />
-            Automação de Reset de Pontuações
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent className="p-6 space-y-6">
-          <AutomationToggle 
-            settings={settings} 
-            onSettingsChange={setSettings} 
-          />
+    <Tabs defaultValue="settings" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="settings" className="flex items-center gap-2">
+          <Settings className="h-4 w-4" />
+          Configurações
+        </TabsTrigger>
+        <TabsTrigger value="history" className="flex items-center gap-2">
+          <Clock className="h-4 w-4" />
+          Histórico ({logs.length})
+        </TabsTrigger>
+      </TabsList>
 
-          {settings.enabled && (
-            <>
-              <div className="space-y-4">
-                <TriggerTypeSelector 
-                  settings={settings} 
-                  onSettingsChange={setSettings} 
-                />
+      <TabsContent value="settings" className="space-y-6 mt-6">
+        <Card className="border-orange-200">
+          <CardHeader className="bg-gradient-to-r from-orange-50 to-yellow-50">
+            <CardTitle className="flex items-center gap-2 text-orange-800">
+              <Settings className="h-5 w-5" />
+              Automação de Reset de Pontuações
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="p-6 space-y-6">
+            <AutomationToggle 
+              settings={settings} 
+              onSettingsChange={setSettings} 
+            />
 
-                <ScheduleConfiguration 
-                  settings={settings} 
-                  onSettingsChange={setSettings} 
-                />
+            {settings.enabled && (
+              <>
+                <div className="space-y-4">
+                  <TriggerTypeSelector 
+                    settings={settings} 
+                    onSettingsChange={setSettings} 
+                  />
 
-                <CompetitionFinalizationInfo settings={settings} />
-              </div>
+                  <ScheduleConfiguration 
+                    settings={settings} 
+                    onSettingsChange={setSettings} 
+                  />
 
-              <NextExecutionAlert nextExecution={nextExecution} />
+                  <CompetitionFinalizationInfo settings={settings} />
+                </div>
 
-              <WarningAlert settings={settings} />
-            </>
-          )}
+                <NextExecutionAlert nextExecution={nextExecution} />
 
-          <AutomationActions
-            settings={settings}
-            showTestSection={showTestSection}
-            onSave={handleSave}
-            onToggleTestSection={() => setShowTestSection(!showTestSection)}
-          />
+                <WarningAlert settings={settings} />
+              </>
+            )}
 
-          <ManualTestSection
-            showTestSection={showTestSection}
-            isExecuting={isExecuting}
-            onExecuteTest={handleManualTest}
-            onCancel={() => setShowTestSection(false)}
-          />
-        </CardContent>
-      </Card>
+            <AutomationActions
+              settings={settings}
+              showTestSection={showTestSection}
+              onSave={handleSave}
+              onToggleTestSection={() => setShowTestSection(!showTestSection)}
+            />
 
-      <AutomationLogs logs={logs} />
-    </div>
+            <ManualTestSection
+              showTestSection={showTestSection}
+              isExecuting={isExecuting}
+              onExecuteTest={handleManualTest}
+              onCancel={() => setShowTestSection(false)}
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="history" className="mt-6">
+        <AutomationLogs logs={logs} />
+      </TabsContent>
+    </Tabs>
   );
 };
