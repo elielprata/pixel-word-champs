@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { HomeHeader } from './home/HomeHeader';
-import { CompetitionsList } from './home/CompetitionsList';
-import { RankingPreview } from './home/RankingPreview';
-import { UserStatsCard } from './home/UserStatsCard';
+import HomeHeader from './home/HomeHeader';
+import CompetitionsList from './home/CompetitionsList';
+import RankingPreview from './home/RankingPreview';
+import UserStatsCard from './home/UserStatsCard';
 import { logger } from '@/utils/logger';
 
 interface HomeScreenProps {

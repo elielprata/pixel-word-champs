@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useChallengeGameLogic } from '@/hooks/useChallengeGameLogic';
-import { ChallengeLoadingScreen } from './challenge/ChallengeLoadingScreen';
-import { ChallengeErrorDisplay } from './challenge/ChallengeErrorDisplay';
+import ChallengeLoadingScreen from './challenge/ChallengeLoadingScreen';
+import ChallengeErrorDisplay from './challenge/ChallengeErrorDisplay';
 import { logger } from '@/utils/logger';
 
 interface ChallengeScreenProps {
@@ -15,6 +15,18 @@ interface ChallengeScreenProps {
   onStartGame: (challengeId: string) => void;
 }
 
+// Mock challenge data - in real app this would come from a hook
+const mockChallenge = {
+  id: '1',
+  title: 'Desafio Palavras Cruzadas',
+  description: 'Encontre o máximo de palavras possível no tabuleiro!',
+  prize: 'R$ 100',
+  participants: 150,
+  difficulty: 'Médio' as const,
+  category: 'Palavras',
+  status: 'active' as const
+};
+
 const ChallengeScreen: React.FC<ChallengeScreenProps> = ({ 
   challengeId, 
   onBack, 
@@ -22,20 +34,14 @@ const ChallengeScreen: React.FC<ChallengeScreenProps> = ({
 }) => {
   const [isJoining, setIsJoining] = useState(false);
   
-  const {
-    challenge,
-    isLoading,
-    error,
-    canJoin,
-    joinChallenge,
-    timeLeft
-  } = useChallengeGameLogic(challengeId);
+  const gameLogic = useChallengeGameLogic({
+    level: 1,
+    competitionId: challengeId
+  });
 
   logger.debug('ChallengeScreen renderizado', { 
     challengeId, 
-    hasChallenge: !!challenge,
-    isLoading, 
-    canJoin 
+    isLoading: gameLogic.isLoading
   }, 'CHALLENGE_SCREEN');
 
   useEffect(() => {
@@ -45,22 +51,13 @@ const ChallengeScreen: React.FC<ChallengeScreenProps> = ({
   }, [challengeId]);
 
   const handleJoinAndPlay = async () => {
-    if (!challenge) {
-      logger.error('Tentativa de jogar sem challenge carregado', undefined, 'CHALLENGE_SCREEN');
-      return;
-    }
-
     setIsJoining(true);
     logger.info('Tentando participar e jogar challenge', { challengeId }, 'CHALLENGE_SCREEN');
 
     try {
-      const success = await joinChallenge();
-      if (success) {
-        logger.info('Participação no challenge bem-sucedida, iniciando jogo', { challengeId }, 'CHALLENGE_SCREEN');
-        onStartGame(challengeId);
-      } else {
-        logger.error('Falha ao participar do challenge', { challengeId }, 'CHALLENGE_SCREEN');
-      }
+      await gameLogic.startGame();
+      logger.info('Participação no challenge bem-sucedida, iniciando jogo', { challengeId }, 'CHALLENGE_SCREEN');
+      onStartGame(challengeId);
     } catch (error) {
       logger.error('Erro ao tentar participar do challenge', { error, challengeId }, 'CHALLENGE_SCREEN');
     } finally {
@@ -68,15 +65,16 @@ const ChallengeScreen: React.FC<ChallengeScreenProps> = ({
     }
   };
 
-  if (isLoading) {
+  if (gameLogic.isLoading) {
     return <ChallengeLoadingScreen />;
   }
 
-  if (error || !challenge) {
+  if (gameLogic.error) {
     return (
       <ChallengeErrorDisplay 
-        error={error || 'Challenge não encontrado'} 
-        onBack={onBack} 
+        error={gameLogic.error} 
+        onRetry={() => gameLogic.startGame()}
+        onBackToMenu={onBack}
       />
     );
   }
@@ -107,13 +105,13 @@ const ChallengeScreen: React.FC<ChallengeScreenProps> = ({
           <CardHeader className="text-center bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
             <CardTitle className="text-2xl flex items-center justify-center gap-2">
               <Trophy className="w-6 h-6" />
-              {challenge.title}
+              {mockChallenge.title}
             </CardTitle>
           </CardHeader>
           
           <CardContent className="p-6 space-y-4">
             <p className="text-gray-600 text-center leading-relaxed">
-              {challenge.description}
+              {mockChallenge.description}
             </p>
 
             {/* Challenge Stats */}
@@ -122,7 +120,7 @@ const ChallengeScreen: React.FC<ChallengeScreenProps> = ({
                 <Users className="w-6 h-6 mx-auto mb-2 text-purple-600" />
                 <div className="text-sm text-gray-600">Participantes</div>
                 <div className="text-lg font-bold text-purple-800">
-                  {challenge.participants}
+                  {mockChallenge.participants}
                 </div>
               </div>
               
@@ -130,7 +128,7 @@ const ChallengeScreen: React.FC<ChallengeScreenProps> = ({
                 <Trophy className="w-6 h-6 mx-auto mb-2 text-blue-600" />
                 <div className="text-sm text-gray-600">Prêmio</div>
                 <div className="text-lg font-bold text-blue-800">
-                  {challenge.prize}
+                  {mockChallenge.prize}
                 </div>
               </div>
             </div>
@@ -139,63 +137,42 @@ const ChallengeScreen: React.FC<ChallengeScreenProps> = ({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Categoria:</span>
-                <Badge variant="secondary">{challenge.category}</Badge>
+                <Badge variant="secondary">{mockChallenge.category}</Badge>
               </div>
               
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Dificuldade:</span>
                 <Badge 
-                  className={`${difficultyColors[challenge.difficulty]} border`}
+                  className={`${difficultyColors[mockChallenge.difficulty]} border`}
                   variant="outline"
                 >
                   <Star className="w-3 h-3 mr-1" />
-                  {challenge.difficulty}
+                  {mockChallenge.difficulty}
                 </Badge>
               </div>
-              
-              {timeLeft && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Tempo restante:</span>
-                  <div className="flex items-center gap-1 text-orange-600">
-                    <Clock className="w-4 h-4" />
-                    <span className="font-semibold">{timeLeft}</span>
-                  </div>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
 
         {/* Action Button */}
         <div className="space-y-4">
-          {canJoin ? (
-            <Button 
-              onClick={handleJoinAndPlay}
-              disabled={isJoining}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-4 text-lg font-semibold shadow-lg"
-            >
-              {isJoining ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Entrando...
-                </>
-              ) : (
-                <>
-                  <Play className="w-5 h-5 mr-2" />
-                  Participar e Jogar
-                </>
-              )}
-            </Button>
-          ) : (
-            <div className="text-center p-4 bg-gray-100 rounded-lg">
-              <p className="text-gray-600">
-                {challenge.status === 'completed' 
-                  ? 'Este desafio já foi concluído' 
-                  : 'Você não pode participar deste desafio no momento'
-                }
-              </p>
-            </div>
-          )}
+          <Button 
+            onClick={handleJoinAndPlay}
+            disabled={isJoining}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-4 text-lg font-semibold shadow-lg"
+          >
+            {isJoining ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Entrando...
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5 mr-2" />
+                Participar e Jogar
+              </>
+            )}
+          </Button>
 
           <p className="text-xs text-gray-500 text-center">
             Ao participar, você concorda com os termos e condições do desafio

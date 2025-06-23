@@ -1,15 +1,15 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { BottomNavigation } from '@/components/BottomNavigation';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import BottomNavigation from '@/components/BottomNavigation';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import HomeScreen from '@/components/HomeScreen';
 import RankingScreen from '@/components/RankingScreen';
 import ProfileScreen from '@/components/ProfileScreen';
 import ChallengeScreen from '@/components/ChallengeScreen';
 import GameBoard from '@/components/GameBoard';
-import { AdminPanel } from '@/components/admin/LazyAdminPanel';
-import { RobustAdminRoute } from '@/components/auth/RobustAdminRoute';
+import { LazyAdminPanel as AdminPanel } from '@/components/admin/LazyAdminPanel';
+import RobustAdminRoute from '@/components/auth/RobustAdminRoute';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster";

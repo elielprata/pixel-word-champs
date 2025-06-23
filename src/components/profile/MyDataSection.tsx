@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserCircle, Mail, Phone, CreditCard, User as UserIcon, Camera } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
-import { AvatarUpload } from '../ui/AvatarUpload';
+import AvatarUpload from '../ui/AvatarUpload';
 import { logger } from '@/utils/logger';
 
 export const MyDataSection = () => {
@@ -15,9 +15,7 @@ export const MyDataSection = () => {
   const [formData, setFormData] = useState({
     username: profile?.username || '',
     email: profile?.email || '',
-    phone: profile?.phone || '',
-    pix_key: profile?.pix_key || '',
-    pix_holder_name: profile?.pix_holder_name || ''
+    phone: profile?.phone || ''
   });
 
   logger.debug('MyDataSection renderizado', { 
@@ -32,9 +30,7 @@ export const MyDataSection = () => {
       setFormData({
         username: profile.username || '',
         email: profile.email || '',
-        phone: profile.phone || '',
-        pix_key: profile.pix_key || '',
-        pix_holder_name: profile.pix_holder_name || ''
+        phone: profile.phone || ''
       });
     }
   }, [profile]);
@@ -53,9 +49,7 @@ export const MyDataSection = () => {
       
       await updateProfile({
         username: formData.username,
-        phone: formData.phone,
-        pix_key: formData.pix_key,
-        pix_holder_name: formData.pix_holder_name
+        phone: formData.phone
       });
       
       setIsEditing(false);
@@ -73,9 +67,7 @@ export const MyDataSection = () => {
       setFormData({
         username: profile.username || '',
         email: profile.email || '',
-        phone: profile.phone || '',
-        pix_key: profile.pix_key || '',
-        pix_holder_name: profile.pix_holder_name || ''
+        phone: profile.phone || ''
       });
     }
     setIsEditing(false);
@@ -100,8 +92,9 @@ export const MyDataSection = () => {
         <div className="flex items-center justify-center mb-4">
           <div className="relative">
             <AvatarUpload
-              currentAvatarUrl={profile.avatar_url}
-              onAvatarChange={handleAvatarChange}
+              currentAvatar={profile.avatar_url}
+              fallback={profile.username?.[0]?.toUpperCase() || 'U'}
+              onAvatarUpdate={handleAvatarChange}
               size="lg"
             />
             {isEditing && (
@@ -165,46 +158,6 @@ export const MyDataSection = () => {
               {profile.phone || 'Não informado'}
             </div>
           )}
-        </div>
-
-        {/* Campos PIX */}
-        <div className="space-y-4 border-t pt-4">
-          <h3 className="font-semibold text-purple-800 flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            Dados PIX (para recebimento de prêmios)
-          </h3>
-          
-          <div className="space-y-2">
-            <Label htmlFor="pix_holder_name">Nome do titular</Label>
-            {isEditing ? (
-              <Input
-                id="pix_holder_name"
-                value={formData.pix_holder_name}
-                onChange={(e) => handleInputChange('pix_holder_name', e.target.value)}
-                placeholder="Nome completo do titular da conta"
-              />
-            ) : (
-              <div className="p-3 bg-gray-50 rounded-md">
-                {profile.pix_holder_name || 'Não informado'}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="pix_key">Chave PIX</Label>
-            {isEditing ? (
-              <Input
-                id="pix_key"
-                value={formData.pix_key}
-                onChange={(e) => handleInputChange('pix_key', e.target.value)}
-                placeholder="CPF, email, telefone ou chave aleatória"
-              />
-            ) : (
-              <div className="p-3 bg-gray-50 rounded-md">
-                {profile.pix_key || 'Não informado'}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Botões de ação */}
