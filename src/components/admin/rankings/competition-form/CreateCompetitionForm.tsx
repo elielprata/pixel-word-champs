@@ -29,7 +29,7 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const paymentData = usePaymentData();
-  const { weeklyCompetitions } = useCustomCompetitions();
+  const { customCompetitions } = useCustomCompetitions();
 
   const [formData, setFormData] = useState({
     type: 'weekly' as 'daily' | 'weekly',
@@ -121,7 +121,7 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
             <>
               <WeeklyTournamentSection 
                 weeklyTournamentId={formData.weeklyTournamentId}
-                weeklyTournaments={weeklyCompetitions || []}
+                weeklyTournaments={customCompetitions || []}
                 onTournamentChange={(tournamentId) => handleInputChange('weeklyTournamentId', tournamentId)}
                 competitionType={formData.type}
               />
@@ -136,7 +136,7 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
           {formData.type === 'daily' && (
             <WeeklyTournamentSection 
               weeklyTournamentId={formData.weeklyTournamentId}
-              weeklyTournaments={weeklyCompetitions || []}
+              weeklyTournaments={customCompetitions || []}
               onTournamentChange={(tournamentId) => handleInputChange('weeklyTournamentId', tournamentId)}
               competitionType={formData.type}
             />
