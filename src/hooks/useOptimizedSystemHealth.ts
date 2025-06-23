@@ -62,10 +62,10 @@ export const useOptimizedSystemHealth = () => {
     },
     staleTime: 3 * 60 * 1000, // 3 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Polling inteligente baseado na saúde do sistema
-      if (!data) return 30000; // 30s se não há dados
-      const isHealthy = data.database && data.authentication && data.permissions;
+      if (!query.state.data) return 30000; // 30s se não há dados
+      const isHealthy = query.state.data.database && query.state.data.authentication && query.state.data.permissions;
       return isHealthy ? 5 * 60 * 1000 : 60 * 1000; // 5min se saudável, 1min se não
     },
     retry: (failureCount, error) => {
