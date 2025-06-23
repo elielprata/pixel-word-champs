@@ -4,12 +4,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, UserPlus, Mail, User, Key } from 'lucide-react';
+import { Loader2, UserPlus } from 'lucide-react';
+import { CreateAdminFormFields } from './CreateAdminFormFields';
 import { logger } from '@/utils/logger';
 
 const adminSchema = z.object({
@@ -125,72 +125,9 @@ export const CreateAdminForm = () => {
       <CardContent className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-slate-700 flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-slate-500" />
-                    Email
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="admin@exemplo.com"
-                      type="email"
-                      disabled={form.formState.isSubmitting}
-                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-slate-700 flex items-center gap-2">
-                    <User className="h-4 w-4 text-slate-500" />
-                    Nome de Usuário
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="nomedousuario"
-                      disabled={form.formState.isSubmitting}
-                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-slate-700 flex items-center gap-2">
-                    <Key className="h-4 w-4 text-slate-500" />
-                    Senha
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="••••••••"
-                      type="password"
-                      disabled={form.formState.isSubmitting}
-                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-200"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <CreateAdminFormFields 
+              form={form} 
+              isSubmitting={form.formState.isSubmitting} 
             />
 
             <Button 
