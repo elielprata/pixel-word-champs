@@ -32,7 +32,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[45vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold flex items-center gap-2">
             <Trophy className="h-4 w-4 text-amber-600" />
