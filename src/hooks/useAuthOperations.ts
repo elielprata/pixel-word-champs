@@ -83,7 +83,8 @@ export const useAuthOperations = (
         setError('');
         logger.info('Registro realizado com sucesso', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
         console.log('🔍 [DEBUG] Estado definido, retornando normalmente (sem throw)');
-        return; // Retorna normalmente - sucesso
+        // CORREÇÃO: NÃO lançar exceção para registros bem-sucedidos
+        return response.data; // Retorna dados normalmente
       } else {
         const errorMessage = response.error || 'Erro no registro';
         console.log('🔍 [DEBUG] Erro na resposta:', errorMessage);
