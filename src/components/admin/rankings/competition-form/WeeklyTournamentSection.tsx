@@ -32,6 +32,11 @@ export const WeeklyTournamentSection = ({
   competitionType = 'daily'
 }: WeeklyTournamentSectionProps) => {
   
+  // Only show this section for daily competitions
+  if (competitionType !== 'daily') {
+    return null;
+  }
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR', {
@@ -72,61 +77,42 @@ export const WeeklyTournamentSection = ({
     }
   };
 
-  const availableTournaments = competitionType === 'daily' 
-    ? weeklyTournaments.filter(tournament => {
-        const actualStatus = competitionStatusService.calculateCorrectStatus({
-          start_date: tournament.start_date,
-          end_date: tournament.end_date,
-          competition_type: 'tournament'
-        });
-        return actualStatus === 'active' || actualStatus === 'scheduled';
-      })
-    : weeklyTournaments;
-
-  const isDailyCompetition = competitionType === 'daily';
+  const availableTournaments = weeklyTournaments.filter(tournament => {
+    const actualStatus = competitionStatusService.calculateCorrectStatus({
+      start_date: tournament.start_date,
+      end_date: tournament.end_date,
+      competition_type: 'tournament'
+    });
+    return actualStatus === 'active' || actualStatus === 'scheduled';
+  });
 
   return (
     <div className="space-y-3">
       <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm font-medium">
         <Link className="h-3 w-3" />
-        {isDailyCompetition ? 'Vincular ao Torneio Semanal' : 'Atribuir a Torneio Semanal'}
-        {isDailyCompetition && <span className="text-red-500">*</span>}
+        Vincular ao Torneio Semanal
+        <span className="text-red-500">*</span>
       </Label>
       
-      {isDailyCompetition && (
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-sm">
-            <strong>Nova dinâmica:</strong> Todas as competições diárias devem estar vinculadas a uma competição semanal. 
-            Os pontos serão contabilizados automaticamente na competição semanal.
-          </AlertDescription>
-        </Alert>
-      )}
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription className="text-sm">
+          <strong>Nova dinâmica:</strong> Todas as competições diárias devem estar vinculadas a uma competição semanal. 
+          Os pontos serão contabilizados automaticamente na competição semanal.
+        </AlertDescription>
+      </Alert>
       
       <Select value={weeklyTournamentId} onValueChange={onTournamentChange}>
         <SelectTrigger className="h-9">
-          <SelectValue placeholder={
-            isDailyCompetition 
-              ? "Selecione um torneio semanal (obrigatório)" 
-              : "Selecione um torneio semanal (opcional)"
-          } />
+          <SelectValue placeholder="Selecione um torneio semanal (obrigatório)" />
         </SelectTrigger>
         <SelectContent>
-          {!isDailyCompetition && (
-            <SelectItem value="none">
-              <span className="text-slate-500">Nenhum torneio selecionado</span>
-            </SelectItem>
-          )}
-          
           {availableTournaments.length === 0 ? (
             <SelectItem value="no-tournaments" disabled>
               <div className="flex items-center gap-2 py-1">
                 <Trophy className="h-3 w-3 text-slate-400" />
                 <span className="text-slate-400 text-xs">
-                  {isDailyCompetition 
-                    ? 'Nenhuma competição semanal ativa disponível' 
-                    : 'Nenhuma competição semanal disponível'
-                  }
+                  Nenhuma competição semanal ativa disponível
                 </span>
               </div>
             </SelectItem>
@@ -156,15 +142,10 @@ export const WeeklyTournamentSection = ({
       </Select>
       
       <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-        {isDailyCompetition ? (
-          availableTournaments.length === 0 
-            ? "É necessário ter uma competição semanal ativa para criar competições diárias."
-            : "Os pontos desta competição diária serão transferidos automaticamente para o torneio semanal selecionado em tempo real."
-        ) : (
-          availableTournaments.length === 0 
-            ? "Nenhuma competição semanal disponível para atribuição."
-            : "Competições diárias podem ser vinculadas a este torneio semanal."
-        )}
+        {availableTournaments.length === 0 
+          ? "É necessário ter uma competição semanal ativa para criar competições diárias."
+          : "Os pontos desta competição diária serão transferidos automaticamente para o torneio semanal selecionado em tempo real."
+        }
       </p>
     </div>
   );
