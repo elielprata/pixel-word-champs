@@ -1,23 +1,20 @@
 
-import React from 'react';
-import { useAuthProvider, AuthContext } from '@/hooks/useAuth';
-import { useAuthCleanup } from '@/hooks/useAuthCleanup';
+import React, { ReactNode } from 'react';
+import { AuthContext, useAuthProvider } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 
 interface AuthProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-const AuthProvider = ({ children }: AuthProviderProps) => {
-  const auth = useAuthProvider();
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const authValue = useAuthProvider();
   
-  // Executar limpeza automática na inicialização
-  useAuthCleanup();
+  logger.debug('AuthProvider renderizado', { isAuthenticated: authValue.isAuthenticated }, 'AUTH_PROVIDER');
 
   return (
-    <AuthContext.Provider value={auth}>
+    <AuthContext.Provider value={authValue}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-export default AuthProvider;

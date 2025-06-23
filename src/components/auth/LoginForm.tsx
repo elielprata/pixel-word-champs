@@ -1,104 +1,113 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/hooks/useAuth';
-import { LoginForm as LoginFormType } from '@/types';
-import { Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useToast } from "@/hooks/use-toast";
 import { logger } from '@/utils/logger';
 
-const loginSchema = z.object({
-  email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
-});
+interface LoginFormProps {
+  onSwitchToRegister: () => void;
+}
 
-const LoginForm = () => {
-  const { login, isLoading, error } = useAuth();
-  const navigate = useNavigate();
-  
-  const form = useForm<LoginFormType>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: ''
+const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha todos os campos",
+        variant: "destructive",
+      });
+      return;
     }
-  });
 
-  const onSubmit = async (data: LoginFormType) => {
+    setIsLoading(true);
+    logger.info('Tentativa de login iniciada', { email }, 'LOGIN_FORM');
+
     try {
-      logger.info('Tentativa de login iniciada', { email: data.email }, 'LOGIN_FORM');
-      await login(data);
+      const result = await signIn(email, password);
       
-      // Redirecionar para home após login bem-sucedido
-      logger.info('Login realizado, redirecionando para home', undefined, 'LOGIN_FORM');
-      navigate('/');
-    } catch (err: any) {
-      logger.error('Erro no login', { error: err.message }, 'LOGIN_FORM');
+      if (result.error) {
+        logger.error('Erro no login', { error: result.error }, 'LOGIN_FORM');
+        toast({
+          title: "Erro no login",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        logger.info('Login realizado com sucesso', { email }, 'LOGIN_FORM');
+        toast({
+          title: "Sucesso!",
+          description: "Login realizado com sucesso",
+        });
+      }
+    } catch (error) {
+      logger.error('Erro inesperado no login', { error }, 'LOGIN_FORM');
+      toast({
+        title: "Erro",
+        description: "Erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="seu@email.com" 
-                  type="email"
-                  autoComplete="email"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Senha</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="••••••••" 
-                  type="password"
-                  autoComplete="current-password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {error && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-            {error}
-          </div>
-        )}
-
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isLoading}
-        >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-center text-purple-800">
           Entrar
-        </Button>
-      </form>
-    </Form>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <Input
+              type="password"
+              placeholder="Senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? "Entrando..." : "Entrar"}
+          </Button>
+        </form>
+        <div className="mt-4 text-center">
+          <Button 
+            variant="link" 
+            onClick={onSwitchToRegister}
+            className="text-purple-600"
+          >
+            Não tem conta? Cadastre-se
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

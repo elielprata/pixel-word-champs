@@ -1,76 +1,88 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { CompetitionParticipation, ApiResponse } from '@/types';
-import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { logger } from '@/utils/logger';
+import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 
-export class CompetitionJoinService {
-  async joinCompetition(competitionId: string): Promise<ApiResponse<CompetitionParticipation>> {
+class CompetitionJoinService {
+  async joinCompetition(competitionId: string, userId: string): Promise<ApiResponse<CompetitionParticipation>> {
     try {
-      logger.info('Tentativa de participar em competição', { competitionId }, 'COMPETITION_JOIN_SERVICE');
+      logger.info('Usuário entrando em competição', { competitionId, userId }, 'COMPETITION_JOIN_SERVICE');
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        logger.error('Usuário não autenticado ao tentar participar', { competitionId }, 'COMPETITION_JOIN_SERVICE');
-        throw new Error('Usuário não autenticado');
-      }
-
       const { data, error } = await supabase
         .from('competition_participations')
         .insert({
           competition_id: competitionId,
-          user_id: user.id,
-          user_score: 0
+          user_id: userId,
+          user_score: 0,
+          user_position: null
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao entrar na competição', { error: error.message }, 'COMPETITION_JOIN_SERVICE');
+        throw new Error(error.message);
+      }
 
       const participation: CompetitionParticipation = {
         id: data.id,
-        competition_id: data.competition_id || '',
-        user_id: data.user_id || '',
-        user_position: data.user_position || 0,
-        user_score: data.user_score || 0,
-        prize: data.prize ? Number(data.prize) : undefined,
-        payment_status: data.payment_status || 'pending',
-        payment_date: data.payment_date || undefined
+        competition_id: data.competition_id,
+        user_id: data.user_id,
+        score: data.user_score || 0,
+        user_score: data.user_score,
+        user_position: data.user_position,
+        joined_at: data.created_at || new Date().toISOString(),
+        payment_status: data.payment_status as 'pending' | 'paid' | 'failed' | 'not_eligible',
+        payment_date: data.payment_date
       };
 
-      logger.info('Participação criada com sucesso', { competitionId, userId: user.id }, 'COMPETITION_JOIN_SERVICE');
+      logger.info('Participação criada com sucesso', { participationId: data.id }, 'COMPETITION_JOIN_SERVICE');
       return createSuccessResponse(participation);
     } catch (error) {
-      logger.error('Erro ao participar de competição', { competitionId, error }, 'COMPETITION_JOIN_SERVICE');
-      return createErrorResponse(handleServiceError(error, 'COMPETITION_JOIN'));
+      logger.error('Erro ao entrar na competição', { error }, 'COMPETITION_JOIN_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'JOIN_COMPETITION'));
     }
   }
 
-  async getCompetitionRanking(competitionId: string): Promise<ApiResponse<any[]>> {
+  async checkUserParticipation(competitionId: string, userId: string): Promise<ApiResponse<CompetitionParticipation | null>> {
     try {
-      logger.debug('Buscando ranking da competição', { competitionId }, 'COMPETITION_JOIN_SERVICE');
+      logger.debug('Verificando participação do usuário', { competitionId, userId }, 'COMPETITION_JOIN_SERVICE');
       
       const { data, error } = await supabase
         .from('competition_participations')
-        .select(`
-          user_position,
-          user_score,
-          profiles (
-            username,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('competition_id', competitionId)
-        .not('user_position', 'is', null)
-        .order('user_position', { ascending: true });
+        .eq('user_id', userId)
+        .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') {
+        logger.error('Erro ao verificar participação', { error: error.message }, 'COMPETITION_JOIN_SERVICE');
+        throw new Error(error.message);
+      }
 
-      logger.debug('Ranking da competição carregado', { competitionId, count: data?.length || 0 }, 'COMPETITION_JOIN_SERVICE');
-      return createSuccessResponse(data || []);
+      if (!data) {
+        logger.debug('Usuário não participa da competição', { competitionId, userId }, 'COMPETITION_JOIN_SERVICE');
+        return createSuccessResponse(null);
+      }
+
+      const participation: CompetitionParticipation = {
+        id: data.id,
+        competition_id: data.competition_id,
+        user_id: data.user_id,
+        score: data.user_score || 0,
+        user_score: data.user_score,
+        user_position: data.user_position,
+        joined_at: data.created_at || '',
+        payment_status: data.payment_status as 'pending' | 'paid' | 'failed' | 'not_eligible',
+        payment_date: data.payment_date
+      };
+
+      logger.debug('Participação encontrada', { participationId: data.id }, 'COMPETITION_JOIN_SERVICE');
+      return createSuccessResponse(participation);
     } catch (error) {
-      logger.error('Erro ao buscar ranking da competição', { competitionId, error }, 'COMPETITION_JOIN_SERVICE');
-      return createErrorResponse(handleServiceError(error, 'COMPETITION_RANKING'));
+      logger.error('Erro ao verificar participação', { error }, 'COMPETITION_JOIN_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'CHECK_USER_PARTICIPATION'));
     }
   }
 }

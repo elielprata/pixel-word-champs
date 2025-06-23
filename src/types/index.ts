@@ -1,4 +1,3 @@
-
 // Corrigir tipagem inconsistente da interface User
 export interface User {
   id: string;
@@ -39,7 +38,7 @@ export interface Competition {
   end_date: string;
   status: 'pending' | 'active' | 'completed' | 'scheduled';
   type: 'challenge' | 'daily' | 'weekly';
-  competition_type?: string;
+  competition_type: string; // Tornar obrigatório para compatibilidade
   prize_pool: number;
   max_participants?: number;
   total_participants: number;

@@ -63,7 +63,6 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           currentLevel={currentLevel}
           nextLevel={nextLevel}
           progress={progress}
-          totalPoints={profile.total_score}
           gamesPlayed={profile.games_played}
           bestPosition={profile.best_weekly_position || 0}
         />
