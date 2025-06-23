@@ -18,26 +18,25 @@ interface PrizeDistributionProps {
 }
 
 const PrizeDistribution = ({ weeklyCompetition }: PrizeDistributionProps) => {
-  // Se não há competição semanal, usar valores padrão
-  const prizePool = weeklyCompetition?.prize_pool || 185;
+  if (!weeklyCompetition) return null;
 
   const prizes = [
     {
       position: '1º',
       icon: <Trophy className="w-4 h-4 text-yellow-500" />,
-      amount: prizePool * 0.50,
+      amount: weeklyCompetition.prize_pool * 0.50,
       color: 'bg-yellow-50 border-yellow-200'
     },
     {
       position: '2º',
       icon: <Medal className="w-4 h-4 text-gray-500" />,
-      amount: prizePool * 0.30,
+      amount: weeklyCompetition.prize_pool * 0.30,
       color: 'bg-gray-50 border-gray-200'
     },
     {
       position: '3º',
       icon: <Award className="w-4 h-4 text-orange-500" />,
-      amount: prizePool * 0.20,
+      amount: weeklyCompetition.prize_pool * 0.20,
       color: 'bg-orange-50 border-orange-200'
     }
   ];

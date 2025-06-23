@@ -3,7 +3,7 @@
 export interface User {
   id: string;
   email: string;
-  username: string; // Tornar obrigatório
+  username: string;
   avatar_url?: string;
   total_score: number;
   games_played: number;
@@ -11,8 +11,8 @@ export interface User {
   best_weekly_position?: number;
   pix_key?: string;
   pix_holder_name?: string;
-  phone?: string;
-  experience_points?: number;
+  phone?: string; // Adicionar campo de telefone
+  experience_points?: number; // Adicionar campo de XP
   created_at: string;
   updated_at: string;
 }
@@ -34,34 +34,29 @@ export interface GameSession {
 export interface Competition {
   id: string;
   title: string;
-  description: string;
+  description?: string;
+  theme?: string;
   start_date: string;
   end_date: string;
-  status: 'pending' | 'active' | 'completed' | 'scheduled';
-  type: 'challenge' | 'daily' | 'weekly';
-  competition_type: string; // Tornar obrigatório para compatibilidade
+  status: string;
+  type: 'daily' | 'weekly' | 'challenge';
   prize_pool: number;
-  max_participants?: number;
   total_participants: number;
-  theme?: string;
-  rules?: any;
+  max_participants: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
+  competition_type: string; // Adicionar propriedade necessária para o hook
 }
 
 export interface CompetitionParticipation {
   id: string;
   competition_id: string;
   user_id: string;
-  score: number;
-  user_score?: number;
-  position?: number;
-  user_position?: number;
-  joined_at: string;
-  completed_at?: string;
-  created_at?: string;
-  payment_status?: 'pending' | 'paid' | 'failed' | 'not_eligible';
+  user_position: number;
+  user_score: number;
   prize?: number;
+  payment_status: 'pending' | 'paid' | 'failed' | 'not_eligible';
   payment_date?: string;
 }
 
@@ -75,7 +70,7 @@ export interface RankingPlayer {
 }
 
 export interface Challenge {
-  id: string; // Padronizar como string para consistência
+  id: number;
   title: string;
   description: string;
   prize: string;

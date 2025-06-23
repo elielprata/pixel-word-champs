@@ -1,151 +1,187 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from "@/hooks/use-toast";
+import { RegisterForm as RegisterFormType } from '@/types';
+import { Loader2 } from 'lucide-react';
 import { logger } from '@/utils/logger';
 
-interface RegisterFormProps {
-  onSwitchToLogin: () => void;
-}
+const registerSchema = z.object({
+  username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
+  email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  confirmPassword: z.string().min(6, 'Confirmação de senha é obrigatória'),
+  inviteCode: z.string().optional()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não coincidem",
+  path: ["confirmPassword"],
+});
 
-const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { signUp } = useAuth();
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password || !confirmPassword || !username) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos",
-        variant: "destructive",
-      });
-      return;
+const RegisterForm = () => {
+  const { register, isLoading, error } = useAuth();
+  
+  const form = useForm<RegisterFormType>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      inviteCode: ''
     }
+  });
 
-    if (password !== confirmPassword) {
-      toast({
-        title: "Erro",
-        description: "As senhas não coincidem",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({
-        title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    logger.info('Tentativa de registro iniciada', { email, username }, 'REGISTER_FORM');
-
+  const onSubmit = async (data: RegisterFormType) => {
     try {
-      const result = await signUp(email, password, username);
+      logger.info('Tentativa de registro iniciada', { 
+        email: data.email, 
+        username: data.username 
+      }, 'REGISTER_FORM');
       
-      if (result.error) {
-        logger.error('Erro no registro', { error: result.error }, 'REGISTER_FORM');
-        toast({
-          title: "Erro no cadastro",
-          description: result.error,
-          variant: "destructive",
-        });
-      } else {
-        logger.info('Registro realizado com sucesso', { email }, 'REGISTER_FORM');
-        toast({
-          title: "Sucesso!",
-          description: "Conta criada com sucesso. Verifique seu email.",
-        });
-      }
-    } catch (error) {
-      logger.error('Erro inesperado no registro', { error }, 'REGISTER_FORM');
-      toast({
-        title: "Erro",
-        description: "Erro inesperado. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      await register(data);
+      
+      logger.info('Registro concluído com sucesso', { 
+        email: data.email 
+      }, 'REGISTER_FORM');
+    } catch (err: any) {
+      logger.error('Erro no registro', { error: err.message }, 'REGISTER_FORM');
     }
   };
 
+  // Função para preencher dados de teste
+  const handleTestRegister = () => {
+    const randomNum = Math.floor(Math.random() * 10000);
+    form.setValue('username', `usuario${randomNum}`);
+    form.setValue('email', `teste${randomNum}@exemplo.com`);
+    form.setValue('password', '123456');
+    form.setValue('confirmPassword', '123456');
+    
+    logger.debug('Dados de teste preenchidos', { randomNum }, 'REGISTER_FORM');
+  };
+
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center text-purple-800">
-          Cadastrar
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Input
-              type="text"
-              placeholder="Nome de usuário"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Input
-              type="password"
-              placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Input
-              type="password"
-              placeholder="Confirmar senha"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={isLoading}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome de usuário</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="meu_username" 
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="seu@email.com" 
+                  type="email"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Senha</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="••••••••" 
+                  type="password"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirmar senha</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="••••••••" 
+                  type="password"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="inviteCode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Código de convite (opcional)</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="ABC123" 
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex items-center justify-center">
+          <Button
+            type="button"
+            variant="link"
+            className="px-0 font-normal text-sm"
+            onClick={handleTestRegister}
           >
-            {isLoading ? "Cadastrando..." : "Cadastrar"}
-          </Button>
-        </form>
-        <div className="mt-4 text-center">
-          <Button 
-            variant="link" 
-            onClick={onSwitchToLogin}
-            className="text-purple-600"
-          >
-            Já tem conta? Faça login
+            Preencher dados de teste
           </Button>
         </div>
-      </CardContent>
-    </Card>
+
+        {error && (
+          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+            {error}
+          </div>
+        )}
+
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isLoading}
+        >
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Criar conta
+        </Button>
+      </form>
+    </Form>
   );
 };
 

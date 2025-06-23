@@ -1,9 +1,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Competition } from '@/types';
+import { competitionService } from '@/services/competitionService';
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { calculateCompetitionStatus } from '@/utils/brasiliaTime';
-import { logger } from '@/utils/logger';
+import { logger, structuredLog } from '@/utils/logger';
 
 export const useOptimizedCompetitions = () => {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
@@ -37,25 +38,28 @@ export const useOptimizedCompetitions = () => {
     setError(null);
 
     try {
-      logger.debug('Carregando competições otimizadas', undefined, 'OPTIMIZED_COMPETITIONS');
-      
-      const customCompetitionsResponse = await customCompetitionService.getCustomCompetitions();
+      const [competitionsResponse, customCompetitionsResponse] = await Promise.all([
+        competitionService.getActiveCompetitions(),
+        customCompetitionService.getCustomCompetitions()
+      ]);
+
+      if (competitionsResponse.success) {
+        setCompetitions(competitionsResponse.data);
+      } else {
+        throw new Error(competitionsResponse.error || 'Erro ao carregar competições');
+      }
 
       if (customCompetitionsResponse.success) {
         setCustomCompetitions(customCompetitionsResponse.data);
-        logger.info('Competições customizadas carregadas', { count: customCompetitionsResponse.data.length }, 'OPTIMIZED_COMPETITIONS');
       } else {
         throw new Error(customCompetitionsResponse.error || 'Erro ao carregar competições customizadas');
       }
 
-      // Simular competições básicas vazias por ora
-      setCompetitions([]);
-      
-      logger.info('Competições carregadas com sucesso', undefined, 'OPTIMIZED_COMPETITIONS');
+      logger.debug('Competições carregadas com sucesso');
     } catch (err) {
       const errorMessage = 'Erro ao carregar competições';
       setError(errorMessage);
-      logger.error(errorMessage, { error: err }, 'OPTIMIZED_COMPETITIONS');
+      structuredLog('error', errorMessage, err);
     } finally {
       setIsLoading(false);
     }

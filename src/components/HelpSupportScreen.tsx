@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, MessageCircle, Mail, BookOpen, Star, HelpCircle } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Mail, BookOpen, Star, HelpCircle, Bug } from 'lucide-react';
 import LiveChatScreen from './LiveChatScreen';
 import SendEmailScreen from './SendEmailScreen';
+import ReportBugScreen from './ReportBugScreen';
 import BasicTutorialScreen from './BasicTutorialScreen';
 import AdvancedStrategiesScreen from './AdvancedStrategiesScreen';
 import RankingSystemScreen from './RankingSystemScreen';
@@ -14,7 +15,7 @@ interface HelpSupportScreenProps {
 }
 
 const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
-  const [currentScreen, setCurrentScreen] = useState<'help' | 'chat' | 'email' | 'basic' | 'advanced' | 'ranking'>('help');
+  const [currentScreen, setCurrentScreen] = useState<'help' | 'chat' | 'email' | 'bug' | 'basic' | 'advanced' | 'ranking'>('help');
 
   const faqs = [
     {
@@ -41,6 +42,10 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
 
   if (currentScreen === 'email') {
     return <SendEmailScreen onBack={() => setCurrentScreen('help')} />;
+  }
+
+  if (currentScreen === 'bug') {
+    return <ReportBugScreen onBack={() => setCurrentScreen('help')} />;
   }
 
   if (currentScreen === 'basic') {
@@ -91,6 +96,15 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
           >
             <Mail className="w-5 h-5 mr-3" />
             Enviar Email
+          </Button>
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            size="lg"
+            onClick={() => setCurrentScreen('bug')}
+          >
+            <Bug className="w-5 h-5 mr-3" />
+            Reportar Bug
           </Button>
         </CardContent>
       </Card>

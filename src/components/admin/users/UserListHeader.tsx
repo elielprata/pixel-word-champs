@@ -3,7 +3,7 @@ import React from 'react';
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Users, RotateCcw } from 'lucide-react';
+import { Search, Users, RotateCcw, Download } from 'lucide-react';
 import { AutomationToggle } from './AutomationToggle';
 
 interface UserListHeaderProps {
@@ -19,8 +19,13 @@ export const UserListHeader = ({
   searchTerm, 
   onSearchChange, 
   onResetScores, 
-  isResettingScores
+  isResettingScores 
 }: UserListHeaderProps) => {
+  const handleExportData = () => {
+    // TODO: Implement export functionality
+    console.log('Exportar dados dos usuários');
+  };
+
   return (
     <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200">
       <div className="flex items-center justify-between">
@@ -32,19 +37,31 @@ export const UserListHeader = ({
           </span>
         </CardTitle>
         
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onResetScores}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+              disabled={isResettingScores}
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Zerar Pontuação Geral
+            </Button>
+            
+            <AutomationToggle />
+          </div>
+          
           <Button
             variant="outline"
             size="sm"
-            onClick={onResetScores}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-            disabled={isResettingScores}
+            onClick={handleExportData}
+            className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
           >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Zerar Pontuação Geral
+            <Download className="h-4 w-4 mr-2" />
+            Exportar Dados
           </Button>
-          
-          <AutomationToggle />
         </div>
       </div>
       

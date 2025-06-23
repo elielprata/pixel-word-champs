@@ -1,7 +1,6 @@
 
 import { useEffect } from 'react';
 import { useCompetitionQueries } from './useCompetitionQueries';
-import { logger } from '@/utils/logger';
 
 export const useCompetitions = () => {
   const {
@@ -24,18 +23,13 @@ export const useCompetitions = () => {
     setError(null);
 
     try {
-      logger.debug('Carregando todas as competições', undefined, 'USE_COMPETITIONS');
-      
       await Promise.all([
         fetchActiveCompetitions(),
         fetchCustomCompetitions(),
         fetchDailyCompetition(),
         fetchWeeklyCompetition()
       ]);
-      
-      logger.info('Todas as competições carregadas com sucesso', undefined, 'USE_COMPETITIONS');
     } catch (err) {
-      logger.error('Erro ao carregar competições', { error: err }, 'USE_COMPETITIONS');
       setError('Erro ao carregar competições');
     } finally {
       setIsLoading(false);

@@ -49,9 +49,14 @@ const ChallengeGameSession = ({
 
       <div className="pt-4">
         <GameBoard
-          challengeId={`level-${currentLevel}`}
-          onBack={onStopGame}
-          onComplete={onAdvanceLevel}
+          level={currentLevel}
+          timeLeft={timeRemaining}
+          onTimeUp={onTimeUp}
+          onLevelComplete={onLevelComplete}
+          onAdvanceLevel={onAdvanceLevel}
+          onStopGame={onStopGame}
+          canRevive={true}
+          onRevive={onRevive}
         />
       </div>
     </div>

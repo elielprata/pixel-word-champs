@@ -27,13 +27,13 @@ export const useWeeklyCompetitionsActions = () => {
   };
 
   const handleEdit = (competition: WeeklyCompetition) => {
-    logger.info('Editando competição semanal', { competitionId: competition.id }, 'WEEKLY_COMPETITIONS_ACTIONS');
+    logger.info('Editando competição', { competitionId: competition.id }, 'WEEKLY_COMPETITIONS_ACTIONS');
     setEditingCompetition(competition);
     setIsEditModalOpen(true);
   };
 
   const handleCompetitionUpdated = (onRefresh?: () => void) => {
-    logger.info('Competição semanal atualizada, recarregando lista', undefined, 'WEEKLY_COMPETITIONS_ACTIONS');
+    logger.info('Competição atualizada, recarregando lista', undefined, 'WEEKLY_COMPETITIONS_ACTIONS');
     if (onRefresh) {
       onRefresh();
     }

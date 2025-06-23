@@ -25,6 +25,7 @@ export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
   const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
+  // ETAPA 4: Usar seleção simples com foco em 5 palavras para o jogo
   const { levelWords, isLoading: wordsLoading, error: wordsError } = useSimpleWordSelection(level);
   const { generateBoard } = useBoardGeneration();
 
@@ -33,12 +34,12 @@ export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
   useEffect(() => {
     if (wordsLoading || levelWords.length === 0) return;
 
-    logger.info('🏗️ Gerando tabuleiro otimizado', {
+    logger.info('🏗️ Gerando tabuleiro otimizado (ETAPA 4)', {
       level,
       isMobile,
       size,
       wordsCount: levelWords.length,
-      targetWordsForGame: 5,
+      targetWordsForGame: 5, // Sempre focado em 5 palavras para o jogo
       words: levelWords
     }, 'OPTIMIZED_BOARD');
 
@@ -47,11 +48,11 @@ export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
       setBoardData(newBoardData);
       setError(null);
       
-      logger.info('✅ Tabuleiro otimizado gerado', {
+      logger.info('✅ Tabuleiro otimizado gerado (ETAPA 4)', {
         level,
         placedWords: newBoardData.placedWords.length,
         totalWords: levelWords.length,
-        gameTargetWords: 5
+        gameTargetWords: 5 // Jogo sempre busca 5 palavras
       }, 'OPTIMIZED_BOARD');
       
     } catch (err) {
@@ -60,6 +61,7 @@ export const useOptimizedBoard = (level: number): OptimizedBoardResult => {
     }
   }, [levelWords, wordsLoading, level, size, isMobile, generateBoard]);
 
+  // Combinar erros de palavras e tabuleiro
   const combinedError = wordsError || error;
   const isWordSelectionError = !!wordsError;
 

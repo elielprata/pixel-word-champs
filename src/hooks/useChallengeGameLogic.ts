@@ -1,106 +1,153 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { GameConfig, WordFound } from '@/types';
+import { useState, useEffect } from 'react';
 import { gameService } from '@/services/gameService';
-import { useAuth } from './useAuth';
-import { logger } from '@/utils/logger';
+import { competitionParticipationService } from '@/services/competitionParticipationService';
+import { competitionValidationService } from '@/services/competitionValidationService';
 
-export const useChallengeGameLogic = (config: GameConfig) => {
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [gameStarted, setGameStarted] = useState(false);
+export const useChallengeGameLogic = (challengeId: string) => {
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [totalScore, setTotalScore] = useState(0);
+  const [gameSession, setGameSession] = useState<any>(null);
+  const [isGameStarted, setIsGameStarted] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [currentScore, setCurrentScore] = useState(0);
-  const [wordsFound, setWordsFound] = useState<WordFound[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [hasMarkedParticipation, setHasMarkedParticipation] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const { user } = useAuth();
+  const [loadingStep, setLoadingStep] = useState<string>('Iniciando...');
 
-  const startGame = useCallback(async () => {
-    if (!user) {
-      setError('Usuário não autenticado');
-      return;
-    }
+  const maxLevels = 20;
 
-    setIsLoading(true);
-    setError(null);
+  useEffect(() => {
+    initializeGameSession();
+  }, [challengeId]);
 
+  const initializeGameSession = async () => {
     try {
-      logger.info('Iniciando novo jogo', { config }, 'CHALLENGE_GAME_LOGIC');
+      setIsLoading(true);
+      setError(null);
+      setLoadingStep('Preparando sessão...');
       
-      const response = await gameService.createGameSession(config, user.id);
+      console.log('🎮 Inicializando sessão de jogo para competição:', challengeId);
       
-      if (response.success && response.data) {
-        setSessionId(response.data.id);
-        setGameStarted(true);
-        setGameCompleted(false);
-        setCurrentScore(0);
-        setWordsFound([]);
-        logger.info('Jogo iniciado com sucesso', { sessionId: response.data.id }, 'CHALLENGE_GAME_LOGIC');
-      } else {
-        setError(response.error || 'Erro ao iniciar jogo');
-        logger.error('Erro ao iniciar jogo', { error: response.error }, 'CHALLENGE_GAME_LOGIC');
+      setLoadingStep('Validando competição...');
+      // Primeiro, descobrir em qual tabela a competição existe
+      const competitionTable = await competitionValidationService.getCompetitionTable(challengeId);
+      console.log('🔍 Tabela da competição:', competitionTable);
+      
+      if (!competitionTable) {
+        console.error('❌ Competição não encontrada em nenhuma tabela:', challengeId);
+        setError('Competição não encontrada. Verifique se o ID está correto.');
+        return;
       }
-    } catch (err) {
-      const errorMessage = 'Erro inesperado ao iniciar jogo';
-      setError(errorMessage);
-      logger.error('Erro inesperado ao iniciar jogo', { error: err }, 'CHALLENGE_GAME_LOGIC');
+      
+      // Validar se a competição está ativa
+      const competitionValidation = await competitionValidationService.validateCompetition(challengeId);
+      
+      if (!competitionValidation.success) {
+        console.error('❌ Competição inválida:', competitionValidation.error);
+        setError(`Competição não disponível: ${competitionValidation.error}`);
+        return;
+      }
+
+      console.log('✅ Competição validada, criando sessão de jogo...');
+      setLoadingStep('Criando sessão de jogo...');
+      
+      // Criar uma nova sessão de jogo para esta competição
+      const sessionResponse = await gameService.createGameSession({
+        level: 1,
+        boardSize: 10,
+        competitionId: challengeId
+      });
+
+      if (!sessionResponse.success) {
+        console.error('❌ Erro ao criar sessão:', sessionResponse.error);
+        setError(sessionResponse.error || 'Erro ao criar sessão de jogo');
+        return;
+      }
+
+      const session = sessionResponse.data;
+      console.log('✅ Sessão de jogo criada:', session.id);
+      
+      setGameSession(session);
+      setCurrentLevel(session.level || 1);
+      setTotalScore(session.total_score || 0);
+      setIsGameStarted(true);
+      setLoadingStep('Sessão criada com sucesso!');
+      
+    } catch (error) {
+      console.error('❌ Erro inesperado ao inicializar sessão:', error);
+      setError('Erro inesperado ao carregar o jogo. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
-  }, [config, user]);
+  };
 
-  const completeGame = useCallback(async (finalScore: number, finalWordsFound: WordFound[]) => {
-    if (!sessionId) {
-      logger.error('Tentativa de completar jogo sem sessionId', undefined, 'CHALLENGE_GAME_LOGIC');
+  const markParticipationAsCompleted = async () => {
+    if (hasMarkedParticipation) {
+      console.log('Participação já foi marcada como concluída');
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      logger.info('Finalizando jogo', { sessionId, finalScore, wordsCount: finalWordsFound.length }, 'CHALLENGE_GAME_LOGIC');
-      
-      const response = await gameService.completeGameSession(sessionId, finalScore, finalWordsFound);
-      
-      if (response.success) {
-        setGameCompleted(true);
-        setCurrentScore(finalScore);
-        setWordsFound(finalWordsFound);
-        logger.info('Jogo finalizado com sucesso', { finalScore }, 'CHALLENGE_GAME_LOGIC');
-      } else {
-        setError(response.error || 'Erro ao finalizar jogo');
-        logger.error('Erro ao finalizar jogo', { error: response.error }, 'CHALLENGE_GAME_LOGIC');
+      console.log('🏁 Marcando participação como concluída...');
+      await competitionParticipationService.markUserAsParticipated(challengeId);
+      if (gameSession?.id) {
+        await gameService.completeGameSession(gameSession.id);
       }
-    } catch (err) {
-      const errorMessage = 'Erro inesperado ao finalizar jogo';
-      setError(errorMessage);
-      logger.error('Erro inesperado ao finalizar jogo', { error: err }, 'CHALLENGE_GAME_LOGIC');
-    } finally {
-      setIsLoading(false);
+      setHasMarkedParticipation(true);
+      console.log('✅ Participação marcada como concluída');
+    } catch (error) {
+      console.error('❌ Erro ao marcar participação:', error);
     }
-  }, [sessionId]);
+  };
 
-  const resetGame = useCallback(() => {
-    logger.debug('Resetando jogo', undefined, 'CHALLENGE_GAME_LOGIC');
-    setSessionId(null);
-    setGameStarted(false);
-    setGameCompleted(false);
-    setCurrentScore(0);
-    setWordsFound([]);
+  const handleTimeUp = () => {
+    console.log('Tempo esgotado!');
+  };
+
+  const handleLevelComplete = async (levelScore: number) => {
+    const newTotalScore = totalScore + levelScore;
+    setTotalScore(newTotalScore);
+    
+    console.log(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Pontos já registrados no banco de dados.`);
+  };
+
+  const handleAdvanceLevel = () => {
+    if (currentLevel < maxLevels) {
+      setCurrentLevel(prev => prev + 1);
+      setIsGameStarted(false);
+      setTimeout(() => {
+        setIsGameStarted(true);
+      }, 100);
+      
+      console.log(`Avançando para o nível ${currentLevel + 1}`);
+    } else {
+      setGameCompleted(true);
+      console.log('Você completou todos os 20 níveis!');
+    }
+  };
+
+  const handleRetry = () => {
+    console.log('🔄 Tentando novamente...');
     setError(null);
-  }, []);
+    setGameSession(null);
+    setIsGameStarted(false);
+    initializeGameSession();
+  };
 
   return {
-    sessionId,
-    gameStarted,
+    currentLevel,
+    totalScore,
+    gameSession,
+    isGameStarted,
     gameCompleted,
-    currentScore,
-    wordsFound,
     isLoading,
     error,
-    startGame,
-    completeGame,
-    resetGame
+    loadingStep,
+    handleTimeUp,
+    handleLevelComplete,
+    handleAdvanceLevel,
+    handleRetry,
+    markParticipationAsCompleted
   };
 };

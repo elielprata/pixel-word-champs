@@ -1,35 +1,78 @@
 
 import React from 'react';
 import GameBoardLayout from './game/GameBoardLayout';
-import { useGameBoard } from '@/hooks/useGameBoard';
+import GameBoardContent from './game/GameBoardContent';
+import GameBoardLoadingState from './game/GameBoardLoadingState';
+import GameBoardErrorState from './game/GameBoardErrorState';
+import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
 import { logger } from '@/utils/logger';
 
 interface GameBoardProps {
-  challengeId: string;
-  onBack: () => void;
-  onComplete: () => void;
+  level: number;
+  timeLeft: number;
+  onTimeUp: () => void;
+  onLevelComplete: (levelScore: number) => void;
+  onAdvanceLevel: () => void;
+  onStopGame: () => void;
+  canRevive?: boolean;
+  onRevive?: () => void;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ challengeId, onBack, onComplete }) => {
-  logger.debug('GameBoard renderizado', { challengeId }, 'GAME_BOARD');
+const GameBoard = ({ 
+  level, 
+  timeLeft, 
+  onTimeUp, 
+  onLevelComplete, 
+  onAdvanceLevel, 
+  onStopGame,
+  canRevive = true,
+  onRevive
+}: GameBoardProps) => {
+  logger.debug('🎮 Renderizando GameBoard DEFINITIVO (sem onWordFound)', { 
+    level, 
+    timeLeft, 
+    canRevive 
+  }, 'GAME_BOARD');
 
-  const gameState = useGameBoard({
-    level: 1,
-    timeLeft: 300,
-    onLevelComplete: (score) => {
-      logger.info('Nível completado', { score }, 'GAME_BOARD');
-      onComplete();
-    },
-    canRevive: false
-  });
+  const { isLoading, error, isWordSelectionError } = useOptimizedBoard(level);
+
+  if (isLoading) {
+    return (
+      <GameBoardLayout>
+        <GameBoardLoadingState 
+          level={level} 
+          debugInfo="Carregando palavras..." 
+        />
+      </GameBoardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <GameBoardLayout>
+        <GameBoardErrorState 
+          error={error} 
+          debugInfo={isWordSelectionError ? "Erro na seleção de palavras" : "Erro na geração do tabuleiro"}
+          level={level}
+          isWordSelectionError={isWordSelectionError}
+          onRetry={() => window.location.reload()}
+        />
+      </GameBoardLayout>
+    );
+  }
 
   return (
     <GameBoardLayout>
-      {/* Game content will be rendered here */}
-      <div className="text-center text-white">
-        <h2 className="text-xl font-bold mb-4">Challenge: {challengeId}</h2>
-        <p>Game board implementation in progress...</p>
-      </div>
+      <GameBoardContent
+        level={level}
+        timeLeft={timeLeft}
+        onTimeUp={onTimeUp}
+        onLevelComplete={onLevelComplete}
+        onAdvanceLevel={onAdvanceLevel}
+        onStopGame={onStopGame}
+        canRevive={canRevive}
+        onRevive={onRevive}
+      />
     </GameBoardLayout>
   );
 };

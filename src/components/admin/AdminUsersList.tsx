@@ -9,17 +9,23 @@ export const AdminUsersList = () => {
   const [editingUser, setEditingUser] = useState<{ id: string; username: string } | null>(null);
   const { usersList, isLoading, removeAdminRole, refetch } = useAdminUsers();
 
+  logger.debug('Renderizando lista de usuários admin', { 
+    usersCount: usersList?.length,
+    isLoading 
+  }, 'ADMIN_USERS_LIST');
+
   const handleEditUser = (user: { id: string; username: string }) => {
-    logger.debug('Editando usuário admin', { userId: user.id }, 'ADMIN_USERS_LIST');
+    logger.info('Editando usuário admin', { userId: user.id }, 'ADMIN_USERS_LIST');
     setEditingUser(user);
   };
 
   const handleRemoveUser = (userId: string, username: string) => {
-    logger.warn('Removendo usuário admin', { userId }, 'ADMIN_USERS_LIST');
+    logger.info('Removendo usuário admin', { userId }, 'ADMIN_USERS_LIST');
     removeAdminRole(userId, username);
   };
 
   const handleCloseModal = () => {
+    logger.debug('Fechando modal de edição', undefined, 'ADMIN_USERS_LIST');
     setEditingUser(null);
   };
 

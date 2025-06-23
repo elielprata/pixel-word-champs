@@ -51,6 +51,9 @@ const RankingList = ({ weeklyRanking, user, totalWeeklyPlayers, getPrizeAmount }
     index === self.findIndex(p => p.user_id === player.user_id)
   );
 
+  console.log('🔍 Ranking original:', weeklyRanking.length, 'items');
+  console.log('🔍 Ranking após filtro:', uniqueRanking.length, 'items');
+
   return (
     <Card className="shadow-sm border border-gray-200">
       <CardHeader className="pb-3">

@@ -1,189 +1,88 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from "@/hooks/use-toast";
-import { logger } from '@/utils/logger';
-
-interface DailyCompetition {
-  id: string;
-  title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  prize_pool: number;
-  max_participants: number;
-  total_participants: number;
-  theme: string;
-  rules: any;
-}
+import { useState, useEffect } from 'react';
+import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 
 export const useDailyCompetitions = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [activeCompetitions, setActiveCompetitions] = useState<any[]>([]);
+  const [competitionRankings, setCompetitionRankings] = useState<Record<string, any[]>>({});
+  const [userParticipations, setUserParticipations] = useState<Record<string, boolean>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: competitions = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['dailyCompetitions'],
-    queryFn: async (): Promise<DailyCompetition[]> => {
-      logger.debug('Buscando competições diárias', undefined, 'DAILY_COMPETITIONS');
+  const fetchActiveCompetitions = async () => {
+    console.log('🎯 Iniciando busca por competições diárias ativas...');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await dailyCompetitionService.getActiveDailyCompetitions();
+      console.log('📊 Resposta do serviço:', response);
       
-      const { data, error } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .eq('competition_type', 'challenge')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        logger.error('Erro ao buscar competições diárias', { error: error.message }, 'DAILY_COMPETITIONS');
-        throw error;
+      if (response.success) {
+        console.log('✅ Competições encontradas:', response.data);
+        setActiveCompetitions(response.data);
+        
+        // Carregar rankings para cada competição ativa
+        const rankings: Record<string, any[]> = {};
+        for (const competition of response.data) {
+          const rankingResponse = await dailyCompetitionService.getDailyCompetitionRanking(competition.id);
+          if (rankingResponse.success) {
+            rankings[competition.id] = rankingResponse.data;
+          }
+        }
+        setCompetitionRankings(rankings);
+      } else {
+        console.error('❌ Erro na resposta:', response.error);
+        setError(response.error || 'Erro ao carregar competições diárias');
       }
+    } catch (err) {
+      console.error('❌ Erro ao carregar dados das competições diárias:', err);
+      setError('Erro ao carregar dados das competições diárias');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      // Mapear os dados para garantir que tenham todas as propriedades necessárias
-      const mappedData = (data || []).map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description || '',
-        start_date: item.start_date,
-        end_date: item.end_date,
-        status: item.status,
-        prize_pool: item.prize_pool || 0,
-        max_participants: item.max_participants || 0,
-        total_participants: 0, // Calcular depois se necessário
-        theme: item.theme || '',
-        rules: item.rules || {}
+  const checkUserParticipation = async (userId: string, competitionId: string): Promise<boolean> => {
+    try {
+      const hasParticipated = await dailyCompetitionService.checkUserParticipation(userId, competitionId);
+      setUserParticipations(prev => ({
+        ...prev,
+        [`${userId}-${competitionId}`]: hasParticipated
       }));
+      return hasParticipated;
+    } catch (error) {
+      console.error('❌ Erro ao verificar participação:', error);
+      return false;
+    }
+  };
 
-      logger.info('Competições diárias carregadas', { count: mappedData.length }, 'DAILY_COMPETITIONS');
-      return mappedData;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const createCompetitionMutation = useMutation({
-    mutationFn: async (competitionData: Partial<DailyCompetition>) => {
-      logger.info('Criando competição diária', { title: competitionData.title }, 'DAILY_COMPETITIONS');
-      
-      const { data, error } = await supabase
-        .from('custom_competitions')
-        .insert({
-          title: competitionData.title,
-          description: competitionData.description,
-          start_date: competitionData.start_date,
-          end_date: competitionData.end_date,
-          prize_pool: competitionData.prize_pool,
-          max_participants: competitionData.max_participants,
-          theme: competitionData.theme,
-          rules: competitionData.rules,
-          competition_type: 'challenge',
-          status: 'active',
-        })
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('Erro ao criar competição diária', { error: error.message }, 'DAILY_COMPETITIONS');
-        throw error;
+  const refreshRanking = async (competitionId: string) => {
+    try {
+      const response = await dailyCompetitionService.getDailyCompetitionRanking(competitionId);
+      if (response.success) {
+        setCompetitionRankings(prev => ({
+          ...prev,
+          [competitionId]: response.data
+        }));
       }
+    } catch (error) {
+      console.error('❌ Erro ao atualizar ranking:', error);
+    }
+  };
 
-      logger.info('Competição diária criada com sucesso', { id: data.id }, 'DAILY_COMPETITIONS');
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Sucesso!",
-        description: "Competição diária criada com sucesso.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['dailyCompetitions'] });
-    },
-    onError: (error: any) => {
-      logger.error('Erro na criação de competição diária', { error: error.message }, 'DAILY_COMPETITIONS');
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao criar competição",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateCompetitionMutation = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<DailyCompetition> & { id: string }) => {
-      logger.info('Atualizando competição diária', { id, updates }, 'DAILY_COMPETITIONS');
-      
-      const { data, error } = await supabase
-        .from('custom_competitions')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('Erro ao atualizar competição diária', { error: error.message }, 'DAILY_COMPETITIONS');
-        throw error;
-      }
-
-      logger.info('Competição diária atualizada com sucesso', { id }, 'DAILY_COMPETITIONS');
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Sucesso!",
-        description: "Competição atualizada com sucesso.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['dailyCompetitions'] });
-    },
-    onError: (error: any) => {
-      logger.error('Erro na atualização de competição diária', { error: error.message }, 'DAILY_COMPETITIONS');
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao atualizar competição",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteCompetitionMutation = useMutation({
-    mutationFn: async (id: string) => {
-      logger.warn('Excluindo competição diária', { id }, 'DAILY_COMPETITIONS');
-      
-      const { error } = await supabase
-        .from('custom_competitions')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        logger.error('Erro ao excluir competição diária', { error: error.message }, 'DAILY_COMPETITIONS');
-        throw error;
-      }
-
-      logger.info('Competição diária excluída com sucesso', { id }, 'DAILY_COMPETITIONS');
-    },
-    onSuccess: () => {
-      toast({
-        title: "Sucesso!",
-        description: "Competição excluída com sucesso.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['dailyCompetitions'] });
-    },
-    onError: (error: any) => {
-      logger.error('Erro na exclusão de competição diária', { error: error.message }, 'DAILY_COMPETITIONS');
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao excluir competição",
-        variant: "destructive",
-      });
-    },
-  });
+  useEffect(() => {
+    fetchActiveCompetitions();
+  }, []);
 
   return {
-    competitions,
+    activeCompetitions,
+    competitionRankings,
+    userParticipations,
     isLoading,
     error,
-    refetch,
-    createCompetition: createCompetitionMutation.mutate,
-    updateCompetition: updateCompetitionMutation.mutate,
-    deleteCompetition: deleteCompetitionMutation.mutate,
-    isCreating: createCompetitionMutation.isPending,
-    isUpdating: updateCompetitionMutation.isPending,
-    isDeleting: deleteCompetitionMutation.isPending,
+    refetch: fetchActiveCompetitions,
+    refreshRanking,
+    checkUserParticipation
   };
 };

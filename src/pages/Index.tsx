@@ -1,148 +1,147 @@
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import React from 'react';
 import BottomNavigation from '@/components/BottomNavigation';
-import ErrorBoundary from '@/components/ErrorBoundary';
 import HomeScreen from '@/components/HomeScreen';
 import RankingScreen from '@/components/RankingScreen';
+import InviteScreen from '@/components/InviteScreen';
 import ProfileScreen from '@/components/ProfileScreen';
+import FullRankingScreen from '@/components/FullRankingScreen';
+import ChallengeRankingScreen from '@/components/ChallengeRankingScreen';
 import ChallengeScreen from '@/components/ChallengeScreen';
-import GameBoard from '@/components/GameBoard';
-import { LazyAdminPanel as AdminPanel } from '@/components/admin/LazyAdminPanel';
-import RobustAdminRoute from '@/components/auth/RobustAdminRoute';
-import { AuthProvider } from '@/components/auth/AuthProvider';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from "@/components/ui/toaster";
+import SettingsScreen from '@/components/SettingsScreen';
+import HelpSupportScreen from '@/components/HelpSupportScreen';
+import AchievementsScreen from '@/components/AchievementsScreen';
+import GameRulesScreen from '@/components/GameRulesScreen';
+import { useAppNavigation } from '@/hooks/useAppNavigation';
 import { logger } from '@/utils/logger';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-type Screen = 'home' | 'ranking' | 'profile' | 'challenge' | 'game' | 'admin';
-
 const Index = () => {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
-  const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
+  const {
+    navigationState,
+    setActiveTab,
+    handleStartChallenge,
+    handleStartGameFromRules,
+    handleBackFromRules,
+    handleBackToHome,
+    handleViewFullRanking,
+    handleBackFromFullRanking,
+    handleViewChallengeRanking,
+    handleBackFromChallengeRanking,
+    handleNavigateToSettings,
+    handleBackFromSettings,
+    handleNavigateToHelp,
+    handleBackFromHelp,
+    handleNavigateToAchievements,
+    handleBackFromAchievements,
+  } = useAppNavigation();
 
-  logger.debug('Index renderizado', { currentScreen, selectedChallengeId }, 'INDEX');
+  const {
+    activeTab,
+    activeChallenge,
+    showFullRanking,
+    challengeRankingId,
+    showSettings,
+    showHelp,
+    showAchievements,
+    showGameRules
+  } = navigationState;
 
-  const handleChallengeSelect = (challengeId: string) => {
-    logger.info('Challenge selecionado', { challengeId }, 'INDEX');
-    setSelectedChallengeId(challengeId);
-    setCurrentScreen('challenge');
-  };
+  logger.debug('Renderizando página principal', { 
+    activeTab, 
+    activeChallenge, 
+    showFullRanking 
+  }, 'INDEX_PAGE');
 
-  const handleStartGame = (challengeId: string) => {
-    logger.info('Iniciando jogo', { challengeId }, 'INDEX');
-    setSelectedChallengeId(challengeId);
-    setCurrentScreen('game');
-  };
+  // Se há um desafio ativo, mostrar a tela do jogo
+  if (activeChallenge) {
+    return (
+      <ChallengeScreen 
+        challengeId={activeChallenge}
+        onBack={handleBackToHome}
+      />
+    );
+  }
 
-  const handleBackToHome = () => {
-    logger.debug('Voltando para home', undefined, 'INDEX');
-    setCurrentScreen('home');
-    setSelectedChallengeId(null);
-  };
+  if (showGameRules) {
+    return (
+      <GameRulesScreen 
+        onBack={handleBackFromRules}
+        onStartGame={handleStartGameFromRules}
+      />
+    );
+  }
 
-  const handleBackToChallenge = () => {
-    logger.debug('Voltando para challenge', undefined, 'INDEX');
-    setCurrentScreen('challenge');
-  };
+  if (showFullRanking) {
+    return (
+      <FullRankingScreen onBack={handleBackFromFullRanking} />
+    );
+  }
 
-  const handleNavigateToAdmin = () => {
-    logger.info('Navegando para admin', undefined, 'INDEX');
-    setCurrentScreen('admin');
-  };
+  if (challengeRankingId) {
+    return (
+      <ChallengeRankingScreen 
+        challengeId={challengeRankingId}
+        onBack={handleBackFromChallengeRanking} 
+      />
+    );
+  }
 
-  const handleBottomNavigation = (screen: 'home' | 'ranking' | 'fullRanking' | 'profile' | 'settings' | 'invite' | 'achievements') => {
-    logger.debug('Mudança de tela via navegação', { from: currentScreen, to: screen }, 'INDEX');
-    
-    // Map BottomNavigation screens to our Screen type
-    switch (screen) {
-      case 'home':
-        setCurrentScreen('home');
-        break;
-      case 'ranking':
-        setCurrentScreen('ranking');
-        break;
-      case 'profile':
-        setCurrentScreen('profile');
-        break;
-      default:
-        // For other screens not in our main navigation, stay on current screen
-        break;
-    }
-  };
+  if (showSettings) {
+    return (
+      <SettingsScreen onBack={handleBackFromSettings} />
+    );
+  }
 
-  const renderCurrentScreen = () => {
-    switch (currentScreen) {
+  if (showHelp) {
+    return (
+      <HelpSupportScreen onBack={handleBackFromHelp} />
+    );
+  }
+
+  if (showAchievements) {
+    return (
+      <AchievementsScreen onBack={handleBackFromAchievements} />
+    );
+  }
+
+  const renderScreen = () => {
+    switch (activeTab) {
       case 'home':
         return (
           <HomeScreen 
-            onChallengeSelect={handleChallengeSelect}
-            onNavigateToAdmin={handleNavigateToAdmin}
+            onStartChallenge={handleStartChallenge} 
+            onViewFullRanking={handleViewFullRanking}
+            onViewChallengeRanking={handleViewChallengeRanking}
           />
         );
       case 'ranking':
-        return <RankingScreen onBack={handleBackToHome} />;
+        return <RankingScreen />;
+      case 'invite':
+        return <InviteScreen />;
       case 'profile':
-        return <ProfileScreen onBack={handleBackToHome} />;
-      case 'challenge':
         return (
-          <ChallengeScreen 
-            challengeId={selectedChallengeId || ''}
-            onBack={handleBackToHome}
-            onStartGame={handleStartGame}
+          <ProfileScreen 
+            onNavigateToSettings={handleNavigateToSettings}
+            onNavigateToHelp={handleNavigateToHelp}
+            onNavigateToAchievements={handleNavigateToAchievements}
           />
-        );
-      case 'game':
-        return (
-          <GameBoard 
-            challengeId={selectedChallengeId || ''}
-            onBack={handleBackToChallenge}
-            onComplete={handleBackToHome}
-          />
-        );
-      case 'admin':
-        return (
-          <RobustAdminRoute>
-            <AdminPanel onBack={handleBackToHome} />
-          </RobustAdminRoute>
         );
       default:
         return (
           <HomeScreen 
-            onChallengeSelect={handleChallengeSelect}
-            onNavigateToAdmin={handleNavigateToAdmin}
+            onStartChallenge={handleStartChallenge} 
+            onViewFullRanking={handleViewFullRanking}
+            onViewChallengeRanking={handleViewChallengeRanking}
           />
         );
     }
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ErrorBoundary>
-          <div className="min-h-screen bg-gray-50">
-            {renderCurrentScreen()}
-            
-            {currentScreen !== 'admin' && currentScreen !== 'game' && (
-              <BottomNavigation 
-                currentScreen={currentScreen === 'challenge' ? 'home' : currentScreen as 'home' | 'ranking' | 'profile'}
-                onScreenChange={handleBottomNavigation}
-              />
-            )}
-          </div>
-          <Toaster />
-        </ErrorBoundary>
-      </AuthProvider>
-    </QueryClientProvider>
+    <div className="min-h-screen bg-gray-50">
+      {renderScreen()}
+      <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+    </div>
   );
 };
 
