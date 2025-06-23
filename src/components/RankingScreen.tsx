@@ -33,6 +33,15 @@ const RankingScreen = ({ onBack }: RankingScreenProps) => {
     refetch();
   };
 
+  const getPrizeAmount = (position: number) => {
+    switch (position) {
+      case 1: return 100;
+      case 2: return 50;
+      case 3: return 25;
+      default: return position <= 10 ? 10 : 0;
+    }
+  };
+
   if (error) {
     logger.error('Erro no ranking', { error, period: selectedPeriod }, 'RANKING_SCREEN');
     return (
@@ -63,14 +72,13 @@ const RankingScreen = ({ onBack }: RankingScreenProps) => {
           totalWeeklyPlayers={weeklyRanking?.length || 0}
         />
 
-        <PrizeDistribution period={selectedPeriod} />
+        <PrizeDistribution weeklyCompetition={null} />
 
         <RankingList 
-          ranking={weeklyRanking || []}
-          isLoading={isLoading}
-          currentUserId={user?.id}
-          period={selectedPeriod}
-          onRefresh={handleRefresh}
+          weeklyRanking={weeklyRanking || []}
+          user={user}
+          totalWeeklyPlayers={weeklyRanking?.length || 0}
+          getPrizeAmount={getPrizeAmount}
         />
       </div>
     </div>

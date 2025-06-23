@@ -92,7 +92,7 @@ export const useGameBoard = ({
           }, 'GAME_BOARD');
           
           // ÚNICA chamada para adicionar palavra
-          gameState.addFoundWord(validatedWord.word, validatedWord.points);
+          gameState.addFoundWord(validatedWord.word, validatedWord.points, finalSelection);
         }
       } finally {
         // SEMPRE liberar o lock, mesmo em caso de erro
@@ -117,7 +117,7 @@ export const useGameBoard = ({
   // Verificar índice da palavra em uma célula
   const getCellWordIndex = useCallback((row: number, col: number) => {
     return gameState.gameState.foundWords.findIndex(fw => 
-      fw.positions.some(pos => pos.row === row && pos.col === col)
+      fw.positions && fw.positions.some(pos => pos.row === row && pos.col === col)
     );
   }, [gameState.gameState.foundWords]);
 

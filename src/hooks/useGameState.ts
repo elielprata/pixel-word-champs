@@ -1,21 +1,7 @@
-
 import { useState, useCallback, useEffect } from 'react';
-import { GameCell } from '@/types/game';
+import { GameCell, FoundWord, GameState } from '@/types/game';
 import { useToast } from "@/hooks/use-toast";
 import { logger } from '@/utils/logger';
-
-interface GameState {
-  selectedCells: GameCell[];
-  foundWords: string[];
-  score: number;
-  timeLeft: number;
-  gameStatus: 'playing' | 'paused' | 'completed' | 'failed';
-  currentWord: string;
-  isSelecting: boolean;
-  permanentlyMarkedCells: GameCell[];
-  hintHighlightedCells: GameCell[];
-  hintsUsed: number;
-}
 
 const initialState: GameState = {
   selectedCells: [],
@@ -28,6 +14,8 @@ const initialState: GameState = {
   permanentlyMarkedCells: [],
   hintHighlightedCells: [],
   hintsUsed: 0,
+  showGameOver: false,
+  showLevelComplete: false,
 };
 
 export const useGameState = () => {
@@ -39,11 +27,18 @@ export const useGameState = () => {
     setGameState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  const addFoundWord = useCallback((word: string, points: number) => {
+  const addFoundWord = useCallback((word: string, points: number, positions: any[] = []) => {
     logger.info('Palavra encontrada', { word, points }, 'GAME_STATE');
+    
+    const foundWord: FoundWord = {
+      word,
+      points,
+      positions
+    };
+    
     setGameState(prev => ({
       ...prev,
-      foundWords: [...prev.foundWords, word],
+      foundWords: [...prev.foundWords, foundWord],
       score: prev.score + points,
       selectedCells: [],
       currentWord: '',
@@ -121,11 +116,53 @@ export const useGameState = () => {
     gameState,
     updateGameState,
     addFoundWord,
-    clearSelection,
-    startSelection,
-    addSelectedCell,
-    updateTimer,
-    completeGame,
-    resetGame,
+    clearSelection: useCallback(() => {
+      logger.debug('Limpando seleção', undefined, 'GAME_STATE');
+      setGameState(prev => ({
+        ...prev,
+        selectedCells: [],
+        currentWord: '',
+        isSelecting: false,
+      }));
+    }, []),
+    startSelection: useCallback(() => {
+      logger.debug('Iniciando seleção', undefined, 'GAME_STATE');
+      setGameState(prev => ({ ...prev, isSelecting: true }));
+    }, []),
+    addSelectedCell: useCallback((cell: GameCell) => {
+      setGameState(prev => {
+        const newWord = prev.currentWord + cell.letter;
+        logger.debug('Adicionando célula selecionada', { 
+          cell: { row: cell.row, col: cell.col, letter: cell.letter },
+          newWord 
+        }, 'GAME_STATE');
+        
+        return {
+          ...prev,
+          selectedCells: [...prev.selectedCells, cell],
+          currentWord: newWord,
+        };
+      });
+    }, []),
+    updateTimer: useCallback((timeLeft: number) => {
+      setGameState(prev => {
+        if (prev.timeLeft !== timeLeft) {
+          logger.debug('Atualizando timer', { timeLeft }, 'GAME_STATE');
+        }
+        return { ...prev, timeLeft };
+      });
+    }, []),
+    completeGame: useCallback(() => {
+      logger.info('Jogo completado', { 
+        score: gameState.score, 
+        wordsFound: gameState.foundWords.length 
+      }, 'GAME_STATE');
+      
+      setGameState(prev => ({ ...prev, gameStatus: 'completed' }));
+    }, [gameState.score, gameState.foundWords.length]),
+    resetGame: useCallback(() => {
+      logger.info('Resetando jogo', undefined, 'GAME_STATE');
+      setGameState(initialState);
+    }, []),
   };
 };
