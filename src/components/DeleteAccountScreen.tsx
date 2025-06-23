@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,8 +21,9 @@ const DeleteAccountScreen = ({ onBack }: DeleteAccountScreenProps) => {
     setIsDeleting(true);
     try {
       // Aqui seria implementada a lógica de exclusão
-      logger.info('Conta excluída', undefined, 'DELETE_ACCOUNT');
+      logger.info('Processo de exclusão de conta iniciado', undefined, 'DELETE_ACCOUNT');
       await new Promise(resolve => setTimeout(resolve, 2000));
+      logger.info('Conta excluída com sucesso', undefined, 'DELETE_ACCOUNT');
       onBack();
     } catch (error) {
       logger.error('Erro ao excluir conta', { error }, 'DELETE_ACCOUNT');

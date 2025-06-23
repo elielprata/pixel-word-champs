@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,7 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
 
   const handleSubmitBug = async () => {
     if (!user) {
+      logger.warn('Tentativa de reportar bug sem usuário logado', undefined, 'BUG_REPORT');
       toast({
         title: "Erro",
         description: "Você precisa estar logado para reportar um bug",
@@ -42,6 +44,12 @@ const ReportBugScreen = ({ onBack }: ReportBugScreenProps) => {
     try {
       const fullMessage = `Tipo: ${bugTypes.find(t => t.value === bugType)?.label}\n\nDescrição:\n${description}\n\nPassos para reproduzir:\n${steps}`;
       
+      logger.debug('Preparando envio de bug report', { 
+        bugType, 
+        userId: user.id,
+        messageLength: fullMessage.length 
+      }, 'BUG_REPORT');
+
       const { error } = await supabase
         .from('user_reports')
         .insert({

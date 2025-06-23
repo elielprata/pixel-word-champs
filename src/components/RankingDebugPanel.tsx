@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,8 +17,10 @@ const RankingDebugPanel = () => {
     setIsChecking(true);
     setError(null);
     try {
+      logger.debug('Iniciando verificação de consistência do ranking', undefined, 'RANKING_DEBUG');
       const result = await rankingDebugService.checkDataConsistency();
       setLastResult(result);
+      logger.debug('Verificação de consistência concluída', { result }, 'RANKING_DEBUG');
     } catch (err) {
       setError('Erro ao verificar consistência');
       logger.error('Erro ao verificar consistência do ranking', { error: err }, 'RANKING_DEBUG');
@@ -30,11 +33,13 @@ const RankingDebugPanel = () => {
     setIsUpdating(true);
     setError(null);
     try {
+      logger.debug('Iniciando atualização forçada do ranking', undefined, 'RANKING_DEBUG');
       await rankingDebugService.forceRankingUpdate();
       // Verificar consistência após atualização
       setTimeout(async () => {
         const result = await rankingDebugService.checkDataConsistency();
         setLastResult(result);
+        logger.debug('Atualização forçada concluída', { result }, 'RANKING_DEBUG');
       }, 1500);
     } catch (err: any) {
       setError(`Erro ao atualizar ranking: ${err.message || 'Erro desconhecido'}`);
@@ -48,10 +53,12 @@ const RankingDebugPanel = () => {
     setIsTesting(true);
     setError(null);
     try {
+      logger.debug('Iniciando teste direto da função', undefined, 'RANKING_DEBUG');
       const result = await rankingDebugService.testFunctionDirectly();
       logger.debug('Resultado do teste de função', { result }, 'RANKING_DEBUG');
       if (!result.success) {
         setError(`Erro no teste: ${result.error?.message || 'Erro desconhecido'}`);
+        logger.error('Erro no teste da função', { error: result.error }, 'RANKING_DEBUG');
       }
     } catch (err: any) {
       setError(`Erro no teste: ${err.message || 'Erro desconhecido'}`);
