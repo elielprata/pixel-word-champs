@@ -7,15 +7,22 @@ import { logger } from '@/utils/logger';
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isAuthenticated: boolean;
+  isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string, username: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  register: (userData: { email: string; password: string; username: string }) => Promise<void>;
+  logout: () => Promise<void>;
+  error: string | undefined;
 }
 
 export const useAuth = (): AuthContextType => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // Get initial session
@@ -24,12 +31,14 @@ export const useAuth = (): AuthContextType => {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           logger.error('Erro ao obter sessão inicial', { error: error.message }, 'AUTH');
+          setError(error.message);
         } else {
           setUser(session?.user ?? null);
           logger.info('Sessão inicial carregada', { hasUser: !!session?.user }, 'AUTH');
         }
       } catch (error) {
         logger.error('Erro inesperado ao obter sessão', { error }, 'AUTH');
+        setError('Erro inesperado');
       } finally {
         setLoading(false);
       }
@@ -54,13 +63,16 @@ export const useAuth = (): AuthContextType => {
       
       if (error) {
         logger.error('Erro no login', { error: error.message }, 'AUTH');
+        setError(error.message);
         return { error: error.message };
       }
       
       logger.info('Login realizado com sucesso', { email }, 'AUTH');
+      setError(undefined);
       return {};
     } catch (error) {
       logger.error('Erro inesperado no login', { error }, 'AUTH');
+      setError('Erro inesperado');
       return { error: 'Erro inesperado' };
     }
   }, []);
@@ -78,13 +90,16 @@ export const useAuth = (): AuthContextType => {
       
       if (error) {
         logger.error('Erro no registro', { error: error.message }, 'AUTH');
+        setError(error.message);
         return { error: error.message };
       }
       
       logger.info('Registro realizado com sucesso', { email }, 'AUTH');
+      setError(undefined);
       return {};
     } catch (error) {
       logger.error('Erro inesperado no registro', { error }, 'AUTH');
+      setError('Erro inesperado');
       return { error: 'Erro inesperado' };
     }
   }, []);
@@ -93,9 +108,11 @@ export const useAuth = (): AuthContextType => {
     try {
       logger.info('Realizando logout', undefined, 'AUTH');
       await supabase.auth.signOut();
+      setError(undefined);
       logger.info('Logout realizado com sucesso', undefined, 'AUTH');
     } catch (error) {
       logger.error('Erro no logout', { error }, 'AUTH');
+      setError('Erro no logout');
     }
   }, []);
 
@@ -106,23 +123,55 @@ export const useAuth = (): AuthContextType => {
       
       if (error) {
         logger.error('Erro no reset de senha', { error: error.message }, 'AUTH');
+        setError(error.message);
         return { error: error.message };
       }
       
       logger.info('Reset de senha enviado', { email }, 'AUTH');
+      setError(undefined);
       return {};
     } catch (error) {
       logger.error('Erro inesperado no reset de senha', { error }, 'AUTH');
+      setError('Erro inesperado');
       return { error: 'Erro inesperado' };
     }
   }, []);
 
+  // Aliases para compatibilidade
+  const login = useCallback(async (credentials: { email: string; password: string }) => {
+    const result = await signIn(credentials.email, credentials.password);
+    if (result.error) {
+      throw new Error(result.error);
+    }
+  }, [signIn]);
+
+  const register = useCallback(async (userData: { email: string; password: string; username: string }) => {
+    const result = await signUp(userData.email, userData.password, userData.username);
+    if (result.error) {
+      throw new Error(result.error);
+    }
+  }, [signUp]);
+
+  const logout = useCallback(async () => {
+    await signOut();
+  }, [signOut]);
+
   return {
     user,
     loading,
+    isAuthenticated: !!user,
+    isLoading: loading,
     signIn,
     signUp,
     signOut,
-    resetPassword
+    resetPassword,
+    login,
+    register,
+    logout,
+    error
   };
 };
+
+// Exportar funções necessárias para AuthProvider
+export const useAuthProvider = useAuth;
+export const AuthContext = React.createContext<AuthContextType | undefined>(undefined);

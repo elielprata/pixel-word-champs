@@ -35,13 +35,12 @@ export const useCompetitionQueries = () => {
         theme: item.theme || '',
         start_date: item.start_date,
         end_date: item.end_date,
-        status: item.status,
-        type: item.competition_type === 'challenge' ? 'daily' : item.competition_type === 'tournament' ? 'weekly' : 'custom',
+        status: item.status as 'pending' | 'active' | 'completed' | 'scheduled',
+        type: item.competition_type === 'challenge' ? 'daily' : item.competition_type === 'tournament' ? 'weekly' : 'challenge',
         competition_type: item.competition_type,
         prize_pool: item.prize_pool || 0,
         total_participants: 0,
         max_participants: item.max_participants || 1000,
-        is_active: item.status === 'active',
         created_at: item.created_at || '',
         updated_at: item.updated_at || ''
       }));
@@ -99,13 +98,12 @@ export const useCompetitionQueries = () => {
         theme: data.theme || '',
         start_date: data.start_date,
         end_date: data.end_date,
-        status: data.status,
+        status: data.status as 'pending' | 'active' | 'completed' | 'scheduled',
         type: 'daily',
         competition_type: data.competition_type,
         prize_pool: data.prize_pool || 0,
         total_participants: 0,
         max_participants: data.max_participants || 1000,
-        is_active: data.status === 'active',
         created_at: data.created_at || '',
         updated_at: data.updated_at || ''
       } : null;
@@ -141,13 +139,12 @@ export const useCompetitionQueries = () => {
         theme: data.theme || '',
         start_date: data.start_date,
         end_date: data.end_date,
-        status: data.status,
+        status: data.status as 'pending' | 'active' | 'completed' | 'scheduled',
         type: 'weekly',
         competition_type: data.competition_type,
         prize_pool: data.prize_pool || 0,
         total_participants: 0,
         max_participants: data.max_participants || 1000,
-        is_active: data.status === 'active',
         created_at: data.created_at || '',
         updated_at: data.updated_at || ''
       } : null;
