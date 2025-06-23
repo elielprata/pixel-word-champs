@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Users, Calendar, TrendingUp, DollarSign, Target, Award, Clock } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, TrendingUp } from 'lucide-react';
 import { useRankings } from '@/hooks/useRankings';
 
 export const RankingMetrics = () => {
-  const { totalPlayers, dailyRanking, weeklyRanking } = useRankings();
+  const { dailyRanking, weeklyRanking } = useRankings();
 
   // Calcular métricas reais baseadas nos dados com usuários únicos
   const dailyParticipants = new Set(dailyRanking.map(player => player.user_id)).size;
