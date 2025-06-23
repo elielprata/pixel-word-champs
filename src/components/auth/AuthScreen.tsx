@@ -96,18 +96,23 @@ const AuthScreen = () => {
               </TabsContent>
             </Tabs>
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground">Ou continue com</span>
-              </div>
-            </div>
+            {/* Divider e Social Login apenas na aba login */}
+            {activeTab === 'login' && (
+              <>
+                {/* Divider */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-muted-foreground">Ou continue com</span>
+                  </div>
+                </div>
 
-            {/* Social Login */}
-            <SocialLogin />
+                {/* Social Login */}
+                <SocialLogin />
+              </>
+            )}
           </CardContent>
         </Card>
 
