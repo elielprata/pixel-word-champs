@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatDailyCompetitionTime } from '@/utils/dailyCompetitionValidation';
+import { Clock } from 'lucide-react';
 
 interface DailyCompetition {
   id: string;
@@ -40,9 +40,50 @@ export const DailyCompetitionFormFields: React.FC<DailyCompetitionFormFieldsProp
   onDataChange,
   handleStartDateChange
 }) => {
-  // Calcular datas formatadas para exibição
-  const startFormatted = currentData.start_date ? formatDailyCompetitionTime(currentData.start_date, false) : '';
-  const endFormatted = currentData.start_date ? formatDailyCompetitionTime(currentData.start_date, true) : '';
+  // Funções auxiliares para manipular data/hora
+  const getTimeFromDateTime = (dateTime: string) => {
+    if (!dateTime) return '08:00'; // Horário padrão
+    const date = new Date(dateTime);
+    return date.toTimeString().slice(0, 5); // HH:MM
+  };
+
+  const getDateFromDateTime = (dateTime: string) => {
+    if (!dateTime) return '';
+    return dateTime.split('T')[0]; // YYYY-MM-DD
+  };
+
+  const handleTimeChange = (value: string) => {
+    const date = getDateFromDateTime(currentData.start_date) || new Date().toISOString().split('T')[0];
+    const combinedDateTime = `${date}T${value}:00`;
+    console.log('🕐 Horário alterado para:', combinedDateTime);
+    onDataChange({ ...currentData, start_date: combinedDateTime });
+  };
+
+  const handleDateOnlyChange = (value: string) => {
+    const currentTime = getTimeFromDateTime(currentData.start_date);
+    const combinedDateTime = `${value}T${currentTime}:00`;
+    console.log('📅 Data alterada para:', combinedDateTime);
+    onDataChange({ ...currentData, start_date: combinedDateTime });
+    
+    if (handleStartDateChange) {
+      handleStartDateChange(value);
+    }
+  };
+
+  // Calcular horário de fim para exibição
+  const calculateEndTime = () => {
+    if (!currentData.start_date) return 'Selecione a data primeiro';
+    const startDate = new Date(currentData.start_date);
+    const endDate = new Date(startDate);
+    endDate.setHours(23, 59, 59);
+    return endDate.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -99,43 +140,75 @@ export const DailyCompetitionFormFields: React.FC<DailyCompetitionFormFieldsProp
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <Label htmlFor="start_date">Data da Competição *</Label>
           <Input
             id="start_date"
             type="date"
-            value={currentData.start_date ? currentData.start_date.split('T')[0] : ''}
-            onChange={(e) => {
-              const newDate = e.target.value;
-              onDataChange({ ...currentData, start_date: `${newDate}T00:00:00` });
-              if (handleStartDateChange) {
-                handleStartDateChange(newDate);
-              }
-            }}
+            value={getDateFromDateTime(currentData.start_date)}
+            onChange={(e) => handleDateOnlyChange(e.target.value)}
             required
           />
-          {startFormatted && (
-            <p className="text-xs text-green-600 mt-1">
-              🕐 Início: {startFormatted}
-            </p>
-          )}
+        </div>
+
+        <div>
+          <Label htmlFor="start_time" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Horário de Início *
+          </Label>
+          <Input
+            id="start_time"
+            type="time"
+            value={getTimeFromDateTime(currentData.start_date)}
+            onChange={(e) => handleTimeChange(e.target.value)}
+            required
+          />
+          <p className="text-xs text-blue-600 mt-1">
+            🎯 Novo: Defina quando a competição inicia
+          </p>
         </div>
 
         <div>
           <Label>Horário de Término (Automático)</Label>
           <div className="p-2 bg-gray-100 rounded-md border">
             <p className="text-sm text-gray-600">
-              {endFormatted || 'Selecione a data primeiro'}
+              {calculateEndTime()}
             </p>
           </div>
-          {endFormatted && (
-            <p className="text-xs text-green-600 mt-1">
-              🏁 Fim: {endFormatted}
-            </p>
-          )}
+          <p className="text-xs text-green-600 mt-1">
+            🏁 Fim: Sempre às 23:59:59 (Brasília)
+          </p>
         </div>
       </div>
+
+      {/* Visualização do cronograma */}
+      {currentData.start_date && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <div className="flex items-center gap-2 text-green-700 mb-2">
+            <Clock className="h-4 w-4" />
+            <span className="font-medium">Cronograma da Competição</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-green-600">🚀 Início: </span>
+              <span className="font-semibold">
+                {new Date(currentData.start_date).toLocaleString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
+            <div>
+              <span className="text-green-600">🏁 Término: </span>
+              <span className="font-semibold">{calculateEndTime()}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Trophy, Calendar, Users, Crown, Info, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Trophy, Calendar, Users, Crown, Info, AlertCircle, Clock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaymentData } from "@/hooks/usePaymentData";
@@ -72,6 +72,22 @@ export const WeeklyTournamentsManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Funções auxiliares para manipular data/hora
+  const getTimeFromDateTime = (dateTime: string) => {
+    if (!dateTime) return '08:00'; // Horário padrão
+    const date = new Date(dateTime);
+    return date.toTimeString().slice(0, 5); // HH:MM
+  };
+
+  const getDateFromDateTime = (dateTime: string) => {
+    if (!dateTime) return '';
+    return dateTime.split('T')[0]; // YYYY-MM-DD
+  };
+
+  const combineDateTime = (date: string, time: string) => {
+    return `${date}T${time}:00`;
   };
 
   const addTournament = async () => {
@@ -272,7 +288,7 @@ export const WeeklyTournamentsManagement = () => {
                   <div className="text-sm text-blue-700">
                     <p className="font-medium">🎉 PARTICIPAÇÃO LIVRE:</p>
                     <p>Todos os usuários podem participar sem limite de vagas!</p>
-                    <p className="mt-1 text-xs">Horários automáticos: Início 00:00:00 | Fim 23:59:59 (Brasília)</p>
+                    <p className="mt-1 text-xs">🎯 Novo: Defina o horário de início | Fim automático: 23:59:59 (Brasília)</p>
                   </div>
                 </div>
                 
@@ -294,23 +310,40 @@ export const WeeklyTournamentsManagement = () => {
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-2">
                     <Label>Data Início</Label>
                     <Input 
                       type="date"
-                      value={newTournament.start_date}
-                      onChange={(e) => setNewTournament({...newTournament, start_date: e.target.value})}
+                      value={getDateFromDateTime(newTournament.start_date)}
+                      onChange={(e) => {
+                        const currentTime = getTimeFromDateTime(newTournament.start_date);
+                        const combined = combineDateTime(e.target.value, currentTime);
+                        setNewTournament({...newTournament, start_date: combined});
+                      }}
                     />
-                    <p className="text-xs text-slate-500 mt-1">Horário: 00:00:00 (Brasília)</p>
+                    <Label className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Horário de Início
+                    </Label>
+                    <Input 
+                      type="time"
+                      value={getTimeFromDateTime(newTournament.start_date)}
+                      onChange={(e) => {
+                        const currentDate = getDateFromDateTime(newTournament.start_date) || new Date().toISOString().split('T')[0];
+                        const combined = combineDateTime(currentDate, e.target.value);
+                        setNewTournament({...newTournament, start_date: combined});
+                      }}
+                    />
+                    <p className="text-xs text-blue-600">🎯 Novo: Defina quando inicia</p>
                   </div>
                   <div>
                     <Label>Data Fim</Label>
                     <Input 
                       type="date"
-                      value={newTournament.end_date}
+                      value={getDateFromDateTime(newTournament.end_date)}
                       onChange={(e) => setNewTournament({...newTournament, end_date: e.target.value})}
                     />
-                    <p className="text-xs text-slate-500 mt-1">Horário: 23:59:59 (Brasília)</p>
+                    <p className="text-xs text-slate-500 mt-1">Horário de fim: <strong>23:59:59</strong> (automático)</p>
                   </div>
                 </div>
                 
@@ -500,7 +533,7 @@ export const WeeklyTournamentsManagement = () => {
                   <div className="text-sm text-blue-700">
                     <p className="font-medium">🎉 PARTICIPAÇÃO LIVRE:</p>
                     <p>Participação sem limites para todos os usuários!</p>
-                    <p className="mt-1 text-xs">Horários automáticos: Início 00:00:00 | Fim 23:59:59 (Brasília)</p>
+                    <p className="mt-1 text-xs">🎯 Novo: Defina o horário de início | Fim automático: 23:59:59 (Brasília)</p>
                   </div>
                 </div>
                 
@@ -551,23 +584,40 @@ export const WeeklyTournamentsManagement = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-2">
                     <Label>Data Início</Label>
                     <Input 
                       type="date"
-                      value={editingTournament.start_date}
-                      onChange={(e) => setEditingTournament({...editingTournament, start_date: e.target.value})}
+                      value={getDateFromDateTime(editingTournament.start_date)}
+                      onChange={(e) => {
+                        const currentTime = getTimeFromDateTime(editingTournament.start_date);
+                        const combined = combineDateTime(e.target.value, currentTime);
+                        setEditingTournament({...editingTournament, start_date: combined});
+                      }}
                     />
-                    <p className="text-xs text-slate-500 mt-1">Horário: 00:00:00 (Brasília)</p>
+                    <Label className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Horário de Início
+                    </Label>
+                    <Input 
+                      type="time"
+                      value={getTimeFromDateTime(editingTournament.start_date)}
+                      onChange={(e) => {
+                        const currentDate = getDateFromDateTime(editingTournament.start_date);
+                        const combined = combineDateTime(currentDate, e.target.value);
+                        setEditingTournament({...editingTournament, start_date: combined});
+                      }}
+                    />
+                    <p className="text-xs text-blue-600">🎯 Novo: Defina quando inicia</p>
                   </div>
                   <div>
                     <Label>Data Fim</Label>
                     <Input 
                       type="date"
-                      value={editingTournament.end_date}
+                      value={getDateFromDateTime(editingTournament.end_date)}
                       onChange={(e) => setEditingTournament({...editingTournament, end_date: e.target.value})}
                     />
-                    <p className="text-xs text-slate-500 mt-1">Horário: 23:59:59 (Brasília)</p>
+                    <p className="text-xs text-slate-500 mt-1">Horário de fim: <strong>23:59:59</strong> (automático)</p>
                   </div>
                 </div>
                 
