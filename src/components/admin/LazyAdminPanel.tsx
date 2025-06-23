@@ -1,13 +1,10 @@
 
 import React, { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import { logger } from '@/utils/logger';
 
 const AdminPanel = React.lazy(() => import('@/pages/AdminPanel'));
 
 const AdminLoadingFallback = () => {
-  logger.debug('Carregando painel administrativo...', undefined, 'ADMIN_LOADING');
-  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
       <div className="text-center">
@@ -19,8 +16,6 @@ const AdminLoadingFallback = () => {
 };
 
 export const LazyAdminPanel = () => {
-  logger.debug('Inicializando lazy loading do painel admin', undefined, 'LAZY_ADMIN_PANEL');
-  
   return (
     <Suspense fallback={<AdminLoadingFallback />}>
       <AdminPanel />

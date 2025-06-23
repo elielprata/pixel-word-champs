@@ -1,11 +1,8 @@
 
 import React from 'react';
 import { Users } from 'lucide-react';
-import { logger } from '@/utils/logger';
 
 export const UserHeaderSection = () => {
-  logger.debug('Renderizando seção de cabeçalho de usuários', undefined, 'USER_HEADER_SECTION');
-  
   return (
     <div className="flex justify-between items-center">
       <div className="flex items-center gap-4">

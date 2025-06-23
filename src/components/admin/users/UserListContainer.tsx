@@ -52,36 +52,36 @@ export const UserListContainer = () => {
   }, [searchTerm]);
 
   const handleViewUser = (user: AllUsersData) => {
-    logger.info('Visualizando usuário', { userId: user.id }, 'USER_LIST_CONTAINER');
+    logger.debug('Visualizando usuário', { userId: user.id }, 'USER_LIST_CONTAINER');
     setSelectedUser(user);
     setShowDetailModal(true);
   };
 
   const handleEditUser = (user: AllUsersData) => {
-    logger.info('Editando usuário', { userId: user.id }, 'USER_LIST_CONTAINER');
+    logger.debug('Editando usuário', { userId: user.id }, 'USER_LIST_CONTAINER');
     setSelectedUser(user);
     setShowEditModal(true);
   };
 
   const handleBanUser = (user: AllUsersData) => {
-    logger.info('Ação de banimento/desbanimento', { userId: user.id, currentlyBanned: user.is_banned }, 'USER_LIST_CONTAINER');
+    logger.debug('Ação de banimento/desbanimento', { userId: user.id, currentlyBanned: user.is_banned }, 'USER_LIST_CONTAINER');
     setSelectedUser(user);
     setShowBanModal(true);
   };
 
   const handleDeleteUser = (user: AllUsersData) => {
-    logger.info('Excluindo usuário', { userId: user.id }, 'USER_LIST_CONTAINER');
+    logger.warn('Excluindo usuário', { userId: user.id }, 'USER_LIST_CONTAINER');
     setSelectedUser(user);
     setShowDeleteModal(true);
   };
 
   const handleResetScores = () => {
-    logger.info('Abrindo modal de reset de pontuações', undefined, 'USER_LIST_CONTAINER');
+    logger.info('Iniciando reset de pontuações', undefined, 'USER_LIST_CONTAINER');
     setShowResetModal(true);
   };
 
   const handleResetScoresConfirm = async (password: string) => {
-    logger.info('Confirmando reset de pontuações', undefined, 'USER_LIST_CONTAINER');
+    logger.warn('Confirmando reset de pontuações', undefined, 'USER_LIST_CONTAINER');
     await resetAllScores(password);
   };
 

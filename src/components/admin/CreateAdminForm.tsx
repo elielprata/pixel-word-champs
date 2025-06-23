@@ -39,7 +39,7 @@ export const CreateAdminForm = () => {
           <div className="bg-blue-100 p-2 rounded-lg">
             <UserPlus className="h-4 w-4 text-blue-600" />
           </div>
-          <span>Novo Administrador (Otimizado)</span>
+          <span>Novo Administrador</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
