@@ -6,6 +6,7 @@ import { useRegisterForm } from '@/hooks/useRegisterForm';
 import { RegisterFormFields } from './RegisterFormFields';
 import { RegisterFormSubmit } from './RegisterFormSubmit';
 import { EmailVerificationModal } from './EmailVerificationModal';
+import { useEmailVerification } from '@/contexts/EmailVerificationContext';
 
 const RegisterForm = () => {
   const {
@@ -18,16 +19,14 @@ const RegisterForm = () => {
     error,
     isFormDisabled,
     onSubmit,
-    showEmailModal,
-    setShowEmailModal,
-    modalEmail,
     testModal
   } = useRegisterForm();
 
+  const { isModalOpen, modalEmail, hideEmailModal } = useEmailVerification();
+
   // DEBUG: Log do estado do modal
-  console.log('🔍 [DEBUG] RegisterForm - showEmailModal:', showEmailModal);
+  console.log('🔍 [DEBUG] RegisterForm - isModalOpen:', isModalOpen);
   console.log('🔍 [DEBUG] RegisterForm - modalEmail:', modalEmail);
-  console.log('🔍 [DEBUG] RegisterForm - watchedEmail:', watchedEmail);
 
   return (
     <>
@@ -60,20 +59,17 @@ const RegisterForm = () => {
         >
           Testar Modal Manualmente
         </Button>
-        <p className="text-xs mt-1">showEmailModal: {showEmailModal ? 'true' : 'false'}</p>
+        <p className="text-xs mt-1">isModalOpen: {isModalOpen ? 'true' : 'false'}</p>
         <p className="text-xs">modalEmail: {modalEmail}</p>
       </div>
 
-      {/* CORREÇÃO CRÍTICA: Modal aparece quando ambos os estados estão corretos */}
-      {showEmailModal && modalEmail && (
+      {/* MODAL USANDO CONTEXTO - ARQUITETURA ROBUSTA */}
+      {isModalOpen && modalEmail && (
         <>
-          {console.log('🔍 [DEBUG] Renderizando EmailVerificationModal com email:', modalEmail)}
+          {console.log('🔍 [DEBUG] Renderizando EmailVerificationModal via contexto com email:', modalEmail)}
           <EmailVerificationModal
-            isOpen={showEmailModal}
-            onClose={() => {
-              console.log('🔍 [DEBUG] Modal sendo fechado');
-              setShowEmailModal(false);
-            }}
+            isOpen={isModalOpen}
+            onClose={hideEmailModal}
             userEmail={modalEmail}
           />
         </>

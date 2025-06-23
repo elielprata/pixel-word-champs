@@ -1,12 +1,13 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { RegisterForm as RegisterFormType } from '@/types';
 import { useUsernameVerification } from '@/hooks/useUsernameVerification';
-import { useEmailVerification } from '@/hooks/useEmailVerification';
+import { useEmailVerification as useEmailCheck } from '@/hooks/useEmailVerification';
+import { useEmailVerification } from '@/contexts/EmailVerificationContext';
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
@@ -21,13 +22,7 @@ const registerSchema = z.object({
 
 export const useRegisterForm = () => {
   const { register, isLoading, error } = useAuth();
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [modalEmail, setModalEmail] = useState<string>('');
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  
-  console.log('🔍 [DEBUG] useRegisterForm - showEmailModal:', showEmailModal);
-  console.log('🔍 [DEBUG] useRegisterForm - modalEmail:', modalEmail);
-  console.log('🔍 [DEBUG] useRegisterForm - registrationSuccess:', registrationSuccess);
+  const { showEmailModal } = useEmailVerification();
   
   const form = useForm<RegisterFormType>({
     resolver: zodResolver(registerSchema),
@@ -44,16 +39,7 @@ export const useRegisterForm = () => {
   const watchedEmail = form.watch('email');
 
   const usernameCheck = useUsernameVerification(watchedUsername);
-  const emailCheck = useEmailVerification(watchedEmail);
-
-  // CORREÇÃO CRÍTICA: useEffect para garantir que o modal apareça quando o registro for bem-sucedido
-  useEffect(() => {
-    if (registrationSuccess && modalEmail) {
-      console.log('🔍 [DEBUG] useEffect detectou registro bem-sucedido, configurando modal');
-      setShowEmailModal(true);
-      setRegistrationSuccess(false); // Reset para próxima tentativa
-    }
-  }, [registrationSuccess, modalEmail]);
+  const emailCheck = useEmailCheck(watchedEmail);
 
   const onSubmit = async (data: RegisterFormType) => {
     console.log('🔍 [DEBUG] onSubmit iniciado');
@@ -68,28 +54,21 @@ export const useRegisterForm = () => {
       return;
     }
 
-    // PASSO 1: Capturar o email ANTES de qualquer operação
+    // CAPTURAR EMAIL ANTES DE QUALQUER OPERAÇÃO
     const emailForModal = data.email;
     console.log('🔍 [DEBUG] Email capturado para modal:', emailForModal);
-    
-    // PASSO 2: Definir o email do modal IMEDIATAMENTE
-    setModalEmail(emailForModal);
-    console.log('🔍 [DEBUG] modalEmail definido como:', emailForModal);
 
     try {
       console.log('🔍 [DEBUG] Chamando register...');
       await register(data);
       console.log('🔍 [DEBUG] Register completou com sucesso!');
       
-      // PASSO 3: Marcar registro como bem-sucedido (useEffect irá configurar o modal)
-      setRegistrationSuccess(true);
-      console.log('🔍 [DEBUG] registrationSuccess definido como true');
+      // MOSTRAR MODAL IMEDIATAMENTE APÓS SUCESSO
+      showEmailModal(emailForModal);
+      console.log('🔍 [DEBUG] showEmailModal chamado com sucesso');
       
     } catch (err: any) {
       console.log('🔍 [DEBUG] Erro no registro:', err.message);
-      // Limpar estados em caso de erro
-      setModalEmail('');
-      setRegistrationSuccess(false);
     }
   };
 
@@ -102,8 +81,7 @@ export const useRegisterForm = () => {
   // Função para testar o modal manualmente
   const testModal = () => {
     console.log('🔍 [DEBUG] Teste manual do modal');
-    setModalEmail('teste@email.com');
-    setRegistrationSuccess(true); // Simular sucesso
+    showEmailModal('teste@email.com');
   };
 
   return {
@@ -116,9 +94,6 @@ export const useRegisterForm = () => {
     error,
     isFormDisabled,
     onSubmit,
-    showEmailModal,
-    setShowEmailModal,
-    modalEmail,
     testModal
   };
 };
