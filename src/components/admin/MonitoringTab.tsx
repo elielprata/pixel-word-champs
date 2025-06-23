@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Server, Database, Users, Clock } from 'lucide-react';
+import { Activity, Server, Shield, Clock } from 'lucide-react';
 import { SystemHealthMonitor } from './SystemHealthMonitor';
 import { UserSystemStatus } from './UserSystemStatus';
 import { AdminAuditLog } from './AdminAuditLog';
@@ -23,9 +23,8 @@ export const MonitoringTab = () => {
         </div>
       </div>
 
-      {/* Seção principal de monitoramento */}
+      {/* Sistema de saúde em tempo real */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monitor de saúde otimizado */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="h-1 w-8 bg-green-500 rounded"></div>
@@ -37,12 +36,11 @@ export const MonitoringTab = () => {
           <SystemHealthMonitor />
         </div>
 
-        {/* Status detalhado do sistema */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="h-1 w-8 bg-blue-500 rounded"></div>
             <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-              <Database className="h-5 w-5 text-blue-600" />
+              <Server className="h-5 w-5 text-blue-600" />
               Status Detalhado
             </h3>
           </div>
@@ -50,31 +48,18 @@ export const MonitoringTab = () => {
         </div>
       </div>
 
-      {/* Métricas de performance */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Métricas essenciais de performance */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
               <Clock className="h-4 w-4 text-orange-500" />
-              Tempo de Resposta
+              Tempo de Resposta Médio
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-800">~150ms</div>
-            <p className="text-xs text-green-600">Excelente performance</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-500" />
-              Conexões Ativas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-800">24</div>
-            <p className="text-xs text-slate-500">Usuários online</p>
+            <p className="text-xs text-green-600">Performance excelente</p>
           </CardContent>
         </Card>
 
@@ -82,7 +67,7 @@ export const MonitoringTab = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
               <Activity className="h-4 w-4 text-purple-500" />
-              Uptime
+              Uptime do Sistema
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -92,11 +77,14 @@ export const MonitoringTab = () => {
         </Card>
       </div>
 
-      {/* Log de auditoria */}
+      {/* Log de auditoria administrativa */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <div className="h-1 w-8 bg-purple-500 rounded"></div>
-          <h3 className="text-lg font-semibold text-slate-800">Auditoria em Tempo Real</h3>
+          <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+            <Shield className="h-4 w-4 text-purple-600" />
+            Auditoria Administrativa
+          </h3>
         </div>
         <AdminAuditLog />
       </div>
