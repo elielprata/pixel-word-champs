@@ -114,7 +114,7 @@ export const UserListContainer = () => {
         
         <CardContent className="p-0">
           {paginatedUsers.length === 0 ? (
-            <UserListEmpty hasSearch={!!searchTerm.trim()} />
+            <UserListEmpty searchTerm={searchTerm} />
           ) : (
             <div className="divide-y divide-slate-100">
               {paginatedUsers.map((user) => (
