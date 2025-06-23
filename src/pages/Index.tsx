@@ -1,110 +1,70 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import AuthScreen from '@/components/auth/AuthScreen';
 import HomeScreen from '@/components/HomeScreen';
+import ProfileScreen from '@/components/ProfileScreen';
 import ChallengeScreen from '@/components/ChallengeScreen';
 import RankingScreen from '@/components/RankingScreen';
-import FullRankingScreen from '@/components/FullRankingScreen';
-import ProfileScreen from '@/components/ProfileScreen';
 import SettingsScreen from '@/components/SettingsScreen';
-import InviteScreen from '@/components/InviteScreen';
-import AchievementsScreen from '@/components/AchievementsScreen';
 import BottomNavigation from '@/components/BottomNavigation';
-import AuthScreen from '@/components/auth/AuthScreen';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { logger } from '@/utils/logger';
 
-type Screen = 'home' | 'challenge' | 'ranking' | 'fullRanking' | 'profile' | 'settings' | 'invite' | 'achievements';
+type Screen = 'home' | 'challenge' | 'ranking' | 'profile' | 'settings';
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
-  const [challengeId, setChallengeId] = useState<string | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    logger.debug('Index montado', { isAuthenticated, isLoading }, 'INDEX');
+  }, [isAuthenticated, isLoading]);
+
+  const handleScreenChange = (screen: Screen) => {
+    logger.debug('Mudança de tela', { from: currentScreen, to: screen }, 'INDEX');
+    setCurrentScreen(screen);
+  };
+
+  const handleBackToHome = () => {
+    logger.debug('Voltando para home', undefined, 'INDEX');
+    setCurrentScreen('home');
+  };
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
       </div>
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <AuthScreen />;
   }
 
-  const handleStartChallenge = (id: string) => {
-    logger.info('Iniciando desafio', { challengeId: id }, 'INDEX_NAVIGATION');
-    setChallengeId(id);
-    setCurrentScreen('challenge');
-  };
-
-  const handleViewFullRanking = () => {
-    logger.info('Navegando para ranking completo', undefined, 'INDEX_NAVIGATION');
-    setCurrentScreen('fullRanking');
-  };
-
-  const handleViewChallengeRanking = (challengeId: number) => {
-    logger.info('Visualizando ranking do desafio', { challengeId }, 'INDEX_NAVIGATION');
-    // Implementar navegação para ranking do desafio específico
-  };
-
-  const handleBackToHome = () => {
-    logger.info('Voltando para a tela inicial', { previousScreen: currentScreen }, 'INDEX_NAVIGATION');
-    setCurrentScreen('home');
-    setChallengeId(null);
-  };
-
-  const renderCurrentScreen = () => {
+  const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
-        return (
-          <HomeScreen
-            onStartChallenge={handleStartChallenge}
-            onViewFullRanking={handleViewFullRanking}
-            onViewChallengeRanking={handleViewChallengeRanking}
-          />
-        );
+        return <HomeScreen />;
       case 'challenge':
-        return challengeId ? (
-          <ChallengeScreen
-            challengeId={challengeId}
-            onBack={handleBackToHome}
-          />
-        ) : null;
+        return <ChallengeScreen onBack={handleBackToHome} />;
       case 'ranking':
         return <RankingScreen onBack={handleBackToHome} />;
-      case 'fullRanking':
-        return <FullRankingScreen onBack={handleBackToHome} />;
       case 'profile':
         return <ProfileScreen onBack={handleBackToHome} />;
       case 'settings':
         return <SettingsScreen onBack={handleBackToHome} />;
-      case 'invite':
-        return <InviteScreen onBack={handleBackToHome} />;
-      case 'achievements':
-        return <AchievementsScreen onBack={handleBackToHome} />;
       default:
-        return (
-          <HomeScreen
-            onStartChallenge={handleStartChallenge}
-            onViewFullRanking={handleViewFullRanking}
-            onViewChallengeRanking={handleViewChallengeRanking}
-          />
-        );
+        return <HomeScreen />;
     }
   };
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
-        {renderCurrentScreen()}
-        {currentScreen !== 'challenge' && (
-          <BottomNavigation
-            currentScreen={currentScreen}
-            onScreenChange={setCurrentScreen}
-          />
-        )}
+      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50">
+        {renderScreen()}
+        <BottomNavigation currentScreen={currentScreen} onScreenChange={handleScreenChange} />
       </div>
     </ProtectedRoute>
   );

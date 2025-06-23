@@ -58,8 +58,8 @@ class GameService {
         user_id: data.user_id,
         competition_id: data.competition_id,
         level: data.level,
-        board: data.board,
-        words_found: data.words_found || [],
+        board: Array.isArray(data.board) ? data.board as string[][] : [['']],
+        words_found: Array.isArray(data.words_found) ? data.words_found as string[] : [],
         total_score: data.total_score || 0,
         time_elapsed: data.time_elapsed || 0,
         is_completed: data.is_completed || false,
@@ -96,8 +96,8 @@ class GameService {
         user_id: data.user_id,
         competition_id: data.competition_id,
         level: data.level,
-        board: data.board,
-        words_found: data.words_found || [],
+        board: Array.isArray(data.board) ? data.board as string[][] : [['']],
+        words_found: Array.isArray(data.words_found) ? data.words_found as string[] : [],
         total_score: data.total_score || 0,
         time_elapsed: data.time_elapsed || 0,
         is_completed: data.is_completed || false,
@@ -129,12 +129,15 @@ class GameService {
         throw new Error(sessionError.message);
       }
 
+      // Converter WordFound[] para string[] para compatibilidade com o banco
+      const wordsAsStrings = wordsFound.map(wf => wf.word);
+
       // Atualizar a sessão como completa
       const updates = {
         is_completed: true,
         completed_at: new Date().toISOString(),
         total_score: finalScore,
-        words_found: wordsFound
+        words_found: wordsAsStrings
       };
 
       const updateResult = await this.updateGameSession(sessionId, updates);
@@ -175,11 +178,24 @@ class GameService {
     try {
       logger.debug('Atualizando estatísticas do usuário', { userId, sessionScore }, 'GAME_SERVICE');
 
+      // Primeiro, buscar o usuário atual
+      const { data: currentUser, error: fetchError } = await supabase
+        .from('profiles')
+        .select('total_score, games_played')
+        .eq('id', userId)
+        .single();
+
+      if (fetchError) {
+        logger.error('Erro ao buscar usuário atual', { error: fetchError.message }, 'GAME_SERVICE');
+        throw new Error(fetchError.message);
+      }
+
+      // Atualizar com os novos valores
       const { error } = await supabase
         .from('profiles')
         .update({
-          total_score: supabase.sql`total_score + ${sessionScore}`,
-          games_played: supabase.sql`games_played + 1`,
+          total_score: (currentUser.total_score || 0) + sessionScore,
+          games_played: (currentUser.games_played || 0) + 1,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
@@ -221,8 +237,8 @@ class GameService {
         user_id: data.user_id,
         competition_id: data.competition_id,
         level: data.level,
-        board: data.board,
-        words_found: data.words_found || [],
+        board: Array.isArray(data.board) ? data.board as string[][] : [['']],
+        words_found: Array.isArray(data.words_found) ? data.words_found as string[] : [],
         total_score: data.total_score || 0,
         time_elapsed: data.time_elapsed || 0,
         is_completed: data.is_completed || false,
