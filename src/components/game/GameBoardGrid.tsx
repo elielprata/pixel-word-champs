@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import GameCell from "./GameCell";
 import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from "@/utils/boardUtils";
@@ -37,18 +38,15 @@ const GameBoardGrid = ({
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
-  // Layout limpo - ajustado para 8x12
   const gridConfig = {
     gap: "1px",
-    maxWidth: isMobile ? "360px" : "480px", // Aumentado para acomodar 12 colunas
+    maxWidth: isMobile ? "360px" : "480px",
     padding: "0px",
   };
 
-  // Função que indica se a célula está atualmente selecionada na linha visual
   const isCellCurrentlySelected = (row: number, col: number) =>
     selectedCells.some((pos) => pos.row === row && pos.col === col);
 
-  // Função para obter a cor da palavra se a célula estiver marcada permanentemente
   const getCellWordColor = (row: number, col: number) => {
     if (!isCellPermanentlyMarked(row, col)) return undefined;
     const wordIndex = getCellWordIndex(row, col);
@@ -60,8 +58,8 @@ const GameBoardGrid = ({
       ref={boardRef}
       className="grid mx-auto bg-white"
       style={{
-        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`, // 12 colunas
-        gridTemplateRows: `repeat(${size}, 1fr)`, // 8 linhas
+        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`,
+        gridTemplateRows: `repeat(${size}, 1fr)`,
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: "100%",

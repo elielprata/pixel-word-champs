@@ -32,7 +32,6 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
-  // Hierarquia visual gamificada: Dica > Palavra encontrada > Seleção atual > Normal
   const getCellClasses = () => {
     const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95";
     
@@ -48,7 +47,6 @@ const GameCell = ({
       return `${baseClasses} bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-800 shadow-lg shadow-yellow-500/50 animate-pulse`;
     }
     
-    // Estado normal com gradiente sutil
     return `${baseClasses} bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 hover:from-gray-100 hover:to-gray-200 shadow-md`;
   };
 
@@ -57,8 +55,6 @@ const GameCell = ({
     : Math.max(cellSize * 0.75, 19);
 
   const borderRadius = isMobile ? "8px" : "10px";
-
-  // Efeito de partículas para célula encontrada
   const showParticleEffect = isPermanentlyMarked && wordColor;
 
   return (
@@ -99,17 +95,14 @@ const GameCell = ({
       data-row={rowIndex}
       data-col={colIndex}
     >
-      {/* Letra principal */}
       <span className="relative z-10 font-bold tracking-tight">
         {letter}
       </span>
       
-      {/* Efeito de brilho para dica */}
       {isHintHighlighted && (
         <div className="absolute inset-0 bg-gradient-to-br from-purple-300/50 to-transparent rounded-lg animate-pulse" />
       )}
       
-      {/* Efeito de celebração para palavra encontrada */}
       {showParticleEffect && (
         <>
           <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping" />
@@ -118,7 +111,6 @@ const GameCell = ({
         </>
       )}
       
-      {/* Borda brilhante para seleção */}
       {isSelected && (
         <div className="absolute inset-0 rounded-lg shadow-lg shadow-yellow-400/30 animate-pulse" />
       )}
