@@ -1,40 +1,46 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Shield, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { LogOut } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { logger } from '@/utils/logger';
+import { AdminErrorReportModal } from '../AdminErrorReportModal';
 
 export const AdminPanelHeader = () => {
-  const navigate = useNavigate();
-  const { logout } = useAuth();
-
-  const handleLogout = async () => {
-    try {
-      logger.info('Iniciando logout do painel admin', undefined, 'ADMIN_PANEL_HEADER');
-      await logout();
-      logger.info('Logout realizado, redirecionando...', undefined, 'ADMIN_PANEL_HEADER');
-      navigate('/auth');
-    } catch (error: any) {
-      logger.error('Erro durante logout do admin', { error: error.message }, 'ADMIN_PANEL_HEADER');
-    }
-  };
+  const [showErrorReport, setShowErrorReport] = useState(false);
 
   return (
-    <div className="mb-8 flex justify-between items-center">
-      <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-          Painel Administrativo
-        </h1>
-        <p className="text-slate-600 mt-2">
-          Gerencie todos os aspectos da plataforma
-        </p>
+    <>
+      <div className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 px-6 py-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-3 rounded-xl">
+              <Shield className="h-8 w-8 text-blue-600" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Painel Administrativo</h1>
+              <p className="text-slate-600 mt-1">
+                Gerencie usuários, conteúdo, rankings e configurações do sistema
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowErrorReport(true)}
+              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200"
+            >
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Reportar Erro
+            </Button>
+          </div>
+        </div>
       </div>
-      <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2 hover:bg-red-50 border-red-200 text-red-700">
-        <LogOut className="h-4 w-4" />
-        Logout
-      </Button>
-    </div>
+
+      <AdminErrorReportModal
+        isOpen={showErrorReport}
+        onClose={() => setShowErrorReport(false)}
+      />
+    </>
   );
 };

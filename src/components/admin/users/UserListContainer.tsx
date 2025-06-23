@@ -110,6 +110,7 @@ export const UserListContainer = () => {
           onSearchChange={setSearchTerm}
           onResetScores={handleResetScores}
           isResettingScores={isResettingScores}
+          users={filteredUsers}
         />
         
         <CardContent className="p-0">
