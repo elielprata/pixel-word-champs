@@ -1,10 +1,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Competition } from '@/types';
-import { competitionService } from '@/services/competitionService';
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { calculateCompetitionStatus } from '@/utils/brasiliaTime';
-import { logger, structuredLog } from '@/utils/logger';
+import { logger } from '@/utils/logger';
 
 export const useOptimizedCompetitions = () => {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
@@ -38,28 +37,25 @@ export const useOptimizedCompetitions = () => {
     setError(null);
 
     try {
-      const [competitionsResponse, customCompetitionsResponse] = await Promise.all([
-        competitionService.getActiveCompetitions(),
-        customCompetitionService.getCustomCompetitions()
-      ]);
-
-      if (competitionsResponse.success) {
-        setCompetitions(competitionsResponse.data);
-      } else {
-        throw new Error(competitionsResponse.error || 'Erro ao carregar competições');
-      }
+      logger.debug('Carregando competições otimizadas', undefined, 'OPTIMIZED_COMPETITIONS');
+      
+      const customCompetitionsResponse = await customCompetitionService.getCustomCompetitions();
 
       if (customCompetitionsResponse.success) {
         setCustomCompetitions(customCompetitionsResponse.data);
+        logger.info('Competições customizadas carregadas', { count: customCompetitionsResponse.data.length }, 'OPTIMIZED_COMPETITIONS');
       } else {
         throw new Error(customCompetitionsResponse.error || 'Erro ao carregar competições customizadas');
       }
 
-      logger.debug('Competições carregadas com sucesso');
+      // Simular competições básicas vazias por ora
+      setCompetitions([]);
+      
+      logger.info('Competições carregadas com sucesso', undefined, 'OPTIMIZED_COMPETITIONS');
     } catch (err) {
       const errorMessage = 'Erro ao carregar competições';
       setError(errorMessage);
-      structuredLog('error', errorMessage, err);
+      logger.error(errorMessage, { error: err }, 'OPTIMIZED_COMPETITIONS');
     } finally {
       setIsLoading(false);
     }

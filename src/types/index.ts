@@ -34,29 +34,34 @@ export interface GameSession {
 export interface Competition {
   id: string;
   title: string;
-  description?: string;
-  theme?: string;
+  description: string;
   start_date: string;
   end_date: string;
-  status: string;
-  type: 'daily' | 'weekly' | 'challenge';
+  status: 'pending' | 'active' | 'completed' | 'scheduled';
+  type: 'challenge' | 'daily' | 'weekly';
+  competition_type?: string;
   prize_pool: number;
+  max_participants?: number;
   total_participants: number;
-  max_participants: number;
-  is_active: boolean;
+  theme?: string;
+  rules?: any;
   created_at: string;
   updated_at: string;
-  competition_type: string; // Adicionar propriedade necessária para o hook
 }
 
 export interface CompetitionParticipation {
   id: string;
   competition_id: string;
   user_id: string;
-  user_position: number;
-  user_score: number;
+  score: number;
+  user_score?: number;
+  position?: number;
+  user_position?: number;
+  joined_at: string;
+  completed_at?: string;
+  created_at?: string;
+  payment_status?: 'pending' | 'paid' | 'failed' | 'not_eligible';
   prize?: number;
-  payment_status: 'pending' | 'paid' | 'failed' | 'not_eligible';
   payment_date?: string;
 }
 

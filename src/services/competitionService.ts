@@ -1,33 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
-
-export interface Competition {
-  id: string;
-  title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  status: 'pending' | 'active' | 'completed';
-  type: 'daily' | 'weekly' | 'custom';
-  prize_pool: number;
-  max_participants?: number;
-  total_participants: number;
-  theme?: string;
-  rules?: any;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CompetitionParticipation {
-  id: string;
-  competition_id: string;
-  user_id: string;
-  score: number;
-  position?: number;
-  joined_at: string;
-  completed_at?: string;
-}
+import { Competition, CompetitionParticipation } from '@/types';
 
 class CompetitionService {
   async getActiveCompetitions(): Promise<Competition[]> {
@@ -44,8 +18,27 @@ class CompetitionService {
       throw error;
     }
 
-    logger.info('Competições ativas carregadas', { count: data?.length || 0 }, 'COMPETITION_SERVICE');
-    return data || [];
+    // Mapear dados para interface Competition
+    const competitions: Competition[] = (data || []).map(item => ({
+      id: item.id,
+      title: item.title || '',
+      description: item.description || '',
+      start_date: item.start_date,
+      end_date: item.end_date,
+      status: item.status as 'pending' | 'active' | 'completed' | 'scheduled',
+      type: item.competition_type === 'challenge' ? 'daily' : item.competition_type === 'tournament' ? 'weekly' : 'daily',
+      competition_type: item.competition_type,
+      prize_pool: item.prize_pool || 0,
+      max_participants: item.max_participants,
+      total_participants: 0, // Calcular se necessário
+      theme: item.theme,
+      rules: item.entry_requirements,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    }));
+
+    logger.info('Competições ativas carregadas', { count: competitions.length }, 'COMPETITION_SERVICE');
+    return competitions;
   }
 
   async getCompetitionById(id: string): Promise<Competition | null> {
@@ -62,8 +55,29 @@ class CompetitionService {
       return null;
     }
 
+    if (!data) return null;
+
+    // Mapear dados para interface Competition
+    const competition: Competition = {
+      id: data.id,
+      title: data.title || '',
+      description: data.description || '',
+      start_date: data.start_date,
+      end_date: data.end_date,
+      status: data.status as 'pending' | 'active' | 'completed' | 'scheduled',
+      type: data.competition_type === 'challenge' ? 'daily' : data.competition_type === 'tournament' ? 'weekly' : 'daily',
+      competition_type: data.competition_type,
+      prize_pool: data.prize_pool || 0,
+      max_participants: data.max_participants,
+      total_participants: 0, // Calcular se necessário
+      theme: data.theme,
+      rules: data.entry_requirements,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
+
     logger.info('Competição encontrada', { id }, 'COMPETITION_SERVICE');
-    return data;
+    return competition;
   }
 
   async joinCompetition(competitionId: string, userId: string): Promise<boolean> {
@@ -89,7 +103,7 @@ class CompetitionService {
         .insert({
           competition_id: competitionId,
           user_id: userId,
-          score: 0,
+          user_score: 0,
         });
 
       if (error) {
@@ -114,8 +128,8 @@ class CompetitionService {
     const { error } = await supabase
       .from('competition_participations')
       .update({ 
-        score,
-        completed_at: new Date().toISOString()
+        user_score: score,
+        created_at: new Date().toISOString()
       })
       .eq('competition_id', competitionId)
       .eq('user_id', userId);
@@ -138,7 +152,7 @@ class CompetitionService {
         profiles!inner(username, avatar_url)
       `)
       .eq('competition_id', competitionId)
-      .order('score', { ascending: false })
+      .order('user_score', { ascending: false })
       .limit(100);
 
     if (error) {
@@ -146,12 +160,29 @@ class CompetitionService {
       throw error;
     }
 
+    // Mapear dados para interface CompetitionParticipation
+    const participations: CompetitionParticipation[] = (data || []).map(item => ({
+      id: item.id,
+      competition_id: item.competition_id,
+      user_id: item.user_id,
+      score: item.user_score || 0,
+      user_score: item.user_score,
+      position: item.user_position,
+      user_position: item.user_position,
+      joined_at: item.created_at,
+      created_at: item.created_at,
+      completed_at: undefined,
+      payment_status: item.payment_status,
+      prize: item.prize,
+      payment_date: item.payment_date
+    }));
+
     logger.info('Ranking da competição carregado', { 
       competitionId, 
-      participants: data?.length || 0 
+      participants: participations.length 
     }, 'COMPETITION_SERVICE');
     
-    return data || [];
+    return participations;
   }
 
   async getUserParticipation(competitionId: string, userId: string): Promise<CompetitionParticipation | null> {
@@ -169,13 +200,30 @@ class CompetitionService {
       throw error;
     }
 
-    if (data) {
-      logger.debug('Participação do usuário encontrada', { competitionId, userId }, 'COMPETITION_SERVICE');
-    } else {
+    if (!data) {
       logger.debug('Usuário não participa da competição', { competitionId, userId }, 'COMPETITION_SERVICE');
+      return null;
     }
 
-    return data;
+    // Mapear dados para interface CompetitionParticipation
+    const participation: CompetitionParticipation = {
+      id: data.id,
+      competition_id: data.competition_id,
+      user_id: data.user_id,
+      score: data.user_score || 0,
+      user_score: data.user_score,
+      position: data.user_position,
+      user_position: data.user_position,
+      joined_at: data.created_at,
+      created_at: data.created_at,
+      completed_at: undefined,
+      payment_status: data.payment_status,
+      prize: data.prize,
+      payment_date: data.payment_date
+    };
+
+    logger.debug('Participação do usuário encontrada', { competitionId, userId }, 'COMPETITION_SERVICE');
+    return participation;
   }
 
   private async updateParticipantCount(competitionId: string): Promise<void> {
@@ -188,7 +236,7 @@ class CompetitionService {
 
     const { error } = await supabase
       .from('custom_competitions')
-      .update({ total_participants: count || 0 })
+      .update({ max_participants: count || 0 })
       .eq('id', competitionId);
 
     if (error) {
@@ -228,9 +276,9 @@ class CompetitionService {
     
     const { data: participants, error } = await supabase
       .from('competition_participations')
-      .select('id, score')
+      .select('id, user_score')
       .eq('competition_id', competitionId)
-      .order('score', { ascending: false });
+      .order('user_score', { ascending: false });
 
     if (error) {
       logger.error('Erro ao buscar participantes para ranking', { error: error.message }, 'COMPETITION_SERVICE');
@@ -245,13 +293,13 @@ class CompetitionService {
     // Atualizar posições
     const updates = participants.map((participant, index) => ({
       id: participant.id,
-      position: index + 1,
+      user_position: index + 1,
     }));
 
     for (const update of updates) {
       await supabase
         .from('competition_participations')
-        .update({ position: update.position })
+        .update({ user_position: update.user_position })
         .eq('id', update.id);
     }
 

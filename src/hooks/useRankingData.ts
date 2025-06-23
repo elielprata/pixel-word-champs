@@ -1,72 +1,49 @@
 
+import { useState, useEffect } from 'react';
+import { rankingApi } from '@/api/rankingApi';
 import { RankingPlayer } from '@/types';
-import { useAuth } from '@/hooks/useAuth';
-import { useRankingQueries } from './useRankingQueries';
-import { useRankingPagination } from './useRankingPagination';
-import { useEffect } from 'react';
+import { logger } from '@/utils/logger';
 
 export const useRankingData = () => {
-  const { user } = useAuth();
-  const {
-    weeklyRanking,
-    historicalCompetitions,
-    isLoading,
-    error,
-    setIsLoading,
-    setError,
-    loadWeeklyRanking,
-    loadHistoricalRanking
-  } = useRankingQueries();
+  const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const {
-    weeklyLimit,
-    loadMoreWeekly,
-    canLoadMoreWeekly
-  } = useRankingPagination();
-
-  const loadAllRankings = async () => {
-    if (!user?.id) {
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    
+  const loadRankingData = async () => {
     try {
-      await Promise.all([
-        loadWeeklyRanking(),
-        loadHistoricalRanking(user.id)
-      ]);
+      setIsLoading(true);
+      setError(null);
+      
+      logger.debug('Carregando dados do ranking', undefined, 'RANKING_DATA');
+      
+      const weekly = await rankingApi.getWeeklyRanking();
+      setWeeklyRanking(weekly);
+      
+      logger.info('Dados do ranking carregados', { 
+        weeklyCount: weekly.length 
+      }, 'RANKING_DATA');
+      
     } catch (err) {
-      setError('Erro ao carregar rankings');
+      logger.error('Erro ao carregar dados do ranking', { error: err }, 'RANKING_DATA');
+      setError('Erro ao carregar ranking');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadAllRankings();
-  }, [user?.id]);
+    loadRankingData();
+  }, []);
 
-  const getUserPosition = (ranking: RankingPlayer[]) => {
-    if (!user) return null;
-    const userIndex = ranking.findIndex(player => player.user_id === user.id);
-    return userIndex !== -1 ? userIndex + 1 : null;
-  };
-
-  const refetch = async () => {
-    await loadAllRankings();
+  const refetch = () => {
+    logger.info('Atualizando dados do ranking', undefined, 'RANKING_DATA');
+    loadRankingData();
   };
 
   return {
-    weeklyRanking: weeklyRanking.slice(0, weeklyLimit),
-    historicalCompetitions,
+    weeklyRanking,
     isLoading,
     error,
-    canLoadMoreWeekly: canLoadMoreWeekly(weeklyRanking.length),
-    loadMoreWeekly,
-    getUserPosition,
     refetch
   };
 };

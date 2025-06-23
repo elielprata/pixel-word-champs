@@ -1,136 +1,36 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
-import { usePlayerLevel } from '@/hooks/usePlayerLevel';
-import { useWeeklyPositionManager } from '@/hooks/useWeeklyPositionManager';
-import { logger } from '@/utils/logger';
-import MyDataSection from './profile/MyDataSection';
 import ProfileHeader from './profile/ProfileHeader';
 import ProfileStatsGrid from './profile/ProfileStatsGrid';
 import ProfileMenu from './profile/ProfileMenu';
+import { logger } from '@/utils/logger';
 
 interface ProfileScreenProps {
-  onNavigateToSettings?: () => void;
-  onNavigateToHelp?: () => void;
-  onNavigateToAchievements?: () => void;
+  onBack: () => void;
 }
 
-const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAchievements }: ProfileScreenProps) => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url);
-  const [showMyData, setShowMyData] = useState(false);
-
-  // Usar o novo sistema de XP
-  const { currentLevel, nextLevel, progress } = usePlayerLevel(user?.total_score || 0);
-
-  // Integrar gerenciamento automático das melhores posições
-  const { forceUpdatePositions } = useWeeklyPositionManager();
-
-  logger.debug('Renderizando ProfileScreen', { userId: user?.id }, 'PROFILE_SCREEN');
-
-  const handleMyData = () => {
-    logger.info('Abrindo seção Meus Dados', undefined, 'PROFILE_SCREEN');
-    setShowMyData(true);
-  };
-
-  const handleHelp = () => {
-    logger.info('Navegando para ajuda', undefined, 'PROFILE_SCREEN');
-    if (onNavigateToHelp) {
-      onNavigateToHelp();
-    }
-  };
-
-  const handleAchievements = () => {
-    // Função desabilitada - não faz nada
-    return;
-  };
-
-  const handleLogout = async () => {
-    try {
-      logger.info('Iniciando logout', { userId: user?.id }, 'PROFILE_SCREEN');
-      await logout();
-      logger.info('Logout realizado com sucesso', undefined, 'PROFILE_SCREEN');
-      navigate('/auth');
-    } catch (error) {
-      logger.error('Erro ao fazer logout', { error }, 'PROFILE_SCREEN');
-    }
-  };
-
-  const getAvatarFallback = () => {
-    if (user?.username && user.username.length > 0) {
-      return user.username.charAt(0).toUpperCase();
-    }
-    if (user?.email && user.email.length > 0) {
-      return user.email.charAt(0).toUpperCase();
-    }
-    return 'U';
-  };
-
-  const handleAvatarUpdate = (newAvatarUrl: string) => {
-    logger.info('Avatar atualizado', undefined, 'PROFILE_SCREEN');
-    setCurrentAvatar(newAvatarUrl);
-  };
-
-  const formatXP = (xp: number) => {
-    if (xp >= 1000000) return `${(xp / 1000000).toFixed(1)}M`;
-    if (xp >= 1000) return `${(xp / 1000).toFixed(1)}K`;
-    return xp.toString();
-  };
-
-  if (showMyData) {
-    return (
-      <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
-        {/* Header com botão voltar */}
-        <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => setShowMyData(false)}>
-            <ChevronRight className="w-5 h-5 rotate-180" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">Meus Dados</h1>
-            <p className="text-sm text-gray-600">Gerencie suas informações pessoais</p>
-          </div>
-        </div>
-
-        <MyDataSection />
-      </div>
-    );
-  }
+const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
+  logger.debug('ProfileScreen renderizado', undefined, 'PROFILE_SCREEN');
 
   return (
-    <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">Seu Perfil</h1>
-        <p className="text-sm text-gray-600">Estatísticas e progressão</p>
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50">
+      <div className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-purple-200 z-10">
+        <div className="flex items-center justify-between p-4">
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
+          <h1 className="text-xl font-bold text-purple-800">Perfil</h1>
+          <div className="w-10" />
+        </div>
       </div>
 
-      {/* Card principal do jogador com novo sistema XP */}
-      <ProfileHeader
-        user={user}
-        currentAvatar={currentAvatar}
-        currentLevel={currentLevel}
-        nextLevel={nextLevel}
-        progress={progress}
-        onAvatarUpdate={handleAvatarUpdate}
-        getAvatarFallback={getAvatarFallback}
-        formatXP={formatXP}
-      />
-
-      {/* Estatísticas compactas */}
-      <ProfileStatsGrid user={user} />
-
-      {/* Menu de ações */}
-      <ProfileMenu
-        onMyData={handleMyData}
-        onAchievements={handleAchievements}
-        onSettings={onNavigateToSettings}
-        onHelp={handleHelp}
-        onLogout={handleLogout}
-      />
+      <div className="p-4 space-y-6">
+        <ProfileHeader />
+        <ProfileStatsGrid />
+        <ProfileMenu />
+      </div>
     </div>
   );
 };
