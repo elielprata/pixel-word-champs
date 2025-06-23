@@ -14,7 +14,7 @@ import { useProfileVerification } from '@/hooks/useProfileVerification';
 import { logger } from '@/utils/logger';
 import { adminSchema, type AdminFormData } from '@/types/admin';
 
-export const EnhancedCreateAdminForm = () => {
+export const CreateAdminForm = () => {
   const { toast } = useToast();
   const { lockAdmin, unlockAdmin, isEmailLocked } = useAdminCreationLock();
   const { verifyProfileCreation } = useProfileVerification();
@@ -70,7 +70,7 @@ export const EnhancedCreateAdminForm = () => {
       }
       return true;
     } catch (error: any) {
-      logger.error('Erro na validação de permissões admin', { error: error.message }, 'ENHANCED_CREATE_ADMIN_FORM');
+      logger.error('Erro na validação de permissões admin', { error: error.message }, 'CREATE_ADMIN_FORM');
       throw error;
     }
   };
@@ -101,7 +101,7 @@ export const EnhancedCreateAdminForm = () => {
       logger.info('Iniciando criação otimizada de usuário admin', { 
         email: data.email, 
         username: data.username 
-      }, 'ENHANCED_CREATE_ADMIN_FORM');
+      }, 'CREATE_ADMIN_FORM');
 
       // 1. Validar permissões do admin atual
       await validateAdminPermissions();
@@ -118,7 +118,7 @@ export const EnhancedCreateAdminForm = () => {
       });
 
       if (authError) {
-        logger.error('Erro ao criar usuário', { error: authError.message }, 'ENHANCED_CREATE_ADMIN_FORM');
+        logger.error('Erro ao criar usuário', { error: authError.message }, 'CREATE_ADMIN_FORM');
         throw authError;
       }
 
@@ -126,7 +126,7 @@ export const EnhancedCreateAdminForm = () => {
         throw new Error('Usuário não foi criado');
       }
 
-      logger.info('Usuário criado no Auth', { userId: authData.user.id }, 'ENHANCED_CREATE_ADMIN_FORM');
+      logger.info('Usuário criado no Auth', { userId: authData.user.id }, 'CREATE_ADMIN_FORM');
 
       // 3. Verificar criação do perfil com verificação inteligente
       const verificationResult = await verifyProfileCreation(authData.user.id);
@@ -135,7 +135,7 @@ export const EnhancedCreateAdminForm = () => {
         logger.warn('Perfil não foi criado automaticamente, tentando criar manualmente', { 
           userId: authData.user.id,
           verificationResult 
-        }, 'ENHANCED_CREATE_ADMIN_FORM');
+        }, 'CREATE_ADMIN_FORM');
         
         // Tentar criar perfil manualmente
         const { error: profileError } = await supabase
@@ -146,7 +146,7 @@ export const EnhancedCreateAdminForm = () => {
           });
 
         if (profileError) {
-          logger.error('Erro ao criar perfil manualmente', { error: profileError.message }, 'ENHANCED_CREATE_ADMIN_FORM');
+          logger.error('Erro ao criar perfil manualmente', { error: profileError.message }, 'CREATE_ADMIN_FORM');
         }
       }
 
@@ -159,14 +159,14 @@ export const EnhancedCreateAdminForm = () => {
         });
 
       if (roleError) {
-        logger.error('Erro ao adicionar role admin', { error: roleError.message }, 'ENHANCED_CREATE_ADMIN_FORM');
+        logger.error('Erro ao adicionar role admin', { error: roleError.message }, 'CREATE_ADMIN_FORM');
         toast({
           title: "Aviso",
           description: "Usuário criado, mas erro ao definir como admin. Defina manualmente.",
           variant: "destructive",
         });
       } else {
-        logger.info('Role admin adicionada com sucesso', { userId: authData.user.id }, 'ENHANCED_CREATE_ADMIN_FORM');
+        logger.info('Role admin adicionada com sucesso', { userId: authData.user.id }, 'CREATE_ADMIN_FORM');
       }
 
       toast({
@@ -178,7 +178,7 @@ export const EnhancedCreateAdminForm = () => {
       form.reset();
 
     } catch (error: any) {
-      logger.error('Erro geral na criação otimizada de admin', { error: error.message }, 'ENHANCED_CREATE_ADMIN_FORM');
+      logger.error('Erro geral na criação otimizada de admin', { error: error.message }, 'CREATE_ADMIN_FORM');
       
       let errorMessage = "Erro ao criar usuário admin";
       
