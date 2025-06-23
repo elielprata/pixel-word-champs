@@ -64,22 +64,29 @@ export const useAuthOperations = (
   const register = useCallback(async (userData: RegisterForm) => {
     if (!isMountedRef.current) return;
     
+    console.log('🔍 [DEBUG] useAuthOperations.register iniciado');
     setIsLoading(true);
     setError('');
 
     try {
+      console.log('🔍 [DEBUG] Chamando authService.register...');
       const response = await authService.register(userData);
       
       if (!isMountedRef.current) return;
 
+      console.log('🔍 [DEBUG] Resposta do authService:', { success: response.success, hasUser: !!response.data?.user });
+
       if (response.success && response.data) {
+        console.log('🔍 [DEBUG] Registro bem-sucedido, definindo usuário...');
         setUser(response.data.user);
         setIsAuthenticated(false); // Manter como false até confirmação
         setError('');
         logger.info('Registro realizado com sucesso', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
+        console.log('🔍 [DEBUG] Estado definido, retornando normalmente (sem throw)');
         return; // Retorna normalmente - sucesso
       } else {
         const errorMessage = response.error || 'Erro no registro';
+        console.log('🔍 [DEBUG] Erro na resposta:', errorMessage);
         setError(errorMessage);
         setIsAuthenticated(false);
         setUser(null);
@@ -88,6 +95,7 @@ export const useAuthOperations = (
     } catch (error: any) {
       if (!isMountedRef.current) return;
       
+      console.log('🔍 [DEBUG] Exceção capturada:', error.message);
       const errorMessage = error.message || 'Erro de conexão';
       setError(errorMessage);
       setIsAuthenticated(false);
@@ -95,6 +103,7 @@ export const useAuthOperations = (
       throw error;
     } finally {
       if (isMountedRef.current) {
+        console.log('🔍 [DEBUG] Finalizando register, setIsLoading(false)');
         setIsLoading(false);
       }
     }
