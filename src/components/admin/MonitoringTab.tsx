@@ -12,14 +12,22 @@ export const MonitoringTab = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header da aba */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-purple-500 to-blue-500 p-3 rounded-lg">
-            <Activity className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">Monitoramento do Sistema</h2>
-            <p className="text-slate-600">Monitore a saúde e auditoria da plataforma em tempo real</p>
+        {/* Header padronizado igual ao da Gestão de Conteúdo */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-br from-purple-500 to-blue-600 p-3 rounded-lg shadow-md">
+                <Activity className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  Monitoramento do Sistema
+                </h1>
+                <p className="text-slate-600 mt-1 text-sm">
+                  Monitore a saúde e auditoria da plataforma em tempo real
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
