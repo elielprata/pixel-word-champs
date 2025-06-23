@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -30,6 +30,7 @@ const RegisterForm = () => {
   const { register, isLoading, error, user, isAuthenticated } = useAuth();
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
+  const [pendingModalShow, setPendingModalShow] = useState(false);
   
   const form = useForm<RegisterFormType>({
     resolver: zodResolver(registerSchema),
@@ -47,6 +48,25 @@ const RegisterForm = () => {
 
   const usernameCheck = useUsernameVerification(watchedUsername);
   const emailCheck = useEmailVerification(watchedEmail);
+
+  // Effect para controlar o modal com delay
+  useEffect(() => {
+    if (pendingModalShow && registeredEmail) {
+      // Aguardar 1 segundo para os estados sincronizarem
+      const timer = setTimeout(() => {
+        logger.info('Exibindo modal após delay de sincronização', { 
+          email: registeredEmail,
+          hasUser: !!user,
+          isAuthenticated
+        }, 'REGISTER_FORM');
+        
+        setShowEmailModal(true);
+        setPendingModalShow(false);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [pendingModalShow, registeredEmail, user, isAuthenticated]);
 
   const onSubmit = async (data: RegisterFormType) => {
     // Verificar disponibilidade antes de enviar
@@ -68,12 +88,11 @@ const RegisterForm = () => {
       
       await register(data);
       
-      // MUDANÇA PRINCIPAL: Mostrar modal sempre que há um usuário (mesmo não autenticado)
-      // Isso permite mostrar o modal mesmo quando o email não foi confirmado
+      // Definir email e marcar para mostrar modal com delay
       setRegisteredEmail(data.email);
-      setShowEmailModal(true);
+      setPendingModalShow(true);
       
-      logger.info('Registro concluído - modal de verificação exibido', { 
+      logger.info('Registro concluído - modal será exibido após delay', { 
         email: data.email 
       }, 'REGISTER_FORM');
     } catch (err: any) {
@@ -81,8 +100,8 @@ const RegisterForm = () => {
     }
   };
 
-  // MUDANÇA: Verificar se existe usuário (mesmo não autenticado) e email não confirmado
-  const shouldShowModal = showEmailModal && registeredEmail && user && !isAuthenticated;
+  // Condição simplificada para mostrar o modal
+  const shouldShowModal = showEmailModal && registeredEmail;
 
   return (
     <>
