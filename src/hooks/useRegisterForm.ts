@@ -83,8 +83,6 @@ export const useRegisterForm = () => {
     usernameCheck.checking ||
     emailCheck.checking;
 
-  const shouldShowModal = showEmailModal && registeredEmail;
-
   return {
     form,
     watchedUsername,
@@ -95,7 +93,7 @@ export const useRegisterForm = () => {
     error,
     isFormDisabled,
     onSubmit,
-    shouldShowModal,
+    showEmailModal,
     registeredEmail,
     setShowEmailModal
   };

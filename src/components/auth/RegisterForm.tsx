@@ -17,7 +17,7 @@ const RegisterForm = () => {
     error,
     isFormDisabled,
     onSubmit,
-    shouldShowModal,
+    showEmailModal,
     registeredEmail,
     setShowEmailModal
   } = useRegisterForm();
@@ -42,7 +42,7 @@ const RegisterForm = () => {
         </form>
       </Form>
 
-      {shouldShowModal && (
+      {showEmailModal && registeredEmail && (
         <EmailVerificationModal
           isOpen={true}
           onClose={() => {
