@@ -2,16 +2,16 @@
 export interface User {
   id: string;
   email: string;
-  username: string;
+  username?: string; // Tornar opcional para compatibilidade
   avatar_url?: string;
   total_score: number;
   games_played: number;
   best_daily_position?: number;
   best_weekly_position?: number;
-  pix_key?: string;
-  pix_holder_name?: string;
-  phone?: string; // Adicionar campo de telefone
-  experience_points?: number; // Adicionar campo de XP
+  pix_key?: string; // Adicionar campo PIX
+  pix_holder_name?: string; // Adicionar nome do titular PIX
+  phone?: string;
+  experience_points?: number;
   created_at: string;
   updated_at: string;
 }
@@ -74,7 +74,7 @@ export interface RankingPlayer {
 }
 
 export interface Challenge {
-  id: number;
+  id: string; // Alterar de number para string para consistência
   title: string;
   description: string;
   prize: string;
