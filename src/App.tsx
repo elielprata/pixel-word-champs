@@ -12,6 +12,7 @@ import AuthScreen from '@/components/auth/AuthScreen';
 import { SimpleAuthProvider } from '@/components/auth/SimpleAuthProvider';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { GlobalEmailVerificationModal } from '@/components/auth/GlobalEmailVerificationModal';
 import { logger } from '@/utils/logger';
 import { initializeCacheWarming } from '@/utils/cacheWarming';
 
@@ -50,6 +51,9 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
+            
+            {/* Modal Global de Verificação de Email */}
+            <GlobalEmailVerificationModal />
           </div>
         </SimpleAuthProvider>
       </TooltipProvider>

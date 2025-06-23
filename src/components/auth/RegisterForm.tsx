@@ -1,16 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useRegisterForm } from '@/hooks/useRegisterForm';
 import { RegisterFormFields } from './RegisterFormFields';
 import { RegisterFormSubmit } from './RegisterFormSubmit';
-import { SimpleEmailVerificationModal } from './SimpleEmailVerificationModal';
+import { showEmailModal, getModalState } from '@/stores/emailModalStore';
 
 const RegisterForm = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalEmail, setModalEmail] = useState('');
-
   const {
     form,
     watchedUsername,
@@ -20,51 +17,21 @@ const RegisterForm = () => {
     isLoading,
     error,
     isFormDisabled,
-    onSubmit: originalOnSubmit
+    onSubmit
   } = useRegisterForm();
 
-  console.log('🔍 [DEBUG] RegisterForm RENDER - isModalOpen:', isModalOpen, 'modalEmail:', modalEmail);
-
-  // Função para mostrar o modal
-  const showModal = (email: string) => {
-    console.log('🔍 [DEBUG] showModal chamado com email:', email);
-    setModalEmail(email);
-    setIsModalOpen(true);
-    console.log('🔍 [DEBUG] Modal state definido - isModalOpen: true, email:', email);
-  };
-
-  // Função para esconder o modal
-  const hideModal = () => {
-    console.log('🔍 [DEBUG] hideModal chamado');
-    setIsModalOpen(false);
-    setModalEmail('');
-  };
-
-  // Wrapper do onSubmit para capturar o sucesso
-  const onSubmit = async (data: any) => {
-    console.log('🔍 [DEBUG] onSubmit wrapper iniciado');
-    
-    try {
-      await originalOnSubmit(data);
-      
-      // Se chegou até aqui, o registro foi bem-sucedido
-      console.log('🔍 [DEBUG] Registro bem-sucedido! Mostrando modal...');
-      
-      // Pequeno delay para garantir que tudo foi processado
-      setTimeout(() => {
-        showModal(data.email);
-      }, 100);
-      
-    } catch (error) {
-      console.log('🔍 [DEBUG] Erro no registro:', error);
-      // Não fazer nada, o erro será tratado pelo hook original
-    }
-  };
+  console.log('🔍 [REGISTER_FORM] Renderizado - usando store global');
 
   // Função para testar o modal manualmente
   const testModal = () => {
-    console.log('🔍 [DEBUG] Teste manual do modal');
-    showModal('teste@email.com');
+    console.log('🧪 [REGISTER_FORM] Teste manual do modal global');
+    console.log('🧪 [REGISTER_FORM] Estado atual do store:', getModalState());
+    showEmailModal('teste@email.com');
+    
+    // Verificar se funcionou
+    setTimeout(() => {
+      console.log('🧪 [REGISTER_FORM] Estado após teste:', getModalState());
+    }, 200);
   };
 
   return (
@@ -87,27 +54,21 @@ const RegisterForm = () => {
         </form>
       </Form>
 
-      {/* Botão temporário para testar o modal */}
-      <div className="mt-4 p-4 bg-yellow-100 border border-yellow-300 rounded">
-        <p className="text-sm text-yellow-800 mb-2">DEBUG: Teste do Modal</p>
+      {/* Botão temporário para testar o modal global */}
+      <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded">
+        <p className="text-sm text-green-800 mb-2">DEBUG: Teste do Modal Global</p>
         <Button 
           type="button" 
           variant="outline" 
           size="sm"
           onClick={testModal}
         >
-          Testar Modal Manualmente
+          Testar Modal Global
         </Button>
-        <p className="text-xs mt-1">isModalOpen: {isModalOpen ? 'true' : 'false'}</p>
-        <p className="text-xs">modalEmail: {modalEmail}</p>
+        <p className="text-xs mt-1 text-green-700">
+          Modal agora é controlado por store global JavaScript!
+        </p>
       </div>
-
-      {/* MODAL COM PORTAL - SEMPRE RENDERIZADO, CONTROLE POR isOpen */}
-      <SimpleEmailVerificationModal
-        isOpen={isModalOpen}
-        onClose={hideModal}
-        userEmail={modalEmail}
-      />
     </>
   );
 };

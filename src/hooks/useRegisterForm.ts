@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth/SimpleAuthProvider';
 import { RegisterForm as RegisterFormType } from '@/types';
 import { useUsernameVerification } from '@/hooks/useUsernameVerification';
 import { useEmailVerification as useEmailCheck } from '@/hooks/useEmailVerification';
+import { showEmailModal } from '@/stores/emailModalStore';
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
@@ -18,7 +19,7 @@ const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-export const useRegisterForm = (onSuccess?: (email: string) => void) => {
+export const useRegisterForm = () => {
   const { register, isLoading, error } = useAuth();
   
   const form = useForm<RegisterFormType>({
@@ -39,7 +40,7 @@ export const useRegisterForm = (onSuccess?: (email: string) => void) => {
   const emailCheck = useEmailCheck(watchedEmail);
 
   const onSubmit = async (data: RegisterFormType) => {
-    console.log('🔍 [DEBUG] useRegisterForm onSubmit iniciado com callback:', !!onSuccess);
+    console.log('🚀 [REGISTER_FORM] onSubmit iniciado - usando funções globais!');
     
     if (!usernameCheck.available && watchedUsername) {
       form.setError('username', { message: 'Este nome de usuário já está em uso' });
@@ -51,9 +52,12 @@ export const useRegisterForm = (onSuccess?: (email: string) => void) => {
       return;
     }
 
-    console.log('🔍 [DEBUG] Chamando register com callback...');
-    await register(data, onSuccess);
-    console.log('🔍 [DEBUG] Register completou');
+    console.log('🚀 [REGISTER_FORM] Chamando register com callback global...');
+    
+    // Usar o callback global direto do store
+    await register(data, showEmailModal);
+    
+    console.log('🚀 [REGISTER_FORM] Register completou!');
   };
 
   const isFormDisabled = isLoading || 
