@@ -27,7 +27,7 @@ const registerSchema = z.object({
 });
 
 const RegisterForm = () => {
-  const { register, isLoading, error } = useAuth();
+  const { register, isLoading, error, user, isAuthenticated } = useAuth();
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   
@@ -68,17 +68,21 @@ const RegisterForm = () => {
       
       await register(data);
       
-      // Mostrar modal de verificação de email após registro bem-sucedido
+      // MUDANÇA PRINCIPAL: Mostrar modal sempre que há um usuário (mesmo não autenticado)
+      // Isso permite mostrar o modal mesmo quando o email não foi confirmado
       setRegisteredEmail(data.email);
       setShowEmailModal(true);
       
-      logger.info('Registro concluído com sucesso', { 
+      logger.info('Registro concluído - modal de verificação exibido', { 
         email: data.email 
       }, 'REGISTER_FORM');
     } catch (err: any) {
       logger.error('Erro no registro', { error: err.message }, 'REGISTER_FORM');
     }
   };
+
+  // MUDANÇA: Verificar se existe usuário (mesmo não autenticado) e email não confirmado
+  const shouldShowModal = showEmailModal && registeredEmail && user && !isAuthenticated;
 
   return (
     <>
@@ -224,7 +228,7 @@ const RegisterForm = () => {
       </Form>
 
       <EmailVerificationModal
-        isOpen={showEmailModal}
+        isOpen={shouldShowModal}
         onClose={() => setShowEmailModal(false)}
         userEmail={registeredEmail}
       />

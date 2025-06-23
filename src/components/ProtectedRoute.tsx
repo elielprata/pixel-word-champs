@@ -9,11 +9,12 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   logger.debug('ProtectedRoute verificação', { 
     isAuthenticated, 
-    isLoading 
+    isLoading,
+    hasUser: !!user
   }, 'PROTECTED_ROUTE');
 
   // Mostrar loading enquanto verifica autenticação
@@ -29,9 +30,13 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  // Redirecionar para login se não estiver autenticado
+  // MUDANÇA: Verificar se realmente está autenticado (não apenas se tem usuário)
+  // Isso impede que usuários com email não confirmado acessem áreas protegidas
   if (!isAuthenticated) {
-    logger.info('Usuário não autenticado redirecionado para auth', undefined, 'PROTECTED_ROUTE');
+    logger.info('Usuário não autenticado redirecionado para auth', { 
+      hasUser: !!user,
+      isAuthenticated 
+    }, 'PROTECTED_ROUTE');
     return <Navigate to="/auth" replace />;
   }
 

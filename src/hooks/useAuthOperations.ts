@@ -73,10 +73,12 @@ export const useAuthOperations = (
       if (!isMountedRef.current) return;
 
       if (response.success && response.data) {
+        // MUDANÇA PRINCIPAL: Não definir como autenticado imediatamente
+        // O usuário só será autenticado após confirmar o email
         setUser(response.data.user);
-        setIsAuthenticated(true);
+        setIsAuthenticated(false); // Manter como false até confirmação
         setError('');
-        logger.info('Registro realizado com sucesso', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
+        logger.info('Registro realizado com sucesso - aguardando confirmação de email', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
       } else {
         const errorMessage = response.error || 'Erro no registro';
         setError(errorMessage);
