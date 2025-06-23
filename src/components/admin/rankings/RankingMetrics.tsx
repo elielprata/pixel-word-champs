@@ -1,169 +1,69 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Trophy, Users, Calendar, Award } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/utils/logger';
-
-interface RankingMetrics {
-  activeCompetitions: number;
-  totalParticipations: number;
-  finishedCompetitions: number;
-  avgParticipationRate: number;
-}
-
-const useRankingMetrics = () => {
-  return useQuery<RankingMetrics>({
-    queryKey: ['rankingMetrics'],
-    queryFn: async (): Promise<RankingMetrics> => {
-      logger.debug('Buscando métricas de ranking', undefined, 'RANKING_METRICS');
-      
-      try {
-        // Buscar total de competições ativas
-        const { data: activeCompetitions, error: activeError } = await supabase
-          .from('custom_competitions')
-          .select('id')
-          .eq('status', 'active');
-
-        if (activeError) {
-          logger.error('Erro ao buscar competições ativas', { error: activeError.message }, 'RANKING_METRICS');
-          throw activeError;
-        }
-
-        // Buscar total de participações
-        const { data: participations, error: participationsError } = await supabase
-          .from('competition_participations')
-          .select('id');
-
-        if (participationsError) {
-          logger.error('Erro ao buscar participações', { error: participationsError.message }, 'RANKING_METRICS');
-          throw participationsError;
-        }
-
-        // Buscar competições finalizadas
-        const { data: finishedCompetitions, error: finishedError } = await supabase
-          .from('custom_competitions')
-          .select('id')
-          .eq('status', 'completed');
-
-        if (finishedError) {
-          logger.error('Erro ao buscar competições finalizadas', { error: finishedError.message }, 'RANKING_METRICS');
-          throw finishedError;
-        }
-
-        const metrics: RankingMetrics = {
-          activeCompetitions: activeCompetitions?.length || 0,
-          totalParticipations: participations?.length || 0,
-          finishedCompetitions: finishedCompetitions?.length || 0,
-          avgParticipationRate: activeCompetitions?.length > 0 
-            ? Math.round((participations?.length || 0) / activeCompetitions.length) 
-            : 0
-        };
-
-        logger.info('Métricas de ranking carregadas', metrics, 'RANKING_METRICS');
-        return metrics;
-      } catch (error: any) {
-        logger.error('Erro ao carregar métricas de ranking', { error: error.message }, 'RANKING_METRICS');
-        throw error;
-      }
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    refetchInterval: 30000, // 30 segundos
-  });
-};
+import { Calendar, TrendingUp } from 'lucide-react';
+import { useRankings } from '@/hooks/useRankings';
 
 export const RankingMetrics = () => {
-  const { data: metrics, isLoading, error } = useRankingMetrics();
+  const { dailyRanking, weeklyRanking } = useRankings();
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map(i => (
-          <Card key={i} className="border-slate-200 shadow-sm animate-pulse">
-            <CardContent className="p-6">
-              <div className="h-16 bg-slate-200 rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+  // Calcular métricas reais baseadas nos dados com usuários únicos
+  const dailyParticipants = new Set(dailyRanking.map(player => player.user_id)).size;
+  const weeklyParticipants = new Set(weeklyRanking.map(player => player.user_id)).size;
 
-  if (error) {
-    logger.error('Erro ao renderizar métricas', { error }, 'RANKING_METRICS');
-    return (
-      <div className="text-center py-8 text-red-600">
-        Erro ao carregar métricas
-      </div>
-    );
-  }
+  const metrics = [
+    {
+      title: "Competições Diárias",
+      value: dailyParticipants.toString(),
+      subtitle: "Usuários únicos hoje",
+      icon: Calendar,
+      color: "from-purple-500 to-purple-600",
+      trend: "Hoje"
+    },
+    {
+      title: "Competição Semanal",
+      value: weeklyParticipants.toString(),
+      subtitle: "Usuários únicos esta semana",
+      icon: TrendingUp,
+      color: "from-cyan-500 to-cyan-600",
+      trend: "Esta semana"
+    }
+  ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <Trophy className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">
-                {metrics?.activeCompetitions || 0}
-              </p>
-              <p className="text-slate-600 text-sm font-medium">Competições Ativas</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-green-100 p-3 rounded-lg">
-              <Users className="h-6 w-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">
-                {metrics?.totalParticipations || 0}
-              </p>
-              <p className="text-slate-600 text-sm font-medium">Total Participações</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-purple-100 p-3 rounded-lg">
-              <Calendar className="h-6 w-6 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">
-                {metrics?.finishedCompetitions || 0}
-              </p>
-              <p className="text-slate-600 text-sm font-medium">Finalizadas</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-orange-100 p-3 rounded-lg">
-              <Award className="h-6 w-6 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">
-                {metrics?.avgParticipationRate || 0}
-              </p>
-              <p className="text-slate-600 text-sm font-medium">Média Participação</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {metrics.map((metric, index) => {
+        const Icon = metric.icon;
+        return (
+          <Card key={index} className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-slate-600">{metric.title}</p>
+                    <div className={`bg-gradient-to-r ${metric.color} p-2 rounded-lg shadow-sm`}>
+                      <Icon className="h-4 w-4 text-white" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-2xl font-bold text-slate-900">{metric.value}</p>
+                    <div className="flex items-center justify-between">
+                      {metric.subtitle && (
+                        <p className="text-xs text-slate-500">{metric.subtitle}</p>
+                      )}
+                      {metric.trend && (
+                        <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+                          {metric.trend}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };
