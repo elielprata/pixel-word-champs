@@ -1,15 +1,23 @@
 
 export interface AutomationConfig {
   enabled: boolean;
-  triggerType: 'schedule' | 'competition_finalization';
-  frequency: 'daily' | 'weekly' | 'monthly';
-  time: string;
-  dayOfWeek?: number;
-  dayOfMonth?: number;
+  triggerType: 'competition_finalization';
   resetOnCompetitionEnd: boolean;
 }
 
 export interface AutomationSettingsProps {
-  onSaveSettings: (settings: AutomationConfig) => void;
   currentSettings: AutomationConfig | null;
+  onSaveSettings: (settings: AutomationConfig) => void;
+}
+
+export interface AutomationLog {
+  id: string;
+  automation_type: string;
+  execution_status: string;
+  scheduled_time: string;
+  executed_at?: string;
+  error_message?: string;
+  settings_snapshot: AutomationConfig;
+  affected_users: number;
+  created_at: string;
 }

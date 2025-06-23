@@ -5,11 +5,7 @@ import { useAutomationExecution } from './useAutomationExecution';
 
 interface AutomationConfig {
   enabled: boolean;
-  triggerType: 'schedule' | 'competition_finalization';
-  frequency: 'daily' | 'weekly' | 'monthly';
-  time: string;
-  dayOfWeek?: number;
-  dayOfMonth?: number;
+  triggerType: 'competition_finalization';
   resetOnCompetitionEnd: boolean;
 }
 
@@ -31,8 +27,7 @@ export const useAutomationSettings = () => {
     isLoading,
     isSaving,
     saveSettings,
-    loadSettings,
-    checkAutomationSchedule
+    loadSettings
   } = useAutomationConfig();
 
   const { logs, loadLogs } = useAutomationLogs();
@@ -47,7 +42,6 @@ export const useAutomationSettings = () => {
     saveSettings,
     loadSettings,
     loadLogs,
-    executeManualReset,
-    checkAutomationSchedule
+    executeManualReset
   };
 };

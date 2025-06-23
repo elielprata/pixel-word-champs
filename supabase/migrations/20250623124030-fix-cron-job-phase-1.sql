@@ -1,23 +1,45 @@
 
--- FASE 1: Corrigir cron job para executar apenas a cada hora (ao invés de a cada minuto)
--- Primeiro, tentar deletar jobs existentes (se existirem)
-SELECT cron.unschedule('invoke-automation-reset-checker-every-minute');
-SELECT cron.unschedule('invoke-automation-reset-checker-hourly');
+-- FASE 1: Remover sistema de agendamento e configurar apenas finalização
+-- Tentar deletar jobs existentes (se existirem) sem gerar erro
+DO $$
+BEGIN
+  BEGIN
+    PERFORM cron.unschedule('invoke-automation-reset-checker-every-minute');
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Job invoke-automation-reset-checker-every-minute não encontrado ou já removido';
+  END;
+  
+  BEGIN
+    PERFORM cron.unschedule('invoke-automation-reset-checker-hourly');
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Job invoke-automation-reset-checker-hourly não encontrado ou já removido';
+  END;
+END $$;
 
--- Criar novo job que executa apenas no minuto 0 de cada hora
--- Isso reduz de 1440 execuções por dia para apenas 24 execuções por dia
-SELECT cron.schedule(
-  'invoke-automation-reset-checker-hourly',
-  '0 * * * *', -- Executa apenas no minuto 0 de cada hora
-  $$
-  SELECT
-    net.http_post(
-        url:='https://oqzpkqbmcnpxpegshlcm.supabase.co/functions/v1/automation-reset-checker',
-        headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc1MiOiJzdXBhYmFzZSIsInJlZiI6Im9xenBrcWJtY25weHBlZ3NobGNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxNDY5MzcsImV4cCI6MjA2NDcyMjkzN30.Wla6j2fBOnPd0DbNmVIdhZKfkTp09d9sE8NOULcRsQk"}'::jsonb,
-        body:='{"scheduled_execution": true}'::jsonb
-    ) as request_id;
-  $$
+-- Atualizar configuração para usar apenas finalização de competição
+UPDATE game_settings 
+SET setting_value = JSON_BUILD_OBJECT(
+  'enabled', true,
+  'triggerType', 'competition_finalization',
+  'resetOnCompetitionEnd', true
+)::text
+WHERE setting_key = 'reset_automation_config';
+
+-- Se não existir a configuração, criar uma nova
+INSERT INTO game_settings (setting_key, setting_value, category, description, setting_type)
+SELECT 
+  'reset_automation_config',
+  JSON_BUILD_OBJECT(
+    'enabled', true,
+    'triggerType', 'competition_finalization', 
+    'resetOnCompetitionEnd', true
+  )::text,
+  'automation',
+  'Configurações para automação do reset de pontuações por finalização de competição',
+  'json'
+WHERE NOT EXISTS (
+  SELECT 1 FROM game_settings WHERE setting_key = 'reset_automation_config'
 );
 
 -- Comentário sobre as melhorias
-COMMENT ON EXTENSION pg_cron IS 'FASE 1 - Cron job otimizado: executa apenas a cada hora ao invés de a cada minuto, reduzindo 98% das chamadas desnecessárias';
+COMMENT ON EXTENSION pg_cron IS 'Sistema de automação simplificado: reset apenas por finalização de competição, sem cron jobs';

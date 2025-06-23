@@ -4,11 +4,7 @@ import { logger } from '@/utils/logger';
 
 interface AutomationConfig {
   enabled: boolean;
-  triggerType: 'schedule' | 'competition_finalization';
-  frequency: 'daily' | 'weekly' | 'monthly';
-  time: string;
-  dayOfWeek?: number;
-  dayOfMonth?: number;
+  triggerType: 'competition_finalization';
   resetOnCompetitionEnd: boolean;
 }
 
@@ -29,11 +25,11 @@ export class AutomationService {
 
       if (data?.setting_value) {
         const config = JSON.parse(data.setting_value);
-        // Garantir compatibilidade com configurações antigas
+        // Garantir que está configurado para finalização de competição
         const updatedConfig = {
-          ...config,
-          triggerType: config.triggerType || 'schedule',
-          resetOnCompetitionEnd: config.resetOnCompetitionEnd || false
+          enabled: config.enabled || false,
+          triggerType: 'competition_finalization' as const,
+          resetOnCompetitionEnd: config.resetOnCompetitionEnd || true
         };
         logger.info('Configurações carregadas', { config: updatedConfig }, 'AUTOMATION_SETTINGS');
         return updatedConfig;
@@ -57,7 +53,7 @@ export class AutomationService {
           setting_key: 'reset_automation_config',
           setting_value: JSON.stringify(settings),
           category: 'automation',
-          description: 'Configurações para automação do reset de pontuações',
+          description: 'Configurações para automação do reset de pontuações por finalização de competição',
           setting_type: 'json'
         }, {
           onConflict: 'setting_key'
@@ -91,47 +87,6 @@ export class AutomationService {
     } catch (error: any) {
       logger.error('Erro no reset manual', { error: error.message }, 'AUTOMATION_SETTINGS');
       throw error;
-    }
-  }
-
-  async checkAutomationSchedule(settings: AutomationConfig): Promise<boolean> {
-    if (!settings?.enabled) return false;
-
-    try {
-      const now = new Date();
-      const [hours, minutes] = settings.time.split(':').map(Number);
-      
-      const shouldExecute = this.checkIfShouldExecute(now, settings, hours, minutes);
-      
-      if (shouldExecute) {
-        logger.info('Automação deve ser executada agora', { settings }, 'AUTOMATION_SETTINGS');
-        return true;
-      }
-      
-      return false;
-    } catch (error: any) {
-      logger.error('Erro ao verificar schedule de automação', { error: error.message }, 'AUTOMATION_SETTINGS');
-      return false;
-    }
-  }
-
-  private checkIfShouldExecute(now: Date, config: AutomationConfig, targetHours: number, targetMinutes: number): boolean {
-    const currentHours = now.getHours();
-    const currentMinutes = now.getMinutes();
-    
-    if (currentHours !== targetHours || Math.abs(currentMinutes - targetMinutes) > 1) {
-      return false;
-    }
-
-    switch (config.frequency) {
-      case 'daily':
-        return true;
-      case 'weekly':
-        return now.getDay() === (config.dayOfWeek || 1);
-      case 'monthly':
-        return now.getDate() === (config.dayOfMonth || 1);
-      default:
-        return false;
     }
   }
 }

@@ -5,11 +5,7 @@ import { automationService } from '@/services/automationService';
 
 interface AutomationConfig {
   enabled: boolean;
-  triggerType: 'schedule' | 'competition_finalization';
-  frequency: 'daily' | 'weekly' | 'monthly';
-  time: string;
-  dayOfWeek?: number;
-  dayOfMonth?: number;
+  triggerType: 'competition_finalization';
   resetOnCompetitionEnd: boolean;
 }
 
@@ -40,14 +36,10 @@ export const useAutomationConfig = () => {
       await automationService.saveSettings(newSettings);
       setSettings(newSettings);
       
-      const triggerDescription = newSettings.triggerType === 'competition_finalization' 
-        ? 'por finalização de competição' 
-        : 'por agendamento';
-      
       toast({
         title: "Sucesso!",
         description: newSettings.enabled 
-          ? `Automação ativada com sucesso (${triggerDescription})`
+          ? 'Automação ativada com sucesso (por finalização de competição)'
           : "Automação desativada com sucesso",
       });
     } catch (error: any) {
@@ -61,11 +53,6 @@ export const useAutomationConfig = () => {
     }
   };
 
-  const checkAutomationSchedule = async () => {
-    if (!settings) return false;
-    return await automationService.checkAutomationSchedule(settings);
-  };
-
   useEffect(() => {
     loadSettings();
   }, []);
@@ -75,7 +62,6 @@ export const useAutomationConfig = () => {
     isLoading,
     isSaving,
     saveSettings,
-    loadSettings,
-    checkAutomationSchedule
+    loadSettings
   };
 };
