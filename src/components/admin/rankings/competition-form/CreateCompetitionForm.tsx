@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { customCompetitionService } from '@/services/customCompetitionService';
+import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
 import { CompetitionTypeSection } from './CompetitionTypeSection';
 import { BasicInfoSection } from './BasicInfoSection';
 import { ScheduleSection } from './ScheduleSection';
@@ -11,7 +11,7 @@ import { PrizeConfigurationSection } from './PrizeConfigurationSection';
 import { WeeklyTournamentSection } from './WeeklyTournamentSection';
 import { FormActions } from './FormActions';
 import { usePaymentData } from '@/hooks/usePaymentData';
-import { useCustomCompetitions } from '@/hooks/useCustomCompetitions';
+import { useUnifiedCompetitions } from '@/hooks/useUnifiedCompetitions';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { secureLogger } from '@/utils/secureLogger';
@@ -39,7 +39,7 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
 
   // Hooks com tratamento de erro
   const paymentData = usePaymentData();
-  const { customCompetitions, isLoading: competitionsLoading, error: competitionsError } = useCustomCompetitions();
+  const { competitions, isLoading: competitionsLoading, error: competitionsError } = useUnifiedCompetitions();
 
   const [formData, setFormData] = useState({
     type: 'weekly' as 'daily' | 'weekly',
@@ -88,10 +88,6 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
     try {
       secureLogger.debug('Iniciando criação de competição', { formData }, 'CREATE_COMPETITION_FORM');
 
-      const totalPrizePool = showPrizeConfig && formData.type === 'weekly' 
-        ? paymentData.calculateTotalPrize() 
-        : 0;
-      
       const startDateTime = formData.startDate && formData.startTime 
         ? `${formData.startDate}T${formData.startTime}:00`
         : formData.startDate;
@@ -100,17 +96,15 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
         title: formData.title,
         description: formData.description,
         type: formData.type,
-        category: formData.category,
         startDate: startDateTime,
         endDate: formData.endDate,
-        prizePool: totalPrizePool,
         maxParticipants: formData.maxParticipants,
         weeklyTournamentId: formData.weeklyTournamentId || undefined
       };
 
       secureLogger.debug('Dados da competição preparados', { competitionData }, 'CREATE_COMPETITION_FORM');
 
-      const result = await customCompetitionService.createCompetition(competitionData);
+      const result = await unifiedCompetitionService.createCompetition(competitionData);
       
       if (result.success) {
         secureLogger.debug('Competição criada com sucesso', { competitionId: result.data?.id }, 'CREATE_COMPETITION_FORM');
@@ -175,6 +169,8 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
     );
   }
 
+  const weeklyTournaments = competitions.filter(c => c.type === 'weekly');
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {showBasicConfig && (
@@ -207,7 +203,7 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
           {formData.type === 'daily' && (
             <WeeklyTournamentSection 
               weeklyTournamentId={formData.weeklyTournamentId}
-              weeklyTournaments={customCompetitions || []}
+              weeklyTournaments={weeklyTournaments}
               onTournamentChange={(tournamentId) => handleInputChange('weeklyTournamentId', tournamentId)}
               competitionType={formData.type}
             />
