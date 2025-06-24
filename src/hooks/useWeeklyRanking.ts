@@ -24,18 +24,6 @@ interface WeeklyStats {
   total_participants: number;
   total_prize_pool: number;
   last_update: string;
-  config?: {
-    start_day_of_week: number;
-    duration_days: number;
-    custom_start_date: string | null;
-    custom_end_date: string | null;
-  };
-  top_3_players: Array<{
-    username: string;
-    score: number;
-    position: number;
-    prize: number;
-  }>;
 }
 
 export const useWeeklyRanking = () => {
@@ -90,18 +78,7 @@ export const useWeeklyRanking = () => {
         throw error;
       }
 
-      // Converter Json do Supabase para o tipo correto
-      const statsData = data as any;
-      
-      return {
-        current_week_start: statsData.current_week_start,
-        current_week_end: statsData.current_week_end,
-        total_participants: statsData.total_participants || 0,
-        total_prize_pool: statsData.total_prize_pool || 0,
-        last_update: statsData.last_update,
-        config: statsData.config || undefined,
-        top_3_players: statsData.top_3_players || []
-      };
+      return data;
     },
     refetchInterval: 30000,
   });
@@ -118,14 +95,13 @@ export const useWeeklyRanking = () => {
         throw error;
       }
       
-      const resetData = data as any;
-      logger.info('Reset executado com sucesso', { data: resetData }, 'USE_WEEKLY_RANKING');
-      return resetData;
+      logger.info('Reset executado com sucesso', { data }, 'USE_WEEKLY_RANKING');
+      return data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data) => {
       toast({
         title: "Reset Executado com Sucesso!",
-        description: `${data.profiles_reset || 0} perfis resetados e ${data.rankings_cleared || 0} rankings limpos.`,
+        description: `${data.profiles_reset} perfis resetados e ${data.rankings_cleared} rankings limpos.`,
       });
       
       // Invalidar queries relacionadas

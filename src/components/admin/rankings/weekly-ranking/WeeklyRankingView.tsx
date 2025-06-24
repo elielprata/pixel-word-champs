@@ -119,7 +119,7 @@ export const WeeklyRankingView = () => {
 
         <TabsContent value="ranking" className="mt-6">
           <div className="space-y-6">
-            {stats && <WeeklyRankingStats stats={stats} />}
+            <WeeklyRankingStats stats={stats} />
             <WeeklyRankingTable ranking={currentRanking} />
           </div>
         </TabsContent>

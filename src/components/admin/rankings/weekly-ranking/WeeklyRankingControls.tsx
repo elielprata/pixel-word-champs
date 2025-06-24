@@ -2,135 +2,125 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Settings, AlertTriangle } from 'lucide-react';
-import { WeeklyConfigModal } from './WeeklyConfigModal';
+import { AlertTriangle, RotateCcw, Info, Calendar } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 
 interface WeeklyRankingControlsProps {
   onResetScores: () => void;
 }
 
-export const WeeklyRankingControls = ({ onResetScores }: WeeklyRankingControlsProps) => {
+export const WeeklyRankingControls: React.FC<WeeklyRankingControlsProps> = ({
+  onResetScores
+}) => {
   const { stats } = useWeeklyRanking();
-  const [showConfigModal, setShowConfigModal] = React.useState(false);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  };
-
-  const getWeekConfigInfo = () => {
-    if (!stats?.config) {
-      return "Configuração padrão (Domingo a Sábado)";
+  const getResetDescription = () => {
+    if (!stats?.config) return 'Carregando configuração...';
+    
+    const { config } = stats;
+    
+    if (config.custom_start_date && config.custom_end_date) {
+      const endDate = new Date(config.custom_end_date);
+      return `Resetará automaticamente após ${endDate.toLocaleDateString('pt-BR')} (período personalizado)`;
     }
     
-    const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    const startDay = dayNames[stats.config.start_day_of_week] || 'Domingo';
-    return `${startDay} - ${stats.config.duration_days} dias`;
-  };
-
-  const getCustomPeriodInfo = () => {
-    if (!stats?.config?.custom_start_date || !stats?.config?.custom_end_date) {
-      return null;
+    const dayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const startDay = dayNames[config.start_day_of_week];
+    
+    if (config.duration_days === 7) {
+      return `Resetará automaticamente toda ${startDay} às 00:00h (início da semana)`;
     }
     
-    return {
-      start: formatDate(stats.config.custom_start_date),
-      end: formatDate(stats.config.custom_end_date)
-    };
+    return `Resetará automaticamente a cada ${config.duration_days} dias, iniciando às ${startDay}s`;
   };
 
-  const customPeriod = getCustomPeriodInfo();
+  const getPeriodInfo = () => {
+    if (!stats?.config) return 'Configuração padrão';
+    
+    const { config } = stats;
+    
+    if (config.custom_start_date && config.custom_end_date) {
+      return 'Período Personalizado';
+    }
+    
+    const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const startDay = dayNames[config.start_day_of_week];
+    const endDayIndex = (config.start_day_of_week + config.duration_days - 1) % 7;
+    const endDay = dayNames[endDayIndex];
+    
+    if (config.duration_days === 7) {
+      return `Semana ${startDay} - ${endDay}`;
+    }
+    
+    return `Período ${startDay} - ${endDay} (${config.duration_days}d)`;
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Status da Configuração */}
-      <Card className="border-slate-200">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Settings className="h-5 w-5 text-slate-600" />
-            Configuração do Ranking Semanal
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Card de Informações */}
+      <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-semibold text-blue-900 flex items-center gap-2">
+            <Info className="h-5 w-5" />
+            Sistema de Ranking Semanal
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="space-y-3">
+          <div className="flex items-start gap-3">
+            <Calendar className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
             <div>
-              <label className="text-sm font-medium text-slate-600">Período da Semana</label>
-              <p className="text-sm text-slate-800">{getWeekConfigInfo()}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-600">Período Atual</label>
-              <p className="text-sm text-slate-800">
-                {stats ? `${formatDate(stats.current_week_start)} - ${formatDate(stats.current_week_end)}` : 'Carregando...'}
-              </p>
+              <p className="text-sm font-medium text-blue-800">Período Atual</p>
+              <p className="text-xs text-blue-600">{getPeriodInfo()}</p>
             </div>
           </div>
-
-          {customPeriod && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-blue-800">Período Personalizado Ativo</p>
-                  <p className="text-sm text-blue-600">
-                    {customPeriod.start} até {customPeriod.end}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowConfigModal(true)}
-              className="flex items-center gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              Configurar Período
-            </Button>
+          
+          <div className="bg-blue-100 p-3 rounded-lg">
+            <p className="text-xs text-blue-700">
+              <strong>Funcionamento:</strong> {getResetDescription()}
+            </p>
+          </div>
+          
+          <div className="text-xs text-blue-600 space-y-1">
+            <p>• Pontuações são acumuladas durante o período ativo</p>
+            <p>• Rankings são calculados automaticamente</p>
+            <p>• Prêmios são distribuídos conforme posicionamento</p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Controles de Ação */}
+      {/* Card de Controles */}
       <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-red-50">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <RefreshCw className="h-5 w-5 text-orange-600" />
-            Controles de Sistema
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-semibold text-orange-900 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5" />
+            Controles Administrativos
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-yellow-800">
-                <p className="font-medium mb-1">⚠️ Ação Irreversível</p>
-                <p>O reset das pontuações irá zerar todos os scores e posições da semana atual.</p>
-              </div>
-            </div>
-          </div>
+          <Alert className="border-orange-200 bg-orange-50">
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800 text-sm">
+              <strong>Atenção:</strong> O reset manual afeta todos os usuários e não pode ser desfeito.
+            </AlertDescription>
+          </Alert>
 
-          <Button 
-            onClick={onResetScores}
-            variant="destructive"
-            className="w-full"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Resetar Pontuações Semanais
-          </Button>
+          <div className="space-y-3">
+            <Button
+              onClick={onResetScores}
+              variant="destructive"
+              className="w-full flex items-center gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Resetar Pontuações Manualmente
+            </Button>
+            
+            <p className="text-xs text-gray-600 text-center">
+              Use apenas em caso de necessidade. O sistema resetará automaticamente conforme configurado.
+            </p>
+          </div>
         </CardContent>
       </Card>
-
-      {/* Modal de Configuração */}
-      <WeeklyConfigModal 
-        open={showConfigModal}
-        onOpenChange={setShowConfigModal}
-        onConfigUpdated={() => {
-          setShowConfigModal(false);
-          // Trigger refetch if needed
-        }}
-      />
     </div>
   );
 };
