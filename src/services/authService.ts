@@ -34,7 +34,17 @@ class AuthService {
         password: credentials.password
       });
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro do Supabase Auth no login', { error: error.message }, 'AUTH_SERVICE');
+        
+        // Preservar mensagens específicas de erro
+        if (error.message?.includes('Email not confirmed')) {
+          throw new Error('Email not confirmed');
+        }
+        
+        throw error;
+      }
+      
       if (!data.user || !data.session) {
         throw new Error('Erro no login: dados incompletos');
       }
@@ -77,7 +87,21 @@ class AuthService {
       });
     } catch (error: any) {
       logger.error('Erro no login', { error: error.message }, 'AUTH_SERVICE');
-      return createErrorResponse(handleServiceError(error, 'AUTH_LOGIN'));
+      
+      // Preservar mensagens específicas importantes
+      let errorMessage = "Erro ao fazer login";
+      
+      if (error.message?.includes('Email not confirmed')) {
+        errorMessage = "Email not confirmed";
+      } else if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = "Email ou senha incorretos";
+      } else if (error.message?.includes('invalid email')) {
+        errorMessage = "Email inválido";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      return createErrorResponse(errorMessage);
     }
   }
 
