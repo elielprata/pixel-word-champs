@@ -1,149 +1,132 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { secureLogger } from '@/utils/secureLogger';
+import { logger } from '@/utils/logger';
 
-interface WeeklyRankingStats {
+interface WeeklyRankingEntry {
+  id: string;
+  user_id: string;
+  username: string;
+  total_score: number;
+  position: number;
+  prize_amount: number;
+  payment_status: string;
+  pix_key?: string;
+  pix_holder_name?: string;
+  week_start: string;
+  week_end: string;
+}
+
+interface WeeklyStats {
   current_week_start: string;
   current_week_end: string;
   total_participants: number;
   total_prize_pool: number;
   last_update: string;
-  config?: {
-    start_day_of_week: number;
-    duration_days: number;
-    custom_start_date: string | null;
-    custom_end_date: string | null;
-  };
-  top_3_players: Array<{
-    username: string;
-    score: number;
-    position: number;
-    prize: number;
-  }>;
-}
-
-interface WeeklyRankingUser {
-  id: string;
-  username: string;
-  total_score: number;
-  position: number;
-  prize_amount: number;
-  pix_key?: string;
-  pix_holder_name?: string;
 }
 
 export const useWeeklyRanking = () => {
   const { toast } = useToast();
-  const [currentRanking, setCurrentRanking] = useState<WeeklyRankingUser[]>([]);
-  const [stats, setStats] = useState<WeeklyRankingStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchWeeklyRankingStats = async () => {
-    try {
-      const { data, error } = await supabase.rpc('get_weekly_ranking_stats');
+  // Query para ranking atual
+  const { data: currentRanking, isLoading, error, refetch } = useQuery({
+    queryKey: ['weeklyRanking'],
+    queryFn: async (): Promise<WeeklyRankingEntry[]> => {
+      logger.info('Buscando ranking semanal atual', undefined, 'USE_WEEKLY_RANKING');
       
-      if (error) throw error;
-      
-      // Tratamento seguro da conversão de tipo
-      if (data && typeof data === 'object' && !Array.isArray(data)) {
-        // Converter primeiro para unknown, depois para o tipo desejado
-        const rawData = data as unknown as WeeklyRankingStats;
-        return rawData;
+      // Primeiro, atualizar o ranking
+      const { error: updateError } = await supabase.rpc('update_weekly_ranking');
+      if (updateError) {
+        logger.error('Erro ao atualizar ranking', { error: updateError.message }, 'USE_WEEKLY_RANKING');
+        throw updateError;
       }
-      
-      throw new Error('Formato de dados inválido recebido do servidor');
-    } catch (error) {
-      secureLogger.error('Erro ao buscar estatísticas do ranking', { error }, 'WEEKLY_RANKING');
-      throw error;
-    }
-  };
 
-  const fetchCurrentRanking = async (weekStartStr: string) => {
-    try {
+      // Buscar dados do ranking atual
+      const currentWeekStart = new Date();
+      currentWeekStart.setUTCDate(currentWeekStart.getUTCDate() - currentWeekStart.getUTCDay());
+      currentWeekStart.setUTCHours(0, 0, 0, 0);
+
       const { data, error } = await supabase
         .from('weekly_rankings')
-        .select(`
-          id,
-          user_id,
-          username,
-          total_score,
-          position,
-          prize_amount,
-          pix_key,
-          pix_holder_name
-        `)
-        .eq('week_start', weekStartStr)
+        .select('*')
+        .gte('week_start', currentWeekStart.toISOString().split('T')[0])
         .order('position', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao buscar ranking semanal', { error: error.message }, 'USE_WEEKLY_RANKING');
+        throw error;
+      }
 
+      logger.info('Ranking semanal carregado', { count: data?.length || 0 }, 'USE_WEEKLY_RANKING');
       return data || [];
-    } catch (error) {
-      secureLogger.error('Erro ao buscar ranking atual', { error }, 'WEEKLY_RANKING');
-      throw error;
-    }
-  };
+    },
+    refetchInterval: 30000, // Atualizar a cada 30 segundos
+  });
 
-  const resetWeeklyScores = async () => {
-    try {
-      const { error } = await supabase.rpc('reset_weekly_scores_and_positions');
+  // Query para estatísticas usando a nova função avançada
+  const { data: stats } = useQuery({
+    queryKey: ['weeklyRankingStats'],
+    queryFn: async (): Promise<WeeklyStats> => {
+      logger.info('Buscando estatísticas do ranking semanal', undefined, 'USE_WEEKLY_RANKING');
       
-      if (error) throw error;
+      const { data, error } = await supabase.rpc('get_weekly_ranking_stats');
       
-      secureLogger.info('Pontuações semanais resetadas manualmente', undefined, 'WEEKLY_RANKING');
-    } catch (error) {
-      secureLogger.error('Erro ao resetar pontuações', { error }, 'WEEKLY_RANKING');
-      throw error;
-    }
-  };
+      if (error) {
+        logger.error('Erro ao buscar estatísticas', { error: error.message }, 'USE_WEEKLY_RANKING');
+        throw error;
+      }
 
-  const loadData = async () => {
-    setIsLoading(true);
-    setError(null);
+      return data;
+    },
+    refetchInterval: 30000,
+  });
 
-    try {
-      const statsData = await fetchWeeklyRankingStats();
+  // Mutation para reset usando a nova função
+  const resetWeeklyScoresMutation = useMutation({
+    mutationFn: async () => {
+      logger.info('Executando reset de pontuações semanais', undefined, 'USE_WEEKLY_RANKING');
       
-      // Converter data para formato adequado para a query
-      const weekStartStr = new Date(statsData.current_week_start).toISOString().split('T')[0];
-      const rankingData = await fetchCurrentRanking(weekStartStr);
-
-      setStats(statsData);
-      setCurrentRanking(rankingData);
+      const { data, error } = await supabase.rpc('reset_weekly_scores_and_positions');
       
-      secureLogger.debug('Dados do ranking carregados', { 
-        participants: statsData.total_participants,
-        rankingSize: rankingData.length,
-        weekStart: statsData.current_week_start,
-        weekEnd: statsData.current_week_end,
-        config: statsData.config
-      }, 'WEEKLY_RANKING');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar ranking';
-      setError(errorMessage);
-      secureLogger.error('Erro ao carregar dados do ranking', { error: errorMessage }, 'WEEKLY_RANKING');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const refetch = () => {
-    loadData();
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
+      if (error) {
+        logger.error('Erro no reset de pontuações', { error: error.message }, 'USE_WEEKLY_RANKING');
+        throw error;
+      }
+      
+      logger.info('Reset executado com sucesso', { data }, 'USE_WEEKLY_RANKING');
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Reset Executado com Sucesso!",
+        description: `${data.profiles_reset} perfis resetados e ${data.rankings_cleared} rankings limpos.`,
+      });
+      
+      // Invalidar queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ['weeklyRanking'] });
+      queryClient.invalidateQueries({ queryKey: ['weeklyRankingStats'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['realUserStats'] });
+    },
+    onError: (error: any) => {
+      logger.error('Erro no reset de pontuações', { error: error.message }, 'USE_WEEKLY_RANKING');
+      toast({
+        title: "Erro no Reset",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   return {
-    currentRanking,
+    currentRanking: currentRanking || [],
     stats,
     isLoading,
-    error,
+    error: error?.message,
     refetch,
-    resetWeeklyScores
+    resetWeeklyScores: resetWeeklyScoresMutation.mutate,
+    isResettingScores: resetWeeklyScoresMutation.isPending,
   };
 };

@@ -8,6 +8,8 @@ import { WeeklyRankingTable } from './WeeklyRankingTable';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
 import { WeeklyRankingHistory } from './WeeklyRankingHistory';
 import { WeeklyRankingDiagnostics } from './WeeklyRankingDiagnostics';
+import { AdvancedWeeklyStats } from './AdvancedWeeklyStats';
+import { WeeklyRankingResetPanel } from './WeeklyRankingResetPanel';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
@@ -75,9 +77,9 @@ export const WeeklyRankingView = () => {
         <div>
           <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <Trophy className="h-6 w-6 text-yellow-600" />
-            Ranking Semanal
+            Ranking Semanal Avançado
           </h2>
-          <p className="text-slate-600">Sistema de ranking contínuo com zeragem automática</p>
+          <p className="text-slate-600">Sistema completo de ranking com monitoramento em tempo real</p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
@@ -87,15 +89,23 @@ export const WeeklyRankingView = () => {
         </div>
       </div>
 
-      {/* Estatísticas */}
-      <WeeklyRankingStats stats={stats} />
+      {/* Estatísticas Avançadas */}
+      <AdvancedWeeklyStats />
 
       {/* Tabs Principais */}
       <Tabs defaultValue="ranking" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="ranking" className="flex items-center gap-2">
             <Trophy className="h-4 w-4" />
-            Ranking Atual
+            Ranking
+          </TabsTrigger>
+          <TabsTrigger value="diagnostics" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Diagnósticos
+          </TabsTrigger>
+          <TabsTrigger value="reset" className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Reset Sistema
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
@@ -105,14 +115,21 @@ export const WeeklyRankingView = () => {
             <Crown className="h-4 w-4" />
             Controles
           </TabsTrigger>
-          <TabsTrigger value="diagnostics" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Diagnósticos
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ranking" className="mt-6">
-          <WeeklyRankingTable ranking={currentRanking} />
+          <div className="space-y-6">
+            <WeeklyRankingStats stats={stats} />
+            <WeeklyRankingTable ranking={currentRanking} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="diagnostics" className="mt-6">
+          <WeeklyRankingDiagnostics />
+        </TabsContent>
+
+        <TabsContent value="reset" className="mt-6">
+          <WeeklyRankingResetPanel />
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
@@ -121,10 +138,6 @@ export const WeeklyRankingView = () => {
 
         <TabsContent value="controls" className="mt-6">
           <WeeklyRankingControls onResetScores={handleResetScores} />
-        </TabsContent>
-
-        <TabsContent value="diagnostics" className="mt-6">
-          <WeeklyRankingDiagnostics />
         </TabsContent>
       </Tabs>
     </div>
