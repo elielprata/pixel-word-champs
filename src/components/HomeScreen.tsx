@@ -27,8 +27,11 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Adicionar verificação automática de status
-  useCompetitionStatusChecker();
+  // Controlar hooks condicionalmente
+  const hasCompetitions = competitions.length > 0;
+  
+  // Adicionar verificação automática de status apenas quando necessário
+  useCompetitionStatusChecker(hasCompetitions);
 
   // Adicionar participação automática e atualização de ranking semanal
   useWeeklyCompetitionAutoParticipation();
@@ -76,9 +79,6 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
           }));
         
         setCompetitions(mappedCompetitions);
-        logger.debug('Competições mapeadas', { 
-          mappedCount: mappedCompetitions.length 
-        }, 'HOME_SCREEN');
       } else {
         logger.error('Erro ao buscar competições', { 
           error: response.error 
@@ -100,7 +100,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   useEffect(() => {
     loadCompetitions();
     
-    const interval = setInterval(loadCompetitions, TIMING_CONFIG.COMPETITION_REFRESH_INTERVAL);
+    // Aumentar intervalo para reduzir sobrecarga
+    const interval = setInterval(loadCompetitions, TIMING_CONFIG.COMPETITION_REFRESH_INTERVAL * 2);
     
     return () => clearInterval(interval);
   }, []);

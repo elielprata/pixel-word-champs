@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { UnifiedCompetition } from '@/types/competition';
 import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
 import { secureLogger } from '@/utils/secureLogger';
@@ -39,12 +39,18 @@ export const useUnifiedCompetitions = () => {
     loadCompetitions();
   }, [loadCompetitions]);
 
-  // Filtros derivados
-  const dailyCompetitions = competitions.filter(c => c.type === 'daily');
-  const weeklyCompetitions = competitions.filter(c => c.type === 'weekly');
-  const activeCompetitions = competitions.filter(c => c.status === 'active');
+  // Memoizar filtros para evitar recálculos desnecessários
+  const dailyCompetitions = useMemo(() => 
+    competitions.filter(c => c.type === 'daily'), [competitions]);
   
-  const activeWeeklyCompetition = weeklyCompetitions.find(c => c.status === 'active') || null;
+  const weeklyCompetitions = useMemo(() => 
+    competitions.filter(c => c.type === 'weekly'), [competitions]);
+  
+  const activeCompetitions = useMemo(() => 
+    competitions.filter(c => c.status === 'active'), [competitions]);
+  
+  const activeWeeklyCompetition = useMemo(() => 
+    weeklyCompetitions.find(c => c.status === 'active') || null, [weeklyCompetitions]);
 
   return {
     competitions,

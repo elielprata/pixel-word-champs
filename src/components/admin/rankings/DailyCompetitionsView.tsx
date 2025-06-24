@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { CompetitionTimeInfo } from './daily/CompetitionTimeInfo';
@@ -33,11 +34,12 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
   isLoading,
   onRefresh
 }) => {
-  // Adicionar hook para atualização automática de status de todas as competições
-  useCompetitionStatusUpdater(competitions);
-
-  // Adicionar verificação automática de status
-  useCompetitionStatusChecker();
+  // Controlar a execução dos hooks para evitar loops
+  const shouldCheckStatus = competitions.length > 0 && !isLoading;
+  
+  // Usar hooks condicionalmente para evitar execuções desnecessárias
+  useCompetitionStatusUpdater(shouldCheckStatus ? competitions : []);
+  useCompetitionStatusChecker(shouldCheckStatus);
 
   const { activeCompetitions } = useDailyCompetitionsLogic(competitions);
   const {
@@ -50,29 +52,18 @@ export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
     handleCompetitionUpdated
   } = useDailyCompetitionsActions();
 
-  console.log('🔍 DailyCompetitionsView - Estados centralizados:', {
-    editingCompetition: editingCompetition?.id,
-    editingCompetitionTitle: editingCompetition?.title,
-    isEditModalOpen,
-    activeCompetitions: activeCompetitions.length,
-    deletingId
-  });
-
   // Função para lidar com edição
   const onEditCompetition = (competition: DailyCompetition) => {
-    console.log('📝 DailyCompetitionsView - Editando competição:', competition.id);
     handleEdit(competition);
   };
 
   // Função para lidar com exclusão
   const onDeleteCompetition = (competition: DailyCompetition) => {
-    console.log('🗑️ DailyCompetitionsView - Excluindo competição:', competition.id);
     handleDelete(competition, onRefresh);
   };
 
   // Função para lidar com a abertura do modal
   const handleModalOpenChange = (open: boolean) => {
-    console.log('🔍 DailyCompetitionsView - Mudança de estado do modal:', open);
     setIsEditModalOpen(open);
   };
 

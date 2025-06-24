@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw } from 'lucide-react';
 import { UnifiedCompetitionModal } from './UnifiedCompetitionModal';
@@ -53,22 +53,23 @@ export const UnifiedCompetitionsView = () => {
     closeModal();
   };
 
-  // Converter UnifiedCompetition[] para DailyCompetition[]
-  const dailyCompetitions: DailyCompetition[] = competitions
-    .filter(comp => comp.type === 'daily')
-    .map(comp => ({
-      id: comp.id,
-      title: comp.title,
-      description: comp.description,
-      start_date: comp.startDate,
-      end_date: comp.endDate,
-      status: comp.status,
-      prize_pool: comp.prizePool,
-      max_participants: comp.maxParticipants,
-      total_participants: comp.totalParticipants || 0,
-      theme: comp.theme || 'default',
-      rules: null
-    }));
+  // Memoizar conversão das competições para evitar re-renders desnecessários
+  const dailyCompetitions: DailyCompetition[] = useMemo(() => 
+    competitions
+      .filter(comp => comp.type === 'daily')
+      .map(comp => ({
+        id: comp.id,
+        title: comp.title,
+        description: comp.description,
+        start_date: comp.startDate,
+        end_date: comp.endDate,
+        status: comp.status,
+        prize_pool: comp.prizePool,
+        max_participants: comp.maxParticipants,
+        total_participants: comp.totalParticipants || 0,
+        theme: comp.theme || 'default',
+        rules: null
+      })), [competitions]);
 
   const handleRefresh = () => {
     refetch();

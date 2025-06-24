@@ -1,15 +1,27 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { competitionStatusService } from '@/services/competitionStatusService';
 import { logger } from '@/utils/logger';
 
 export const useCompetitionStatusUpdater = (competitions: any[]) => {
+  const lastCheckRef = useRef<number>(0);
+  const competitionsHashRef = useRef<string>('');
+
   useEffect(() => {
-    // Auto-update desabilitado para evitar loops infinitos
-    // O status é calculado em tempo real nos componentes quando necessário
-    logger.debug('useCompetitionStatusUpdater: Auto-update desabilitado para evitar loops');
+    // Criar hash das competições para detectar mudanças reais
+    const competitionsHash = competitions.map(c => `${c.id}-${c.status}`).join(',');
     
-    // Apenas log de debug para verificar se há inconsistências
+    // Evitar verificações desnecessárias
+    if (competitionsHashRef.current === competitionsHash) return;
+    
+    // Implementar debounce de 5 segundos
+    const now = Date.now();
+    if (now - lastCheckRef.current < 5000) return;
+    
+    lastCheckRef.current = now;
+    competitionsHashRef.current = competitionsHash;
+
+    // Apenas log de debug para verificar inconsistências (sem atualizações automáticas)
     if (competitions.length > 0) {
       competitions.forEach(competition => {
         const actualStatus = competitionStatusService.calculateCorrectStatus({
@@ -23,7 +35,7 @@ export const useCompetitionStatusUpdater = (competitions: any[]) => {
             title: competition.title,
             dbStatus: competition.status,
             calculatedStatus: actualStatus
-          });
+          }, 'COMPETITION_STATUS_UPDATER');
         }
       });
     }
