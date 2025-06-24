@@ -75,6 +75,12 @@ export const WeeklyRankingView = () => {
     );
   }
 
+  // Ensure stats has the required top_3_players property
+  const extendedStats = stats ? {
+    ...stats,
+    top_3_players: stats.top_3_players || []
+  } : null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -84,7 +90,7 @@ export const WeeklyRankingView = () => {
             <Trophy className="h-6 w-6 text-yellow-600" />
             Ranking Semanal
           </h2>
-          <p className="text-slate-600">Sistema de ranking contínuo com zeragem automática</p>
+          <p className="text-slate-600">Sistema de ranking contínuo integrado com configurações de prêmios</p>
         </div>
         <div className="flex gap-3">
           <Button 
@@ -102,7 +108,7 @@ export const WeeklyRankingView = () => {
       </div>
 
       {/* Estatísticas */}
-      <WeeklyRankingStats stats={stats} onConfigUpdated={handleConfigUpdated} />
+      <WeeklyRankingStats stats={extendedStats} onConfigUpdated={handleConfigUpdated} />
 
       {/* Controles */}
       <WeeklyRankingControls onResetScores={handleResetScores} />

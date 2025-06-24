@@ -36,12 +36,15 @@ export const useAdvancedWeeklyStats = () => {
         throw error;
       }
       
+      // Type assertion para garantir que data é do tipo correto
+      const stats = data as AdvancedWeeklyStats;
+      
       logger.info('Estatísticas avançadas carregadas', { 
-        participants: data.total_participants,
-        prize_pool: data.total_prize_pool 
+        participants: stats.total_participants,
+        prize_pool: stats.total_prize_pool 
       }, 'ADVANCED_WEEKLY_STATS');
       
-      return data;
+      return stats;
     },
     refetchInterval: 10000, // Atualizar a cada 10 segundos
   });

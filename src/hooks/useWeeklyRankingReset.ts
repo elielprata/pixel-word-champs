@@ -28,12 +28,15 @@ export const useWeeklyRankingReset = () => {
         throw error;
       }
       
+      // Type assertion para garantir que data é do tipo correto
+      const resetData = data as ResetResult;
+      
       logger.info('Reset executado com sucesso', { 
-        profiles_reset: data.profiles_reset,
-        rankings_cleared: data.rankings_cleared 
+        profiles_reset: resetData.profiles_reset,
+        rankings_cleared: resetData.rankings_cleared 
       }, 'WEEKLY_RANKING_RESET');
       
-      return data;
+      return resetData;
     },
     onSuccess: (data) => {
       toast({

@@ -70,6 +70,12 @@ export const WeeklyRankingView = () => {
     );
   }
 
+  // Ensure stats has the required top_3_players property for advanced stats
+  const extendedStats = stats ? {
+    ...stats,
+    top_3_players: stats.top_3_players || []
+  } : null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -79,7 +85,7 @@ export const WeeklyRankingView = () => {
             <Trophy className="h-6 w-6 text-yellow-600" />
             Ranking Semanal Avançado
           </h2>
-          <p className="text-slate-600">Sistema completo de ranking com monitoramento em tempo real</p>
+          <p className="text-slate-600">Sistema completo de ranking integrado com configurações de prêmios</p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
@@ -119,7 +125,7 @@ export const WeeklyRankingView = () => {
 
         <TabsContent value="ranking" className="mt-6">
           <div className="space-y-6">
-            <WeeklyRankingStats stats={stats} />
+            <WeeklyRankingStats stats={extendedStats} />
             <WeeklyRankingTable ranking={currentRanking} />
           </div>
         </TabsContent>

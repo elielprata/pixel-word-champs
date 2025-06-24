@@ -33,8 +33,11 @@ export const useWeeklyRankingDiagnostics = () => {
         throw error;
       }
       
-      logger.info('Diagnósticos executados com sucesso', { health: data.system_health }, 'WEEKLY_RANKING_DIAGNOSTICS');
-      return data;
+      // Type assertion para garantir que data é do tipo correto
+      const diagnostics = data as DiagnosticsResult;
+      
+      logger.info('Diagnósticos executados com sucesso', { health: diagnostics.system_health }, 'WEEKLY_RANKING_DIAGNOSTICS');
+      return diagnostics;
     },
     refetchInterval: 30000, // Atualizar a cada 30 segundos
   });

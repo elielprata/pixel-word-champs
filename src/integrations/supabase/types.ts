@@ -1026,6 +1026,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_prize_for_position: {
+        Args: { user_position: number }
+        Returns: number
+      }
       check_user_availability: {
         Args: { check_username?: string; check_email?: string }
         Returns: Json

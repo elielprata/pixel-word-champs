@@ -24,6 +24,18 @@ interface WeeklyStats {
   total_participants: number;
   total_prize_pool: number;
   last_update: string;
+  config?: {
+    start_day_of_week: number;
+    duration_days: number;
+    custom_start_date?: string;
+    custom_end_date?: string;
+  };
+  top_3_players: Array<{
+    username: string;
+    score: number;
+    position: number;
+    prize: number;
+  }>;
 }
 
 export const useWeeklyRanking = () => {
@@ -78,7 +90,8 @@ export const useWeeklyRanking = () => {
         throw error;
       }
 
-      return data;
+      // Type assertion para garantir que data é do tipo correto
+      return data as WeeklyStats;
     },
     refetchInterval: 30000,
   });
@@ -98,10 +111,11 @@ export const useWeeklyRanking = () => {
       logger.info('Reset executado com sucesso', { data }, 'USE_WEEKLY_RANKING');
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
+      const resetData = data as { profiles_reset: number; rankings_cleared: number };
       toast({
         title: "Reset Executado com Sucesso!",
-        description: `${data.profiles_reset} perfis resetados e ${data.rankings_cleared} rankings limpos.`,
+        description: `${resetData.profiles_reset} perfis resetados e ${resetData.rankings_cleared} rankings limpos.`,
       });
       
       // Invalidar queries relacionadas

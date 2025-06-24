@@ -84,7 +84,7 @@ export const WeeklyRankingControls: React.FC<WeeklyRankingControlsProps> = ({
           <div className="text-xs text-blue-600 space-y-1">
             <p>• Pontuações são acumuladas durante o período ativo</p>
             <p>• Rankings são calculados automaticamente</p>
-            <p>• Prêmios são distribuídos conforme posicionamento</p>
+            <p>• Prêmios são distribuídos conforme configuração da aba Pagamentos</p>
           </div>
         </CardContent>
       </Card>
