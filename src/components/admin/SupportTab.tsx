@@ -29,7 +29,8 @@ interface SupportTicket {
 export const SupportTab = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const isAdmin = useIsAdmin();
+  const isAdminQuery = useIsAdmin();
+  const isAdmin = isAdminQuery.data || false;
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -188,7 +189,7 @@ export const SupportTab = () => {
 
   useEffect(() => {
     loadTickets();
-  }, [statusFilter, priorityFilter]);
+  }, [statusFilter, priorityFilter, isAdmin]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -241,6 +242,18 @@ export const SupportTab = () => {
   };
 
   const stats = getTicketStats();
+
+  // Mostrar loading enquanto verifica se é admin
+  if (isAdminQuery.isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
