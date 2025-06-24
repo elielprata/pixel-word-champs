@@ -1,16 +1,10 @@
 
-import { useMemo, useCallback } from 'react';
-import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
-import { useSimpleSelection } from '@/hooks/useSimpleSelection';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useGameValidation } from '@/hooks/useGameValidation';
-import { useGameState } from '@/hooks/useGameState';
-import { useCellInteractions } from '@/hooks/useCellInteractions';
-import { useSelectionLock } from '@/hooks/useSelectionLock';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useOptimizedWordSelection } from './useOptimizedWordSelection';
+import { useGameState } from './useGameState';
+import { useCellInteractions } from './useCellInteractions';
+import { useOptimizedGameScoring } from './useOptimizedGameScoring';
 import { logger } from '@/utils/logger';
-import { isLinearPath } from '@/hooks/word-selection/validateLinearPath';
-import { type Position } from '@/utils/boardUtils';
-import { GAME_CONSTANTS } from '@/constants/game';
 
 interface GameBoardProps {
   level: number;
@@ -27,180 +21,123 @@ export const useGameBoard = ({
   canRevive,
   onRevive
 }: GameBoardProps) => {
-  const isMobile = useIsMobile();
-  const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
-  
-  // Estado do jogo consolidado
-  const gameState = useGameState(level, timeLeft, onLevelComplete);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showGameOver, setShowGameOver] = useState(false);
+  const [showLevelComplete, setShowLevelComplete] = useState(false);
+  const gameInitialized = useRef(false);
 
-  // Sistema de lock para evitar duplicação
-  const { isProcessing, acquireLock, releaseLock } = useSelectionLock();
+  // Hook para seleção de palavras otimizada
+  const { 
+    board, 
+    levelWords, 
+    isWordSelectionError,
+    error: wordSelectionError 
+  } = useOptimizedWordSelection(level);
 
-  // Validação de palavras (única fonte de verdade)
-  const { validateAndAddWord } = useGameValidation(gameState.foundWords, levelWords);
+  // Hook para pontuação otimizada
+  const {
+    TOTAL_WORDS_REQUIRED,
+    calculateLevelData,
+    registerLevelCompletion,
+    discardIncompleteLevel,
+    initializeSession,
+    isUpdatingScore
+  } = useOptimizedGameScoring(level, board);
+
+  // Estado do jogo
+  const gameState = useGameState(levelWords);
 
   // Interações com células
   const cellInteractions = useCellInteractions(
+    board,
     gameState.foundWords,
-    gameState.permanentlyMarkedCells,
-    gameState.hintHighlightedCells
+    gameState.addFoundWord,
+    gameState.updateHintsUsed
   );
 
-  // Seleção simples (única fonte de verdade)
-  const {
-    startCell,
-    currentCell,
-    isDragging,
-    handleStart,
-    handleDrag,
-    handleEnd,
-    isCellSelected,
-    getLinearPath
-  } = useSimpleSelection();
-
-  // CORREÇÃO DEFINITIVA: Finalizar seleção com LOCK PROTECTION
-  const handleCellEnd = useCallback(() => {
-    const finalSelection = handleEnd();
-
-    if (finalSelection.length >= 3 && isLinearPath(finalSelection)) {
-      const word = finalSelection.map(pos => boardData.board[pos.row][pos.col]).join('');
-      
-      logger.info(`🔍 TENTATIVA DE SELEÇÃO COM LOCK - Palavra: "${word}"`, { 
-        word, 
-        positions: finalSelection,
-        isProcessing,
-        beforeCount: gameState.foundWords.length,
-        foundWords: gameState.foundWords.map(fw => fw.word)
-      }, 'GAME_BOARD');
-      
-      // PROTEÇÃO CRÍTICA: Tentar adquirir lock antes de processar
-      if (!acquireLock(word)) {
-        logger.warn(`⚠️ SELEÇÃO BLOQUEADA - Lock não pôde ser adquirido para "${word}"`, { 
-          word,
-          isProcessing 
-        }, 'GAME_BOARD');
-        return;
-      }
-
-      try {
-        const validatedWord = validateAndAddWord(word, finalSelection);
-        if (validatedWord) {
-          logger.info(`✅ PALAVRA VALIDADA COM LOCK - "${word}" = ${validatedWord.points} pontos`, { 
-            word: validatedWord.word,
-            points: validatedWord.points,
-            beforeCount: gameState.foundWords.length
-          }, 'GAME_BOARD');
-          
-          // ÚNICA chamada para adicionar palavra
-          gameState.addFoundWord(validatedWord);
-        }
-      } finally {
-        // SEMPRE liberar o lock, mesmo em caso de erro
-        releaseLock();
-      }
+  // Inicializar sessão quando o jogo estiver pronto
+  useEffect(() => {
+    if (board && levelWords.length > 0 && !gameInitialized.current) {
+      initializeSession();
+      gameInitialized.current = true;
+      setIsLoading(false);
+      logger.info('🎮 Jogo inicializado - sessão em memória criada', { level });
     }
-  }, [handleEnd, boardData.board, validateAndAddWord, gameState, acquireLock, releaseLock, isProcessing]);
+  }, [board, levelWords, initializeSession, level]);
 
-  // Seleção atual em tempo real
-  const selectedCells: Position[] = useMemo(() => {
-    if (isDragging && startCell && currentCell) {
-      return getLinearPath(startCell, currentCell);
+  // Verificar se há erro na seleção de palavras
+  useEffect(() => {
+    if (wordSelectionError) {
+      setError(wordSelectionError);
+      setIsLoading(false);
     }
-    return [];
-  }, [isDragging, startCell, currentCell, getLinearPath]);
+  }, [wordSelectionError]);
 
-  // Função de cor para palavras
-  const getWordColor = useCallback((wordIndex: number) => {
-    return GAME_CONSTANTS.WORD_COLORS[wordIndex % GAME_CONSTANTS.WORD_COLORS.length];
-  }, []);
-
-  // Verificar índice da palavra em uma célula
-  const getCellWordIndex = useCallback((row: number, col: number) => {
-    return gameState.foundWords.findIndex(fw => 
-      fw.positions.some(pos => pos.row === row && pos.col === col)
-    );
-  }, [gameState.foundWords]);
-
-  // Ações do jogo simplificadas
-  const useHint = useCallback(() => {
-    if (gameState.hintsUsed >= GAME_CONSTANTS.MAX_HINTS_PER_LEVEL) {
-      logger.warn('⚠️ Limite de dicas atingido', { used: gameState.hintsUsed, max: GAME_CONSTANTS.MAX_HINTS_PER_LEVEL }, 'GAME_BOARD');
-      return;
-    }
-
-    const remainingWords = levelWords.filter(word => 
-      !gameState.foundWords.some(fw => fw.word === word)
-    );
-
-    if (remainingWords.length === 0) {
-      logger.warn('⚠️ Não há palavras restantes para dica', {}, 'GAME_BOARD');
-      return;
-    }
-
-    const randomWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
-    const placedWord = boardData.placedWords.find(pw => pw.word === randomWord);
+  // Verificar conclusão do nível
+  useEffect(() => {
+    const { isLevelCompleted, currentLevelScore } = calculateLevelData(gameState.foundWords);
     
-    if (placedWord) {
-      gameState.setHintHighlightedCells(placedWord.positions);
-      gameState.setHintsUsed(prev => prev + 1);
+    if (isLevelCompleted && !showLevelComplete && !isUpdatingScore) {
+      logger.info('🏆 Nível completado! Registrando...', { 
+        level, 
+        score: currentLevelScore,
+        wordsFound: gameState.foundWords.length 
+      });
       
-      logger.info(`💡 Dica usada para palavra "${randomWord}"`, { 
-        word: randomWord,
-        hintsUsed: gameState.hintsUsed + 1 
-      }, 'GAME_BOARD');
-
-      // Remover highlight após 3 segundos
-      setTimeout(() => {
-        gameState.setHintHighlightedCells([]);
-      }, 3000);
+      // Registrar conclusão do nível
+      registerLevelCompletion(gameState.foundWords, 0).then(() => {
+        setShowLevelComplete(true);
+        onLevelComplete(currentLevelScore);
+      });
     }
-  }, [gameState, levelWords, boardData.placedWords]);
+  }, [gameState.foundWords, calculateLevelData, showLevelComplete, isUpdatingScore, registerLevelCompletion, onLevelComplete, level]);
+
+  // Game over quando tempo acabar
+  useEffect(() => {
+    if (timeLeft <= 0 && !showLevelComplete && !showGameOver) {
+      logger.info('⏰ Tempo esgotado - nível não completado', { level, foundWords: gameState.foundWords.length });
+      discardIncompleteLevel();
+      setShowGameOver(true);
+    }
+  }, [timeLeft, showLevelComplete, showGameOver, discardIncompleteLevel, level, gameState.foundWords.length]);
 
   const handleGoHome = useCallback(() => {
-    window.location.href = '/';
-  }, []);
+    logger.info('🏠 Voltando ao menu - descartando progresso', { level });
+    discardIncompleteLevel();
+  }, [discardIncompleteLevel, level]);
 
   const closeGameOver = useCallback(() => {
-    gameState.setShowGameOver(false);
-  }, [gameState]);
+    setShowGameOver(false);
+  }, []);
+
+  const { currentLevelScore } = calculateLevelData(gameState.foundWords);
 
   return {
     isLoading,
     error,
-    isMobile,
-    // Props do tabuleiro
+    isWordSelectionError,
     boardProps: {
-      boardData,
-      size,
-      selectedCells,
-      isDragging: isDragging && !isProcessing // Disable dragging when processing
+      board,
+      selectedCells: cellInteractions.selectedCells,
+      foundWordPositions: cellInteractions.foundWordPositions,
+      onCellMouseDown: cellInteractions.handleCellMouseDown,
+      onCellMouseEnter: cellInteractions.handleCellMouseEnter,
+      onCellMouseUp: cellInteractions.handleCellMouseUp
     },
-    // Props do estado do jogo
     gameStateProps: {
       foundWords: gameState.foundWords,
       levelWords,
       hintsUsed: gameState.hintsUsed,
-      currentLevelScore: gameState.currentLevelScore
+      currentLevelScore
     },
-    // Props dos modais
     modalProps: {
-      showGameOver: gameState.showGameOver,
-      showLevelComplete: gameState.showLevelComplete
+      showGameOver,
+      showLevelComplete
     },
-    // Props de interação com células
-    cellInteractionProps: {
-      handleCellStart: isProcessing ? () => {} : handleStart, // Disable start when processing
-      handleCellMove: isProcessing ? () => {} : handleDrag,   // Disable move when processing
-      handleCellEnd: isProcessing ? () => {} : handleCellEnd, // Disable end when processing
-      isCellSelected,
-      isCellPermanentlyMarked: cellInteractions.isCellPermanentlyMarked,
-      isCellHintHighlighted: cellInteractions.isCellHintHighlighted,
-      getWordColor,
-      getCellWordIndex
-    },
-    // Ações do jogo
+    cellInteractionProps: cellInteractions,
     gameActions: {
-      useHint,
+      useHint: gameState.useHint,
       handleGoHome,
       closeGameOver
     }
