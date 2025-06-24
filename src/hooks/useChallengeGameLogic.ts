@@ -3,8 +3,10 @@ import { useState, useEffect } from 'react';
 import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
 import { competitionValidationService } from '@/services/competitionValidationService';
+import { useAuth } from '@/hooks/useAuth';
 
 export const useChallengeGameLogic = (challengeId: string) => {
+  const { user } = useAuth();
   const [currentLevel, setCurrentLevel] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
   const [gameSession, setGameSession] = useState<any>(null);
@@ -83,14 +85,14 @@ export const useChallengeGameLogic = (challengeId: string) => {
   };
 
   const markParticipationAsCompleted = async () => {
-    if (hasMarkedParticipation) {
-      console.log('Participação já foi marcada como concluída');
+    if (hasMarkedParticipation || !user) {
+      console.log('Participação já foi marcada como concluída ou usuário não logado');
       return;
     }
 
     try {
       console.log('🏁 Marcando participação como concluída...');
-      await competitionParticipationService.markUserAsParticipated(challengeId);
+      await competitionParticipationService.markUserAsParticipated(challengeId, user.id);
       if (gameSession?.id) {
         await gameService.completeGameSession(gameSession.id);
       }

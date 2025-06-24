@@ -28,17 +28,17 @@ export const useAuthOperations = (
     try {
       logger.info('Iniciando processo de login', { email: credentials.email }, 'AUTH_OPERATIONS');
       
-      const response = await authService.login(credentials);
+      const response = await authService.signIn(credentials.email, credentials.password);
       
       if (!isMountedRef.current) return;
 
-      if (response.success && response.data) {
+      if (response.data && !response.error) {
         setUser(response.data.user);
         setIsAuthenticated(true);
         setError('');
         logger.info('Login realizado com sucesso', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
       } else {
-        const errorMessage = response.error || 'Erro no login';
+        const errorMessage = response.error?.message || 'Erro no login';
         setError(errorMessage);
         setIsAuthenticated(false);
         setUser(null);
@@ -68,17 +68,21 @@ export const useAuthOperations = (
     try {
       logger.info('Iniciando processo de registro', { email: userData.email, username: userData.username }, 'AUTH_OPERATIONS');
       
-      const response = await authService.register(userData);
+      const response = await authService.signUp({
+        email: userData.email,
+        password: userData.password,
+        username: userData.username
+      });
       
       if (!isMountedRef.current) return;
 
-      if (response.success && response.data) {
+      if (response.data && !response.error) {
         setUser(response.data.user);
         setIsAuthenticated(true);
         setError('');
-        logger.info('Registro realizado com sucesso', { userId: response.data.user.id }, 'AUTH_OPERATIONS');
+        logger.info('Registro realizado com sucesso', { userId: response.data.user?.id }, 'AUTH_OPERATIONS');
       } else {
-        const errorMessage = response.error || 'Erro no registro';
+        const errorMessage = response.error?.message || 'Erro no registro';
         setError(errorMessage);
         setIsAuthenticated(false);
         setUser(null);
@@ -102,7 +106,7 @@ export const useAuthOperations = (
   const logout = useCallback(async () => {
     try {
       logger.info('Iniciando logout', undefined, 'AUTH_OPERATIONS');
-      await authService.logout();
+      await authService.signOut();
       
       if (isMountedRef.current) {
         setUser(null);

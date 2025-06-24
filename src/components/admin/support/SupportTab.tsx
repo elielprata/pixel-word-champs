@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,8 @@ interface SupportTicket {
   created_at: string;
   updated_at: string;
   user_id: string;
-  username: string;
+  username?: string;
+  resolution?: string;
 }
 
 export const SupportTab = () => {
@@ -135,7 +136,7 @@ export const SupportTab = () => {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadTickets();
   }, []);
 
@@ -259,7 +260,7 @@ export const SupportTab = () => {
                       </div>
                       <p className="text-gray-600 mb-2">{ticket.description}</p>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>Por: {ticket.username}</span>
+                        <span>Por: {ticket.username || 'Usuário'}</span>
                         <span>Criado: {formatBrasiliaDate(new Date(ticket.created_at))}</span>
                         <span>Atualizado: {formatBrasiliaDate(new Date(ticket.updated_at))}</span>
                       </div>
