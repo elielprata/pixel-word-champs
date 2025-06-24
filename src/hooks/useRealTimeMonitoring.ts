@@ -12,11 +12,13 @@ interface SystemHealthMetrics {
   system_load: 'low' | 'medium' | 'high';
   last_sync_time: string;
   sync_status: 'healthy' | 'warning' | 'critical';
+  completed_sessions_without_competition: number;
+  total_completed_sessions: number;
 }
 
 interface RealTimeAlert {
   id: string;
-  type: 'sync_failure' | 'orphaned_scores' | 'system_overload' | 'prize_mismatch';
+  type: 'sync_failure' | 'orphaned_scores' | 'system_overload' | 'prize_mismatch' | 'orphaned_sessions';
   severity: 'info' | 'warning' | 'critical';
   message: string;
   timestamp: string;
