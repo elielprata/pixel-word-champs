@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { prepareDailyCompetitionData, validateDailyCompetitionData } from '@/utils/dailyCompetitionValidation';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { ApiResponse } from '@/types';
+import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 export class DailyCompetitionValidationService {
   /**
@@ -72,7 +73,7 @@ export class DailyCompetitionValidationService {
         .from('custom_competitions')
         .update({
           ...preparedData,
-          updated_at: new Date().toISOString()
+          updated_at: createBrasiliaTimestamp(new Date().toString())
         })
         .eq('id', competitionId)
         .eq('competition_type', 'challenge') // Garantir que só atualize competições diárias
@@ -139,8 +140,8 @@ export class DailyCompetitionValidationService {
         
         if (endDate.getTime() !== expectedEndDate.getTime()) {
           console.log(`🔧 Corrigindo horário da competição ${comp.title}:`, {
-            current: endDate.toISOString(),
-            expected: expectedEndDate.toISOString()
+            current: endDate,
+            expected: expectedEndDate
           });
           
           corrections.push({

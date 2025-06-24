@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { IndividualPrize, GroupPrize } from '@/types/payment';
 import { secureLogger } from '@/utils/secureLogger';
+import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 export const usePaymentData = () => {
   const { toast } = useToast();
@@ -135,7 +137,7 @@ export const usePaymentData = () => {
           .from('prize_configurations')
           .update({ 
             prize_amount: prizeValue,
-            updated_at: new Date().toISOString()
+            updated_at: createBrasiliaTimestamp(new Date().toString())
           })
           .eq('id', prizeToUpdate.id);
 
@@ -179,7 +181,7 @@ export const usePaymentData = () => {
             group_name: editGroupPrize.name,
             total_winners: editGroupPrize.totalWinners,
             prize_amount: editGroupPrize.prizePerWinner,
-            updated_at: new Date().toISOString()
+            updated_at: createBrasiliaTimestamp(new Date().toString())
           })
           .eq('id', editGroupPrize.id);
 
@@ -216,7 +218,7 @@ export const usePaymentData = () => {
           .from('prize_configurations')
           .update({ 
             active: !group.active,
-            updated_at: new Date().toISOString()
+            updated_at: createBrasiliaTimestamp(new Date().toString())
           })
           .eq('id', groupId);
 

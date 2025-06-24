@@ -1,5 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
+import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 interface CompetitionHistoryData {
   competitionId: string;
@@ -30,7 +32,7 @@ class CompetitionHistoryService {
         prize_earned: data.prizeEarned,
         competition_start_date: data.competitionStartDate,
         competition_end_date: data.competitionEndDate,
-        finalized_at: new Date().toISOString()
+        finalized_at: createBrasiliaTimestamp(new Date().toString())
       }));
 
       const { error } = await supabase

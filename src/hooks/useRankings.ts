@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface RankingPlayer {
   pos: number;
@@ -22,8 +23,8 @@ export const useRankings = () => {
     try {
       console.log('📊 Buscando ranking semanal...');
       
-      // Calcular início da semana atual (segunda-feira)
-      const today = new Date();
+      // Calcular início da semana atual (segunda-feira) usando Brasília
+      const today = getCurrentBrasiliaDate();
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       const weekStart = new Date(today.setDate(diff));

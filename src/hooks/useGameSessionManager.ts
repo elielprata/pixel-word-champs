@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWeeklyCompetitionAutoParticipation } from './useWeeklyCompetitionAutoParticipation';
 import { weeklyPositionService } from '@/services/weeklyPositionService';
 import { logger } from '@/utils/logger';
+import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 interface GameSessionData {
   level: number;
@@ -32,7 +33,7 @@ export const useGameSessionManager = () => {
         competitionId: activeWeeklyCompetition?.id
       });
 
-      // Criar sessão no banco de dados (agora permitido)
+      // Criar sessão no banco de dados
       const { data: session, error } = await supabase
         .from('game_sessions')
         .insert({
@@ -42,9 +43,9 @@ export const useGameSessionManager = () => {
           competition_id: activeWeeklyCompetition?.id || null,
           total_score: 0,
           time_elapsed: 0,
-          is_completed: false, // Agora permitido!
+          is_completed: false,
           words_found: [],
-          started_at: new Date().toISOString()
+          started_at: createBrasiliaTimestamp(new Date().toString())
         })
         .select()
         .single();
@@ -129,7 +130,7 @@ export const useGameSessionManager = () => {
             time_elapsed: timeElapsed,
             is_completed: true,
             words_found: wordsFound,
-            completed_at: new Date().toISOString()
+            completed_at: createBrasiliaTimestamp(new Date().toString())
           })
           .eq('id', sessionId)
           .select()
@@ -154,7 +155,7 @@ export const useGameSessionManager = () => {
             time_elapsed: timeElapsed,
             is_completed: true,
             words_found: wordsFound,
-            completed_at: new Date().toISOString()
+            completed_at: createBrasiliaTimestamp(new Date().toString())
           })
           .select()
           .single();
