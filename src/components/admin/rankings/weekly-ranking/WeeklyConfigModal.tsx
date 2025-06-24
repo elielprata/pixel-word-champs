@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, RotateCcw } from 'lucide-react';
 import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
+import { formatWeeklyPeriodPreview, isValidDateRange } from '@/utils/weeklyDateUtils';
 
 interface WeeklyConfigModalProps {
   open: boolean;
@@ -61,7 +62,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
         custom_end_date: null
       });
     } else {
-      if (!customStartDate || !customEndDate) {
+      if (!customStartDate || !customEndDate || !isValidDateRange(customStartDate, customEndDate)) {
         return;
       }
       
@@ -84,20 +85,20 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   };
 
   const getPreview = () => {
-    if (configType === 'custom') {
-      if (!customStartDate || !customEndDate) return 'Selecione as datas';
-      
-      const start = new Date(customStartDate);
-      const end = new Date(customEndDate);
-      
-      return `${start.toLocaleDateString('pt-BR')} a ${end.toLocaleDateString('pt-BR')}`;
+    return formatWeeklyPeriodPreview(
+      configType,
+      customStartDate,
+      customEndDate,
+      startDayOfWeek,
+      durationDays
+    );
+  };
+
+  const isFormValid = () => {
+    if (configType === 'weekly') {
+      return true;
     }
-    
-    const startDay = DAYS_OF_WEEK.find(d => d.value === startDayOfWeek)?.label || 'Domingo';
-    const endDayIndex = (startDayOfWeek + durationDays - 1) % 7;
-    const endDay = DAYS_OF_WEEK[endDayIndex]?.label || 'Sábado';
-    
-    return `${startDay} a ${endDay} (${durationDays} dias)`;
+    return customStartDate && customEndDate && isValidDateRange(customStartDate, customEndDate);
   };
 
   return (
@@ -171,8 +172,15 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
                   type="date"
                   value={customEndDate}
                   onChange={(e) => setCustomEndDate(e.target.value)}
+                  min={customStartDate}
                 />
               </div>
+
+              {customStartDate && customEndDate && !isValidDateRange(customStartDate, customEndDate) && (
+                <p className="text-sm text-red-600">
+                  A data de fim deve ser posterior à data de início.
+                </p>
+              )}
             </TabsContent>
           </Tabs>
 
@@ -192,7 +200,10 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
+            <Button 
+              onClick={handleSave}
+              disabled={!isFormValid()}
+            >
               Salvar Configuração
             </Button>
           </div>
