@@ -33,8 +33,27 @@ export const useWeeklyRankingDiagnostics = () => {
         throw error;
       }
       
-      logger.info('Diagnósticos executados com sucesso', { health: data.system_health }, 'WEEKLY_RANKING_DIAGNOSTICS');
-      return data;
+      // Converter Json do Supabase para o tipo correto
+      const diagnosticsData = data as any;
+      
+      logger.info('Diagnósticos executados com sucesso', { health: diagnosticsData.system_health }, 'WEEKLY_RANKING_DIAGNOSTICS');
+      
+      return {
+        timestamp: diagnosticsData.timestamp,
+        system_health: diagnosticsData.system_health || 'warning',
+        issues: diagnosticsData.issues || {
+          orphaned_rankings: 0,
+          duplicate_rankings: 0,
+          config_issues: 0
+        },
+        statistics: diagnosticsData.statistics || {
+          active_profiles: 0,
+          total_game_sessions: 0,
+          completed_sessions: 0,
+          completion_rate: 0
+        },
+        recommendations: diagnosticsData.recommendations || []
+      };
     },
     refetchInterval: 30000, // Atualizar a cada 30 segundos
   });

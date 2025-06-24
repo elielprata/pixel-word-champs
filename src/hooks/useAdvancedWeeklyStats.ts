@@ -36,12 +36,23 @@ export const useAdvancedWeeklyStats = () => {
         throw error;
       }
       
+      // Converter Json do Supabase para o tipo correto
+      const statsData = data as any;
+      
       logger.info('Estatísticas avançadas carregadas', { 
-        participants: data.total_participants,
-        prize_pool: data.total_prize_pool 
+        participants: statsData.total_participants,
+        prize_pool: statsData.total_prize_pool 
       }, 'ADVANCED_WEEKLY_STATS');
       
-      return data;
+      return {
+        current_week_start: statsData.current_week_start,
+        current_week_end: statsData.current_week_end,
+        total_participants: statsData.total_participants || 0,
+        total_prize_pool: statsData.total_prize_pool || 0,
+        last_update: statsData.last_update,
+        config: statsData.config || null,
+        top_3_players: statsData.top_3_players || []
+      };
     },
     refetchInterval: 10000, // Atualizar a cada 10 segundos
   });

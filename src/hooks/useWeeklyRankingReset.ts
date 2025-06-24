@@ -28,12 +28,22 @@ export const useWeeklyRankingReset = () => {
         throw error;
       }
       
+      // Converter Json do Supabase para o tipo correto
+      const resetData = data as any;
+      
       logger.info('Reset executado com sucesso', { 
-        profiles_reset: data.profiles_reset,
-        rankings_cleared: data.rankings_cleared 
+        profiles_reset: resetData.profiles_reset,
+        rankings_cleared: resetData.rankings_cleared 
       }, 'WEEKLY_RANKING_RESET');
       
-      return data;
+      return {
+        success: resetData.success || true,
+        profiles_reset: resetData.profiles_reset || 0,
+        rankings_cleared: resetData.rankings_cleared || 0,
+        week_start: resetData.week_start,
+        week_end: resetData.week_end,
+        reset_at: resetData.reset_at
+      };
     },
     onSuccess: (data) => {
       toast({
