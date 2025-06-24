@@ -4,10 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw } from 'lucide-react';
 import { UnifiedCompetitionModal } from './UnifiedCompetitionModal';
 import { UnifiedCompetitionsList } from './UnifiedCompetitionsList';
+import { EditCompetitionModal } from './EditCompetitionModal';
 import { useUnifiedCompetitions } from '@/hooks/useUnifiedCompetitions';
 import { useUnifiedCompetitionModal } from '@/hooks/useUnifiedCompetitionModal';
+import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
+import { useToast } from "@/hooks/use-toast";
+import { UnifiedCompetition } from '@/types/competition';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const UnifiedCompetitionsView = () => {
+  const { toast } = useToast();
   const { 
     competitions, 
     isLoading, 
@@ -21,19 +36,61 @@ export const UnifiedCompetitionsView = () => {
     closeModal 
   } = useUnifiedCompetitionModal();
 
+  const [editingCompetition, setEditingCompetition] = useState<UnifiedCompetition | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deletingCompetition, setDeletingCompetition] = useState<UnifiedCompetition | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleCompetitionCreated = () => {
     refetch();
     closeModal();
   };
 
-  const handleEdit = (competition: any) => {
-    // TODO: Implementar edição na Etapa 3
-    console.log('Editar competição:', competition.id);
+  const handleEdit = (competition: UnifiedCompetition) => {
+    setEditingCompetition(competition);
+    setIsEditModalOpen(true);
   };
 
-  const handleDelete = (competition: any) => {
-    // TODO: Implementar exclusão na Etapa 3
-    console.log('Excluir competição:', competition.id);
+  const handleCompetitionUpdated = () => {
+    refetch();
+    setIsEditModalOpen(false);
+    setEditingCompetition(null);
+    toast({
+      title: "Sucesso",
+      description: "Competição atualizada com sucesso!",
+    });
+  };
+
+  const handleDelete = (competition: UnifiedCompetition) => {
+    setDeletingCompetition(competition);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingCompetition) return;
+    
+    setIsDeleting(true);
+    try {
+      const result = await unifiedCompetitionService.deleteCompetition(deletingCompetition.id);
+      
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: "Competição excluída com sucesso!",
+        });
+        refetch();
+      } else {
+        throw new Error(result.error || 'Erro ao excluir competição');
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao excluir competição",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeletingCompetition(null);
+    }
   };
 
   const handleRefresh = () => {
@@ -75,12 +132,45 @@ export const UnifiedCompetitionsView = () => {
         onDelete={handleDelete}
       />
 
-      {/* Modal */}
+      {/* Modal de Criação */}
       <UnifiedCompetitionModal
         open={isOpen}
         onOpenChange={closeModal}
         onCompetitionCreated={handleCompetitionCreated}
       />
+
+      {/* Modal de Edição */}
+      {editingCompetition && (
+        <EditCompetitionModal
+          open={isEditModalOpen}
+          onOpenChange={setIsEditModalOpen}
+          competition={editingCompetition}
+          onCompetitionUpdated={handleCompetitionUpdated}
+        />
+      )}
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <AlertDialog open={!!deletingCompetition} onOpenChange={() => setDeletingCompetition(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a competição "{deletingCompetition?.title}"? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
