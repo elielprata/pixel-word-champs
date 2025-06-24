@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Settings } from 'lucide-react';
+import { Trophy, Settings, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CreateCompetitionForm } from './competition-form/CreateCompetitionForm';
+import { secureLogger } from '@/utils/secureLogger';
 
 interface CreateCompetitionModalProps {
   open: boolean;
@@ -14,12 +16,23 @@ interface CreateCompetitionModalProps {
 export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreated }: CreateCompetitionModalProps) => {
   const [competitionType, setCompetitionType] = useState<'daily' | 'weekly'>('weekly');
   const [activeTab, setActiveTab] = useState('basic');
+  const [error, setError] = useState<string | null>(null);
+
+  // Log quando o modal é aberto/fechado
+  React.useEffect(() => {
+    if (open) {
+      secureLogger.debug('Modal de criação de competição aberto', { competitionType, activeTab }, 'CREATE_COMPETITION_MODAL');
+    }
+  }, [open, competitionType, activeTab]);
 
   const handleClose = () => {
+    secureLogger.debug('Fechando modal de criação de competição', undefined, 'CREATE_COMPETITION_MODAL');
+    setError(null);
     onOpenChange(false);
   };
 
   const handleCompetitionTypeChange = (type: 'daily' | 'weekly') => {
+    secureLogger.debug('Mudando tipo de competição', { from: competitionType, to: type }, 'CREATE_COMPETITION_MODAL');
     setCompetitionType(type);
     
     // If user is on prizes tab and switches to daily, move to basic tab
@@ -28,7 +41,48 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
     }
   };
 
+  const handleError = (errorMessage: string) => {
+    secureLogger.error('Erro no modal de criação de competição', { error: errorMessage }, 'CREATE_COMPETITION_MODAL');
+    setError(errorMessage);
+  };
+
   const showPrizesTab = competitionType === 'weekly';
+
+  // Error Boundary simples
+  if (error) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-600 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              Erro no Modal
+            </DialogTitle>
+          </DialogHeader>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+          <div className="flex justify-end gap-2 mt-4">
+            <button 
+              onClick={() => setError(null)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Tentar Novamente
+            </button>
+            <button 
+              onClick={handleClose}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+            >
+              Fechar
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -60,6 +114,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
               onCompetitionCreated={onCompetitionCreated}
               showPrizeConfig={false}
               onCompetitionTypeChange={handleCompetitionTypeChange}
+              onError={handleError}
             />
           </TabsContent>
 
@@ -71,6 +126,7 @@ export const CreateCompetitionModal = ({ open, onOpenChange, onCompetitionCreate
                 showPrizeConfig={true}
                 showBasicConfig={false}
                 onCompetitionTypeChange={handleCompetitionTypeChange}
+                onError={handleError}
               />
             </TabsContent>
           )}

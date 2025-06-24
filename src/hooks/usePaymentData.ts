@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { IndividualPrize, GroupPrize } from '@/types/payment';
+import { secureLogger } from '@/utils/secureLogger';
 
 export const usePaymentData = () => {
   const { toast } = useToast();
@@ -13,17 +14,22 @@ export const usePaymentData = () => {
   const [editIndividualValue, setEditIndividualValue] = useState<string>('');
   const [editGroupPrize, setEditGroupPrize] = useState<GroupPrize | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchPrizeConfigurations = async () => {
     try {
-      console.log('🏆 Buscando configurações de prêmios...');
+      setIsLoading(true);
+      setError(null);
+      secureLogger.debug('Buscando configurações de prêmios', undefined, 'PAYMENT_DATA');
       
-      const { data: prizeConfigs, error } = await supabase
+      const { data: prizeConfigs, error: fetchError } = await supabase
         .from('prize_configurations')
         .select('*')
         .order('position', { ascending: true });
 
-      if (error) throw error;
+      if (fetchError) {
+        throw fetchError;
+      }
 
       // Separar prêmios individuais e em grupo
       const individual: IndividualPrize[] = [];
@@ -48,13 +54,17 @@ export const usePaymentData = () => {
         }
       });
 
-      console.log('📊 Prêmios individuais carregados:', individual.length);
-      console.log('📊 Prêmios em grupo carregados:', groups.length);
+      secureLogger.debug('Prêmios carregados com sucesso', { 
+        individual: individual.length, 
+        groups: groups.length 
+      }, 'PAYMENT_DATA');
 
       setIndividualPrizes(individual);
       setGroupPrizes(groups);
     } catch (error) {
-      console.error('❌ Erro ao carregar configurações de prêmios:', error);
+      const errorMessage = 'Erro ao carregar configurações de prêmios';
+      secureLogger.error(errorMessage, { error }, 'PAYMENT_DATA');
+      setError(errorMessage);
       toast({
         title: "Erro ao carregar prêmios",
         description: "Não foi possível carregar as configurações de premiação.",
@@ -206,21 +216,31 @@ export const usePaymentData = () => {
   };
 
   const calculateTotalPrize = () => {
-    const individualTotal = individualPrizes.reduce((sum, prize) => sum + prize.prize, 0);
-    const groupTotal = groupPrizes
-      .filter(group => group.active)
-      .reduce((sum, group) => sum + (group.totalWinners * group.prizePerWinner), 0);
-    
-    return individualTotal + groupTotal;
+    try {
+      const individualTotal = individualPrizes.reduce((sum, prize) => sum + prize.prize, 0);
+      const groupTotal = groupPrizes
+        .filter(group => group.active)
+        .reduce((sum, group) => sum + (group.totalWinners * group.prizePerWinner), 0);
+      
+      return individualTotal + groupTotal;
+    } catch (error) {
+      secureLogger.error('Erro ao calcular prêmio total', { error }, 'PAYMENT_DATA');
+      return 0;
+    }
   };
 
   const calculateTotalWinners = () => {
-    const individualWinners = individualPrizes.filter(prize => prize.prize > 0).length;
-    const groupWinners = groupPrizes
-      .filter(group => group.active)
-      .reduce((sum, group) => sum + group.totalWinners, 0);
-    
-    return individualWinners + groupWinners;
+    try {
+      const individualWinners = individualPrizes.filter(prize => prize.prize > 0).length;
+      const groupWinners = groupPrizes
+        .filter(group => group.active)
+        .reduce((sum, group) => sum + group.totalWinners, 0);
+      
+      return individualWinners + groupWinners;
+    } catch (error) {
+      secureLogger.error('Erro ao calcular total de vencedores', { error }, 'PAYMENT_DATA');
+      return 0;
+    }
   };
 
   return {
@@ -231,6 +251,7 @@ export const usePaymentData = () => {
     editIndividualValue,
     editGroupPrize,
     isLoading,
+    error,
     setEditIndividualValue,
     setEditGroupPrize,
     handleEditIndividual,

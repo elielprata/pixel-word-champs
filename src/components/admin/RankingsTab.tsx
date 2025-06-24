@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +13,7 @@ import { WeeklyCompetitionsView } from './rankings/WeeklyCompetitionsView';
 import { DailyCompetitionsView } from './rankings/DailyCompetitionsView';
 import { useRankings } from '@/hooks/useRankings';
 import { useCompetitions } from '@/hooks/useCompetitions';
+import { useCreateCompetitionModal } from '@/hooks/useCreateCompetitionModal';
 
 // Use the same interface as WeeklyCompetitionsView expects
 interface WeeklyCompetition {
@@ -30,7 +30,7 @@ interface WeeklyCompetition {
 }
 
 export const RankingsTab = () => {
-  const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
+  const { isOpen, openModal, closeModal, error: modalError } = useCreateCompetitionModal();
   
   const {
     weeklyRanking,
@@ -50,7 +50,8 @@ export const RankingsTab = () => {
     weeklyCompetitions: weeklyCompetitions.length,
     customCompetitions: customCompetitions.length,
     isRankingsLoading,
-    isCompetitionsLoading
+    isCompetitionsLoading,
+    modalError
   });
 
   // Filtrar competições diárias (tipo 'challenge')
@@ -83,6 +84,7 @@ export const RankingsTab = () => {
     console.log('🔄 Nova competição criada, atualizando dados...');
     refreshData();
     refetchCompetitions();
+    closeModal();
   };
 
   const handleRefreshCompetitions = () => {
@@ -139,7 +141,7 @@ export const RankingsTab = () => {
                 
                 <Button 
                   className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700" 
-                  onClick={() => setIsCreateCompetitionOpen(true)}
+                  onClick={openModal}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Competição
@@ -212,8 +214,8 @@ export const RankingsTab = () => {
 
         {/* Modals */}
         <CreateCompetitionModal 
-          open={isCreateCompetitionOpen} 
-          onOpenChange={setIsCreateCompetitionOpen} 
+          open={isOpen} 
+          onOpenChange={closeModal} 
           onCompetitionCreated={handleCompetitionCreated} 
         />
       </div>

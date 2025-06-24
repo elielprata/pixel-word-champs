@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +12,9 @@ import { WeeklyTournamentSection } from './WeeklyTournamentSection';
 import { FormActions } from './FormActions';
 import { usePaymentData } from '@/hooks/usePaymentData';
 import { useCustomCompetitions } from '@/hooks/useCustomCompetitions';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { secureLogger } from '@/utils/secureLogger';
 
 interface CreateCompetitionFormProps {
   onClose: () => void;
@@ -18,6 +22,7 @@ interface CreateCompetitionFormProps {
   showPrizeConfig?: boolean;
   showBasicConfig?: boolean;
   onCompetitionTypeChange?: (type: 'daily' | 'weekly') => void;
+  onError?: (error: string) => void;
 }
 
 export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
@@ -25,12 +30,16 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
   onCompetitionCreated,
   showPrizeConfig = true,
   showBasicConfig = true,
-  onCompetitionTypeChange
+  onCompetitionTypeChange,
+  onError
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  // Hooks com tratamento de erro
   const paymentData = usePaymentData();
-  const { customCompetitions } = useCustomCompetitions();
+  const { customCompetitions, isLoading: competitionsLoading, error: competitionsError } = useCustomCompetitions();
 
   const [formData, setFormData] = useState({
     type: 'weekly' as 'daily' | 'weekly',
@@ -38,17 +47,34 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
     description: '',
     category: '',
     startDate: '',
-    startTime: '08:00', // Campo separado para horário
+    startTime: '08:00',
     endDate: '',
     maxParticipants: 1000,
     weeklyTournamentId: ''
   });
 
+  // Log de inicialização do componente
+  React.useEffect(() => {
+    secureLogger.debug('CreateCompetitionForm inicializado', { 
+      showPrizeConfig, 
+      showBasicConfig,
+      paymentDataLoading: paymentData.isLoading,
+      competitionsLoading,
+      competitionsError
+    }, 'CREATE_COMPETITION_FORM');
+  }, [showPrizeConfig, showBasicConfig, paymentData.isLoading, competitionsLoading, competitionsError]);
+
+  // Tratar erros dos hooks
+  React.useEffect(() => {
+    if (competitionsError && onError) {
+      onError(`Erro ao carregar competições: ${competitionsError}`);
+    }
+  }, [competitionsError, onError]);
+
   const handleInputChange = (field: string, value: any) => {
-    console.log(`📝 Campo alterado: ${field} =`, value);
+    secureLogger.debug(`Campo alterado: ${field}`, { value }, 'CREATE_COMPETITION_FORM');
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Notify parent component about competition type changes
     if (field === 'type' && onCompetitionTypeChange) {
       onCompetitionTypeChange(value);
     }
@@ -57,13 +83,15 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLocalError(null);
 
     try {
-      console.log('🚀 Criando competição com dados:', formData);
+      secureLogger.debug('Iniciando criação de competição', { formData }, 'CREATE_COMPETITION_FORM');
 
-      const totalPrizePool = paymentData.calculateTotalPrize();
+      const totalPrizePool = showPrizeConfig && formData.type === 'weekly' 
+        ? paymentData.calculateTotalPrize() 
+        : 0;
       
-      // Combinar data e horário apenas no momento do envio
       const startDateTime = formData.startDate && formData.startTime 
         ? `${formData.startDate}T${formData.startTime}:00`
         : formData.startDate;
@@ -80,9 +108,12 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
         weeklyTournamentId: formData.weeklyTournamentId || undefined
       };
 
+      secureLogger.debug('Dados da competição preparados', { competitionData }, 'CREATE_COMPETITION_FORM');
+
       const result = await customCompetitionService.createCompetition(competitionData);
       
       if (result.success) {
+        secureLogger.debug('Competição criada com sucesso', { competitionId: result.data?.id }, 'CREATE_COMPETITION_FORM');
         toast({
           title: "Sucesso!",
           description: "Competição criada com sucesso.",
@@ -96,16 +127,53 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
         throw new Error(result.error || 'Erro ao criar competição');
       }
     } catch (error) {
-      console.error('❌ Erro ao criar competição:', error);
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível criar a competição";
+      secureLogger.error('Erro ao criar competição', { error: errorMessage }, 'CREATE_COMPETITION_FORM');
+      
+      setLocalError(errorMessage);
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível criar a competição",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Loading state
+  if (paymentData.isLoading || competitionsLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+          <p className="text-sm text-gray-600">Carregando dados necessários...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (localError) {
+    return (
+      <div className="space-y-4">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {localError}
+          </AlertDescription>
+        </Alert>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setLocalError(null)}>
+            Tentar Novamente
+          </Button>
+          <Button variant="outline" onClick={onClose}>
+            Fechar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
