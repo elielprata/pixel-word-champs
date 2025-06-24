@@ -119,7 +119,7 @@ export const UnifiedCompetitionsList = ({
                 <div>
                   <div className="font-medium">Participantes</div>
                   <div className="text-slate-600">
-                    {competition.totalParticipants || 0} / {competition.maxParticipants}
+                    {competition.totalParticipants || 0} participantes
                   </div>
                 </div>
               </div>
