@@ -7,9 +7,10 @@ export const AdminPanelTabs = () => {
   logger.debug('Renderizando abas do painel administrativo', undefined, 'ADMIN_PANEL_TABS');
   
   return (
-    <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+    <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
       <TabsTrigger value="users">Usuários</TabsTrigger>
       <TabsTrigger value="rankings">Competições</TabsTrigger>
+      <TabsTrigger value="payments">Pagamentos</TabsTrigger>
       <TabsTrigger value="content">Conteúdo</TabsTrigger>
       <TabsTrigger value="monitoring">Monitoramento</TabsTrigger>
       <TabsTrigger value="support">Suporte</TabsTrigger>
