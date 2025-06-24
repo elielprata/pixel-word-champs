@@ -16,8 +16,8 @@ interface SupportTicket {
   id: string;
   title: string;
   description: string;
-  status: 'open' | 'in_progress' | 'resolved';
-  priority: 'low' | 'medium' | 'high';
+  status: string;
+  priority: string;
   created_at: string;
   updated_at: string;
   user_id: string;
@@ -43,7 +43,7 @@ export const SupportTab = () => {
         .from('support_tickets')
         .select(`
           *,
-          profiles!inner(username)
+          profiles!support_tickets_user_id_fkey(username)
         `)
         .order('created_at', { ascending: false });
 
@@ -51,7 +51,9 @@ export const SupportTab = () => {
 
       const formattedTickets = data?.map(ticket => ({
         ...ticket,
-        username: ticket.profiles?.username || 'Usuário'
+        username: ticket.profiles?.username || 'Usuário',
+        status: ticket.status as 'open' | 'in_progress' | 'resolved',
+        priority: ticket.priority as 'low' | 'medium' | 'high'
       })) || [];
 
       setTickets(formattedTickets);
