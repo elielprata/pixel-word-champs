@@ -1,51 +1,64 @@
 
-import { secureLogger } from '@/utils/secureLogger';
+/**
+ * VALIDAÇÕES ESPECÍFICAS PARA COMPETIÇÕES SEMANAIS (BRASÍLIA)
+ * 
+ * Verifica se as datas das competições semanais estão no formato correto:
+ * - Início: qualquer horário do dia escolhido
+ * - Fim: sempre 23:59:59 do último dia
+ */
 
-export const validateWeeklyCompetitionData = (formData: any) => {
-  secureLogger.debug('Validando dados de competição semanal', { formData }, 'WEEKLY_COMPETITION_VALIDATION');
-  
-  if (!formData.title?.trim()) {
-    throw new Error('Título é obrigatório');
-  }
-
-  if (!formData.description?.trim()) {
-    throw new Error('Descrição é obrigatória');
-  }
-
-  if (!formData.startDate) {
-    throw new Error('Data de início é obrigatória');
-  }
-
-  if (!formData.endDate) {
-    throw new Error('Data de fim é obrigatória');
-  }
-
-  const startDate = new Date(formData.startDate);
-  const endDate = new Date(formData.endDate);
-
-  if (startDate >= endDate) {
-    throw new Error('Data de fim deve ser posterior à data de início');
-  }
-
-  return {
-    title: formData.title.trim(),
-    description: formData.description.trim(),
-    start_date: startDate.toISOString(),
-    end_date: endDate.toISOString(),
-    competition_type: 'tournament',
-    max_participants: formData.maxParticipants || 1000
-  };
-};
+import { logger } from './logger';
 
 export const isWeeklyCompetitionTimeValid = (startDate: string, endDate: string): boolean => {
   try {
     const start = new Date(startDate);
     const end = new Date(endDate);
     
-    // Verificar se a data de fim é posterior à de início
-    return end > start;
+    // Verificar se o fim é 23:59:59
+    const isValidEndTime = end.getHours() === 23 && 
+                          end.getMinutes() === 59 && 
+                          end.getSeconds() === 59;
+    
+    // Verificar se end_date é posterior ao start_date
+    const isValidDateRange = end.getTime() > start.getTime();
+    
+    const isValid = isValidEndTime && isValidDateRange;
+    
+    logger.debug('Validação de competição semanal', {
+      startDate,
+      endDate,
+      isValidEndTime,
+      isValidDateRange,
+      isValid
+    }, 'WEEKLY_COMPETITION_VALIDATION');
+    
+    return isValid;
   } catch (error) {
-    secureLogger.error('Erro na validação de horário semanal', { error }, 'WEEKLY_COMPETITION_VALIDATION');
+    logger.error('Erro na validação de competição semanal', { 
+      startDate, 
+      endDate, 
+      error 
+    }, 'WEEKLY_COMPETITION_VALIDATION');
     return false;
   }
+};
+
+export const validateWeeklyCompetitionData = (competitionData: any): string[] => {
+  const errors: string[] = [];
+  
+  if (!competitionData.start_date) {
+    errors.push('Data de início é obrigatória');
+  }
+  
+  if (!competitionData.end_date) {
+    errors.push('Data de fim é obrigatória');
+  }
+  
+  if (competitionData.start_date && competitionData.end_date) {
+    if (!isWeeklyCompetitionTimeValid(competitionData.start_date, competitionData.end_date)) {
+      errors.push('Competições semanais devem terminar às 23:59:59 do último dia');
+    }
+  }
+  
+  return errors;
 };
