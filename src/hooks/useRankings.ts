@@ -1,7 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { CompetitionStatusService } from '@/services/competitionStatusService';
 
 interface RankingPlayer {
   pos: number;
@@ -12,23 +12,9 @@ interface RankingPlayer {
   user_id: string;
 }
 
-interface WeeklyCompetition {
-  id: string;
-  title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  prize_pool: number;
-  max_participants: number;
-  total_participants: number;
-}
-
 export const useRankings = () => {
   const { toast } = useToast();
   const [weeklyRanking, setWeeklyRanking] = useState<RankingPlayer[]>([]);
-  const [weeklyCompetitions, setWeeklyCompetitions] = useState<WeeklyCompetition[]>([]);
-  const [activeWeeklyCompetition, setActiveWeeklyCompetition] = useState<WeeklyCompetition | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [totalPlayers, setTotalPlayers] = useState(0);
 
@@ -95,48 +81,6 @@ export const useRankings = () => {
     }
   };
 
-  const fetchWeeklyCompetitions = async () => {
-    try {
-      console.log('🏆 Buscando competições semanais...');
-      
-      const { data, error } = await supabase
-        .from('custom_competitions')
-        .select('*')
-        .eq('competition_type', 'tournament')
-        .in('status', ['active', 'scheduled', 'completed'])
-        .order('start_date', { ascending: false });
-
-      if (error) throw error;
-
-      const competitions = (data || []).map(comp => ({
-        id: comp.id,
-        title: comp.title,
-        description: comp.description,
-        start_date: comp.start_date,
-        end_date: comp.end_date,
-        status: comp.status,
-        prize_pool: Number(comp.prize_pool) || 0,
-        max_participants: comp.max_participants || 0,
-        total_participants: 0 // TODO: calcular participantes reais
-      }));
-
-      console.log('🏆 Competições semanais carregadas:', competitions.length);
-      setWeeklyCompetitions(competitions);
-
-      // Definir competição ativa (deve haver apenas uma com status 'active')
-      const active = competitions.find(comp => comp.status === 'active');
-      setActiveWeeklyCompetition(active || null);
-      
-      if (active) {
-        console.log('👑 Competição ativa encontrada:', active.title);
-      } else {
-        console.log('📅 Nenhuma competição ativa no momento');
-      }
-    } catch (error) {
-      console.error('❌ Erro ao carregar competições semanais:', error);
-    }
-  };
-
   const fetchTotalPlayers = async () => {
     try {
       const { count, error } = await supabase
@@ -157,7 +101,6 @@ export const useRankings = () => {
     setIsLoading(true);
     await Promise.all([
       fetchWeeklyRankings(),
-      fetchWeeklyCompetitions(),
       fetchTotalPlayers()
     ]);
     setIsLoading(false);
@@ -168,10 +111,8 @@ export const useRankings = () => {
   }, []);
 
   return {
-    dailyRanking: weeklyRanking, // Retorna ranking semanal no lugar do diário
+    dailyRanking: weeklyRanking, // Mantido para compatibilidade
     weeklyRanking,
-    weeklyCompetitions,
-    activeWeeklyCompetition,
     totalPlayers,
     isLoading,
     refreshData

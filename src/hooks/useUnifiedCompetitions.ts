@@ -19,9 +19,11 @@ export const useUnifiedCompetitions = () => {
       const result = await unifiedCompetitionService.getCompetitions();
       
       if (result.success) {
-        setCompetitions(result.data || []);
-        secureLogger.debug('Competições carregadas com sucesso', { 
-          count: result.data?.length || 0 
+        // Filtrar apenas competições diárias
+        const dailyCompetitions = (result.data || []).filter(c => c.type === 'daily');
+        setCompetitions(dailyCompetitions);
+        secureLogger.debug('Competições diárias carregadas com sucesso', { 
+          count: dailyCompetitions.length 
         }, 'UNIFIED_COMPETITIONS');
       } else {
         throw new Error(result.error || 'Erro ao carregar competições');
@@ -40,24 +42,14 @@ export const useUnifiedCompetitions = () => {
   }, [loadCompetitions]);
 
   // Memoizar filtros para evitar recálculos desnecessários
-  const dailyCompetitions = useMemo(() => 
-    competitions.filter(c => c.type === 'daily'), [competitions]);
-  
-  const weeklyCompetitions = useMemo(() => 
-    competitions.filter(c => c.type === 'weekly'), [competitions]);
-  
+  const dailyCompetitions = useMemo(() => competitions, [competitions]);
   const activeCompetitions = useMemo(() => 
     competitions.filter(c => c.status === 'active'), [competitions]);
-  
-  const activeWeeklyCompetition = useMemo(() => 
-    weeklyCompetitions.find(c => c.status === 'active') || null, [weeklyCompetitions]);
 
   return {
     competitions,
     dailyCompetitions,
-    weeklyCompetitions,
     activeCompetitions,
-    activeWeeklyCompetition,
     isLoading,
     error,
     refetch: loadCompetitions

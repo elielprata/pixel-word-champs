@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { competitionService } from '@/services/competitionService';
 import { customCompetitionService } from '@/services/customCompetitionService';
 import { Competition } from '@/types';
@@ -9,7 +9,6 @@ export const useCompetitionQueries = () => {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [customCompetitions, setCustomCompetitions] = useState<any[]>([]);
   const [dailyCompetition, setDailyCompetition] = useState<Competition | null>(null);
-  const [weeklyCompetition, setWeeklyCompetition] = useState<Competition | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,33 +57,16 @@ export const useCompetitionQueries = () => {
     }
   };
 
-  const fetchWeeklyCompetition = async () => {
-    try {
-      const response = await competitionService.getWeeklyCompetition();
-      
-      if (response.success) {
-        setWeeklyCompetition(response.data);
-      } else {
-        throw new Error(response.error || 'Erro ao carregar competição semanal');
-      }
-    } catch (err) {
-      logger.error('Erro ao carregar competição semanal', { error: err }, 'COMPETITION_QUERIES');
-      throw err;
-    }
-  };
-
   return {
     competitions,
     customCompetitions,
     dailyCompetition,
-    weeklyCompetition,
     isLoading,
     error,
     setIsLoading,
     setError,
     fetchActiveCompetitions,
     fetchCustomCompetitions,
-    fetchDailyCompetition,
-    fetchWeeklyCompetition
+    fetchDailyCompetition
   };
 };

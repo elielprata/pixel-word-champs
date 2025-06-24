@@ -7,15 +7,13 @@ export const useCompetitions = () => {
     competitions,
     customCompetitions,
     dailyCompetition,
-    weeklyCompetition,
     isLoading,
     error,
     setIsLoading,
     setError,
     fetchActiveCompetitions,
     fetchCustomCompetitions,
-    fetchDailyCompetition,
-    fetchWeeklyCompetition
+    fetchDailyCompetition
   } = useCompetitionQueries();
 
   const loadAllCompetitions = async () => {
@@ -26,8 +24,7 @@ export const useCompetitions = () => {
       await Promise.all([
         fetchActiveCompetitions(),
         fetchCustomCompetitions(),
-        fetchDailyCompetition(),
-        fetchWeeklyCompetition()
+        fetchDailyCompetition()
       ]);
     } catch (err) {
       setError('Erro ao carregar competições');
@@ -44,7 +41,6 @@ export const useCompetitions = () => {
     competitions,
     customCompetitions,
     dailyCompetition,
-    weeklyCompetition,
     isLoading,
     error,
     refetch: loadAllCompetitions

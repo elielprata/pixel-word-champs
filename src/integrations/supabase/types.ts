@@ -306,7 +306,6 @@ export type Database = {
           theme: string | null
           title: string
           updated_at: string | null
-          weekly_tournament_id: string | null
         }
         Insert: {
           competition_type: string
@@ -324,7 +323,6 @@ export type Database = {
           theme?: string | null
           title: string
           updated_at?: string | null
-          weekly_tournament_id?: string | null
         }
         Update: {
           competition_type?: string
@@ -342,17 +340,8 @@ export type Database = {
           theme?: string | null
           title?: string
           updated_at?: string | null
-          weekly_tournament_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "custom_competitions_weekly_tournament_id_fkey"
-            columns: ["weekly_tournament_id"]
-            isOneToOne: false
-            referencedRelation: "custom_competitions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       game_sessions: {
         Row: {
@@ -1068,10 +1057,6 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
-      }
-      migrate_weekly_competition_prizes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
       }
       reset_weekly_scores_and_positions: {
         Args: Record<PropertyKey, never>

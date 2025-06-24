@@ -9,5 +9,5 @@ export interface DailyCompetition {
   max_participants: number;
   status: string;
   created_at: string;
-  // Nota: prize_pool removido - competições diárias não têm prêmios
+  // Competições diárias não têm prêmios (prêmios vêm do ranking semanal)
 }
