@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trophy, Users, Calendar, Crown, Coins, Settings } from 'lucide-react';
 import { WeeklyConfigModal } from './WeeklyConfigModal';
+import { formatDateInputToDisplay } from '@/utils/weeklyDateUtils';
 
 interface WeeklyRankingStatsProps {
   stats: {
@@ -33,14 +33,6 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
   onConfigUpdated
 }) => {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
 
   const getWeekDescription = () => {
     if (!stats?.config) return '';
@@ -158,7 +150,7 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
                 )}
               </div>
               <p className="text-sm font-bold text-blue-700">
-                {formatDate(stats.current_week_start)} - {formatDate(stats.current_week_end)}
+                {formatDateInputToDisplay(stats.current_week_start)} - {formatDateInputToDisplay(stats.current_week_end)}
               </p>
               <p className="text-xs text-blue-600 mt-1">
                 {getWeekDescription()}
