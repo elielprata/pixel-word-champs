@@ -2,15 +2,18 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bug, RefreshCw, Eye, TestTube } from 'lucide-react';
+import { Bug, RefreshCw, Eye, TestTube, Shield } from 'lucide-react';
 import { rankingDebugService } from '@/services/rankingDebugService';
+import { cleanOrphanGameSessions, validateOrphanPrevention } from '@/utils/cleanOrphanSessions';
 import { logger } from '@/utils/logger';
 
 const RankingDebugPanel = () => {
   const [isChecking, setIsChecking] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isValidatingProtection, setIsValidatingProtection] = useState(false);
   const [lastResult, setLastResult] = useState<any>(null);
+  const [protectionResult, setProtectionResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleCheckConsistency = async () => {
@@ -68,18 +71,53 @@ const RankingDebugPanel = () => {
     }
   };
 
+  const handleValidateProtection = async () => {
+    setIsValidatingProtection(true);
+    setError(null);
+    try {
+      logger.debug('🔍 Validando sistema de proteção contra sessões órfãs', undefined, 'ORPHAN_PROTECTION');
+      
+      // Primeiro validar se o sistema de proteção está funcionando
+      const validation = await validateOrphanPrevention();
+      
+      // Depois executar limpeza se necessário
+      const cleanup = await cleanOrphanGameSessions();
+      
+      const combinedResult = {
+        validation,
+        cleanup,
+        systemHealth: validation.isProtected && cleanup.triggerWorking !== false ? 'PROTEGIDO' : 'COMPROMETIDO'
+      };
+      
+      setProtectionResult(combinedResult);
+      
+      if (!validation.isProtected || cleanup.triggerBypassed) {
+        setError('⚠️ Sistema de proteção comprometido - sessões órfãs detectadas');
+        logger.error('🚨 Sistema de proteção contra sessões órfãs comprometido', { combinedResult }, 'ORPHAN_PROTECTION');
+      } else {
+        logger.info('✅ Sistema de proteção funcionando corretamente', { combinedResult }, 'ORPHAN_PROTECTION');
+      }
+      
+    } catch (err: any) {
+      setError(`Erro na validação: ${err.message || 'Erro desconhecido'}`);
+      logger.error('❌ Erro ao validar sistema de proteção', { error: err }, 'ORPHAN_PROTECTION');
+    } finally {
+      setIsValidatingProtection(false);
+    }
+  };
+
   return (
     <Card className="mb-4 border-yellow-200 bg-yellow-50">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-semibold text-yellow-800 flex items-center gap-2">
           <Bug className="w-5 h-5" />
-          Debug do Ranking
+          Debug do Ranking & Proteção Anti-Órfãs
         </CardTitle>
       </CardHeader>
       
       <CardContent className="space-y-4">
         <p className="text-sm text-yellow-700">
-          Ferramentas para diagnóstico e correção de problemas no ranking
+          Ferramentas para diagnóstico e correção de problemas no ranking e validação do sistema de prevenção de sessões órfãs
         </p>
         
         {error && (
@@ -90,13 +128,29 @@ const RankingDebugPanel = () => {
         
         {lastResult && (
           <div className="bg-white p-3 rounded border border-yellow-200">
-            <h4 className="font-medium text-yellow-800 mb-2">📊 Último Resultado:</h4>
+            <h4 className="font-medium text-yellow-800 mb-2">📊 Último Resultado - Ranking:</h4>
             <div className="text-sm space-y-1">
               <p>• Total de perfis: {lastResult.summary?.totalProfiles}</p>
               <p>• Total no ranking: {lastResult.summary?.totalInRanking}</p>
               <p className={lastResult.summary?.inconsistenciesFound > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
                 • Inconsistências: {lastResult.summary?.inconsistenciesFound}
               </p>
+            </div>
+          </div>
+        )}
+
+        {protectionResult && (
+          <div className="bg-white p-3 rounded border border-blue-200">
+            <h4 className="font-medium text-blue-800 mb-2">🛡️ Status da Proteção Anti-Órfãs:</h4>
+            <div className="text-sm space-y-1">
+              <p className={protectionResult.systemHealth === 'PROTEGIDO' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                • Sistema: {protectionResult.systemHealth}
+              </p>
+              <p>• Sessões órfãs detectadas: {protectionResult.validation?.orphanCount || 0}</p>
+              <p>• Trigger funcionando: {protectionResult.validation?.isProtected ? 'SIM' : 'NÃO'}</p>
+              {protectionResult.cleanup?.deletedCount > 0 && (
+                <p className="text-orange-600">• Sessões removidas: {protectionResult.cleanup.deletedCount}</p>
+              )}
             </div>
           </div>
         )}
@@ -145,6 +199,21 @@ const RankingDebugPanel = () => {
               <TestTube className="w-4 h-4 mr-2" />
             )}
             Testar Função
+          </Button>
+
+          <Button 
+            onClick={handleValidateProtection}
+            disabled={isValidatingProtection}
+            variant="outline"
+            size="sm"
+            className="border-blue-300 text-blue-700 hover:bg-blue-100"
+          >
+            {isValidatingProtection ? (
+              <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Shield className="w-4 h-4 mr-2" />
+            )}
+            Validar Proteção
           </Button>
         </div>
         

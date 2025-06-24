@@ -20,9 +20,12 @@ export const useGameSessionManager = () => {
   const [currentSessionData, setCurrentSessionData] = useState<GameSessionData | null>(null);
 
   const startGameSession = useCallback((level: number, boardData: any) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      logger.warn('⚠️ Tentativa de iniciar sessão sem usuário autenticado');
+      return;
+    }
 
-    // Criar sessão apenas em memória - não no banco ainda
+    // Criar sessão APENAS em memória - NUNCA no banco com is_completed = false
     const sessionData: GameSessionData = {
       level,
       boardData,
@@ -32,28 +35,51 @@ export const useGameSessionManager = () => {
     };
 
     setCurrentSessionData(sessionData);
-    logger.info('Sessão iniciada em memória', { level, userId: user.id }, 'GAME_SESSION_MANAGER');
+    logger.info('🎮 Sessão iniciada APENAS EM MEMÓRIA (sem banco)', { 
+      level, 
+      userId: user.id,
+      memoryOnly: true,
+      triggerProtected: true
+    });
   }, [user?.id]);
 
   const updateSessionData = useCallback((updates: Partial<GameSessionData>) => {
-    setCurrentSessionData(prev => prev ? { ...prev, ...updates } : null);
+    setCurrentSessionData(prev => {
+      if (!prev) {
+        logger.warn('⚠️ Tentativa de atualizar sessão inexistente em memória');
+        return null;
+      }
+      
+      const updated = { ...prev, ...updates };
+      logger.debug('📝 Sessão atualizada em memória', { 
+        level: updated.level,
+        score: updated.totalScore,
+        wordsCount: updated.wordsFound.length
+      });
+      
+      return updated;
+    });
   }, []);
 
   const completeGameSession = useCallback(async (finalScore: number, wordsFound: any[], timeElapsed: number) => {
     if (!user?.id || !currentSessionData) {
-      logger.warn('Não é possível completar sessão - dados insuficientes', { userId: user?.id, hasSessionData: !!currentSessionData }, 'GAME_SESSION_MANAGER');
+      logger.error('❌ Não é possível completar sessão - dados insuficientes', { 
+        userId: user?.id, 
+        hasSessionData: !!currentSessionData 
+      });
       return null;
     }
 
     try {
-      logger.info('Registrando sessão completada no banco', { 
+      logger.info('🏆 Registrando sessão COMPLETADA no banco (is_completed = true)', { 
         userId: user.id,
         level: currentSessionData.level,
         finalScore,
-        weeklyCompetitionId: activeWeeklyCompetition?.id 
-      }, 'GAME_SESSION_MANAGER');
+        weeklyCompetitionId: activeWeeklyCompetition?.id,
+        triggerProtected: true
+      });
 
-      // Agora sim, registrar a sessão COMPLETA no banco
+      // CRÍTICO: Inserir APENAS com is_completed = true (trigger vai permitir)
       const { data: session, error } = await supabase
         .from('game_sessions')
         .insert({
@@ -63,7 +89,7 @@ export const useGameSessionManager = () => {
           competition_id: activeWeeklyCompetition?.id || null,
           total_score: finalScore,
           time_elapsed: timeElapsed,
-          is_completed: true, // SEMPRE true - só registramos sessões completadas
+          is_completed: true, // SEMPRE true - NUNCA false (trigger impede)
           words_found: wordsFound,
           completed_at: new Date().toISOString()
         })
@@ -71,7 +97,11 @@ export const useGameSessionManager = () => {
         .single();
 
       if (error) {
-        logger.error('Erro ao registrar sessão completada', { error }, 'GAME_SESSION_MANAGER');
+        logger.error('❌ Erro ao registrar sessão completada (trigger pode ter bloqueado)', { 
+          error,
+          isCompletedValue: true,
+          triggerActive: true
+        });
         throw error;
       }
 
@@ -81,15 +111,21 @@ export const useGameSessionManager = () => {
       // Limpar sessão da memória
       setCurrentSessionData(null);
 
-      logger.info('Sessão completada e registrada com sucesso', { 
+      logger.info('✅ Sessão completada e registrada com sucesso (trigger permitiu)', { 
         sessionId: session.id,
-        finalScore 
-      }, 'GAME_SESSION_MANAGER');
+        finalScore,
+        confirmed: session.is_completed === true
+      });
 
       return session;
 
     } catch (error) {
-      logger.error('Erro na conclusão da sessão de jogo', { error }, 'GAME_SESSION_MANAGER');
+      logger.error('❌ Erro crítico na conclusão da sessão de jogo', { 
+        error,
+        sessionData: currentSessionData,
+        finalScore,
+        triggerMayHaveBlocked: true
+      });
       throw error;
     }
   }, [user?.id, currentSessionData, activeWeeklyCompetition]);
@@ -106,7 +142,7 @@ export const useGameSessionManager = () => {
         .single();
 
       if (profileError) {
-        logger.error('Erro ao buscar perfil do usuário', { error: profileError }, 'GAME_SESSION_MANAGER');
+        logger.error('Erro ao buscar perfil do usuário', { error: profileError });
         return;
       }
 
@@ -125,7 +161,7 @@ export const useGameSessionManager = () => {
         .eq('id', user.id);
 
       if (updateError) {
-        logger.error('Erro ao atualizar pontuação total do usuário', { error: updateError }, 'GAME_SESSION_MANAGER');
+        logger.error('Erro ao atualizar pontuação total do usuário', { error: updateError });
         return;
       }
 
@@ -142,23 +178,30 @@ export const useGameSessionManager = () => {
         logger.warn('⚠️ Erro ao atualizar melhores posições semanais:', positionUpdateError);
       }
 
-      logger.info('Pontuação total do usuário atualizada', { 
+      logger.info('✅ Pontuação total do usuário atualizada', { 
         userId: user.id,
         sessionScore,
         newTotalScore,
         newGamesPlayed,
         weeklyUpdated: !!activeWeeklyCompetition 
-      }, 'GAME_SESSION_MANAGER');
+      });
 
     } catch (error) {
-      logger.error('Erro na atualização da pontuação total', { error }, 'GAME_SESSION_MANAGER');
+      logger.error('Erro na atualização da pontuação total', { error });
     }
   };
 
   const discardSession = useCallback(() => {
+    if (currentSessionData) {
+      logger.info('🗑️ Sessão descartada da memória - nível não completado (SEM impacto no banco)', { 
+        userId: user?.id,
+        level: currentSessionData.level,
+        memoryOnly: true,
+        triggerProtected: true
+      });
+    }
     setCurrentSessionData(null);
-    logger.info('Sessão descartada - nível não completado', { userId: user?.id }, 'GAME_SESSION_MANAGER');
-  }, [user?.id]);
+  }, [user?.id, currentSessionData]);
 
   return {
     currentSessionData,
