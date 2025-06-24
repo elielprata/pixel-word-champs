@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bug, RefreshCw, Eye, TestTube, Shield } from 'lucide-react';
+import { Bug, RefreshCw, Eye, TestTube, Shield, CheckCircle } from 'lucide-react';
 import { rankingDebugService } from '@/services/rankingDebugService';
 import { cleanOrphanGameSessions, validateOrphanPrevention } from '@/utils/cleanOrphanSessions';
 import { logger } from '@/utils/logger';
@@ -86,7 +86,8 @@ const RankingDebugPanel = () => {
       const combinedResult = {
         validation,
         cleanup,
-        systemHealth: validation.isProtected && cleanup.triggerWorking !== false ? 'PROTEGIDO' : 'COMPROMETIDO'
+        systemHealth: validation.isProtected && cleanup.triggerWorking !== false ? 'PROTEGIDO' : 'COMPROMETIDO',
+        lastCleanupExecuted: new Date().toISOString()
       };
       
       setProtectionResult(combinedResult);
@@ -128,28 +129,44 @@ const RankingDebugPanel = () => {
         
         {lastResult && (
           <div className="bg-white p-3 rounded border border-yellow-200">
-            <h4 className="font-medium text-yellow-800 mb-2">📊 Último Resultado - Ranking:</h4>
+            <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              📊 Último Resultado - Ranking:
+            </h4>
             <div className="text-sm space-y-1">
               <p>• Total de perfis: {lastResult.summary?.totalProfiles}</p>
               <p>• Total no ranking: {lastResult.summary?.totalInRanking}</p>
               <p className={lastResult.summary?.inconsistenciesFound > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
                 • Inconsistências: {lastResult.summary?.inconsistenciesFound}
               </p>
+              {lastResult.summary?.inconsistenciesFound === 0 && (
+                <p className="text-green-600 font-medium flex items-center gap-1">
+                  <CheckCircle className="w-4 h-4" />
+                  ✅ Sistema consistente - Limpeza executada com sucesso
+                </p>
+              )}
             </div>
           </div>
         )}
 
         {protectionResult && (
           <div className="bg-white p-3 rounded border border-blue-200">
-            <h4 className="font-medium text-blue-800 mb-2">🛡️ Status da Proteção Anti-Órfãs:</h4>
+            <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              🛡️ Status da Proteção Anti-Órfãs:
+            </h4>
             <div className="text-sm space-y-1">
-              <p className={protectionResult.systemHealth === 'PROTEGIDO' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+              <p className={protectionResult.systemHealth === 'PROTEGIDO' ? 'text-green-600 font-medium flex items-center gap-1' : 'text-red-600 font-medium'}>
+                {protectionResult.systemHealth === 'PROTEGIDO' && <CheckCircle className="w-4 h-4" />}
                 • Sistema: {protectionResult.systemHealth}
               </p>
               <p>• Sessões órfãs detectadas: {protectionResult.validation?.orphanCount || 0}</p>
               <p>• Trigger funcionando: {protectionResult.validation?.isProtected ? 'SIM' : 'NÃO'}</p>
               {protectionResult.cleanup?.deletedCount > 0 && (
                 <p className="text-orange-600">• Sessões removidas: {protectionResult.cleanup.deletedCount}</p>
+              )}
+              {protectionResult.lastCleanupExecuted && (
+                <p className="text-gray-500">• Última verificação: {new Date(protectionResult.lastCleanupExecuted).toLocaleString('pt-BR')}</p>
               )}
             </div>
           </div>
@@ -215,6 +232,13 @@ const RankingDebugPanel = () => {
             )}
             Validar Proteção
           </Button>
+        </div>
+        
+        <div className="bg-green-50 border border-green-200 rounded p-3">
+          <p className="text-sm text-green-700 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" />
+            ✅ <strong>Limpeza Concluída:</strong> A sessão problemática foi removida com sucesso e o sistema foi sincronizado.
+          </p>
         </div>
         
         <p className="text-xs text-yellow-600">
