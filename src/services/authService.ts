@@ -36,12 +36,6 @@ class AuthService {
 
       if (error) {
         logger.error('Erro do Supabase Auth no login', { error: error.message }, 'AUTH_SERVICE');
-        
-        // Preservar mensagens específicas de erro
-        if (error.message?.includes('Email not confirmed')) {
-          throw new Error('Email not confirmed');
-        }
-        
         throw error;
       }
       
@@ -88,12 +82,10 @@ class AuthService {
     } catch (error: any) {
       logger.error('Erro no login', { error: error.message }, 'AUTH_SERVICE');
       
-      // Preservar mensagens específicas importantes
+      // Mensagens de erro simplificadas
       let errorMessage = "Erro ao fazer login";
       
-      if (error.message?.includes('Email not confirmed')) {
-        errorMessage = "Email not confirmed";
-      } else if (error.message?.includes('Invalid login credentials')) {
+      if (error.message?.includes('Invalid login credentials')) {
         errorMessage = "Email ou senha incorretos";
       } else if (error.message?.includes('invalid email')) {
         errorMessage = "Email inválido";

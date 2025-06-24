@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { authService } from '@/services/authService';
 import { LoginForm, RegisterForm } from '@/types';
@@ -43,7 +44,7 @@ export const useAuthOperations = (
         setUser(null);
         logger.error('Falha no login', { error: errorMessage }, 'AUTH_OPERATIONS');
         
-        // Lançar erro para que o LoginForm possa capturar e tratar especificamente
+        // Lançar erro para que o LoginForm possa capturar
         throw new Error(errorMessage);
       }
     } catch (error: any) {
@@ -55,7 +56,7 @@ export const useAuthOperations = (
       setUser(null);
       logger.error('Erro durante login', { error: errorMessage }, 'AUTH_OPERATIONS');
       
-      // Re-lançar o erro para que o componente possa tratar especificamente
+      // Re-lançar o erro para que o componente possa tratar
       throw error;
     } finally {
       if (isMountedRef.current) {
