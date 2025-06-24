@@ -35,13 +35,8 @@ export const useCompetitionFinalization = (competitions: Competition[]) => {
           }, 'COMPETITION_FINALIZATION');
 
           try {
-            if (competition.competition_type === 'tournament') {
-              await competitionFinalizationService.finalizeWeeklyCompetition(competition.id);
-              logger.info('✅ Competição semanal finalizada com sucesso', {
-                id: competition.id,
-                title: competition.title
-              }, 'COMPETITION_FINALIZATION');
-            } else if (competition.competition_type === 'challenge') {
+            // Apenas competições diárias são suportadas agora
+            if (competition.competition_type === 'challenge') {
               await competitionFinalizationService.finalizeDailyCompetition(competition.id);
               logger.info('✅ Competição diária finalizada com sucesso', {
                 id: competition.id,

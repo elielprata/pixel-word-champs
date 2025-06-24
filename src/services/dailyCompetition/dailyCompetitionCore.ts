@@ -57,7 +57,7 @@ export class DailyCompetitionCoreService {
       // Para competições diárias independentes, buscar participações diretas
       const { data: participations, error: participationsError } = await supabase
         .from('game_sessions')
-        .select('user_id, total_score, created_at')
+        .select('user_id, total_score, started_at')
         .eq('competition_id', competitionId)
         .eq('is_completed', true)
         .order('total_score', { ascending: false })
@@ -92,7 +92,7 @@ export class DailyCompetitionCoreService {
           user_id: participation.user_id,
           user_score: participation.total_score,
           user_position: index + 1,
-          created_at: participation.created_at,
+          created_at: participation.started_at,
           profiles: profile ? {
             username: profile.username,
             avatar_url: profile.avatar_url

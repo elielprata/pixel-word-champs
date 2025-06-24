@@ -83,14 +83,23 @@ export class DailyCompetitionParticipationService {
 
       // Atualizar pontuação total do perfil do usuário (para ranking semanal automático)
       if (scoreDifference > 0) {
+        // Buscar pontuação atual do perfil
+        const { data: currentProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('total_score')
+          .eq('id', session.user_id)
+          .single();
+
+        if (profileError) {
+          logger.error('Erro ao buscar perfil atual', { error: profileError }, 'DAILY_COMPETITION_PARTICIPATION');
+          return;
+        }
+
+        const newTotalScore = (currentProfile?.total_score || 0) + scoreDifference;
+
         const { error: updateProfileError } = await supabase
           .from('profiles')
-          .update({ 
-            total_score: supabase.rpc('increment_total_score', { 
-              user_id: session.user_id, 
-              score_increment: scoreDifference 
-            })
-          })
+          .update({ total_score: newTotalScore })
           .eq('id', session.user_id);
 
         if (updateProfileError) {
@@ -98,7 +107,8 @@ export class DailyCompetitionParticipationService {
         } else {
           logger.info('Pontuação do perfil atualizada para ranking semanal automático', { 
             userId: session.user_id, 
-            scoreDifference 
+            scoreDifference,
+            newTotalScore
           }, 'DAILY_COMPETITION_PARTICIPATION');
         }
       }
