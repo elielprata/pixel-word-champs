@@ -30,7 +30,7 @@ interface WeeklyStats {
     custom_start_date: string | null;
     custom_end_date: string | null;
   };
-  top_3_players?: Array<{
+  top_3_players: Array<{
     username: string;
     score: number;
     position: number;
