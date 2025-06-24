@@ -1012,7 +1012,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mv_current_weekly_ranking: {
+        Row: {
+          last_updated: string | null
+          pix_holder_name: string | null
+          pix_key: string | null
+          position: number | null
+          total_score: number | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_user_availability: {
@@ -1022,6 +1033,10 @@ export type Database = {
       cleanup_orphaned_rankings: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      diagnose_ranking_system: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       fix_orphaned_scores: {
         Args: Record<PropertyKey, never>
@@ -1062,9 +1077,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      reset_weekly_scores_and_positions: {
+      refresh_ranking_view: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      reset_weekly_scores_and_positions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       sync_user_scores_to_weekly_ranking: {
         Args: Record<PropertyKey, never>
