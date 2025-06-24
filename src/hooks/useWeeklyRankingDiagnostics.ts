@@ -33,8 +33,29 @@ export const useWeeklyRankingDiagnostics = () => {
         throw error;
       }
       
-      // Type assertion para garantir que data é do tipo correto
-      const diagnostics = data as DiagnosticsResult;
+      // Validação e conversão segura do tipo
+      if (!data || typeof data !== 'object') {
+        throw new Error('Dados inválidos retornados da função diagnose_ranking_system');
+      }
+      
+      const diagnosticsData = data as any;
+      
+      const diagnostics: DiagnosticsResult = {
+        timestamp: diagnosticsData.timestamp,
+        system_health: diagnosticsData.system_health,
+        issues: {
+          orphaned_rankings: diagnosticsData.issues?.orphaned_rankings || 0,
+          duplicate_rankings: diagnosticsData.issues?.duplicate_rankings || 0,
+          config_issues: diagnosticsData.issues?.config_issues || 0,
+        },
+        statistics: {
+          active_profiles: diagnosticsData.statistics?.active_profiles || 0,
+          total_game_sessions: diagnosticsData.statistics?.total_game_sessions || 0,
+          completed_sessions: diagnosticsData.statistics?.completed_sessions || 0,
+          completion_rate: diagnosticsData.statistics?.completion_rate || 0,
+        },
+        recommendations: Array.isArray(diagnosticsData.recommendations) ? diagnosticsData.recommendations : []
+      };
       
       logger.info('Diagnósticos executados com sucesso', { health: diagnostics.system_health }, 'WEEKLY_RANKING_DIAGNOSTICS');
       return diagnostics;

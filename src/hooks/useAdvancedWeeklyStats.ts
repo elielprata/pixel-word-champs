@@ -12,8 +12,8 @@ interface AdvancedWeeklyStats {
   config: {
     start_day_of_week: number;
     duration_days: number;
-    custom_start_date?: string;
-    custom_end_date?: string;
+    custom_start_date?: string | null;
+    custom_end_date?: string | null;
   } | null;
   top_3_players: Array<{
     username: string;
@@ -36,15 +36,32 @@ export const useAdvancedWeeklyStats = () => {
         throw error;
       }
       
-      // Type assertion para garantir que data é do tipo correto
-      const stats = data as AdvancedWeeklyStats;
+      // Validação e conversão segura do tipo
+      if (!data || typeof data !== 'object') {
+        throw new Error('Dados inválidos retornados da função get_weekly_ranking_stats');
+      }
+      
+      const stats = data as any;
       
       logger.info('Estatísticas avançadas carregadas', { 
         participants: stats.total_participants,
         prize_pool: stats.total_prize_pool 
       }, 'ADVANCED_WEEKLY_STATS');
       
-      return stats;
+      return {
+        current_week_start: stats.current_week_start,
+        current_week_end: stats.current_week_end,
+        total_participants: stats.total_participants || 0,
+        total_prize_pool: stats.total_prize_pool || 0,
+        last_update: stats.last_update,
+        config: stats.config ? {
+          start_day_of_week: stats.config.start_day_of_week,
+          duration_days: stats.config.duration_days,
+          custom_start_date: stats.config.custom_start_date || null,
+          custom_end_date: stats.config.custom_end_date || null,
+        } : null,
+        top_3_players: stats.top_3_players || []
+      };
     },
     refetchInterval: 10000, // Atualizar a cada 10 segundos
   });

@@ -28,15 +28,28 @@ export const useWeeklyRankingReset = () => {
         throw error;
       }
       
-      // Type assertion para garantir que data é do tipo correto
-      const resetData = data as ResetResult;
+      // Validação e conversão segura do tipo
+      if (!data || typeof data !== 'object') {
+        throw new Error('Dados inválidos retornados da função reset_weekly_scores_and_positions');
+      }
+      
+      const resetData = data as any;
+      
+      const result: ResetResult = {
+        success: resetData.success || true,
+        profiles_reset: resetData.profiles_reset || 0,
+        rankings_cleared: resetData.rankings_cleared || 0,
+        week_start: resetData.week_start,
+        week_end: resetData.week_end,
+        reset_at: resetData.reset_at
+      };
       
       logger.info('Reset executado com sucesso', { 
-        profiles_reset: resetData.profiles_reset,
-        rankings_cleared: resetData.rankings_cleared 
+        profiles_reset: result.profiles_reset,
+        rankings_cleared: result.rankings_cleared 
       }, 'WEEKLY_RANKING_RESET');
       
-      return resetData;
+      return result;
     },
     onSuccess: (data) => {
       toast({

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,8 +15,8 @@ interface WeeklyRankingStatsProps {
     config?: {
       start_day_of_week: number;
       duration_days: number;
-      custom_start_date: string | null;
-      custom_end_date: string | null;
+      custom_start_date?: string | null;
+      custom_end_date?: string | null;
     };
     top_3_players: Array<{
       username: string;

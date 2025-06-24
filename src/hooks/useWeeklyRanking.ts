@@ -27,8 +27,8 @@ interface WeeklyStats {
   config?: {
     start_day_of_week: number;
     duration_days: number;
-    custom_start_date?: string;
-    custom_end_date?: string;
+    custom_start_date?: string | null;
+    custom_end_date?: string | null;
   };
   top_3_players: Array<{
     username: string;
@@ -90,8 +90,26 @@ export const useWeeklyRanking = () => {
         throw error;
       }
 
-      // Type assertion para garantir que data é do tipo correto
-      return data as WeeklyStats;
+      // Validação e conversão segura do tipo
+      if (!data || typeof data !== 'object') {
+        throw new Error('Dados inválidos retornados da função get_weekly_ranking_stats');
+      }
+
+      const statsData = data as any;
+      return {
+        current_week_start: statsData.current_week_start,
+        current_week_end: statsData.current_week_end,
+        total_participants: statsData.total_participants || 0,
+        total_prize_pool: statsData.total_prize_pool || 0,
+        last_update: statsData.last_update,
+        config: statsData.config ? {
+          start_day_of_week: statsData.config.start_day_of_week,
+          duration_days: statsData.config.duration_days,
+          custom_start_date: statsData.config.custom_start_date || null,
+          custom_end_date: statsData.config.custom_end_date || null,
+        } : undefined,
+        top_3_players: statsData.top_3_players || []
+      };
     },
     refetchInterval: 30000,
   });
