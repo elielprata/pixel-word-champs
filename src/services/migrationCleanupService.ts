@@ -149,39 +149,40 @@ class MigrationCleanupService {
     try {
       secureLogger.info('Iniciando limpeza de torneios semanais não utilizados', undefined, 'MIGRATION_CLEANUP');
 
-      // Buscar torneios concluídos sem competições diárias vinculadas
-      const { data: unusedTournaments } = await supabase
+      // Buscar todos os torneios concluídos
+      const { data: completedTournaments } = await supabase
         .from('custom_competitions')
-        .select(`
-          id,
-          title,
-          status,
-          (
-            select count(*) 
-            from custom_competitions as daily 
-            where daily.weekly_tournament_id = custom_competitions.id
-          ) as linked_competitions_count
-        `)
+        .select('id, title, status')
         .eq('competition_type', 'tournament')
         .eq('status', 'completed');
 
-      if (!unusedTournaments) {
+      if (!completedTournaments || completedTournaments.length === 0) {
         return { success: true, itemsRemoved: 0, tablesAffected: [] };
       }
 
-      // Filtrar apenas os que não têm competições vinculadas
-      const toDelete = unusedTournaments
-        .filter(t => t.linked_competitions_count === 0)
-        .map(t => t.id);
+      const tournamentsToDelete: string[] = [];
 
-      if (toDelete.length === 0) {
+      // Para cada torneio, verificar se tem competições vinculadas
+      for (const tournament of completedTournaments) {
+        const { count: linkedCount } = await supabase
+          .from('custom_competitions')
+          .select('*', { count: 'exact', head: true })
+          .eq('weekly_tournament_id', tournament.id);
+
+        // Se não tem competições vinculadas, pode ser removido
+        if (!linkedCount || linkedCount === 0) {
+          tournamentsToDelete.push(tournament.id);
+        }
+      }
+
+      if (tournamentsToDelete.length === 0) {
         return { success: true, itemsRemoved: 0, tablesAffected: [] };
       }
 
       const { count } = await supabase
         .from('custom_competitions')
         .delete()
-        .in('id', toDelete);
+        .in('id', tournamentsToDelete);
 
       secureLogger.info('Torneios não utilizados removidos', { count }, 'MIGRATION_CLEANUP');
 
