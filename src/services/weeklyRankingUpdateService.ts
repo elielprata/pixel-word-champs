@@ -21,7 +21,7 @@ class WeeklyRankingUpdateService {
     }
   }
 
-  async getCurrentWeekStart(): string {
+  async getCurrentWeekStart(): Promise<string> {
     const today = new Date();
     const dayOfWeek = today.getDay();
     const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);

@@ -32,24 +32,38 @@ export const useDailyRanking = () => {
           user_id,
           username,
           total_score,
-          position,
-          profiles!inner(
-            full_name,
-            avatar_url
-          )
+          position
         `)
         .eq('week_start', weekStartStr)
         .order('position', { ascending: true });
 
       if (error) throw error;
 
-      const formattedData: DailyRankingUser[] = (data || []).map(item => ({
-        user_id: item.user_id,
-        name: item.profiles?.full_name || item.username || 'Usuário',
-        avatar_url: item.profiles?.avatar_url || undefined,
-        score: item.total_score || 0,
-        pos: item.position || 0
-      }));
+      // Get profile data separately to avoid join issues
+      const userIds = (data || []).map(item => item.user_id);
+      let profilesData: any[] = [];
+      
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds);
+        
+        if (!profilesError) {
+          profilesData = profiles || [];
+        }
+      }
+
+      const formattedData: DailyRankingUser[] = (data || []).map(item => {
+        const profile = profilesData.find(p => p.id === item.user_id);
+        return {
+          user_id: item.user_id,
+          name: profile?.username || item.username || 'Usuário',
+          avatar_url: profile?.avatar_url || undefined,
+          score: item.total_score || 0,
+          pos: item.position || 0
+        };
+      });
 
       setDailyRanking(formattedData);
       secureLogger.debug('Daily ranking carregado', { count: formattedData.length }, 'DAILY_RANKING');
