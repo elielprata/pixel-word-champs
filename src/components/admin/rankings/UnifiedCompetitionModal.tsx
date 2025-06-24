@@ -6,13 +6,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CreateCompetitionForm } from './competition-form/CreateCompetitionForm';
+import { UnifiedCompetitionForm } from './UnifiedCompetitionForm';
 
 interface UnifiedCompetitionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCompetitionCreated?: () => void;
-  competitionTypeFilter?: 'daily' | 'weekly';
+  competitionTypeFilter?: 'daily';
 }
 
 export const UnifiedCompetitionModal: React.FC<UnifiedCompetitionModalProps> = ({
@@ -26,21 +26,14 @@ export const UnifiedCompetitionModal: React.FC<UnifiedCompetitionModalProps> = (
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {competitionTypeFilter === 'daily' ? 'Criar Competição Diária' : 'Criar Competição'}
+            Criar Competição Diária
           </DialogTitle>
         </DialogHeader>
         
-        <CreateCompetitionForm
+        <UnifiedCompetitionForm
           onClose={() => onOpenChange(false)}
-          onCompetitionCreated={onCompetitionCreated}
-          showPrizeConfig={competitionTypeFilter !== 'daily'}
-          showBasicConfig={true}
-          onCompetitionTypeChange={(type) => {
-            // Restringir tipo se necessário
-            if (competitionTypeFilter === 'daily' && type !== 'daily') {
-              // Pode adicionar lógica para forçar tipo diário
-            }
-          }}
+          onSuccess={onCompetitionCreated || (() => {})}
+          onError={(error) => console.error('Erro ao criar competição:', error)}
         />
       </DialogContent>
     </Dialog>
