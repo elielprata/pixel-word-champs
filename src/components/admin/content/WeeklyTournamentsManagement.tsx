@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Trophy, Calendar, Users, Crown, Info, AlertCircle, Clock } from 'lucide-react';
+import { Plus, Edit, Trash2, Trophy, Calendar, Users, Crown, Info, Clock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaymentData } from "@/hooks/usePaymentData";
@@ -36,15 +36,13 @@ export const WeeklyTournamentsManagement = () => {
     description: '',
     start_date: '',
     end_date: '',
-    max_participants: 0 // Sem limite - valor 0 significa ilimitado
+    max_participants: 0
   });
   const { toast } = useToast();
   const { calculateTotalPrize } = usePaymentData();
 
-  // Calcular pool de prêmios automaticamente
   const currentPrizePool = calculateTotalPrize();
   
-  // Calcular pool total de todos os torneios ativos
   const totalActivePrizePool = tournaments
     .filter(t => t.status === 'active' || t.status === 'scheduled')
     .reduce((total, tournament) => total + tournament.prize_pool, 0);
@@ -74,16 +72,15 @@ export const WeeklyTournamentsManagement = () => {
     }
   };
 
-  // Funções auxiliares para manipular data/hora
   const getTimeFromDateTime = (dateTime: string) => {
-    if (!dateTime) return '08:00'; // Horário padrão
+    if (!dateTime) return '08:00';
     const date = new Date(dateTime);
-    return date.toTimeString().slice(0, 5); // HH:MM
+    return date.toTimeString().slice(0, 5);
   };
 
   const getDateFromDateTime = (dateTime: string) => {
     if (!dateTime) return '';
-    return dateTime.split('T')[0]; // YYYY-MM-DD
+    return dateTime.split('T')[0];
   };
 
   const combineDateTime = (date: string, time: string) => {
@@ -101,18 +98,15 @@ export const WeeklyTournamentsManagement = () => {
         return;
       }
 
-      // CORREÇÃO RADICAL: Usar datas como STRINGS PURAS - sem conversões
       const competitionData = {
         title: newTournament.title,
         description: newTournament.description,
         competition_type: 'tournament',
-        start_date: newTournament.start_date, // STRING PURA - trigger do banco fará padronização
-        end_date: newTournament.end_date,     // STRING PURA - trigger do banco fará 23:59:59
+        start_date: newTournament.start_date,
+        end_date: newTournament.end_date,
         prize_pool: currentPrizePool,
-        max_participants: 0 // Participação livre - sem limite
+        max_participants: 0
       };
-
-      console.log('🏆 Criando torneio semanal com STRINGS PURAS (ZERO conversões):', competitionData);
 
       const result = await customCompetitionService.createCompetition(competitionData);
 
@@ -156,28 +150,24 @@ export const WeeklyTournamentsManagement = () => {
         return;
       }
 
-      // CORREÇÃO RADICAL: Usar datas como STRINGS PURAS - sem conversões
       const updateData = {
         title: editingTournament.title,
         description: editingTournament.description,
         competition_type: 'tournament',
-        max_participants: 0, // Forçar participação livre
-        start_date: editingTournament.start_date, // STRING PURA - trigger do banco fará padronização
-        end_date: editingTournament.end_date      // STRING PURA - trigger do banco fará 23:59:59
+        max_participants: 0,
+        start_date: editingTournament.start_date,
+        end_date: editingTournament.end_date
       };
-
-      console.log('🔧 Atualizando torneio semanal com STRINGS PURAS (ZERO conversões):', updateData);
 
       const result = await customCompetitionService.updateCompetition(editingTournament.id, updateData);
 
       if (result.success) {
-        // Também atualizar status e prize_pool diretamente no Supabase
         const { error } = await supabase
           .from('custom_competitions')
           .update({
             status: editingTournament.status,
             prize_pool: currentPrizePool,
-            max_participants: 0 // Garantir participação livre
+            max_participants: 0
           })
           .eq('id', editingTournament.id);
 
@@ -384,7 +374,6 @@ export const WeeklyTournamentsManagement = () => {
       </CardHeader>
 
       <CardContent className="p-6">
-        {/* Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50">
             <CardContent className="p-4">
@@ -447,7 +436,6 @@ export const WeeklyTournamentsManagement = () => {
           </Card>
         </div>
 
-        {/* Tabela de torneios */}
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
@@ -520,7 +508,6 @@ export const WeeklyTournamentsManagement = () => {
           </div>
         )}
 
-        {/* Modal de edição */}
         {editingTournament && (
           <Dialog open={!!editingTournament} onOpenChange={() => setEditingTournament(null)}>
             <DialogContent className="max-w-2xl">
