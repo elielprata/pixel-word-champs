@@ -124,8 +124,8 @@ export const WeeklyRankingControls = ({ onResetScores }: WeeklyRankingControlsPr
 
       {/* Modal de Configuração */}
       <WeeklyConfigModal 
-        isOpen={showConfigModal}
-        onClose={() => setShowConfigModal(false)}
+        open={showConfigModal}
+        onOpenChange={setShowConfigModal}
         onConfigUpdated={() => {
           setShowConfigModal(false);
           // Trigger refetch if needed
