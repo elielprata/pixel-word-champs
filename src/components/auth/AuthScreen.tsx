@@ -89,25 +89,26 @@ const AuthScreen = () => {
               
               <TabsContent value="login" className="space-y-4">
                 <LoginForm />
+                
+                {/* Divider - apenas na aba de login */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-muted-foreground">Ou continue com</span>
+                  </div>
+                </div>
+
+                {/* Social Login - apenas na aba de login */}
+                <SocialLogin />
               </TabsContent>
               
               <TabsContent value="register" className="space-y-4">
                 <RegisterForm />
+                {/* Sem divider e sem SocialLogin na aba de cadastro */}
               </TabsContent>
             </Tabs>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground">Ou continue com</span>
-              </div>
-            </div>
-
-            {/* Social Login */}
-            <SocialLogin />
           </CardContent>
         </Card>
 
