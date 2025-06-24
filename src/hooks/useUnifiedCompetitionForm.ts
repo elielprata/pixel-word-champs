@@ -14,7 +14,7 @@ export const useUnifiedCompetitionForm = () => {
     type: 'daily', // Apenas competições diárias
     startDate: '',
     endDate: '',
-    maxParticipants: 1000
+    maxParticipants: 0 // Não usado mais - participação livre
   });
 
   const updateField = useCallback((field: keyof CompetitionFormData, value: any) => {
@@ -35,14 +35,6 @@ export const useUnifiedCompetitionForm = () => {
 
     if (!formData.startDate) {
       errors.push('Data de início é obrigatória');
-    }
-
-    if (formData.startDate && formData.endDate) {
-      const start = new Date(formData.startDate);
-      const end = new Date(formData.endDate);
-      if (start >= end) {
-        errors.push('Data de fim deve ser posterior à data de início');
-      }
     }
 
     return {
@@ -82,7 +74,7 @@ export const useUnifiedCompetitionForm = () => {
         
         toast({
           title: "Sucesso!",
-          description: "Competição criária criada com sucesso.",
+          description: "Competição diária criada com sucesso.",
         });
         
         // Reset form
@@ -92,7 +84,7 @@ export const useUnifiedCompetitionForm = () => {
           type: 'daily',
           startDate: '',
           endDate: '',
-          maxParticipants: 1000
+          maxParticipants: 0
         });
         
         if (onSuccess) onSuccess();
@@ -120,7 +112,7 @@ export const useUnifiedCompetitionForm = () => {
       type: 'daily',
       startDate: '',
       endDate: '',
-      maxParticipants: 1000
+      maxParticipants: 0
     });
   }, []);
 

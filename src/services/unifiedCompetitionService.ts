@@ -26,7 +26,7 @@ class UnifiedCompetitionService {
         competition_type: 'challenge', // Sempre 'challenge' para competições diárias
         start_date: startDateUTC,
         end_date: endDateUTC,
-        max_participants: formData.maxParticipants,
+        max_participants: null, // Participação livre - sem limite
         prize_pool: 0, // Competições diárias não têm prêmios
         theme: 'Geral',
         created_by: user.user.id,
@@ -156,7 +156,7 @@ class UnifiedCompetitionService {
       status: data.status,
       startDate: data.start_date,
       endDate: data.end_date,
-      maxParticipants: data.max_participants || 1000,
+      maxParticipants: 0, // Participação livre - sem limite
       theme: data.theme,
       totalParticipants: data.total_participants || 0,
       createdAt: data.created_at,

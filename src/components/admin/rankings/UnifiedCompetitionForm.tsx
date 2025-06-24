@@ -68,28 +68,15 @@ export const UnifiedCompetitionForm = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Data de Início *</Label>
-              <Input
-                id="startDate"
-                type="datetime-local"
-                value={formData.startDate}
-                onChange={(e) => updateField('startDate', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="maxParticipants">Máximo de Participantes</Label>
-              <Input
-                id="maxParticipants"
-                type="number"
-                value={formData.maxParticipants}
-                onChange={(e) => updateField('maxParticipants', parseInt(e.target.value) || 1000)}
-                min="1"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="startDate">Data de Início *</Label>
+            <Input
+              id="startDate"
+              type="datetime-local"
+              value={formData.startDate}
+              onChange={(e) => updateField('startDate', e.target.value)}
+              required
+            />
           </div>
         </CardContent>
       </Card>
