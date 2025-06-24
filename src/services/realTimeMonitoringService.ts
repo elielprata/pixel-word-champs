@@ -10,11 +10,13 @@ interface SystemHealthMetrics {
   system_load: 'low' | 'medium' | 'high';
   last_sync_time: string;
   sync_status: 'healthy' | 'warning' | 'critical';
+  completed_sessions_without_competition: number;
+  total_completed_sessions: number;
 }
 
 interface RealTimeAlert {
   id: string;
-  type: 'sync_failure' | 'orphaned_scores' | 'system_overload' | 'prize_mismatch';
+  type: 'sync_failure' | 'orphaned_scores' | 'system_overload' | 'prize_mismatch' | 'orphaned_sessions';
   severity: 'info' | 'warning' | 'critical';
   message: string;
   timestamp: string;
@@ -22,122 +24,153 @@ interface RealTimeAlert {
 }
 
 class RealTimeMonitoringService {
-  private metricsChannel: any = null;
-  private alertsQueue: RealTimeAlert[] = [];
-  private lastHealthCheck: Date | null = null;
+  private isMonitoring: boolean = false;
+  private monitoringInterval: NodeJS.Timeout | null = null;
 
   async startMonitoring(): Promise<void> {
-    try {
-      logger.info('Iniciando monitoramento em tempo real do sistema de ranking', undefined, 'RT_MONITORING');
-      
-      // Configurar canal para atualizações em tempo real
-      this.metricsChannel = supabase
-        .channel('ranking-system-monitoring')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'weekly_rankings'
-          },
-          (payload) => this.handleRankingUpdate(payload)
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'profiles'
-          },
-          (payload) => this.handleProfileUpdate(payload)
-        )
-        .subscribe();
-
-      // Iniciar verificação periódica de saúde
-      this.startHealthChecks();
-      
-      logger.info('Monitoramento em tempo real ativado com sucesso', undefined, 'RT_MONITORING');
-    } catch (error) {
-      logger.error('Erro ao iniciar monitoramento em tempo real', { error }, 'RT_MONITORING');
-      throw error;
+    if (this.isMonitoring) {
+      logger.warn('Monitoramento já está ativo', undefined, 'RT_MONITORING_SERVICE');
+      return;
     }
+
+    this.isMonitoring = true;
+    logger.info('Iniciando monitoramento em tempo real', undefined, 'RT_MONITORING_SERVICE');
+
+    // Monitoramento a cada 30 segundos
+    this.monitoringInterval = setInterval(async () => {
+      try {
+        await this.performHealthCheck();
+      } catch (error) {
+        logger.error('Erro no monitoramento automático', { error }, 'RT_MONITORING_SERVICE');
+      }
+    }, 30000);
   }
 
   async stopMonitoring(): Promise<void> {
-    if (this.metricsChannel) {
-      await supabase.removeChannel(this.metricsChannel);
-      this.metricsChannel = null;
-    }
-    logger.info('Monitoramento em tempo real desativado', undefined, 'RT_MONITORING');
-  }
-
-  private async handleRankingUpdate(payload: any): Promise<void> {
-    logger.debug('Atualização detectada no ranking semanal', { payload }, 'RT_MONITORING');
+    this.isMonitoring = false;
     
-    // Verificar integridade após mudanças no ranking
-    await this.checkSystemIntegrity();
-  }
-
-  private async handleProfileUpdate(payload: any): Promise<void> {
-    if (payload.new?.total_score !== payload.old?.total_score) {
-      logger.debug('Mudança de pontuação detectada', { 
-        userId: payload.new.id,
-        oldScore: payload.old?.total_score,
-        newScore: payload.new?.total_score 
-      }, 'RT_MONITORING');
-      
-      // Verificar se o ranking precisa ser atualizado
-      await this.validateRankingSync();
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval);
+      this.monitoringInterval = null;
     }
-  }
 
-  private async startHealthChecks(): Promise<void> {
-    // Verificação inicial
-    await this.performHealthCheck();
-    
-    // Agendar verificações periódicas (a cada 5 minutos)
-    setInterval(async () => {
-      await this.performHealthCheck();
-    }, 5 * 60 * 1000);
+    logger.info('Monitoramento em tempo real parado', undefined, 'RT_MONITORING_SERVICE');
   }
 
   async performHealthCheck(): Promise<SystemHealthMetrics> {
     try {
-      logger.debug('Executando verificação de saúde do sistema', undefined, 'RT_MONITORING');
-      
-      const [
-        activeUsersResult,
-        rankingResult,
-        orphanedResult,
-        prizesResult
-      ] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact' }).gt('total_score', 0),
-        supabase.from('weekly_rankings').select('id', { count: 'exact' }),
-        supabase.from('game_sessions').select('id', { count: 'exact' }).eq('is_completed', true).is('competition_id', null),
-        supabase.from('weekly_rankings').select('prize_amount', { count: 'exact' }).eq('payment_status', 'pending')
-      ]);
+      logger.debug('Executando verificação de saúde do sistema', undefined, 'RT_MONITORING_SERVICE');
+
+      // Contar usuários ativos (com pontuação > 0)
+      const { count: activeUsers } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gt('total_score', 0);
+
+      // Contar registros no ranking semanal
+      const currentWeekStart = new Date();
+      currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1);
+      const weekStartISO = currentWeekStart.toISOString().split('T')[0];
+
+      const { count: weeklyRankingSize } = await supabase
+        .from('weekly_rankings')
+        .select('*', { count: 'exact', head: true })
+        .eq('week_start', weekStartISO);
+
+      // Contar sessões órfãs (completadas sem competition_id)
+      const { count: orphanedSessions } = await supabase
+        .from('game_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_completed', true)
+        .is('competition_id', null);
+
+      // Contar total de sessões completadas
+      const { count: totalCompletedSessions } = await supabase
+        .from('game_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_completed', true);
+
+      // Contar prêmios pendentes
+      const { count: pendingPrizes } = await supabase
+        .from('prize_distributions')
+        .select('*', { count: 'exact', head: true })
+        .eq('payment_status', 'pending');
 
       const metrics: SystemHealthMetrics = {
-        total_active_users: activeUsersResult.count || 0,
-        weekly_ranking_size: rankingResult.count || 0,
-        orphaned_sessions: orphanedResult.count || 0,
-        pending_prizes: prizesResult.count || 0,
-        system_load: this.calculateSystemLoad(activeUsersResult.count || 0),
+        total_active_users: activeUsers || 0,
+        weekly_ranking_size: weeklyRankingSize || 0,
+        orphaned_sessions: orphanedSessions || 0,
+        completed_sessions_without_competition: orphanedSessions || 0,
+        total_completed_sessions: totalCompletedSessions || 0,
+        pending_prizes: pendingPrizes || 0,
+        system_load: this.calculateSystemLoad(activeUsers || 0),
         last_sync_time: new Date().toISOString(),
-        sync_status: this.evaluateSyncStatus(orphanedResult.count || 0)
+        sync_status: this.determineSyncStatus(orphanedSessions || 0, activeUsers || 0, weeklyRankingSize || 0)
       };
 
-      this.lastHealthCheck = new Date();
-      
-      // Verificar se há alertas a serem gerados
-      await this.evaluateAlerts(metrics);
-      
-      logger.info('Verificação de saúde concluída', metrics, 'RT_MONITORING');
+      logger.info('Verificação de saúde concluída', metrics, 'RT_MONITORING_SERVICE');
       return metrics;
+
     } catch (error) {
-      logger.error('Erro na verificação de saúde do sistema', { error }, 'RT_MONITORING');
+      logger.error('Erro na verificação de saúde do sistema', { error }, 'RT_MONITORING_SERVICE');
       throw error;
     }
+  }
+
+  async getActiveAlerts(): Promise<RealTimeAlert[]> {
+    try {
+      const alerts: RealTimeAlert[] = [];
+      const metrics = await this.performHealthCheck();
+
+      // Alerta para sessões órfãs
+      if (metrics.orphaned_sessions > 0) {
+        alerts.push({
+          id: 'orphaned_sessions_' + Date.now(),
+          type: 'orphaned_sessions',
+          severity: metrics.orphaned_sessions > 10 ? 'critical' : 'warning',
+          message: `${metrics.orphaned_sessions} sessões completadas sem vinculação a competições detectadas`,
+          timestamp: new Date().toISOString(),
+          auto_resolve: false
+        });
+      }
+
+      // Alerta para discrepância entre usuários ativos e ranking
+      if (metrics.total_active_users > metrics.weekly_ranking_size) {
+        const difference = metrics.total_active_users - metrics.weekly_ranking_size;
+        alerts.push({
+          id: 'ranking_sync_' + Date.now(),
+          type: 'sync_failure',
+          severity: difference > 5 ? 'critical' : 'warning',
+          message: `${difference} usuários com pontuação não estão no ranking semanal`,
+          timestamp: new Date().toISOString(),
+          auto_resolve: false
+        });
+      }
+
+      // Alerta para carga do sistema
+      if (metrics.system_load === 'high') {
+        alerts.push({
+          id: 'system_load_' + Date.now(),
+          type: 'system_overload',
+          severity: 'warning',
+          message: 'Carga alta do sistema detectada',
+          timestamp: new Date().toISOString(),
+          auto_resolve: true
+        });
+      }
+
+      logger.debug('Alertas ativos coletados', { alertsCount: alerts.length }, 'RT_MONITORING_SERVICE');
+      return alerts;
+
+    } catch (error) {
+      logger.error('Erro ao coletar alertas ativos', { error }, 'RT_MONITORING_SERVICE');
+      return [];
+    }
+  }
+
+  async resolveAlert(alertId: string): Promise<void> {
+    logger.info('Resolvendo alerta', { alertId }, 'RT_MONITORING_SERVICE');
+    // Implementação futura: marcar alerta como resolvido em tabela de alertas
   }
 
   private calculateSystemLoad(activeUsers: number): 'low' | 'medium' | 'high' {
@@ -146,152 +179,10 @@ class RealTimeMonitoringService {
     return 'high';
   }
 
-  private evaluateSyncStatus(orphanedSessions: number): 'healthy' | 'warning' | 'critical' {
-    if (orphanedSessions === 0) return 'healthy';
-    if (orphanedSessions < 10) return 'warning';
-    return 'critical';
-  }
-
-  private async evaluateAlerts(metrics: SystemHealthMetrics): Promise<void> {
-    // Alerta para sessões órfãs
-    if (metrics.orphaned_sessions > 0) {
-      await this.createAlert({
-        type: 'orphaned_scores',
-        severity: metrics.orphaned_sessions > 10 ? 'critical' : 'warning',
-        message: `${metrics.orphaned_sessions} sessões órfãs detectadas`,
-        auto_resolve: true
-      });
-    }
-
-    // Alerta para alta carga do sistema
-    if (metrics.system_load === 'high') {
-      await this.createAlert({
-        type: 'system_overload',
-        severity: 'warning',
-        message: `Sistema com alta carga: ${metrics.total_active_users} usuários ativos`,
-        auto_resolve: false
-      });
-    }
-
-    // Alerta para falha de sincronização
-    if (metrics.sync_status === 'critical') {
-      await this.createAlert({
-        type: 'sync_failure',
-        severity: 'critical',
-        message: 'Falha crítica na sincronização do ranking',
-        auto_resolve: false
-      });
-    }
-  }
-
-  private async createAlert(alertData: Omit<RealTimeAlert, 'id' | 'timestamp'>): Promise<void> {
-    const alert: RealTimeAlert = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      ...alertData
-    };
-
-    this.alertsQueue.push(alert);
-    logger.warn('Alerta gerado', alert, 'RT_MONITORING');
-  }
-
-  async getActiveAlerts(): Promise<RealTimeAlert[]> {
-    return this.alertsQueue.filter(alert => 
-      // Manter alertas dos últimos 30 minutos
-      new Date().getTime() - new Date(alert.timestamp).getTime() < 30 * 60 * 1000
-    );
-  }
-
-  async resolveAlert(alertId: string): Promise<void> {
-    this.alertsQueue = this.alertsQueue.filter(alert => alert.id !== alertId);
-    logger.info('Alerta resolvido', { alertId }, 'RT_MONITORING');
-  }
-
-  private async checkSystemIntegrity(): Promise<void> {
-    try {
-      const { data, error } = await supabase.rpc('validate_scoring_integrity');
-      
-      if (error) throw error;
-      
-      const validation = data as any;
-      if (!validation.validation_passed) {
-        await this.createAlert({
-          type: 'sync_failure',
-          severity: 'warning',
-          message: `Problemas de integridade detectados: ${validation.issues.join(', ')}`,
-          auto_resolve: true
-        });
-      }
-    } catch (error) {
-      logger.error('Erro na verificação de integridade', { error }, 'RT_MONITORING');
-    }
-  }
-
-  private async validateRankingSync(): Promise<void> {
-    try {
-      // Verificar se há discrepâncias entre profiles e weekly_rankings
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, total_score')
-        .gt('total_score', 0)
-        .order('total_score', { ascending: false });
-
-      const currentWeekStart = new Date();
-      currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1);
-      const weekStartStr = currentWeekStart.toISOString().split('T')[0];
-
-      const { data: rankingData } = await supabase
-        .from('weekly_rankings')
-        .select('user_id, total_score, position')
-        .eq('week_start', weekStartStr)
-        .order('position', { ascending: true });
-
-      // Comparar dados e identificar discrepâncias
-      const discrepancies = this.findSyncDiscrepancies(profilesData || [], rankingData || []);
-      
-      if (discrepancies.length > 0) {
-        await this.createAlert({
-          type: 'sync_failure',
-          severity: 'warning',
-          message: `${discrepancies.length} discrepâncias encontradas entre perfis e ranking`,
-          auto_resolve: true
-        });
-      }
-    } catch (error) {
-      logger.error('Erro na validação de sincronização', { error }, 'RT_MONITORING');
-    }
-  }
-
-  private findSyncDiscrepancies(profiles: any[], rankings: any[]): string[] {
-    const discrepancies: string[] = [];
-    
-    for (let i = 0; i < Math.min(profiles.length, rankings.length); i++) {
-      const profile = profiles[i];
-      const ranking = rankings[i];
-      
-      if (profile.id !== ranking.user_id) {
-        discrepancies.push(`Posição ${i + 1}: usuário diferente`);
-      }
-      
-      if (profile.total_score !== ranking.total_score) {
-        discrepancies.push(`Usuário ${profile.id}: pontuação divergente`);
-      }
-    }
-    
-    if (profiles.length !== rankings.length) {
-      discrepancies.push(`Quantidade diferente: ${profiles.length} perfis vs ${rankings.length} ranking`);
-    }
-    
-    return discrepancies;
-  }
-
-  async getCurrentMetrics(): Promise<SystemHealthMetrics | null> {
-    if (!this.lastHealthCheck || 
-        new Date().getTime() - this.lastHealthCheck.getTime() > 5 * 60 * 1000) {
-      return await this.performHealthCheck();
-    }
-    
-    return null; // Usar cache se recente
+  private determineSyncStatus(orphanedSessions: number, activeUsers: number, rankingSize: number): 'healthy' | 'warning' | 'critical' {
+    if (orphanedSessions > 10) return 'critical';
+    if (orphanedSessions > 0 || Math.abs(activeUsers - rankingSize) > 5) return 'warning';
+    return 'healthy';
   }
 }
 
