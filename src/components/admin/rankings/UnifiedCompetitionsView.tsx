@@ -16,6 +16,21 @@ import {
 } from "@/components/ui/tabs";
 import { Trophy, Calendar } from 'lucide-react';
 
+// Interface para mapear UnifiedCompetition para DailyCompetition
+interface DailyCompetition {
+  id: string;
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  prize_pool: number;
+  max_participants: number;
+  total_participants: number;
+  theme: string;
+  rules: any;
+}
+
 export const UnifiedCompetitionsView = () => {
   const { 
     competitions, 
@@ -38,8 +53,22 @@ export const UnifiedCompetitionsView = () => {
     closeModal();
   };
 
-  // Filtrar apenas competições diárias (challenges)
-  const dailyCompetitions = competitions.filter(comp => comp.type === 'daily');
+  // Converter UnifiedCompetition[] para DailyCompetition[]
+  const dailyCompetitions: DailyCompetition[] = competitions
+    .filter(comp => comp.type === 'daily')
+    .map(comp => ({
+      id: comp.id,
+      title: comp.title,
+      description: comp.description,
+      start_date: comp.startDate,
+      end_date: comp.endDate,
+      status: comp.status,
+      prize_pool: comp.prizePool,
+      max_participants: comp.maxParticipants,
+      total_participants: comp.totalParticipants || 0,
+      theme: comp.theme || 'default',
+      rules: null
+    }));
 
   const handleRefresh = () => {
     refetch();

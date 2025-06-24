@@ -16,7 +16,7 @@ interface WeeklyRankingStatsProps {
       position: number;
       prize: number;
     }>;
-  };
+  } | null;
 }
 
 export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
@@ -29,6 +29,69 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
       year: 'numeric'
     });
   };
+
+  // Valores padrão quando stats é null
+  if (!stats) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <Calendar className="h-4 w-4 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-blue-600 font-medium">Semana Atual</p>
+                <p className="text-sm font-bold text-blue-700">Carregando...</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-green-100 p-2 rounded-lg">
+                <Users className="h-4 w-4 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-green-600 font-medium">Participantes</p>
+                <p className="text-2xl font-bold text-green-700">0</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-purple-100 p-2 rounded-lg">
+                <Coins className="h-4 w-4 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-purple-600 font-medium">Pool de Prêmios</p>
+                <p className="text-xl font-bold text-purple-700">R$ 0,00</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-yellow-100 p-2 rounded-lg">
+                <Crown className="h-4 w-4 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm text-yellow-600 font-medium">Líder</p>
+                <p className="text-sm font-bold text-yellow-700">Nenhum</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

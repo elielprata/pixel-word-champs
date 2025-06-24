@@ -41,7 +41,12 @@ export const useWeeklyRanking = () => {
       
       if (error) throw error;
       
-      return data as WeeklyRankingStats;
+      // Tratamento seguro da conversão de tipo
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        return data as WeeklyRankingStats;
+      }
+      
+      throw new Error('Formato de dados inválido recebido do servidor');
     } catch (error) {
       secureLogger.error('Erro ao buscar estatísticas do ranking', { error }, 'WEEKLY_RANKING');
       throw error;
