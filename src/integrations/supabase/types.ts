@@ -821,6 +821,63 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_competitions_backup: {
+        Row: {
+          competition_type: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          entry_requirements: Json | null
+          id: string | null
+          max_participants: number | null
+          prize_pool: number | null
+          rules: Json | null
+          start_date: string | null
+          status: string | null
+          theme: string | null
+          title: string | null
+          updated_at: string | null
+          weekly_tournament_id: string | null
+        }
+        Insert: {
+          competition_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          entry_requirements?: Json | null
+          id?: string | null
+          max_participants?: number | null
+          prize_pool?: number | null
+          rules?: Json | null
+          start_date?: string | null
+          status?: string | null
+          theme?: string | null
+          title?: string | null
+          updated_at?: string | null
+          weekly_tournament_id?: string | null
+        }
+        Update: {
+          competition_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          entry_requirements?: Json | null
+          id?: string | null
+          max_participants?: number | null
+          prize_pool?: number | null
+          rules?: Json | null
+          start_date?: string | null
+          status?: string | null
+          theme?: string | null
+          title?: string | null
+          updated_at?: string | null
+          weekly_tournament_id?: string | null
+        }
+        Relationships: []
+      }
       weekly_rankings: {
         Row: {
           created_at: string | null
@@ -960,6 +1017,10 @@ export type Database = {
           roles: string[]
         }[]
       }
+      get_weekly_ranking_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       has_role: {
         Args: {
           _user_id: string
@@ -970,6 +1031,10 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      migrate_weekly_competition_prizes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       reset_weekly_scores_and_positions: {
         Args: Record<PropertyKey, never>

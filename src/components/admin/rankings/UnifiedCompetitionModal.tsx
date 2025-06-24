@@ -1,47 +1,46 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Trophy } from 'lucide-react';
-import { UnifiedCompetitionForm } from './UnifiedCompetitionForm';
-import { useUnifiedCompetitionModal } from '@/hooks/useUnifiedCompetitionModal';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { CreateCompetitionForm } from './competition-form/CreateCompetitionForm';
 
 interface UnifiedCompetitionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCompetitionCreated?: () => void;
+  competitionTypeFilter?: 'daily' | 'weekly';
 }
 
-export const UnifiedCompetitionModal = ({ 
-  open, 
-  onOpenChange, 
-  onCompetitionCreated 
-}: UnifiedCompetitionModalProps) => {
-  const { error, closeModal, handleError } = useUnifiedCompetitionModal();
-
-  const handleClose = () => {
-    closeModal();
-    onOpenChange(false);
-  };
-
-  const handleSuccess = () => {
-    if (onCompetitionCreated) onCompetitionCreated();
-    handleClose();
-  };
-
+export const UnifiedCompetitionModal: React.FC<UnifiedCompetitionModalProps> = ({
+  open,
+  onOpenChange,
+  onCompetitionCreated,
+  competitionTypeFilter
+}) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-amber-600" />
-            Criar Nova Competição
+          <DialogTitle>
+            {competitionTypeFilter === 'daily' ? 'Criar Competição Diária' : 'Criar Competição'}
           </DialogTitle>
         </DialogHeader>
-
-        <UnifiedCompetitionForm 
-          onClose={handleClose}
-          onSuccess={handleSuccess}
-          onError={handleError}
+        
+        <CreateCompetitionForm
+          onClose={() => onOpenChange(false)}
+          onCompetitionCreated={onCompetitionCreated}
+          showPrizeConfig={competitionTypeFilter !== 'daily'}
+          showBasicConfig={true}
+          onCompetitionTypeChange={(type) => {
+            // Restringir tipo se necessário
+            if (competitionTypeFilter === 'daily' && type !== 'daily') {
+              // Pode adicionar lógica para forçar tipo diário
+            }
+          }}
         />
       </DialogContent>
     </Dialog>
