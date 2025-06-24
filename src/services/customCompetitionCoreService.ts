@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -7,9 +6,9 @@ import { logger } from '@/utils/logger';
 
 export class CustomCompetitionCoreService {
   /**
-   * Cria uma nova competição customizada
+   * Cria uma nova competição customizada (nome padronizado)
    */
-  async createCustomCompetition(competitionData: any): Promise<ApiResponse<any>> {
+  async createCompetition(competitionData: any): Promise<ApiResponse<any>> {
     try {
       logger.info('Criando competição customizada (BRASÍLIA)', { 
         type: competitionData.competition_type,
@@ -55,6 +54,39 @@ export class CustomCompetitionCoreService {
     } catch (error) {
       logger.error('Erro ao criar competição', { error }, 'CUSTOM_COMPETITION_CORE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'CREATE_CUSTOM_COMPETITION'));
+    }
+  }
+
+  /**
+   * Método legado - mantido para compatibilidade
+   */
+  async createCustomCompetition(competitionData: any): Promise<ApiResponse<any>> {
+    return this.createCompetition(competitionData);
+  }
+
+  /**
+   * Busca competições ativas
+   */
+  async getActiveCompetitions(): Promise<ApiResponse<any[]>> {
+    try {
+      logger.debug('Buscando competições ativas', undefined, 'CUSTOM_COMPETITION_CORE_SERVICE');
+
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      logger.debug('Competições ativas carregadas', { 
+        count: data?.length || 0 
+      }, 'CUSTOM_COMPETITION_CORE_SERVICE');
+
+      return createSuccessResponse(data || []);
+    } catch (error) {
+      logger.error('Erro ao buscar competições ativas', { error }, 'CUSTOM_COMPETITION_CORE_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_COMPETITIONS'));
     }
   }
 
@@ -119,7 +151,7 @@ export class CustomCompetitionCoreService {
   }
 
   /**
-   * Busca competições customizadas
+   * Busca competições customizadas (todas)
    */
   async getCustomCompetitions(): Promise<ApiResponse<any[]>> {
     try {
