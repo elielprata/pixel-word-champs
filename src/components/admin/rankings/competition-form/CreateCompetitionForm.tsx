@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -169,8 +168,20 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
     );
   }
 
-  // Filtrar competições semanais usando o tipo unificado
-  const weeklyTournaments = competitions.filter(c => c.type === 'weekly');
+  // Map UnifiedCompetition to WeeklyCompetition format for the WeeklyTournamentSection
+  const weeklyTournaments = competitions
+    .filter(c => c.type === 'weekly')
+    .map(competition => ({
+      id: competition.id,
+      title: competition.title,
+      description: competition.description,
+      start_date: competition.startDate,
+      end_date: competition.endDate,
+      status: competition.status,
+      prize_pool: competition.prizePool,
+      max_participants: competition.maxParticipants,
+      total_participants: competition.totalParticipants || 0
+    }));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
