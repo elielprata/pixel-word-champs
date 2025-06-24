@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trophy, Users, Calendar, Crown, Coins, Settings } from 'lucide-react';
 import { WeeklyConfigModal } from './WeeklyConfigModal';
-import { formatDateInputToDisplay } from '@/utils/weeklyDateUtils';
+import { formatDateInputToDisplay } from '@/utils/brasiliaTimeUnified';
 
 interface WeeklyRankingStatsProps {
   stats: {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, RotateCcw } from 'lucide-react';
 import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
-import { formatWeeklyPeriodPreview, isValidDateRange } from '@/utils/weeklyDateUtils';
+import { formatWeeklyPeriodPreview, validateBrasiliaDateRange } from '@/utils/brasiliaTimeUnified';
 
 interface WeeklyConfigModalProps {
   open: boolean;
@@ -62,7 +61,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
         custom_end_date: null
       });
     } else {
-      if (!customStartDate || !customEndDate || !isValidDateRange(customStartDate, customEndDate)) {
+      if (!customStartDate || !customEndDate || !validateBrasiliaDateRange(customStartDate, customEndDate)) {
         return;
       }
       
@@ -98,7 +97,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
     if (configType === 'weekly') {
       return true;
     }
-    return customStartDate && customEndDate && isValidDateRange(customStartDate, customEndDate);
+    return customStartDate && customEndDate && validateBrasiliaDateRange(customStartDate, customEndDate);
   };
 
   return (
@@ -176,7 +175,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
                 />
               </div>
 
-              {customStartDate && customEndDate && !isValidDateRange(customStartDate, customEndDate) && (
+              {customStartDate && customEndDate && !validateBrasiliaDateRange(customStartDate, customEndDate) && (
                 <p className="text-sm text-red-600">
                   A data de fim deve ser posterior à data de início.
                 </p>

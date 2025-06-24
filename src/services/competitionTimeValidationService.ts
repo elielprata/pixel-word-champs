@@ -5,6 +5,7 @@ import { createSuccessResponse, createErrorResponse, handleServiceError } from '
 import { isDailyCompetitionTimeValid } from '@/utils/dailyCompetitionValidation';
 import { isWeeklyCompetitionTimeValid } from '@/utils/weeklyCompetitionValidation';
 import { logger } from '@/utils/logger';
+import { getCurrentBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 export class CompetitionTimeValidationService {
   /**
@@ -12,7 +13,7 @@ export class CompetitionTimeValidationService {
    */
   async validateAllCompetitionTimes(): Promise<ApiResponse<any>> {
     try {
-      logger.debug('Verificando horários de todas as competições', undefined, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      logger.debug('Verificando horários de todas as competições (BRASÍLIA)', undefined, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
       const { data: competitions, error } = await supabase
         .from('custom_competitions')
@@ -47,7 +48,7 @@ export class CompetitionTimeValidationService {
         }
       }
 
-      logger.info('Resultado da validação de horários', results, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      logger.info('Resultado da validação de horários (BRASÍLIA)', results, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
       return createSuccessResponse(results);
     } catch (error) {
@@ -61,7 +62,7 @@ export class CompetitionTimeValidationService {
    */
   async forceTimeCorrection(competitionId: string): Promise<ApiResponse<any>> {
     try {
-      logger.info('Forçando correção de horário para competição', { competitionId }, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      logger.info('Forçando correção de horário para competição (BRASÍLIA)', { competitionId }, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
       // Buscar a competição atual
       const { data: competition, error: fetchError } = await supabase
@@ -76,7 +77,7 @@ export class CompetitionTimeValidationService {
       const { data: updatedCompetition, error: updateError } = await supabase
         .from('custom_competitions')
         .update({
-          updated_at: new Date().toISOString()
+          updated_at: getCurrentBrasiliaDate().toISOString()
         })
         .eq('id', competitionId)
         .select()
@@ -84,7 +85,7 @@ export class CompetitionTimeValidationService {
 
       if (updateError) throw updateError;
 
-      logger.info('Competição corrigida pelo trigger', { competitionId, updatedCompetition }, 'COMPETITION_TIME_VALIDATION_SERVICE');
+      logger.info('Competição corrigida pelo trigger (BRASÍLIA)', { competitionId, updatedCompetition }, 'COMPETITION_TIME_VALIDATION_SERVICE');
       
       return createSuccessResponse(updatedCompetition);
     } catch (error) {

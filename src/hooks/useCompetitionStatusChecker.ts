@@ -16,7 +16,7 @@ export const useCompetitionStatusChecker = (enabled: boolean = true) => {
       
       isRunningRef.current = true;
       try {
-        logger.debug('Verificação automática de status iniciada', undefined, 'COMPETITION_STATUS_CHECKER');
+        logger.debug('Verificação automática de status iniciada (BRASÍLIA)', undefined, 'COMPETITION_STATUS_CHECKER');
         await competitionTimeService.updateCompetitionStatuses();
       } catch (error) {
         logger.error('Erro na verificação automática de status', { error }, 'COMPETITION_STATUS_CHECKER');

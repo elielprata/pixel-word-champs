@@ -1,17 +1,17 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getCurrentDateISO, calculateCompetitionStatus } from '@/utils/brasiliaTime';
+import { getCurrentBrasiliaDate, calculateCompetitionStatus, calculateTimeRemaining } from '@/utils/brasiliaTimeUnified';
 import { logger, structuredLog } from '@/utils/logger';
 
 class CompetitionTimeService {
   /**
-   * Atualiza o status das competições baseado no horário atual
+   * Atualiza o status das competições baseado no horário de Brasília
    */
   async updateCompetitionStatuses() {
     try {
-      logger.debug('Iniciando atualização de status das competições', undefined, 'COMPETITION_TIME_SERVICE');
+      logger.debug('Iniciando atualização de status das competições (BRASÍLIA)', undefined, 'COMPETITION_TIME_SERVICE');
       
-      const now = getCurrentDateISO();
+      const now = getCurrentBrasiliaDate().toISOString();
       
       const { data: competitions, error } = await supabase
         .from('custom_competitions')
@@ -48,7 +48,7 @@ class CompetitionTimeService {
               error: updateError 
             }, 'COMPETITION_TIME_SERVICE');
           } else {
-            logger.debug('Status da competição atualizado', { 
+            logger.debug('Status da competição atualizado (BRASÍLIA)', { 
               title: competition.title, 
               oldStatus: competition.status,
               newStatus: currentStatus 
@@ -58,7 +58,7 @@ class CompetitionTimeService {
         }
       }
 
-      logger.info('Atualização de status de competições concluída', {
+      logger.info('Atualização de status de competições concluída (BRASÍLIA)', {
         totalCompetitions: competitions.length,
         updated: updatedCount
       }, 'COMPETITION_TIME_SERVICE');
@@ -68,24 +68,21 @@ class CompetitionTimeService {
   }
 
   /**
-   * Verifica se uma competição está ativa no momento
+   * Verifica se uma competição está ativa no momento (BRASÍLIA)
    */
   isCompetitionActive(startDate: string, endDate: string): boolean {
     const status = calculateCompetitionStatus(startDate, endDate);
     const isActive = status === 'active';
-    logger.debug('Verificação de status de competição', { startDate, endDate, status, isActive }, 'COMPETITION_TIME_SERVICE');
+    logger.debug('Verificação de status de competição (BRASÍLIA)', { startDate, endDate, status, isActive }, 'COMPETITION_TIME_SERVICE');
     return isActive;
   }
 
   /**
-   * Obtém o tempo restante para uma competição em segundos
+   * Obtém o tempo restante para uma competição em segundos (BRASÍLIA)
    */
   getTimeRemaining(endDate: string): number {
-    const now = new Date();
-    const end = new Date(endDate);
-    const diffMs = end.getTime() - now.getTime();
-    const timeRemaining = Math.max(0, Math.floor(diffMs / 1000));
-    logger.debug('Tempo restante calculado', { endDate, timeRemaining }, 'COMPETITION_TIME_SERVICE');
+    const timeRemaining = calculateTimeRemaining(endDate);
+    logger.debug('Tempo restante calculado (BRASÍLIA)', { endDate, timeRemaining }, 'COMPETITION_TIME_SERVICE');
     return timeRemaining;
   }
 
@@ -94,7 +91,7 @@ class CompetitionTimeService {
    */
   async forceUpdateCompetitionStatus(competitionId: string): Promise<boolean> {
     try {
-      logger.debug('Forçando atualização de competição específica', { competitionId }, 'COMPETITION_TIME_SERVICE');
+      logger.debug('Forçando atualização de competição específica (BRASÍLIA)', { competitionId }, 'COMPETITION_TIME_SERVICE');
       
       const { data: competition, error: fetchError } = await supabase
         .from('custom_competitions')
@@ -117,7 +114,7 @@ class CompetitionTimeService {
           .from('custom_competitions')
           .update({ 
             status: correctStatus,
-            updated_at: getCurrentDateISO()
+            updated_at: getCurrentBrasiliaDate().toISOString()
           })
           .eq('id', competitionId);
 
@@ -126,7 +123,7 @@ class CompetitionTimeService {
           return false;
         }
 
-        logger.info('Atualização forçada realizada', { 
+        logger.info('Atualização forçada realizada (BRASÍLIA)', { 
           competitionId,
           oldStatus: competition.status,
           newStatus: correctStatus 
@@ -134,7 +131,7 @@ class CompetitionTimeService {
         return true;
       }
 
-      logger.debug('Competição já está com status correto', { competitionId, status: competition.status }, 'COMPETITION_TIME_SERVICE');
+      logger.debug('Competição já está com status correto (BRASÍLIA)', { competitionId, status: competition.status }, 'COMPETITION_TIME_SERVICE');
       return true;
     } catch (error) {
       logger.error('Erro na atualização forçada', { competitionId, error }, 'COMPETITION_TIME_SERVICE');

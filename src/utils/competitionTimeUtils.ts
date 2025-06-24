@@ -1,11 +1,13 @@
 
 /**
- * Utilitários para verificação de tempo das competições (VERSÃO SIMPLIFICADA)
- * Removidas as conversões complexas de timezone - agora trabalha com datas simples
+ * Utilitários para verificação de tempo das competições (BRASÍLIA UNIFICADO)
+ * Todas as operações agora trabalham exclusivamente com horário de Brasília
  */
 
+import { getCurrentBrasiliaDate, isCompetitionActive, calculateCompetitionStatus } from './brasiliaTimeUnified';
+
 /**
- * Ajusta o horário de fim da competição para 23:59:59 (VERSÃO SIMPLIFICADA)
+ * Ajusta o horário de fim da competição para 23:59:59 (BRASÍLIA)
  */
 export const adjustCompetitionEndTime = (startDate: Date): Date => {
   const correctedEndDate = new Date(startDate);
@@ -14,25 +16,18 @@ export const adjustCompetitionEndTime = (startDate: Date): Date => {
 };
 
 /**
- * Verifica se uma competição está ativa (VERSÃO SIMPLIFICADA)
- */
-export const isCompetitionActive = (startDate: Date, endDate: Date): boolean => {
-  const now = new Date();
-  return now >= startDate && now <= endDate;
-};
-
-/**
- * Log de verificação de competição (VERSÃO SIMPLIFICADA)
+ * Log de verificação de competição (BRASÍLIA)
  */
 export const logCompetitionVerification = (comp: any, isActive: boolean, now: Date) => {
-  console.log(`🔍 Verificando competição "${comp.title}" (SIMPLES):`, {
+  console.log(`🔍 Verificando competição "${comp.title}" (BRASÍLIA):`, {
     id: comp.id,
-    start: new Date(comp.start_date).toISOString(),
-    end: new Date(comp.end_date).toISOString(),
-    now: now.toISOString(),
+    start: new Date(comp.start_date).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+    end: new Date(comp.end_date).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+    now: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
     isActive: isActive,
-    startTime: new Date(comp.start_date).getTime(),
-    endTime: new Date(comp.end_date).getTime(),
-    currentTime: now.getTime()
+    timezone: 'America/Sao_Paulo'
   });
 };
+
+// Re-exportar funções unificadas
+export { isCompetitionActive, calculateCompetitionStatus };
