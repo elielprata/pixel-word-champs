@@ -878,6 +878,39 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_config: {
+        Row: {
+          created_at: string
+          custom_end_date: string | null
+          custom_start_date: string | null
+          duration_days: number
+          id: string
+          is_active: boolean
+          start_day_of_week: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_end_date?: string | null
+          custom_start_date?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          start_day_of_week?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_end_date?: string | null
+          custom_start_date?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          start_day_of_week?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       weekly_rankings: {
         Row: {
           created_at: string | null

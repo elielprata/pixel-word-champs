@@ -1,7 +1,8 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Trophy, Users, Calendar, Crown, Coins } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Trophy, Users, Calendar, Crown, Coins, Settings } from 'lucide-react';
+import { WeeklyConfigModal } from './WeeklyConfigModal';
 
 interface WeeklyRankingStatsProps {
   stats: {
@@ -10,6 +11,12 @@ interface WeeklyRankingStatsProps {
     total_participants: number;
     total_prize_pool: number;
     last_update: string;
+    config?: {
+      start_day_of_week: number;
+      duration_days: number;
+      custom_start_date: string | null;
+      custom_end_date: string | null;
+    };
     top_3_players: Array<{
       username: string;
       score: number;
@@ -17,17 +24,42 @@ interface WeeklyRankingStatsProps {
       prize: number;
     }>;
   } | null;
+  onConfigUpdated?: () => void;
 }
 
 export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
-  stats
+  stats,
+  onConfigUpdated
 }) => {
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
+  };
+
+  const getWeekDescription = () => {
+    if (!stats?.config) return '';
+    
+    const { config } = stats;
+    
+    if (config.custom_start_date && config.custom_end_date) {
+      return 'Período Personalizado';
+    }
+    
+    const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const startDay = dayNames[config.start_day_of_week];
+    const endDayIndex = (config.start_day_of_week + config.duration_days - 1) % 7;
+    const endDay = dayNames[endDayIndex];
+    
+    if (config.duration_days === 7) {
+      return `Semana ${startDay} - ${endDay}`;
+    }
+    
+    return `Período ${startDay} - ${endDay} (${config.duration_days}d)`;
   };
 
   // Valores padrão quando stats é null
@@ -40,10 +72,18 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
               <div className="bg-blue-100 p-2 rounded-lg">
                 <Calendar className="h-4 w-4 text-blue-600" />
               </div>
-              <div>
-                <p className="text-sm text-blue-600 font-medium">Semana Atual</p>
+              <div className="flex-1">
+                <p className="text-sm text-blue-600 font-medium">Período Atual</p>
                 <p className="text-sm font-bold text-blue-700">Carregando...</p>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsConfigModalOpen(true)}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -89,6 +129,12 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
             </div>
           </CardContent>
         </Card>
+
+        <WeeklyConfigModal
+          open={isConfigModalOpen}
+          onOpenChange={setIsConfigModalOpen}
+          onConfigUpdated={onConfigUpdated}
+        />
       </div>
     );
   }
@@ -101,12 +147,30 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
             <div className="bg-blue-100 p-2 rounded-lg">
               <Calendar className="h-4 w-4 text-blue-600" />
             </div>
-            <div>
-              <p className="text-sm text-blue-600 font-medium">Semana Atual</p>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-blue-600 font-medium">Período Atual</p>
+                {stats.config?.custom_start_date && (
+                  <span className="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full">
+                    Custom
+                  </span>
+                )}
+              </div>
               <p className="text-sm font-bold text-blue-700">
                 {formatDate(stats.current_week_start)} - {formatDate(stats.current_week_end)}
               </p>
+              <p className="text-xs text-blue-600 mt-1">
+                {getWeekDescription()}
+              </p>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsConfigModalOpen(true)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -159,6 +223,12 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      <WeeklyConfigModal
+        open={isConfigModalOpen}
+        onOpenChange={setIsConfigModalOpen}
+        onConfigUpdated={onConfigUpdated}
+      />
     </div>
   );
 };

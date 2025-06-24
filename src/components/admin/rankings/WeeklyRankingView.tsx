@@ -48,6 +48,14 @@ export const WeeklyRankingView = () => {
     }
   };
 
+  const handleConfigUpdated = () => {
+    refetch();
+    toast({
+      title: "Configuração aplicada",
+      description: "Período semanal atualizado com sucesso!",
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -94,7 +102,7 @@ export const WeeklyRankingView = () => {
       </div>
 
       {/* Estatísticas */}
-      <WeeklyRankingStats stats={stats} />
+      <WeeklyRankingStats stats={stats} onConfigUpdated={handleConfigUpdated} />
 
       {/* Controles */}
       <WeeklyRankingControls onResetScores={handleResetScores} />

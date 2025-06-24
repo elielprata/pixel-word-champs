@@ -10,6 +10,12 @@ interface WeeklyRankingStats {
   total_participants: number;
   total_prize_pool: number;
   last_update: string;
+  config?: {
+    start_day_of_week: number;
+    duration_days: number;
+    custom_start_date: string | null;
+    custom_end_date: string | null;
+  };
   top_3_players: Array<{
     username: string;
     score: number;
@@ -55,13 +61,8 @@ export const useWeeklyRanking = () => {
     }
   };
 
-  const fetchCurrentRanking = async () => {
+  const fetchCurrentRanking = async (weekStartStr: string) => {
     try {
-      // Buscar ranking atual da semana
-      const currentWeekStart = new Date();
-      currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1);
-      const weekStartStr = currentWeekStart.toISOString().split('T')[0];
-
       const { data, error } = await supabase
         .from('weekly_rankings')
         .select(`
@@ -104,17 +105,21 @@ export const useWeeklyRanking = () => {
     setError(null);
 
     try {
-      const [statsData, rankingData] = await Promise.all([
-        fetchWeeklyRankingStats(),
-        fetchCurrentRanking()
-      ]);
+      const statsData = await fetchWeeklyRankingStats();
+      
+      // Converter data para formato adequado para a query
+      const weekStartStr = new Date(statsData.current_week_start).toISOString().split('T')[0];
+      const rankingData = await fetchCurrentRanking(weekStartStr);
 
       setStats(statsData);
       setCurrentRanking(rankingData);
       
       secureLogger.debug('Dados do ranking carregados', { 
         participants: statsData.total_participants,
-        rankingSize: rankingData.length 
+        rankingSize: rankingData.length,
+        weekStart: statsData.current_week_start,
+        weekEnd: statsData.current_week_end,
+        config: statsData.config
       }, 'WEEKLY_RANKING');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar ranking';
