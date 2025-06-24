@@ -1019,6 +1019,10 @@ export type Database = {
         Args: { check_username?: string; check_email?: string }
         Returns: Json
       }
+      cleanup_orphaned_rankings: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       fix_orphaned_scores: {
         Args: Record<PropertyKey, never>
         Returns: Json
