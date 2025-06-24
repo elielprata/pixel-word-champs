@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { weeklyPositionService } from '@/services/weeklyPositionService';
+import { scoringSyncService } from '@/services/scoringSyncService';
 import { logger } from '@/utils/logger';
 
 interface FoundWord {
@@ -54,7 +55,7 @@ export const useGameScoring = (foundWords: FoundWord[], level: number) => {
       const currentScore = profile?.total_score || 0;
       const newScore = currentScore + points;
 
-      // Atualizar pontuação no perfil
+      // Atualizar pontuação no perfil (o trigger SQL fará a sincronização automática)
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
@@ -69,17 +70,17 @@ export const useGameScoring = (foundWords: FoundWord[], level: number) => {
       }
 
       logger.info(`✅ Pontuação registrada: ${currentScore} → ${newScore} (+${points})`);
+      logger.info('🔄 Trigger SQL ativado para sincronização automática do ranking');
 
-      // Atualizar ranking semanal
+      // Verificar se auto-update está ativo, senão forçar atualização manual
       try {
-        const { error: rankingError } = await supabase.rpc('update_weekly_ranking');
-        if (rankingError) {
-          logger.warn('⚠️ Erro ao atualizar ranking semanal:', rankingError);
-        } else {
-          logger.info('✅ Ranking semanal atualizado');
+        const autoUpdateEnabled = await scoringSyncService.getAutoUpdateStatus();
+        if (!autoUpdateEnabled) {
+          logger.info('⚙️ Auto-update desabilitado, forçando sincronização manual');
+          await scoringSyncService.syncUserScoresToWeeklyRanking();
         }
-      } catch (rankingUpdateError) {
-        logger.warn('⚠️ Erro ao forçar atualização do ranking:', rankingUpdateError);
+      } catch (syncError) {
+        logger.warn('⚠️ Erro na sincronização manual do ranking:', syncError);
       }
 
       // Atualizar melhores posições semanais após mudança de pontuação

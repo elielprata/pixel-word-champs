@@ -997,6 +997,10 @@ export type Database = {
         Args: { check_username?: string; check_email?: string }
         Returns: Json
       }
+      fix_orphaned_scores: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_invite_data_optimized: {
         Args: { user_uuid: string }
         Returns: Json
@@ -1040,6 +1044,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      sync_user_scores_to_weekly_ranking: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_competition_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1059,6 +1067,10 @@ export type Database = {
       update_weekly_ranking: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      validate_scoring_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
     }
     Enums: {
