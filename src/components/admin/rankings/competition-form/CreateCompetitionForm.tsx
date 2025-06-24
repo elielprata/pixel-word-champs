@@ -169,6 +169,7 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
     );
   }
 
+  // Filtrar competições semanais usando o tipo unificado
   const weeklyTournaments = competitions.filter(c => c.type === 'weekly');
 
   return (
