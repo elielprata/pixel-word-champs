@@ -4,8 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Trophy } from 'lucide-react';
 import { DailyCompetitionsView } from './DailyCompetitionsView';
 import { WeeklyRankingView } from './WeeklyRankingView';
+import { useUnifiedCompetitions } from '@/hooks/useUnifiedCompetitions';
 
 export const UnifiedCompetitionsView = () => {
+  const { competitions, isLoading } = useUnifiedCompetitions();
+
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -36,7 +39,10 @@ export const UnifiedCompetitionsView = () => {
         </TabsList>
 
         <TabsContent value="daily" className="space-y-6">
-          <DailyCompetitionsView />
+          <DailyCompetitionsView 
+            competitions={competitions}
+            isLoading={isLoading}
+          />
         </TabsContent>
 
         <TabsContent value="weekly-ranking" className="space-y-6">

@@ -1,104 +1,70 @@
 
-import React from 'react';
-import { EditCompetitionModal } from './EditCompetitionModal';
-import { CompetitionTimeInfo } from './daily/CompetitionTimeInfo';
-import { DailyCompetitionsEmpty } from './daily/DailyCompetitionsEmpty';
-import { DailyCompetitionsContainer } from './daily/DailyCompetitionsContainer';
-import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
-import { useCompetitionStatusChecker } from '@/hooks/useCompetitionStatusChecker';
-import { useDailyCompetitionsLogic } from '@/hooks/useDailyCompetitionsLogic';
-import { useDailyCompetitionsActions } from '@/hooks/useDailyCompetitionsActions';
-
-interface DailyCompetition {
-  id: string;
-  title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  prize_pool: number;
-  max_participants: number;
-  total_participants: number;
-  theme: string;
-  rules: any;
-}
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, Calendar, Trophy } from 'lucide-react';
+import { UnifiedCompetitionsList } from './UnifiedCompetitionsList';
+import { UnifiedCompetitionModal } from './UnifiedCompetitionModal';
+import { UnifiedCompetition } from '@/types/competition';
 
 interface DailyCompetitionsViewProps {
-  competitions: DailyCompetition[];
+  competitions: UnifiedCompetition[];
   isLoading: boolean;
-  onRefresh?: () => void;
 }
 
-export const DailyCompetitionsView: React.FC<DailyCompetitionsViewProps> = ({
-  competitions,
-  isLoading,
-  onRefresh
-}) => {
-  // Controlar a execução dos hooks para evitar loops
-  const shouldCheckStatus = competitions.length > 0 && !isLoading;
-  
-  // Usar hooks condicionalmente para evitar execuções desnecessárias
-  useCompetitionStatusUpdater(shouldCheckStatus ? competitions : []);
-  useCompetitionStatusChecker(shouldCheckStatus);
+export const DailyCompetitionsView = ({ competitions, isLoading }: DailyCompetitionsViewProps) => {
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const { activeCompetitions } = useDailyCompetitionsLogic(competitions);
-  const {
-    editingCompetition,
-    isEditModalOpen,
-    setIsEditModalOpen,
-    deletingId,
-    handleEdit,
-    handleDelete,
-    handleCompetitionUpdated
-  } = useDailyCompetitionsActions();
-
-  // Função para lidar com edição
-  const onEditCompetition = (competition: DailyCompetition) => {
-    handleEdit(competition);
+  const handleEdit = (competition: UnifiedCompetition) => {
+    console.log('Editar competição:', competition);
   };
 
-  // Função para lidar com exclusão
-  const onDeleteCompetition = (competition: DailyCompetition) => {
-    handleDelete(competition, onRefresh);
+  const handleDelete = (competition: UnifiedCompetition) => {
+    console.log('Deletar competição:', competition);
   };
 
-  // Função para lidar com a abertura do modal
-  const handleModalOpenChange = (open: boolean) => {
-    setIsEditModalOpen(open);
+  const handleCompetitionCreated = () => {
+    setShowCreateModal(false);
+    // A lista será atualizada automaticamente pelo hook
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 rounded-full mx-auto mb-4"></div>
-          <p className="text-slate-600">Carregando competições diárias...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (activeCompetitions.length === 0) {
-    return <DailyCompetitionsEmpty />;
-  }
 
   return (
     <div className="space-y-6">
-      <CompetitionTimeInfo />
+      {/* Header */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-6 w-6 text-blue-600" />
+              <div>
+                <CardTitle className="text-xl">Competições Diárias</CardTitle>
+                <p className="text-sm text-slate-600 mt-1">
+                  Gerencie competições diárias focadas no engajamento dos usuários
+                </p>
+              </div>
+            </div>
+            <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Competição
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
 
-      <DailyCompetitionsContainer 
+      {/* Lista de Competições */}
+      <UnifiedCompetitionsList
         competitions={competitions}
-        onRefresh={onRefresh}
-        onEdit={onEditCompetition}
-        onDelete={onDeleteCompetition}
-        deletingId={deletingId}
+        isLoading={isLoading}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
 
-      <EditCompetitionModal
-        open={isEditModalOpen}
-        onOpenChange={handleModalOpenChange}
-        competition={editingCompetition}
-        onCompetitionUpdated={() => handleCompetitionUpdated(onRefresh)}
+      {/* Modal de Criação */}
+      <UnifiedCompetitionModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onCompetitionCreated={handleCompetitionCreated}
+        competitionTypeFilter="daily"
       />
     </div>
   );

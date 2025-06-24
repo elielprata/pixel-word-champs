@@ -28,10 +28,6 @@ export const UnifiedCompetitionsList = ({
     }
   };
 
-  const getTypeColor = (type: string) => {
-    return type === 'daily' ? 'bg-orange-100 text-orange-800' : 'bg-purple-100 text-purple-800';
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -60,7 +56,7 @@ export const UnifiedCompetitionsList = ({
             Nenhuma competição encontrada
           </h3>
           <p className="text-slate-600">
-            Comece criando sua primeira competição.
+            Comece criando sua primeira competição diária.
           </p>
         </CardContent>
       </Card>
@@ -78,8 +74,8 @@ export const UnifiedCompetitionsList = ({
                 <p className="text-slate-600 text-sm mb-3">{competition.description}</p>
                 
                 <div className="flex flex-wrap gap-2">
-                  <Badge className={getTypeColor(competition.type)}>
-                    {competition.type === 'daily' ? 'Diária' : 'Semanal'}
+                  <Badge className="bg-orange-100 text-orange-800">
+                    Competição Diária
                   </Badge>
                   <Badge className={getStatusColor(competition.status)}>
                     {competition.status === 'active' ? 'Ativa' : 
@@ -127,16 +123,6 @@ export const UnifiedCompetitionsList = ({
                   </div>
                 </div>
               </div>
-
-              {competition.type === 'weekly' && competition.prizePool > 0 && (
-                <div className="flex items-center gap-2 md:col-span-3">
-                  <Trophy className="h-4 w-4 text-slate-400" />
-                  <div>
-                    <div className="font-medium">Prêmio Total</div>
-                    <div className="text-slate-600">R$ {competition.prizePool.toFixed(2)}</div>
-                  </div>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>

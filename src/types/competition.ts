@@ -3,7 +3,7 @@ export interface UnifiedCompetition {
   id: string;
   title: string;
   description: string;
-  type: 'daily'; // Removida opção 'weekly'
+  type: 'daily'; // Apenas competições diárias
   status: 'draft' | 'scheduled' | 'active' | 'completed';
   startDate: string;
   endDate: string;

@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Trophy, Users, Settings, Save, X } from 'lucide-react';
+import { Calendar, Users, Settings, Save, X } from 'lucide-react';
 import { useUnifiedCompetitionForm } from '@/hooks/useUnifiedCompetitionForm';
 
 interface UnifiedCompetitionFormProps {
@@ -25,7 +24,6 @@ export const UnifiedCompetitionForm = ({
     updateField,
     submitForm,
     isSubmitting,
-    paymentData,
     hasTitle
   } = useUnifiedCompetitionForm();
 
@@ -34,9 +32,6 @@ export const UnifiedCompetitionForm = ({
     submitForm(onSuccess);
   };
 
-  const isWeekly = formData.type === 'weekly';
-  const showPrizeSection = isWeekly && hasTitle;
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Configurações Básicas */}
@@ -44,36 +39,20 @@ export const UnifiedCompetitionForm = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Configurações Básicas
+            Criar Competição Diária
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
               <Label htmlFor="title">Título *</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => updateField('title', e.target.value)}
-                placeholder="Nome da competição"
+                placeholder="Nome da competição diária"
                 required
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="type">Tipo de Competição *</Label>
-              <Select 
-                value={formData.type} 
-                onValueChange={(value: 'daily' | 'weekly') => updateField('type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Competição Diária</SelectItem>
-                  <SelectItem value="weekly">Competição Semanal</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 
@@ -101,57 +80,32 @@ export const UnifiedCompetitionForm = ({
               />
             </div>
 
-            {isWeekly && (
-              <div className="space-y-2">
-                <Label htmlFor="endDate">Data de Fim *</Label>
-                <Input
-                  id="endDate"
-                  type="datetime-local"
-                  value={formData.endDate}
-                  onChange={(e) => updateField('endDate', e.target.value)}
-                  required
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="maxParticipants">Máximo de Participantes</Label>
-            <Input
-              id="maxParticipants"
-              type="number"
-              value={formData.maxParticipants}
-              onChange={(e) => updateField('maxParticipants', parseInt(e.target.value) || 1000)}
-              min="1"
-            />
+            <div className="space-y-2">
+              <Label htmlFor="maxParticipants">Máximo de Participantes</Label>
+              <Input
+                id="maxParticipants"
+                type="number"
+                value={formData.maxParticipants}
+                onChange={(e) => updateField('maxParticipants', parseInt(e.target.value) || 1000)}
+                min="1"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Seção de Premiação - apenas para competições semanais */}
-      {showPrizeSection && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-4 w-4" />
-              Configuração de Premiação
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-blue-900">Prêmio Total Calculado</h3>
-                  <p className="text-blue-700">
-                    R$ {paymentData.calculateTotalPrize().toFixed(2)} para {paymentData.calculateTotalWinners()} vencedores
-                  </p>
-                </div>
-                <Trophy className="h-8 w-8 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Informações sobre competições diárias */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h3 className="font-medium text-blue-900 mb-2">🎯 Competição Diária</h3>
+            <p className="text-blue-700 text-sm">
+              Competições diárias não possuem premiação em dinheiro. 
+              O foco é na diversão e engajamento dos usuários. A competição terminará automaticamente às 23:59 do dia selecionado.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Ações */}
       <div className="flex justify-end gap-3 pt-4 border-t">

@@ -1,39 +1,30 @@
 
 import { useState, useEffect } from 'react';
 import { Competition } from '@/types';
-import { useCompetitionQueries } from './useCompetitionQueries';
 
+// Hook depreciado - mantido apenas para compatibilidade
+// O sistema agora usa apenas ranking semanal automático
 export const useWeeklyCompetition = () => {
-  const {
-    weeklyCompetition,
-    isLoading,
-    error,
-    setIsLoading,
-    setError,
-    fetchWeeklyCompetition
-  } = useCompetitionQueries();
-
-  const loadCompetition = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      await fetchWeeklyCompetition();
-    } catch (err) {
-      setError('Erro ao carregar competição semanal');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [weeklyCompetition, setWeeklyCompetition] = useState<Competition | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadCompetition();
+    // Sistema simplificado - não há mais competições semanais
+    setWeeklyCompetition(null);
+    setIsLoading(false);
+    setError(null);
   }, []);
+
+  const refetch = async () => {
+    // Não há mais competições semanais para buscar
+    return Promise.resolve();
+  };
 
   return {
     weeklyCompetition,
     isLoading,
     error,
-    refetch: loadCompetition
+    refetch
   };
 };

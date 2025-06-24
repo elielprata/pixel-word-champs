@@ -7,9 +7,8 @@ import { toUTCTimestamp, createEndOfDayUTC } from '@/utils/dateHelpers';
 class UnifiedCompetitionService {
   async createCompetition(formData: CompetitionFormData): Promise<CompetitionApiResponse<UnifiedCompetition>> {
     try {
-      secureLogger.info('Criando competição unificada', { 
-        title: formData.title, 
-        type: formData.type 
+      secureLogger.info('Criando competição diária', { 
+        title: formData.title 
       }, 'UNIFIED_COMPETITION_SERVICE');
 
       const { data: user } = await supabase.auth.getUser();
@@ -17,43 +16,25 @@ class UnifiedCompetitionService {
         throw new Error('Usuário não autenticado');
       }
 
-      // Preparar dados baseado no tipo
+      // Preparar dados para competição diária
       const startDateUTC = toUTCTimestamp(formData.startDate);
-      const endDateUTC = formData.type === 'daily' 
-        ? createEndOfDayUTC(formData.startDate) 
-        : toUTCTimestamp(formData.endDate);
+      const endDateUTC = createEndOfDayUTC(formData.startDate);
 
-      // Verificar sobreposição apenas para competições semanais
-      if (formData.type === 'weekly') {
-        const hasOverlap = await this.checkWeeklyCompetitionOverlap(startDateUTC, endDateUTC);
-        if (hasOverlap) {
-          throw new Error('As datas desta competição semanal se sobrepõem a uma competição semanal já existente.');
-        }
-      }
-
-      // CORREÇÃO: Tratar campos UUID opcionais adequadamente
       const competitionData = {
         title: formData.title,
         description: formData.description,
-        competition_type: formData.type === 'daily' ? 'challenge' : 'tournament',
+        competition_type: 'challenge', // Sempre 'challenge' para competições diárias
         start_date: startDateUTC,
         end_date: endDateUTC,
         max_participants: formData.maxParticipants,
-        prize_pool: formData.type === 'daily' ? 0 : undefined, // Será calculado pelo hook de prêmios
-        theme: formData.type === 'daily' ? 'Geral' : undefined,
-        // CORREÇÃO CRÍTICA: Converter string vazia para null para campos UUID
-        weekly_tournament_id: formData.weeklyTournamentId && formData.weeklyTournamentId.trim() 
-          ? formData.weeklyTournamentId 
-          : null,
+        prize_pool: 0, // Competições diárias não têm prêmios
+        theme: 'Geral',
         created_by: user.user.id,
-        status: formData.type === 'daily' ? 'active' : 'scheduled'
+        status: 'active'
       };
 
       secureLogger.debug('Dados preparados para inserção', { 
-        competitionData: {
-          ...competitionData,
-          weekly_tournament_id: competitionData.weekly_tournament_id
-        }
+        competitionData 
       }, 'UNIFIED_COMPETITION_SERVICE');
 
       const { data, error } = await supabase
@@ -70,8 +51,7 @@ class UnifiedCompetitionService {
       const unifiedCompetition = this.mapToUnifiedCompetition(data);
       
       secureLogger.info('Competição criada com sucesso', { 
-        id: unifiedCompetition.id,
-        type: unifiedCompetition.type 
+        id: unifiedCompetition.id
       }, 'UNIFIED_COMPETITION_SERVICE');
 
       return { success: true, data: unifiedCompetition };
@@ -86,11 +66,12 @@ class UnifiedCompetitionService {
 
   async getCompetitions(): Promise<CompetitionApiResponse<UnifiedCompetition[]>> {
     try {
-      secureLogger.debug('Buscando todas as competições', undefined, 'UNIFIED_COMPETITION_SERVICE');
+      secureLogger.debug('Buscando competições diárias', undefined, 'UNIFIED_COMPETITION_SERVICE');
       
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
+        .eq('competition_type', 'challenge') // Apenas competições diárias
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -119,16 +100,7 @@ class UnifiedCompetitionService {
 
       if (formData.startDate) {
         updateData.start_date = toUTCTimestamp(formData.startDate);
-      }
-      if (formData.endDate) {
-        updateData.end_date = toUTCTimestamp(formData.endDate);
-      }
-
-      // CORREÇÃO: Tratar weekly_tournament_id adequadamente na atualização
-      if ('weeklyTournamentId' in formData) {
-        updateData.weekly_tournament_id = formData.weeklyTournamentId && formData.weeklyTournamentId.trim() 
-          ? formData.weeklyTournamentId 
-          : null;
+        updateData.end_date = createEndOfDayUTC(formData.startDate);
       }
 
       const { data, error } = await supabase
@@ -175,46 +147,17 @@ class UnifiedCompetitionService {
     }
   }
 
-  private async checkWeeklyCompetitionOverlap(startDate: string, endDate: string): Promise<boolean> {
-    try {
-      const { data: existingCompetitions, error } = await supabase
-        .from('custom_competitions')
-        .select('id, title, start_date, end_date')
-        .eq('competition_type', 'tournament')
-        .neq('status', 'completed');
-
-      if (error || !existingCompetitions) return false;
-
-      for (const competition of existingCompetitions) {
-        const existingStart = competition.start_date.split('T')[0];
-        const existingEnd = competition.end_date.split('T')[0];
-        const newStart = startDate.split('T')[0];
-        const newEnd = endDate.split('T')[0];
-
-        const hasOverlap = newStart <= existingEnd && newEnd >= existingStart;
-        if (hasOverlap) return true;
-      }
-
-      return false;
-    } catch (error) {
-      secureLogger.error('Erro ao verificar sobreposição', { error }, 'UNIFIED_COMPETITION_SERVICE');
-      return false;
-    }
-  }
-
   private mapToUnifiedCompetition(data: any): UnifiedCompetition {
     return {
       id: data.id,
       title: data.title,
       description: data.description || '',
-      type: data.competition_type === 'challenge' ? 'daily' : 'weekly',
+      type: 'daily', // Sempre 'daily'
       status: data.status,
       startDate: data.start_date,
       endDate: data.end_date,
       maxParticipants: data.max_participants || 1000,
-      prizePool: Number(data.prize_pool) || 0,
       theme: data.theme,
-      weeklyTournamentId: data.weekly_tournament_id,
       totalParticipants: data.total_participants || 0,
       createdAt: data.created_at,
       updatedAt: data.updated_at

@@ -3,21 +3,18 @@ import { useState, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { CompetitionFormData, CompetitionValidationResult } from '@/types/competition';
 import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
-import { usePaymentData } from '@/hooks/usePaymentData';
 import { secureLogger } from '@/utils/secureLogger';
 
 export const useUnifiedCompetitionForm = () => {
   const { toast } = useToast();
-  const paymentData = usePaymentData();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CompetitionFormData>({
     title: '',
     description: '',
-    type: 'weekly',
+    type: 'daily', // Apenas competições diárias
     startDate: '',
     endDate: '',
-    maxParticipants: 1000,
-    weeklyTournamentId: ''
+    maxParticipants: 1000
   });
 
   const updateField = useCallback((field: keyof CompetitionFormData, value: any) => {
@@ -40,21 +37,12 @@ export const useUnifiedCompetitionForm = () => {
       errors.push('Data de início é obrigatória');
     }
 
-    if (formData.type === 'weekly' && !formData.endDate) {
-      errors.push('Data de fim é obrigatória para competições semanais');
-    }
-
-    if (formData.type === 'weekly' && formData.startDate && formData.endDate) {
+    if (formData.startDate && formData.endDate) {
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
       if (start >= end) {
         errors.push('Data de fim deve ser posterior à data de início');
       }
-    }
-
-    // CORREÇÃO: Validar weekly_tournament_id para competições diárias
-    if (formData.type === 'daily' && !formData.weeklyTournamentId?.trim()) {
-      errors.push('Torneio semanal é obrigatório para competições diárias');
     }
 
     return {
@@ -81,31 +69,11 @@ export const useUnifiedCompetitionForm = () => {
     setIsSubmitting(true);
     secureLogger.info('Iniciando submissão de competição', { 
       title: formData.title, 
-      type: formData.type,
-      weeklyTournamentId: formData.weeklyTournamentId
+      type: formData.type
     }, 'UNIFIED_COMPETITION_FORM');
 
     try {
-      // CORREÇÃO: Preparar dados limpos para envio
-      const cleanFormData = {
-        ...formData,
-        // Garantir que weeklyTournamentId seja enviado corretamente
-        weeklyTournamentId: formData.type === 'daily' && formData.weeklyTournamentId?.trim() 
-          ? formData.weeklyTournamentId.trim()
-          : formData.type === 'weekly' 
-            ? undefined 
-            : formData.weeklyTournamentId || undefined
-      };
-
-      secureLogger.debug('Dados limpos para envio', { cleanFormData }, 'UNIFIED_COMPETITION_FORM');
-
-      // Calcular prêmio total para competições semanais
-      if (formData.type === 'weekly') {
-        const totalPrize = paymentData.calculateTotalPrize();
-        secureLogger.debug('Prêmio total calculado', { totalPrize }, 'UNIFIED_COMPETITION_FORM');
-      }
-
-      const result = await unifiedCompetitionService.createCompetition(cleanFormData);
+      const result = await unifiedCompetitionService.createCompetition(formData);
       
       if (result.success) {
         secureLogger.info('Competição criada com sucesso', { 
@@ -114,18 +82,17 @@ export const useUnifiedCompetitionForm = () => {
         
         toast({
           title: "Sucesso!",
-          description: "Competição criada com sucesso.",
+          description: "Competição criária criada com sucesso.",
         });
         
         // Reset form
         setFormData({
           title: '',
           description: '',
-          type: 'weekly',
+          type: 'daily',
           startDate: '',
           endDate: '',
-          maxParticipants: 1000,
-          weeklyTournamentId: ''
+          maxParticipants: 1000
         });
         
         if (onSuccess) onSuccess();
@@ -144,17 +111,16 @@ export const useUnifiedCompetitionForm = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, isSubmitting, validateForm, paymentData, toast]);
+  }, [formData, isSubmitting, validateForm, toast]);
 
   const resetForm = useCallback(() => {
     setFormData({
       title: '',
       description: '',
-      type: 'weekly',
+      type: 'daily',
       startDate: '',
       endDate: '',
-      maxParticipants: 1000,
-      weeklyTournamentId: ''
+      maxParticipants: 1000
     });
   }, []);
 
@@ -165,7 +131,6 @@ export const useUnifiedCompetitionForm = () => {
     submitForm,
     resetForm,
     isSubmitting,
-    paymentData,
     hasTitle: !!formData.title.trim()
   };
 };
