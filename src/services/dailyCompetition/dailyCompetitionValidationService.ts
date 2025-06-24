@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { validateDailyCompetitionData } from '@/utils/dailyCompetitionValidation';
+import { prepareDailyCompetitionData, validateDailyCompetitionData } from '@/utils/dailyCompetitionValidation';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { ApiResponse } from '@/types';
 
@@ -12,10 +12,16 @@ export class DailyCompetitionValidationService {
     try {
       console.log('🔍 Service: Criando competição diária com validação:', formData);
       
-      // OBRIGATÓRIO: Validar e corrigir dados antes de salvar
-      const validatedData = validateDailyCompetitionData(formData);
+      // OBRIGATÓRIO: Validar dados antes de preparar
+      const validationErrors = validateDailyCompetitionData(formData);
+      if (validationErrors.length > 0) {
+        throw new Error(`Dados inválidos: ${validationErrors.join(', ')}`);
+      }
       
-      console.log('✅ Service: Dados validados (SEM PRÊMIOS):', validatedData);
+      // OBRIGATÓRIO: Preparar dados corrigidos
+      const preparedData = prepareDailyCompetitionData(formData);
+      
+      console.log('✅ Service: Dados preparados (SEM PRÊMIOS):', preparedData);
       
       // Obter o usuário atual
       const { data: { user } } = await supabase.auth.getUser();
@@ -24,14 +30,7 @@ export class DailyCompetitionValidationService {
       const { data, error } = await supabase
         .from('custom_competitions')
         .insert({
-          title: validatedData.title,
-          description: validatedData.description,
-          theme: validatedData.theme,
-          start_date: validatedData.start_date,
-          end_date: validatedData.end_date,
-          competition_type: validatedData.competition_type,
-          max_participants: formData.max_participants || null,
-          prize_pool: 0, // SEMPRE 0 para competições diárias (trigger do banco garante)
+          ...preparedData,
           created_by: user?.id
         })
         .select()
@@ -57,21 +56,22 @@ export class DailyCompetitionValidationService {
     try {
       console.log('🔍 Service: Atualizando competição diária:', { competitionId, formData });
       
-      // OBRIGATÓRIO: Validar e corrigir dados antes de atualizar
-      const validatedData = validateDailyCompetitionData(formData);
+      // OBRIGATÓRIO: Validar dados antes de preparar
+      const validationErrors = validateDailyCompetitionData(formData);
+      if (validationErrors.length > 0) {
+        throw new Error(`Dados inválidos: ${validationErrors.join(', ')}`);
+      }
       
-      console.log('✅ Service: Dados validados para atualização (SEM PRÊMIOS):', validatedData);
+      // OBRIGATÓRIO: Preparar dados corrigidos
+      const preparedData = prepareDailyCompetitionData(formData);
+      
+      console.log('✅ Service: Dados preparados para atualização (SEM PRÊMIOS):', preparedData);
       
       // Atualizar no banco - o trigger garantirá prize_pool = 0
       const { data, error } = await supabase
         .from('custom_competitions')
         .update({
-          title: validatedData.title,
-          description: validatedData.description,
-          theme: validatedData.theme,
-          start_date: validatedData.start_date,
-          end_date: validatedData.end_date,
-          prize_pool: 0, // SEMPRE 0 para competições diárias (trigger do banco garante)
+          ...preparedData,
           updated_at: new Date().toISOString()
         })
         .eq('id', competitionId)

@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { validateDailyCompetitionData, isDailyCompetitionTimeValid } from '@/utils/dailyCompetitionValidation';
+import { prepareDailyCompetitionData, validateDailyCompetitionData, isDailyCompetitionTimeValid } from '@/utils/dailyCompetitionValidation';
 
 export const useDailyCompetitionValidation = () => {
   const { toast } = useToast();
@@ -10,16 +10,16 @@ export const useDailyCompetitionValidation = () => {
     try {
       console.log('🔍 Hook: Validação diária SIMPLIFICADA:', formData);
       
-      // IMPORTANTE: Garantir que competições diárias não tenham prêmios
-      const dataWithNoPrizes = {
-        ...formData,
-        prize_pool: 0 // Forçar prize_pool = 0 para competições diárias
-      };
+      // Primeiro validar se há erros
+      const validationErrors = validateDailyCompetitionData(formData);
+      if (validationErrors.length > 0) {
+        throw new Error(`Dados inválidos: ${validationErrors.join(', ')}`);
+      }
       
-      // Aplicar validação simplificada (sem conversões de timezone)
-      const validatedData = validateDailyCompetitionData(dataWithNoPrizes);
+      // Se não há erros, preparar os dados corrigidos
+      const preparedData = prepareDailyCompetitionData(formData);
       
-      console.log('✅ Hook: Dados validados (SISTEMA SIMPLIFICADO):', validatedData);
+      console.log('✅ Hook: Dados preparados (SISTEMA SIMPLIFICADO):', preparedData);
       
       // Informar ao usuário sobre o sistema simplificado
       toast({
@@ -28,7 +28,7 @@ export const useDailyCompetitionValidation = () => {
         duration: 3000,
       });
       
-      return validatedData;
+      return preparedData;
     } catch (error) {
       console.error('❌ Hook: Erro na validação simplificada:', error);
       

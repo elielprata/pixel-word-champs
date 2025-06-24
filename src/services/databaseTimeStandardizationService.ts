@@ -12,6 +12,7 @@ import { createSuccessResponse, createErrorResponse, handleServiceError } from '
 import { logger } from '@/utils/logger';
 import { isDailyCompetitionTimeValid } from '@/utils/dailyCompetitionValidation';
 import { isWeeklyCompetitionTimeValid } from '@/utils/weeklyCompetitionValidation';
+import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 export class DatabaseTimeStandardizationService {
   /**
@@ -184,11 +185,15 @@ export class DatabaseTimeStandardizationService {
       logger.info('Validando sistema de triggers (BRASÍLIA)', undefined, 'DB_TIME_STANDARDIZATION');
       
       // Criar uma competição de teste
+      const testStartDate = createBrasiliaTimestamp(new Date().toISOString());
+      const testEndDate = createBrasiliaTimestamp(new Date().toISOString(), true);
+      
       const testCompetition = {
         title: 'TESTE_TRIGGER_SYSTEM',
         description: 'Competição de teste para validar triggers',
         competition_type: 'challenge',
-        start_date: new Date().toISOString(),
+        start_date: testStartDate,
+        end_date: testEndDate,
         theme: 'Teste',
         status: 'draft'
       };

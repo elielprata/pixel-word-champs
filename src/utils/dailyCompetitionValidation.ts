@@ -8,6 +8,7 @@
  */
 
 import { logger } from './logger';
+import { createBrasiliaTimestamp } from './brasiliaTimeUnified';
 
 export const isDailyCompetitionTimeValid = (startDate: string, endDate: string): boolean => {
   try {
@@ -61,4 +62,28 @@ export const validateDailyCompetitionData = (competitionData: any): string[] => 
   }
   
   return errors;
+};
+
+export const prepareDailyCompetitionData = (formData: any): any => {
+  logger.debug('Preparando dados de competição diária', { formData }, 'DAILY_COMPETITION_VALIDATION');
+  
+  // Preparar horários em Brasília
+  const startDateBrasilia = createBrasiliaTimestamp(formData.startDate || formData.start_date);
+  const endDateBrasilia = createBrasiliaTimestamp(formData.startDate || formData.start_date, true);
+  
+  const preparedData = {
+    title: formData.title,
+    description: formData.description,
+    theme: formData.theme || 'Geral',
+    start_date: startDateBrasilia,
+    end_date: endDateBrasilia,
+    competition_type: 'challenge',
+    prize_pool: 0, // Competições diárias sempre sem prêmios
+    max_participants: formData.max_participants || null,
+    status: 'active'
+  };
+  
+  logger.debug('Dados preparados para competição diária', { preparedData }, 'DAILY_COMPETITION_VALIDATION');
+  
+  return preparedData;
 };
