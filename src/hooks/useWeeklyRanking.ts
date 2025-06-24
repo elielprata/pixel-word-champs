@@ -43,7 +43,9 @@ export const useWeeklyRanking = () => {
       
       // Tratamento seguro da conversão de tipo
       if (data && typeof data === 'object' && !Array.isArray(data)) {
-        return data as WeeklyRankingStats;
+        // Converter primeiro para unknown, depois para o tipo desejado
+        const rawData = data as unknown as WeeklyRankingStats;
+        return rawData;
       }
       
       throw new Error('Formato de dados inválido recebido do servidor');
