@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { secureLogger } from '@/utils/secureLogger';
+import { getCurrentBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface WeeklyRankingHistoryItem {
   id: string;
@@ -72,8 +73,8 @@ export const useWeeklyRankingHistory = (page: number = 1, pageSize: number = 5) 
       const historyResults = await Promise.all(historyPromises);
       setHistoryData(historyResults);
 
-      // Identificar semana atual
-      const currentWeekStart = new Date();
+      // Identificar semana atual usando horário de Brasília
+      const currentWeekStart = getCurrentBrasiliaDate();
       currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1);
       const currentWeekStartStr = currentWeekStart.toISOString().split('T')[0];
       

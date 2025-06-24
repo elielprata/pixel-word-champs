@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Activity } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentBrasiliaDate, createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 interface ActivityData {
   day: string;
@@ -18,14 +19,14 @@ const useUserActivity = () => {
     queryFn: async (): Promise<ActivityData[]> => {
       console.log('📊 Buscando dados de atividade dos usuários...');
 
-      const sevenDaysAgo = new Date();
+      const sevenDaysAgo = getCurrentBrasiliaDate();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       sevenDaysAgo.setHours(0, 0, 0, 0);
 
       const { data: sessions, error } = await supabase
         .from('game_sessions')
         .select('started_at, user_id')
-        .gte('started_at', sevenDaysAgo.toISOString());
+        .gte('started_at', createBrasiliaTimestamp(sevenDaysAgo.toString()));
 
       if (error) {
         console.error('❌ Erro ao buscar sessões:', error);
@@ -37,7 +38,7 @@ const useUserActivity = () => {
       const last7Days = [];
 
       for (let i = 6; i >= 0; i--) {
-        const date = new Date();
+        const date = getCurrentBrasiliaDate();
         date.setDate(date.getDate() - i);
         date.setHours(0, 0, 0, 0);
         const dateStr = date.toISOString().split('T')[0];

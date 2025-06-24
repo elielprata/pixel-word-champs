@@ -1,6 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentBrasiliaDate, createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 export interface UserStats {
   totalUsers: number;
@@ -27,8 +28,8 @@ export const useRealUserStats = () => {
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      // Buscar usuários ativos únicos (últimas 24h - 00:00:00 a 23:59:59 de hoje)
-      const today = new Date();
+      // Buscar usuários ativos únicos (últimas 24h - horário de Brasília)
+      const today = getCurrentBrasiliaDate();
       today.setHours(0, 0, 0, 0);
       const endOfToday = new Date(today);
       endOfToday.setHours(23, 59, 59, 999);
@@ -36,8 +37,8 @@ export const useRealUserStats = () => {
       const { data: activeUsersData } = await supabase
         .from('game_sessions')
         .select('user_id', { count: 'exact' })
-        .gte('started_at', today.toISOString())
-        .lte('started_at', endOfToday.toISOString());
+        .gte('started_at', createBrasiliaTimestamp(today.toString()))
+        .lte('started_at', createBrasiliaTimestamp(endOfToday.toString()));
 
       // Contar usuários únicos ativos
       const uniqueActiveUsers = new Set(activeUsersData?.map(session => session.user_id) || []);
@@ -52,15 +53,15 @@ export const useRealUserStats = () => {
       const { count: newUsersToday } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .gte('created_at', today.toISOString())
-        .lte('created_at', endOfToday.toISOString());
+        .gte('created_at', createBrasiliaTimestamp(today.toString()))
+        .lte('created_at', createBrasiliaTimestamp(endOfToday.toString()));
 
       // Sessões criadas hoje
       const { count: sessionsToday } = await supabase
         .from('game_sessions')
         .select('*', { count: 'exact', head: true })
-        .gte('started_at', today.toISOString())
-        .lte('started_at', endOfToday.toISOString());
+        .gte('started_at', createBrasiliaTimestamp(today.toString()))
+        .lte('started_at', createBrasiliaTimestamp(endOfToday.toString()));
 
       // Buscar dados agregados dos perfis
       const { data: profileStats } = await supabase
@@ -102,11 +103,11 @@ export const useRealUserStats = () => {
   });
 };
 
-// Função auxiliar para calcular retenção real
+// Função auxiliar para calcular retenção real usando horário de Brasília
 async function calculateRetention(days: number): Promise<number> {
   try {
-    // Data de referência (hoje - days)
-    const referenceDate = new Date();
+    // Data de referência usando horário de Brasília
+    const referenceDate = getCurrentBrasiliaDate();
     referenceDate.setDate(referenceDate.getDate() - days);
     referenceDate.setHours(0, 0, 0, 0);
     
@@ -117,8 +118,8 @@ async function calculateRetention(days: number): Promise<number> {
     const { data: registeredUsers } = await supabase
       .from('profiles')
       .select('id')
-      .gte('created_at', referenceDate.toISOString())
-      .lte('created_at', endReferenceDate.toISOString());
+      .gte('created_at', createBrasiliaTimestamp(referenceDate.toString()))
+      .lte('created_at', createBrasiliaTimestamp(endReferenceDate.toString()));
 
     if (!registeredUsers || registeredUsers.length === 0) {
       return 0;
@@ -127,7 +128,7 @@ async function calculateRetention(days: number): Promise<number> {
     const registeredUserIds = registeredUsers.map(user => user.id);
 
     // Data de hoje para verificar atividade
-    const today = new Date();
+    const today = getCurrentBrasiliaDate();
     today.setHours(0, 0, 0, 0);
     const endOfToday = new Date(today);
     endOfToday.setHours(23, 59, 59, 999);
@@ -137,8 +138,8 @@ async function calculateRetention(days: number): Promise<number> {
       .from('game_sessions')
       .select('user_id')
       .in('user_id', registeredUserIds)
-      .gte('started_at', today.toISOString())
-      .lte('started_at', endOfToday.toISOString());
+      .gte('started_at', createBrasiliaTimestamp(today.toString()))
+      .lte('started_at', createBrasiliaTimestamp(endOfToday.toString()));
 
     // Contar usuários únicos que retornaram
     const uniqueReturnedUsers = new Set(activeUsersSessions?.map(session => session.user_id) || []);

@@ -1,6 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentBrasiliaDate, createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 interface DailyUserData {
   date: string;
@@ -14,15 +15,15 @@ export const useUserGrowth = () => {
     queryFn: async (): Promise<DailyUserData[]> => {
       console.log('📈 Buscando dados de crescimento de usuários...');
 
-      // Buscar dados dos últimos 7 dias
-      const sevenDaysAgo = new Date();
+      // Buscar dados dos últimos 7 dias usando horário de Brasília
+      const sevenDaysAgo = getCurrentBrasiliaDate();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       sevenDaysAgo.setHours(0, 0, 0, 0);
 
       const { data: userData, error } = await supabase
         .from('profiles')
         .select('created_at')
-        .gte('created_at', sevenDaysAgo.toISOString())
+        .gte('created_at', createBrasiliaTimestamp(sevenDaysAgo.toString()))
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -34,8 +35,9 @@ export const useUserGrowth = () => {
       const dailyData: { [key: string]: number } = {};
       const last7Days = [];
 
+      // Gerar últimos 7 dias usando horário de Brasília
       for (let i = 6; i >= 0; i--) {
-        const date = new Date();
+        const date = getCurrentBrasiliaDate();
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
         last7Days.push(dateStr);

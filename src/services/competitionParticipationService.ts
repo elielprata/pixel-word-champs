@@ -1,177 +1,122 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { logger } from '@/utils/logger';
+import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
+
+export interface ParticipationRecord {
+  user_id: string;
+  competition_id: string;
+  joined_at: string;
+  final_score?: number;
+  final_position?: number;
+}
 
 class CompetitionParticipationService {
-  async hasUserParticipated(userId: string): Promise<{ success: boolean; hasParticipated: boolean; error?: string }> {
+  async joinCompetition(competitionId: string, userId: string): Promise<boolean> {
     try {
-      logger.debug('Verificando se usuário participou', { userId }, 'COMPETITION_PARTICIPATION_SERVICE');
-      
-      const { data, error } = await supabase
-        .from('game_sessions')
-        .select('id, is_completed')
-        .eq('user_id', userId)
-        .single();
+      logger.info('Usuário entrando na competição', { competitionId, userId });
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        throw error;
-      }
-
-      const hasParticipated = !!data;
-      
-      logger.debug('Verificação de participação concluída', { userId, hasParticipated }, 'COMPETITION_PARTICIPATION_SERVICE');
-      return {
-        success: true,
-        hasParticipated
-      };
-    } catch (error) {
-      logger.error('Erro ao verificar participação do usuário', { userId, error }, 'COMPETITION_PARTICIPATION_SERVICE');
-      return {
-        success: false,
-        hasParticipated: false,
-        error: handleServiceError(error, 'CHECK_PARTICIPATION')
-      };
-    }
-  }
-
-  async hasUserParticipatedInCompetition(userId: string, competitionId: string): Promise<{ success: boolean; hasParticipated: boolean; error?: string }> {
-    try {
-      logger.debug('Verificando participação em competição específica', { userId, competitionId }, 'COMPETITION_PARTICIPATION_SERVICE');
-      
-      const { data, error } = await supabase
-        .from('game_sessions')
-        .select('id, is_completed')
-        .eq('user_id', userId)
-        .eq('competition_id', competitionId)
-        .eq('is_completed', true) // Só considera como participação se foi completada
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        throw error;
-      }
-
-      const hasParticipated = !!data;
-      
-      logger.debug('Verificação de participação em competição concluída', { 
-        userId, 
-        competitionId, 
-        hasParticipated 
-      }, 'COMPETITION_PARTICIPATION_SERVICE');
-      
-      return {
-        success: true,
-        hasParticipated
-      };
-    } catch (error) {
-      logger.error('Erro ao verificar participação em competição', { userId, competitionId, error }, 'COMPETITION_PARTICIPATION_SERVICE');
-      return {
-        success: false,
-        hasParticipated: false,
-        error: handleServiceError(error, 'CHECK_COMPETITION_PARTICIPATION')
-      };
-    }
-  }
-
-  async markUserAsParticipated(sessionId: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      logger.debug('Marcando usuário como participante', { sessionId }, 'COMPETITION_PARTICIPATION_SERVICE');
-      
       const { error } = await supabase
-        .from('game_sessions')
-        .update({ 
-          is_completed: true,
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', sessionId);
+        .from('competition_participants')
+        .insert({
+          user_id: userId,
+          competition_id: competitionId,
+          joined_at: createBrasiliaTimestamp(new Date().toString())
+        });
 
-      if (error) throw error;
-
-      logger.info('Usuário marcado como participante', { sessionId }, 'COMPETITION_PARTICIPATION_SERVICE');
-      return { success: true };
-    } catch (error) {
-      logger.error('Erro ao marcar participação', { sessionId, error }, 'COMPETITION_PARTICIPATION_SERVICE');
-      return {
-        success: false,
-        error: handleServiceError(error, 'MARK_PARTICIPATION')
-      };
-    }
-  }
-
-  async checkUserParticipation(userId: string, competitionId: string): Promise<boolean> {
-    try {
-      logger.debug('Verificando participação do usuário', { userId, competitionId }, 'COMPETITION_PARTICIPATION_SERVICE');
-      
-      const { data, error } = await supabase
-        .from('competition_participations')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('competition_id', competitionId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
+        logger.error('Erro ao entrar na competição', { error });
         throw error;
       }
 
-      const hasParticipated = !!data;
-      logger.debug('Resultado da verificação de participação', { userId, competitionId, hasParticipated }, 'COMPETITION_PARTICIPATION_SERVICE');
-      return hasParticipated;
+      logger.info('Usuário entrou na competição com sucesso', { competitionId, userId });
+      return true;
     } catch (error) {
-      logger.error('Erro ao verificar participação do usuário', { userId, competitionId, error }, 'COMPETITION_PARTICIPATION_SERVICE');
+      logger.error('Erro no serviço de participação', { error });
       return false;
     }
   }
 
-  async createParticipation(userId: string, competitionId: string, score: number = 0): Promise<{ success: boolean; error?: string }> {
+  async leaveCompetition(competitionId: string, userId: string): Promise<boolean> {
     try {
-      logger.info('Criando participação - PARTICIPAÇÃO LIVRE', { userId, competitionId, score }, 'COMPETITION_PARTICIPATION_SERVICE');
-      
-      // Participação livre - sem verificação de limites
+      logger.info('Usuário saindo da competição', { competitionId, userId });
+
       const { error } = await supabase
-        .from('competition_participations')
-        .insert({
-          user_id: userId,
-          competition_id: competitionId,
-          user_score: score
-        });
+        .from('competition_participants')
+        .delete()
+        .eq('user_id', userId)
+        .eq('competition_id', competitionId);
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao sair da competição', { error });
+        throw error;
+      }
 
-      logger.info('Participação criada com sucesso', { userId, competitionId }, 'COMPETITION_PARTICIPATION_SERVICE');
-      return { success: true };
+      logger.info('Usuário saiu da competição com sucesso', { competitionId, userId });
+      return true;
     } catch (error) {
-      logger.error('Erro ao criar participação', { userId, competitionId, error }, 'COMPETITION_PARTICIPATION_SERVICE');
-      return {
-        success: false,
-        error: handleServiceError(error, 'CREATE_PARTICIPATION')
-      };
+      logger.error('Erro no serviço de saída da competição', { error });
+      return false;
     }
   }
 
-  async updateParticipationScore(sessionId: string, totalScore: number): Promise<void> {
+  async getParticipants(competitionId: string): Promise<ParticipationRecord[]> {
     try {
-      logger.debug('Atualizando pontuação da participação', { sessionId, totalScore }, 'COMPETITION_PARTICIPATION_SERVICE');
-      
-      const { error } = await supabase
-        .from('game_sessions')
-        .update({ total_score: totalScore })
-        .eq('id', sessionId);
+      logger.info('Buscando participantes da competição', { competitionId });
 
-      if (error) throw error;
-      
-      logger.debug('Pontuação da participação atualizada', { sessionId, totalScore }, 'COMPETITION_PARTICIPATION_SERVICE');
+      const { data, error } = await supabase
+        .from('competition_participants')
+        .select('*')
+        .eq('competition_id', competitionId)
+        .order('joined_at', { ascending: true });
+
+      if (error) {
+        logger.error('Erro ao buscar participantes', { error });
+        throw error;
+      }
+
+      logger.info('Participantes encontrados', { competitionId, count: data?.length || 0 });
+      return data || [];
     } catch (error) {
-      logger.error('Erro ao atualizar pontuação da participação', { sessionId, error }, 'COMPETITION_PARTICIPATION_SERVICE');
+      logger.error('Erro no serviço de busca de participantes', { error });
       throw error;
     }
   }
 
-  async updateCompetitionRankings(competitionId: string): Promise<void> {
+  async updateParticipantScore(
+    competitionId: string, 
+    userId: string, 
+    finalScore: number, 
+    finalPosition: number
+  ): Promise<boolean> {
     try {
-      logger.debug('Atualizando rankings da competição - PARTICIPAÇÃO LIVRE', { competitionId }, 'COMPETITION_PARTICIPATION_SERVICE');
+      logger.info('Atualizando pontuação do participante', { 
+        competitionId, 
+        userId, 
+        finalScore, 
+        finalPosition 
+      });
+
+      const { error } = await supabase
+        .from('competition_participants')
+        .update({
+          final_score: finalScore,
+          final_position: finalPosition,
+          updated_at: createBrasiliaTimestamp(new Date().toString())
+        })
+        .eq('user_id', userId)
+        .eq('competition_id', competitionId);
+
+      if (error) {
+        logger.error('Erro ao atualizar pontuação', { error });
+        throw error;
+      }
+
+      logger.info('Pontuação atualizada com sucesso', { competitionId, userId });
+      return true;
     } catch (error) {
-      logger.error('Erro ao atualizar rankings da competição', { competitionId, error }, 'COMPETITION_PARTICIPATION_SERVICE');
-      throw error;
+      logger.error('Erro no serviço de atualização de pontuação', { error });
+      return false;
     }
   }
 }

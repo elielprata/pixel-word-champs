@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentBrasiliaDate, createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 interface UserStats {
   position: number | null;
@@ -46,8 +47,8 @@ export const useUserStats = () => {
 
       if (profileError) throw profileError;
 
-      // Buscar posição no ranking semanal atual
-      const today = new Date();
+      // Buscar posição no ranking semanal atual usando horário de Brasília
+      const today = getCurrentBrasiliaDate();
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       const weekStart = new Date(today.setDate(diff));
@@ -65,7 +66,7 @@ export const useUserStats = () => {
       }
 
       // Calcular sequência de vitórias baseada em jogos completados recentemente
-      const sevenDaysAgo = new Date();
+      const sevenDaysAgo = getCurrentBrasiliaDate();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
       const { data: recentSessions, error: sessionsError } = await supabase
@@ -73,7 +74,7 @@ export const useUserStats = () => {
         .select('completed_at, is_completed')
         .eq('user_id', user.id)
         .eq('is_completed', true)
-        .gte('completed_at', sevenDaysAgo.toISOString())
+        .gte('completed_at', createBrasiliaTimestamp(sevenDaysAgo.toString()))
         .order('completed_at', { ascending: false });
 
       if (sessionsError) {
@@ -89,7 +90,7 @@ export const useUserStats = () => {
       );
 
       for (let i = 0; i < 7; i++) {
-        const checkDate = new Date();
+        const checkDate = getCurrentBrasiliaDate();
         checkDate.setDate(checkDate.getDate() - i);
         if (completedDates.has(checkDate.toDateString())) {
           streak++;
