@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { secureLogger } from '@/utils/secureLogger';
-import { toUTCTimestamp, createEndOfDayUTC } from '@/utils/dateHelpers';
+import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 interface IndependentCompetitionData {
   title: string;
@@ -20,7 +20,7 @@ interface ServiceResponse<T = any> {
 class IndependentCompetitionService {
   async createIndependentCompetition(formData: IndependentCompetitionData): Promise<ServiceResponse> {
     try {
-      secureLogger.info('Criando competição diária independente', { 
+      secureLogger.info('Criando competição diária independente (BRASÍLIA)', { 
         title: formData.title, 
         theme: formData.theme 
       }, 'INDEPENDENT_COMPETITION_SERVICE');
@@ -30,16 +30,16 @@ class IndependentCompetitionService {
         throw new Error('Usuário não autenticado');
       }
 
-      // Preparar dados da competição independente
-      const startDateUTC = toUTCTimestamp(formData.startDate);
-      const endDateUTC = createEndOfDayUTC(formData.startDate);
+      // Preparar dados da competição independente em Brasília
+      const startDateBrasilia = createBrasiliaTimestamp(formData.startDate);
+      const endDateBrasilia = createBrasiliaTimestamp(formData.startDate, true);
 
       const competitionData = {
         title: formData.title,
         description: formData.description || null,
         competition_type: 'challenge',
-        start_date: startDateUTC,
-        end_date: endDateUTC,
+        start_date: startDateBrasilia,
+        end_date: endDateBrasilia,
         max_participants: formData.maxParticipants,
         prize_pool: 0, // Competições diárias não têm prêmios diretos
         theme: formData.theme,
@@ -49,7 +49,7 @@ class IndependentCompetitionService {
         status: 'active'
       };
 
-      secureLogger.debug('Dados da competição independente', { 
+      secureLogger.debug('Dados da competição independente (BRASÍLIA)', { 
         competitionData 
       }, 'INDEPENDENT_COMPETITION_SERVICE');
 
@@ -64,7 +64,7 @@ class IndependentCompetitionService {
         throw error;
       }
 
-      secureLogger.info('Competição independente criada com sucesso', { 
+      secureLogger.info('Competição independente criada com sucesso (BRASÍLIA)', { 
         id: data.id,
         title: data.title,
         independentSystem: true

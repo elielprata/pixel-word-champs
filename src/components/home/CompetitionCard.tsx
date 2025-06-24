@@ -1,9 +1,10 @@
+
 import React, { useMemo } from 'react';
 import { Zap, Clock, Play } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Competition } from '@/types';
-import { calculateCompetitionStatus, calculateTimeRemaining } from '@/utils/brasiliaTime';
+import { calculateCompetitionStatus, calculateTimeRemaining } from '@/utils/brasiliaTimeUnified';
 
 interface CompetitionCardProps {
   competition: Competition;

@@ -5,7 +5,7 @@
  * PRINCÍPIO: Usar as novas funções simplificadas sem conversões de timezone
  */
 
-import { formatDateForDisplay } from '@/utils/brasiliaTime';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 import { logger } from '@/utils/logger';
 
 export const formatDate = (dateString: string) => {
@@ -15,7 +15,7 @@ export const formatDate = (dateString: string) => {
   }
   
   logger.debug('Formatando data', { dateString }, 'COMPETITION_UTILS');
-  return formatDateForDisplay(dateString);
+  return formatBrasiliaDate(new Date(dateString), false);
 };
 
 export const getWeekFromDate = (dateString: string) => {

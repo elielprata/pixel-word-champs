@@ -2,12 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { UnifiedCompetition, CompetitionFormData, CompetitionApiResponse } from '@/types/competition';
 import { secureLogger } from '@/utils/secureLogger';
-import { toUTCTimestamp, createEndOfDayUTC } from '@/utils/dateHelpers';
+import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 class UnifiedCompetitionService {
   async createCompetition(formData: CompetitionFormData): Promise<CompetitionApiResponse<UnifiedCompetition>> {
     try {
-      secureLogger.info('Criando competição diária', { 
+      secureLogger.info('Criando competição diária (BRASÍLIA)', { 
         title: formData.title 
       }, 'UNIFIED_COMPETITION_SERVICE');
 
@@ -16,16 +16,16 @@ class UnifiedCompetitionService {
         throw new Error('Usuário não autenticado');
       }
 
-      // Preparar dados para competição diária
-      const startDateUTC = toUTCTimestamp(formData.startDate);
-      const endDateUTC = createEndOfDayUTC(formData.startDate);
+      // Preparar dados para competição diária em Brasília
+      const startDateBrasilia = createBrasiliaTimestamp(formData.startDate);
+      const endDateBrasilia = createBrasiliaTimestamp(formData.startDate, true);
 
       const competitionData = {
         title: formData.title,
         description: formData.description,
         competition_type: 'challenge', // Sempre 'challenge' para competições diárias
-        start_date: startDateUTC,
-        end_date: endDateUTC,
+        start_date: startDateBrasilia,
+        end_date: endDateBrasilia,
         max_participants: null, // Participação livre - sem limite
         prize_pool: 0, // Competições diárias não têm prêmios
         theme: 'Geral',
@@ -33,7 +33,7 @@ class UnifiedCompetitionService {
         status: 'active'
       };
 
-      secureLogger.debug('Dados preparados para inserção', { 
+      secureLogger.debug('Dados preparados para inserção (BRASÍLIA)', { 
         competitionData 
       }, 'UNIFIED_COMPETITION_SERVICE');
 
@@ -50,7 +50,7 @@ class UnifiedCompetitionService {
 
       const unifiedCompetition = this.mapToUnifiedCompetition(data);
       
-      secureLogger.info('Competição criada com sucesso', { 
+      secureLogger.info('Competição criada com sucesso (BRASÍLIA)', { 
         id: unifiedCompetition.id
       }, 'UNIFIED_COMPETITION_SERVICE');
 
@@ -91,7 +91,7 @@ class UnifiedCompetitionService {
 
   async updateCompetition(id: string, formData: Partial<CompetitionFormData>): Promise<CompetitionApiResponse<UnifiedCompetition>> {
     try {
-      secureLogger.info('Atualizando competição', { id, title: formData.title }, 'UNIFIED_COMPETITION_SERVICE');
+      secureLogger.info('Atualizando competição (BRASÍLIA)', { id, title: formData.title }, 'UNIFIED_COMPETITION_SERVICE');
 
       const updateData: any = {
         ...formData,
@@ -99,8 +99,8 @@ class UnifiedCompetitionService {
       };
 
       if (formData.startDate) {
-        updateData.start_date = toUTCTimestamp(formData.startDate);
-        updateData.end_date = createEndOfDayUTC(formData.startDate);
+        updateData.start_date = createBrasiliaTimestamp(formData.startDate);
+        updateData.end_date = createBrasiliaTimestamp(formData.startDate, true);
       }
 
       const { data, error } = await supabase
@@ -114,7 +114,7 @@ class UnifiedCompetitionService {
 
       const unifiedCompetition = this.mapToUnifiedCompetition(data);
       
-      secureLogger.info('Competição atualizada com sucesso', { id }, 'UNIFIED_COMPETITION_SERVICE');
+      secureLogger.info('Competição atualizada com sucesso (BRASÍLIA)', { id }, 'UNIFIED_COMPETITION_SERVICE');
       return { success: true, data: unifiedCompetition };
     } catch (error) {
       secureLogger.error('Erro ao atualizar competição', { id, error }, 'UNIFIED_COMPETITION_SERVICE');

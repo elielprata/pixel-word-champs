@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Competition } from '@/types';
 import { competitionService } from '@/services/competitionService';
 import { customCompetitionService } from '@/services/customCompetitionService';
-import { calculateCompetitionStatus } from '@/utils/brasiliaTime';
+import { calculateCompetitionStatus } from '@/utils/brasiliaTimeUnified';
 import { logger, structuredLog } from '@/utils/logger';
 
 export const useOptimizedCompetitions = () => {
