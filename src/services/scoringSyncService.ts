@@ -53,8 +53,10 @@ class ScoringSyncService {
         throw error;
       }
       
-      logger.info('Validação de integridade concluída', data, 'SCORING_VALIDATION');
-      return data as ScoringValidationResult;
+      // Conversão segura do tipo Json para ScoringValidationResult
+      const result = data as unknown as ScoringValidationResult;
+      logger.info('Validação de integridade concluída', result, 'SCORING_VALIDATION');
+      return result;
     } catch (error: any) {
       logger.error('Erro na validação de integridade', { error: error.message }, 'SCORING_VALIDATION');
       throw error;
@@ -72,7 +74,8 @@ class ScoringSyncService {
         throw error;
       }
       
-      const result = data as OrphanedScoresFix;
+      // Conversão segura do tipo Json para OrphanedScoresFix
+      const result = data as unknown as OrphanedScoresFix;
       logger.info('Correção de pontuações órfãs concluída', { 
         fixedUsers: result.fixed_users_count,
         rankingUpdated: result.ranking_updated 
