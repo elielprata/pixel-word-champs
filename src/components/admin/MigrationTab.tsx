@@ -1,0 +1,79 @@
+
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Database, 
+  ArrowRight, 
+  AlertTriangle,
+  CheckCircle
+} from 'lucide-react';
+import { MigrationImpactDashboard } from './migration/MigrationImpactDashboard';
+import { logger } from '@/utils/logger';
+
+export const MigrationTab = () => {
+  logger.debug('Renderizando aba de migração', undefined, 'MIGRATION_TAB');
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-6 w-6 text-purple-600" />
+            Sistema de Migração - Competições Semanais → Ranking Semanal
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            Migração segura do sistema híbrido para sistema simplificado
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <span className="text-yellow-700">Sistema Híbrido Atual</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-gray-400" />
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <span className="text-green-700">Sistema Simplificado</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Processo de Migração */}
+      <Card>
+        <CardHeader>
+          <CardTitle>🚀 Fases da Migração</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="font-medium text-blue-800">Fase 1</div>
+              <div className="text-sm text-blue-700">Análise de Impacto</div>
+              <div className="text-xs text-blue-600 mt-1">✅ Em Andamento</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="font-medium text-gray-800">Fase 2</div>
+              <div className="text-sm text-gray-700">Migração Gradual</div>
+              <div className="text-xs text-gray-600 mt-1">⏳ Aguardando</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="font-medium text-gray-800">Fase 3</div>
+              <div className="text-sm text-gray-700">Limpeza Final</div>
+              <div className="text-xs text-gray-600 mt-1">⏳ Aguardando</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="font-medium text-gray-800">Fase 4</div>
+              <div className="text-sm text-gray-700">Validação</div>
+              <div className="text-xs text-gray-600 mt-1">⏳ Aguardando</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Dashboard de Análise */}
+      <MigrationImpactDashboard />
+    </div>
+  );
+};

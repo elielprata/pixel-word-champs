@@ -8,6 +8,7 @@ import { MonitoringTab } from "@/components/admin/MonitoringTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 import { AdvancedSystemTab } from '@/components/admin/AdvancedSystemTab';
+import { MigrationTab } from '@/components/admin/MigrationTab';
 import { logger } from '@/utils/logger';
 
 export const AdminPanelContent = () => {
@@ -33,6 +34,10 @@ export const AdminPanelContent = () => {
 
       <TabsContent value="support">
         <SupportTab />
+      </TabsContent>
+
+      <TabsContent value="migration">
+        <MigrationTab />
       </TabsContent>
 
       <TabsContent value="advanced">
