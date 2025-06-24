@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Trophy } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import { UnifiedCompetitionsList } from './UnifiedCompetitionsList';
 import { UnifiedCompetitionModal } from './UnifiedCompetitionModal';
 import { UnifiedCompetition } from '@/types/competition';

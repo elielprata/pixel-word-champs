@@ -1,9 +1,8 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, History, Settings } from 'lucide-react';
+import { Trophy, History } from 'lucide-react';
 import { RankingHeader } from './rankings/RankingHeader';
-import { RankingMetrics } from './rankings/RankingMetrics';
 import { CompetitionHistory } from './rankings/CompetitionHistory';
 import { UnifiedCompetitionsView } from './rankings/UnifiedCompetitionsView';
 
@@ -13,15 +12,6 @@ export const RankingsTab = () => {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
         <RankingHeader />
-
-        {/* Métricas Overview */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-slate-600" />
-            <h2 className="text-lg font-semibold text-slate-900">Métricas das Competições</h2>
-          </div>
-          <RankingMetrics />
-        </div>
 
         {/* Main Content */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
