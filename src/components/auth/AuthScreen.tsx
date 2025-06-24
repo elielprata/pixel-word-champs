@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,11 +23,6 @@ const AuthScreen = () => {
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
-
-  // Função para lidar com sucesso do registro
-  const handleRegistrationSuccess = () => {
-    setActiveTab('login');
-  };
 
   // Mostrar loading enquanto verifica autenticação
   if (isLoading) {
@@ -96,27 +92,22 @@ const AuthScreen = () => {
               </TabsContent>
               
               <TabsContent value="register" className="space-y-4">
-                <RegisterForm onRegistrationSuccess={handleRegistrationSuccess} />
+                <RegisterForm />
               </TabsContent>
             </Tabs>
 
-            {/* Divider e Social Login apenas na aba login */}
-            {activeTab === 'login' && (
-              <>
-                {/* Divider */}
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Ou continue com</span>
-                  </div>
-                </div>
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-muted-foreground">Ou continue com</span>
+              </div>
+            </div>
 
-                {/* Social Login */}
-                <SocialLogin />
-              </>
-            )}
+            {/* Social Login */}
+            <SocialLogin />
           </CardContent>
         </Card>
 

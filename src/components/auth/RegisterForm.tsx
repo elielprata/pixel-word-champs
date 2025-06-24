@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,7 +13,7 @@ import { logger } from '@/utils/logger';
 import { useUsernameVerification } from '@/hooks/useUsernameVerification';
 import { useEmailVerification } from '@/hooks/useEmailVerification';
 import { AvailabilityIndicator } from './AvailabilityIndicator';
-import { RegistrationSuccessModal } from './RegistrationSuccessModal';
+import { EmailVerificationModal } from './EmailVerificationModal';
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
@@ -25,13 +26,10 @@ const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-interface RegisterFormProps {
-  onRegistrationSuccess?: () => void;
-}
-
-const RegisterForm = ({ onRegistrationSuccess }: RegisterFormProps) => {
+const RegisterForm = () => {
   const { register, isLoading, error } = useAuth();
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   
   const form = useForm<RegisterFormType>({
     resolver: zodResolver(registerSchema),
@@ -70,8 +68,9 @@ const RegisterForm = ({ onRegistrationSuccess }: RegisterFormProps) => {
       
       await register(data);
       
-      // Mostrar modal de sucesso
-      setShowSuccessModal(true);
+      // Mostrar modal de verificação de email após registro bem-sucedido
+      setRegisteredEmail(data.email);
+      setShowEmailModal(true);
       
       logger.info('Registro concluído com sucesso', { 
         email: data.email 
@@ -79,11 +78,6 @@ const RegisterForm = ({ onRegistrationSuccess }: RegisterFormProps) => {
     } catch (err: any) {
       logger.error('Erro no registro', { error: err.message }, 'REGISTER_FORM');
     }
-  };
-
-  const handleCloseSuccessModal = () => {
-    setShowSuccessModal(false);
-    onRegistrationSuccess?.();
   };
 
   return (
@@ -229,9 +223,10 @@ const RegisterForm = ({ onRegistrationSuccess }: RegisterFormProps) => {
         </form>
       </Form>
 
-      <RegistrationSuccessModal
-        isOpen={showSuccessModal}
-        onClose={handleCloseSuccessModal}
+      <EmailVerificationModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        userEmail={registeredEmail}
       />
     </>
   );

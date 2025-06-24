@@ -44,97 +44,31 @@ class SecureLogger {
     }
   }
 
-  private maskSensitiveData(data: any, visited = new WeakSet(), depth = 0): any {
-    // Limitar profundidade para evitar recursão infinita
-    if (depth > 10) {
-      return '[MAX_DEPTH_REACHED]';
-    }
-
-    // Verificar tipos primitivos
-    if (data === null || data === undefined) {
+  private maskSensitiveData(data: any): any {
+    if (!data || typeof data !== 'object') {
       return data;
     }
 
-    if (typeof data !== 'object') {
-      return data;
-    }
-
-    // Verificar referências circulares
-    if (visited.has(data)) {
-      return '[CIRCULAR_REFERENCE]';
-    }
-
-    // Tratamento especial para erros
-    if (data instanceof Error) {
-      return {
-        name: data.name,
-        message: this.maskString(data.message),
-        stack: data.stack ? '[STACK_TRACE]' : undefined
-      };
-    }
-
-    // Tratamento para arrays
     if (Array.isArray(data)) {
-      if (data.length > 50) {
-        return `[ARRAY_TOO_LARGE: ${data.length} items]`;
-      }
-      
-      visited.add(data);
-      try {
-        const result = data.slice(0, 10).map(item => 
-          this.maskSensitiveData(item, visited, depth + 1)
-        );
-        if (data.length > 10) {
-          result.push(`[... ${data.length - 10} more items]`);
-        }
-        return result;
-      } finally {
-        visited.delete(data);
-      }
+      return data.map(item => this.maskSensitiveData(item));
     }
 
-    // Verificar se é um objeto DOM ou função
-    if (typeof data === 'function' || 
-        (data.constructor && data.constructor.name && 
-         ['HTMLElement', 'Window', 'Document'].some(name => 
-           data.constructor.name.includes(name)))) {
-      return `[${data.constructor?.name || 'OBJECT'}]`;
-    }
-
-    visited.add(data);
+    const masked = { ...data };
     
-    try {
-      const masked: any = {};
-      const keys = Object.keys(data);
-      
-      // Limitar número de propriedades processadas
-      if (keys.length > 20) {
-        return `[OBJECT_TOO_LARGE: ${keys.length} properties]`;
-      }
-      
-      for (const key of keys) {
-        try {
-          const lowerKey = key.toLowerCase();
-          const isSensitive = this.sensitiveFields.some(field => 
-            lowerKey.includes(field) || lowerKey.endsWith('_key') || lowerKey.endsWith('_token')
-          );
+    Object.keys(masked).forEach(key => {
+      const lowerKey = key.toLowerCase();
+      const isSensitive = this.sensitiveFields.some(field => 
+        lowerKey.includes(field) || lowerKey.endsWith('_key') || lowerKey.endsWith('_token')
+      );
 
-          if (isSensitive && typeof data[key] === 'string') {
-            masked[key] = this.maskString(data[key]);
-          } else {
-            masked[key] = this.maskSensitiveData(data[key], visited, depth + 1);
-          }
-        } catch (error) {
-          masked[key] = '[MASK_ERROR]';
-        }
+      if (isSensitive && typeof masked[key] === 'string') {
+        masked[key] = this.maskString(masked[key]);
+      } else if (typeof masked[key] === 'object') {
+        masked[key] = this.maskSensitiveData(masked[key]);
       }
+    });
 
-      return masked;
-    } catch (error) {
-      return '[MASKING_FAILED]';
-    } finally {
-      visited.delete(data);
-    }
+    return masked;
   }
 
   private maskString(value: string): string {
@@ -157,19 +91,11 @@ class SecureLogger {
   }
 
   private formatMessage(level: string, message: string, data?: any, context?: string): LogEntry {
-    // Tentar mascarar dados com fallback seguro
-    let maskedData;
-    try {
-      maskedData = data ? this.maskSensitiveData(data) : undefined;
-    } catch (error) {
-      maskedData = '[DATA_MASKING_FAILED]';
-    }
-
     return {
       timestamp: new Date().toISOString(),
       level,
       message,
-      data: maskedData,
+      data: data ? this.maskSensitiveData(data) : undefined,
       context,
       environment: this.environment
     };
@@ -205,79 +131,54 @@ class SecureLogger {
 
   error(message: string, data?: any, context?: string): void {
     if (this.shouldLog(1)) {
-      try {
-        const entry = this.formatMessage('ERROR', message, data, context);
-        this.logToConsole(entry);
-        
-        // Em produção, registrar erros críticos
-        if (this.environment === 'production') {
-          // Aqui poderia ser integrado com serviços de monitoramento
-          // como Sentry, LogRocket, etc.
-        }
-      } catch (error) {
-        // Fallback seguro em caso de erro no logging
-        console.error(`[ERROR] ${message}`, '[LOG_ERROR]');
+      const entry = this.formatMessage('ERROR', message, data, context);
+      this.logToConsole(entry);
+      
+      // Em produção, registrar erros críticos
+      if (this.environment === 'production') {
+        // Aqui poderia ser integrado com serviços de monitoramento
+        // como Sentry, LogRocket, etc.
       }
     }
   }
 
   warn(message: string, data?: any, context?: string): void {
     if (this.shouldLog(2)) {
-      try {
-        const entry = this.formatMessage('WARN', message, data, context);
-        this.logToConsole(entry);
-      } catch (error) {
-        console.warn(`[WARN] ${message}`, '[LOG_ERROR]');
-      }
+      const entry = this.formatMessage('WARN', message, data, context);
+      this.logToConsole(entry);
     }
   }
 
   info(message: string, data?: any, context?: string): void {
     if (this.shouldLog(3)) {
-      try {
-        const entry = this.formatMessage('INFO', message, data, context);
-        this.logToConsole(entry);
-      } catch (error) {
-        console.info(`[INFO] ${message}`, '[LOG_ERROR]');
-      }
+      const entry = this.formatMessage('INFO', message, data, context);
+      this.logToConsole(entry);
     }
   }
 
   debug(message: string, data?: any, context?: string): void {
     if (this.shouldLog(4)) {
-      try {
-        const entry = this.formatMessage('DEBUG', message, data, context);
-        this.logToConsole(entry);
-      } catch (error) {
-        console.debug(`[DEBUG] ${message}`, '[LOG_ERROR]');
-      }
+      const entry = this.formatMessage('DEBUG', message, data, context);
+      this.logToConsole(entry);
     }
   }
 
   // Método específico para logs de produção críticos
   production(message: string, data?: any, context?: string): void {
     if (this.environment === 'production') {
-      try {
-        const entry = this.formatMessage('PROD', message, data, context);
-        this.logToConsole(entry);
-      } catch (error) {
-        console.log(`[PROD] ${message}`, '[LOG_ERROR]');
-      }
+      const entry = this.formatMessage('PROD', message, data, context);
+      this.logToConsole(entry);
     }
   }
 
   // Método para auditoria de segurança
   security(message: string, data?: any, context?: string): void {
-    try {
-      const entry = this.formatMessage('SECURITY', message, data, context);
-      this.logToConsole(entry);
-      
-      // Logs de segurança sempre são registrados independente do nível
-      if (this.environment === 'production') {
-        // Integração com sistemas de auditoria de segurança
-      }
-    } catch (error) {
-      console.warn(`🔒 [SECURITY] ${message}`, '[LOG_ERROR]');
+    const entry = this.formatMessage('SECURITY', message, data, context);
+    this.logToConsole(entry);
+    
+    // Logs de segurança sempre são registrados independente do nível
+    if (this.environment === 'production') {
+      // Integração com sistemas de auditoria de segurança
     }
   }
 

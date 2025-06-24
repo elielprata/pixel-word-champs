@@ -43,9 +43,6 @@ export const useAuthOperations = (
         setIsAuthenticated(false);
         setUser(null);
         logger.error('Falha no login', { error: errorMessage }, 'AUTH_OPERATIONS');
-        
-        // Lançar erro para que o LoginForm possa capturar
-        throw new Error(errorMessage);
       }
     } catch (error: any) {
       if (!isMountedRef.current) return;
@@ -55,9 +52,6 @@ export const useAuthOperations = (
       setIsAuthenticated(false);
       setUser(null);
       logger.error('Erro durante login', { error: errorMessage }, 'AUTH_OPERATIONS');
-      
-      // Re-lançar o erro para que o componente possa tratar
-      throw error;
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
