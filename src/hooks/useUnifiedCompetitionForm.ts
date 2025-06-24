@@ -52,6 +52,11 @@ export const useUnifiedCompetitionForm = () => {
       }
     }
 
+    // CORREÇÃO: Validar weekly_tournament_id para competições diárias
+    if (formData.type === 'daily' && !formData.weeklyTournamentId?.trim()) {
+      errors.push('Torneio semanal é obrigatório para competições diárias');
+    }
+
     return {
       isValid: errors.length === 0,
       errors
@@ -76,18 +81,31 @@ export const useUnifiedCompetitionForm = () => {
     setIsSubmitting(true);
     secureLogger.info('Iniciando submissão de competição', { 
       title: formData.title, 
-      type: formData.type 
+      type: formData.type,
+      weeklyTournamentId: formData.weeklyTournamentId
     }, 'UNIFIED_COMPETITION_FORM');
 
     try {
+      // CORREÇÃO: Preparar dados limpos para envio
+      const cleanFormData = {
+        ...formData,
+        // Garantir que weeklyTournamentId seja enviado corretamente
+        weeklyTournamentId: formData.type === 'daily' && formData.weeklyTournamentId?.trim() 
+          ? formData.weeklyTournamentId.trim()
+          : formData.type === 'weekly' 
+            ? undefined 
+            : formData.weeklyTournamentId || undefined
+      };
+
+      secureLogger.debug('Dados limpos para envio', { cleanFormData }, 'UNIFIED_COMPETITION_FORM');
+
       // Calcular prêmio total para competições semanais
-      const finalFormData = { ...formData };
       if (formData.type === 'weekly') {
         const totalPrize = paymentData.calculateTotalPrize();
         secureLogger.debug('Prêmio total calculado', { totalPrize }, 'UNIFIED_COMPETITION_FORM');
       }
 
-      const result = await unifiedCompetitionService.createCompetition(finalFormData);
+      const result = await unifiedCompetitionService.createCompetition(cleanFormData);
       
       if (result.success) {
         secureLogger.info('Competição criada com sucesso', { 

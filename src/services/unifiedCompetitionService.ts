@@ -31,6 +31,7 @@ class UnifiedCompetitionService {
         }
       }
 
+      // CORREÇÃO: Tratar campos UUID opcionais adequadamente
       const competitionData = {
         title: formData.title,
         description: formData.description,
@@ -40,10 +41,20 @@ class UnifiedCompetitionService {
         max_participants: formData.maxParticipants,
         prize_pool: formData.type === 'daily' ? 0 : undefined, // Será calculado pelo hook de prêmios
         theme: formData.type === 'daily' ? 'Geral' : undefined,
-        weekly_tournament_id: formData.weeklyTournamentId,
+        // CORREÇÃO CRÍTICA: Converter string vazia para null para campos UUID
+        weekly_tournament_id: formData.weeklyTournamentId && formData.weeklyTournamentId.trim() 
+          ? formData.weeklyTournamentId 
+          : null,
         created_by: user.user.id,
         status: formData.type === 'daily' ? 'active' : 'scheduled'
       };
+
+      secureLogger.debug('Dados preparados para inserção', { 
+        competitionData: {
+          ...competitionData,
+          weekly_tournament_id: competitionData.weekly_tournament_id
+        }
+      }, 'UNIFIED_COMPETITION_SERVICE');
 
       const { data, error } = await supabase
         .from('custom_competitions')
@@ -51,7 +62,10 @@ class UnifiedCompetitionService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        secureLogger.error('Erro do Supabase ao inserir', { error }, 'UNIFIED_COMPETITION_SERVICE');
+        throw error;
+      }
 
       const unifiedCompetition = this.mapToUnifiedCompetition(data);
       
@@ -108,6 +122,13 @@ class UnifiedCompetitionService {
       }
       if (formData.endDate) {
         updateData.end_date = toUTCTimestamp(formData.endDate);
+      }
+
+      // CORREÇÃO: Tratar weekly_tournament_id adequadamente na atualização
+      if ('weeklyTournamentId' in formData) {
+        updateData.weekly_tournament_id = formData.weeklyTournamentId && formData.weeklyTournamentId.trim() 
+          ? formData.weeklyTournamentId 
+          : null;
       }
 
       const { data, error } = await supabase
