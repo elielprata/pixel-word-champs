@@ -97,6 +97,23 @@ export const UnifiedCompetitionsView = () => {
     refetch();
   };
 
+  // Convert UnifiedCompetition to BaseCompetition format for EditCompetitionModal
+  const convertToBaseCompetition = (competition: UnifiedCompetition) => {
+    return {
+      id: competition.id,
+      title: competition.title,
+      description: competition.description,
+      start_date: competition.startDate,
+      end_date: competition.endDate,
+      status: competition.status,
+      prize_pool: competition.prizePool,
+      max_participants: competition.maxParticipants,
+      total_participants: competition.totalParticipants || 0,
+      competition_type: competition.type === 'daily' ? 'challenge' : 'tournament',
+      theme: competition.theme
+    };
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -144,7 +161,7 @@ export const UnifiedCompetitionsView = () => {
         <EditCompetitionModal
           open={isEditModalOpen}
           onOpenChange={setIsEditModalOpen}
-          competition={editingCompetition}
+          competition={convertToBaseCompetition(editingCompetition)}
           onCompetitionUpdated={handleCompetitionUpdated}
         />
       )}
