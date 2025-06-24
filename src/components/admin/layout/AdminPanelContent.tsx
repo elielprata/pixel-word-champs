@@ -7,6 +7,7 @@ import { GameContentTab } from "@/components/admin/GameContentTab";
 import { MonitoringTab } from "@/components/admin/MonitoringTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
+import { AdvancedSystemTab } from '@/components/admin/AdvancedSystemTab';
 import { logger } from '@/utils/logger';
 
 export const AdminPanelContent = () => {
@@ -34,8 +35,8 @@ export const AdminPanelContent = () => {
         <SupportTab />
       </TabsContent>
 
-      <TabsContent value="integrations">
-        <IntegrationsTab />
+      <TabsContent value="advanced">
+        <AdvancedSystemTab />
       </TabsContent>
     </>
   );
