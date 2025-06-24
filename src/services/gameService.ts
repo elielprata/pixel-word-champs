@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   GameSession, 
@@ -32,32 +31,28 @@ class GameService {
         words_found: [],
         total_score: 0,
         time_elapsed: 0,
-        is_completed: false,
+        is_completed: false, // Agora permitido
       };
 
-      // CORREÇÃO PRINCIPAL: Não inserir competition_id diretamente se for custom_competition
+      // Adicionar competition_id se fornecido
       if (config.competitionId) {
         try {
           const competitionTable = await competitionValidationService.getCompetitionTable(config.competitionId);
           
           if (competitionTable === 'competitions') {
-            // Apenas se for da tabela competitions, usar foreign key diretamente
             sessionData.competition_id = config.competitionId;
             logger.debug('Competição encontrada em competitions - usando foreign key', { competitionId: config.competitionId }, 'GAME_SERVICE');
           } else if (competitionTable === 'custom_competitions') {
-            // Para custom_competitions, armazenar apenas no metadata do board
             logger.debug('Competição encontrada em custom_competitions - armazenando em metadata', { competitionId: config.competitionId }, 'GAME_SERVICE');
             sessionData.board = { 
               ...board, 
               _custom_competition_id: config.competitionId 
             };
-            // NÃO definir competition_id para evitar foreign key constraint
           } else {
             logger.warn('Competição não encontrada, criando sessão sem vinculação', { competitionId: config.competitionId }, 'GAME_SERVICE');
           }
         } catch (validationError) {
           logger.warn('Erro na validação da competição, criando sessão sem vinculação', { error: validationError, competitionId: config.competitionId }, 'GAME_SERVICE');
-          // Continuar criando a sessão mesmo se a validação da competição falhar
         }
       }
 
@@ -76,14 +71,13 @@ class GameService {
 
       const session = this.mapGameSession(data);
       
-      // Tentar registrar participação automaticamente, mas não falhar se der erro
+      // Tentar registrar participação automaticamente
       if (config.competitionId) {
         try {
           await dailyCompetitionService.joinCompetitionAutomatically(session.id);
           logger.info('Participação automática registrada', { sessionId: session.id }, 'GAME_SERVICE');
         } catch (participationError) {
           logger.warn('Erro ao registrar participação automática - continuando', { error: participationError, sessionId: session.id }, 'GAME_SERVICE');
-          // Não falhar a criação da sessão por causa disso
         }
       }
       
@@ -186,14 +180,13 @@ class GameService {
 
       const session = this.mapGameSession(data);
       
-      // Tentar atualizar pontuação na competição, mas não falhar se der erro
+      // Tentar atualizar pontuação na competição
       if (session.total_score > 0) {
         try {
           await dailyCompetitionService.updateParticipationScore(sessionId, session.total_score);
           logger.info('Pontuação final atualizada na competição', { sessionId, totalScore: session.total_score }, 'GAME_SERVICE');
         } catch (updateError) {
           logger.warn('Erro ao atualizar pontuação na competição - continuando', { error: updateError, sessionId }, 'GAME_SERVICE');
-          // Não falhar a conclusão da sessão por causa disso
         }
       }
       
@@ -221,17 +214,14 @@ class GameService {
           .update({ total_score: newTotalScore })
           .eq('id', sessionId);
 
-        // Tentar atualizar participação, mas não falhar se der erro
         try {
           await dailyCompetitionService.updateParticipationScore(sessionId, newTotalScore);
         } catch (error) {
           logger.warn('Erro ao atualizar pontuação na competição - continuando', { error, sessionId }, 'GAME_SERVICE');
-          // Não falhar a atualização da sessão por causa disso
         }
       }
     } catch (error) {
       logger.warn('Erro ao atualizar pontuação da sessão - continuando', { error, sessionId }, 'GAME_SERVICE');
-      // Não falhar por causa de erro na atualização de pontuação
     }
   }
 
@@ -239,7 +229,6 @@ class GameService {
     let customCompetitionId = null;
     if (data.board && typeof data.board === 'object' && data.board._custom_competition_id) {
       customCompetitionId = data.board._custom_competition_id;
-      // Manter a metadata no board para referência futura
     }
 
     return {

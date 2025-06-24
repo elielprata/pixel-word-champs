@@ -19,39 +19,70 @@ export const useGameSessionManager = () => {
   const { activeWeeklyCompetition, updateWeeklyScore } = useWeeklyCompetitionAutoParticipation();
   const [currentSessionData, setCurrentSessionData] = useState<GameSessionData | null>(null);
 
-  const startGameSession = useCallback((level: number, boardData: any) => {
+  const startGameSession = useCallback(async (level: number, boardData: any) => {
     if (!user?.id) {
       logger.warn('⚠️ Tentativa de iniciar sessão sem usuário autenticado');
-      return;
+      return null;
     }
 
-    // Criar sessão APENAS em memória - NUNCA no banco com is_completed = false
-    const sessionData: GameSessionData = {
-      level,
-      boardData,
-      wordsFound: [],
-      totalScore: 0,
-      timeElapsed: 0
-    };
+    try {
+      logger.info('🎮 Criando sessão de jogo no banco', { 
+        level, 
+        userId: user.id,
+        competitionId: activeWeeklyCompetition?.id
+      });
 
-    setCurrentSessionData(sessionData);
-    logger.info('🎮 Sessão iniciada APENAS EM MEMÓRIA (sem banco)', { 
-      level, 
-      userId: user.id,
-      memoryOnly: true,
-      triggerProtected: true
-    });
-  }, [user?.id]);
+      // Criar sessão no banco de dados (agora permitido)
+      const { data: session, error } = await supabase
+        .from('game_sessions')
+        .insert({
+          user_id: user.id,
+          board: boardData,
+          level,
+          competition_id: activeWeeklyCompetition?.id || null,
+          total_score: 0,
+          time_elapsed: 0,
+          is_completed: false, // Agora permitido!
+          words_found: [],
+          started_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('❌ Erro ao criar sessão no banco', { error });
+        throw error;
+      }
+
+      // Manter dados em memória também
+      const sessionData: GameSessionData = {
+        level,
+        boardData,
+        wordsFound: [],
+        totalScore: 0,
+        timeElapsed: 0
+      };
+
+      setCurrentSessionData(sessionData);
+      logger.info('✅ Sessão criada com sucesso', { sessionId: session.id });
+      
+      return session;
+
+    } catch (error) {
+      logger.error('❌ Erro crítico ao criar sessão', { error });
+      throw error;
+    }
+  }, [user?.id, activeWeeklyCompetition]);
 
   const updateSessionData = useCallback((updates: Partial<GameSessionData>) => {
     setCurrentSessionData(prev => {
       if (!prev) {
-        logger.warn('⚠️ Tentativa de atualizar sessão inexistente em memória');
+        logger.warn('⚠️ Tentativa de atualizar sessão inexistente');
         return null;
       }
       
       const updated = { ...prev, ...updates };
-      logger.debug('📝 Sessão atualizada em memória', { 
+      logger.debug('📝 Sessão atualizada', { 
         level: updated.level,
         score: updated.totalScore,
         wordsCount: updated.wordsFound.length
@@ -71,38 +102,70 @@ export const useGameSessionManager = () => {
     }
 
     try {
-      logger.info('🏆 Registrando sessão COMPLETADA no banco (is_completed = true)', { 
-        userId: user.id,
-        level: currentSessionData.level,
-        finalScore,
-        weeklyCompetitionId: activeWeeklyCompetition?.id,
-        triggerProtected: true
-      });
-
-      // CRÍTICO: Inserir APENAS com is_completed = true (trigger vai permitir)
-      const { data: session, error } = await supabase
+      // Buscar sessão incompleta existente
+      const { data: existingSessions, error: fetchError } = await supabase
         .from('game_sessions')
-        .insert({
-          user_id: user.id,
-          board: currentSessionData.boardData,
-          level: currentSessionData.level,
-          competition_id: activeWeeklyCompetition?.id || null,
-          total_score: finalScore,
-          time_elapsed: timeElapsed,
-          is_completed: true, // SEMPRE true - NUNCA false (trigger impede)
-          words_found: wordsFound,
-          completed_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_completed', false)
+        .order('started_at', { ascending: false })
+        .limit(1);
 
-      if (error) {
-        logger.error('❌ Erro ao registrar sessão completada (trigger pode ter bloqueado)', { 
-          error,
-          isCompletedValue: true,
-          triggerActive: true
-        });
-        throw error;
+      if (fetchError) {
+        logger.error('❌ Erro ao buscar sessão existente', { error: fetchError });
+        throw fetchError;
+      }
+
+      let sessionId: string;
+
+      if (existingSessions && existingSessions.length > 0) {
+        // Completar sessão existente
+        sessionId = existingSessions[0].id;
+        
+        const { data: session, error } = await supabase
+          .from('game_sessions')
+          .update({
+            total_score: finalScore,
+            time_elapsed: timeElapsed,
+            is_completed: true,
+            words_found: wordsFound,
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', sessionId)
+          .select()
+          .single();
+
+        if (error) {
+          logger.error('❌ Erro ao completar sessão existente', { error });
+          throw error;
+        }
+
+        logger.info('✅ Sessão existente completada', { sessionId, finalScore });
+      } else {
+        // Criar nova sessão já completada
+        const { data: session, error } = await supabase
+          .from('game_sessions')
+          .insert({
+            user_id: user.id,
+            board: currentSessionData.boardData,
+            level: currentSessionData.level,
+            competition_id: activeWeeklyCompetition?.id || null,
+            total_score: finalScore,
+            time_elapsed: timeElapsed,
+            is_completed: true,
+            words_found: wordsFound,
+            completed_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (error) {
+          logger.error('❌ Erro ao criar sessão completada', { error });
+          throw error;
+        }
+
+        sessionId = session.id;
+        logger.info('✅ Nova sessão completada criada', { sessionId, finalScore });
       }
 
       // Atualizar pontuação total do usuário
@@ -111,21 +174,10 @@ export const useGameSessionManager = () => {
       // Limpar sessão da memória
       setCurrentSessionData(null);
 
-      logger.info('✅ Sessão completada e registrada com sucesso (trigger permitiu)', { 
-        sessionId: session.id,
-        finalScore,
-        confirmed: session.is_completed === true
-      });
-
-      return session;
+      return { id: sessionId };
 
     } catch (error) {
-      logger.error('❌ Erro crítico na conclusão da sessão de jogo', { 
-        error,
-        sessionData: currentSessionData,
-        finalScore,
-        triggerMayHaveBlocked: true
-      });
+      logger.error('❌ Erro crítico na conclusão da sessão', { error });
       throw error;
     }
   }, [user?.id, currentSessionData, activeWeeklyCompetition]);
@@ -191,17 +243,30 @@ export const useGameSessionManager = () => {
     }
   };
 
-  const discardSession = useCallback(() => {
-    if (currentSessionData) {
-      logger.info('🗑️ Sessão descartada da memória - nível não completado (SEM impacto no banco)', { 
-        userId: user?.id,
-        level: currentSessionData.level,
-        memoryOnly: true,
-        triggerProtected: true
-      });
+  const discardSession = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      // Remover sessões incompletas do banco
+      const { error } = await supabase
+        .from('game_sessions')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('is_completed', false);
+
+      if (error) {
+        logger.warn('⚠️ Erro ao remover sessões incompletas', { error });
+      } else {
+        logger.info('🗑️ Sessões incompletas removidas do banco');
+      }
+    } catch (error) {
+      logger.warn('⚠️ Erro na limpeza de sessões', { error });
     }
+
+    // Limpar da memória
     setCurrentSessionData(null);
-  }, [user?.id, currentSessionData]);
+    logger.info('🗑️ Sessão descartada da memória');
+  }, [user?.id]);
 
   return {
     currentSessionData,
