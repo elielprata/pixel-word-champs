@@ -12,7 +12,7 @@ import { createSuccessResponse, createErrorResponse, handleServiceError } from '
 import { logger } from '@/utils/logger';
 import { isDailyCompetitionTimeValid } from '@/utils/dailyCompetitionValidation';
 import { isWeeklyCompetitionTimeValid } from '@/utils/weeklyCompetitionValidation';
-import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
+import { createBrasiliaTimestamp, getCurrentBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 export class DatabaseTimeStandardizationService {
   /**
@@ -95,11 +95,11 @@ export class DatabaseTimeStandardizationService {
 
       if (fetchError) throw fetchError;
 
-      // O trigger do banco irá corrigir automaticamente os horários
+      // Fazer uma atualização mínima que irá acionar o trigger
       const { data: updatedCompetition, error: updateError } = await supabase
         .from('custom_competitions')
         .update({
-          updated_at: new Date().toISOString()
+          updated_at: createBrasiliaTimestamp(getCurrentBrasiliaDate().toString())
         })
         .eq('id', competitionId)
         .select()
@@ -185,8 +185,9 @@ export class DatabaseTimeStandardizationService {
       logger.info('Validando sistema de triggers (BRASÍLIA)', undefined, 'DB_TIME_STANDARDIZATION');
       
       // Criar uma competição de teste
-      const testStartDate = createBrasiliaTimestamp(new Date().toISOString());
-      const testEndDate = createBrasiliaTimestamp(new Date().toISOString(), true);
+      const testDate = getCurrentBrasiliaDate().toString();
+      const testStartDate = createBrasiliaTimestamp(testDate);
+      const testEndDate = createBrasiliaTimestamp(testDate, true);
       
       const testCompetition = {
         title: 'TESTE_TRIGGER_SYSTEM',

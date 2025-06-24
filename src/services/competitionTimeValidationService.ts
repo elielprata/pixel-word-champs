@@ -5,7 +5,7 @@ import { createSuccessResponse, createErrorResponse, handleServiceError } from '
 import { isDailyCompetitionTimeValid } from '@/utils/dailyCompetitionValidation';
 import { isWeeklyCompetitionTimeValid } from '@/utils/weeklyCompetitionValidation';
 import { logger } from '@/utils/logger';
-import { getCurrentBrasiliaDate } from '@/utils/brasiliaTimeUnified';
+import { getCurrentBrasiliaDate, createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
 export class CompetitionTimeValidationService {
   /**
@@ -77,7 +77,7 @@ export class CompetitionTimeValidationService {
       const { data: updatedCompetition, error: updateError } = await supabase
         .from('custom_competitions')
         .update({
-          updated_at: getCurrentBrasiliaDate().toISOString()
+          updated_at: createBrasiliaTimestamp(getCurrentBrasiliaDate().toString())
         })
         .eq('id', competitionId)
         .select()

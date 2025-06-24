@@ -95,7 +95,7 @@ class UnifiedCompetitionService {
 
       const updateData: any = {
         ...formData,
-        updated_at: new Date().toISOString()
+        updated_at: createBrasiliaTimestamp(new Date().toString())
       };
 
       if (formData.startDate) {
