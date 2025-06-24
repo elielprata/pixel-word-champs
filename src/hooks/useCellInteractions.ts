@@ -1,5 +1,5 @@
 
-import { useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 
 interface FoundWord {
@@ -13,6 +13,9 @@ export const useCellInteractions = (
   permanentlyMarkedCells: Position[],
   hintHighlightedCells: Position[]
 ) => {
+  const [selectedCells, setSelectedCells] = useState<Position[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+
   // Otimizar verificações com Map para O(1) lookup
   const permanentCellsMap = useMemo(() => {
     const map = new Map<string, boolean>();
@@ -40,6 +43,10 @@ export const useCellInteractions = (
     return map;
   }, [foundWords]);
 
+  const isCellSelected = useCallback((row: number, col: number) => {
+    return selectedCells.some(pos => pos.row === row && pos.col === col);
+  }, [selectedCells]);
+
   const isCellPermanentlyMarked = useCallback((row: number, col: number) => {
     return permanentCellsMap.has(`${row}-${col}`);
   }, [permanentCellsMap]);
@@ -64,10 +71,39 @@ export const useCellInteractions = (
     return colors[wordIndex % colors.length];
   }, []);
 
+  const handleCellStart = useCallback((row: number, col: number) => {
+    setSelectedCells([{ row, col }]);
+    setIsDragging(true);
+  }, []);
+
+  const handleCellMove = useCallback((row: number, col: number) => {
+    if (!isDragging) return;
+    
+    setSelectedCells(prev => {
+      const newPos = { row, col };
+      const exists = prev.some(pos => pos.row === row && pos.col === col);
+      if (exists) return prev;
+      return [...prev, newPos];
+    });
+  }, [isDragging]);
+
+  const handleCellEnd = useCallback(() => {
+    setIsDragging(false);
+    // Aqui você implementaria a lógica de validação da palavra selecionada
+    // Por enquanto, apenas limpa a seleção
+    setSelectedCells([]);
+  }, []);
+
   return {
+    selectedCells,
+    isDragging,
+    isCellSelected,
     isCellPermanentlyMarked,
     isCellHintHighlighted,
     getCellWordIndex,
-    getWordColor
+    getWordColor,
+    handleCellStart,
+    handleCellMove,
+    handleCellEnd
   };
 };

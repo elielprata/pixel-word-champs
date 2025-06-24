@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGameScoring } from '@/hooks/useGameScoring';
 import { logger } from '@/utils/logger';
@@ -22,8 +22,8 @@ interface GameState {
 }
 
 export const useGameState = (
-  level: number, 
-  timeLeft: number,
+  levelWords: string[],
+  timeLeft?: number,
   onLevelComplete?: (levelScore: number) => void
 ) => {
   const [state, setState] = useState<GameState>({
@@ -41,11 +41,11 @@ export const useGameState = (
     currentLevelScore, 
     isLevelCompleted, 
     updateUserScore 
-  } = useGameScoring(state.foundWords, level);
+  } = useGameScoring(state.foundWords, 1); // level default 1
 
-  // Reset state quando muda o nível
+  // Reset state quando muda as palavras do nível
   useEffect(() => {
-    logger.info(`🔄 Resetando estado do jogo para nível ${level}`, { level }, 'GAME_STATE');
+    logger.info(`🔄 Resetando estado do jogo`, { wordCount: levelWords.length }, 'GAME_STATE');
     setState({
       foundWords: [],
       hintsUsed: 0,
@@ -55,25 +55,23 @@ export const useGameState = (
       permanentlyMarkedCells: [],
       isLevelCompleted: false
     });
-  }, [level]);
+  }, [levelWords]);
 
   // Game Over quando tempo acaba
   useEffect(() => {
     if (timeLeft === 0 && !state.showGameOver && !state.isLevelCompleted) {
       logger.info('⏰ Tempo esgotado - Game Over', { 
-        level, 
         foundWords: state.foundWords.length,
         targetWords: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED 
       }, 'GAME_STATE');
       setState(prev => ({ ...prev, showGameOver: true }));
     }
-  }, [timeLeft, state.showGameOver, state.isLevelCompleted, level, state.foundWords.length]);
+  }, [timeLeft, state.showGameOver, state.isLevelCompleted, state.foundWords.length]);
 
   // Level complete quando atinge o número necessário de palavras
   useEffect(() => {
     if (isLevelCompleted && !state.showLevelComplete && !state.isLevelCompleted) {
-      logger.info(`🎉 Nível ${level} COMPLETADO!`, {
-        level,
+      logger.info(`🎉 Nível COMPLETADO!`, {
         foundWordsCount: state.foundWords.length,
         totalWordsRequired: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
         foundWords: state.foundWords.map(fw => fw.word),
@@ -89,7 +87,6 @@ export const useGameState = (
       // Notificar level complete via callback
       if (onLevelComplete) {
         logger.info(`📞 CALLBACK - Notificando level complete: ${currentLevelScore} pontos`, {
-          level,
           score: currentLevelScore
         }, 'GAME_STATE');
         onLevelComplete(currentLevelScore);
@@ -98,9 +95,9 @@ export const useGameState = (
       // Registrar pontos no banco
       updateUserScore(currentLevelScore);
     }
-  }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, level, currentLevelScore, updateUserScore, onLevelComplete]);
+  }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, currentLevelScore, updateUserScore, onLevelComplete]);
 
-  const addFoundWord = (newFoundWord: FoundWord) => {
+  const addFoundWord = useCallback((newFoundWord: FoundWord) => {
     // PROTEÇÃO FINAL: Verificar duplicação uma última vez antes de adicionar ao estado
     const isAlreadyFound = state.foundWords.some(fw => fw.word === newFoundWord.word);
     if (isAlreadyFound) {
@@ -125,12 +122,35 @@ export const useGameState = (
       foundWords: [...prev.foundWords, newFoundWord],
       permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
     }));
-  };
+  }, [state.foundWords]);
+
+  const useHint = useCallback(() => {
+    if (state.hintsUsed >= 3) return; // Limite de dicas
+    
+    // Encontrar uma palavra não encontrada ainda
+    const availableWords = levelWords.filter(word => 
+      !state.foundWords.some(fw => fw.word === word)
+    );
+    
+    if (availableWords.length === 0) return;
+    
+    // Simular highlight de uma palavra (implementação básica)
+    const randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
+    logger.info(`💡 Dica usada: ${randomWord}`, { hintsUsed: state.hintsUsed + 1 }, 'GAME_STATE');
+    
+    setState(prev => ({ 
+      ...prev, 
+      hintsUsed: prev.hintsUsed + 1,
+      // Aqui você implementaria a lógica para destacar as células da palavra
+      hintHighlightedCells: [] // TODO: implementar highlight das células
+    }));
+  }, [levelWords, state.foundWords, state.hintsUsed]);
 
   return {
     ...state,
     currentLevelScore,
     addFoundWord,
+    useHint,
     setHintsUsed: (value: number | ((prev: number) => number)) => {
       setState(prev => ({ 
         ...prev, 

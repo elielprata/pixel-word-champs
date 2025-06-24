@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useOptimizedWordSelection } from './useOptimizedWordSelection';
+import { useOptimizedBoard } from './useOptimizedBoard';
 import { useGameState } from './useGameState';
 import { useCellInteractions } from './useCellInteractions';
 import { useOptimizedGameScoring } from './useOptimizedGameScoring';
@@ -27,13 +27,15 @@ export const useGameBoard = ({
   const [showLevelComplete, setShowLevelComplete] = useState(false);
   const gameInitialized = useRef(false);
 
-  // Hook para seleção de palavras otimizada
+  // Hook para board otimizado
   const { 
-    board, 
+    boardData, 
+    size,
     levelWords, 
-    isWordSelectionError,
-    error: wordSelectionError 
-  } = useOptimizedWordSelection(level);
+    isLoading: boardLoading,
+    error: boardError,
+    isWordSelectionError
+  } = useOptimizedBoard(level);
 
   // Hook para pontuação otimizada
   const {
@@ -43,36 +45,35 @@ export const useGameBoard = ({
     discardIncompleteLevel,
     initializeSession,
     isUpdatingScore
-  } = useOptimizedGameScoring(level, board);
+  } = useOptimizedGameScoring(level, boardData);
 
   // Estado do jogo
-  const gameState = useGameState(levelWords);
+  const gameState = useGameState(levelWords, timeLeft, onLevelComplete);
 
   // Interações com células
   const cellInteractions = useCellInteractions(
-    board,
     gameState.foundWords,
-    gameState.addFoundWord,
-    gameState.updateHintsUsed
+    gameState.permanentlyMarkedCells,
+    gameState.hintHighlightedCells
   );
 
   // Inicializar sessão quando o jogo estiver pronto
   useEffect(() => {
-    if (board && levelWords.length > 0 && !gameInitialized.current) {
+    if (boardData && levelWords.length > 0 && !gameInitialized.current) {
       initializeSession();
       gameInitialized.current = true;
       setIsLoading(false);
       logger.info('🎮 Jogo inicializado - sessão em memória criada', { level });
     }
-  }, [board, levelWords, initializeSession, level]);
+  }, [boardData, levelWords, initializeSession, level]);
 
-  // Verificar se há erro na seleção de palavras
+  // Verificar se há erro na seleção de palavras/board
   useEffect(() => {
-    if (wordSelectionError) {
-      setError(wordSelectionError);
+    if (boardError) {
+      setError(boardError);
       setIsLoading(false);
     }
-  }, [wordSelectionError]);
+  }, [boardError]);
 
   // Verificar conclusão do nível
   useEffect(() => {
@@ -114,16 +115,14 @@ export const useGameBoard = ({
   const { currentLevelScore } = calculateLevelData(gameState.foundWords);
 
   return {
-    isLoading,
+    isLoading: isLoading || boardLoading,
     error,
     isWordSelectionError,
     boardProps: {
-      board,
+      boardData,
+      size,
       selectedCells: cellInteractions.selectedCells,
-      foundWordPositions: cellInteractions.foundWordPositions,
-      onCellMouseDown: cellInteractions.handleCellMouseDown,
-      onCellMouseEnter: cellInteractions.handleCellMouseEnter,
-      onCellMouseUp: cellInteractions.handleCellMouseUp
+      isDragging: cellInteractions.isDragging
     },
     gameStateProps: {
       foundWords: gameState.foundWords,
@@ -135,7 +134,16 @@ export const useGameBoard = ({
       showGameOver,
       showLevelComplete
     },
-    cellInteractionProps: cellInteractions,
+    cellInteractionProps: {
+      handleCellStart: cellInteractions.handleCellStart,
+      handleCellMove: cellInteractions.handleCellMove,
+      handleCellEnd: cellInteractions.handleCellEnd,
+      isCellSelected: cellInteractions.isCellSelected,
+      isCellPermanentlyMarked: cellInteractions.isCellPermanentlyMarked,
+      isCellHintHighlighted: cellInteractions.isCellHintHighlighted,
+      getCellWordIndex: cellInteractions.getCellWordIndex,
+      getWordColor: cellInteractions.getWordColor
+    },
     gameActions: {
       useHint: gameState.useHint,
       handleGoHome,
