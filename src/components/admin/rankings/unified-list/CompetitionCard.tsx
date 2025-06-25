@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users, Edit, Trash2, Clock } from 'lucide-react';
 import { UnifiedCompetition } from '@/types/competition';
-import { formatBrasiliaDate, formatTimePreview } from '@/utils/brasiliaTimeUnified';
+import { formatDatePreview, formatTimePreview } from '@/utils/brasiliaTimeUnified';
 
 interface CompetitionCardProps {
   competition: UnifiedCompetition;
@@ -38,14 +38,13 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
     }
   };
 
-  const formatDateTimeCorrect = (dateString: string, label: string) => {
+  const formatDateTimeDisplay = (dateString: string, label: string) => {
     if (!dateString) {
       return 'Data inválida';
     }
 
     try {
-      const date = new Date(dateString);
-      const dateFormatted = formatBrasiliaDate(date, false);
+      const dateFormatted = formatDatePreview(dateString);
       const timeFormatted = formatTimePreview(dateString);
       
       return `${dateFormatted}, ${timeFormatted}`;
@@ -101,12 +100,12 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Início: {formatDateTimeCorrect(competition.startDate, 'Início')}</span>
+                <span>Início: {formatDateTimeDisplay(competition.startDate, 'Início')}</span>
               </div>
               
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Fim: {formatDateTimeCorrect(competition.endDate, 'Fim')}</span>
+                <span>Fim: {formatDateTimeDisplay(competition.endDate, 'Fim')}</span>
               </div>
               
               <div className="flex items-center gap-1">

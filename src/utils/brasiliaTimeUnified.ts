@@ -1,3 +1,4 @@
+
 /**
  * UTILITÁRIO UNIFICADO DE TEMPO PARA BRASÍLIA
  * Todas as funções trabalham exclusivamente com horário de Brasília (UTC-3)
@@ -153,21 +154,40 @@ export const validateCompetitionDuration = (startDateTime: string, durationHours
 };
 
 /**
- * Formata horário de preview para exibição
- * VERSÃO SIMPLIFICADA
+ * Formata horário para exibição SEM conversão adicional de timezone
+ * Os dados já vêm do banco em UTC, apenas extraímos o horário
  */
 export const formatTimePreview = (dateTime: string): string => {
   if (!dateTime) return '';
   
   try {
     const date = new Date(dateTime);
-    return date.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'America/Sao_Paulo'
-    });
+    // Usar toISOString para obter o horário UTC e depois extrair apenas HH:MM
+    const isoString = date.toISOString();
+    const timePart = isoString.split('T')[1];
+    const [hours, minutes] = timePart.split(':');
+    return `${hours}:${minutes}`;
   } catch (error) {
     return '';
+  }
+};
+
+/**
+ * Formata data para exibição SEM conversão adicional de timezone
+ * Os dados já vêm do banco em UTC
+ */
+export const formatDatePreview = (dateTime: string): string => {
+  if (!dateTime) return 'Data inválida';
+  
+  try {
+    const date = new Date(dateTime);
+    // Usar toISOString para obter a data UTC e depois formatar
+    const isoString = date.toISOString();
+    const datePart = isoString.split('T')[0];
+    const [year, month, day] = datePart.split('-');
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    return 'Data inválida';
   }
 };
 
