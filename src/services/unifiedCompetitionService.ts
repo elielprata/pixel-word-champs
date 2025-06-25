@@ -9,7 +9,8 @@ class UnifiedCompetitionService {
     try {
       secureLogger.info('Criando competição diária (BRASÍLIA)', { 
         title: formData.title,
-        duration: formData.duration
+        duration: formData.duration,
+        startDate: formData.startDate
       }, 'UNIFIED_COMPETITION_SERVICE');
 
       const { data: user } = await supabase.auth.getUser();
@@ -23,6 +24,13 @@ class UnifiedCompetitionService {
         ? calculateEndDateWithDuration(formData.startDate, formData.duration)
         : createBrasiliaTimestamp(formData.startDate, true);
 
+      console.log('🔧 Dados de entrada para criação:', {
+        originalStartDate: formData.startDate,
+        originalDuration: formData.duration,
+        calculatedStartDate: startDateBrasilia,
+        calculatedEndDate: endDateBrasilia
+      });
+
       const competitionData = {
         title: formData.title,
         description: formData.description,
@@ -35,6 +43,8 @@ class UnifiedCompetitionService {
         created_by: user.user.id,
         status: 'active'
       };
+
+      console.log('💾 Dados enviados para o banco:', competitionData);
 
       secureLogger.debug('Dados preparados para inserção (BRASÍLIA)', { 
         competitionData,
@@ -52,8 +62,12 @@ class UnifiedCompetitionService {
         throw error;
       }
 
+      console.log('✅ Dados salvos no banco:', data);
+
       const unifiedCompetition = this.mapToUnifiedCompetition(data, formData.duration);
       
+      console.log('🔄 Dados mapeados para UnifiedCompetition:', unifiedCompetition);
+
       secureLogger.info('Competição criada com sucesso (BRASÍLIA)', { 
         id: unifiedCompetition.id,
         duration: formData.duration
@@ -170,11 +184,22 @@ class UnifiedCompetitionService {
       calculatedDuration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60));
     }
 
-    return {
+    console.log('🗺️ Mapeando dados do banco para UnifiedCompetition:', {
+      rawData: {
+        id: data.id,
+        start_date: data.start_date,
+        end_date: data.end_date
+      },
+      inputDuration: duration,
+      calculatedDuration,
+      finalDuration: calculatedDuration
+    });
+
+    const mapped = {
       id: data.id,
       title: data.title,
       description: data.description || '',
-      type: 'daily', // Sempre 'daily'
+      type: 'daily' as const, // Sempre 'daily'
       status: data.status,
       startDate: data.start_date,
       endDate: data.end_date,
@@ -185,6 +210,10 @@ class UnifiedCompetitionService {
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
+
+    console.log('✨ Objeto UnifiedCompetition final:', mapped);
+
+    return mapped;
   }
 }
 

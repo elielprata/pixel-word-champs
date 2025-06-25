@@ -103,20 +103,52 @@ export const createBrasiliaTimestamp = (dateString: string, endOfDay: boolean = 
  * Calcula a data de fim baseada na data de início e duração em horas
  */
 export const calculateEndDateWithDuration = (startDateTime: string, durationHours: number): string => {
-  if (!startDateTime || !durationHours) return '';
-  
-  const startDate = new Date(startDateTime);
-  const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
-  
-  // Garantir que não passe de 23:59:59 do mesmo dia
-  const sameDayLimit = new Date(startDate);
-  sameDayLimit.setHours(23, 59, 59, 999);
-  
-  if (endDate > sameDayLimit) {
-    return sameDayLimit.toISOString();
+  console.log('🧮 calculateEndDateWithDuration - Input:', {
+    startDateTime,
+    durationHours,
+    startDateType: typeof startDateTime,
+    durationType: typeof durationHours
+  });
+
+  if (!startDateTime || !durationHours) {
+    console.warn('⚠️ Parâmetros inválidos para calculateEndDateWithDuration');
+    return '';
   }
   
-  return endDate.toISOString();
+  try {
+    const startDate = new Date(startDateTime);
+    console.log('📅 Data de início parseada:', {
+      original: startDateTime,
+      parsed: startDate.toISOString(),
+      localString: startDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+    });
+
+    const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
+    console.log('📅 Data de fim calculada:', {
+      calculated: endDate.toISOString(),
+      localString: endDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      durationAdded: durationHours
+    });
+    
+    // Garantir que não passe de 23:59:59 do mesmo dia
+    const sameDayLimit = new Date(startDate);
+    sameDayLimit.setHours(23, 59, 59, 999);
+    
+    if (endDate > sameDayLimit) {
+      console.log('⚠️ Data de fim ajustada para limite do dia:', {
+        original: endDate.toISOString(),
+        adjusted: sameDayLimit.toISOString()
+      });
+      return sameDayLimit.toISOString();
+    }
+    
+    const result = endDate.toISOString();
+    console.log('✅ calculateEndDateWithDuration - Output:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ Erro em calculateEndDateWithDuration:', error);
+    return '';
+  }
 };
 
 /**
@@ -159,12 +191,24 @@ export const validateCompetitionDuration = (startDateTime: string, durationHours
 export const formatTimePreview = (dateTime: string): string => {
   if (!dateTime) return '';
   
-  const date = new Date(dateTime);
-  return date.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'America/Sao_Paulo'
-  });
+  try {
+    const date = new Date(dateTime);
+    const result = date.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'America/Sao_Paulo'
+    });
+    
+    console.log('⏰ formatTimePreview:', {
+      input: dateTime,
+      output: result
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('❌ Erro em formatTimePreview:', error);
+    return '';
+  }
 };
 
 /**

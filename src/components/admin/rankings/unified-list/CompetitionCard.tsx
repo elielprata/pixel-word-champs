@@ -20,6 +20,17 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
   onDelete,
   isDeleting
 }) => {
+  // Debug logs para verificar dados recebidos
+  console.log('🃏 CompetitionCard: Dados recebidos:', {
+    id: competition.id,
+    title: competition.title,
+    startDate: competition.startDate,
+    endDate: competition.endDate,
+    duration: competition.duration,
+    rawStartDate: new Date(competition.startDate).toISOString(),
+    rawEndDate: new Date(competition.endDate).toISOString()
+  });
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-700 border-green-200';
@@ -38,22 +49,62 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
     }
   };
 
-  const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
-    const date = new Date(dateString);
-    const timeFormatted = formatTimePreview(dateString);
-    return `${formatBrasiliaDate(date, false)}, ${timeFormatted}`;
+  const formatDateTimeCorrect = (dateString: string, label: string) => {
+    if (!dateString) {
+      console.warn(`⚠️ Data vazia para ${label}`);
+      return 'Data inválida';
+    }
+
+    try {
+      const date = new Date(dateString);
+      const dateFormatted = formatBrasiliaDate(date, false);
+      const timeFormatted = formatTimePreview(dateString);
+      
+      const result = `${dateFormatted}, ${timeFormatted}`;
+      console.log(`📅 ${label}:`, {
+        input: dateString,
+        parsed: date.toISOString(),
+        formatted: result
+      });
+      
+      return result;
+    } catch (error) {
+      console.error(`❌ Erro ao formatar ${label}:`, error);
+      return 'Data inválida';
+    }
   };
 
-  const formatDuration = (startDate: string, endDate: string, duration?: number) => {
-    if (duration) {
-      return `${duration}h`;
+  const calculateAndDisplayDuration = () => {
+    // Priorizar duração fornecida
+    if (competition.duration && competition.duration > 0) {
+      console.log('⏱️ Usando duração fornecida:', competition.duration);
+      return `${competition.duration}h`;
     }
     
     // Calcular duração baseada nas datas
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const hours = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60));
-    return `${hours}h`;
+    if (competition.startDate && competition.endDate) {
+      try {
+        const start = new Date(competition.startDate);
+        const end = new Date(competition.endDate);
+        const diffMs = end.getTime() - start.getTime();
+        const hours = Math.round(diffMs / (1000 * 60 * 60));
+        
+        console.log('🧮 Duração calculada:', {
+          start: start.toISOString(),
+          end: end.toISOString(),
+          diffMs,
+          hours
+        });
+        
+        return `${hours}h`;
+      } catch (error) {
+        console.error('❌ Erro ao calcular duração:', error);
+        return 'N/A';
+      }
+    }
+    
+    console.warn('⚠️ Não foi possível determinar duração');
+    return 'N/A';
   };
 
   return (
@@ -78,18 +129,18 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Início: {formatDateTime(competition.startDate, false)}</span>
+                <span>Início: {formatDateTimeCorrect(competition.startDate, 'Início')}</span>
               </div>
               
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Fim: {formatDateTime(competition.endDate, true)}</span>
+                <span>Fim: {formatDateTimeCorrect(competition.endDate, 'Fim')}</span>
               </div>
               
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3 text-blue-600" />
                 <span className="text-blue-600 font-medium">
-                  Duração: {formatDuration(competition.startDate, competition.endDate, competition.duration)}
+                  Duração: {calculateAndDisplayDuration()}
                 </span>
               </div>
               
