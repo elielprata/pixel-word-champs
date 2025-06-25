@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { customCompetitionService } from '@/services/customCompetitionService';
+import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
 import { CompetitionEditActions } from './CompetitionEditActions';
 import { PrizeConfigurationSection } from '../competition-form/PrizeConfigurationSection';
 import { usePaymentData } from '@/hooks/usePaymentData';
@@ -19,7 +19,7 @@ interface BaseCompetition {
   status: string;
   prize_pool: number;
   max_participants: number;
-  total_participants?: number; // Made optional to match WeeklyCompetition
+  total_participants?: number;
   competition_type?: string;
   theme?: string;
   rules?: any;
@@ -43,8 +43,8 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    start_date: '',
-    end_date: ''
+    startDate: '',
+    endDate: ''
   });
 
   useEffect(() => {
@@ -57,11 +57,15 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         originalStatus: competition.status
       });
       
+      // Extrair apenas a data (YYYY-MM-DD) dos timestamps
+      const startDate = competition.start_date.split('T')[0];
+      const endDate = competition.end_date.split('T')[0];
+      
       setFormData({
         title: competition.title,
         description: competition.description || '',
-        start_date: competition.start_date,
-        end_date: competition.end_date
+        startDate: startDate,
+        endDate: endDate
       });
     }
   }, [competition]);
@@ -74,40 +78,45 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
     try {
       console.log('💾 Salvando alterações da competição:', {
         id: competition.id,
-        preservedStartDate: formData.start_date,
-        preservedEndDate: formData.end_date,
         newTitle: formData.title,
-        newDescription: formData.description
+        newDescription: formData.description,
+        newStartDate: formData.startDate,
+        newEndDate: formData.endDate
       });
 
-      const competitionType = competition.theme ? 'challenge' : competition.competition_type === 'challenge' ? 'challenge' : 'tournament';
+      const isDailyCompetition = competition.theme || competition.competition_type === 'challenge';
 
-      // Calcular premiação total automaticamente
-      const totalPrizePool = paymentData.calculateTotalPrize();
-      
-      const updateData = {
-        title: formData.title,
-        description: formData.description,
-        competition_type: competitionType,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
-        prize_pool: totalPrizePool,
-        ...(competition.theme && { theme: competition.theme })
-      };
+      if (isDailyCompetition) {
+        // Para competições diárias, usar o serviço unificado
+        const updateData = {
+          title: formData.title,
+          description: formData.description,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          maxParticipants: 0
+        };
 
-      const response = await customCompetitionService.updateCompetition(competition.id, updateData);
-      
-      if (response.success) {
-        toast({
-          title: "Sucesso",
-          description: "Competição atualizada com sucesso"
-        });
-        if (onCompetitionUpdated) {
-          onCompetitionUpdated();
+        const response = await unifiedCompetitionService.updateCompetition(competition.id, updateData);
+        
+        if (response.success) {
+          toast({
+            title: "Sucesso",
+            description: "Competição diária atualizada avec sucesso"
+          });
+          if (onCompetitionUpdated) {
+            onCompetitionUpdated();
+          }
+          onClose();
+        } else {
+          throw new Error(response.error || 'Erro ao atualizar competição');
         }
-        onClose();
       } else {
-        throw new Error(response.error || 'Erro ao atualizar competição');
+        // Para competições semanais, manter lógica existente
+        toast({
+          title: "Aviso",
+          description: "Edição de competições semanais ainda não implementada neste contexto",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('❌ Erro ao atualizar competição:', error);
@@ -147,6 +156,43 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
             rows={3}
           />
         </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="startDate">Data de Início</Label>
+            <Input
+              id="startDate"
+              type="date"
+              value={formData.startDate}
+              onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="endDate">Data de Fim</Label>
+            <Input
+              id="endDate"
+              type="date"
+              value={formData.endDate}
+              onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+              required
+            />
+          </div>
+        </div>
+
+        {isDailyCompetition && (
+          <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+            <Label className="text-sm font-medium text-green-800">Configurações Automáticas</Label>
+            <div className="text-sm text-green-700 mt-1 space-y-1">
+              <p>💰 Premiação: Sem prêmios em dinheiro</p>
+              <p>🎯 Participação: Livre (todos os usuários podem participar)</p>
+              <p className="text-xs text-green-600 mt-1">
+                💡 Competições diárias focam no engajamento dos usuários
+              </p>
+            </div>
+          </div>
+        )}
 
         {!isDailyCompetition && (
           <div className="bg-green-50 p-3 rounded-lg border border-green-200">

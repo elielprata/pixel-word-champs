@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Calendar } from 'lucide-react';
 import { UnifiedCompetitionsList } from './UnifiedCompetitionsList';
 import { UnifiedCompetitionModal } from './UnifiedCompetitionModal';
+import { EditCompetitionModal } from './EditCompetitionModal';
 import { UnifiedCompetition } from '@/types/competition';
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,22 +17,17 @@ interface DailyCompetitionsViewProps {
 export const DailyCompetitionsView = ({ competitions, isLoading }: DailyCompetitionsViewProps) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<UnifiedCompetition | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const { toast } = useToast();
 
   const handleEdit = (competition: UnifiedCompetition) => {
     console.log('🔧 Abrindo modal de edição para:', competition.id);
     setEditingCompetition(competition);
-    // TODO: Implementar modal de edição completo
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: `Edição da competição "${competition.title}" será implementada em breve.`,
-    });
+    setShowEditModal(true);
   };
 
   const handleDelete = (competition: UnifiedCompetition) => {
     console.log('✅ Competição excluída:', competition.id);
-    // A exclusão já foi processada no UnifiedCompetitionsList
-    // Aqui podemos atualizar a lista se necessário
     toast({
       title: "Competição removida",
       description: "A lista será atualizada automaticamente.",
@@ -44,6 +40,33 @@ export const DailyCompetitionsView = ({ competitions, isLoading }: DailyCompetit
       title: "Competição criada",
       description: "A nova competição foi criada com sucesso.",
     });
+  };
+
+  const handleCompetitionUpdated = () => {
+    setShowEditModal(false);
+    setEditingCompetition(null);
+    toast({
+      title: "Competição atualizada",
+      description: "A competição foi atualizada com sucesso.",
+    });
+  };
+
+  // Converter UnifiedCompetition para BaseCompetition
+  const mapToBaseCompetition = (unified: UnifiedCompetition) => {
+    return {
+      id: unified.id,
+      title: unified.title,
+      description: unified.description,
+      start_date: unified.startDate,
+      end_date: unified.endDate,
+      status: unified.status,
+      prize_pool: 0, // Competições diárias não têm prêmios
+      max_participants: unified.maxParticipants,
+      total_participants: unified.totalParticipants,
+      competition_type: 'challenge',
+      theme: unified.theme,
+      rules: null
+    };
   };
 
   return (
@@ -83,6 +106,14 @@ export const DailyCompetitionsView = ({ competitions, isLoading }: DailyCompetit
         onOpenChange={setShowCreateModal}
         onCompetitionCreated={handleCompetitionCreated}
         competitionTypeFilter="daily"
+      />
+
+      {/* Modal de Edição */}
+      <EditCompetitionModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        competition={editingCompetition ? mapToBaseCompetition(editingCompetition) : null}
+        onCompetitionUpdated={handleCompetitionUpdated}
       />
     </div>
   );
