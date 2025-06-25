@@ -1,14 +1,13 @@
 /**
  * UTILITÁRIO UNIFICADO DE TEMPO PARA BRASÍLIA
  * Todas as funções trabalham exclusivamente com horário de Brasília (UTC-3)
- * Elimina conversões e simplifica o sistema
+ * Sistema simplificado após correção do trigger do banco
  */
 
 /**
  * Obtém a data atual no horário de Brasília
  */
 export const getCurrentBrasiliaDate = (): Date => {
-  // Usar Intl.DateTimeFormat para conversão mais robusta
   const now = new Date();
   const brasiliaTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
   return brasiliaTime;
@@ -16,28 +15,23 @@ export const getCurrentBrasiliaDate = (): Date => {
 
 /**
  * Cria uma data em Brasília a partir de uma string de data
- * Esta função garante que a data seja interpretada como horário de Brasília
  */
 export const createBrasiliaDateFromString = (dateString: string): Date => {
   if (!dateString) return getCurrentBrasiliaDate();
   
-  // Para datas no formato YYYY-MM-DD, criar explicitamente no timezone de Brasília
   if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
     const [year, month, day] = dateString.split('-').map(Number);
-    // Criar data no timezone de Brasília usando o offset correto
     const brasiliaDate = new Date();
     brasiliaDate.setFullYear(year, month - 1, day);
     brasiliaDate.setHours(0, 0, 0, 0);
     
-    // Ajustar para timezone de Brasília se necessário
     const offset = brasiliaDate.getTimezoneOffset();
-    const brasiliaOffset = 180; // UTC-3 em minutos
+    const brasiliaOffset = 180;
     const adjustment = (offset - brasiliaOffset) * 60000;
     
     return new Date(brasiliaDate.getTime() + adjustment);
   }
   
-  // Para outros formatos, usar conversão padrão
   return new Date(dateString);
 };
 
@@ -70,14 +64,12 @@ export const formatBrasiliaDate = (date: Date | string, includeTime: boolean = t
 
 /**
  * Formata uma data no formato YYYY-MM-DD para DD/MM/YYYY
- * VERSÃO ULTRA SIMPLIFICADA - apenas manipulação de string
  */
 export const formatDateInputToDisplay = (dateString: string): string => {
   if (!dateString || !dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
     return 'Data inválida';
   }
   
-  // Apenas split da string e reorganização - SEM conversões de data
   const [year, month, day] = dateString.split('-');
   return `${day}/${month}/${year}`;
 };
@@ -101,52 +93,28 @@ export const createBrasiliaTimestamp = (dateString: string, endOfDay: boolean = 
 
 /**
  * Calcula a data de fim baseada na data de início e duração em horas
+ * VERSÃO SIMPLIFICADA - o trigger do banco agora respeita esta data
  */
 export const calculateEndDateWithDuration = (startDateTime: string, durationHours: number): string => {
-  console.log('🧮 calculateEndDateWithDuration - Input:', {
-    startDateTime,
-    durationHours,
-    startDateType: typeof startDateTime,
-    durationType: typeof durationHours
-  });
-
   if (!startDateTime || !durationHours) {
-    console.warn('⚠️ Parâmetros inválidos para calculateEndDateWithDuration');
     return '';
   }
   
   try {
     const startDate = new Date(startDateTime);
-    console.log('📅 Data de início parseada:', {
-      original: startDateTime,
-      parsed: startDate.toISOString(),
-      localString: startDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-    });
-
     const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
-    console.log('📅 Data de fim calculada:', {
-      calculated: endDate.toISOString(),
-      localString: endDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-      durationAdded: durationHours
-    });
     
-    // Garantir que não passe de 23:59:59 do mesmo dia
+    // Verificar limite do mesmo dia (o trigger do banco fará a validação final)
     const sameDayLimit = new Date(startDate);
     sameDayLimit.setHours(23, 59, 59, 999);
     
     if (endDate > sameDayLimit) {
-      console.log('⚠️ Data de fim ajustada para limite do dia:', {
-        original: endDate.toISOString(),
-        adjusted: sameDayLimit.toISOString()
-      });
       return sameDayLimit.toISOString();
     }
     
-    const result = endDate.toISOString();
-    console.log('✅ calculateEndDateWithDuration - Output:', result);
-    return result;
+    return endDate.toISOString();
   } catch (error) {
-    console.error('❌ Erro em calculateEndDateWithDuration:', error);
+    console.error('Erro em calculateEndDateWithDuration:', error);
     return '';
   }
 };
@@ -170,7 +138,6 @@ export const validateCompetitionDuration = (startDateTime: string, durationHours
   const startDate = new Date(startDateTime);
   const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
   
-  // Verificar se ultrapassa 23:59:59 do mesmo dia
   const sameDayLimit = new Date(startDate);
   sameDayLimit.setHours(23, 59, 59, 999);
   
@@ -187,26 +154,19 @@ export const validateCompetitionDuration = (startDateTime: string, durationHours
 
 /**
  * Formata horário de preview para exibição
+ * VERSÃO SIMPLIFICADA
  */
 export const formatTimePreview = (dateTime: string): string => {
   if (!dateTime) return '';
   
   try {
     const date = new Date(dateTime);
-    const result = date.toLocaleTimeString('pt-BR', {
+    return date.toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit',
       timeZone: 'America/Sao_Paulo'
     });
-    
-    console.log('⏰ formatTimePreview:', {
-      input: dateTime,
-      output: result
-    });
-    
-    return result;
   } catch (error) {
-    console.error('❌ Erro em formatTimePreview:', error);
     return '';
   }
 };
@@ -249,7 +209,6 @@ export const getBrasiliaWeekBoundaries = (
   const now = getCurrentBrasiliaDate();
   const startOfWeek = new Date(now);
   
-  // Calcular início da semana baseado no dia configurado
   const currentDay = startOfWeek.getDay();
   const daysToSubtract = (currentDay - startDayOfWeek + 7) % 7;
   startOfWeek.setDate(startOfWeek.getDate() - daysToSubtract);

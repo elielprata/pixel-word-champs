@@ -20,17 +20,6 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
   onDelete,
   isDeleting
 }) => {
-  // Debug logs para verificar dados recebidos
-  console.log('🃏 CompetitionCard: Dados recebidos:', {
-    id: competition.id,
-    title: competition.title,
-    startDate: competition.startDate,
-    endDate: competition.endDate,
-    duration: competition.duration,
-    rawStartDate: new Date(competition.startDate).toISOString(),
-    rawEndDate: new Date(competition.endDate).toISOString()
-  });
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-700 border-green-200';
@@ -51,7 +40,6 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
 
   const formatDateTimeCorrect = (dateString: string, label: string) => {
     if (!dateString) {
-      console.warn(`⚠️ Data vazia para ${label}`);
       return 'Data inválida';
     }
 
@@ -60,16 +48,9 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
       const dateFormatted = formatBrasiliaDate(date, false);
       const timeFormatted = formatTimePreview(dateString);
       
-      const result = `${dateFormatted}, ${timeFormatted}`;
-      console.log(`📅 ${label}:`, {
-        input: dateString,
-        parsed: date.toISOString(),
-        formatted: result
-      });
-      
-      return result;
+      return `${dateFormatted}, ${timeFormatted}`;
     } catch (error) {
-      console.error(`❌ Erro ao formatar ${label}:`, error);
+      console.error(`Erro ao formatar ${label}:`, error);
       return 'Data inválida';
     }
   };
@@ -77,7 +58,6 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
   const calculateAndDisplayDuration = () => {
     // Priorizar duração fornecida
     if (competition.duration && competition.duration > 0) {
-      console.log('⏱️ Usando duração fornecida:', competition.duration);
       return `${competition.duration}h`;
     }
     
@@ -89,21 +69,13 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
         const diffMs = end.getTime() - start.getTime();
         const hours = Math.round(diffMs / (1000 * 60 * 60));
         
-        console.log('🧮 Duração calculada:', {
-          start: start.toISOString(),
-          end: end.toISOString(),
-          diffMs,
-          hours
-        });
-        
         return `${hours}h`;
       } catch (error) {
-        console.error('❌ Erro ao calcular duração:', error);
+        console.error('Erro ao calcular duração:', error);
         return 'N/A';
       }
     }
     
-    console.warn('⚠️ Não foi possível determinar duração');
     return 'N/A';
   };
 
