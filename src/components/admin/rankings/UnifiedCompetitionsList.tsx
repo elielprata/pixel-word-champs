@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,9 @@ import { Calendar, Users, Edit, Trash2, Clock } from 'lucide-react';
 import { UnifiedCompetition } from '@/types/competition';
 import { formatBrasiliaDate, formatTimePreview } from '@/utils/brasiliaTimeUnified';
 import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
+import { DeleteCompetitionModal } from './DeleteCompetitionModal';
+import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
+import { useToast } from "@/hooks/use-toast";
 
 interface UnifiedCompetitionsListProps {
   competitions: UnifiedCompetition[];
@@ -21,8 +24,50 @@ export const UnifiedCompetitionsList: React.FC<UnifiedCompetitionsListProps> = (
   onEdit,
   onDelete
 }) => {
+  const { toast } = useToast();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [competitionToDelete, setCompetitionToDelete] = useState<UnifiedCompetition | null>(null);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+
   // Atualizar status automaticamente
   useCompetitionStatusUpdater(competitions);
+
+  const handleDeleteClick = (competition: UnifiedCompetition) => {
+    setCompetitionToDelete(competition);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!competitionToDelete) return;
+
+    setIsDeletingId(competitionToDelete.id);
+
+    try {
+      const result = await unifiedCompetitionService.deleteCompetition(competitionToDelete.id);
+      
+      if (result.success) {
+        toast({
+          title: "Competição excluída",
+          description: `A competição "${competitionToDelete.title}" foi excluída com sucesso.`,
+        });
+        
+        setDeleteModalOpen(false);
+        setCompetitionToDelete(null);
+        onDelete(competitionToDelete);
+      } else {
+        throw new Error(result.error || 'Erro ao excluir competição');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir competição:', error);
+      toast({
+        title: "Erro ao excluir",
+        description: error instanceof Error ? error.message : "Não foi possível excluir a competição. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingId(null);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,79 +129,94 @@ export const UnifiedCompetitionsList: React.FC<UnifiedCompetitionsListProps> = (
   }
 
   return (
-    <div className="space-y-4">
-      {competitions.map((competition) => (
-        <Card key={competition.id} className="hover:shadow-md transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h4 className="font-semibold text-slate-800">{competition.title}</h4>
-                  <Badge className={getStatusColor(competition.status)}>
-                    {getStatusText(competition.status)}
-                  </Badge>
-                  {competition.theme && (
-                    <Badge variant="outline" className="text-xs">
-                      {competition.theme}
+    <>
+      <div className="space-y-4">
+        {competitions.map((competition) => (
+          <Card key={competition.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h4 className="font-semibold text-slate-800">{competition.title}</h4>
+                    <Badge className={getStatusColor(competition.status)}>
+                      {getStatusText(competition.status)}
                     </Badge>
-                  )}
-                </div>
-                
-                <p className="text-sm text-slate-600 mb-3">{competition.description}</p>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-slate-500" />
-                    <span>Início: {formatDateTime(competition.startDate, false)}</span>
+                    {competition.theme && (
+                      <Badge variant="outline" className="text-xs">
+                        {competition.theme}
+                      </Badge>
+                    )}
                   </div>
                   
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-slate-500" />
-                    <span>Fim: {formatDateTime(competition.endDate, true)}</span>
-                  </div>
+                  <p className="text-sm text-slate-600 mb-3">{competition.description}</p>
                   
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3 text-blue-600" />
-                    <span className="text-blue-600 font-medium">
-                      Duração: {formatDuration(competition.startDate, competition.endDate, competition.duration)}
-                    </span>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3 text-slate-500" />
+                      <span>Início: {formatDateTime(competition.startDate, false)}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3 text-slate-500" />
+                      <span>Fim: {formatDateTime(competition.endDate, true)}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-blue-600" />
+                      <span className="text-blue-600 font-medium">
+                        Duração: {formatDuration(competition.startDate, competition.endDate, competition.duration)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                      <Users className="h-3 w-3 text-green-600" />
+                      <span className="text-green-600 font-medium">Participação Livre</span>
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3 text-green-600" />
-                    <span className="text-green-600 font-medium">Participação Livre</span>
-                  </div>
-                </div>
 
-                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-                  <span className="text-blue-700">📝 Competição diária - Sem premiação em dinheiro</span>
+                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+                    <span className="text-blue-700">📝 Competição diária - Sem premiação em dinheiro</span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 ml-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEdit(competition)}
+                    className="h-8 w-8 p-0 hover:bg-blue-50"
+                    title="Editar competição"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteClick(competition)}
+                    disabled={isDeletingId === competition.id}
+                    className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                    title="Excluir competição"
+                  >
+                    {isDeletingId === competition.id ? (
+                      <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
+                    ) : (
+                      <Trash2 className="h-3 w-3" />
+                    )}
+                  </Button>
                 </div>
               </div>
-              
-              <div className="flex gap-2 ml-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEdit(competition)}
-                  className="h-8 w-8 p-0 hover:bg-blue-50"
-                  title="Editar competição"
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onDelete(competition)}
-                  className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                  title="Excluir competição"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <DeleteCompetitionModal
+        open={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        competition={competitionToDelete}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeletingId === competitionToDelete?.id}
+      />
+    </>
   );
 };
