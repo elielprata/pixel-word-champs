@@ -12,13 +12,23 @@ import { useToast } from "@/hooks/use-toast";
 interface DailyCompetitionsViewProps {
   competitions: UnifiedCompetition[];
   isLoading: boolean;
+  onRefresh?: () => void;
 }
 
-export const DailyCompetitionsView = ({ competitions, isLoading }: DailyCompetitionsViewProps) => {
+export const DailyCompetitionsView = ({ competitions, isLoading, onRefresh }: DailyCompetitionsViewProps) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<UnifiedCompetition | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [localCompetitions, setLocalCompetitions] = useState<UnifiedCompetition[]>([]);
   const { toast } = useToast();
+
+  // Use local competitions if available, otherwise use props
+  const displayedCompetitions = localCompetitions.length > 0 ? localCompetitions : competitions;
+
+  // Update local competitions when props change
+  React.useEffect(() => {
+    setLocalCompetitions(competitions);
+  }, [competitions]);
 
   const handleEdit = (competition: UnifiedCompetition) => {
     console.log('🔧 Abrindo modal de edição para:', competition.id);
@@ -28,10 +38,22 @@ export const DailyCompetitionsView = ({ competitions, isLoading }: DailyCompetit
 
   const handleDelete = (competition: UnifiedCompetition) => {
     console.log('✅ Competição excluída:', competition.id);
+    
+    // Optimistic update: remove immediately from local state
+    setLocalCompetitions(prev => prev.filter(comp => comp.id !== competition.id));
+    
     toast({
       title: "Competição removida",
-      description: "A lista será atualizada automaticamente.",
+      description: "A competição foi excluída com sucesso.",
     });
+
+    // Optionally refresh from server to ensure consistency
+    if (onRefresh) {
+      // Small delay to allow user to see the immediate update
+      setTimeout(() => {
+        onRefresh();
+      }, 1000);
+    }
   };
 
   const handleCompetitionCreated = () => {
@@ -40,6 +62,11 @@ export const DailyCompetitionsView = ({ competitions, isLoading }: DailyCompetit
       title: "Competição criada",
       description: "A nova competição foi criada com sucesso.",
     });
+    
+    // Refresh data after creation
+    if (onRefresh) {
+      onRefresh();
+    }
   };
 
   const handleCompetitionUpdated = () => {
@@ -49,9 +76,14 @@ export const DailyCompetitionsView = ({ competitions, isLoading }: DailyCompetit
       title: "Competição atualizada",
       description: "A competição foi atualizada com sucesso.",
     });
+    
+    // Refresh data after update
+    if (onRefresh) {
+      onRefresh();
+    }
   };
 
-  // Converter UnifiedCompetition para BaseCompetition
+  // Convert UnifiedCompetition para BaseCompetition
   const mapToBaseCompetition = (unified: UnifiedCompetition) => {
     return {
       id: unified.id,
@@ -94,7 +126,7 @@ export const DailyCompetitionsView = ({ competitions, isLoading }: DailyCompetit
 
       {/* Lista de Competições */}
       <UnifiedCompetitionsList
-        competitions={competitions}
+        competitions={displayedCompetitions}
         isLoading={isLoading}
         onEdit={handleEdit}
         onDelete={handleDelete}

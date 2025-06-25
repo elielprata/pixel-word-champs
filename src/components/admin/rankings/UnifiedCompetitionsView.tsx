@@ -1,17 +1,20 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Trophy } from 'lucide-react';
 import { DailyCompetitionsView } from './DailyCompetitionsView';
 import { WeeklyRankingView } from './WeeklyRankingView';
 import { useUnifiedCompetitions } from '@/hooks/useUnifiedCompetitions';
+
 export const UnifiedCompetitionsView = () => {
   const {
     competitions,
-    isLoading
+    isLoading,
+    refetch
   } = useUnifiedCompetitions();
-  return <div className="space-y-6">
-      
 
+  return (
+    <div className="space-y-6">
       <Tabs defaultValue="daily" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="daily" className="flex items-center gap-2">
@@ -25,12 +28,17 @@ export const UnifiedCompetitionsView = () => {
         </TabsList>
 
         <TabsContent value="daily" className="space-y-6">
-          <DailyCompetitionsView competitions={competitions} isLoading={isLoading} />
+          <DailyCompetitionsView 
+            competitions={competitions} 
+            isLoading={isLoading}
+            onRefresh={refetch}
+          />
         </TabsContent>
 
         <TabsContent value="weekly-ranking" className="space-y-6">
           <WeeklyRankingView />
         </TabsContent>
       </Tabs>
-    </div>;
+    </div>
+  );
 };
