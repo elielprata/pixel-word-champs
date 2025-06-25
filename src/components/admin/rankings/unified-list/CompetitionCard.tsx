@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users, Edit, Trash2, Clock } from 'lucide-react';
 import { UnifiedCompetition } from '@/types/competition';
-import { formatDatePreview, formatTimePreview } from '@/utils/brasiliaTimeUnified';
+import { formatDateForDisplay, formatTimeForDisplay } from '@/utils/brasiliaTimeUnified';
 
 interface CompetitionCardProps {
   competition: UnifiedCompetition;
@@ -38,14 +38,14 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
     }
   };
 
-  const formatDateTimeDisplay = (dateString: string, label: string) => {
-    if (!dateString) {
+  const formatDateTimeDisplay = (utcDateString: string, label: string) => {
+    if (!utcDateString) {
       return 'Data inválida';
     }
 
     try {
-      const dateFormatted = formatDatePreview(dateString);
-      const timeFormatted = formatTimePreview(dateString);
+      const dateFormatted = formatDateForDisplay(utcDateString);
+      const timeFormatted = formatTimeForDisplay(utcDateString);
       
       return `${dateFormatted}, ${timeFormatted}`;
     } catch (error) {
@@ -60,7 +60,7 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
       return `${competition.duration}h`;
     }
     
-    // Calcular duração baseada nas datas
+    // Calcular duração baseada nas datas UTC
     if (competition.startDate && competition.endDate) {
       try {
         const start = new Date(competition.startDate);
@@ -122,7 +122,7 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
             </div>
 
             <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-              <span className="text-blue-700">📝 Competição diária - Sem premiação em dinheiro</span>
+              <span className="text-blue-700">📝 Competição diária - Horários em Brasília</span>
             </div>
           </div>
           

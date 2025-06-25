@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { UnifiedCompetition, CompetitionFormData, CompetitionApiResponse } from '@/types/competition';
 import { secureLogger } from '@/utils/secureLogger';
-import { createBrasiliaTimestamp, calculateEndDateWithDuration } from '@/utils/brasiliaTimeUnified';
+import { convertBrasiliaInputToUTC, calculateEndDateWithDuration } from '@/utils/brasiliaTimeUnified';
 
 class UnifiedCompetitionService {
   async createCompetition(formData: CompetitionFormData): Promise<CompetitionApiResponse<UnifiedCompetition>> {
@@ -18,18 +18,16 @@ class UnifiedCompetitionService {
         throw new Error('Usuário não autenticado');
       }
 
-      // Calcular data de fim baseada na duração
-      const startDateBrasilia = formData.startDate;
-      const endDateBrasilia = formData.duration 
-        ? calculateEndDateWithDuration(formData.startDate, formData.duration)
-        : createBrasiliaTimestamp(formData.startDate, true);
+      // CONVERSÃO ÚNICA: Brasília -> UTC
+      const startDateUTC = convertBrasiliaInputToUTC(formData.startDate);
+      const endDateUTC = calculateEndDateWithDuration(startDateUTC, formData.duration);
 
       const competitionData = {
         title: formData.title,
         description: formData.description,
         competition_type: 'challenge',
-        start_date: startDateBrasilia,
-        end_date: endDateBrasilia,
+        start_date: startDateUTC,  // Salvar em UTC
+        end_date: endDateUTC,     // Salvar em UTC
         max_participants: null,
         prize_pool: 0,
         theme: 'Geral',
@@ -37,8 +35,9 @@ class UnifiedCompetitionService {
         status: 'active'
       };
 
-      secureLogger.debug('Dados preparados para inserção', { 
-        competitionData,
+      secureLogger.debug('Dados UTC para inserção', { 
+        startUTC: startDateUTC,
+        endUTC: endDateUTC,
         originalDuration: formData.duration
       }, 'UNIFIED_COMPETITION_SERVICE');
 
@@ -109,13 +108,13 @@ class UnifiedCompetitionService {
         updated_at: new Date().toISOString()
       };
 
-      // Recalcular data de fim se duração foi alterada
+      // Recalcular datas se fornecidas
       if (updateData.startDate && updateData.duration) {
-        dataToUpdate.start_date = updateData.startDate;
-        dataToUpdate.end_date = calculateEndDateWithDuration(updateData.startDate, updateData.duration);
-      } else if (updateData.startDate) {
-        dataToUpdate.start_date = updateData.startDate;
-        dataToUpdate.end_date = createBrasiliaTimestamp(updateData.startDate, true);
+        const startDateUTC = convertBrasiliaInputToUTC(updateData.startDate);
+        const endDateUTC = calculateEndDateWithDuration(startDateUTC, updateData.duration);
+        
+        dataToUpdate.start_date = startDateUTC;
+        dataToUpdate.end_date = endDateUTC;
       }
 
       const { data, error } = await supabase
@@ -163,7 +162,7 @@ class UnifiedCompetitionService {
   }
 
   private mapToUnifiedCompetition(data: any, duration?: number): UnifiedCompetition {
-    // Calcular duração baseada nas datas se não fornecida
+    // Calcular duração baseada nas datas UTC se não fornecida
     let calculatedDuration = duration;
     if (!calculatedDuration && data.start_date && data.end_date) {
       const start = new Date(data.start_date);
@@ -177,8 +176,8 @@ class UnifiedCompetitionService {
       description: data.description || '',
       type: 'daily' as const,
       status: data.status,
-      startDate: data.start_date,
-      endDate: data.end_date,
+      startDate: data.start_date,  // Manter UTC para processamento
+      endDate: data.end_date,      // Manter UTC para processamento
       duration: calculatedDuration,
       maxParticipants: 0,
       theme: data.theme,

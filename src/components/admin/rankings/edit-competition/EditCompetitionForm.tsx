@@ -9,6 +9,7 @@ import { unifiedCompetitionService } from '@/services/unifiedCompetitionService'
 import { CompetitionEditActions } from './CompetitionEditActions';
 import { PrizeConfigurationSection } from '../competition-form/PrizeConfigurationSection';
 import { usePaymentData } from '@/hooks/usePaymentData';
+import { formatUTCForDateTimeLocal } from '@/utils/brasiliaTimeUnified';
 
 interface BaseCompetition {
   id: string;
@@ -57,15 +58,15 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         originalStatus: competition.status
       });
       
-      // Extrair apenas a data (YYYY-MM-DD) dos timestamps
-      const startDate = competition.start_date.split('T')[0];
-      const endDate = competition.end_date.split('T')[0];
+      // Converter UTC para datetime-local (Brasília)
+      const startDateLocal = formatUTCForDateTimeLocal(competition.start_date);
+      const endDateLocal = formatUTCForDateTimeLocal(competition.end_date);
       
       setFormData({
         title: competition.title,
         description: competition.description || '',
-        startDate: startDate,
-        endDate: endDate
+        startDate: startDateLocal,
+        endDate: endDateLocal
       });
     }
   }, [competition]);
@@ -91,8 +92,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         const updateData = {
           title: formData.title,
           description: formData.description,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
+          startDate: formData.startDate,  // Será convertido para UTC no serviço
           maxParticipants: 0
         };
 
@@ -101,7 +101,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         if (response.success) {
           toast({
             title: "Sucesso",
-            description: "Competição diária atualizada avec sucesso"
+            description: "Competição diária atualizada com sucesso"
           });
           if (onCompetitionUpdated) {
             onCompetitionUpdated();
@@ -159,25 +159,34 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="startDate">Data de Início</Label>
+            <Label htmlFor="startDate">Data e Hora de Início</Label>
             <Input
               id="startDate"
-              type="date"
+              type="datetime-local"
               value={formData.startDate}
               onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
               required
             />
+            <p className="text-xs text-blue-600 mt-1">
+              🇧🇷 Horário de Brasília
+            </p>
           </div>
 
           <div>
-            <Label htmlFor="endDate">Data de Fim</Label>
+            <Label htmlFor="endDate">Data e Hora de Fim</Label>
             <Input
               id="endDate"
-              type="date"
+              type="datetime-local"
               value={formData.endDate}
               onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
               required
+              disabled={isDailyCompetition}
             />
+            {isDailyCompetition && (
+              <p className="text-xs text-green-600 mt-1">
+                ⚙️ Calculado automaticamente baseado na duração
+              </p>
+            )}
           </div>
         </div>
 
@@ -187,6 +196,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
             <div className="text-sm text-green-700 mt-1 space-y-1">
               <p>💰 Premiação: Sem prêmios em dinheiro</p>
               <p>🎯 Participação: Livre (todos os usuários podem participar)</p>
+              <p>⏰ Horários: Exibição em Brasília, processamento em UTC</p>
               <p className="text-xs text-green-600 mt-1">
                 💡 Competições diárias focam no engajamento dos usuários
               </p>

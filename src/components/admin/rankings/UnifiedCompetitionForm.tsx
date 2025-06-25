@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Users, Settings, Save, X, Clock } from 'lucide-react';
+import { Save, X, Clock } from 'lucide-react';
 import { useUnifiedCompetitionForm } from '@/hooks/useUnifiedCompetitionForm';
-import { formatTimePreview, validateCompetitionDuration } from '@/utils/brasiliaTimeUnified';
+import { formatTimeForDisplay, validateCompetitionDuration, getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 interface UnifiedCompetitionFormProps {
   onClose: () => void;
@@ -33,21 +33,36 @@ export const UnifiedCompetitionForm = ({
     submitForm(onSuccess);
   };
 
-  // Calcular preview dos horários
+  // Preview dos horários calculados
   const getTimePreview = () => {
     if (!formData.startDate || !formData.duration) return null;
     
-    const startTime = formatTimePreview(formData.startDate);
-    const endTime = formatTimePreview(formData.endDate);
-    
-    return { startTime, endTime };
+    // Simular conversão para preview (sem afetar dados reais)
+    try {
+      const startInput = new Date(formData.startDate + ':00');
+      const endInput = new Date(startInput.getTime() + (formData.duration * 60 * 60 * 1000));
+      
+      const startTime = startInput.toTimeString().slice(0, 5);
+      const endTime = endInput.toTimeString().slice(0, 5);
+      
+      return { startTime, endTime };
+    } catch {
+      return null;
+    }
   };
 
-  // Validar duração em tempo real
+  // Validação em tempo real
   const getDurationValidation = () => {
     if (!formData.startDate || !formData.duration) return null;
     
-    return validateCompetitionDuration(formData.startDate, formData.duration);
+    // Simular conversão UTC para validação
+    try {
+      const brasiliaDate = new Date(formData.startDate + ':00');
+      const utcDate = new Date(brasiliaDate.getTime() + (3 * 60 * 60 * 1000));
+      return validateCompetitionDuration(utcDate.toISOString(), formData.duration);
+    } catch {
+      return { isValid: false, error: 'Data inválida' };
+    }
   };
 
   const timePreview = getTimePreview();
@@ -55,13 +70,17 @@ export const UnifiedCompetitionForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Configurações Básicas */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
+            <Clock className="h-4 w-4" />
             Criar Competição Diária
           </CardTitle>
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-700">
+              ⏰ Horário atual em Brasília: <strong>{getCurrentBrasiliaTime()}</strong>
+            </p>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
@@ -99,6 +118,9 @@ export const UnifiedCompetitionForm = ({
                 onChange={(e) => updateField('startDate', e.target.value)}
                 required
               />
+              <p className="text-xs text-blue-600">
+                🇧🇷 Horário de Brasília
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -125,15 +147,15 @@ export const UnifiedCompetitionForm = ({
 
           {/* Preview dos Horários */}
           {timePreview && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-800">Preview dos Horários</span>
+                <Clock className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800">Preview - Horário de Brasília</span>
               </div>
-              <div className="text-sm text-blue-700 space-y-1">
+              <div className="text-sm text-green-700 space-y-1">
                 <p>🟢 <strong>Início:</strong> {timePreview.startTime}</p>
                 <p>🔴 <strong>Término:</strong> {timePreview.endTime}</p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-green-600">
                   ⏰ Duração: {formData.duration} {formData.duration === 1 ? 'hora' : 'horas'}
                 </p>
               </div>
