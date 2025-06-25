@@ -4,6 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Link, Trophy, Calendar, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { competitionStatusService } from '@/services/competitionStatusService';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
+
 interface WeeklyCompetition {
   id: string;
   title: string;
@@ -32,13 +34,8 @@ export const WeeklyTournamentSection = ({
     return null;
   }
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+    // Usar função padronizada - UTC para Brasília apenas na exibição
+    return formatBrasiliaDate(dateString, false);
   };
   const getStatusText = (competition: WeeklyCompetition) => {
     const actualStatus = competitionStatusService.calculateCorrectStatus({

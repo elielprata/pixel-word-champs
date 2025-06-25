@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { competitionStatusService } from '@/services/competitionStatusService';
 import { rankingQueryService } from '@/services/rankingQueryService';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 import {
   Table,
   TableBody,
@@ -179,16 +179,9 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
   };
 
   const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
-    const date = new Date(dateString);
-    const dateFormatted = date.toLocaleDateString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-    
+    // Usar função padronizada - UTC para Brasília apenas na exibição
+    const dateFormatted = formatBrasiliaDate(dateString, false);
     const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
-    
     return `${dateFormatted}, ${timeFormatted}`;
   };
 
