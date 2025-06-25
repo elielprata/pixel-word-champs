@@ -73,7 +73,7 @@ export class CompetitionTimeValidationService {
       const { data: updatedCompetition, error: updateError } = await supabase
         .from('custom_competitions')
         .update({
-          updated_at: createBrasiliaTimestamp(getCurrentBrasiliaDate().toString())
+          updated_at: createBrasiliaTimestamp()
         })
         .eq('id', competitionId)
         .select()

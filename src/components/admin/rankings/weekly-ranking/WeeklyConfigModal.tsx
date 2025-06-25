@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -87,7 +86,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
         custom_end_date: null
       });
     } else {
-      if (!customStartDate || !customEndDate || !validateBrasiliaDateRange(customStartDate, customEndDate)) {
+      if (!customStartDate || !customEndDate || !validateBrasiliaDateRange(customStartDate, customEndDate).isValid) {
         console.warn('⚠️ Datas inválidas:', { customStartDate, customEndDate });
         return;
       }
@@ -113,13 +112,12 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
   const getPreview = () => {
     try {
-      return formatWeeklyPeriodPreview(
-        configType,
-        customStartDate,
-        customEndDate,
-        startDayOfWeek,
-        durationDays
-      );
+      if (configType === 'custom') {
+        return formatWeeklyPeriodPreview(customStartDate, customEndDate);
+      } else {
+        const dayName = DAYS_OF_WEEK.find(d => d.value === startDayOfWeek)?.label || 'Domingo';
+        return `Período semanal iniciando em ${dayName} por ${durationDays} dias`;
+      }
     } catch (err) {
       console.error('❌ Erro ao gerar preview:', err);
       return 'Erro ao gerar preview';
@@ -130,7 +128,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
     if (configType === 'weekly') {
       return true;
     }
-    return customStartDate && customEndDate && validateBrasiliaDateRange(customStartDate, customEndDate);
+    return customStartDate && customEndDate && validateBrasiliaDateRange(customStartDate, customEndDate).isValid;
   };
 
   // Renderizar loading
@@ -249,7 +247,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
                 />
               </div>
 
-              {customStartDate && customEndDate && !validateBrasiliaDateRange(customStartDate, customEndDate) && (
+              {customStartDate && customEndDate && !validateBrasiliaDateRange(customStartDate, customEndDate).isValid && (
                 <p className="text-sm text-red-600">
                   A data de fim deve ser posterior à data de início.
                 </p>

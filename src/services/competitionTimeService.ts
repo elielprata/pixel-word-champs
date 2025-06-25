@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getCurrentBrasiliaDate, calculateCompetitionStatus, calculateTimeRemaining, createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
+import { getCurrentBrasiliaDate, calculateCompetitionStatus, getCompetitionTimeRemaining, createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 import { logger, structuredLog } from '@/utils/logger';
 
 class CompetitionTimeService {
@@ -11,7 +11,7 @@ class CompetitionTimeService {
     try {
       logger.debug('Iniciando atualização de status das competições (BRASÍLIA)', undefined, 'COMPETITION_TIME_SERVICE');
       
-      const now = createBrasiliaTimestamp(getCurrentBrasiliaDate().toString());
+      const now = createBrasiliaTimestamp();
       
       const { data: competitions, error } = await supabase
         .from('custom_competitions')
@@ -81,7 +81,7 @@ class CompetitionTimeService {
    * Obtém o tempo restante para uma competição em segundos (BRASÍLIA)
    */
   getTimeRemaining(endDate: string): number {
-    const timeRemaining = calculateTimeRemaining(endDate);
+    const timeRemaining = getCompetitionTimeRemaining(endDate);
     logger.debug('Tempo restante calculado (BRASÍLIA)', { endDate, timeRemaining }, 'COMPETITION_TIME_SERVICE');
     return timeRemaining;
   }
@@ -114,7 +114,7 @@ class CompetitionTimeService {
           .from('custom_competitions')
           .update({ 
             status: correctStatus,
-            updated_at: createBrasiliaTimestamp(getCurrentBrasiliaDate().toString())
+            updated_at: createBrasiliaTimestamp()
           })
           .eq('id', competitionId);
 

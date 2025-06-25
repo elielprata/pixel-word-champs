@@ -165,15 +165,17 @@ export const formatUTCForDateTimeLocal = (utcDateTime: string): string => {
 
 /**
  * ===========================================
- * FUNÇÕES UNIVERSAIS - PADRÃO PARA TODO O SISTEMA
+ * FUNÇÕES UNIVERSAIS - CORRIGIDAS PARA COMPATIBILIDADE
  * ===========================================
  */
 
 /**
- * Formatar data UTC para exibição Brasília - UNIVERSAL
+ * Formatar data UTC para exibição Brasília - ASSINATURA CORRIGIDA
  */
-export const formatBrasiliaDate = (date: Date | string, includeTime: boolean = true): string => {
+export const formatBrasiliaDate = (date: Date | string | null | undefined, includeTime: boolean = true): string => {
   try {
+    if (!date) return 'Data inválida';
+    
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     
     // Converter para Brasília (UTC-3) apenas para exibição
@@ -199,12 +201,19 @@ export const formatBrasiliaDate = (date: Date | string, includeTime: boolean = t
 };
 
 /**
- * Criar timestamp UTC para banco de dados - UNIVERSAL
+ * Criar timestamp UTC para banco de dados - ASSINATURA CORRIGIDA
  */
-export const createBrasiliaTimestamp = (date?: Date): string => {
+export const createBrasiliaTimestamp = (date?: Date | string | null): string => {
   // SEMPRE retornar UTC puro - sem conversões
-  const targetDate = date || new Date();
-  return targetDate.toISOString();
+  if (!date) {
+    return new Date().toISOString();
+  }
+  
+  if (typeof date === 'string') {
+    return new Date(date).toISOString();
+  }
+  
+  return date.toISOString();
 };
 
 /**
@@ -255,7 +264,7 @@ export const formatDateInputToDisplay = (dateString: string): string => {
 };
 
 /**
- * Preview de período semanal - UNIVERSAL
+ * Preview de período semanal - ASSINATURA CORRIGIDA
  */
 export const formatWeeklyPeriodPreview = (startDate: string, endDate: string): string => {
   if (!startDate || !endDate) return '';
@@ -293,9 +302,30 @@ export const validateBrasiliaDateRange = (startDate: string, endDate: string): {
 };
 
 /**
- * Calcular tempo restante - UNIVERSAL
+ * Calcular tempo restante - ASSINATURA CORRIGIDA PARA RETORNAR NUMBER
  */
-export const calculateTimeRemaining = (endDateUTC: string): string => {
+export const calculateTimeRemaining = (endDateUTC: string): number => {
+  if (!endDateUTC) return 0;
+  
+  try {
+    const now = new Date();
+    const end = new Date(endDateUTC);
+    const diff = end.getTime() - now.getTime();
+    
+    if (diff <= 0) return 0;
+    
+    // Retornar diferença em milissegundos
+    return diff;
+  } catch (error) {
+    console.error('Erro ao calcular tempo restante:', error);
+    return 0;
+  }
+};
+
+/**
+ * Calcular tempo restante formatado - NOVA FUNÇÃO PARA STRING
+ */
+export const calculateTimeRemainingFormatted = (endDateUTC: string): string => {
   if (!endDateUTC) return '';
   
   try {
@@ -356,5 +386,12 @@ export const formatTimePreview = formatTimeForDisplay;
 export const formatDatePreview = formatDateForDisplay;
 export const isCompetitionActive = (start: string, end: string) => calculateCompetitionStatus(start, end) === 'active';
 
-// Aliases para compatibilidade
-export const formatDateInputToDisplay = formatDateInputToDisplay;
+// Funcões específicas para competições
+export const getCompetitionTimeRemaining = (endDate: string): number => {
+  const remaining = calculateTimeRemaining(endDate);
+  return Math.max(0, Math.floor(remaining / 1000)); // Retornar em segundos
+};
+
+export const getCompetitionTimeRemainingText = (endDate: string): string => {
+  return calculateTimeRemainingFormatted(endDate);
+};
