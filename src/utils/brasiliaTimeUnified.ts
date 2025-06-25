@@ -1,4 +1,3 @@
-
 /**
  * UTILITÁRIO UNIFICADO DE TEMPO - VERSÃO PADRONIZAÇÃO UNIVERSAL
  * PRINCÍPIO DEFINITIVO: UTC para tudo, Brasília APENAS para exibição final
@@ -62,10 +61,11 @@ export const calculateEndDateWithDuration = (startDateTimeUTC: string, durationH
 };
 
 /**
- * Valida duração sem conversões de timezone
+ * Valida duração SEM conversões de timezone - CORRIGIDO
+ * TODOS OS INPUTS JÁ ESTÃO EM HORÁRIO DE BRASÍLIA
  */
-export const validateCompetitionDuration = (startDateTimeUTC: string, durationHours: number): { isValid: boolean; error?: string } => {
-  if (!startDateTimeUTC) {
+export const validateCompetitionDuration = (startDateTimeBrasilia: string, durationHours: number): { isValid: boolean; error?: string } => {
+  if (!startDateTimeBrasilia) {
     return { isValid: false, error: 'Data de início é obrigatória' };
   }
   
@@ -77,21 +77,31 @@ export const validateCompetitionDuration = (startDateTimeUTC: string, durationHo
     return { isValid: false, error: 'Duração máxima é de 12 horas' };
   }
   
-  const startDate = new Date(startDateTimeUTC);
-  const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
-  
-  const sameDayLimit = new Date(startDate);
-  sameDayLimit.setUTCHours(23, 59, 59, 999);
-  
-  if (endDate > sameDayLimit) {
-    const maxDurationHours = Math.floor((sameDayLimit.getTime() - startDate.getTime()) / (60 * 60 * 1000));
-    return { 
-      isValid: false, 
-      error: `Duração máxima para este horário é de ${maxDurationHours} horas (até 23:59:59)` 
-    };
+  try {
+    // Tratar input como já sendo horário de Brasília
+    const startDate = new Date(startDateTimeBrasilia);
+    const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
+    
+    // Criar limite do mesmo dia (23:59:59) em horário de Brasília
+    const sameDayLimit = new Date(startDate);
+    sameDayLimit.setHours(23, 59, 59, 999); // setHours ao invés de setUTCHours
+    
+    if (endDate > sameDayLimit) {
+      const maxEndTime = new Date(sameDayLimit);
+      const maxDurationMs = maxEndTime.getTime() - startDate.getTime();
+      const maxDurationHours = Math.floor(maxDurationMs / (60 * 60 * 1000));
+      
+      return { 
+        isValid: false, 
+        error: `Duração máxima para este horário é de ${maxDurationHours} horas (até 23:59:59 do mesmo dia)` 
+      };
+    }
+    
+    return { isValid: true };
+  } catch (error) {
+    console.error('Erro na validação de duração:', error);
+    return { isValid: false, error: 'Erro na validação da duração' };
   }
-  
-  return { isValid: true };
 };
 
 /**
