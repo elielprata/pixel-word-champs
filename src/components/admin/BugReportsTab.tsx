@@ -157,139 +157,159 @@ export const BugReportsTab = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Bug className="h-5 w-5" />
-        <h2 className="text-xl font-semibold">
-          {isAdmin ? 'Gerenciar Reports de Bugs' : 'Meus Reports de Bugs'}
-        </h2>
-      </div>
-
-      {/* Estatísticas simples (apenas para admins) */}
-      {isAdmin && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-3">
-              <div className="text-2xl font-bold text-blue-600">{reports.length}</div>
-              <div className="text-sm text-gray-600">Total de Reports</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3">
-              <div className="text-2xl font-bold text-red-600">
-                {reports.filter(r => r.status === 'pending').length}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header Section */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-br from-orange-500 to-red-600 p-3 rounded-lg shadow-md">
+                <Bug className="h-7 w-7 text-white" />
               </div>
-              <div className="text-sm text-gray-600">Pendentes</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3">
-              <div className="text-2xl font-bold text-green-600">
-                {reports.filter(r => r.status === 'resolved').length}
-              </div>
-              <div className="text-sm text-gray-600">Resolvidos</div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Filtros (apenas para admins) */}
-      {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Filtros
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="all">Todos</option>
-                  <option value="pending">Pendentes</option>
-                  <option value="resolved">Resolvidos</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label>Prioridade</Label>
-                <select
-                  value={priorityFilter}
-                  onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="all">Todas</option>
-                  <option value="high">Alta</option>
-                  <option value="medium">Média</option>
-                  <option value="low">Baixa</option>
-                </select>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  {isAdmin ? 'Gerenciar Reports de Bugs' : 'Meus Reports de Bugs'}
+                </h1>
+                <p className="text-slate-600 mt-1 text-sm">
+                  {isAdmin ? 'Visualize e gerencie todos os reports de bugs da plataforma' : 'Acompanhe o status dos seus reports enviados'}
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Lista de reports */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">
-              {isAdmin ? 'Reports de Bugs Recebidos' : 'Meus Reports de Bugs'}
-            </CardTitle>
-            <Button variant="outline" onClick={loadReports} disabled={isLoading}>
-              {isLoading ? 'Carregando...' : 'Atualizar'}
-            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {reports.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">Nenhum report de bug encontrado</p>
-          ) : (
-            <div className="space-y-4">
-              {reports.map((report) => (
-                <div key={report.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        {getStatusIcon(report.status)}
-                        <h3 className="font-semibold">{report.subject}</h3>
-                        <Badge className={getPriorityColor(report.priority)}>
-                          {report.priority === 'high' ? 'Alta' : report.priority === 'medium' ? 'Média' : 'Baixa'}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 mb-2">{report.message}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        {isAdmin && <span>Por: {report.username || 'Usuário'}</span>}
-                        <span>Criado: {formatBrasiliaDate(new Date(report.created_at))}</span>
-                        <span>Atualizado: {formatBrasiliaDate(new Date(report.updated_at))}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={getStatusColor(report.status)}>
-                        {report.status === 'resolved' ? 'Resolvido' : 'Pendente'}
-                      </Badge>
-                      {isAdmin && report.status === 'pending' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => resolveReport(report.id)}
-                        >
-                          Marcar como Resolvido
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+        </div>
+
+        {/* Estatísticas simples (apenas para admins) */}
+        {isAdmin && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <Card className="border-slate-200 shadow-sm">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{reports.length}</div>
+                  <div className="text-sm text-slate-600">Total de Reports</div>
                 </div>
-              ))}
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">
+                    {reports.filter(r => r.status === 'pending').length}
+                  </div>
+                  <div className="text-sm text-slate-600">Pendentes</div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {reports.filter(r => r.status === 'resolved').length}
+                  </div>
+                  <div className="text-sm text-slate-600">Resolvidos</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Filtros (apenas para admins) */}
+          {isAdmin && (
+            <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Filter className="h-4 w-4 text-slate-600" />
+                <h3 className="text-lg font-semibold text-slate-900">Filtros</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                  >
+                    <option value="all">Todos</option>
+                    <option value="pending">Pendentes</option>
+                    <option value="resolved">Resolvidos</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Prioridade</Label>
+                  <select
+                    value={priorityFilter}
+                    onChange={(e) => setPriorityFilter(e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                  >
+                    <option value="all">Todas</option>
+                    <option value="high">Alta</option>
+                    <option value="medium">Média</option>
+                    <option value="low">Baixa</option>
+                  </select>
+                </div>
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="space-y-1">
+                <h3 className="text-xl font-semibold text-slate-900">
+                  {isAdmin ? 'Reports de Bugs Recebidos' : 'Meus Reports de Bugs'}
+                </h3>
+                <p className="text-slate-600 text-sm">
+                  {isAdmin ? 'Gerencie todos os reports enviados pelos usuários' : 'Acompanhe o status dos seus reports'}
+                </p>
+              </div>
+              <Button variant="outline" onClick={loadReports} disabled={isLoading}>
+                {isLoading ? 'Carregando...' : 'Atualizar'}
+              </Button>
+            </div>
+
+            {reports.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">Nenhum report de bug encontrado</p>
+            ) : (
+              <div className="space-y-4">
+                {reports.map((report) => (
+                  <div key={report.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          {getStatusIcon(report.status)}
+                          <h3 className="font-semibold">{report.subject}</h3>
+                          <Badge className={getPriorityColor(report.priority)}>
+                            {report.priority === 'high' ? 'Alta' : report.priority === 'medium' ? 'Média' : 'Baixa'}
+                          </Badge>
+                        </div>
+                        <p className="text-gray-600 mb-2">{report.message}</p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          {isAdmin && <span>Por: {report.username || 'Usuário'}</span>}
+                          <span>Criado: {formatBrasiliaDate(new Date(report.created_at))}</span>
+                          <span>Atualizado: {formatBrasiliaDate(new Date(report.updated_at))}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={getStatusColor(report.status)}>
+                          {report.status === 'resolved' ? 'Resolvido' : 'Pendente'}
+                        </Badge>
+                        {isAdmin && report.status === 'pending' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => resolveReport(report.id)}
+                          >
+                            Marcar como Resolvido
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
