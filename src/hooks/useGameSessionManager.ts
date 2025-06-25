@@ -102,6 +102,17 @@ export const useGameSessionManager = () => {
       return null;
     }
 
+    // VALIDAÇÃO CRÍTICA ANTES DE COMPLETAR
+    if (wordsFound.length < 5) {
+      logger.error(`❌ BLOQUEADO: Tentativa de completar sessão com apenas ${wordsFound.length} palavras`);
+      throw new Error(`Sessão não pode ser completada: apenas ${wordsFound.length} de 5 palavras encontradas`);
+    }
+
+    if (finalScore <= 0) {
+      logger.error('❌ BLOQUEADO: Tentativa de completar sessão com pontuação zero');
+      throw new Error('Sessão não pode ser completada com pontuação zero');
+    }
+
     try {
       // Buscar sessão incompleta existente
       const { data: existingSessions, error: fetchError } = await supabase
@@ -123,6 +134,8 @@ export const useGameSessionManager = () => {
         // Completar sessão existente
         sessionId = existingSessions[0].id;
         
+        logger.info(`🔄 Completando sessão existente: ${wordsFound.length} palavras, ${finalScore} pontos`);
+        
         const { data: session, error } = await supabase
           .from('game_sessions')
           .update({
@@ -141,9 +154,11 @@ export const useGameSessionManager = () => {
           throw error;
         }
 
-        logger.info('✅ Sessão existente completada', { sessionId, finalScore });
+        logger.info('✅ Sessão existente completada com validação', { sessionId, finalScore, wordsCount: wordsFound.length });
       } else {
         // Criar nova sessão já completada
+        logger.info(`🔄 Criando nova sessão completada: ${wordsFound.length} palavras, ${finalScore} pontos`);
+        
         const { data: session, error } = await supabase
           .from('game_sessions')
           .insert({
@@ -166,7 +181,7 @@ export const useGameSessionManager = () => {
         }
 
         sessionId = session.id;
-        logger.info('✅ Nova sessão completada criada', { sessionId, finalScore });
+        logger.info('✅ Nova sessão completada criada com validação', { sessionId, finalScore, wordsCount: wordsFound.length });
       }
 
       // Atualizar pontuação total do usuário

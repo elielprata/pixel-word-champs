@@ -44,33 +44,45 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
 
     const { currentLevelScore, isLevelCompleted } = calculateLevelData(foundWords);
 
-    if (!isLevelCompleted) {
-      logger.warn('⚠️ Tentativa de registrar nível incompleto - descartando');
+    // VALIDAÇÃO RIGOROSA: Verificar múltiplas condições antes de prosseguir
+    if (!isLevelCompleted || foundWords.length < TOTAL_WORDS_REQUIRED) {
+      logger.error(`❌ VALIDAÇÃO FALHOU: Apenas ${foundWords.length} de ${TOTAL_WORDS_REQUIRED} palavras encontradas`);
       await discardSession();
-      return;
+      throw new Error(`Sessão inválida: ${foundWords.length} palavras encontradas (mínimo: ${TOTAL_WORDS_REQUIRED})`);
+    }
+
+    if (currentLevelScore <= 0) {
+      logger.error('❌ VALIDAÇÃO FALHOU: Pontuação zero ou negativa');
+      await discardSession();
+      throw new Error('Sessão inválida: pontuação deve ser maior que zero');
     }
 
     setIsUpdatingScore(true);
     
     try {
-      logger.info(`🔄 Registrando conclusão do nível ${level}: +${currentLevelScore} pontos`);
+      logger.info(`🔄 Registrando conclusão VALIDADA do nível ${level}: ${foundWords.length} palavras, ${currentLevelScore} pontos`);
 
-      // Registrar sessão COMPLETADA no banco
+      // Registrar sessão COMPLETADA no banco com validações rigorosas
       const session = await completeGameSession(currentLevelScore, foundWords, timeElapsed);
 
       if (session) {
-        logger.info(`✅ Nível ${level} completado e registrado: ${currentLevelScore} pontos`);
+        logger.info(`✅ Nível ${level} completado e registrado: ${currentLevelScore} pontos, ${foundWords.length} palavras`);
+      } else {
+        throw new Error('Falha ao registrar sessão no banco de dados');
       }
 
     } catch (error) {
-      logger.error('❌ Erro ao registrar conclusão do nível:', error);
+      logger.error('❌ Erro crítico ao registrar conclusão do nível:', error);
+      // Em caso de erro, garantir que a sessão seja descartada
+      await discardSession();
+      throw error;
     } finally {
       setIsUpdatingScore(false);
     }
   }, [level, isUpdatingScore, calculateLevelData, completeGameSession, discardSession]);
 
   const discardIncompleteLevel = useCallback(async () => {
-    logger.info(`🗑️ Descartando nível ${level} incompleto - pontos não salvos`);
+    logger.info(`🗑️ Descartando nível ${level} incompleto - sessão não será salva`);
     await discardSession();
   }, [level, discardSession]);
 
