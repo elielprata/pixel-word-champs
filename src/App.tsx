@@ -2,10 +2,10 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster";
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { AuthProvider } from '@/components/auth/AuthProvider';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import AuthProvider from '@/components/auth/AuthProvider';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import HomeScreen from '@/components/HomeScreen';
 import RankingScreen from '@/components/RankingScreen';
 import ProfileScreen from '@/components/ProfileScreen';
@@ -41,11 +41,11 @@ const AppContent = () => {
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
-        return <HomeScreen onNavigate={navigateToScreen} />;
+        return <HomeScreen />;
       case 'ranking':
-        return <RankingScreen onBack={() => navigateToScreen('home')} />;
+        return <RankingScreen />;
       case 'profile':
-        return <ProfileScreen onBack={() => navigateToScreen('home')} />;
+        return <ProfileScreen />;
       case 'settings':
         return <SettingsScreen onBack={() => navigateToScreen('home')} />;
       case 'help':
@@ -59,25 +59,25 @@ const AppContent = () => {
       case 'deleteAccount':
         return <DeleteAccountScreen onBack={() => navigateToScreen('settings')} />;
       case 'game':
-        return <GameBoard onBack={() => navigateToScreen('home')} />;
+        return <GameBoard />;
       case 'challenge':
-        return <ChallengeScreen onBack={() => navigateToScreen('home')} />;
+        return <ChallengeScreen challengeId="1" onBack={() => navigateToScreen('home')} />;
       case 'fullRanking':
         return <FullRankingScreen onBack={() => navigateToScreen('ranking')} />;
       case 'challengeRanking':
-        return <ChallengeRankingScreen onBack={() => navigateToScreen('home')} />;
+        return <ChallengeRankingScreen challengeId="1" onBack={() => navigateToScreen('home')} />;
       case 'achievements':
-        return <AchievementsScreen onBack={() => navigateToScreen('profile')} />;
+        return <AchievementsScreen />;
       case 'invite':
-        return <InviteScreen onBack={() => navigateToScreen('profile')} />;
+        return <InviteScreen />;
       case 'pixConfig':
-        return <PixConfigScreen onBack={() => navigateToScreen('profile')} />;
+        return <PixConfigScreen />;
       case 'gameRules':
-        return <GameRulesScreen onBack={() => navigateToScreen('help')} />;
+        return <GameRulesScreen onBack={() => navigateToScreen('help')} onStartGame={() => navigateToScreen('game')} />;
       case 'admin':
         return <AdminPanel />;
       default:
-        return <HomeScreen onNavigate={navigateToScreen} />;
+        return <HomeScreen />;
     }
   };
 
