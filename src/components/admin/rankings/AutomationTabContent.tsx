@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +15,7 @@ import { getDefaultSettings } from '../users/automation/utils';
 import { AutomationActions } from '../users/automation/AutomationActions';
 import { ManualTestSection } from '../users/automation/ManualTestSection';
 import { automationService } from '@/services/automationService';
+import { getCurrentBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 export const AutomationTabContent = () => {
   const { logs, isExecuting, executeManualReset, settings: currentSettings, saveSettings } = useAutomationSettings();
@@ -82,10 +84,16 @@ export const AutomationTabContent = () => {
       };
     }
     
+    // Usar getCurrentBrasiliaDate() para padronização de timezone
     const nextResetDate = new Date(resetStatus.next_reset_date);
-    const today = new Date();
-    const diffTime = nextResetDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const today = getCurrentBrasiliaDate();
+    
+    // Calcular diferença usando apenas datas (sem horários)
+    const nextResetDateOnly = new Date(nextResetDate.getFullYear(), nextResetDate.getMonth(), nextResetDate.getDate());
+    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const diffTime = nextResetDateOnly.getTime() - todayDateOnly.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
     return {
       message: `Próximo reset em ${diffDays} dia(s) - ${nextResetDate.toLocaleDateString('pt-BR')} às 00:00:00`,

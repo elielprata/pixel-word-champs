@@ -9,9 +9,11 @@
  * Obtém a data atual no horário de Brasília
  */
 export const getCurrentBrasiliaDate = (): Date => {
+  // Criar nova instância de Date com o horário atual de Brasília
   const now = new Date();
-  // Converter para Brasília (UTC-3)
-  const brasiliaTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const brasiliaOffset = -3 * 60; // Brasília é UTC-3 (em minutos)
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const brasiliaTime = new Date(utc + (brasiliaOffset * 60000));
   return brasiliaTime;
 };
 
