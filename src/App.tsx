@@ -41,11 +41,17 @@ const AppContent = () => {
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
-        return <HomeScreen />;
+        return (
+          <HomeScreen 
+            onStartChallenge={(challengeId) => navigateToScreen('challenge')}
+            onViewFullRanking={() => navigateToScreen('fullRanking')}
+            onViewChallengeRanking={() => navigateToScreen('challengeRanking')}
+          />
+        );
       case 'ranking':
         return <RankingScreen />;
       case 'profile':
-        return <ProfileScreen />;
+        return <ProfileScreen onBack={() => navigateToScreen('home')} />;
       case 'settings':
         return <SettingsScreen onBack={() => navigateToScreen('home')} />;
       case 'help':
@@ -59,25 +65,40 @@ const AppContent = () => {
       case 'deleteAccount':
         return <DeleteAccountScreen onBack={() => navigateToScreen('settings')} />;
       case 'game':
-        return <GameBoard />;
+        return (
+          <GameBoard 
+            level={1}
+            timeLeft={300}
+            onTimeUp={() => navigateToScreen('home')}
+            onLevelComplete={() => navigateToScreen('home')}
+            onAdvanceLevel={() => navigateToScreen('game')}
+            onStopGame={() => navigateToScreen('home')}
+          />
+        );
       case 'challenge':
         return <ChallengeScreen challengeId="1" onBack={() => navigateToScreen('home')} />;
       case 'fullRanking':
         return <FullRankingScreen onBack={() => navigateToScreen('ranking')} />;
       case 'challengeRanking':
-        return <ChallengeRankingScreen challengeId="1" onBack={() => navigateToScreen('home')} />;
+        return <ChallengeRankingScreen challengeId={1} onBack={() => navigateToScreen('home')} />;
       case 'achievements':
-        return <AchievementsScreen />;
+        return <AchievementsScreen onBack={() => navigateToScreen('home')} />;
       case 'invite':
         return <InviteScreen />;
       case 'pixConfig':
-        return <PixConfigScreen />;
+        return <PixConfigScreen onBack={() => navigateToScreen('profile')} />;
       case 'gameRules':
         return <GameRulesScreen onBack={() => navigateToScreen('help')} onStartGame={() => navigateToScreen('game')} />;
       case 'admin':
         return <AdminPanel />;
       default:
-        return <HomeScreen />;
+        return (
+          <HomeScreen 
+            onStartChallenge={(challengeId) => navigateToScreen('challenge')}
+            onViewFullRanking={() => navigateToScreen('fullRanking')}
+            onViewChallengeRanking={() => navigateToScreen('challengeRanking')}
+          />
+        );
     }
   };
 
