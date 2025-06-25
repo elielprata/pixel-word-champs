@@ -56,6 +56,7 @@ export const UserListContainer = () => {
           userCount={0} 
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          users={[]}
         />
         <div className="p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -72,6 +73,7 @@ export const UserListContainer = () => {
           userCount={filteredUsers.length} 
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          users={filteredUsers}
         />
         
         {filteredUsers.length === 0 ? (

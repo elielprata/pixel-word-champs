@@ -1,24 +1,50 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Users, Download } from 'lucide-react';
+import { Search, Users, Download, Loader2 } from 'lucide-react';
+import { AllUsersData } from '@/hooks/useUsersQuery';
+import { exportUsersToCSV } from '@/utils/csvExport';
+import { useToast } from "@/hooks/use-toast";
 
 interface UserListHeaderProps {
   userCount: number;
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  users: AllUsersData[];
 }
 
 export const UserListHeader = ({ 
   userCount, 
   searchTerm, 
-  onSearchChange
+  onSearchChange,
+  users
 }: UserListHeaderProps) => {
-  const handleExportData = () => {
-    // TODO: Implement export functionality
-    console.log('Exportar dados dos usuários');
+  const [isExporting, setIsExporting] = useState(false);
+  const { toast } = useToast();
+
+  const handleExportData = async () => {
+    try {
+      setIsExporting(true);
+      
+      // Exportar os usuários
+      exportUsersToCSV(users, 'usuarios_sistema');
+      
+      toast({
+        title: "Exportação concluída",
+        description: `${users.length} usuários exportados com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro na exportação:', error);
+      toast({
+        title: "Erro na exportação",
+        description: "Não foi possível exportar os dados dos usuários.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -37,10 +63,20 @@ export const UserListHeader = ({
             variant="outline"
             size="sm"
             onClick={handleExportData}
+            disabled={isExporting || users.length === 0}
             className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar Dados
+            {isExporting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Exportando...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Exportar Dados
+              </>
+            )}
           </Button>
         </div>
       </div>
