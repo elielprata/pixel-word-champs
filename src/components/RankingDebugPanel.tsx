@@ -6,7 +6,6 @@ import { DebugPanelHeader } from '@/components/admin/debug/DebugPanelHeader';
 import { DebugActionButtons } from '@/components/admin/debug/DebugActionButtons';
 import { RankingResultDisplay } from '@/components/admin/debug/RankingResultDisplay';
 import { ProtectionResultDisplay } from '@/components/admin/debug/ProtectionResultDisplay';
-import { WeeklyPeriodTestPanel } from '@/components/admin/debug/WeeklyPeriodTestPanel';
 import { useDebugActions } from '@/components/admin/debug/useDebugActions';
 
 const RankingDebugPanel = () => {
@@ -26,10 +25,6 @@ const RankingDebugPanel = () => {
 
   return (
     <div className="space-y-4">
-      {/* Novo Painel de Teste de Período Semanal */}
-      <WeeklyPeriodTestPanel />
-      
-      {/* Painel de Debug Existente */}
       <Card className="border-yellow-200 bg-yellow-50">
         <DebugPanelHeader />
         
@@ -60,10 +55,6 @@ const RankingDebugPanel = () => {
               ✅ <strong>Período Semanal Corrigido:</strong> As funções de cálculo foram atualizadas para garantir domingo a sábado.
             </p>
           </div>
-          
-          <p className="text-xs text-yellow-600">
-            ⚠️ Use o novo painel de teste acima para verificar se o cálculo de período está funcionando corretamente
-          </p>
         </CardContent>
       </Card>
     </div>
