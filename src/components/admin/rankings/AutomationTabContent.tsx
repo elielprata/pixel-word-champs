@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,7 +16,7 @@ import { ManualTestSection } from '../users/automation/ManualTestSection';
 
 export const AutomationTabContent = () => {
   const { logs, isExecuting, executeManualReset, settings: currentSettings, saveSettings } = useAutomationSettings();
-  const { resetScores, isResettingScores } = useResetScores();
+  const { resetAllScores, isResettingScores } = useResetScores();
   const [settings, setSettings] = useState<AutomationConfig>(
     currentSettings || getDefaultSettings()
   );
@@ -37,7 +36,7 @@ export const AutomationTabContent = () => {
 
   const handleEmergencyReset = async () => {
     try {
-      await resetScores('admin_emergency_reset');
+      await resetAllScores('admin123'); // Using the correct function name
       setShowEmergencyReset(false);
     } catch (error) {
       console.error('Erro no reset de emergência:', error);
