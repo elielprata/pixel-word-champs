@@ -14,11 +14,7 @@ export const WarningAlert = ({ settings }: WarningAlertProps) => {
       <AlertTriangle className="h-4 w-4" />
       <AlertDescription>
         <strong>Atenção:</strong> O reset automático zeará a pontuação de todos os usuários.
-        Esta ação é irreversível e será executada automaticamente {
-          settings.triggerType === 'competition_finalization' 
-            ? 'quando uma competição semanal for finalizada'
-            : 'no horário configurado'
-        }.
+        Esta ação é irreversível e será executada automaticamente quando a data de fim do ranking semanal for ultrapassada.
       </AlertDescription>
     </Alert>
   );
