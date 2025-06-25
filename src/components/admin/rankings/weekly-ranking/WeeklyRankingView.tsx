@@ -22,8 +22,7 @@ export const WeeklyRankingView = () => {
     stats, 
     isLoading, 
     error, 
-    refetch,
-    resetWeeklyScores 
+    refetch
   } = useWeeklyRanking();
 
   const handleRefresh = () => {
@@ -32,23 +31,6 @@ export const WeeklyRankingView = () => {
       title: "Atualizado",
       description: "Ranking semanal atualizado com sucesso!",
     });
-  };
-
-  const handleResetScores = async () => {
-    try {
-      await resetWeeklyScores();
-      toast({
-        title: "Sucesso",
-        description: "Pontuações semanais resetadas com sucesso!",
-      });
-      refetch();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao resetar pontuações semanais",
-        variant: "destructive",
-      });
-    }
   };
 
   if (isLoading) {
@@ -100,7 +82,7 @@ export const WeeklyRankingView = () => {
 
       {/* Tabs Principais */}
       <Tabs defaultValue="ranking" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="ranking" className="flex items-center gap-2">
             <Trophy className="h-4 w-4" />
             Ranking
@@ -109,17 +91,13 @@ export const WeeklyRankingView = () => {
             <Activity className="h-4 w-4" />
             Diagnósticos
           </TabsTrigger>
-          <TabsTrigger value="reset" className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Reset Sistema
-          </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Histórico
           </TabsTrigger>
           <TabsTrigger value="controls" className="flex items-center gap-2">
             <Crown className="h-4 w-4" />
-            Controles
+            Informações
           </TabsTrigger>
         </TabsList>
 
@@ -134,16 +112,12 @@ export const WeeklyRankingView = () => {
           <WeeklyRankingDiagnostics />
         </TabsContent>
 
-        <TabsContent value="reset" className="mt-6">
-          <WeeklyRankingResetPanel />
-        </TabsContent>
-
         <TabsContent value="history" className="mt-6">
           <WeeklyRankingHistory />
         </TabsContent>
 
         <TabsContent value="controls" className="mt-6">
-          <WeeklyRankingControls onResetScores={handleResetScores} />
+          <WeeklyRankingControls />
         </TabsContent>
       </Tabs>
     </div>

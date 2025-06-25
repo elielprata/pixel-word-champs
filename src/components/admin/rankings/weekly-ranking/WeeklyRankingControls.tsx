@@ -1,18 +1,10 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, RotateCcw, Info, Calendar } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info, Calendar } from 'lucide-react';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 
-interface WeeklyRankingControlsProps {
-  onResetScores: () => void;
-}
-
-export const WeeklyRankingControls: React.FC<WeeklyRankingControlsProps> = ({
-  onResetScores
-}) => {
+export const WeeklyRankingControls: React.FC = () => {
   const { stats } = useWeeklyRanking();
 
   const getResetDescription = () => {
@@ -57,8 +49,7 @@ export const WeeklyRankingControls: React.FC<WeeklyRankingControlsProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Card de Informações */}
+    <div className="grid grid-cols-1 gap-6">
       <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold text-blue-900 flex items-center gap-2">
@@ -85,39 +76,7 @@ export const WeeklyRankingControls: React.FC<WeeklyRankingControlsProps> = ({
             <p>• Pontuações são acumuladas durante o período ativo</p>
             <p>• Rankings são calculados automaticamente</p>
             <p>• Prêmios são distribuídos conforme configuração da aba Pagamentos</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Card de Controles */}
-      <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-red-50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold text-orange-900 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Controles Administrativos
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Alert className="border-orange-200 bg-orange-50">
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
-            <AlertDescription className="text-orange-800 text-sm">
-              <strong>Atenção:</strong> O reset manual afeta todos os usuários e não pode ser desfeito.
-            </AlertDescription>
-          </Alert>
-
-          <div className="space-y-3">
-            <Button
-              onClick={onResetScores}
-              variant="destructive"
-              className="w-full flex items-center gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Resetar Pontuações Manualmente
-            </Button>
-            
-            <p className="text-xs text-gray-600 text-center">
-              Use apenas em caso de necessidade. O sistema resetará automaticamente conforme configurado.
-            </p>
+            <p>• Para reset manual, utilize a aba Automação</p>
           </div>
         </CardContent>
       </Card>
