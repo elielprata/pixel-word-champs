@@ -1,13 +1,12 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Settings, Calendar } from 'lucide-react';
+import { BookOpen, Settings } from 'lucide-react';
 import { GameContentTabHeader } from './layout/GameContentTabHeader';
 import { GameContentTabMetrics } from './layout/GameContentTabMetrics';
 import { WordsManagement } from './content/WordsManagement';
 import { CategoriesManagement } from './content/CategoriesManagement';
 import { GameSettings } from './content/GameSettings';
-import { DailyCompetitionsManagement } from './content/DailyCompetitionsManagement';
 
 export const GameContentTab = () => {
   return (
@@ -16,7 +15,7 @@ export const GameContentTab = () => {
       <GameContentTabMetrics />
       
       <Tabs defaultValue="words" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="words" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             Palavras
@@ -24,10 +23,6 @@ export const GameContentTab = () => {
           <TabsTrigger value="categories" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             Categorias
-          </TabsTrigger>
-          <TabsTrigger value="daily-competitions" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Competições Diárias
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -41,10 +36,6 @@ export const GameContentTab = () => {
 
         <TabsContent value="categories">
           <CategoriesManagement />
-        </TabsContent>
-
-        <TabsContent value="daily-competitions">
-          <DailyCompetitionsManagement />
         </TabsContent>
 
         <TabsContent value="settings">
