@@ -8,11 +8,25 @@ import { WeeklyPeriodService } from '@/services/weeklyPeriodService';
 import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 import { useToast } from '@/hooks/use-toast';
 
+interface DbStats {
+  current_week_start: string;
+  current_week_end: string;
+  total_participants: number;
+  total_prize_pool: number;
+  last_update: string;
+  top_3_players?: Array<{
+    username: string;
+    score: number;
+    position: number;
+    prize: number;
+  }>;
+}
+
 export const WeeklyPeriodTestPanel = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [testResults, setTestResults] = useState<any>(null);
-  const [dbStats, setDbStats] = useState<any>(null);
+  const [dbStats, setDbStats] = useState<DbStats | null>(null);
 
   const runPeriodTest = async () => {
     setIsLoading(true);
@@ -24,7 +38,8 @@ export const WeeklyPeriodTestPanel = () => {
       });
       
       // Obter estatísticas do banco
-      const stats = await WeeklyPeriodService.getWeeklyStats();
+      const statsResponse = await WeeklyPeriodService.getWeeklyStats();
+      const stats = statsResponse as DbStats;
       
       const results = {
         local: {
