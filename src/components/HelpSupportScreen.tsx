@@ -2,9 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, MessageCircle, Mail, BookOpen, Star, HelpCircle, Bug } from 'lucide-react';
-import LiveChatScreen from './LiveChatScreen';
-import SendEmailScreen from './SendEmailScreen';
+import { ArrowLeft, BookOpen, Star, HelpCircle, Bug } from 'lucide-react';
 import ReportBugScreen from './ReportBugScreen';
 import BasicTutorialScreen from './BasicTutorialScreen';
 import AdvancedStrategiesScreen from './AdvancedStrategiesScreen';
@@ -15,7 +13,7 @@ interface HelpSupportScreenProps {
 }
 
 const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
-  const [currentScreen, setCurrentScreen] = useState<'help' | 'chat' | 'email' | 'bug' | 'basic' | 'advanced' | 'ranking'>('help');
+  const [currentScreen, setCurrentScreen] = useState<'help' | 'bug' | 'basic' | 'advanced' | 'ranking'>('help');
 
   const faqs = [
     {
@@ -35,14 +33,6 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
       answer: "Assista anúncios para ganhar +30 segundos extras em qualquer nível, quantas vezes quiser"
     }
   ];
-
-  if (currentScreen === 'chat') {
-    return <LiveChatScreen onBack={() => setCurrentScreen('help')} />;
-  }
-
-  if (currentScreen === 'email') {
-    return <SendEmailScreen onBack={() => setCurrentScreen('help')} />;
-  }
 
   if (currentScreen === 'bug') {
     return <ReportBugScreen onBack={() => setCurrentScreen('help')} />;
@@ -79,24 +69,6 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start" 
-            size="lg"
-            onClick={() => setCurrentScreen('chat')}
-          >
-            <MessageCircle className="w-5 h-5 mr-3" />
-            Chat ao Vivo
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start" 
-            size="lg"
-            onClick={() => setCurrentScreen('email')}
-          >
-            <Mail className="w-5 h-5 mr-3" />
-            Enviar Email
-          </Button>
           <Button 
             variant="outline" 
             className="w-full justify-start" 
@@ -169,12 +141,8 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Mail className="w-4 h-4" />
-            <span>suporte@letraarena.com</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <MessageCircle className="w-4 h-4" />
-            <span>Chat disponível das 9h às 18h</span>
+            <Bug className="w-4 h-4" />
+            <span>Para bugs, use o formulário de report</span>
           </div>
         </CardContent>
       </Card>
