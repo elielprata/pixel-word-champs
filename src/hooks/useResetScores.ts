@@ -9,14 +9,20 @@ export const useResetScores = () => {
 
   const resetAllScoresMutation = useMutation({
     mutationFn: async (adminPassword: string) => {
-      // Verificar senha do admin
-      if (adminPassword !== 'admin123') {
-        throw new Error('Senha de administrador incorreta');
-      }
-
+      // Obter usuário atual
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
         throw new Error('Usuário não autenticado');
+      }
+
+      // Verificar senha do admin usando autenticação real do Supabase
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: currentUser.user.email!,
+        password: adminPassword
+      });
+
+      if (authError) {
+        throw new Error('Senha de administrador incorreta');
       }
 
       // Zerar pontuação de todos os usuários

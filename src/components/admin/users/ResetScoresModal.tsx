@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, Shield } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { logger } from '@/utils/logger';
 
@@ -60,22 +60,30 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
-            <AlertTriangle className="h-5 w-5" />
-            Zerar Pontuação Geral
+            <Shield className="h-5 w-5" />
+            Confirmação de Segurança
           </DialogTitle>
-          <DialogDescription className="space-y-2">
-            <p className="text-slate-600">
-              Esta ação irá zerar a pontuação total de <strong>todos os usuários</strong> do sistema.
-            </p>
-            <p className="text-red-600 font-medium">
-              ⚠️ Esta operação é irreversível!
-            </p>
+          <DialogDescription className="space-y-3">
+            <div className="text-slate-600">
+              <p>Esta ação irá zerar a pontuação total de <strong>todos os usuários</strong> do sistema.</p>
+            </div>
+            
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>OPERAÇÃO IRREVERSÍVEL!</strong><br />
+                Para sua segurança, confirme sua senha atual de login.
+              </AlertDescription>
+            </Alert>
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="admin-password">Sua Senha de Administrador</Label>
+            <Label htmlFor="admin-password" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Sua Senha de Login
+            </Label>
             <Input
               id="admin-password"
               type="password"
@@ -83,9 +91,10 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Digite sua senha atual"
               disabled={isResetting}
+              className="border-slate-300 focus:border-red-500"
             />
             <p className="text-xs text-slate-500">
-              Digite sua senha atual para confirmar esta ação crítica
+              Esta é a mesma senha que você usa para fazer login no sistema
             </p>
           </div>
 
@@ -109,14 +118,18 @@ export const ResetScoresModal = ({ isOpen, onClose, onConfirm, isResetting }: Re
               type="submit"
               variant="destructive"
               disabled={isResetting || !password.trim()}
+              className="bg-red-600 hover:bg-red-700"
             >
               {isResetting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Zerando...
+                  Executando Reset...
                 </>
               ) : (
-                'Confirmar Reset'
+                <>
+                  <Shield className="h-4 w-4 mr-2" />
+                  Confirmar e Executar
+                </>
               )}
             </Button>
           </DialogFooter>
