@@ -2,10 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, MessageCircle, Mail, BookOpen, Star, HelpCircle, Bug } from 'lucide-react';
-import LiveChatScreen from './LiveChatScreen';
-import SendEmailScreen from './SendEmailScreen';
-import ReportBugScreen from './ReportBugScreen';
+import { ArrowLeft, BookOpen, Star, HelpCircle } from 'lucide-react';
 import BasicTutorialScreen from './BasicTutorialScreen';
 import AdvancedStrategiesScreen from './AdvancedStrategiesScreen';
 import RankingSystemScreen from './RankingSystemScreen';
@@ -15,7 +12,7 @@ interface HelpSupportScreenProps {
 }
 
 const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
-  const [currentScreen, setCurrentScreen] = useState<'help' | 'chat' | 'email' | 'bug' | 'basic' | 'advanced' | 'ranking'>('help');
+  const [currentScreen, setCurrentScreen] = useState<'help' | 'basic' | 'advanced' | 'ranking'>('help');
 
   const faqs = [
     {
@@ -36,18 +33,6 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
     }
   ];
 
-  if (currentScreen === 'chat') {
-    return <LiveChatScreen onBack={() => setCurrentScreen('help')} />;
-  }
-
-  if (currentScreen === 'email') {
-    return <SendEmailScreen onBack={() => setCurrentScreen('help')} />;
-  }
-
-  if (currentScreen === 'bug') {
-    return <ReportBugScreen onBack={() => setCurrentScreen('help')} />;
-  }
-
   if (currentScreen === 'basic') {
     return <BasicTutorialScreen onBack={() => setCurrentScreen('help')} />;
   }
@@ -67,53 +52,14 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft className="w-6 h-6" />
         </Button>
-        <h1 className="text-2xl font-bold text-purple-800 ml-3">Ajuda e Suporte</h1>
+        <h1 className="text-2xl font-bold text-purple-800 ml-3">Ajuda</h1>
       </div>
-
-      {/* Quick Actions */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-blue-500" />
-            Precisa de Ajuda?
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start" 
-            size="lg"
-            onClick={() => setCurrentScreen('chat')}
-          >
-            <MessageCircle className="w-5 h-5 mr-3" />
-            Chat ao Vivo
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start" 
-            size="lg"
-            onClick={() => setCurrentScreen('email')}
-          >
-            <Mail className="w-5 h-5 mr-3" />
-            Enviar Email
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start" 
-            size="lg"
-            onClick={() => setCurrentScreen('bug')}
-          >
-            <Bug className="w-5 h-5 mr-3" />
-            Reportar Bug
-          </Button>
-        </CardContent>
-      </Card>
 
       {/* FAQ */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-green-500" />
+            <HelpCircle className="w-5 h-5 text-blue-500" />
             Perguntas Frequentes
           </CardTitle>
         </CardHeader>
@@ -131,8 +77,8 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Star className="w-5 h-5 text-yellow-500" />
-            Tutorial
+            <BookOpen className="w-5 h-5 text-green-500" />
+            Como Jogar
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -142,39 +88,41 @@ const HelpSupportScreen = ({ onBack }: HelpSupportScreenProps) => {
               className="w-full justify-start"
               onClick={() => setCurrentScreen('basic')}
             >
-              Como jogar - Básico
+              Tutorial Básico
             </Button>
             <Button 
               variant="outline" 
               className="w-full justify-start"
               onClick={() => setCurrentScreen('advanced')}
             >
-              Estratégias avançadas
+              Estratégias Avançadas
             </Button>
             <Button 
               variant="outline" 
               className="w-full justify-start"
               onClick={() => setCurrentScreen('ranking')}
             >
-              Sistema de ranking
+              Sistema de Ranking
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Contact Info */}
+      {/* Game Rules */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-lg">Informações de Contato</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Star className="w-5 h-5 text-yellow-500" />
+            Regras do Jogo
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Mail className="w-4 h-4" />
-            <span>suporte@letraarena.com</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <MessageCircle className="w-4 h-4" />
-            <span>Chat disponível das 9h às 18h</span>
+        <CardContent className="space-y-3">
+          <div className="text-sm text-gray-600 space-y-2">
+            <p><strong>• Objetivo:</strong> Encontre o maior número de palavras no tabuleiro</p>
+            <p><strong>• Formação:</strong> Conecte letras adjacentes (horizontal, vertical, diagonal)</p>
+            <p><strong>• Pontuação:</strong> Palavras maiores valem mais pontos</p>
+            <p><strong>• Tempo:</strong> Cada nível tem tempo limitado</p>
+            <p><strong>• Competições:</strong> Participe de desafios diários e torneios semanais</p>
           </div>
         </CardContent>
       </Card>
