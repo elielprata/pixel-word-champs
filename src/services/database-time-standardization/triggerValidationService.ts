@@ -20,9 +20,9 @@ export class TriggerValidationService {
       logger.info('Validando sistema de triggers (BRASÍLIA)', undefined, 'DB_TRIGGER_VALIDATION');
       
       // Criar uma competição de teste
-      const testDate = getCurrentBrasiliaDate().toString();
+      const testDate = getCurrentBrasiliaDate();
       const testStartDate = createBrasiliaTimestamp(testDate);
-      const testEndDate = createBrasiliaTimestamp(testDate, true);
+      const testEndDate = createBrasiliaTimestamp(testDate);
       
       const testCompetition = {
         title: 'TESTE_TRIGGER_SYSTEM',

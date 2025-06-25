@@ -58,6 +58,56 @@ class CustomCompetitionCoreService {
       throw error;
     }
   }
+
+  // Método para compatibilidade com customCompetitionService
+  async createCompetition(competitionData: any) {
+    return this.createNewCompetition(competitionData);
+  }
+
+  async getCustomCompetitions() {
+    try {
+      secureLogger.debug('Buscando competições customizadas', undefined, 'CUSTOM_COMPETITION_SERVICE');
+      
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      secureLogger.debug('Competições customizadas carregadas', { 
+        count: data?.length || 0 
+      }, 'CUSTOM_COMPETITION_SERVICE');
+      
+      return data || [];
+    } catch (error) {
+      secureLogger.error('Erro ao buscar competições customizadas', { error }, 'CUSTOM_COMPETITION_SERVICE');
+      throw error;
+    }
+  }
+
+  async getActiveCompetitions() {
+    try {
+      secureLogger.debug('Buscando competições ativas', undefined, 'CUSTOM_COMPETITION_SERVICE');
+      
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      secureLogger.debug('Competições ativas carregadas', { 
+        count: data?.length || 0 
+      }, 'CUSTOM_COMPETITION_SERVICE');
+      
+      return data || [];
+    } catch (error) {
+      secureLogger.error('Erro ao buscar competições ativas', { error }, 'CUSTOM_COMPETITION_SERVICE');
+      throw error;
+    }
+  }
 }
 
 export const customCompetitionCoreService = new CustomCompetitionCoreService();

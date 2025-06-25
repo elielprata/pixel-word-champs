@@ -32,7 +32,7 @@ class IndependentCompetitionService {
 
       // Preparar dados da competição independente em Brasília
       const startDateBrasilia = createBrasiliaTimestamp(formData.startDate);
-      const endDateBrasilia = createBrasiliaTimestamp(formData.startDate, true);
+      const endDateBrasilia = createBrasiliaTimestamp(formData.startDate);
 
       const competitionData = {
         title: formData.title,
