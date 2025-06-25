@@ -18,9 +18,7 @@ export const UserListContainer = () => {
     isLoading, 
     banUser, 
     deleteUser, 
-    unbanUser, 
-    resetAllScores, 
-    isResettingScores 
+    unbanUser
   } = useAllUsers();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,7 +28,6 @@ export const UserListContainer = () => {
   const [showBanModal, setShowBanModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showResetModal, setShowResetModal] = useState(false);
 
   const filteredUsers = useMemo(() => {
     if (!searchTerm.trim()) return usersList;
@@ -89,30 +86,12 @@ export const UserListContainer = () => {
     setShowDeleteModal(true);
   };
 
-  const handleResetScores = () => {
-    logger.info('Abrindo modal de reset de pontuações', { 
-      timestamp: formatBrasiliaDate(new Date())
-    }, 'USER_LIST_CONTAINER');
-    setShowResetModal(true);
-  };
-
-  const handleResetScoresConfirm = async (password: string) => {
-    logger.info('Confirmando reset de pontuações', { 
-      timestamp: formatBrasiliaDate(new Date())
-    }, 'USER_LIST_CONTAINER');
-    await resetAllScores(password);
-  };
-
   const closeModals = () => {
     setSelectedUser(null);
     setShowDetailModal(false);
     setShowBanModal(false);
     setShowDeleteModal(false);
     setShowEditModal(false);
-  };
-
-  const closeResetModal = () => {
-    setShowResetModal(false);
   };
 
   if (isLoading) {
@@ -123,11 +102,9 @@ export const UserListContainer = () => {
     <>
       <Card className="border-slate-200 shadow-sm">
         <UserListHeader
-          userCount={filteredUsers.length}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onResetScores={handleResetScores}
-          isResettingScores={isResettingScores}
+          totalUsers={filteredUsers.length}
+          onRefresh={() => window.location.reload()}
+          isLoading={isLoading}
         />
         
         <CardContent className="p-0">
@@ -183,11 +160,7 @@ export const UserListContainer = () => {
         showBanModal={showBanModal}
         showDeleteModal={showDeleteModal}
         showEditModal={showEditModal}
-        showResetModal={showResetModal}
-        isResettingScores={isResettingScores}
         onCloseModals={closeModals}
-        onCloseResetModal={closeResetModal}
-        onResetScores={handleResetScoresConfirm}
       />
     </>
   );

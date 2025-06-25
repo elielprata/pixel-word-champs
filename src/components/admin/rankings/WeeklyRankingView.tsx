@@ -19,8 +19,7 @@ export const WeeklyRankingView = () => {
     stats, 
     isLoading, 
     error, 
-    refetch,
-    resetWeeklyScores 
+    refetch
   } = useWeeklyRanking();
 
   const handleRefresh = () => {
@@ -29,23 +28,6 @@ export const WeeklyRankingView = () => {
       title: "Atualizado",
       description: "Ranking semanal atualizado com sucesso!",
     });
-  };
-
-  const handleResetScores = async () => {
-    try {
-      await resetWeeklyScores();
-      toast({
-        title: "Sucesso",
-        description: "Pontuações semanais resetadas com sucesso!",
-      });
-      refetch();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao resetar pontuações semanais",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleConfigUpdated = () => {
@@ -111,7 +93,7 @@ export const WeeklyRankingView = () => {
       <WeeklyRankingStats stats={extendedStats} onConfigUpdated={handleConfigUpdated} />
 
       {/* Controles */}
-      <WeeklyRankingControls onResetScores={handleResetScores} />
+      <WeeklyRankingControls />
 
       {/* Conteúdo Principal */}
       {showHistory ? (
