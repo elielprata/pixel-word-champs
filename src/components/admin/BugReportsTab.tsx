@@ -46,10 +46,7 @@ export const BugReportsTab = () => {
     try {
       let query = supabase
         .from('user_reports')
-        .select(`
-          *,
-          profiles!user_reports_user_id_fkey(username)
-        `)
+        .select('*')
         .eq('report_type', 'bug');
 
       // Se não for admin, mostrar apenas os próprios reports
@@ -69,12 +66,23 @@ export const BugReportsTab = () => {
 
       if (error) throw error;
 
-      const formattedReports = data?.map(report => ({
-        ...report,
-        username: report.profiles?.username || 'Usuário',
-      })) || [];
+      // Buscar usernames separadamente para evitar problemas de join
+      const reportsWithUsernames = await Promise.all(
+        (data || []).map(async (report) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', report.user_id)
+            .single();
+          
+          return {
+            ...report,
+            username: profile?.username || 'Usuário',
+          };
+        })
+      );
 
-      setReports(formattedReports);
+      setReports(reportsWithUsernames);
     } catch (error) {
       console.error('Erro ao carregar reports:', error);
       toast({
