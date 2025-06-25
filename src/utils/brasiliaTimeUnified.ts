@@ -1,4 +1,3 @@
-
 /**
  * UTILITÁRIO UNIFICADO DE TEMPO PARA BRASÍLIA
  * Todas as funções trabalham exclusivamente com horário de Brasília (UTC-3)
@@ -9,12 +8,37 @@
  * Obtém a data atual no horário de Brasília
  */
 export const getCurrentBrasiliaDate = (): Date => {
-  // Criar nova instância de Date com o horário atual de Brasília
+  // Usar Intl.DateTimeFormat para conversão mais robusta
   const now = new Date();
-  const brasiliaOffset = -3 * 60; // Brasília é UTC-3 (em minutos)
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const brasiliaTime = new Date(utc + (brasiliaOffset * 60000));
+  const brasiliaTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
   return brasiliaTime;
+};
+
+/**
+ * Cria uma data em Brasília a partir de uma string de data
+ * Esta função garante que a data seja interpretada como horário de Brasília
+ */
+export const createBrasiliaDateFromString = (dateString: string): Date => {
+  if (!dateString) return getCurrentBrasiliaDate();
+  
+  // Para datas no formato YYYY-MM-DD, criar explicitamente no timezone de Brasília
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    // Criar data no timezone de Brasília usando o offset correto
+    const brasiliaDate = new Date();
+    brasiliaDate.setFullYear(year, month - 1, day);
+    brasiliaDate.setHours(0, 0, 0, 0);
+    
+    // Ajustar para timezone de Brasília se necessário
+    const offset = brasiliaDate.getTimezoneOffset();
+    const brasiliaOffset = 180; // UTC-3 em minutos
+    const adjustment = (offset - brasiliaOffset) * 60000;
+    
+    return new Date(brasiliaDate.getTime() + adjustment);
+  }
+  
+  // Para outros formatos, usar conversão padrão
+  return new Date(dateString);
 };
 
 /**

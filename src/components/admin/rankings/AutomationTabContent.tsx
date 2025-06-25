@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +14,7 @@ import { getDefaultSettings } from '../users/automation/utils';
 import { AutomationActions } from '../users/automation/AutomationActions';
 import { ManualTestSection } from '../users/automation/ManualTestSection';
 import { automationService } from '@/services/automationService';
-import { getCurrentBrasiliaDate } from '@/utils/brasiliaTimeUnified';
+import { getCurrentBrasiliaDate, createBrasiliaDateFromString } from '@/utils/brasiliaTimeUnified';
 
 export const AutomationTabContent = () => {
   const { logs, isExecuting, executeManualReset, settings: currentSettings, saveSettings } = useAutomationSettings();
@@ -84,11 +83,11 @@ export const AutomationTabContent = () => {
       };
     }
     
-    // Usar getCurrentBrasiliaDate() para padronização de timezone
-    const nextResetDate = new Date(resetStatus.next_reset_date);
+    // Usar createBrasiliaDateFromString para padronização completa
+    const nextResetDate = createBrasiliaDateFromString(resetStatus.next_reset_date);
     const today = getCurrentBrasiliaDate();
     
-    // Calcular diferença usando apenas datas (sem horários)
+    // Calcular diferença usando apenas datas (sem horários) para precisão
     const nextResetDateOnly = new Date(nextResetDate.getFullYear(), nextResetDate.getMonth(), nextResetDate.getDate());
     const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     
