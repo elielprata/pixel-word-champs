@@ -1,131 +1,58 @@
 
-import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { TooltipProvider } from "@/components/ui/tooltip";
+import Index from './pages/Index';
+import AdminPanel from './pages/AdminPanel';
+import NotFound from './pages/NotFound';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import AuthScreen from '@/components/auth/AuthScreen';
 import AuthProvider from '@/components/auth/AuthProvider';
-import { useAppNavigation } from '@/hooks/useAppNavigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import HomeScreen from '@/components/HomeScreen';
-import RankingScreen from '@/components/RankingScreen';
-import ProfileScreen from '@/components/ProfileScreen';
-import SettingsScreen from '@/components/SettingsScreen';
-import HelpScreen from '@/components/HelpScreen';
-import TermsOfServiceScreen from '@/components/TermsOfServiceScreen';
-import PrivacyPolicyScreen from '@/components/PrivacyPolicyScreen';
-import LanguageSelectionScreen from '@/components/LanguageSelectionScreen';
-import DeleteAccountScreen from '@/components/DeleteAccountScreen';
-import GameBoard from '@/components/GameBoard';
-import ChallengeScreen from '@/components/ChallengeScreen';
-import FullRankingScreen from '@/components/FullRankingScreen';
-import ChallengeRankingScreen from '@/components/ChallengeRankingScreen';
-import AchievementsScreen from '@/components/AchievementsScreen';
-import InviteScreen from '@/components/InviteScreen';
-import PixConfigScreen from '@/components/PixConfigScreen';
-import GameRulesScreen from '@/components/GameRulesScreen';
-import AdminPanel from '@/pages/AdminPanel';
-import './App.css';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-const AppContent = () => {
-  const { currentScreen, navigateToScreen } = useAppNavigation();
-
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'home':
-        return (
-          <HomeScreen 
-            onStartChallenge={(challengeId) => navigateToScreen('challenge')}
-            onViewFullRanking={() => navigateToScreen('fullRanking')}
-            onViewChallengeRanking={() => navigateToScreen('challengeRanking')}
-          />
-        );
-      case 'ranking':
-        return <RankingScreen />;
-      case 'profile':
-        return (
-          <ProfileScreen 
-            onNavigateToSettings={() => navigateToScreen('settings')}
-            onNavigateToHelp={() => navigateToScreen('help')}
-            onNavigateToAchievements={() => navigateToScreen('achievements')}
-          />
-        );
-      case 'settings':
-        return <SettingsScreen onBack={() => navigateToScreen('home')} />;
-      case 'help':
-        return <HelpScreen onBack={() => navigateToScreen('settings')} />;
-      case 'terms':
-        return <TermsOfServiceScreen onBack={() => navigateToScreen('settings')} />;
-      case 'privacy':
-        return <PrivacyPolicyScreen onBack={() => navigateToScreen('settings')} />;
-      case 'language':
-        return <LanguageSelectionScreen onBack={() => navigateToScreen('settings')} />;
-      case 'deleteAccount':
-        return <DeleteAccountScreen onBack={() => navigateToScreen('settings')} />;
-      case 'game':
-        return (
-          <GameBoard 
-            level={1}
-            timeLeft={300}
-            onTimeUp={() => navigateToScreen('home')}
-            onLevelComplete={() => navigateToScreen('home')}
-            onAdvanceLevel={() => navigateToScreen('game')}
-            onStopGame={() => navigateToScreen('home')}
-          />
-        );
-      case 'challenge':
-        return <ChallengeScreen challengeId="1" onBack={() => navigateToScreen('home')} />;
-      case 'fullRanking':
-        return <FullRankingScreen onBack={() => navigateToScreen('ranking')} />;
-      case 'challengeRanking':
-        return <ChallengeRankingScreen challengeId={1} onBack={() => navigateToScreen('home')} />;
-      case 'achievements':
-        return <AchievementsScreen onBack={() => navigateToScreen('home')} />;
-      case 'invite':
-        return <InviteScreen />;
-      case 'pixConfig':
-        return <PixConfigScreen onBack={() => navigateToScreen('profile')} />;
-      case 'gameRules':
-        return <GameRulesScreen onBack={() => navigateToScreen('help')} onStartGame={() => navigateToScreen('game')} />;
-      case 'admin':
-        return <AdminPanel />;
-      default:
-        return (
-          <HomeScreen 
-            onStartChallenge={(challengeId) => navigateToScreen('challenge')}
-            onViewFullRanking={() => navigateToScreen('fullRanking')}
-            onViewChallengeRanking={() => navigateToScreen('challengeRanking')}
-          />
-        );
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
-      {renderScreen()}
-    </div>
-  );
-};
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { logger } from '@/utils/logger';
+import { initializeCacheWarming } from '@/utils/cacheWarming';
 
 function App() {
+  logger.debug('Aplicação inicializada', undefined, 'APP');
+
+  // Inicializar cache warming automático
+  useEffect(() => {
+    try {
+      initializeCacheWarming();
+      logger.info('✅ Cache warming automático inicializado', undefined, 'APP');
+    } catch (error) {
+      logger.error('❌ Erro ao inicializar cache warming', { error }, 'APP');
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
         <AuthProvider>
-          <ProtectedRoute>
-            <AppContent />
-          </ProtectedRoute>
+          <div className="App">
+            <Routes>
+              <Route path="/auth" element={<AuthScreen />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminPanel />
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+          </div>
         </AuthProvider>
-        <Toaster />
-      </QueryClientProvider>
+      </TooltipProvider>
     </ErrorBoundary>
   );
 }

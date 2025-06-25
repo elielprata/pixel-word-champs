@@ -5,6 +5,7 @@ import { UsersTab } from "@/components/admin/UsersTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { MonitoringTab } from "@/components/admin/MonitoringTab";
+import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 import { AdvancedSystemTab } from '@/components/admin/AdvancedSystemTab';
 import { logger } from '@/utils/logger';
@@ -28,6 +29,10 @@ export const AdminPanelContent = () => {
 
       <TabsContent value="monitoring">
         <MonitoringTab />
+      </TabsContent>
+
+      <TabsContent value="support">
+        <SupportTab />
       </TabsContent>
 
       <TabsContent value="advanced">
