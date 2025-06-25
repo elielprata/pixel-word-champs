@@ -24,22 +24,27 @@ export const useWeeklyConfig = () => {
       setIsLoading(true);
       setError(null);
 
+      console.log('🔄 Carregando configuração semanal...');
+
       const { data, error } = await supabase
         .from('weekly_config')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle(); // Alterado de .single() para .maybeSingle()
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
+        console.error('❌ Erro ao carregar configuração:', error);
         throw error;
       }
 
+      console.log('✅ Configuração carregada:', data);
       setConfig(data || null);
       secureLogger.debug('Configuração semanal carregada', { config: data }, 'WEEKLY_CONFIG');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar configuração';
+      console.error('❌ Erro final:', errorMessage);
       setError(errorMessage);
       secureLogger.error('Erro ao carregar configuração semanal', { error: errorMessage }, 'WEEKLY_CONFIG');
     } finally {
@@ -49,6 +54,7 @@ export const useWeeklyConfig = () => {
 
   const updateConfig = async (newConfig: Partial<WeeklyConfig>) => {
     try {
+      console.log('🔄 Atualizando configuração semanal:', newConfig);
       secureLogger.debug('Atualizando configuração semanal', { newConfig }, 'WEEKLY_CONFIG');
 
       // Desativar configuração atual
@@ -74,6 +80,7 @@ export const useWeeklyConfig = () => {
 
       if (error) throw error;
 
+      console.log('✅ Configuração atualizada:', data);
       setConfig(data);
       
       toast({
@@ -84,6 +91,7 @@ export const useWeeklyConfig = () => {
       secureLogger.info('Configuração semanal atualizada', { newConfig: data }, 'WEEKLY_CONFIG');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar configuração';
+      console.error('❌ Erro ao atualizar:', errorMessage);
       setError(errorMessage);
       
       toast({
@@ -97,6 +105,7 @@ export const useWeeklyConfig = () => {
   };
 
   const resetToDefault = async () => {
+    console.log('🔄 Resetando para configuração padrão...');
     await updateConfig({
       start_day_of_week: 0, // Domingo
       duration_days: 7,
