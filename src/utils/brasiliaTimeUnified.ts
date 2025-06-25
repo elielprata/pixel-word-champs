@@ -1,3 +1,4 @@
+
 /**
  * UTILITÁRIO UNIFICADO DE TEMPO PARA BRASÍLIA
  * Todas as funções trabalham exclusivamente com horário de Brasília (UTC-3)
@@ -70,13 +71,17 @@ export const formatBrasiliaDate = (date: Date | string, includeTime: boolean = t
 
 /**
  * Formata uma data no formato YYYY-MM-DD para DD/MM/YYYY
+ * VERSÃO CORRIGIDA - não aplica conversões de timezone desnecessárias
  */
 export const formatDateInputToDisplay = (dateString: string): string => {
   if (!dateString || !dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
     return 'Data inválida';
   }
   
+  // Extrair componentes da data diretamente da string, sem conversões
   const [year, month, day] = dateString.split('-');
+  
+  // Retornar formatação direta sem criar objeto Date (evita timezone issues)
   return `${day}/${month}/${year}`;
 };
 
