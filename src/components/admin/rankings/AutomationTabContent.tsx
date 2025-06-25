@@ -14,7 +14,7 @@ import { getDefaultSettings } from '../users/automation/utils';
 import { AutomationActions } from '../users/automation/AutomationActions';
 import { ManualTestSection } from '../users/automation/ManualTestSection';
 import { automationService } from '@/services/automationService';
-import { getCurrentBrasiliaDate, createBrasiliaDateFromString } from '@/utils/brasiliaTimeUnified';
+import { formatDateInputToDisplay } from '@/utils/brasiliaTimeUnified';
 
 export const AutomationTabContent = () => {
   const { logs, isExecuting, executeManualReset, settings: currentSettings, saveSettings } = useAutomationSettings();
@@ -83,19 +83,24 @@ export const AutomationTabContent = () => {
       };
     }
     
-    // Usar createBrasiliaDateFromString para padronização completa
-    const nextResetDate = createBrasiliaDateFromString(resetStatus.next_reset_date);
-    const today = getCurrentBrasiliaDate();
+    // Usar formatação simples sem conversões
+    const nextResetFormatted = formatDateInputToDisplay(resetStatus.next_reset_date);
     
-    // Calcular diferença usando apenas datas (sem horários) para precisão
-    const nextResetDateOnly = new Date(nextResetDate.getFullYear(), nextResetDate.getMonth(), nextResetDate.getDate());
-    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    // Calcular diferença usando strings diretas
+    const today = new Date().toISOString().split('T')[0];
+    const nextResetDate = resetStatus.next_reset_date;
     
-    const diffTime = nextResetDateOnly.getTime() - todayDateOnly.getTime();
+    const todayParts = today.split('-').map(Number);
+    const nextParts = nextResetDate.split('-').map(Number);
+    
+    const todayObj = new Date(todayParts[0], todayParts[1] - 1, todayParts[2]);
+    const nextObj = new Date(nextParts[0], nextParts[1] - 1, nextParts[2]);
+    
+    const diffTime = nextObj.getTime() - todayObj.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
     return {
-      message: `Próximo reset em ${diffDays} dia(s) - ${nextResetDate.toLocaleDateString('pt-BR')} às 00:00:00`,
+      message: `Próximo reset em ${diffDays} dia(s) - ${nextResetFormatted} às 00:00:00`,
       color: "text-blue-600",
       icon: Calendar
     };
@@ -139,7 +144,7 @@ export const AutomationTabContent = () => {
                     <span className="font-medium">Status Atual do Sistema</span>
                   </div>
                   <div className="text-sm text-blue-700 space-y-1">
-                    <p>Período atual: {new Date(resetStatus.week_start).toLocaleDateString('pt-BR')} - {new Date(resetStatus.week_end).toLocaleDateString('pt-BR')}</p>
+                    <p>Período atual: {formatDateInputToDisplay(resetStatus.week_start)} - {formatDateInputToDisplay(resetStatus.week_end)}</p>
                     <p>Tipo: {resetStatus.is_custom_dates ? 'Datas Customizadas' : 'Configuração Padrão'}</p>
                     {nextResetInfo && (
                       <div className={`flex items-center gap-2 font-medium ${nextResetInfo.color}`}>
