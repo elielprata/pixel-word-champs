@@ -9,16 +9,12 @@ interface UserListHeaderProps {
   userCount: number;
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  onResetScores: () => void;
-  isResettingScores: boolean;
 }
 
 export const UserListHeader = ({ 
   userCount, 
   searchTerm, 
-  onSearchChange, 
-  onResetScores, 
-  isResettingScores 
+  onSearchChange
 }: UserListHeaderProps) => {
   const handleExportData = () => {
     // TODO: Implement export functionality
