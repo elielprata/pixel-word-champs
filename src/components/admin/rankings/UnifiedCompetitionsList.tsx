@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users, Trophy, Edit, Trash2 } from 'lucide-react';
 import { UnifiedCompetition } from '@/types/competition';
+import { useToast } from "@/hooks/use-toast";
+import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
 
 interface UnifiedCompetitionsListProps {
   competitions: UnifiedCompetition[];
@@ -19,6 +21,8 @@ export const UnifiedCompetitionsList = ({
   onEdit,
   onDelete
 }: UnifiedCompetitionsListProps) => {
+  const { toast } = useToast();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
@@ -36,6 +40,41 @@ export const UnifiedCompetitionsList = ({
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleEdit = (competition: UnifiedCompetition) => {
+    console.log('🔧 Editando competição:', competition.id);
+    onEdit(competition);
+  };
+
+  const handleDelete = async (competition: UnifiedCompetition) => {
+    console.log('🗑️ Excluindo competição:', competition.id);
+    
+    const confirmDelete = window.confirm(`Tem certeza que deseja excluir a competição "${competition.title}"?`);
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      const result = await unifiedCompetitionService.deleteCompetition(competition.id);
+      
+      if (result.success) {
+        toast({
+          title: "Competição excluída",
+          description: `A competição "${competition.title}" foi excluída com sucesso.`,
+        });
+        onDelete(competition);
+      } else {
+        throw new Error(result.error || 'Erro ao excluir competição');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao excluir competição:', error);
+      toast({
+        title: "Erro ao excluir",
+        description: error instanceof Error ? error.message : "Não foi possível excluir a competição. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -86,10 +125,20 @@ export const UnifiedCompetitionsList = ({
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => onEdit(competition)}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleEdit(competition)}
+                  className="hover:bg-blue-50"
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => onDelete(competition)}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleDelete(competition)}
+                  className="hover:bg-red-50 hover:text-red-600"
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>

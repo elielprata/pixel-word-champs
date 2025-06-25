@@ -6,6 +6,7 @@ import { Plus, Calendar } from 'lucide-react';
 import { UnifiedCompetitionsList } from './UnifiedCompetitionsList';
 import { UnifiedCompetitionModal } from './UnifiedCompetitionModal';
 import { UnifiedCompetition } from '@/types/competition';
+import { useToast } from "@/hooks/use-toast";
 
 interface DailyCompetitionsViewProps {
   competitions: UnifiedCompetition[];
@@ -14,18 +15,35 @@ interface DailyCompetitionsViewProps {
 
 export const DailyCompetitionsView = ({ competitions, isLoading }: DailyCompetitionsViewProps) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingCompetition, setEditingCompetition] = useState<UnifiedCompetition | null>(null);
+  const { toast } = useToast();
 
   const handleEdit = (competition: UnifiedCompetition) => {
-    console.log('Editar competição:', competition);
+    console.log('🔧 Abrindo modal de edição para:', competition.id);
+    setEditingCompetition(competition);
+    // TODO: Implementar modal de edição completo
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: `Edição da competição "${competition.title}" será implementada em breve.`,
+    });
   };
 
   const handleDelete = (competition: UnifiedCompetition) => {
-    console.log('Deletar competição:', competition);
+    console.log('✅ Competição excluída:', competition.id);
+    // A exclusão já foi processada no UnifiedCompetitionsList
+    // Aqui podemos atualizar a lista se necessário
+    toast({
+      title: "Competição removida",
+      description: "A lista será atualizada automaticamente.",
+    });
   };
 
   const handleCompetitionCreated = () => {
     setShowCreateModal(false);
-    // A lista será atualizada automaticamente pelo hook
+    toast({
+      title: "Competição criada",
+      description: "A nova competição foi criada com sucesso.",
+    });
   };
 
   return (
