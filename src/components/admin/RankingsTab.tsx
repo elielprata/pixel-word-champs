@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, DollarSign } from 'lucide-react';
+import { Trophy, DollarSign, Settings } from 'lucide-react';
 import { RankingHeader } from './rankings/RankingHeader';
 import { PaymentsTab } from './PaymentsTab';
 import { UnifiedCompetitionsView } from './rankings/UnifiedCompetitionsView';
+import { AutomationTabContent } from './rankings/AutomationTabContent';
 
 export const RankingsTab = () => {
   return (
@@ -17,7 +18,7 @@ export const RankingsTab = () => {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <Tabs defaultValue="competitions" className="w-full">
             <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-              <TabsList className="grid w-full grid-cols-2 bg-white border border-slate-200">
+              <TabsList className="grid w-full grid-cols-3 bg-white border border-slate-200">
                 <TabsTrigger 
                   value="competitions" 
                   className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
@@ -31,6 +32,13 @@ export const RankingsTab = () => {
                 >
                   <DollarSign className="h-4 w-4" />
                   Pagamentos
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="automation" 
+                  className="flex items-center gap-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700"
+                >
+                  <Settings className="h-4 w-4" />
+                  Automação
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -52,6 +60,21 @@ export const RankingsTab = () => {
                     </p>
                   </div>
                   <PaymentsTab />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="automation" className="mt-0">
+                <div className="space-y-6">
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                      <Settings className="h-5 w-5 text-orange-600" />
+                      Sistema de Automação
+                    </h3>
+                    <p className="text-slate-600 text-sm">
+                      Configure reset automático após finalização de competições e execute resets manuais de emergência
+                    </p>
+                  </div>
+                  <AutomationTabContent />
                 </div>
               </TabsContent>
             </div>
