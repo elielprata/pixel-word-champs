@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, AlertCircle, CheckCircle, Loader2, Trophy, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface AutomationLog {
   id: string;
@@ -126,13 +126,13 @@ export const AutomationLogs = ({ logs, isLoading }: AutomationLogsProps) => {
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-slate-500" />
                       <span className="font-medium">Agendado:</span>
-                      <span>{new Date(log.scheduled_time).toLocaleString('pt-BR')}</span>
+                      <span>{formatBrasiliaDate(new Date(log.scheduled_time))}</span>
                     </div>
                     {log.executed_at && (
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-slate-500" />
                         <span className="font-medium">Executado:</span>
-                        <span>{new Date(log.executed_at).toLocaleString('pt-BR')}</span>
+                        <span>{formatBrasiliaDate(new Date(log.executed_at))}</span>
                       </div>
                     )}
                   </div>

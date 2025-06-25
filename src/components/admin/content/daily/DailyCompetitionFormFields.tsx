@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Clock } from 'lucide-react';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface DailyCompetition {
   id: string;
@@ -76,13 +76,7 @@ export const DailyCompetitionFormFields: React.FC<DailyCompetitionFormFieldsProp
     const startDate = new Date(currentData.start_date);
     const endDate = new Date(startDate);
     endDate.setHours(23, 59, 59);
-    return endDate.toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatBrasiliaDate(endDate);
   };
 
   return (
@@ -193,13 +187,7 @@ export const DailyCompetitionFormFields: React.FC<DailyCompetitionFormFieldsProp
             <div>
               <span className="text-green-600">🚀 Início: </span>
               <span className="font-semibold">
-                {new Date(currentData.start_date).toLocaleString('pt-BR', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {formatBrasiliaDate(new Date(currentData.start_date))}
               </span>
             </div>
             <div>

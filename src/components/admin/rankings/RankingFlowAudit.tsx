@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle, RefreshCw, Database, Users, Trophy } from 'lucide-react';
 import { useRankingFlowAudit } from '@/hooks/useRankingFlowAudit';
 import { Loader2 } from 'lucide-react';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 export const RankingFlowAudit = () => {
   const { auditData, isLoading, error, refetch } = useRankingFlowAudit();
@@ -171,7 +172,7 @@ export const RankingFlowAudit = () => {
               <span className="text-sm font-medium">Última Atualização</span>
               <span className="text-xs text-gray-500">
                 {auditData.lastRankingUpdate 
-                  ? new Date(auditData.lastRankingUpdate).toLocaleString('pt-BR')
+                  ? formatBrasiliaDate(new Date(auditData.lastRankingUpdate))
                   : 'Nunca'
                 }
               </span>

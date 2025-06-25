@@ -19,6 +19,7 @@ import {
   Zap
 } from 'lucide-react';
 import { useRealTimeMonitoring } from '@/hooks/useRealTimeMonitoring';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 export const RealTimeMonitoringPanel = () => {
   const {
@@ -201,7 +202,7 @@ export const RealTimeMonitoringPanel = () => {
                 <div className="flex items-center justify-center gap-2">
                   <Clock className="h-4 w-4 text-gray-600" />
                   <span className="text-sm text-gray-700">
-                    {new Date(metrics.last_sync_time).toLocaleTimeString('pt-BR')}
+                    {formatBrasiliaDate(new Date(metrics.last_sync_time), false)}
                   </span>
                 </div>
                 <p className="text-xs text-gray-600 mt-1">Última Sync</p>
@@ -230,7 +231,7 @@ export const RealTimeMonitoringPanel = () => {
                         {alert.severity.toUpperCase()}
                       </Badge>
                       <span className="text-xs text-gray-600">
-                        {new Date(alert.timestamp).toLocaleString('pt-BR')}
+                        {formatBrasiliaDate(new Date(alert.timestamp))}
                       </span>
                     </div>
                     <AlertDescription className="text-sm">
