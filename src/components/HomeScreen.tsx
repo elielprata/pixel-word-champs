@@ -14,6 +14,7 @@ import CompetitionsList from './home/CompetitionsList';
 import LoadingState from './home/LoadingState';
 import ErrorState from './home/ErrorState';
 import { logger } from '@/utils/logger';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface HomeScreenProps {
   onStartChallenge: (challengeId: string) => void;
@@ -46,7 +47,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
       setError(null);
       
       logger.info('Carregando competições diárias', { 
-        userId: user?.id 
+        userId: user?.id,
+        timestamp: formatBrasiliaDate(new Date())
       }, 'HOME_SCREEN');
 
       const response = await dailyCompetitionService.getActiveDailyCompetitions();
@@ -54,7 +56,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
       if (response.success && response.data) {
         logger.info('Competições carregadas', { 
           count: response.data.length,
-          userId: user?.id 
+          userId: user?.id,
+          timestamp: formatBrasiliaDate(new Date())
         }, 'HOME_SCREEN');
         
         // Mapear os dados para a interface Competition - APENAS competições diárias
@@ -81,7 +84,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
         setCompetitions(mappedCompetitions);
       } else {
         logger.error('Erro ao buscar competições', { 
-          error: response.error 
+          error: response.error,
+          timestamp: formatBrasiliaDate(new Date())
         }, 'HOME_SCREEN');
         setError(response.error || 'Erro ao carregar competições');
       }
@@ -89,7 +93,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
     } catch (err) {
       logger.error('Erro ao carregar competições', { 
         error: err,
-        userId: user?.id 
+        userId: user?.id,
+        timestamp: formatBrasiliaDate(new Date())
       }, 'HOME_SCREEN');
       setError('Erro ao carregar competições');
     } finally {

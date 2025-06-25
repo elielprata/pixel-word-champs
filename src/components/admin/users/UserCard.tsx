@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, Edit, Ban, Trash2, UserCheck, Users } from 'lucide-react';
 import { AllUsersData } from '@/hooks/useAllUsers';
 import { logger } from '@/utils/logger';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface UserCardProps {
   user: AllUsersData;
@@ -67,7 +68,7 @@ export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser
               {user.email} • {user.games_played} jogos • {user.total_score} pontos
             </div>
             <div className="text-xs text-slate-500">
-              Cadastrado: {new Date(user.created_at).toLocaleDateString('pt-BR')}
+              Cadastrado: {formatBrasiliaDate(new Date(user.created_at), false)}
               {user.is_banned && user.ban_reason && (
                 <span className="text-red-600 ml-2">• Motivo: {user.ban_reason}</span>
               )}

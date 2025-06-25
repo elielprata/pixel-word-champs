@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePlayerLevel } from '@/hooks/usePlayerLevel';
 import { useWeeklyPositionManager } from '@/hooks/useWeeklyPositionManager';
 import { logger } from '@/utils/logger';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 import MyDataSection from './profile/MyDataSection';
 import ProfileHeader from './profile/ProfileHeader';
 import ProfileStatsGrid from './profile/ProfileStatsGrid';
@@ -30,15 +31,22 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   // Integrar gerenciamento automático das melhores posições
   const { forceUpdatePositions } = useWeeklyPositionManager();
 
-  logger.debug('Renderizando ProfileScreen', { userId: user?.id }, 'PROFILE_SCREEN');
+  logger.debug('Renderizando ProfileScreen', { 
+    userId: user?.id,
+    timestamp: formatBrasiliaDate(new Date())
+  }, 'PROFILE_SCREEN');
 
   const handleMyData = () => {
-    logger.info('Abrindo seção Meus Dados', undefined, 'PROFILE_SCREEN');
+    logger.info('Abrindo seção Meus Dados', { 
+      timestamp: formatBrasiliaDate(new Date())
+    }, 'PROFILE_SCREEN');
     setShowMyData(true);
   };
 
   const handleHelp = () => {
-    logger.info('Navegando para ajuda', undefined, 'PROFILE_SCREEN');
+    logger.info('Navegando para ajuda', { 
+      timestamp: formatBrasiliaDate(new Date())
+    }, 'PROFILE_SCREEN');
     if (onNavigateToHelp) {
       onNavigateToHelp();
     }
@@ -51,12 +59,20 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
 
   const handleLogout = async () => {
     try {
-      logger.info('Iniciando logout', { userId: user?.id }, 'PROFILE_SCREEN');
+      logger.info('Iniciando logout', { 
+        userId: user?.id,
+        timestamp: formatBrasiliaDate(new Date())
+      }, 'PROFILE_SCREEN');
       await logout();
-      logger.info('Logout realizado com sucesso', undefined, 'PROFILE_SCREEN');
+      logger.info('Logout realizado com sucesso', { 
+        timestamp: formatBrasiliaDate(new Date())
+      }, 'PROFILE_SCREEN');
       navigate('/auth');
     } catch (error) {
-      logger.error('Erro ao fazer logout', { error }, 'PROFILE_SCREEN');
+      logger.error('Erro ao fazer logout', { 
+        error,
+        timestamp: formatBrasiliaDate(new Date())
+      }, 'PROFILE_SCREEN');
     }
   };
 
@@ -71,7 +87,9 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   };
 
   const handleAvatarUpdate = (newAvatarUrl: string) => {
-    logger.info('Avatar atualizado', undefined, 'PROFILE_SCREEN');
+    logger.info('Avatar atualizado', { 
+      timestamp: formatBrasiliaDate(new Date())
+    }, 'PROFILE_SCREEN');
     setCurrentAvatar(newAvatarUrl);
   };
 

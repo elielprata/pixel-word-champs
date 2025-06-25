@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Trophy, Medal, Award } from 'lucide-react';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface ChallengeRankingScreenProps {
   challengeId: number;
@@ -16,13 +17,15 @@ const ChallengeRankingScreen = ({ challengeId, onBack }: ChallengeRankingScreenP
     3: { title: "Cidades do Brasil", description: "Conheça as cidades brasileiras" },
   }[challengeId] || { title: "Desafio", description: "Ranking do desafio" };
 
+  // Simular dados com timestamps em Brasília
+  const now = new Date();
   const mockRanking = [
-    { pos: 1, name: "João Silva", score: 2540, completedAt: "14:32" },
-    { pos: 2, name: "Maria Santos", score: 2410, completedAt: "15:45" },
-    { pos: 3, name: "Pedro Costa", score: 2380, completedAt: "16:12" },
-    { pos: 4, name: "Ana Lima", score: 2250, completedAt: "17:23" },
-    { pos: 5, name: "Carlos Souza", score: 2180, completedAt: "18:07" },
-    { pos: 42, name: "Você", score: 1890, completedAt: "19:15" },
+    { pos: 1, name: "João Silva", score: 2540, completedAt: formatBrasiliaDate(new Date(now.getTime() - 5 * 60 * 60 * 1000), false) },
+    { pos: 2, name: "Maria Santos", score: 2410, completedAt: formatBrasiliaDate(new Date(now.getTime() - 4 * 60 * 60 * 1000), false) },
+    { pos: 3, name: "Pedro Costa", score: 2380, completedAt: formatBrasiliaDate(new Date(now.getTime() - 3 * 60 * 60 * 1000), false) },
+    { pos: 4, name: "Ana Lima", score: 2250, completedAt: formatBrasiliaDate(new Date(now.getTime() - 2 * 60 * 60 * 1000), false) },
+    { pos: 5, name: "Carlos Souza", score: 2180, completedAt: formatBrasiliaDate(new Date(now.getTime() - 1 * 60 * 60 * 1000), false) },
+    { pos: 42, name: "Você", score: 1890, completedAt: formatBrasiliaDate(now, false) },
   ];
 
   const getRankingIcon = (position: number) => {
@@ -76,7 +79,7 @@ const ChallengeRankingScreen = ({ challengeId, onBack }: ChallengeRankingScreenP
                     <p className={`font-medium ${player.name === 'Você' ? 'text-purple-700' : 'text-gray-900'}`}>
                       {player.name}
                     </p>
-                    <p className="text-sm text-gray-500">Finalizado às {player.completedAt}</p>
+                    <p className="text-sm text-gray-500">Finalizado em {player.completedAt}</p>
                   </div>
                 </div>
                 <div className="text-right">

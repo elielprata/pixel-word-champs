@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { User, Calendar, Gamepad2, Trophy, Ban } from 'lucide-react';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface UserDetailModalProps {
   isOpen: boolean;
@@ -99,13 +100,7 @@ export const UserDetailModal = ({ isOpen, onClose, user }: UserDetailModalProps)
               <div>
                 <span className="text-slate-600">Data de cadastro:</span>
                 <span className="ml-2 font-medium">
-                  {new Date(user.created_at).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {formatBrasiliaDate(new Date(user.created_at))}
                 </span>
               </div>
               
@@ -133,13 +128,7 @@ export const UserDetailModal = ({ isOpen, onClose, user }: UserDetailModalProps)
                     <div>
                       <span className="text-slate-600">Data do banimento:</span>
                       <span className="ml-2 font-medium">
-                        {new Date(user.banned_at).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {formatBrasiliaDate(new Date(user.banned_at))}
                       </span>
                     </div>
                   )}

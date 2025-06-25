@@ -7,6 +7,7 @@ import AchievementStats from './achievements/AchievementStats';
 import AchievementsList from './achievements/AchievementsList';
 import { createAchievements, getRarityColor } from './achievements/achievementData';
 import { logger } from '@/utils/logger';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface AchievementsScreenProps {
   onBack: () => void;
@@ -22,11 +23,14 @@ const AchievementsScreen = ({ onBack }: AchievementsScreenProps) => {
     userId: user?.id,
     totalAchievements: achievements.length,
     unlockedAchievements: unlockedAchievements.length,
-    totalPoints 
+    totalPoints,
+    timestamp: formatBrasiliaDate(new Date())
   }, 'ACHIEVEMENTS_SCREEN');
 
   const handleBack = () => {
-    logger.debug('Voltando da tela de conquistas', undefined, 'ACHIEVEMENTS_SCREEN');
+    logger.debug('Voltando da tela de conquistas', { 
+      timestamp: formatBrasiliaDate(new Date())
+    }, 'ACHIEVEMENTS_SCREEN');
     onBack();
   };
 

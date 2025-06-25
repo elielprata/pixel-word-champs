@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Clock } from 'lucide-react';
 import { CompetitionActions } from './CompetitionActions';
 import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface DailyCompetition {
   id: string;
@@ -48,16 +49,9 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
 
   const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
     const date = new Date(dateString);
-    const dateFormatted = date.toLocaleDateString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-    
     const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
     
-    return `${dateFormatted}, ${timeFormatted}`;
+    return `${formatBrasiliaDate(date, false)}, ${timeFormatted}`;
   };
 
   const getStatusColor = (status: string) => {
