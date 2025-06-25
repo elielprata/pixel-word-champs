@@ -1140,6 +1140,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      should_reset_weekly_ranking: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       sync_user_scores_to_weekly_ranking: {
         Args: Record<PropertyKey, never>
         Returns: undefined

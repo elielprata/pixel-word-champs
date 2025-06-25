@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Settings, Clock, AlertTriangle, RotateCcw, Zap } from 'lucide-react';
+import { Settings, Clock, AlertTriangle, RotateCcw, Zap, Calendar, Info } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AutomationLogs } from '../users/AutomationLogs';
 import { useAutomationSettings } from '@/hooks/useAutomationSettings';
@@ -13,6 +13,7 @@ import { AutomationConfig } from '../users/automation/types';
 import { getDefaultSettings } from '../users/automation/utils';
 import { AutomationActions } from '../users/automation/AutomationActions';
 import { ManualTestSection } from '../users/automation/ManualTestSection';
+import { automationService } from '@/services/automationService';
 
 export const AutomationTabContent = () => {
   const { logs, isExecuting, executeManualReset, settings: currentSettings, saveSettings } = useAutomationSettings();
@@ -22,26 +23,78 @@ export const AutomationTabContent = () => {
   );
   const [showTestSection, setShowTestSection] = useState(false);
   const [showEmergencyReset, setShowEmergencyReset] = useState(false);
+  const [resetStatus, setResetStatus] = useState<any>(null);
+
+  useEffect(() => {
+    if (currentSettings) {
+      setSettings(currentSettings);
+    }
+  }, [currentSettings]);
+
+  useEffect(() => {
+    // Carregar status do reset ao montar o componente
+    loadResetStatus();
+  }, []);
+
+  const loadResetStatus = async () => {
+    try {
+      const status = await automationService.checkResetStatus();
+      setResetStatus(status);
+    } catch (error) {
+      console.error('Erro ao carregar status do reset:', error);
+    }
+  };
 
   const handleSave = () => {
     saveSettings(settings);
+    // Recarregar status após salvar
+    setTimeout(loadResetStatus, 1000);
   };
 
   const handleManualTest = async () => {
     const success = await executeManualReset();
     if (success) {
       setShowTestSection(false);
+      // Recarregar status após reset
+      setTimeout(loadResetStatus, 1000);
     }
   };
 
   const handleEmergencyReset = async () => {
     try {
-      await resetAllScores('admin123'); // Using the correct function name
+      await resetAllScores('admin123');
       setShowEmergencyReset(false);
+      // Recarregar status após reset
+      setTimeout(loadResetStatus, 1000);
     } catch (error) {
       console.error('Erro no reset de emergência:', error);
     }
   };
+
+  const getNextResetInfo = () => {
+    if (!resetStatus) return null;
+    
+    if (resetStatus.should_reset) {
+      return {
+        message: "Reset deve ser executado agora",
+        color: "text-red-600",
+        icon: AlertTriangle
+      };
+    }
+    
+    const nextResetDate = new Date(resetStatus.next_reset_date);
+    const today = new Date();
+    const diffTime = nextResetDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return {
+      message: `Próximo reset em ${diffDays} dia(s) - ${nextResetDate.toLocaleDateString('pt-BR')} às 00:00:00`,
+      color: "text-blue-600",
+      icon: Calendar
+    };
+  };
+
+  const nextResetInfo = getNextResetInfo();
 
   return (
     <div className="space-y-6">
@@ -66,11 +119,31 @@ export const AutomationTabContent = () => {
             <CardHeader className="bg-gradient-to-r from-orange-50 to-yellow-50">
               <CardTitle className="flex items-center gap-2 text-orange-800">
                 <Settings className="h-5 w-5" />
-                Automação de Reset por Finalização de Competição
+                Automação de Reset Baseado em Tempo
               </CardTitle>
             </CardHeader>
             
             <CardContent className="p-6 space-y-6">
+              {/* Status do Sistema */}
+              {resetStatus && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-blue-800 mb-2">
+                    <Info className="h-4 w-4" />
+                    <span className="font-medium">Status Atual do Sistema</span>
+                  </div>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p>Período atual: {new Date(resetStatus.week_start).toLocaleDateString('pt-BR')} - {new Date(resetStatus.week_end).toLocaleDateString('pt-BR')}</p>
+                    <p>Tipo: {resetStatus.is_custom_dates ? 'Datas Customizadas' : 'Configuração Padrão'}</p>
+                    {nextResetInfo && (
+                      <div className={`flex items-center gap-2 font-medium ${nextResetInfo.color}`}>
+                        <nextResetInfo.icon className="h-4 w-4" />
+                        {nextResetInfo.message}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Switch de Automação */}
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -78,7 +151,7 @@ export const AutomationTabContent = () => {
                     Automação Ativada
                   </Label>
                   <p className="text-sm text-slate-600">
-                    Ativar reset automático de pontuações após finalização de competições semanais
+                    Ativar reset automático de pontuações baseado nas datas do ranking semanal
                   </p>
                 </div>
                 <Switch
@@ -94,11 +167,11 @@ export const AutomationTabContent = () => {
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-center gap-2 text-blue-800">
                       <Clock className="h-4 w-4" />
-                      <span className="font-medium">Reset por Finalização de Competição</span>
+                      <span className="font-medium">Reset Baseado em Tempo</span>
                     </div>
                     <p className="text-sm text-blue-700 mt-1">
-                      O reset será executado automaticamente quando uma competição semanal for finalizada.
-                      Isso zera as pontuações de todos os usuários para iniciar um novo ciclo de competição.
+                      O sistema verifica diariamente às 00:00:00 se a data de fim do ranking semanal foi ultrapassada.
+                      Quando isso acontece, executa automaticamente o reset das pontuações de todos os usuários.
                     </p>
                   </div>
 
@@ -107,7 +180,7 @@ export const AutomationTabContent = () => {
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
                       <strong>Atenção:</strong> O reset automático zeará a pontuação de todos os usuários.
-                      Esta ação é irreversível e será executada automaticamente quando uma competição semanal for finalizada.
+                      Esta ação é irreversível e será executada automaticamente quando a data de fim do ranking for ultrapassada.
                     </AlertDescription>
                   </Alert>
                 </>

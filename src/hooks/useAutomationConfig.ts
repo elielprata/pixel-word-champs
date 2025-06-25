@@ -5,7 +5,7 @@ import { automationService } from '@/services/automationService';
 
 interface AutomationConfig {
   enabled: boolean;
-  triggerType: 'competition_finalization';
+  triggerType: 'time_based';
   resetOnCompetitionEnd: boolean;
 }
 
@@ -39,7 +39,7 @@ export const useAutomationConfig = () => {
       toast({
         title: "Sucesso!",
         description: newSettings.enabled 
-          ? 'Automação ativada com sucesso (por finalização de competição)'
+          ? 'Automação ativada com sucesso (baseada em tempo)'
           : "Automação desativada com sucesso",
       });
     } catch (error: any) {

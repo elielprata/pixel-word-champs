@@ -4,7 +4,7 @@ import { logger } from '@/utils/logger';
 
 interface AutomationConfig {
   enabled: boolean;
-  triggerType: 'competition_finalization';
+  triggerType: 'time_based';
   resetOnCompetitionEnd: boolean;
 }
 
@@ -25,10 +25,10 @@ export class AutomationService {
 
       if (data?.setting_value) {
         const config = JSON.parse(data.setting_value);
-        // Garantir que está configurado para finalização de competição
+        // Garantir que está configurado para time_based
         const updatedConfig = {
           enabled: config.enabled || false,
-          triggerType: 'competition_finalization' as const,
+          triggerType: 'time_based' as const,
           resetOnCompetitionEnd: config.resetOnCompetitionEnd || true
         };
         logger.info('Configurações carregadas', { config: updatedConfig }, 'AUTOMATION_SETTINGS');
@@ -53,7 +53,7 @@ export class AutomationService {
           setting_key: 'reset_automation_config',
           setting_value: JSON.stringify(settings),
           category: 'automation',
-          description: 'Configurações para automação do reset de pontuações por finalização de competição',
+          description: 'Configurações para automação do reset de pontuações baseado em tempo',
           setting_type: 'json'
         }, {
           onConflict: 'setting_key'
@@ -86,6 +86,22 @@ export class AutomationService {
       return true;
     } catch (error: any) {
       logger.error('Erro no reset manual', { error: error.message }, 'AUTOMATION_SETTINGS');
+      throw error;
+    }
+  }
+
+  async checkResetStatus(): Promise<any> {
+    try {
+      logger.info('Verificando status do reset', undefined, 'AUTOMATION_SETTINGS');
+
+      const { data, error } = await supabase.rpc('should_reset_weekly_ranking');
+
+      if (error) throw error;
+
+      logger.info('Status do reset obtido', { result: data }, 'AUTOMATION_SETTINGS');
+      return data;
+    } catch (error: any) {
+      logger.error('Erro ao verificar status do reset', { error: error.message }, 'AUTOMATION_SETTINGS');
       throw error;
     }
   }
