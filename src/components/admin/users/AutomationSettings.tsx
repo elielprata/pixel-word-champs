@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Settings, Clock, AlertTriangle } from 'lucide-react';
+import { Settings, Clock, AlertTriangle, Activity } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AutomationLogs } from './AutomationLogs';
+import { AutomationSystemStatus } from './automation/AutomationSystemStatus';
 import { useAutomationSettings } from '@/hooks/useAutomationSettings';
 import { AutomationConfig, AutomationSettingsProps } from './automation/types';
 import { getNextExecution, getDefaultSettings } from './automation/utils';
@@ -33,10 +34,14 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
 
   return (
     <Tabs defaultValue="settings" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="settings" className="flex items-center gap-2">
           <Settings className="h-4 w-4" />
           Configurações
+        </TabsTrigger>
+        <TabsTrigger value="diagnostics" className="flex items-center gap-2">
+          <Activity className="h-4 w-4" />
+          Sistema
         </TabsTrigger>
         <TabsTrigger value="history" className="flex items-center gap-2">
           <Clock className="h-4 w-4" />
@@ -111,6 +116,10 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
             />
           </CardContent>
         </Card>
+      </TabsContent>
+
+      <TabsContent value="diagnostics" className="mt-6">
+        <AutomationSystemStatus />
       </TabsContent>
 
       <TabsContent value="history" className="mt-6">
