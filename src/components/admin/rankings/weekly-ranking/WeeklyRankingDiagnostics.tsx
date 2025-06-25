@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle, XCircle, RefreshCw, Activity, TrendingUp } from 'lucide-react';
 import { useWeeklyRankingDiagnostics } from '@/hooks/useWeeklyRankingDiagnostics';
 import { logger } from '@/utils/logger';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 export const WeeklyRankingDiagnostics = () => {
   const { data: diagnostics, isLoading, refetch, error } = useWeeklyRankingDiagnostics();
@@ -94,7 +95,7 @@ export const WeeklyRankingDiagnostics = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-slate-600">
-            Diagnóstico executado em: {new Date(diagnostics.timestamp).toLocaleString()}
+            Diagnóstico executado em: {formatBrasiliaDate(new Date(diagnostics.timestamp))}
           </div>
         </CardContent>
       </Card>

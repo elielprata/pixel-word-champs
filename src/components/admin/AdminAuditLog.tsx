@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from '@/integrations/supabase/client';
 import { Shield, User, Trash, RefreshCw, Calendar } from 'lucide-react';
 import { logger } from '@/utils/logger';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface AdminAction {
   id: string;
@@ -135,7 +136,7 @@ export const AdminAuditLog = () => {
                       {getActionBadge(action.action_type)}
                     </div>
                     <span className="text-xs text-slate-500">
-                      {new Date(action.created_at).toLocaleString()}
+                      {formatBrasiliaDate(new Date(action.created_at))}
                     </span>
                   </div>
                   
