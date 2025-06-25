@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,7 +38,7 @@ export const WeeklyPeriodTestPanel = () => {
       
       // Obter estatísticas do banco
       const statsResponse = await WeeklyPeriodService.getWeeklyStats();
-      const stats = statsResponse as DbStats;
+      const stats = statsResponse as unknown as DbStats;
       
       const results = {
         local: {
