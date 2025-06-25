@@ -1,8 +1,14 @@
 
 /**
- * UTILITÁRIO UNIFICADO DE TEMPO - VERSÃO CORRIGIDA
- * PRINCÍPIO: UTC para processamento interno, Brasília apenas para exibição
- * ZERO conversões de timezone desnecessárias
+ * UTILITÁRIO UNIFICADO DE TEMPO - VERSÃO PADRONIZAÇÃO UNIVERSAL
+ * PRINCÍPIO DEFINITIVO: UTC para tudo, Brasília APENAS para exibição final
+ * ZERO conversões desnecessárias em qualquer lugar do sistema
+ */
+
+/**
+ * ===========================================
+ * FUNÇÕES PRINCIPAIS - PADRÃO UNIVERSAL
+ * ===========================================
  */
 
 /**
@@ -89,8 +95,13 @@ export const validateCompetitionDuration = (startDateTimeUTC: string, durationHo
 };
 
 /**
- * Formata horário UTC para exibição em Brasília - SEM conversão adicional
- * O dado já vem do banco em UTC, extrair apenas HH:MM
+ * ===========================================
+ * FUNÇÕES DE EXIBIÇÃO - CONVERSÃO FINAL PARA BRASÍLIA
+ * ===========================================
+ */
+
+/**
+ * Formata horário UTC para exibição em Brasília
  */
 export const formatTimeForDisplay = (utcDateTime: string): string => {
   if (!utcDateTime) return '';
@@ -109,7 +120,7 @@ export const formatTimeForDisplay = (utcDateTime: string): string => {
 };
 
 /**
- * Formata data UTC para exibição em Brasília - SEM conversão adicional
+ * Formata data UTC para exibição em Brasília
  */
 export const formatDateForDisplay = (utcDateTime: string): string => {
   if (!utcDateTime) return 'Data inválida';
@@ -153,6 +164,168 @@ export const formatUTCForDateTimeLocal = (utcDateTime: string): string => {
 };
 
 /**
+ * ===========================================
+ * FUNÇÕES UNIVERSAIS - PADRÃO PARA TODO O SISTEMA
+ * ===========================================
+ */
+
+/**
+ * Formatar data UTC para exibição Brasília - UNIVERSAL
+ */
+export const formatBrasiliaDate = (date: Date | string, includeTime: boolean = true): string => {
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    // Converter para Brasília (UTC-3) apenas para exibição
+    const brasiliaTime = new Date(dateObj.getTime() - (3 * 60 * 60 * 1000));
+    
+    const day = brasiliaTime.getUTCDate().toString().padStart(2, '0');
+    const month = (brasiliaTime.getUTCMonth() + 1).toString().padStart(2, '0');
+    const year = brasiliaTime.getUTCFullYear();
+    
+    if (!includeTime) {
+      return `${day}/${month}/${year}`;
+    }
+    
+    const hours = brasiliaTime.getUTCHours().toString().padStart(2, '0');
+    const minutes = brasiliaTime.getUTCMinutes().toString().padStart(2, '0');
+    const seconds = brasiliaTime.getUTCSeconds().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  } catch (error) {
+    console.error('Erro ao formatar data Brasília:', error);
+    return 'Data inválida';
+  }
+};
+
+/**
+ * Criar timestamp UTC para banco de dados - UNIVERSAL
+ */
+export const createBrasiliaTimestamp = (date?: Date): string => {
+  // SEMPRE retornar UTC puro - sem conversões
+  const targetDate = date || new Date();
+  return targetDate.toISOString();
+};
+
+/**
+ * Obter data/hora atual em Brasília - UNIVERSAL
+ */
+export const getCurrentBrasiliaDate = (): Date => {
+  // Retornar UTC atual - conversão será feita apenas na exibição
+  return new Date();
+};
+
+/**
+ * Obter horário atual formatado para Brasília - UNIVERSAL
+ */
+export const getCurrentBrasiliaTime = (): string => {
+  const now = new Date();
+  // Converter para Brasília apenas para exibição
+  const brasiliaTime = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+  
+  const year = brasiliaTime.getUTCFullYear();
+  const month = (brasiliaTime.getUTCMonth() + 1).toString().padStart(2, '0');
+  const day = brasiliaTime.getUTCDate().toString().padStart(2, '0');
+  const hours = brasiliaTime.getUTCHours().toString().padStart(2, '0');
+  const minutes = brasiliaTime.getUTCMinutes().toString().padStart(2, '0');
+  
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
+/**
+ * Formatar data para inputs - UNIVERSAL
+ */
+export const formatDateInputToDisplay = (dateString: string): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    // Converter para Brasília apenas para exibição
+    const brasiliaDate = new Date(date.getTime() - (3 * 60 * 60 * 1000));
+    
+    const day = brasiliaDate.getUTCDate().toString().padStart(2, '0');
+    const month = (brasiliaDate.getUTCMonth() + 1).toString().padStart(2, '0');
+    const year = brasiliaDate.getUTCFullYear();
+    
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    console.error('Erro ao formatar data para input:', error);
+    return '';
+  }
+};
+
+/**
+ * Preview de período semanal - UNIVERSAL
+ */
+export const formatWeeklyPeriodPreview = (startDate: string, endDate: string): string => {
+  if (!startDate || !endDate) return '';
+  
+  try {
+    const start = formatDateInputToDisplay(startDate);
+    const end = formatDateInputToDisplay(endDate);
+    return `${start} - ${end}`;
+  } catch (error) {
+    console.error('Erro ao formatar período semanal:', error);
+    return '';
+  }
+};
+
+/**
+ * Validar range de datas Brasília - UNIVERSAL
+ */
+export const validateBrasiliaDateRange = (startDate: string, endDate: string): { isValid: boolean; error?: string } => {
+  if (!startDate || !endDate) {
+    return { isValid: false, error: 'Datas de início e fim são obrigatórias' };
+  }
+  
+  try {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start >= end) {
+      return { isValid: false, error: 'Data de início deve ser anterior à data de fim' };
+    }
+    
+    return { isValid: true };
+  } catch (error) {
+    return { isValid: false, error: 'Datas inválidas' };
+  }
+};
+
+/**
+ * Calcular tempo restante - UNIVERSAL
+ */
+export const calculateTimeRemaining = (endDateUTC: string): string => {
+  if (!endDateUTC) return '';
+  
+  try {
+    const now = new Date();
+    const end = new Date(endDateUTC);
+    const diff = end.getTime() - now.getTime();
+    
+    if (diff <= 0) return 'Finalizado';
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    
+    return `${minutes}m`;
+  } catch (error) {
+    console.error('Erro ao calcular tempo restante:', error);
+    return '';
+  }
+};
+
+/**
+ * ===========================================
+ * FUNÇÕES DE ESTADO - LÓGICA PURA UTC
+ * ===========================================
+ */
+
+/**
  * Calcula status da competição baseado em UTC
  */
 export const calculateCompetitionStatus = (
@@ -173,22 +346,15 @@ export const calculateCompetitionStatus = (
 };
 
 /**
- * Obter data/hora atual em Brasília para referência do usuário
+ * ===========================================
+ * COMPATIBILIDADE - MANTER CÓDIGO EXISTENTE FUNCIONANDO
+ * ===========================================
  */
-export const getCurrentBrasiliaTime = (): string => {
-  const now = new Date();
-  const brasiliaTime = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-  
-  const year = brasiliaTime.getUTCFullYear();
-  const month = (brasiliaTime.getUTCMonth() + 1).toString().padStart(2, '0');
-  const day = brasiliaTime.getUTCDate().toString().padStart(2, '0');
-  const hours = brasiliaTime.getUTCHours().toString().padStart(2, '0');
-  const minutes = brasiliaTime.getUTCMinutes().toString().padStart(2, '0');
-  
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
-};
 
 // Manter compatibilidade com código existente
 export const formatTimePreview = formatTimeForDisplay;
 export const formatDatePreview = formatDateForDisplay;
 export const isCompetitionActive = (start: string, end: string) => calculateCompetitionStatus(start, end) === 'active';
+
+// Aliases para compatibilidade
+export const formatDateInputToDisplay = formatDateInputToDisplay;

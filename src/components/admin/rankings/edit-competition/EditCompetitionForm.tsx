@@ -85,7 +85,8 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         newEndDate: formData.endDate
       });
 
-      const isDailyCompetition = competition.theme || competition.competition_type === 'challenge';
+      // Corrigir verificação do tipo de competição
+      const isDailyCompetition = competition.theme !== null || competition.competition_type === 'challenge';
 
       if (isDailyCompetition) {
         // Para competições diárias, usar o serviço unificado
@@ -132,7 +133,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
 
   if (!competition) return null;
 
-  const isDailyCompetition = competition.theme || competition.competition_type === 'challenge';
+  const isDailyCompetition = competition.theme !== null || competition.competition_type === 'challenge';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
