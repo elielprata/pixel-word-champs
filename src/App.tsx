@@ -51,7 +51,13 @@ const AppContent = () => {
       case 'ranking':
         return <RankingScreen />;
       case 'profile':
-        return <ProfileScreen onBack={() => navigateToScreen('home')} />;
+        return (
+          <ProfileScreen 
+            onNavigateToSettings={() => navigateToScreen('settings')}
+            onNavigateToHelp={() => navigateToScreen('help')}
+            onNavigateToAchievements={() => navigateToScreen('achievements')}
+          />
+        );
       case 'settings':
         return <SettingsScreen onBack={() => navigateToScreen('home')} />;
       case 'help':
