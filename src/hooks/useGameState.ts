@@ -2,6 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGameScoring } from '@/hooks/useGameScoring';
+import { useGamePointsConfig } from '@/hooks/useGamePointsConfig';
+import { toast } from '@/hooks/use-toast';
 import { logger } from '@/utils/logger';
 import { GAME_CONSTANTS } from '@/constants/game';
 
@@ -24,7 +26,8 @@ interface GameState {
 export const useGameState = (
   levelWords: string[],
   timeLeft?: number,
-  onLevelComplete?: (levelScore: number) => void
+  onLevelComplete?: (levelScore: number) => void,
+  boardData?: { board: string[][]; placedWords: any[] }
 ) => {
   const [state, setState] = useState<GameState>({
     foundWords: [],
@@ -35,6 +38,8 @@ export const useGameState = (
     permanentlyMarkedCells: [],
     isLevelCompleted: false
   });
+
+  const { getPointsForWord } = useGamePointsConfig();
 
   // Usar hook especializado de pontuação
   const { 
@@ -97,6 +102,115 @@ export const useGameState = (
     }
   }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, currentLevelScore, updateUserScore, onLevelComplete]);
 
+  // Função para obter a palavra extra (com maior pontuação)
+  const getExtraWord = useCallback((): string | null => {
+    if (!levelWords || levelWords.length === 0) return null;
+    
+    const wordsWithPoints = levelWords.map(word => ({
+      word,
+      points: getPointsForWord(word)
+    }));
+    const sorted = [...wordsWithPoints].sort((a, b) => b.points - a.points);
+    return sorted[0]?.word || null;
+  }, [levelWords, getPointsForWord]);
+
+  // Sistema de dicas CORRIGIDO e unificado
+  const useHint = useCallback(() => {
+    logger.info('💡 Dica solicitada', { 
+      hintsUsed: state.hintsUsed, 
+      hasBoard: !!boardData,
+      levelWordsCount: levelWords.length 
+    }, 'GAME_STATE');
+
+    // Verificar se já usou a dica
+    if (state.hintsUsed >= 1) {
+      toast({
+        title: "Dica indisponível",
+        description: "Você já usou sua dica neste nível.",
+        variant: "destructive"
+      });
+      logger.warn('Dica bloqueada - já foi usada', { hintsUsed: state.hintsUsed }, 'GAME_STATE');
+      return;
+    }
+
+    // Verificar se temos dados do tabuleiro
+    if (!boardData || !boardData.placedWords) {
+      toast({
+        title: "Dica indisponível",
+        description: "Dados do tabuleiro não disponíveis.",
+        variant: "destructive"
+      });
+      logger.error('Dica bloqueada - sem dados do tabuleiro', { hasBoard: !!boardData }, 'GAME_STATE');
+      return;
+    }
+
+    const extraWord = getExtraWord();
+    logger.info('🎯 Palavra extra identificada', { extraWord }, 'GAME_STATE');
+
+    // Encontrar primeira palavra não encontrada que NÃO é a extra
+    const hintWord = levelWords.find(
+      (word) =>
+        !state.foundWords.some(fw => fw.word === word) &&
+        word !== extraWord
+    );
+
+    if (!hintWord) {
+      toast({
+        title: "Dica indisponível",
+        description: "A dica não pode ser usada na palavra de Desafio Extra. Tente encontrá-la por conta própria!",
+        variant: "destructive"
+      });
+      logger.warn('Dica bloqueada - apenas palavra extra disponível', { 
+        extraWord, 
+        foundWords: state.foundWords.map(fw => fw.word) 
+      }, 'GAME_STATE');
+      return;
+    }
+
+    // Encontrar posicionamento da palavra no tabuleiro
+    const wordPlacement = boardData.placedWords.find(pw => pw.word === hintWord);
+
+    if (!wordPlacement || !Array.isArray(wordPlacement.positions)) {
+      toast({
+        title: "Dica não pôde ser aplicada",
+        description: "Não foi possível encontrar a posição da palavra no tabuleiro.",
+        variant: "destructive"
+      });
+      logger.error('Dica bloqueada - palavra não encontrada no tabuleiro', { 
+        hintWord, 
+        hasPlacement: !!wordPlacement,
+        hasPositions: wordPlacement?.positions ? Array.isArray(wordPlacement.positions) : false
+      }, 'GAME_STATE');
+      return;
+    }
+
+    // Aplicar a dica
+    setState(prev => ({ 
+      ...prev, 
+      hintsUsed: prev.hintsUsed + 1,
+      hintHighlightedCells: wordPlacement.positions
+    }));
+
+    logger.info('✅ Dica aplicada com sucesso', { 
+      word: hintWord, 
+      hintsUsed: state.hintsUsed + 1,
+      positionsCount: wordPlacement.positions.length
+    }, 'GAME_STATE');
+
+    toast({
+      title: "Dica revelada!",
+      description: `Palavra destacada: ${hintWord}`,
+      variant: "default"
+    });
+
+    // Remover destaque após 3 segundos
+    setTimeout(() => {
+      setState(prev => ({ ...prev, hintHighlightedCells: [] }));
+      logger.info('🔄 Destaque da dica removido', { word: hintWord }, 'GAME_STATE');
+    }, 3000);
+
+  }, [state.hintsUsed, state.foundWords, levelWords, boardData, getExtraWord]);
+
   const addFoundWord = useCallback((newFoundWord: FoundWord) => {
     // PROTEÇÃO FINAL: Verificar duplicação uma última vez antes de adicionar ao estado
     const isAlreadyFound = state.foundWords.some(fw => fw.word === newFoundWord.word);
@@ -123,28 +237,6 @@ export const useGameState = (
       permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
     }));
   }, [state.foundWords]);
-
-  const useHint = useCallback(() => {
-    if (state.hintsUsed >= 3) return; // Limite de dicas
-    
-    // Encontrar uma palavra não encontrada ainda
-    const availableWords = levelWords.filter(word => 
-      !state.foundWords.some(fw => fw.word === word)
-    );
-    
-    if (availableWords.length === 0) return;
-    
-    // Simular highlight de uma palavra (implementação básica)
-    const randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
-    logger.info(`💡 Dica usada: ${randomWord}`, { hintsUsed: state.hintsUsed + 1 }, 'GAME_STATE');
-    
-    setState(prev => ({ 
-      ...prev, 
-      hintsUsed: prev.hintsUsed + 1,
-      // Aqui você implementaria a lógica para destacar as células da palavra
-      hintHighlightedCells: [] // TODO: implementar highlight das células
-    }));
-  }, [levelWords, state.foundWords, state.hintsUsed]);
 
   return {
     ...state,

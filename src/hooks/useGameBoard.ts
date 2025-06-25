@@ -47,8 +47,8 @@ export const useGameBoard = ({
     isUpdatingScore
   } = useOptimizedGameScoring(level, boardData);
 
-  // Estado do jogo
-  const gameState = useGameState(levelWords, timeLeft, onLevelComplete);
+  // Estado do jogo - AGORA COM boardData
+  const gameState = useGameState(levelWords, timeLeft, onLevelComplete, boardData);
 
   // Interações com células
   const cellInteractions = useCellInteractions(
