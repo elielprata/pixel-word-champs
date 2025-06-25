@@ -1,4 +1,3 @@
-
 /**
  * UTILITÁRIO UNIFICADO DE TEMPO PARA BRASÍLIA
  * Todas as funções trabalham exclusivamente com horário de Brasília (UTC-3)
@@ -94,7 +93,7 @@ export const createBrasiliaTimestamp = (dateString: string, endOfDay: boolean = 
 
 /**
  * Calcula a data de fim baseada na data de início e duração em horas
- * VERSÃO SIMPLIFICADA - o trigger do banco agora respeita esta data
+ * VERSÃO CORRIGIDA - evita conversões duplas de timezone
  */
 export const calculateEndDateWithDuration = (startDateTime: string, durationHours: number): string => {
   if (!startDateTime || !durationHours) {
@@ -102,13 +101,17 @@ export const calculateEndDateWithDuration = (startDateTime: string, durationHour
   }
   
   try {
+    // Trabalhar diretamente com UTC para evitar conversões duplas
     const startDate = new Date(startDateTime);
+    
+    // Somar a duração em milissegundos (horas * 60 * 60 * 1000)
     const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
     
-    // Verificar limite do mesmo dia (o trigger do banco fará a validação final)
+    // Verificar limite do mesmo dia em UTC (23:59:59)
     const sameDayLimit = new Date(startDate);
-    sameDayLimit.setHours(23, 59, 59, 999);
+    sameDayLimit.setUTCHours(23, 59, 59, 999);
     
+    // Se ultrapassar o limite do dia, ajustar para 23:59:59
     if (endDate > sameDayLimit) {
       return sameDayLimit.toISOString();
     }
@@ -140,7 +143,7 @@ export const validateCompetitionDuration = (startDateTime: string, durationHours
   const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
   
   const sameDayLimit = new Date(startDate);
-  sameDayLimit.setHours(23, 59, 59, 999);
+  sameDayLimit.setUTCHours(23, 59, 59, 999);
   
   if (endDate > sameDayLimit) {
     const maxDurationHours = Math.floor((sameDayLimit.getTime() - startDate.getTime()) / (60 * 60 * 1000));
