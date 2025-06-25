@@ -1,112 +1,31 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Settings, Clock, AlertTriangle, RotateCcw, Zap, Calendar, Info } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AutomationLogs } from '../users/AutomationLogs';
-import { useAutomationSettings } from '@/hooks/useAutomationSettings';
-import { useResetScores } from '@/hooks/useResetScores';
-import { AutomationConfig } from '../users/automation/types';
-import { getDefaultSettings } from '../users/automation/utils';
-import { AutomationActions } from '../users/automation/AutomationActions';
-import { ManualTestSection } from '../users/automation/ManualTestSection';
-import { automationService } from '@/services/automationService';
-import { formatDateInputToDisplay } from '@/utils/brasiliaTimeUnified';
+import { Settings, Clock, Zap } from 'lucide-react';
+import { useAutomationTabLogic } from './automation/useAutomationTabLogic';
+import { AutomationSystemStatus } from './automation/AutomationSystemStatus';
+import { AutomationSettingsSection } from './automation/AutomationSettingsSection';
+import { EmergencyResetSection } from './automation/EmergencyResetSection';
+import { AutomationHistorySection } from './automation/AutomationHistorySection';
 
 export const AutomationTabContent = () => {
-  const { logs, isExecuting, executeManualReset, settings: currentSettings, saveSettings } = useAutomationSettings();
-  const { resetAllScores, isResettingScores } = useResetScores();
-  const [settings, setSettings] = useState<AutomationConfig>(
-    currentSettings || getDefaultSettings()
-  );
-  const [showTestSection, setShowTestSection] = useState(false);
-  const [showEmergencyReset, setShowEmergencyReset] = useState(false);
-  const [resetStatus, setResetStatus] = useState<any>(null);
-
-  useEffect(() => {
-    if (currentSettings) {
-      setSettings(currentSettings);
-    }
-  }, [currentSettings]);
-
-  useEffect(() => {
-    // Carregar status do reset ao montar o componente
-    loadResetStatus();
-  }, []);
-
-  const loadResetStatus = async () => {
-    try {
-      const status = await automationService.checkResetStatus();
-      setResetStatus(status);
-    } catch (error) {
-      console.error('Erro ao carregar status do reset:', error);
-    }
-  };
-
-  const handleSave = () => {
-    saveSettings(settings);
-    // Recarregar status após salvar
-    setTimeout(loadResetStatus, 1000);
-  };
-
-  const handleManualTest = async () => {
-    const success = await executeManualReset();
-    if (success) {
-      setShowTestSection(false);
-      // Recarregar status após reset
-      setTimeout(loadResetStatus, 1000);
-    }
-  };
-
-  const handleEmergencyReset = async () => {
-    try {
-      await resetAllScores('admin123');
-      setShowEmergencyReset(false);
-      // Recarregar status após reset
-      setTimeout(loadResetStatus, 1000);
-    } catch (error) {
-      console.error('Erro no reset de emergência:', error);
-    }
-  };
-
-  const getNextResetInfo = () => {
-    if (!resetStatus) return null;
-    
-    if (resetStatus.should_reset) {
-      return {
-        message: "Reset deve ser executado agora",
-        color: "text-red-600",
-        icon: AlertTriangle
-      };
-    }
-    
-    // Usar formatação simples sem conversões
-    const nextResetFormatted = formatDateInputToDisplay(resetStatus.next_reset_date);
-    
-    // Calcular diferença usando strings diretas
-    const today = new Date().toISOString().split('T')[0];
-    const nextResetDate = resetStatus.next_reset_date;
-    
-    const todayParts = today.split('-').map(Number);
-    const nextParts = nextResetDate.split('-').map(Number);
-    
-    const todayObj = new Date(todayParts[0], todayParts[1] - 1, todayParts[2]);
-    const nextObj = new Date(nextParts[0], nextParts[1] - 1, nextParts[2]);
-    
-    const diffTime = nextObj.getTime() - todayObj.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    return {
-      message: `Próximo reset em ${diffDays} dia(s) - ${nextResetFormatted} às 00:00:00`,
-      color: "text-blue-600",
-      icon: Calendar
-    };
-  };
-
-  const nextResetInfo = getNextResetInfo();
+  const {
+    logs,
+    settings,
+    showTestSection,
+    showEmergencyReset,
+    resetStatus,
+    nextResetInfo,
+    isExecuting,
+    isResettingScores,
+    setSettings,
+    setShowTestSection,
+    setShowEmergencyReset,
+    handleSave,
+    handleManualTest,
+    handleEmergencyReset
+  } = useAutomationTabLogic();
 
   return (
     <div className="space-y-6">
@@ -136,80 +55,20 @@ export const AutomationTabContent = () => {
             </CardHeader>
             
             <CardContent className="p-6 space-y-6">
-              {/* Status do Sistema */}
-              {resetStatus && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-blue-800 mb-2">
-                    <Info className="h-4 w-4" />
-                    <span className="font-medium">Status Atual do Sistema</span>
-                  </div>
-                  <div className="text-sm text-blue-700 space-y-1">
-                    <p>Período atual: {formatDateInputToDisplay(resetStatus.week_start)} - {formatDateInputToDisplay(resetStatus.week_end)}</p>
-                    <p>Tipo: {resetStatus.is_custom_dates ? 'Datas Customizadas' : 'Configuração Padrão'}</p>
-                    {nextResetInfo && (
-                      <div className={`flex items-center gap-2 font-medium ${nextResetInfo.color}`}>
-                        <nextResetInfo.icon className="h-4 w-4" />
-                        {nextResetInfo.message}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Switch de Automação */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="automation-enabled" className="text-base font-medium">
-                    Automação Ativada
-                  </Label>
-                  <p className="text-sm text-slate-600">
-                    Ativar reset automático de pontuações baseado nas datas do ranking semanal
-                  </p>
-                </div>
-                <Switch
-                  id="automation-enabled"
-                  checked={settings.enabled}
-                  onCheckedChange={(enabled) => setSettings({ ...settings, enabled })}
-                />
-              </div>
-
-              {settings.enabled && (
-                <>
-                  {/* Informação sobre o tipo de trigger */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 text-blue-800">
-                      <Clock className="h-4 w-4" />
-                      <span className="font-medium">Reset Baseado em Tempo</span>
-                    </div>
-                    <p className="text-sm text-blue-700 mt-1">
-                      O sistema verifica diariamente às 00:00:00 se a data de fim do ranking semanal foi ultrapassada.
-                      Quando isso acontece, executa automaticamente o reset das pontuações de todos os usuários.
-                    </p>
-                  </div>
-
-                  {/* Alerta de aviso */}
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                      <strong>Atenção:</strong> O reset automático zeará a pontuação de todos os usuários.
-                      Esta ação é irreversível e será executada automaticamente quando a data de fim do ranking for ultrapassada.
-                    </AlertDescription>
-                  </Alert>
-                </>
-              )}
-
-              <AutomationActions
-                settings={settings}
-                showTestSection={showTestSection}
-                onSave={handleSave}
-                onToggleTestSection={() => setShowTestSection(!showTestSection)}
+              <AutomationSystemStatus 
+                resetStatus={resetStatus} 
+                nextResetInfo={nextResetInfo} 
               />
 
-              <ManualTestSection
+              <AutomationSettingsSection
+                settings={settings}
                 showTestSection={showTestSection}
                 isExecuting={isExecuting}
+                onSettingsChange={setSettings}
+                onSave={handleSave}
+                onToggleTestSection={() => setShowTestSection(!showTestSection)}
                 onExecuteTest={handleManualTest}
-                onCancel={() => setShowTestSection(false)}
+                onCancelTest={() => setShowTestSection(false)}
               />
             </CardContent>
           </Card>
@@ -225,76 +84,18 @@ export const AutomationTabContent = () => {
             </CardHeader>
             
             <CardContent className="p-6 space-y-6">
-              <div className="space-y-4">
-                <p className="text-slate-700">
-                  Use esta funcionalidade para zerar manualmente todas as pontuações dos usuários em situações de emergência.
-                </p>
-
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>ATENÇÃO:</strong> Esta ação é irreversível e zerará imediatamente a pontuação de todos os usuários do sistema.
-                    Use apenas em casos de emergência ou manutenção programada.
-                  </AlertDescription>
-                </Alert>
-
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowEmergencyReset(!showEmergencyReset)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-                  >
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    {showEmergencyReset ? 'Cancelar' : 'Preparar Reset de Emergência'}
-                  </Button>
-                </div>
-
-                {showEmergencyReset && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-4">
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-red-800">Confirmar Reset de Emergência</h4>
-                      <p className="text-sm text-red-700">
-                        Esta ação zerará imediatamente a pontuação de todos os usuários. Tem certeza de que deseja continuar?
-                      </p>
-                    </div>
-                    
-                    <div className="flex gap-3">
-                      <Button
-                        variant="destructive"
-                        onClick={handleEmergencyReset}
-                        disabled={isResettingScores}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        {isResettingScores ? (
-                          <>
-                            <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
-                            Executando Reset...
-                          </>
-                        ) : (
-                          <>
-                            <Zap className="h-4 w-4 mr-2" />
-                            CONFIRMAR RESET DE EMERGÊNCIA
-                          </>
-                        )}
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowEmergencyReset(false)}
-                        disabled={isResettingScores}
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <EmergencyResetSection
+                showEmergencyReset={showEmergencyReset}
+                isResettingScores={isResettingScores}
+                onToggleEmergencyReset={() => setShowEmergencyReset(!showEmergencyReset)}
+                onEmergencyReset={handleEmergencyReset}
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
-          <AutomationLogs logs={logs} />
+          <AutomationHistorySection logs={logs} />
         </TabsContent>
       </Tabs>
     </div>
