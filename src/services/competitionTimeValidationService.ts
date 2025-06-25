@@ -2,7 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
-import { isDailyCompetitionTimeValid } from '@/utils/dailyCompetitionValidation';
 import { isWeeklyCompetitionTimeValid } from '@/utils/weeklyCompetitionValidation';
 import { logger } from '@/utils/logger';
 import { getCurrentBrasiliaDate, createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
@@ -23,7 +22,6 @@ export class CompetitionTimeValidationService {
 
       const results = {
         totalChecked: competitions?.length || 0,
-        dailyInconsistent: [] as any[],
         weeklyInconsistent: [] as any[],
         validCompetitions: 0
       };
@@ -31,16 +29,14 @@ export class CompetitionTimeValidationService {
       for (const comp of competitions || []) {
         let isValid = false;
         
-        if (comp.competition_type === 'challenge') {
-          isValid = isDailyCompetitionTimeValid(comp.start_date, comp.end_date);
-          if (!isValid) {
-            results.dailyInconsistent.push(comp);
-          }
-        } else if (comp.competition_type === 'tournament') {
+        if (comp.competition_type === 'tournament') {
           isValid = isWeeklyCompetitionTimeValid(comp.start_date, comp.end_date);
           if (!isValid) {
             results.weeklyInconsistent.push(comp);
           }
+        } else {
+          // Para outros tipos de competição, considerar válido por padrão
+          isValid = true;
         }
         
         if (isValid) {
@@ -107,8 +103,8 @@ export class CompetitionTimeValidationService {
         throw new Error('Falha na validação inicial');
       }
 
-      const { dailyInconsistent, weeklyInconsistent } = validationResult.data;
-      const allInconsistent = [...dailyInconsistent, ...weeklyInconsistent];
+      const { weeklyInconsistent } = validationResult.data;
+      const allInconsistent = [...weeklyInconsistent];
       
       const correctionResults = [];
       
