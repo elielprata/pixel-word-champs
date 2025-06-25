@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -37,7 +36,7 @@ export const AutomationTabContent = () => {
 
   const handleEmergencyReset = async () => {
     try {
-      await resetAllScores('admin123');
+      await resetAllScores('admin123'); // Using the correct function name
       setShowEmergencyReset(false);
     } catch (error) {
       console.error('Erro no reset de emergência:', error);
