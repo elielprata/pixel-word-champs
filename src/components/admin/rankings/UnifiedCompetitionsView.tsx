@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Trophy } from 'lucide-react';
 import { DailyCompetitionsView } from './DailyCompetitionsView';
 import { WeeklyRankingView } from './WeeklyRankingView';
+import { AdministrativeControlsCard } from './AdministrativeControlsCard';
 import { useUnifiedCompetitions } from '@/hooks/useUnifiedCompetitions';
 
 export const UnifiedCompetitionsView = () => {
@@ -25,6 +26,9 @@ export const UnifiedCompetitionsView = () => {
           </div>
         </div>
       </div>
+
+      {/* Controles Administrativos */}
+      <AdministrativeControlsCard />
 
       <Tabs defaultValue="daily" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">

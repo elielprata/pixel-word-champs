@@ -22,8 +22,7 @@ export const WeeklyRankingView = () => {
     stats, 
     isLoading, 
     error, 
-    refetch,
-    resetWeeklyScores 
+    refetch
   } = useWeeklyRanking();
 
   const handleRefresh = () => {
@@ -32,23 +31,6 @@ export const WeeklyRankingView = () => {
       title: "Atualizado",
       description: "Ranking semanal atualizado com sucesso!",
     });
-  };
-
-  const handleResetScores = async () => {
-    try {
-      await resetWeeklyScores();
-      toast({
-        title: "Sucesso",
-        description: "Pontuações semanais resetadas com sucesso!",
-      });
-      refetch();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao resetar pontuações semanais",
-        variant: "destructive",
-      });
-    }
   };
 
   if (isLoading) {
@@ -119,7 +101,7 @@ export const WeeklyRankingView = () => {
           </TabsTrigger>
           <TabsTrigger value="controls" className="flex items-center gap-2">
             <Crown className="h-4 w-4" />
-            Controles
+            Informações
           </TabsTrigger>
         </TabsList>
 
@@ -143,7 +125,16 @@ export const WeeklyRankingView = () => {
         </TabsContent>
 
         <TabsContent value="controls" className="mt-6">
-          <WeeklyRankingControls onResetScores={handleResetScores} />
+          <div className="space-y-4">
+            <WeeklyRankingControls />
+            
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-amber-800">
+                <strong>Controles Administrativos:</strong> Os botões de reset foram movidos para a aba principal "Competições" 
+                para centralizar todos os controles administrativos em um local.
+              </p>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -5,7 +5,6 @@ import { UserDetailModal } from './UserDetailModal';
 import { BanUserModal } from './BanUserModal';
 import { DeleteUserModal } from './DeleteUserModal';
 import { EditUserModal } from '../EditUserModal';
-import { ResetScoresModal } from './ResetScoresModal';
 import { logger } from '@/utils/logger';
 import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
@@ -15,11 +14,7 @@ interface UserModalsManagerProps {
   showBanModal: boolean;
   showDeleteModal: boolean;
   showEditModal: boolean;
-  showResetModal: boolean;
-  isResettingScores: boolean;
   onCloseModals: () => void;
-  onCloseResetModal: () => void;
-  onResetScores: (password: string) => Promise<void>;
 }
 
 export const UserModalsManager = ({
@@ -28,11 +23,7 @@ export const UserModalsManager = ({
   showBanModal,
   showDeleteModal,
   showEditModal,
-  showResetModal,
-  isResettingScores,
   onCloseModals,
-  onCloseResetModal,
-  onResetScores,
 }: UserModalsManagerProps) => {
   logger.debug('Gerenciando modais de usuário', { 
     hasSelectedUser: !!selectedUser,
@@ -40,7 +31,6 @@ export const UserModalsManager = ({
     showBanModal,
     showDeleteModal,
     showEditModal,
-    showResetModal,
     timestamp: formatBrasiliaDate(new Date())
   }, 'USER_MODALS_MANAGER');
 
@@ -75,13 +65,6 @@ export const UserModalsManager = ({
           />
         </>
       )}
-
-      <ResetScoresModal
-        isOpen={showResetModal}
-        onClose={onCloseResetModal}
-        onConfirm={onResetScores}
-        isResetting={isResettingScores}
-      />
     </>
   );
 };
