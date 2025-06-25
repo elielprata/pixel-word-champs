@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CompetitionFormData, CompetitionValidationResult } from '@/types/competition';
 import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
 import { secureLogger } from '@/utils/secureLogger';
+import { validateCompetitionDuration, calculateEndDateWithDuration } from '@/utils/brasiliaTimeUnified';
 
 export const useUnifiedCompetitionForm = () => {
   const { toast } = useToast();
@@ -14,12 +15,25 @@ export const useUnifiedCompetitionForm = () => {
     type: 'daily', // Apenas competições diárias
     startDate: '',
     endDate: '',
+    duration: 3, // Duração padrão de 3 horas
     maxParticipants: 0 // Não usado mais - participação livre
   });
 
   const updateField = useCallback((field: keyof CompetitionFormData, value: any) => {
     secureLogger.debug(`Campo alterado: ${field}`, { value }, 'UNIFIED_COMPETITION_FORM');
-    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Recalcular endDate automaticamente quando startDate ou duration mudarem
+      if (field === 'startDate' || field === 'duration') {
+        if (newData.startDate && newData.duration) {
+          newData.endDate = calculateEndDateWithDuration(newData.startDate, newData.duration);
+        }
+      }
+      
+      return newData;
+    });
   }, []);
 
   const validateForm = useCallback((): CompetitionValidationResult => {
@@ -35,6 +49,18 @@ export const useUnifiedCompetitionForm = () => {
 
     if (!formData.startDate) {
       errors.push('Data de início é obrigatória');
+    }
+
+    if (!formData.duration || formData.duration < 1) {
+      errors.push('Duração deve ser de pelo menos 1 hora');
+    }
+
+    // Validar duração específica
+    if (formData.startDate && formData.duration) {
+      const durationValidation = validateCompetitionDuration(formData.startDate, formData.duration);
+      if (!durationValidation.isValid && durationValidation.error) {
+        errors.push(durationValidation.error);
+      }
     }
 
     return {
@@ -61,7 +87,8 @@ export const useUnifiedCompetitionForm = () => {
     setIsSubmitting(true);
     secureLogger.info('Iniciando submissão de competição', { 
       title: formData.title, 
-      type: formData.type
+      type: formData.type,
+      duration: formData.duration
     }, 'UNIFIED_COMPETITION_FORM');
 
     try {
@@ -84,6 +111,7 @@ export const useUnifiedCompetitionForm = () => {
           type: 'daily',
           startDate: '',
           endDate: '',
+          duration: 3,
           maxParticipants: 0
         });
         
@@ -112,6 +140,7 @@ export const useUnifiedCompetitionForm = () => {
       type: 'daily',
       startDate: '',
       endDate: '',
+      duration: 3,
       maxParticipants: 0
     });
   }, []);

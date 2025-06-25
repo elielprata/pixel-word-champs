@@ -7,6 +7,7 @@ export interface UnifiedCompetition {
   status: 'draft' | 'scheduled' | 'active' | 'completed';
   startDate: string;
   endDate: string;
+  duration?: number; // Nova propriedade para duração em horas
   maxParticipants: number;
   theme?: string;
   totalParticipants?: number;
@@ -20,6 +21,7 @@ export interface CompetitionFormData {
   type: 'daily'; // Apenas competições diárias
   startDate: string;
   endDate: string;
+  duration: number; // Nova propriedade obrigatória para duração em horas
   maxParticipants: number;
 }
 

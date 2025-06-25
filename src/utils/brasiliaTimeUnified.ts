@@ -1,5 +1,3 @@
-
-
 /**
  * UTILITÁRIO UNIFICADO DE TEMPO PARA BRASÍLIA
  * Todas as funções trabalham exclusivamente com horário de Brasília (UTC-3)
@@ -99,6 +97,74 @@ export const createBrasiliaTimestamp = (dateString: string, endOfDay: boolean = 
   }
   
   return date.toISOString();
+};
+
+/**
+ * Calcula a data de fim baseada na data de início e duração em horas
+ */
+export const calculateEndDateWithDuration = (startDateTime: string, durationHours: number): string => {
+  if (!startDateTime || !durationHours) return '';
+  
+  const startDate = new Date(startDateTime);
+  const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
+  
+  // Garantir que não passe de 23:59:59 do mesmo dia
+  const sameDayLimit = new Date(startDate);
+  sameDayLimit.setHours(23, 59, 59, 999);
+  
+  if (endDate > sameDayLimit) {
+    return sameDayLimit.toISOString();
+  }
+  
+  return endDate.toISOString();
+};
+
+/**
+ * Valida se uma duração é válida para uma data de início
+ */
+export const validateCompetitionDuration = (startDateTime: string, durationHours: number): { isValid: boolean; error?: string } => {
+  if (!startDateTime) {
+    return { isValid: false, error: 'Data de início é obrigatória' };
+  }
+  
+  if (!durationHours || durationHours < 1) {
+    return { isValid: false, error: 'Duração deve ser de pelo menos 1 hora' };
+  }
+  
+  if (durationHours > 12) {
+    return { isValid: false, error: 'Duração máxima é de 12 horas' };
+  }
+  
+  const startDate = new Date(startDateTime);
+  const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
+  
+  // Verificar se ultrapassa 23:59:59 do mesmo dia
+  const sameDayLimit = new Date(startDate);
+  sameDayLimit.setHours(23, 59, 59, 999);
+  
+  if (endDate > sameDayLimit) {
+    const maxDurationHours = Math.floor((sameDayLimit.getTime() - startDate.getTime()) / (60 * 60 * 1000));
+    return { 
+      isValid: false, 
+      error: `Duração máxima para este horário é de ${maxDurationHours} horas (até 23:59:59)` 
+    };
+  }
+  
+  return { isValid: true };
+};
+
+/**
+ * Formata horário de preview para exibição
+ */
+export const formatTimePreview = (dateTime: string): string => {
+  if (!dateTime) return '';
+  
+  const date = new Date(dateTime);
+  return date.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Sao_Paulo'
+  });
 };
 
 /**
@@ -275,4 +341,3 @@ export const isValidDateString = (dateString: string): boolean => {
     return false;
   }
 };
-

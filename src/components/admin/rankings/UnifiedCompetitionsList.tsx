@@ -3,9 +3,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users, Edit, Trash2 } from 'lucide-react';
+import { Calendar, Users, Edit, Trash2, Clock } from 'lucide-react';
 import { UnifiedCompetition } from '@/types/competition';
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
+import { formatBrasiliaDate, formatTimePreview } from '@/utils/brasiliaTimeUnified';
 import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 
 interface UnifiedCompetitionsListProps {
@@ -44,8 +44,20 @@ export const UnifiedCompetitionsList: React.FC<UnifiedCompetitionsListProps> = (
 
   const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
     const date = new Date(dateString);
-    const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
+    const timeFormatted = formatTimePreview(dateString);
     return `${formatBrasiliaDate(date, false)}, ${timeFormatted}`;
+  };
+
+  const formatDuration = (startDate: string, endDate: string, duration?: number) => {
+    if (duration) {
+      return `${duration}h`;
+    }
+    
+    // Calcular duração baseada nas datas
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const hours = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60));
+    return `${hours}h`;
   };
 
   if (isLoading) {
@@ -92,7 +104,7 @@ export const UnifiedCompetitionsList: React.FC<UnifiedCompetitionsListProps> = (
                 
                 <p className="text-sm text-slate-600 mb-3">{competition.description}</p>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3 text-slate-500" />
                     <span>Início: {formatDateTime(competition.startDate, false)}</span>
@@ -101,6 +113,13 @@ export const UnifiedCompetitionsList: React.FC<UnifiedCompetitionsListProps> = (
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3 text-slate-500" />
                     <span>Fim: {formatDateTime(competition.endDate, true)}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-blue-600" />
+                    <span className="text-blue-600 font-medium">
+                      Duração: {formatDuration(competition.startDate, competition.endDate, competition.duration)}
+                    </span>
                   </div>
                   
                   <div className="flex items-center gap-1">

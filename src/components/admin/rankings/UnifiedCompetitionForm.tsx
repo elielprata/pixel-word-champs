@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Users, Settings, Save, X } from 'lucide-react';
+import { Calendar, Users, Settings, Save, X, Clock } from 'lucide-react';
 import { useUnifiedCompetitionForm } from '@/hooks/useUnifiedCompetitionForm';
+import { formatTimePreview, validateCompetitionDuration } from '@/utils/brasiliaTimeUnified';
 
 interface UnifiedCompetitionFormProps {
   onClose: () => void;
@@ -31,6 +32,26 @@ export const UnifiedCompetitionForm = ({
     e.preventDefault();
     submitForm(onSuccess);
   };
+
+  // Calcular preview dos horários
+  const getTimePreview = () => {
+    if (!formData.startDate || !formData.duration) return null;
+    
+    const startTime = formatTimePreview(formData.startDate);
+    const endTime = formatTimePreview(formData.endDate);
+    
+    return { startTime, endTime };
+  };
+
+  // Validar duração em tempo real
+  const getDurationValidation = () => {
+    if (!formData.startDate || !formData.duration) return null;
+    
+    return validateCompetitionDuration(formData.startDate, formData.duration);
+  };
+
+  const timePreview = getTimePreview();
+  const durationValidation = getDurationValidation();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -68,16 +89,67 @@ export const UnifiedCompetitionForm = ({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="startDate">Data de Início *</Label>
-            <Input
-              id="startDate"
-              type="datetime-local"
-              value={formData.startDate}
-              onChange={(e) => updateField('startDate', e.target.value)}
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Data e Horário de Início *</Label>
+              <Input
+                id="startDate"
+                type="datetime-local"
+                value={formData.startDate}
+                onChange={(e) => updateField('startDate', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="duration" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Duração (horas) *
+              </Label>
+              <Input
+                id="duration"
+                type="number"
+                min="1"
+                max="12"
+                step="1"
+                value={formData.duration}
+                onChange={(e) => updateField('duration', parseInt(e.target.value) || 1)}
+                placeholder="Ex: 3"
+                required
+              />
+              <p className="text-xs text-gray-500">
+                Mínimo: 1 hora | Máximo: 12 horas
+              </p>
+            </div>
           </div>
+
+          {/* Preview dos Horários */}
+          {timePreview && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">Preview dos Horários</span>
+              </div>
+              <div className="text-sm text-blue-700 space-y-1">
+                <p>🟢 <strong>Início:</strong> {timePreview.startTime}</p>
+                <p>🔴 <strong>Término:</strong> {timePreview.endTime}</p>
+                <p className="text-xs text-blue-600">
+                  ⏰ Duração: {formData.duration} {formData.duration === 1 ? 'hora' : 'horas'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Validação de Duração */}
+          {durationValidation && !durationValidation.isValid && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <X className="h-4 w-4 text-red-600" />
+                <span className="text-sm font-medium text-red-800">Erro de Duração</span>
+              </div>
+              <p className="text-sm text-red-700">{durationValidation.error}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -86,10 +158,12 @@ export const UnifiedCompetitionForm = ({
         <CardContent className="p-4">
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <h3 className="font-medium text-blue-900 mb-2">🎯 Competição Diária</h3>
-            <p className="text-blue-700 text-sm">
-              Competições diárias não possuem premiação em dinheiro. 
-              O foco é na diversão e engajamento dos usuários. A competição terminará automaticamente às 23:59 do dia selecionado.
-            </p>
+            <div className="text-blue-700 text-sm space-y-1">
+              <p>• Sem premiação em dinheiro - foco na diversão e engajamento</p>
+              <p>• Participação livre para todos os usuários</p>
+              <p>• Duração personalizável de 1 a 12 horas</p>
+              <p>• Sempre termina no mesmo dia (limite: 23:59:59)</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -100,7 +174,10 @@ export const UnifiedCompetitionForm = ({
           <X className="h-4 w-4 mr-2" />
           Cancelar
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          disabled={isSubmitting || (durationValidation && !durationValidation.isValid)}
+        >
           <Save className="h-4 w-4 mr-2" />
           {isSubmitting ? 'Criando...' : 'Criar Competição'}
         </Button>
