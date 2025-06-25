@@ -5,7 +5,7 @@ import { useAutomationExecution } from './useAutomationExecution';
 
 interface AutomationConfig {
   enabled: boolean;
-  triggerType: 'competition_finalization';
+  triggerType: 'time_based';
   resetOnCompetitionEnd: boolean;
 }
 

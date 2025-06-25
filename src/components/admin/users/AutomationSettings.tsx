@@ -49,7 +49,7 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
           <CardHeader className="bg-gradient-to-r from-orange-50 to-yellow-50">
             <CardTitle className="flex items-center gap-2 text-orange-800">
               <Settings className="h-5 w-5" />
-              Automação de Reset de Pontuações
+              Automação de Reset Baseado em Tempo
             </CardTitle>
           </CardHeader>
           
@@ -61,7 +61,7 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
                   Automação Ativada
                 </Label>
                 <p className="text-sm text-slate-600">
-                  Ativar reset automático de pontuações
+                  Ativar reset automático de pontuações baseado nas datas do ranking semanal
                 </p>
               </div>
               <Switch
@@ -77,10 +77,11 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 text-blue-800">
                     <Clock className="h-4 w-4" />
-                    <span className="font-medium">Reset por Finalização de Competição</span>
+                    <span className="font-medium">Reset Baseado em Tempo</span>
                   </div>
                   <p className="text-sm text-blue-700 mt-1">
-                    O reset será executado automaticamente quando uma competição semanal for finalizada.
+                    O sistema verifica diariamente às 00:00:00 se a data de fim do ranking semanal foi ultrapassada.
+                    Quando isso acontece, executa automaticamente o reset das pontuações de todos os usuários.
                   </p>
                 </div>
 
@@ -89,7 +90,7 @@ export const AutomationSettings = ({ onSaveSettings, currentSettings }: Automati
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
                     <strong>Atenção:</strong> O reset automático zeará a pontuação de todos os usuários.
-                    Esta ação é irreversível e será executada automaticamente quando uma competição semanal for finalizada.
+                    Esta ação é irreversível e será executada automaticamente quando a data de fim do ranking semanal for ultrapassada.
                   </AlertDescription>
                 </Alert>
               </>
