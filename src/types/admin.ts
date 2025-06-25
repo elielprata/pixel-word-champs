@@ -20,6 +20,21 @@ export interface AdminUser {
   role: string;
 }
 
+// Interface para usuário na lista (compatível com AllUsersData)
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  total_score: number;
+  games_played: number;
+  is_banned: boolean;
+  banned_at: string | null;
+  banned_by: string | null;
+  ban_reason: string | null;
+  created_at: string;
+  roles: string[];
+}
+
 // Interface para verificação de status do sistema
 export interface SystemHealth {
   database: boolean;

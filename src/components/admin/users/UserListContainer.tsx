@@ -1,38 +1,52 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { UserListHeader } from './UserListHeader';
 import { UserCard } from './UserCard';
 import { UserListEmpty } from './UserListEmpty';
 import { UserModalsManager } from './UserModalsManager';
-import { useAllUsers } from '@/hooks/useAllUsers';
-import { User } from '@/types/admin';
+import { useAllUsers, AllUsersData } from '@/hooks/useAllUsers';
 
 export const UserListContainer = () => {
-  const { data: users = [], isLoading } = useAllUsers();
+  const { usersList: users = [], isLoading } = useAllUsers();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AllUsersData | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showBanModal, setShowBanModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const filteredUsers = users.filter(user =>
     user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleUserAction = (user: User, action: string) => {
+  const handleViewUser = (user: AllUsersData) => {
     setSelectedUser(user);
-    switch (action) {
-      case 'view':
-        setShowDetailModal(true);
-        break;
-      case 'ban':
-        setShowBanModal(true);
-        break;
-      case 'delete':
-        setShowDeleteModal(true);
-        break;
-    }
+    setShowDetailModal(true);
+  };
+
+  const handleEditUser = (user: AllUsersData) => {
+    setSelectedUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleBanUser = (user: AllUsersData) => {
+    setSelectedUser(user);
+    setShowBanModal(true);
+  };
+
+  const handleDeleteUser = (user: AllUsersData) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleCloseModals = () => {
+    setShowDetailModal(false);
+    setShowBanModal(false);
+    setShowDeleteModal(false);
+    setShowEditModal(false);
+    setSelectedUser(null);
   };
 
   if (isLoading) {
@@ -69,7 +83,10 @@ export const UserListContainer = () => {
                 <UserCard
                   key={user.id}
                   user={user}
-                  onAction={handleUserAction}
+                  onViewUser={handleViewUser}
+                  onEditUser={handleEditUser}
+                  onBanUser={handleBanUser}
+                  onDeleteUser={handleDeleteUser}
                 />
               ))}
             </div>
@@ -79,13 +96,15 @@ export const UserListContainer = () => {
 
       <UserModalsManager
         selectedUser={selectedUser}
-        showDeleteModal={showDeleteModal}
-        showBanModal={showBanModal}
         showDetailModal={showDetailModal}
-        onCloseDeleteModal={() => setShowDeleteModal(false)}
-        onCloseBanModal={() => setShowBanModal(false)}
-        onCloseDetailModal={() => setShowDetailModal(false)}
-        onClearSelection={() => setSelectedUser(null)}
+        showBanModal={showBanModal}
+        showDeleteModal={showDeleteModal}
+        showEditModal={showEditModal}
+        showResetModal={false}
+        isResettingScores={false}
+        onCloseModals={handleCloseModals}
+        onCloseResetModal={() => {}}
+        onResetScores={async () => {}}
       />
     </>
   );
