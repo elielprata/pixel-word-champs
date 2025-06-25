@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Bug, AlertCircle, CheckCircle, Filter } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
@@ -35,11 +33,6 @@ export const BugReportsTab = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [newReport, setNewReport] = useState({
-    subject: '',
-    message: '',
-    priority: 'medium' as 'low' | 'medium' | 'high'
-  });
 
   const loadReports = async () => {
     setIsLoading(true);
@@ -92,49 +85,6 @@ export const BugReportsTab = () => {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const createReport = async () => {
-    if (!user || !newReport.subject || !newReport.message) {
-      toast({
-        title: "Erro",
-        description: "Preencha todos os campos obrigatórios",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('user_reports')
-        .insert({
-          subject: newReport.subject,
-          message: newReport.message,
-          priority: newReport.priority,
-          report_type: 'bug',
-          status: 'pending',
-          user_id: user.id,
-          created_at: createBrasiliaTimestamp(new Date().toString()),
-          updated_at: createBrasiliaTimestamp(new Date().toString())
-        });
-
-      if (error) throw error;
-
-      setNewReport({ subject: '', message: '', priority: 'medium' });
-      loadReports();
-      
-      toast({
-        title: "Sucesso",
-        description: "Report de bug enviado com sucesso",
-      });
-    } catch (error) {
-      console.error('Erro ao criar report:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar o report de bug",
-        variant: "destructive",
-      });
     }
   };
 
@@ -211,7 +161,7 @@ export const BugReportsTab = () => {
       <div className="flex items-center gap-2 mb-6">
         <Bug className="h-5 w-5" />
         <h2 className="text-xl font-semibold">
-          {isAdmin ? 'Gerenciar Reports de Bugs' : 'Reportar Bugs'}
+          {isAdmin ? 'Gerenciar Reports de Bugs' : 'Meus Reports de Bugs'}
         </h2>
       </div>
 
@@ -242,55 +192,6 @@ export const BugReportsTab = () => {
           </Card>
         </div>
       )}
-
-      {/* Formulário para criar novo report */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">
-            Reportar Bug
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="subject">Título do Bug *</Label>
-              <Input
-                id="subject"
-                value={newReport.subject}
-                onChange={(e) => setNewReport({ ...newReport, subject: e.target.value })}
-                placeholder="Descreva o problema em poucas palavras"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="priority">Prioridade</Label>
-              <select
-                id="priority"
-                value={newReport.priority}
-                onChange={(e) => setNewReport({ ...newReport, priority: e.target.value as 'low' | 'medium' | 'high' })}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="low">Baixa - Bug menor</option>
-                <option value="medium">Média - Bug que atrapalha o uso</option>
-                <option value="high">Alta - Bug que impede o uso</option>
-              </select>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="message">Descrição Detalhada *</Label>
-            <Textarea
-              id="message"
-              value={newReport.message}
-              onChange={(e) => setNewReport({ ...newReport, message: e.target.value })}
-              placeholder="Descreva o bug em detalhes: o que aconteceu, como reproduzir, etc."
-              rows={4}
-            />
-          </div>
-          <Button onClick={createReport} className="w-full">
-            <Bug className="w-4 h-4 mr-2" />
-            Enviar Report de Bug
-          </Button>
-        </CardContent>
-      </Card>
 
       {/* Filtros (apenas para admins) */}
       {isAdmin && (
@@ -338,7 +239,7 @@ export const BugReportsTab = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">
-              {isAdmin ? 'Todos os Reports de Bugs' : 'Meus Reports de Bugs'}
+              {isAdmin ? 'Reports de Bugs Recebidos' : 'Meus Reports de Bugs'}
             </CardTitle>
             <Button variant="outline" onClick={loadReports} disabled={isLoading}>
               {isLoading ? 'Carregando...' : 'Atualizar'}
