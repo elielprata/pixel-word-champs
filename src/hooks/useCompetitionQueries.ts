@@ -17,7 +17,7 @@ export const useCompetitionQueries = () => {
       const response = await competitionService.getActiveCompetitions();
       
       if (response.success) {
-        setCompetitions(response.data);
+        setCompetitions(response.data || []);
       } else {
         throw new Error(response.error || 'Erro ao carregar competições');
       }
@@ -32,7 +32,7 @@ export const useCompetitionQueries = () => {
       const response = await customCompetitionService.getCustomCompetitions();
       
       if (response.success) {
-        setCustomCompetitions(response.data);
+        setCustomCompetitions(response.data || []);
       } else {
         throw new Error(response.error || 'Erro ao carregar competições customizadas');
       }

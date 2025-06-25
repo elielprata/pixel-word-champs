@@ -44,13 +44,13 @@ export const useOptimizedCompetitions = () => {
       ]);
 
       if (competitionsResponse.success) {
-        setCompetitions(competitionsResponse.data);
+        setCompetitions(competitionsResponse.data || []);
       } else {
         throw new Error(competitionsResponse.error || 'Erro ao carregar competições');
       }
 
       if (customCompetitionsResponse.success) {
-        setCustomCompetitions(customCompetitionsResponse.data);
+        setCustomCompetitions(customCompetitionsResponse.data || []);
       } else {
         throw new Error(customCompetitionsResponse.error || 'Erro ao carregar competições customizadas');
       }
