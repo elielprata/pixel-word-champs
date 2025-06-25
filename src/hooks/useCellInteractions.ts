@@ -1,6 +1,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
+import { useSimpleSelectionWithValidation } from './useSimpleSelectionWithValidation';
 
 interface FoundWord {
   word: string;
@@ -8,13 +9,31 @@ interface FoundWord {
   points: number;
 }
 
-export const useCellInteractions = (
-  foundWords: FoundWord[],
-  permanentlyMarkedCells: Position[],
-  hintHighlightedCells: Position[]
-) => {
-  const [selectedCells, setSelectedCells] = useState<Position[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
+interface UseCellInteractionsProps {
+  foundWords: FoundWord[];
+  permanentlyMarkedCells: Position[];
+  hintHighlightedCells: Position[];
+  boardData?: { board: string[][]; placedWords: any[] };
+  levelWords: string[];
+  onWordFound: (foundWord: FoundWord) => void;
+}
+
+export const useCellInteractions = ({
+  foundWords,
+  permanentlyMarkedCells,
+  hintHighlightedCells,
+  boardData,
+  levelWords,
+  onWordFound
+}: UseCellInteractionsProps) => {
+  
+  // Hook de seleção com validação integrada
+  const selectionHook = useSimpleSelectionWithValidation({
+    boardData,
+    levelWords,
+    foundWords,
+    onWordFound
+  });
 
   // Otimizar verificações com Map para O(1) lookup
   const permanentCellsMap = useMemo(() => {
@@ -44,8 +63,8 @@ export const useCellInteractions = (
   }, [foundWords]);
 
   const isCellSelected = useCallback((row: number, col: number) => {
-    return selectedCells.some(pos => pos.row === row && pos.col === col);
-  }, [selectedCells]);
+    return selectionHook.isCellSelected(row, col);
+  }, [selectionHook]);
 
   const isCellPermanentlyMarked = useCallback((row: number, col: number) => {
     return permanentCellsMap.has(`${row}-${col}`);
@@ -71,39 +90,18 @@ export const useCellInteractions = (
     return colors[wordIndex % colors.length];
   }, []);
 
-  const handleCellStart = useCallback((row: number, col: number) => {
-    setSelectedCells([{ row, col }]);
-    setIsDragging(true);
-  }, []);
-
-  const handleCellMove = useCallback((row: number, col: number) => {
-    if (!isDragging) return;
-    
-    setSelectedCells(prev => {
-      const newPos = { row, col };
-      const exists = prev.some(pos => pos.row === row && pos.col === col);
-      if (exists) return prev;
-      return [...prev, newPos];
-    });
-  }, [isDragging]);
-
-  const handleCellEnd = useCallback(() => {
-    setIsDragging(false);
-    // Aqui você implementaria a lógica de validação da palavra selecionada
-    // Por enquanto, apenas limpa a seleção
-    setSelectedCells([]);
-  }, []);
-
   return {
-    selectedCells,
-    isDragging,
+    selectedCells: selectionHook.startCell && selectionHook.currentCell 
+      ? selectionHook.getLinearPath(selectionHook.startCell, selectionHook.currentCell)
+      : [],
+    isDragging: selectionHook.isDragging,
     isCellSelected,
     isCellPermanentlyMarked,
     isCellHintHighlighted,
     getCellWordIndex,
     getWordColor,
-    handleCellStart,
-    handleCellMove,
-    handleCellEnd
+    handleCellStart: selectionHook.handleStart,
+    handleCellMove: selectionHook.handleDrag,
+    handleCellEnd: selectionHook.handleEnd
   };
 };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useOptimizedBoard } from './useOptimizedBoard';
 import { useGameState } from './useGameState';
@@ -50,12 +49,15 @@ export const useGameBoard = ({
   // Estado do jogo - AGORA COM boardData
   const gameState = useGameState(levelWords, timeLeft, onLevelComplete, boardData);
 
-  // Interações com células
-  const cellInteractions = useCellInteractions(
-    gameState.foundWords,
-    gameState.permanentlyMarkedCells,
-    gameState.hintHighlightedCells
-  );
+  // Interações com células - ATUALIZADO para incluir validação de palavras
+  const cellInteractions = useCellInteractions({
+    foundWords: gameState.foundWords,
+    permanentlyMarkedCells: gameState.permanentlyMarkedCells,
+    hintHighlightedCells: gameState.hintHighlightedCells,
+    boardData,
+    levelWords,
+    onWordFound: gameState.addFoundWord
+  });
 
   // Inicializar sessão quando o jogo estiver pronto
   useEffect(() => {
