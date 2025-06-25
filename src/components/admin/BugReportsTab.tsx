@@ -157,31 +157,25 @@ export const BugReportsTab = () => {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Bug className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">
-            {isAdmin ? 'Gerenciar Reports de Bugs' : 'Meus Reports de Bugs'}
-          </h2>
-        </div>
-        <Button variant="outline" onClick={loadReports} disabled={isLoading}>
-          {isLoading ? 'Carregando...' : 'Atualizar'}
-        </Button>
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Bug className="h-5 w-5" />
+        <h2 className="text-xl font-semibold">
+          {isAdmin ? 'Gerenciar Reports de Bugs' : 'Meus Reports de Bugs'}
+        </h2>
       </div>
 
-      {/* Stats Cards - apenas para admins */}
+      {/* Estatísticas simples (apenas para admins) */}
       {isAdmin && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="text-2xl font-bold text-blue-600">{reports.length}</div>
               <div className="text-sm text-gray-600">Total de Reports</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="text-2xl font-bold text-red-600">
                 {reports.filter(r => r.status === 'pending').length}
               </div>
@@ -189,7 +183,7 @@ export const BugReportsTab = () => {
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="text-2xl font-bold text-green-600">
                 {reports.filter(r => r.status === 'resolved').length}
               </div>
@@ -199,11 +193,11 @@ export const BugReportsTab = () => {
         </div>
       )}
 
-      {/* Filters - apenas para admins */}
+      {/* Filtros (apenas para admins) */}
       {isAdmin && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-lg flex items-center gap-2">
               <Filter className="h-4 w-4" />
               Filtros
             </CardTitle>
@@ -240,12 +234,17 @@ export const BugReportsTab = () => {
         </Card>
       )}
 
-      {/* Reports List */}
+      {/* Lista de reports */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
-            {isAdmin ? 'Reports de Bugs Recebidos' : 'Meus Reports de Bugs'}
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">
+              {isAdmin ? 'Reports de Bugs Recebidos' : 'Meus Reports de Bugs'}
+            </CardTitle>
+            <Button variant="outline" onClick={loadReports} disabled={isLoading}>
+              {isLoading ? 'Carregando...' : 'Atualizar'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {reports.length === 0 ? (
