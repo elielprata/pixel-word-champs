@@ -3,7 +3,6 @@ import React from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
-import { PaymentsTab } from "@/components/admin/PaymentsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
 import { MonitoringTab } from "@/components/admin/MonitoringTab";
 import { SupportTab } from "@/components/admin/SupportTab";
@@ -22,10 +21,6 @@ export const AdminPanelContent = () => {
 
       <TabsContent value="rankings">
         <RankingsTab />
-      </TabsContent>
-
-      <TabsContent value="payments">
-        <PaymentsTab />
       </TabsContent>
 
       <TabsContent value="content">

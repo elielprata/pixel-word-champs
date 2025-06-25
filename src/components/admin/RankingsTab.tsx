@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, History } from 'lucide-react';
+import { Trophy, DollarSign } from 'lucide-react';
 import { RankingHeader } from './rankings/RankingHeader';
-import { CompetitionHistory } from './rankings/CompetitionHistory';
+import { PaymentsTab } from './PaymentsTab';
 import { UnifiedCompetitionsView } from './rankings/UnifiedCompetitionsView';
 
 export const RankingsTab = () => {
@@ -17,7 +17,7 @@ export const RankingsTab = () => {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <Tabs defaultValue="competitions" className="w-full">
             <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-              <TabsList className="grid grid-cols-2 bg-white border border-slate-200">
+              <TabsList className="grid w-full grid-cols-2 bg-white border border-slate-200">
                 <TabsTrigger 
                   value="competitions" 
                   className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
@@ -26,11 +26,11 @@ export const RankingsTab = () => {
                   Sistema de Rankings
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="history" 
-                  className="flex items-center gap-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700"
+                  value="payments" 
+                  className="flex items-center gap-2 data-[state=active]:bg-green-50 data-[state=active]:text-green-700"
                 >
-                  <History className="h-4 w-4" />
-                  Histórico
+                  <DollarSign className="h-4 w-4" />
+                  Pagamentos
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -40,18 +40,18 @@ export const RankingsTab = () => {
                 <UnifiedCompetitionsView />
               </TabsContent>
 
-              <TabsContent value="history" className="mt-0">
+              <TabsContent value="payments" className="mt-0">
                 <div className="space-y-6">
                   <div className="space-y-1">
                     <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                      <History className="h-5 w-5 text-orange-600" />
-                      Histórico de Competições
+                      <DollarSign className="h-5 w-5 text-green-600" />
+                      Configurações de Pagamentos
                     </h3>
                     <p className="text-slate-600 text-sm">
-                      Visualize todas as competições que já foram finalizadas
+                      Configure prêmios individuais e em grupo para o sistema de rankings
                     </p>
                   </div>
-                  <CompetitionHistory />
+                  <PaymentsTab />
                 </div>
               </TabsContent>
             </div>
