@@ -1,40 +1,41 @@
-
 /**
  * CONVERSÕES PRINCIPAIS - BRASÍLIA ↔ UTC
- * Funções core para conversão entre fusos horários
+ * CORRIGIDO: Funções core para conversão entre fusos horários sem double conversion
  */
 
 /**
- * CORRIGIDO: Converte input datetime-local para UTC sem duplicação
- * Input: 15:30 Brasília → Output: 18:30 UTC (correto: +3h apenas uma vez)
+ * CORRIGIDO: Converte input datetime-local para UTC sem double conversion
+ * Input: 15:30 Brasília → Output: 18:30 UTC (exatamente +3h uma vez)
  */
 export const convertBrasiliaInputToUTC = (brasiliaDateTime: string): string => {
   if (!brasiliaDateTime) return new Date().toISOString();
   
   try {
-    console.log('🔄 CONVERSÃO BRASÍLIA → UTC (SEM DUPLICAÇÃO):', {
+    console.log('🔄 CONVERSÃO BRASÍLIA → UTC (CORRIGIDA):', {
       input: brasiliaDateTime,
-      step: 'Conversão direta sem adições extras'
+      step: 'Conversão direta sem double-conversion'
     });
     
-    // CORREÇÃO DEFINITIVA: Usar Date diretamente sem parsing manual
-    // O datetime-local já é interpretado no timezone local do sistema
-    const brasiliaDate = new Date(brasiliaDateTime);
+    // CORREÇÃO: O datetime-local é interpretado como horário local
+    // Precisamos tratá-lo como Brasília e converter para UTC
+    const [datePart, timePart] = brasiliaDateTime.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hour, minute] = timePart.split(':').map(Number);
     
-    // Verificar se a data é válida
-    if (isNaN(brasiliaDate.getTime())) {
-      console.error('❌ Data inválida:', brasiliaDateTime);
-      return new Date().toISOString();
-    }
+    // Criar data em Brasília (UTC-3)
+    const brasiliaDate = new Date();
+    brasiliaDate.setFullYear(year, month - 1, day);
+    brasiliaDate.setHours(hour, minute, 0, 0);
     
-    // A conversão para UTC é automática pelo toISOString()
-    const utcResult = brasiliaDate.toISOString();
+    // Adicionar offset do Brasil (+3 horas para converter para UTC)
+    const utcTime = brasiliaDate.getTime() + (3 * 60 * 60 * 1000);
+    const utcResult = new Date(utcTime).toISOString();
     
-    console.log('✅ Conversão sem duplicação:', {
+    console.log('✅ Conversão corrigida:', {
       brasiliaInput: brasiliaDateTime,
-      brasiliaTime: brasiliaDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      brasiliaTime: brasiliaDate.toLocaleString('pt-BR'),
       utcResult: utcResult,
-      operation: 'Conversão direta sem adições manuais'
+      operation: 'Adicionou +3h para converter Brasília→UTC'
     });
     
     return utcResult;
@@ -45,40 +46,45 @@ export const convertBrasiliaInputToUTC = (brasiliaDateTime: string): string => {
 };
 
 /**
- * CORRIGIDO: Converte UTC para formato datetime-local (Brasília) sem duplicação
+ * CORRIGIDO: Converte UTC para formato datetime-local (Brasília)
  */
 export const formatUTCForDateTimeLocal = (utcDateTime: string): string => {
   if (!utcDateTime) return '';
   
   try {
-    console.log('🔄 UTC → Brasília (SEM DUPLICAÇÃO):', {
+    console.log('🔄 UTC → Brasília (CORRIGIDO):', {
       input: utcDateTime,
-      step: 'Conversão usando toLocaleString'
+      step: 'Conversão usando offset manual'
     });
     
     const utcDate = new Date(utcDateTime);
     
-    // CORREÇÃO: Usar toLocaleString para conversão automática
-    const brasiliaString = utcDate.toLocaleString('sv-SE', { 
-      timeZone: 'America/Sao_Paulo' 
-    }).replace(' ', 'T').slice(0, 16);
+    // Subtrair 3 horas para converter UTC para Brasília
+    const brasiliaTime = utcDate.getTime() - (3 * 60 * 60 * 1000);
+    const brasiliaDate = new Date(brasiliaTime);
     
-    console.log('✅ UTC → Brasília (sem duplicação):', {
+    // Formatar para datetime-local
+    const year = brasiliaDate.getFullYear();
+    const month = String(brasiliaDate.getMonth() + 1).padStart(2, '0');
+    const day = String(brasiliaDate.getDate()).padStart(2, '0');
+    const hours = String(brasiliaDate.getHours()).padStart(2, '0');
+    const minutes = String(brasiliaDate.getMinutes()).padStart(2, '0');
+    
+    const result = `${year}-${month}-${day}T${hours}:${minutes}`;
+    
+    console.log('✅ UTC → Brasília (corrigido):', {
       utcInput: utcDateTime,
-      brasiliaResult: brasiliaString,
-      operation: 'Conversão automática via toLocaleString'
+      brasiliaResult: result,
+      operation: 'Subtraiu -3h para converter UTC→Brasília'
     });
     
-    return brasiliaString;
+    return result;
   } catch (error) {
     console.error('❌ Erro ao converter UTC para datetime-local:', error);
     return '';
   }
 };
 
-/**
- * Criar timestamp UTC para banco de dados
- */
 export const createBrasiliaTimestamp = (date?: Date | string | null): string => {
   if (!date) {
     return new Date().toISOString();
@@ -91,21 +97,14 @@ export const createBrasiliaTimestamp = (date?: Date | string | null): string => 
   return date.toISOString();
 };
 
-/**
- * Obter data/hora atual em Brasília
- */
 export const getCurrentBrasiliaDate = (): Date => {
   return new Date();
 };
 
-/**
- * CORRIGIDO FINAL: Obter horário atual formatado para Brasília (formato garantido)
- */
 export const getCurrentBrasiliaTime = (): string => {
   const now = new Date();
   
   try {
-    // CORREÇÃO FINAL: Formatação manual para garantir consistência absoluta
     const brasiliaTime = now.toLocaleString('pt-BR', { 
       timeZone: 'America/Sao_Paulo',
       day: '2-digit',
@@ -117,10 +116,9 @@ export const getCurrentBrasiliaTime = (): string => {
       hour12: false
     });
     
-    // Garantir formato padronizado DD/MM/YYYY HH:mm:ss
     const cleanedTime = brasiliaTime.replace(/,\s*/g, ' ').trim();
     
-    console.log('🕐 FORMATAÇÃO FINAL getCurrentBrasiliaTime:', {
+    console.log('🕐 FORMATAÇÃO getCurrentBrasiliaTime:', {
       original: brasiliaTime,
       cleaned: cleanedTime,
       regex: /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/.test(cleanedTime)
@@ -129,7 +127,6 @@ export const getCurrentBrasiliaTime = (): string => {
     return cleanedTime;
   } catch (error) {
     console.error('❌ Erro ao formatar horário atual:', error);
-    // Fallback manual em caso de erro
     const fallback = now.toISOString().replace('T', ' ').slice(0, 19);
     return fallback;
   }

@@ -2,64 +2,57 @@
 import { useState, useEffect, useCallback } from 'react';
 import { competitionTimeService } from '@/services/competitionTimeService';
 import { logger } from '@/utils/logger';
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 /**
  * Hook para status de competição em tempo real
- * CORREÇÃO: Agora usa conversão correta de timezone para cálculos
+ * CORRIGIDO: Agora usa conversão correta de timezone para cálculos
  */
 export const useRealTimeCompetitionStatus = (competitions: any[]) => {
   const [lastUpdate, setLastUpdate] = useState(Date.now());
 
-  // Função para calcular status em tempo real usando timezone de Brasília CORRIGIDO
+  // CORRIGIDO: Função para calcular status em tempo real sem double conversion
   const calculateRealTimeStatus = useCallback((startDate: string, endDate: string) => {
-    // Usar timezone de Brasília para todos os cálculos
+    // CORREÇÃO: Usar a mesma lógica corrigida do serviço
     const now = new Date();
-    const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-    
-    // CORREÇÃO CRÍTICA: Converter datas UTC do banco para Brasília
     const startUTC = new Date(startDate);
     const endUTC = new Date(endDate);
-    const startBrasilia = new Date(startUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-    const endBrasilia = new Date(endUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
 
     logger.debug('Calculando status em tempo real (CORRIGIDO)', {
-      brasiliaTime: formatBrasiliaDate(brasiliaTime),
-      startDateUTC: startUTC.toISOString(),
-      endDateUTC: endUTC.toISOString(),
-      startDateBrasilia: formatBrasiliaDate(startBrasilia),
-      endDateBrasilia: formatBrasiliaDate(endBrasilia),
+      nowUTC: now.toISOString(),
+      startUTC: startUTC.toISOString(),
+      endUTC: endUTC.toISOString(),
+      nowBrasilia: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      startBrasilia: startUTC.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      endBrasilia: endUTC.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       comparison: {
-        isBefore: brasiliaTime < startBrasilia,
-        isDuring: brasiliaTime >= startBrasilia && brasiliaTime <= endBrasilia,
-        isAfter: brasiliaTime > endBrasilia
+        isBefore: now < startUTC,
+        isDuring: now >= startUTC && now <= endUTC,
+        isAfter: now > endUTC
       }
     }, 'REAL_TIME_STATUS');
 
-    if (brasiliaTime < startBrasilia) {
+    // CORREÇÃO: Comparação direta de objetos Date
+    if (now < startUTC) {
       return 'scheduled';
-    } else if (brasiliaTime >= startBrasilia && brasiliaTime <= endBrasilia) {
+    } else if (now >= startUTC && now <= endUTC) {
       return 'active';
     } else {
       return 'completed';
     }
   }, []);
 
-  // Função para calcular tempo restante em segundos (CORRIGIDA)
+  // CORRIGIDO: Função para calcular tempo restante em segundos
   const calculateTimeRemaining = useCallback((endDate: string) => {
     const now = new Date();
-    const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-    
-    // CORREÇÃO: Converter data UTC do banco para Brasília
     const endUTC = new Date(endDate);
-    const endBrasilia = new Date(endUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
     
-    const diff = endBrasilia.getTime() - brasiliaTime.getTime();
+    const diff = endUTC.getTime() - now.getTime();
     
     logger.debug('Calculando tempo restante (CORRIGIDO)', {
-      brasiliaTime: formatBrasiliaDate(brasiliaTime),
-      endDateUTC: endUTC.toISOString(),
-      endDateBrasilia: formatBrasiliaDate(endBrasilia),
+      nowUTC: now.toISOString(),
+      endUTC: endUTC.toISOString(),
+      nowBrasilia: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      endBrasilia: endUTC.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       diffMs: diff,
       diffSeconds: Math.floor(diff / 1000)
     }, 'REAL_TIME_STATUS');
@@ -111,7 +104,7 @@ export const useRealTimeCompetitionStatus = (competitions: any[]) => {
     const interval = setInterval(() => {
       setLastUpdate(Date.now());
       logger.debug('Status tempo real atualizado', { 
-        timestamp: formatBrasiliaDate(new Date())
+        timestamp: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
       }, 'REAL_TIME_STATUS');
     }, 30000); // 30 segundos
 

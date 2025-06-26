@@ -5,50 +5,48 @@ import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 class CompetitionTimeService {
   /**
-   * Calcula o status correto baseado nas datas UTC armazenadas no banco
-   * CORREÇÃO: Agora converte as datas UTC para Brasília antes de comparar
+   * CORRIGIDO: Calcula o status correto sem double conversion
+   * Compara datas UTC diretamente e converte apenas para log/debug
    */
   calculateCorrectStatus(startDate: string, endDate: string): string {
-    // Usar timezone de Brasília para todos os cálculos
+    // CORREÇÃO: Usar Date nativo sem conversões problemáticas
     const now = new Date();
-    const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-    
-    // CORREÇÃO CRÍTICA: Converter datas UTC do banco para Brasília
     const startUTC = new Date(startDate);
     const endUTC = new Date(endDate);
-    const startBrasilia = new Date(startUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-    const endBrasilia = new Date(endUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
 
-    logger.debug('Calculando status correto com timezone corrigido', {
-      brasiliaTime: formatBrasiliaDate(brasiliaTime),
-      startDateUTC: startUTC.toISOString(),
-      endDateUTC: endUTC.toISOString(),
-      startDateBrasilia: formatBrasiliaDate(startBrasilia),
-      endDateBrasilia: formatBrasiliaDate(endBrasilia),
+    // Log para debug (usando conversão apenas para exibição)
+    logger.debug('Calculando status correto SEM double conversion', {
+      nowUTC: now.toISOString(),
+      startUTC: startUTC.toISOString(),
+      endUTC: endUTC.toISOString(),
+      nowBrasilia: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      startBrasilia: startUTC.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      endBrasilia: endUTC.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       comparison: {
-        isBefore: brasiliaTime < startBrasilia,
-        isDuring: brasiliaTime >= startBrasilia && brasiliaTime <= endBrasilia,
-        isAfter: brasiliaTime > endBrasilia
+        isBefore: now < startUTC,
+        isDuring: now >= startUTC && now <= endUTC,
+        isAfter: now > endUTC
       }
     }, 'COMPETITION_TIME_SERVICE');
 
-    if (brasiliaTime < startBrasilia) {
+    // CORREÇÃO: Comparação direta de objetos Date (UTC com UTC)
+    if (now < startUTC) {
       logger.debug('Status: scheduled (antes do início)', {
-        brasiliaTime: formatBrasiliaDate(brasiliaTime),
-        startTime: formatBrasiliaDate(startBrasilia)
+        now: now.toISOString(),
+        start: startUTC.toISOString()
       }, 'COMPETITION_TIME_SERVICE');
       return 'scheduled';
-    } else if (brasiliaTime >= startBrasilia && brasiliaTime <= endBrasilia) {
+    } else if (now >= startUTC && now <= endUTC) {
       logger.debug('Status: active (durante o período)', {
-        brasiliaTime: formatBrasiliaDate(brasiliaTime),
-        startTime: formatBrasiliaDate(startBrasilia),
-        endTime: formatBrasiliaDate(endBrasilia)
+        now: now.toISOString(),
+        start: startUTC.toISOString(),
+        end: endUTC.toISOString()
       }, 'COMPETITION_TIME_SERVICE');
       return 'active';
     } else {
       logger.debug('Status: completed (após o fim)', {
-        brasiliaTime: formatBrasiliaDate(brasiliaTime),
-        endTime: formatBrasiliaDate(endBrasilia)
+        now: now.toISOString(),
+        end: endUTC.toISOString()
       }, 'COMPETITION_TIME_SERVICE');
       return 'completed';
     }
@@ -59,14 +57,13 @@ class CompetitionTimeService {
    */
   async updateCompetitionStatuses(): Promise<void> {
     try {
-      logger.info('🔄 Iniciando atualização automática de status de competições', undefined, 'COMPETITION_TIME_SERVICE');
+      logger.info('🔄 Iniciando atualização automática de status de competições (CORRIGIDA)', undefined, 'COMPETITION_TIME_SERVICE');
       
-      const brasiliaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-      const brasiliaISO = brasiliaTime.toISOString();
+      const now = new Date();
       
       logger.debug('Horário de referência para atualizações', {
-        brasiliaTime: formatBrasiliaDate(brasiliaTime),
-        brasiliaISO: brasiliaISO
+        nowUTC: now.toISOString(),
+        nowBrasilia: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
       }, 'COMPETITION_TIME_SERVICE');
 
       // Buscar todas as competições ativas e agendadas
@@ -137,10 +134,10 @@ class CompetitionTimeService {
         }
       }
 
-      logger.info(`🎯 Atualização de status concluída`, {
+      logger.info(`🎯 Atualização de status concluída (CORRIGIDA)`, {
         totalVerified: competitions.length,
         totalUpdated: updatedCount,
-        timestamp: formatBrasiliaDate(new Date())
+        timestamp: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
       }, 'COMPETITION_TIME_SERVICE');
 
     } catch (error) {
