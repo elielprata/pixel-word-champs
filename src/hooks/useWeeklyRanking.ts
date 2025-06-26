@@ -29,6 +29,7 @@ interface WeeklyStats {
     duration_days: number;
     custom_start_date?: string | null;
     custom_end_date?: string | null;
+    reference_date?: string | null;
   };
   top_3_players: Array<{
     username: string;
@@ -46,7 +47,7 @@ export const useWeeklyRanking = () => {
   const { data: currentRanking, isLoading, error, refetch } = useQuery({
     queryKey: ['weeklyRanking'],
     queryFn: async (): Promise<WeeklyRankingEntry[]> => {
-      logger.info('Buscando ranking semanal atual', undefined, 'USE_WEEKLY_RANKING');
+      logger.info('Buscando ranking semanal atual com sistema de referência', undefined, 'USE_WEEKLY_RANKING');
       
       // Primeiro, atualizar o ranking
       const { error: updateError } = await supabase.rpc('update_weekly_ranking');
@@ -55,15 +56,20 @@ export const useWeeklyRanking = () => {
         throw updateError;
       }
 
-      // Buscar dados do ranking atual
-      const currentWeekStart = new Date();
-      currentWeekStart.setUTCDate(currentWeekStart.getUTCDate() - currentWeekStart.getUTCDay());
-      currentWeekStart.setUTCHours(0, 0, 0, 0);
+      // Buscar dados do ranking atual baseado na função de referência
+      const { data: statsData, error: statsError } = await supabase.rpc('get_weekly_ranking_stats');
+      if (statsError) {
+        logger.error('Erro ao buscar stats para período atual', { error: statsError.message }, 'USE_WEEKLY_RANKING');
+        throw statsError;
+      }
+
+      const stats = statsData as any;
+      const currentWeekStart = stats.current_week_start;
 
       const { data, error } = await supabase
         .from('weekly_rankings')
         .select('*')
-        .gte('week_start', currentWeekStart.toISOString().split('T')[0])
+        .eq('week_start', currentWeekStart)
         .order('position', { ascending: true });
 
       if (error) {
@@ -71,17 +77,20 @@ export const useWeeklyRanking = () => {
         throw error;
       }
 
-      logger.info('Ranking semanal carregado', { count: data?.length || 0 }, 'USE_WEEKLY_RANKING');
+      logger.info('Ranking semanal carregado com sistema de referência', { 
+        count: data?.length || 0,
+        week_start: currentWeekStart
+      }, 'USE_WEEKLY_RANKING');
       return data || [];
     },
     refetchInterval: 30000, // Atualizar a cada 30 segundos
   });
 
-  // Query para estatísticas usando a nova função avançada
+  // Query para estatísticas usando a nova função com referência
   const { data: stats } = useQuery({
     queryKey: ['weeklyRankingStats'],
     queryFn: async (): Promise<WeeklyStats> => {
-      logger.info('Buscando estatísticas do ranking semanal', undefined, 'USE_WEEKLY_RANKING');
+      logger.info('Buscando estatísticas do ranking semanal com sistema de referência', undefined, 'USE_WEEKLY_RANKING');
       
       const { data, error } = await supabase.rpc('get_weekly_ranking_stats');
       
@@ -107,6 +116,7 @@ export const useWeeklyRanking = () => {
           duration_days: statsData.config.duration_days,
           custom_start_date: statsData.config.custom_start_date || null,
           custom_end_date: statsData.config.custom_end_date || null,
+          reference_date: statsData.config.reference_date || null,
         } : undefined,
         top_3_players: statsData.top_3_players || []
       };
@@ -117,7 +127,7 @@ export const useWeeklyRanking = () => {
   // Mutation para reset usando a nova função
   const resetWeeklyScoresMutation = useMutation({
     mutationFn: async () => {
-      logger.info('Executando reset de pontuações semanais', undefined, 'USE_WEEKLY_RANKING');
+      logger.info('Executando reset de pontuações semanais com sistema de referência', undefined, 'USE_WEEKLY_RANKING');
       
       const { data, error } = await supabase.rpc('reset_weekly_scores_and_positions');
       
@@ -126,7 +136,7 @@ export const useWeeklyRanking = () => {
         throw error;
       }
       
-      logger.info('Reset executado com sucesso', { data }, 'USE_WEEKLY_RANKING');
+      logger.info('Reset executado com sucesso usando sistema de referência', { data }, 'USE_WEEKLY_RANKING');
       return data;
     },
     onSuccess: (data: any) => {
@@ -139,6 +149,8 @@ export const useWeeklyRanking = () => {
       // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['weeklyRanking'] });
       queryClient.invalidateQueries({ queryKey: ['weeklyRankingStats'] });
+      queryClient.invalidateQueries({ queryKey: ['weeklyConfigSync'] });
+      queryClient.invalidateQueries({ queryKey: ['advancedWeeklyStats'] });
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
       queryClient.invalidateQueries({ queryKey: ['realUserStats'] });
     },

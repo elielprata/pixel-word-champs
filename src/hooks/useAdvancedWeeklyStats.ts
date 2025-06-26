@@ -14,6 +14,7 @@ interface AdvancedWeeklyStats {
     duration_days: number;
     custom_start_date?: string | null;
     custom_end_date?: string | null;
+    reference_date?: string | null;
   } | null;
   top_3_players: Array<{
     username: string;
@@ -27,7 +28,7 @@ export const useAdvancedWeeklyStats = () => {
   return useQuery({
     queryKey: ['advancedWeeklyStats'],
     queryFn: async (): Promise<AdvancedWeeklyStats> => {
-      logger.info('Buscando estatísticas avançadas do ranking semanal', undefined, 'ADVANCED_WEEKLY_STATS');
+      logger.info('Buscando estatísticas avançadas do ranking semanal com sistema de referência', undefined, 'ADVANCED_WEEKLY_STATS');
       
       const { data, error } = await supabase.rpc('get_weekly_ranking_stats');
       
@@ -43,9 +44,10 @@ export const useAdvancedWeeklyStats = () => {
       
       const stats = data as any;
       
-      logger.info('Estatísticas avançadas carregadas', { 
+      logger.info('Estatísticas avançadas carregadas com sistema de referência', { 
         participants: stats.total_participants,
-        prize_pool: stats.total_prize_pool 
+        prize_pool: stats.total_prize_pool,
+        reference_date: stats.config?.reference_date
       }, 'ADVANCED_WEEKLY_STATS');
       
       return {
@@ -59,6 +61,7 @@ export const useAdvancedWeeklyStats = () => {
           duration_days: stats.config.duration_days,
           custom_start_date: stats.config.custom_start_date || null,
           custom_end_date: stats.config.custom_end_date || null,
+          reference_date: stats.config.reference_date || null,
         } : null,
         top_3_players: stats.top_3_players || []
       };

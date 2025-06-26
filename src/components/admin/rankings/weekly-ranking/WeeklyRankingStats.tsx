@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Users, DollarSign, Settings, Calendar, AlertCircle } from 'lucide-react';
+import { Trophy, Users, DollarSign, Settings, Calendar, AlertCircle, Info } from 'lucide-react';
 import { WeeklyConfigModal } from './WeeklyConfigModal';
 import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
@@ -23,6 +23,7 @@ interface WeeklyStats {
     duration_days: number;
     custom_start_date?: string | null;
     custom_end_date?: string | null;
+    reference_date?: string | null;
   };
 }
 
@@ -55,6 +56,7 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
   }
 
   const isCustomDates = stats.config?.custom_start_date && stats.config?.custom_end_date;
+  const hasReferenceDate = stats.config?.reference_date;
 
   return (
     <>
@@ -78,6 +80,11 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
                     <AlertCircle className="h-3 w-3" />
                     Datas Customizadas
                   </div>
+                ) : hasReferenceDate ? (
+                  <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                    <Info className="h-3 w-3" />
+                    Sistema de Referência
+                  </div>
                 ) : (
                   <div className="text-xs text-blue-600">
                     Domingo a Sábado
@@ -93,6 +100,11 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
                   Config
                 </Button>
               </div>
+              {hasReferenceDate && (
+                <div className="text-xs text-blue-500 mt-1">
+                  Ref: {formatBrasiliaDate(stats.config.reference_date, false)}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -875,6 +875,7 @@ export type Database = {
           duration_days: number
           id: string
           is_active: boolean
+          reference_date: string | null
           start_day_of_week: number
           updated_at: string
         }
@@ -885,6 +886,7 @@ export type Database = {
           duration_days?: number
           id?: string
           is_active?: boolean
+          reference_date?: string | null
           start_day_of_week?: number
           updated_at?: string
         }
@@ -895,6 +897,7 @@ export type Database = {
           duration_days?: number
           id?: string
           is_active?: boolean
+          reference_date?: string | null
           start_day_of_week?: number
           updated_at?: string
         }
@@ -1029,6 +1032,13 @@ export type Database = {
       calculate_prize_for_position: {
         Args: { user_position: number } | { user_position: number }
         Returns: number
+      }
+      calculate_week_from_reference: {
+        Args: { target_date: string; ref_date?: string }
+        Returns: {
+          week_start: string
+          week_end: string
+        }[]
       }
       check_user_availability: {
         Args: { check_username?: string; check_email?: string }
