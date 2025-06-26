@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Info, Calendar, Clock, AlertTriangle } from 'lucide-react';
+import { formatDateInputToDisplay } from '@/utils/brasiliaTimeUnified';
 import { useWeeklyConfigSync } from '@/hooks/useWeeklyConfigSync';
 
 interface AutomationSystemStatusProps {
@@ -39,21 +40,22 @@ export const AutomationSystemStatus: React.FC<AutomationSystemStatusProps> = () 
 
   if (!syncedConfig) return null;
 
-  // Usar EXCLUSIVAMENTE os dados retornados pela função should_reset_weekly_ranking()
-  // SEM fazer formatação adicional para manter consistência
+  // Formatação clara da próxima execução usando sistema unificado
   const formatNextReset = () => {
     const resetDate = new Date(syncedConfig.next_reset_date);
+    const weekStart = formatDateInputToDisplay(syncedConfig.current_week_start);
+    const weekEnd = formatDateInputToDisplay(syncedConfig.current_week_end);
     
     if (syncedConfig.should_reset) {
       return {
-        message: `Reset deve ser executado AGORA (fim da semana ${syncedConfig.current_week_start} - ${syncedConfig.current_week_end})`,
+        message: `Reset deve ser executado AGORA (fim da semana ${weekStart} - ${weekEnd})`,
         color: 'text-red-600',
         icon: AlertTriangle
       };
     }
     
     return {
-      message: `Próximo reset: ${resetDate.toLocaleDateString('pt-BR')} às 00:00 (fim da semana ${syncedConfig.current_week_start} - ${syncedConfig.current_week_end})`,
+      message: `Próximo reset: ${resetDate.toLocaleDateString('pt-BR')} às 00:00 (fim da semana ${weekStart} - ${weekEnd})`,
       color: 'text-blue-600',
       icon: Calendar
     };
@@ -72,7 +74,7 @@ export const AutomationSystemStatus: React.FC<AutomationSystemStatusProps> = () 
         <div className="flex items-center gap-2">
           <Calendar className="h-3 w-3 text-blue-600" />
           <span className="text-blue-700">
-            <strong>Período Atual:</strong> {syncedConfig.current_week_start} - {syncedConfig.current_week_end}
+            <strong>Período Atual:</strong> {formatDateInputToDisplay(syncedConfig.current_week_start)} - {formatDateInputToDisplay(syncedConfig.current_week_end)}
           </span>
         </div>
         
