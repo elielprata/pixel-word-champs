@@ -21,7 +21,6 @@ interface DailyCompetition {
 interface DailyCompetitionsContainerProps {
   competitions: DailyCompetition[];
   onRefresh?: () => void;
-  onEdit: (competition: DailyCompetition) => void;
   onDelete: (competition: DailyCompetition) => void;
   deletingId: string | null;
 }
@@ -29,7 +28,6 @@ interface DailyCompetitionsContainerProps {
 export const DailyCompetitionsContainer: React.FC<DailyCompetitionsContainerProps> = ({
   competitions,
   onRefresh,
-  onEdit,
   onDelete,
   deletingId
 }) => {
@@ -49,7 +47,6 @@ export const DailyCompetitionsContainer: React.FC<DailyCompetitionsContainerProp
           <DailyCompetitionCard
             key={competition.id}
             competition={competition}
-            onEdit={onEdit}
             onDelete={onDelete}
             isDeleting={deletingId === competition.id}
           />

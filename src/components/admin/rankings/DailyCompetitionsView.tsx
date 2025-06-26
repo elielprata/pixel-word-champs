@@ -1,11 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar } from 'lucide-react';
 import { UnifiedCompetitionsList } from './UnifiedCompetitionsList';
 import { UnifiedCompetitionModal } from './UnifiedCompetitionModal';
-import { EditCompetitionModal } from './EditCompetitionModal';
 import { UnifiedCompetition } from '@/types/competition';
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,8 +15,6 @@ interface DailyCompetitionsViewProps {
 
 export const DailyCompetitionsView = ({ competitions, isLoading, onRefresh }: DailyCompetitionsViewProps) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingCompetition, setEditingCompetition] = useState<UnifiedCompetition | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [localCompetitions, setLocalCompetitions] = useState<UnifiedCompetition[]>([]);
   const { toast } = useToast();
 
@@ -29,12 +25,6 @@ export const DailyCompetitionsView = ({ competitions, isLoading, onRefresh }: Da
   React.useEffect(() => {
     setLocalCompetitions(competitions);
   }, [competitions]);
-
-  const handleEdit = (competition: UnifiedCompetition) => {
-    console.log('🔧 Abrindo modal de edição para:', competition.id);
-    setEditingCompetition(competition);
-    setShowEditModal(true);
-  };
 
   const handleDelete = (competition: UnifiedCompetition) => {
     console.log('✅ Competição excluída:', competition.id);
@@ -69,38 +59,6 @@ export const DailyCompetitionsView = ({ competitions, isLoading, onRefresh }: Da
     }
   };
 
-  const handleCompetitionUpdated = () => {
-    setShowEditModal(false);
-    setEditingCompetition(null);
-    toast({
-      title: "Competição atualizada",
-      description: "A competição foi atualizada com sucesso.",
-    });
-    
-    // Refresh data after update
-    if (onRefresh) {
-      onRefresh();
-    }
-  };
-
-  // Convert UnifiedCompetition para BaseCompetition
-  const mapToBaseCompetition = (unified: UnifiedCompetition) => {
-    return {
-      id: unified.id,
-      title: unified.title,
-      description: unified.description,
-      start_date: unified.startDate,
-      end_date: unified.endDate,
-      status: unified.status,
-      prize_pool: 0, // Competições diárias não têm prêmios
-      max_participants: unified.maxParticipants,
-      total_participants: unified.totalParticipants,
-      competition_type: 'challenge',
-      theme: unified.theme,
-      rules: null
-    };
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -128,7 +86,6 @@ export const DailyCompetitionsView = ({ competitions, isLoading, onRefresh }: Da
       <UnifiedCompetitionsList
         competitions={displayedCompetitions}
         isLoading={isLoading}
-        onEdit={handleEdit}
         onDelete={handleDelete}
       />
 
@@ -138,14 +95,6 @@ export const DailyCompetitionsView = ({ competitions, isLoading, onRefresh }: Da
         onOpenChange={setShowCreateModal}
         onCompetitionCreated={handleCompetitionCreated}
         competitionTypeFilter="daily"
-      />
-
-      {/* Modal de Edição */}
-      <EditCompetitionModal
-        open={showEditModal}
-        onOpenChange={setShowEditModal}
-        competition={editingCompetition ? mapToBaseCompetition(editingCompetition) : null}
-        onCompetitionUpdated={handleCompetitionUpdated}
       />
     </div>
   );
