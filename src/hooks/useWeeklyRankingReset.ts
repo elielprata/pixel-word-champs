@@ -28,7 +28,10 @@ export const useWeeklyRankingReset = () => {
       }
 
       logger.info('✅ Reset do ranking semanal concluído', data, 'WEEKLY_RANKING_RESET');
-      return data as ResetResponse;
+      
+      // Conversão segura dos dados retornados
+      const resetData = data as unknown as ResetResponse;
+      return resetData;
     },
     onSuccess: (data: ResetResponse) => {
       toast({
