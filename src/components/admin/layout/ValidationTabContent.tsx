@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, RefreshCw, Clock, Shield } from 'lucide-react';
 import { TimeValidationPanel } from '../validation/TimeValidationPanel';
+import { EndToEndTestPanel } from '../validation/EndToEndTestPanel';
 import { useTimeSystemValidation } from '@/hooks/useTimeSystemValidation';
 import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
@@ -31,7 +32,7 @@ export const ValidationTabContent: React.FC = () => {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Status do Sistema de Tempo Unificado
+              Status do Sistema de Tempo Unificado - VERSÃO FINAL
             </div>
             <Button 
               variant="outline" 
@@ -55,9 +56,9 @@ export const ValidationTabContent: React.FC = () => {
                 }
                 className="text-sm"
               >
-                {systemHealthy === true ? '✅ Sistema Saudável' : 
-                 systemHealthy === false ? '❌ Problemas Detectados' : 
-                 '⏳ Validando...'}
+                {systemHealthy === true ? '✅ Sistema 100% Alinhado' : 
+                 systemHealthy === false ? '❌ Correções Necessárias' : 
+                 '⏳ Validando Sistema...'}
               </Badge>
               <span className="text-sm text-gray-600">
                 {passedChecks}/{totalChecks} verificações passaram
@@ -92,14 +93,17 @@ export const ValidationTabContent: React.FC = () => {
 
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-700">
-              <strong>🎯 Sistema Unificado:</strong> Input = Preview = Exibição (todos em Brasília), UTC apenas para storage interno.
+              <strong>🎯 SISTEMA FINAL:</strong> Input = Preview = Lista = Detalhes (todos em Brasília)
             </p>
             <p className="text-xs text-blue-600 mt-1">
-              Esta validação garante que não há conversões incorretas ou perda de precisão temporal.
+              ✅ UTC usado apenas para storage interno - Usuário nunca vê conversões
             </p>
           </div>
         </CardContent>
       </Card>
+
+      {/* Teste End-to-End */}
+      <EndToEndTestPanel />
 
       {/* Painel de Validação Completa */}
       <TimeValidationPanel />
