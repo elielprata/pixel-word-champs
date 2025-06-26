@@ -1,20 +1,17 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle } from 'lucide-react';
 
 interface CompetitionStatusBadgeProps {
   status: 'scheduled' | 'active' | 'completed';
   isRealTime?: boolean;
-  isStatusOutdated?: boolean;
-  calculatedStatus?: string;
+  isStatusOutdated?: boolean; // Deprecated - sempre false agora
+  calculatedStatus?: string; // Deprecated - não usado mais
 }
 
 export const CompetitionStatusBadge: React.FC<CompetitionStatusBadgeProps> = ({ 
   status, 
-  isRealTime = false,
-  isStatusOutdated = false,
-  calculatedStatus
+  isRealTime = false
 }) => {
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -48,25 +45,12 @@ export const CompetitionStatusBadge: React.FC<CompetitionStatusBadgeProps> = ({
   const config = getStatusConfig(status);
 
   return (
-    <div className="flex items-center gap-2">
-      <Badge className={`${config.className} flex items-center gap-1`}>
-        <span>{config.indicator}</span>
-        {config.text}
-        {isRealTime && status === 'active' && (
-          <span className="ml-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-        )}
-      </Badge>
-      
-      {/* Indicador de inconsistência para debug */}
-      {isStatusOutdated && calculatedStatus && (
-        <Badge className="bg-orange-100 text-orange-700 border-orange-200 flex items-center gap-1">
-          <AlertTriangle className="w-3 h-3" />
-          <span className="text-xs">
-            Deveria ser: {calculatedStatus === 'active' ? 'Ativo' : 
-                        calculatedStatus === 'scheduled' ? 'Agendado' : 'Finalizado'}
-          </span>
-        </Badge>
+    <Badge className={`${config.className} flex items-center gap-1`}>
+      <span>{config.indicator}</span>
+      {config.text}
+      {isRealTime && status === 'active' && (
+        <span className="ml-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
       )}
-    </div>
+    </Badge>
   );
 };

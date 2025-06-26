@@ -11,7 +11,6 @@ import CompetitionsList from './home/CompetitionsList';
 import LoadingState from './home/LoadingState';
 import ErrorState from './home/ErrorState';
 import { logger } from '@/utils/logger';
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface HomeScreenProps {
   onStartChallenge: (challengeId: string) => void;
@@ -34,21 +33,20 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
       setIsLoading(true);
       setError(null);
       
-      logger.info('Carregando competições diárias', { 
+      logger.info('🔄 Carregando competições - confiando totalmente no banco de dados', { 
         userId: user?.id,
-        timestamp: formatBrasiliaDate(new Date())
+        timestamp: new Date().toISOString()
       }, 'HOME_SCREEN');
 
       const response = await dailyCompetitionService.getActiveDailyCompetitions();
       
       if (response.success && response.data) {
-        logger.info('Competições carregadas', { 
+        logger.info('✅ Competições carregadas do banco', { 
           count: response.data.length,
-          userId: user?.id,
-          timestamp: formatBrasiliaDate(new Date())
+          userId: user?.id
         }, 'HOME_SCREEN');
         
-        // Mapear os dados para a interface Competition - confiar totalmente no status do backend
+        // Mapear os dados - confiar 100% no status do banco de dados
         const mappedCompetitions: Competition[] = response.data
           .map(comp => ({
             id: comp.id,
@@ -57,31 +55,34 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
             theme: comp.theme || '',
             start_date: comp.start_date,
             end_date: comp.end_date,
-            status: comp.status || 'active', // Status já atualizado pelo cron job
+            status: comp.status, // Status direto do banco (atualizado pelo cron job)
             type: 'daily' as const,
             prize_pool: Number(comp.prize_pool) || 0,
             total_participants: 0,
             max_participants: comp.max_participants || 1000,
-            is_active: comp.status === 'active',
+            is_active: comp.status === 'active', // Derivado do status do banco
             created_at: comp.created_at || '',
             updated_at: comp.updated_at || '',
             competition_type: comp.competition_type
           }));
         
         setCompetitions(mappedCompetitions);
+        
+        logger.info('📊 Status das competições carregadas:', 
+          mappedCompetitions.map(c => ({ id: c.id, title: c.title, status: c.status })), 
+          'HOME_SCREEN'
+        );
       } else {
-        logger.error('Erro ao buscar competições', { 
-          error: response.error,
-          timestamp: formatBrasiliaDate(new Date())
+        logger.error('❌ Erro ao buscar competições', { 
+          error: response.error
         }, 'HOME_SCREEN');
         setError(response.error || 'Erro ao carregar competições');
       }
 
     } catch (err) {
-      logger.error('Erro ao carregar competições', { 
+      logger.error('❌ Erro ao carregar competições', { 
         error: err,
-        userId: user?.id,
-        timestamp: formatBrasiliaDate(new Date())
+        userId: user?.id
       }, 'HOME_SCREEN');
       setError('Erro ao carregar competições');
     } finally {
@@ -92,8 +93,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   useEffect(() => {
     loadCompetitions();
     
-    // Reduzir intervalo para 2 minutos para melhor responsividade
-    const interval = setInterval(loadCompetitions, 120000); // 2 minutos
+    // Atualizar a cada 2 minutos (cron job roda a cada 5 minutos)
+    const interval = setInterval(loadCompetitions, 120000);
     
     return () => clearInterval(interval);
   }, []);

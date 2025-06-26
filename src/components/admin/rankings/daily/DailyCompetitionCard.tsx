@@ -5,11 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users, Clock, Trash2 } from 'lucide-react';
 import { 
-  calculateDynamicStatus, 
   getStatusText, 
   getStatusColor, 
-  formatDateTimeBrasilia,
-  useDynamicCompetitionStatus 
+  formatDateTimeBrasilia 
 } from '@/utils/dynamicCompetitionStatus';
 
 interface DailyCompetition {
@@ -36,8 +34,8 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
   onDelete,
   isDeleting
 }) => {
-  // 🎯 STATUS DINÂMICO - Comparação UTC pura
-  const dynamicStatus = useDynamicCompetitionStatus(competition.start_date, competition.end_date);
+  // 🎯 CONFIAR COMPLETAMENTE NO STATUS DO BANCO
+  const status = competition.status as 'scheduled' | 'active' | 'completed';
 
   const handleDelete = () => {
     console.log('🃏 Card: handleDelete executado para competição:', competition.id);
@@ -52,9 +50,9 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
             <div className="flex items-center gap-3 mb-2">
               <h4 className="font-semibold text-slate-800">{competition.title}</h4>
               
-              {/* 🎯 STATUS DINÂMICO */}
-              <Badge className={getStatusColor(dynamicStatus)}>
-                {getStatusText(dynamicStatus)}
+              {/* Status direto do banco */}
+              <Badge className={getStatusColor(status)}>
+                {getStatusText(status)}
               </Badge>
               
               {competition.theme && (
@@ -84,7 +82,7 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
             </div>
 
             <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-              <span className="text-blue-700">📝 Competição diária - Horários em Brasília (Status: {getStatusText(dynamicStatus)})</span>
+              <span className="text-blue-700">📝 Status do banco: {getStatusText(status)} - Horários em Brasília</span>
             </div>
           </div>
           

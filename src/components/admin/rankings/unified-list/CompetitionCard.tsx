@@ -6,11 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Users, Trash2, Clock } from 'lucide-react';
 import { UnifiedCompetition } from '@/types/competition';
 import { 
-  calculateDynamicStatus, 
   getStatusText, 
   getStatusColor, 
-  formatDateTimeBrasilia,
-  useDynamicCompetitionStatus 
+  formatDateTimeBrasilia 
 } from '@/utils/dynamicCompetitionStatus';
 
 interface CompetitionCardProps {
@@ -24,8 +22,8 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
   onDelete,
   isDeleting
 }) => {
-  // 🎯 STATUS DINÂMICO - Comparação UTC pura
-  const dynamicStatus = useDynamicCompetitionStatus(competition.startDate, competition.endDate);
+  // 🎯 CONFIAR COMPLETAMENTE NO STATUS DO BANCO
+  const status = competition.status as 'scheduled' | 'active' | 'completed';
 
   const calculateAndDisplayDuration = () => {
     // Priorizar duração fornecida
@@ -59,9 +57,9 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
             <div className="flex items-center gap-3 mb-2">
               <h4 className="font-semibold text-slate-800">{competition.title}</h4>
               
-              {/* 🎯 STATUS DINÂMICO */}
-              <Badge className={getStatusColor(dynamicStatus)}>
-                {getStatusText(dynamicStatus)}
+              {/* Status direto do banco */}
+              <Badge className={getStatusColor(status)}>
+                {getStatusText(status)}
               </Badge>
               
               {competition.theme && (
@@ -98,7 +96,7 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
             </div>
 
             <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-              <span className="text-blue-700">📝 Competição diária - Horários em Brasília (Status: {getStatusText(dynamicStatus)})</span>
+              <span className="text-blue-700">📝 Status do banco: {getStatusText(status)} - Horários em Brasília</span>
             </div>
           </div>
           
