@@ -8,6 +8,7 @@ import { MonitoringTab } from "@/components/admin/MonitoringTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 import { AdvancedSystemTab } from '@/components/admin/AdvancedSystemTab';
+import { PaymentsTab } from '@/components/admin/PaymentsTab';
 import { logger } from '@/utils/logger';
 
 export const AdminPanelContent: React.FC = () => {
@@ -23,8 +24,16 @@ export const AdminPanelContent: React.FC = () => {
         <RankingsTab />
       </TabsContent>
 
-      <TabsContent value="content">
+      <TabsContent value="game-content">
         <GameContentTab />
+      </TabsContent>
+
+      <TabsContent value="payments">
+        <PaymentsTab />
+      </TabsContent>
+
+      <TabsContent value="integrations">
+        <IntegrationsTab />
       </TabsContent>
 
       <TabsContent value="monitoring">
