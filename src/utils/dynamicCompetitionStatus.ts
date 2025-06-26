@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 /**
  * LÓGICA DE STATUS DINÂMICO - COMPARAÇÃO UTC PURA
  * Calcula status baseado apenas em comparações de tempo UTC
