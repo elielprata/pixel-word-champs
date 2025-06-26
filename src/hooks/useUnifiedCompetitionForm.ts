@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CompetitionFormData, CompetitionValidationResult } from '@/types/competition';
 import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
 import { secureLogger } from '@/utils/secureLogger';
-import { validateCompetitionDuration } from '@/utils/brasiliaTimeUnified';
+import { validateCompetitionDuration, getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 export const useUnifiedCompetitionForm = () => {
   const { toast } = useToast();
@@ -20,21 +20,26 @@ export const useUnifiedCompetitionForm = () => {
   });
 
   const updateField = useCallback((field: keyof CompetitionFormData, value: any) => {
-    secureLogger.debug(`Campo alterado: ${field}`, { value }, 'UNIFIED_COMPETITION_FORM');
+    console.log('📝 Campo alterado:', {
+      field,
+      value,
+      timestamp: getCurrentBrasiliaTime()
+    });
     
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
-      // CORRIGIDO: Recalcular endDate mantendo tudo em Brasília
+      // Recalcular endDate quando startDate ou duration mudarem
       if (field === 'startDate' || field === 'duration') {
         if (newData.startDate && newData.duration) {
           try {
-            console.log('🔄 Recalculando endDate (Brasília):', {
+            console.log('⏰ Recalculando endDate:', {
               startDate: newData.startDate,
-              duration: newData.duration
+              duration: newData.duration,
+              timestamp: getCurrentBrasiliaTime()
             });
             
-            // Calcular fim em horário de Brasília
+            // Trabalhar com horário local (Brasília)
             const brasiliaStart = new Date(newData.startDate);
             const brasiliaEnd = new Date(brasiliaStart.getTime() + (newData.duration * 60 * 60 * 1000));
             
@@ -44,7 +49,7 @@ export const useUnifiedCompetitionForm = () => {
             
             const finalBrasiliaEnd = brasiliaEnd > sameDayLimit ? sameDayLimit : brasiliaEnd;
             
-            // Converter para formato datetime-local (sem conversão de timezone)
+            // Converter para formato datetime-local
             const year = finalBrasiliaEnd.getFullYear();
             const month = (finalBrasiliaEnd.getMonth() + 1).toString().padStart(2, '0');
             const day = finalBrasiliaEnd.getDate().toString().padStart(2, '0');
@@ -53,9 +58,10 @@ export const useUnifiedCompetitionForm = () => {
             
             newData.endDate = `${year}-${month}-${day}T${hours}:${minutes}`;
             
-            console.log('✅ EndDate calculado (Brasília):', {
+            console.log('✅ EndDate calculado:', {
               brasiliaEnd: finalBrasiliaEnd.toLocaleString('pt-BR'),
-              endDateFormat: newData.endDate
+              endDateFormat: newData.endDate,
+              timestamp: getCurrentBrasiliaTime()
             });
           } catch (error) {
             console.error('❌ Erro ao calcular endDate:', error);
@@ -102,6 +108,11 @@ export const useUnifiedCompetitionForm = () => {
 
   const submitForm = useCallback(async (onSuccess?: () => void) => {
     if (isSubmitting) return;
+
+    console.log('🚀 Iniciando submissão do formulário:', {
+      formData,
+      timestamp: getCurrentBrasiliaTime()
+    });
 
     const validation = validateForm();
     if (!validation.isValid) {
@@ -181,7 +192,17 @@ export const useUnifiedCompetitionForm = () => {
     updateField,
     validateForm,
     submitForm,
-    resetForm,
+    resetForm: useCallback(() => {
+      setFormData({
+        title: '',
+        description: '',
+        type: 'daily',
+        startDate: '',
+        endDate: '',
+        duration: 3,
+        maxParticipants: 0
+      });
+    }, []),
     isSubmitting,
     hasTitle: !!formData.title.trim()
   };

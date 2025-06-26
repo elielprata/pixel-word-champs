@@ -7,7 +7,7 @@ import { convertBrasiliaInputToUTC, calculateEndDateWithDuration } from '@/utils
 class UnifiedCompetitionService {
   async createCompetition(formData: CompetitionFormData): Promise<CompetitionApiResponse<UnifiedCompetition>> {
     try {
-      secureLogger.info('Criando competição diária', { 
+      secureLogger.info('Iniciando criação de competição', { 
         title: formData.title,
         duration: formData.duration,
         startDate: formData.startDate
@@ -18,16 +18,30 @@ class UnifiedCompetitionService {
         throw new Error('Usuário não autenticado');
       }
 
-      // CONVERSÃO ÚNICA: Brasília -> UTC
+      // CORREÇÃO: Usar startDate em Brasília para calcular endDate
+      console.log('🔧 CORREÇÃO: Calculando datas sem duplicação:', {
+        startDateBrasilia: formData.startDate,
+        duration: formData.duration,
+        step: 'Usando startDate em Brasília para calcular endDate'
+      });
+
+      const endDateUTC = calculateEndDateWithDuration(formData.startDate, formData.duration);
       const startDateUTC = convertBrasiliaInputToUTC(formData.startDate);
-      const endDateUTC = calculateEndDateWithDuration(startDateUTC, formData.duration);
+
+      console.log('✅ Datas calculadas (CORRIGIDO):', {
+        startDateBrasilia: formData.startDate,
+        startDateUTC: startDateUTC,
+        endDateUTC: endDateUTC,
+        duration: formData.duration,
+        operation: 'Correção da duplicação de timezone'
+      });
 
       const competitionData = {
         title: formData.title,
         description: formData.description,
         competition_type: 'challenge',
-        start_date: startDateUTC,  // Salvar em UTC
-        end_date: endDateUTC,     // Salvar em UTC
+        start_date: startDateUTC,
+        end_date: endDateUTC,
         max_participants: null,
         prize_pool: 0,
         theme: 'Geral',
@@ -35,7 +49,7 @@ class UnifiedCompetitionService {
         status: 'active'
       };
 
-      secureLogger.debug('Dados UTC para inserção', { 
+      secureLogger.debug('Dados para inserção no banco', { 
         startUTC: startDateUTC,
         endUTC: endDateUTC,
         originalDuration: formData.duration
@@ -176,8 +190,8 @@ class UnifiedCompetitionService {
       description: data.description || '',
       type: 'daily' as const,
       status: data.status,
-      startDate: data.start_date,  // Manter UTC para processamento
-      endDate: data.end_date,      // Manter UTC para processamento
+      startDate: data.start_date,
+      endDate: data.end_date,
       duration: calculatedDuration,
       maxParticipants: 0,
       theme: data.theme,
