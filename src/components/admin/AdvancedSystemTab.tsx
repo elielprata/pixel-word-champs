@@ -9,7 +9,6 @@ import {
   Database,
   Shield
 } from 'lucide-react';
-import { WeeklyRankingSystemPanel } from './rankings/weekly-ranking/WeeklyRankingSystemPanel';
 import { logger } from '@/utils/logger';
 
 export const AdvancedSystemTab = () => {
@@ -39,16 +38,9 @@ export const AdvancedSystemTab = () => {
 
         {/* Main Content */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <Tabs defaultValue="ranking-system" className="w-full">
+          <Tabs defaultValue="system-health" className="w-full">
             <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-              <TabsList className="grid grid-cols-3 bg-white border border-slate-200">
-                <TabsTrigger 
-                  value="ranking-system" 
-                  className="flex items-center gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700"
-                >
-                  <Trophy className="h-4 w-4" />
-                  Sistema de Ranking
-                </TabsTrigger>
+              <TabsList className="grid grid-cols-2 bg-white border border-slate-200">
                 <TabsTrigger 
                   value="system-health" 
                   className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
@@ -67,21 +59,6 @@ export const AdvancedSystemTab = () => {
             </div>
 
             <div className="p-6">
-              <TabsContent value="ranking-system" className="space-y-6 mt-0">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-purple-600" />
-                      Sistema de Ranking Semanal
-                    </h3>
-                    <p className="text-slate-600 text-sm">
-                      Controle avançado do sistema de ranking e competições semanais
-                    </p>
-                  </div>
-                </div>
-                <WeeklyRankingSystemPanel />
-              </TabsContent>
-
               <TabsContent value="system-health" className="space-y-6 mt-0">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">

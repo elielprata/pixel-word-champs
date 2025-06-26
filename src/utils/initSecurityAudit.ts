@@ -1,7 +1,6 @@
 
 import { logger } from './logger';
 import { securityAuditReporter } from './securityAuditReport';
-import { logAuditService } from './logAudit';
 
 export const initializeSecurityAudit = async () => {
   try {
@@ -18,15 +17,6 @@ export const initializeSecurityAudit = async () => {
         fullReport: reportText 
       }, 'SECURITY_AUDIT_INIT');
     }
-    
-    // Log de evento de segurança final
-    logAuditService.logSecurityEvent('FINAL_SYSTEM_AUDIT_COMPLETED', {
-      status: report.status,
-      securityScore: report.securityMetrics.securityScore,
-      phases: report.phases,
-      migrationComplete: true,
-      totalFilesUpdated: Object.values(report.phases).reduce((sum, phase) => sum + phase.filesUpdated, 0)
-    }, report.status === 'PASSED' ? 'low' : report.status === 'WARNING' ? 'medium' : 'high');
     
     logger.production('Sistema final de auditoria inicializado com sucesso', {
       status: report.status,
@@ -51,11 +41,6 @@ export const initializeSecurityAudit = async () => {
       error: error.message,
       stack: error.stack
     }, 'SECURITY_AUDIT_INIT');
-    
-    logAuditService.logSecurityEvent('FINAL_AUDIT_INITIALIZATION_FAILED', {
-      error: error.message,
-      timestamp: new Date().toISOString()
-    }, 'critical');
     
     throw error;
   }
