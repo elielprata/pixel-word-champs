@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { rankingDebugService } from '@/services/rankingDebugService';
 import { cleanOrphanGameSessions, validateOrphanPrevention } from '@/utils/cleanOrphanSessions';
 import { logger } from '@/utils/logger';
 
@@ -17,13 +16,11 @@ export const useDebugActions = () => {
     setIsChecking(true);
     setError(null);
     try {
-      logger.debug('Iniciando verificação de consistência do ranking', undefined, 'RANKING_DEBUG');
-      const result = await rankingDebugService.checkDataConsistency();
-      setLastResult(result);
-      logger.debug('Verificação de consistência concluída', { result }, 'RANKING_DEBUG');
+      logger.debug('Funcionalidade de verificação de consistência removida', undefined, 'RANKING_DEBUG');
+      setLastResult({ message: 'Funcionalidade removida - diagnósticos desabilitados' });
     } catch (err) {
-      setError('Erro ao verificar consistência');
-      logger.error('Erro ao verificar consistência do ranking', { error: err }, 'RANKING_DEBUG');
+      setError('Funcionalidade não disponível');
+      logger.error('Funcionalidade de diagnóstico removida', { error: err }, 'RANKING_DEBUG');
     } finally {
       setIsChecking(false);
     }
@@ -33,16 +30,11 @@ export const useDebugActions = () => {
     setIsUpdating(true);
     setError(null);
     try {
-      logger.debug('Iniciando atualização forçada do ranking', undefined, 'RANKING_DEBUG');
-      await rankingDebugService.forceRankingUpdate();
-      setTimeout(async () => {
-        const result = await rankingDebugService.checkDataConsistency();
-        setLastResult(result);
-        logger.debug('Atualização forçada concluída', { result }, 'RANKING_DEBUG');
-      }, 1500);
+      logger.debug('Funcionalidade de atualização forçada removida', undefined, 'RANKING_DEBUG');
+      setLastResult({ message: 'Funcionalidade removida - diagnósticos desabilitados' });
     } catch (err: any) {
-      setError(`Erro ao atualizar ranking: ${err.message || 'Erro desconhecido'}`);
-      logger.error('Erro ao forçar atualização do ranking', { error: err }, 'RANKING_DEBUG');
+      setError(`Funcionalidade não disponível: ${err.message || 'Erro desconhecido'}`);
+      logger.error('Funcionalidade de diagnóstico removida', { error: err }, 'RANKING_DEBUG');
     } finally {
       setIsUpdating(false);
     }
@@ -52,16 +44,11 @@ export const useDebugActions = () => {
     setIsTesting(true);
     setError(null);
     try {
-      logger.debug('Iniciando teste direto da função', undefined, 'RANKING_DEBUG');
-      const result = await rankingDebugService.testFunctionDirectly();
-      logger.debug('Resultado do teste de função', { result }, 'RANKING_DEBUG');
-      if (!result.success) {
-        setError(`Erro no teste: ${result.error?.message || 'Erro desconhecido'}`);
-        logger.error('Erro no teste da função', { error: result.error }, 'RANKING_DEBUG');
-      }
+      logger.debug('Funcionalidade de teste removida', undefined, 'RANKING_DEBUG');
+      setError('Funcionalidade removida - diagnósticos desabilitados');
     } catch (err: any) {
-      setError(`Erro no teste: ${err.message || 'Erro desconhecido'}`);
-      logger.error('Erro no teste de função do ranking', { error: err }, 'RANKING_DEBUG');
+      setError(`Funcionalidade não disponível: ${err.message || 'Erro desconhecido'}`);
+      logger.error('Funcionalidade de diagnóstico removida', { error: err }, 'RANKING_DEBUG');
     } finally {
       setIsTesting(false);
     }
