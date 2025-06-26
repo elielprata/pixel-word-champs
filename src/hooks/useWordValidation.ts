@@ -1,9 +1,9 @@
 
+
 import { useCallback, useRef } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { isLinearPath } from '@/hooks/word-selection/validateLinearPath';
 import { logger } from '@/utils/logger';
-import { toast } from '@/hooks/use-toast';
 
 interface FoundWord {
   word: string;
@@ -56,11 +56,6 @@ export const useWordValidation = ({
         logger.debug('Trajetória de seleção inválida - não é linear', { 
           positions: selectedPositions 
         });
-        toast({
-          title: "Seleção inválida",
-          description: "Selecione palavras apenas na horizontal, vertical ou diagonal",
-          variant: "destructive"
-        });
         return false;
       }
 
@@ -101,11 +96,6 @@ export const useWordValidation = ({
           word,
           existingWords: foundWords.map(fw => fw.word)
         });
-        toast({
-          title: "Palavra já encontrada",
-          description: `A palavra "${word}" já foi descoberta!`,
-          variant: "default"
-        });
         return false;
       }
 
@@ -122,13 +112,6 @@ export const useWordValidation = ({
         points, 
         positionsCount: selectedPositions.length,
         beforeFoundWordsCount: foundWords.length
-      });
-
-      // Notificar confirmação com feedback visual
-      toast({
-        title: "Palavra encontrada! 🎉",
-        description: `"${word.toUpperCase()}" = ${points} pontos`,
-        variant: "default"
       });
 
       // CRÍTICO: Chamar callback para adicionar ao estado do jogo APENAS UMA VEZ
@@ -155,3 +138,4 @@ export const useWordValidation = ({
     validateAndConfirmWord
   };
 };
+
