@@ -8,7 +8,8 @@ import {
   Settings, 
   Bug, 
   BarChart3, 
-  Zap
+  Zap,
+  Shield
 } from 'lucide-react';
 
 export const AdminPanelTabs: React.FC = () => {
@@ -30,9 +31,9 @@ export const AdminPanelTabs: React.FC = () => {
         <Zap className="h-4 w-4" />
         <span className="hidden sm:inline">Integrações</span>
       </TabsTrigger>
-      <TabsTrigger value="monitoring" className="flex items-center gap-2">
-        <BarChart3 className="h-4 w-4" />
-        <span className="hidden sm:inline">Monitoring</span>
+      <TabsTrigger value="validation" className="flex items-center gap-2">
+        <Shield className="h-4 w-4" />
+        <span className="hidden sm:inline">Validação</span>
       </TabsTrigger>
       <TabsTrigger value="support" className="flex items-center gap-2">
         <Bug className="h-4 w-4" />
@@ -40,7 +41,7 @@ export const AdminPanelTabs: React.FC = () => {
       </TabsTrigger>
       <TabsTrigger value="advanced" className="flex items-center gap-2">
         <Settings className="h-4 w-4" />
-        <span className="hidden sm:inline">Avançado</span>
+        <span className="hidden sm:inline">Sistema</span>
       </TabsTrigger>
     </TabsList>
   );
