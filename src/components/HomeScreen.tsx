@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { useAuth } from '@/hooks/useAuth';
-import { useCompetitionStatusChecker } from '@/hooks/useCompetitionStatusChecker';
+import { useRealTimeCompetitionStatus } from '@/hooks/useRealTimeCompetitionStatus';
 import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
 import { useCompetitionFinalization } from '@/hooks/useCompetitionFinalization';
@@ -28,18 +28,15 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Controlar hooks condicionalmente
-  const hasCompetitions = competitions.length > 0;
-  
-  // Adicionar verificação automática de status apenas quando necessário
-  useCompetitionStatusChecker(hasCompetitions);
+  // Usar hook de status em tempo real
+  const { competitions: competitionsWithRealTimeStatus } = useRealTimeCompetitionStatus(competitions);
 
   // Adicionar participação automática e atualização de ranking semanal
   useWeeklyCompetitionAutoParticipation();
   useWeeklyRankingUpdater();
 
   // Adicionar hook de finalização automática para competições diárias
-  useCompetitionFinalization(competitions);
+  useCompetitionFinalization(competitionsWithRealTimeStatus);
 
   const loadCompetitions = async () => {
     try {
@@ -105,8 +102,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   useEffect(() => {
     loadCompetitions();
     
-    // Aumentar intervalo para reduzir sobrecarga
-    const interval = setInterval(loadCompetitions, TIMING_CONFIG.COMPETITION_REFRESH_INTERVAL * 2);
+    // Reduzir intervalo para 2 minutos para atualização mais frequente
+    const interval = setInterval(loadCompetitions, 120000);
     
     return () => clearInterval(interval);
   }, []);
@@ -126,7 +123,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
         )}
 
         <CompetitionsList
-          competitions={competitions}
+          competitions={competitionsWithRealTimeStatus}
           onStartChallenge={onStartChallenge}
           onRefresh={loadCompetitions}
         />

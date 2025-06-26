@@ -15,7 +15,7 @@ export const useCompetitionStatusChecker = (enabled: boolean = true) => {
       
       isRunningRef.current = true;
       try {
-        logger.debug('Verificação automática de status iniciada (BRASÍLIA)', undefined, 'COMPETITION_STATUS_CHECKER');
+        logger.debug('Verificação automática de status iniciada (TEMPO REAL)', undefined, 'COMPETITION_STATUS_CHECKER');
         await competitionTimeService.updateCompetitionStatuses();
       } catch (error) {
         logger.error('Erro na verificação automática de status', { error }, 'COMPETITION_STATUS_CHECKER');
@@ -24,7 +24,11 @@ export const useCompetitionStatusChecker = (enabled: boolean = true) => {
       }
     };
 
-    intervalRef.current = setInterval(checkAndUpdateStatuses, 10 * 60 * 1000);
+    // Reduzir intervalo para 1 minuto (60 segundos)
+    intervalRef.current = setInterval(checkAndUpdateStatuses, 60 * 1000);
+
+    // Primeira verificação imediata
+    checkAndUpdateStatuses();
 
     return () => {
       if (intervalRef.current) {
