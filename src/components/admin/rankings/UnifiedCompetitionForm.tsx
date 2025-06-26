@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Save, X, Clock } from 'lucide-react';
 import { useUnifiedCompetitionForm } from '@/hooks/useUnifiedCompetitionForm';
-import { validateCompetitionDuration, getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 interface UnifiedCompetitionFormProps {
   onClose: () => void;
@@ -14,39 +14,92 @@ interface UnifiedCompetitionFormProps {
   onError: (error: string) => void;
 }
 
+const getCurrentBrasiliaTimeSafe = (): string => {
+  try {
+    const now = new Date();
+    const brasiliaTime = now.toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    return brasiliaTime.replace(/,\s*/g, ' ').trim();
+  } catch (error) {
+    console.error('❌ Erro ao obter horário de Brasília:', error);
+    return new Date().toLocaleString('pt-BR');
+  }
+};
+
+const validateCompetitionDurationSafe = (startDate: string, duration: number) => {
+  try {
+    if (!startDate || !duration || duration < 1) {
+      return { isValid: false, error: 'Data de início e duração são obrigatórias' };
+    }
+    
+    if (duration > 12) {
+      return { isValid: false, error: 'Duração máxima é de 12 horas' };
+    }
+
+    return { isValid: true, error: null };
+  } catch (error) {
+    console.error('❌ Erro na validação de duração:', error);
+    return { isValid: false, error: 'Erro na validação' };
+  }
+};
+
 export const UnifiedCompetitionForm = ({ 
   onClose, 
   onSuccess, 
   onError 
 }: UnifiedCompetitionFormProps) => {
+  console.log('🎯 [UnifiedCompetitionForm] INICIANDO COMPONENTE');
+
+  let formHook;
+  try {
+    formHook = useUnifiedCompetitionForm();
+    console.log('✅ [UnifiedCompetitionForm] Hook carregado com sucesso');
+  } catch (error) {
+    console.error('❌ [UnifiedCompetitionForm] Erro ao carregar hook:', error);
+    return (
+      <div className="p-4 text-red-600">
+        <h3 className="font-bold">Erro no formulário</h3>
+        <p>Não foi possível carregar o formulário. Tente novamente.</p>
+        <Button onClick={onClose} className="mt-2">Fechar</Button>
+      </div>
+    );
+  }
+
   const {
     formData,
     updateField,
     submitForm,
     isSubmitting,
     hasTitle
-  } = useUnifiedCompetitionForm();
+  } = formHook;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 [UnifiedCompetitionForm] Submetendo formulário');
     submitForm(onSuccess);
   };
 
-  // CORRIGIDO: Preview mantém horários em Brasília (igual ao input)
+  // Preview de horários com tratamento de erro
   const getTimePreview = () => {
     if (!formData.startDate || !formData.duration) return null;
     
     try {
-      console.log('🎯 Gerando preview (Brasília):', {
+      console.log('🎯 [UnifiedCompetitionForm] Gerando preview:', {
         startDate: formData.startDate,
         duration: formData.duration
       });
       
-      // Trabalhar direto com o input (já em Brasília)
       const startInput = new Date(formData.startDate);
       const endInput = new Date(startInput.getTime() + (formData.duration * 60 * 60 * 1000));
       
-      // Verificar limite do mesmo dia
       const sameDayLimit = new Date(startInput);
       sameDayLimit.setHours(23, 59, 59, 999);
       
@@ -55,29 +108,17 @@ export const UnifiedCompetitionForm = ({
       const startTime = startInput.toTimeString().slice(0, 5);
       const endTime = finalEnd.toTimeString().slice(0, 5);
       
-      console.log('✅ Preview gerado (Brasília):', {
-        startTime,
-        endTime,
-        startFull: startInput.toLocaleString('pt-BR'),
-        endFull: finalEnd.toLocaleString('pt-BR')
-      });
-      
       return { startTime, endTime };
     } catch (error) {
-      console.error('❌ Erro no preview:', error);
+      console.error('❌ [UnifiedCompetitionForm] Erro no preview:', error);
       return null;
     }
   };
 
-  // Validação em tempo real
-  const getDurationValidation = () => {
-    if (!formData.startDate || !formData.duration) return null;
-    
-    return validateCompetitionDuration(formData.startDate, formData.duration);
-  };
-
   const timePreview = getTimePreview();
-  const durationValidation = getDurationValidation();
+  const durationValidation = validateCompetitionDurationSafe(formData.startDate, formData.duration);
+
+  console.log('🎯 [UnifiedCompetitionForm] RENDERIZANDO FORMULÁRIO');
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -89,7 +130,7 @@ export const UnifiedCompetitionForm = ({
           </CardTitle>
           <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-700">
-              ⏰ Horário atual em Brasília: <strong>{getCurrentBrasiliaTime()}</strong>
+              ⏰ Horário atual em Brasília: <strong>{getCurrentBrasiliaTimeSafe()}</strong>
             </p>
           </div>
         </CardHeader>
@@ -156,7 +197,6 @@ export const UnifiedCompetitionForm = ({
             </div>
           </div>
 
-          {/* CORRIGIDO: Preview mostra horários iguais ao input */}
           {timePreview && (
             <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
@@ -169,14 +209,10 @@ export const UnifiedCompetitionForm = ({
                 <p className="text-xs text-green-600">
                   ⏰ Duração: {formData.duration} {formData.duration === 1 ? 'hora' : 'horas'}
                 </p>
-                <p className="text-xs text-blue-600">
-                  💡 INPUT = EXIBIÇÃO (Brasília), UTC apenas para storage interno
-                </p>
               </div>
             </div>
           )}
 
-          {/* Validação de Duração */}
           {durationValidation && !durationValidation.isValid && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
@@ -189,7 +225,6 @@ export const UnifiedCompetitionForm = ({
         </CardContent>
       </Card>
 
-      {/* Informações sobre competições diárias */}
       <Card>
         <CardContent className="p-4">
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -204,7 +239,6 @@ export const UnifiedCompetitionForm = ({
         </CardContent>
       </Card>
 
-      {/* Ações */}
       <div className="flex justify-end gap-3 pt-4 border-t">
         <Button type="button" variant="outline" onClick={onClose}>
           <X className="h-4 w-4 mr-2" />

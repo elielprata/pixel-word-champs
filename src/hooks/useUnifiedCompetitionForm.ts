@@ -4,9 +4,46 @@ import { useToast } from "@/hooks/use-toast";
 import { CompetitionFormData, CompetitionValidationResult } from '@/types/competition';
 import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
 import { secureLogger } from '@/utils/secureLogger';
-import { validateCompetitionDuration, getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
+
+const getCurrentBrasiliaTimeSafe = (): string => {
+  try {
+    const now = new Date();
+    return now.toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).replace(/,\s*/g, ' ').trim();
+  } catch (error) {
+    console.error('❌ Erro ao obter horário seguro:', error);
+    return new Date().toLocaleString('pt-BR');
+  }
+};
+
+const validateCompetitionDurationSafe = (startDate: string, duration: number) => {
+  try {
+    if (!startDate || !duration || duration < 1) {
+      return { isValid: false, error: 'Data de início e duração são obrigatórias' };
+    }
+    
+    if (duration > 12) {
+      return { isValid: false, error: 'Duração máxima é de 12 horas' };
+    }
+
+    return { isValid: true, error: null };
+  } catch (error) {
+    console.error('❌ Erro na validação segura:', error);
+    return { isValid: false, error: 'Erro na validação' };
+  }
+};
 
 export const useUnifiedCompetitionForm = () => {
+  console.log('🚀 [useUnifiedCompetitionForm] INICIANDO HOOK');
+  
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CompetitionFormData>({
@@ -19,11 +56,13 @@ export const useUnifiedCompetitionForm = () => {
     maxParticipants: 0
   });
 
+  console.log('✅ [useUnifiedCompetitionForm] Estado inicial criado');
+
   const updateField = useCallback((field: keyof CompetitionFormData, value: any) => {
-    console.log('📝 Campo alterado:', {
+    console.log('📝 [useUnifiedCompetitionForm] Campo alterado:', {
       field,
       value,
-      timestamp: getCurrentBrasiliaTime()
+      timestamp: getCurrentBrasiliaTimeSafe()
     });
     
     setFormData(prev => {
@@ -33,23 +72,19 @@ export const useUnifiedCompetitionForm = () => {
       if (field === 'startDate' || field === 'duration') {
         if (newData.startDate && newData.duration) {
           try {
-            console.log('⏰ Recalculando endDate:', {
+            console.log('⏰ [useUnifiedCompetitionForm] Recalculando endDate:', {
               startDate: newData.startDate,
-              duration: newData.duration,
-              timestamp: getCurrentBrasiliaTime()
+              duration: newData.duration
             });
             
-            // Trabalhar com horário local (Brasília)
             const brasiliaStart = new Date(newData.startDate);
             const brasiliaEnd = new Date(brasiliaStart.getTime() + (newData.duration * 60 * 60 * 1000));
             
-            // Verificar limite do mesmo dia
             const sameDayLimit = new Date(brasiliaStart);
             sameDayLimit.setHours(23, 59, 59, 999);
             
             const finalBrasiliaEnd = brasiliaEnd > sameDayLimit ? sameDayLimit : brasiliaEnd;
             
-            // Converter para formato datetime-local
             const year = finalBrasiliaEnd.getFullYear();
             const month = (finalBrasiliaEnd.getMonth() + 1).toString().padStart(2, '0');
             const day = finalBrasiliaEnd.getDate().toString().padStart(2, '0');
@@ -58,13 +93,11 @@ export const useUnifiedCompetitionForm = () => {
             
             newData.endDate = `${year}-${month}-${day}T${hours}:${minutes}`;
             
-            console.log('✅ EndDate calculado:', {
-              brasiliaEnd: finalBrasiliaEnd.toLocaleString('pt-BR'),
-              endDateFormat: newData.endDate,
-              timestamp: getCurrentBrasiliaTime()
+            console.log('✅ [useUnifiedCompetitionForm] EndDate calculado:', {
+              endDate: newData.endDate
             });
           } catch (error) {
-            console.error('❌ Erro ao calcular endDate:', error);
+            console.error('❌ [useUnifiedCompetitionForm] Erro ao calcular endDate:', error);
           }
         }
       }
@@ -74,6 +107,8 @@ export const useUnifiedCompetitionForm = () => {
   }, []);
 
   const validateForm = useCallback((): CompetitionValidationResult => {
+    console.log('🔍 [useUnifiedCompetitionForm] Validando formulário');
+    
     const errors: string[] = [];
 
     if (!formData.title.trim()) {
@@ -94,7 +129,7 @@ export const useUnifiedCompetitionForm = () => {
 
     // Validar duração específica
     if (formData.startDate && formData.duration) {
-      const durationValidation = validateCompetitionDuration(formData.startDate, formData.duration);
+      const durationValidation = validateCompetitionDurationSafe(formData.startDate, formData.duration);
       if (!durationValidation.isValid && durationValidation.error) {
         errors.push(durationValidation.error);
       }
@@ -109,9 +144,9 @@ export const useUnifiedCompetitionForm = () => {
   const submitForm = useCallback(async (onSuccess?: () => void) => {
     if (isSubmitting) return;
 
-    console.log('🚀 Iniciando submissão do formulário:', {
+    console.log('🚀 [useUnifiedCompetitionForm] Iniciando submissão:', {
       formData,
-      timestamp: getCurrentBrasiliaTime()
+      timestamp: getCurrentBrasiliaTimeSafe()
     });
 
     const validation = validateForm();
@@ -176,6 +211,7 @@ export const useUnifiedCompetitionForm = () => {
   }, [formData, isSubmitting, validateForm, toast]);
 
   const resetForm = useCallback(() => {
+    console.log('🔄 [useUnifiedCompetitionForm] Resetando formulário');
     setFormData({
       title: '',
       description: '',
@@ -187,22 +223,14 @@ export const useUnifiedCompetitionForm = () => {
     });
   }, []);
 
+  console.log('✅ [useUnifiedCompetitionForm] Hook pronto para uso');
+
   return {
     formData,
     updateField,
     validateForm,
     submitForm,
-    resetForm: useCallback(() => {
-      setFormData({
-        title: '',
-        description: '',
-        type: 'daily',
-        startDate: '',
-        endDate: '',
-        duration: 3,
-        maxParticipants: 0
-      });
-    }, []),
+    resetForm,
     isSubmitting,
     hasTitle: !!formData.title.trim()
   };
