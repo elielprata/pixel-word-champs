@@ -2,18 +2,21 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Trophy, Users, Calendar, Crown } from 'lucide-react';
+import { RefreshCw, Trophy, Users, Calendar, Crown, Activity } from 'lucide-react';
 import { WeeklyRankingControls } from './weekly-ranking/WeeklyRankingControls';
 import { WeeklyRankingTable } from './weekly-ranking/WeeklyRankingTable';
 import { WeeklyRankingStats } from './weekly-ranking/WeeklyRankingStats';
 import { WeeklyRankingHistory } from './weekly-ranking/WeeklyRankingHistory';
+import { WeeklyRankingDiagnostics } from './weekly-ranking/WeeklyRankingDiagnostics';
+import { AdvancedWeeklyStats } from './weekly-ranking/AdvancedWeeklyStats';
+import { WeeklyRankingResetPanel } from './weekly-ranking/WeeklyRankingResetPanel';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const WeeklyRankingView = () => {
   const { toast } = useToast();
-  const [showHistory, setShowHistory] = useState(false);
   const { 
     currentRanking, 
     stats, 
@@ -27,14 +30,6 @@ export const WeeklyRankingView = () => {
     toast({
       title: "Atualizado",
       description: "Ranking semanal atualizado com sucesso!",
-    });
-  };
-
-  const handleConfigUpdated = () => {
-    refetch();
-    toast({
-      title: "Configuração aplicada",
-      description: "Período semanal atualizado com sucesso!",
     });
   };
 
@@ -76,18 +71,11 @@ export const WeeklyRankingView = () => {
         <div>
           <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <Trophy className="h-6 w-6 text-yellow-600" />
-            Ranking Semanal
+            Ranking Semanal Avançado
           </h2>
-          <p className="text-slate-600">Sistema de ranking contínuo integrado com configurações de prêmios</p>
+          <p className="text-slate-600">Sistema completo de ranking integrado com configurações de prêmios</p>
         </div>
         <div className="flex gap-3">
-          <Button 
-            variant="outline" 
-            onClick={() => setShowHistory(!showHistory)}
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            {showHistory ? 'Ranking Atual' : 'Histórico'}
-          </Button>
           <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar
@@ -95,18 +83,49 @@ export const WeeklyRankingView = () => {
         </div>
       </div>
 
-      {/* Estatísticas */}
-      <WeeklyRankingStats stats={extendedStats} onConfigUpdated={handleConfigUpdated} />
+      {/* Estatísticas Avançadas */}
+      <AdvancedWeeklyStats />
 
-      {/* Controles */}
-      <WeeklyRankingControls />
+      {/* Tabs Principais */}
+      <Tabs defaultValue="ranking" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="ranking" className="flex items-center gap-2">
+            <Trophy className="h-4 w-4" />
+            Ranking
+          </TabsTrigger>
+          <TabsTrigger value="diagnostics" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Diagnósticos
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Histórico
+          </TabsTrigger>
+          <TabsTrigger value="controls" className="flex items-center gap-2">
+            <Crown className="h-4 w-4" />
+            Informações
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Conteúdo Principal */}
-      {showHistory ? (
-        <WeeklyRankingHistory />
-      ) : (
-        <WeeklyRankingTable ranking={currentRanking} />
-      )}
+        <TabsContent value="ranking" className="mt-6">
+          <div className="space-y-6">
+            <WeeklyRankingStats stats={extendedStats} />
+            <WeeklyRankingTable ranking={currentRanking} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="diagnostics" className="mt-6">
+          <WeeklyRankingDiagnostics />
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-6">
+          <WeeklyRankingHistory />
+        </TabsContent>
+
+        <TabsContent value="controls" className="mt-6">
+          <WeeklyRankingControls />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
