@@ -1,11 +1,12 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, DollarSign, Settings } from 'lucide-react';
+import { Trophy, DollarSign, Settings, Calendar } from 'lucide-react';
 import { RankingHeader } from './rankings/RankingHeader';
 import { PaymentsTab } from './PaymentsTab';
 import { UnifiedCompetitionsView } from './rankings/UnifiedCompetitionsView';
 import { AutomationTabContent } from './rankings/AutomationTabContent';
+import { WeeklyRankingView } from './rankings/weekly-ranking/WeeklyRankingView';
 
 export const RankingsTab = () => {
   return (
@@ -18,13 +19,20 @@ export const RankingsTab = () => {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <Tabs defaultValue="competitions" className="w-full">
             <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-              <TabsList className="grid w-full grid-cols-3 bg-white border border-slate-200">
+              <TabsList className="grid w-full grid-cols-4 bg-white border border-slate-200">
                 <TabsTrigger 
                   value="competitions" 
                   className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
                 >
                   <Trophy className="h-4 w-4" />
-                  Sistema de Rankings
+                  Competições Diárias
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="weekly-ranking" 
+                  className="flex items-center gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Ranking Semanal
                 </TabsTrigger>
                 <TabsTrigger 
                   value="payments" 
@@ -46,6 +54,21 @@ export const RankingsTab = () => {
             <div className="p-6">
               <TabsContent value="competitions" className="mt-0">
                 <UnifiedCompetitionsView />
+              </TabsContent>
+
+              <TabsContent value="weekly-ranking" className="mt-0">
+                <div className="space-y-6">
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-purple-600" />
+                      Sistema de Ranking Semanal
+                    </h3>
+                    <p className="text-slate-600 text-sm">
+                      Gerencie o ranking semanal e visualize estatísticas avançadas
+                    </p>
+                  </div>
+                  <WeeklyRankingView />
+                </div>
               </TabsContent>
 
               <TabsContent value="payments" className="mt-0">
