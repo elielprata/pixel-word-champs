@@ -6,14 +6,15 @@ import { createSuccessResponse, createErrorResponse, handleServiceError } from '
 export class DailyCompetitionCoreService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
     try {
-      console.log('🔍 Buscando competições diárias ativas...');
+      console.log('🔍 Buscando competições diárias com lógica dinâmica...');
 
-      // Buscar apenas competições diárias ativas
+      // CORREÇÃO: Buscar todas as competições challenge e filtrar por tempo dinâmico
+      // ao invés de depender do campo status que pode estar desatualizado
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
         .eq('competition_type', 'challenge')
-        .eq('status', 'active');
+        .order('start_date', { ascending: true });
 
       if (error) {
         console.error('❌ Erro na consulta SQL:', error);
@@ -25,20 +26,58 @@ export class DailyCompetitionCoreService {
         return createSuccessResponse([]);
       }
 
-      console.log(`✅ Total de competições diárias ativas encontradas: ${data.length}`);
+      console.log(`📊 Total de competições challenge encontradas: ${data.length}`);
+
+      // LÓGICA DINÂMICA: Filtrar competições ativas baseado no horário atual
+      const now = new Date();
+      const activeCompetitions = data.filter(comp => {
+        try {
+          const startDate = new Date(comp.start_date);
+          const endDate = new Date(comp.end_date);
+          
+          // Verificar se as datas são válidas
+          if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            console.warn(`⚠️ Datas inválidas na competição ${comp.id}:`, {
+              start_date: comp.start_date,
+              end_date: comp.end_date
+            });
+            return false;
+          }
+
+          // Uma competição é ativa se estamos entre start_date e end_date
+          const isActive = now >= startDate && now < endDate;
+          
+          console.log(`🔍 Verificando competição "${comp.title}":`, {
+            id: comp.id,
+            now: now.toISOString(),
+            start_date: startDate.toISOString(),
+            end_date: endDate.toISOString(),
+            isActive,
+            statusNoBanco: comp.status
+          });
+
+          return isActive;
+        } catch (error) {
+          console.error(`❌ Erro ao processar competição ${comp.id}:`, error);
+          return false;
+        }
+      });
+
+      console.log(`✅ Competições ativas encontradas: ${activeCompetitions.length}`);
       
-      // Log detalhado de cada competição encontrada
-      data.forEach((comp, index) => {
-        console.log(`📋 Competição ${index + 1}:`, {
+      // Log detalhado de cada competição ativa encontrada
+      activeCompetitions.forEach((comp, index) => {
+        console.log(`📋 Competição ativa ${index + 1}:`, {
           id: comp.id,
           title: comp.title,
-          status: comp.status,
+          statusOriginal: comp.status,
           start_date: comp.start_date,
-          end_date: comp.end_date
+          end_date: comp.end_date,
+          statusCalculado: 'active'
         });
       });
 
-      return createSuccessResponse(data);
+      return createSuccessResponse(activeCompetitions);
     } catch (error) {
       console.error('❌ Erro ao buscar competições diárias ativas:', error);
       return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_DAILY_COMPETITIONS'));
