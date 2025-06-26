@@ -51,7 +51,7 @@ export const TimeValidationPanel: React.FC = () => {
     // Teste 2: Conversão UTC → Brasília para exibição
     console.log('🧪 TESTE 2: Conversão UTC → Brasília para exibição');
     const utcForDisplay = '2025-06-26T18:30:00.000Z';
-    const expectedBrasilia = '26/06/2025 15:30:00'; // -3h
+    const expectedBrasilia = '26/06/2025 15:30:00'; // -3h SEM VÍRGULA
     const actualBrasilia = formatBrasiliaDate(utcForDisplay, true);
     
     results.push({
@@ -110,18 +110,18 @@ export const TimeValidationPanel: React.FC = () => {
       details: `22:00 + 4h = 02:00 (próximo dia) → deve ser rejeitado`
     });
 
-    // Teste 6: Horário atual Brasília
-    console.log('🧪 TESTE 6: Horário atual Brasília');
+    // Teste 6: CORRIGIDO - Horário atual Brasília (formato padronizado)
+    console.log('🧪 TESTE 6: Horário atual Brasília (formato padronizado)');
     const currentBrasilia = getCurrentBrasiliaTime();
-    const brazilianFormat = /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(currentBrasilia);
+    const brazilianFormat = /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/.test(currentBrasilia); // SEM VÍRGULA
     
     results.push({
-      test: 'Horário atual Brasília',
+      test: 'Horário atual Brasília (formato padronizado)',
       input: 'getCurrentBrasiliaTime()',
-      expected: 'Formato DD/MM/YYYY HH:mm',
+      expected: 'Formato DD/MM/YYYY HH:mm:ss (sem vírgula)',
       actual: currentBrasilia,
       passed: brazilianFormat,
-      details: `Formato brasileiro: ${currentBrasilia}`
+      details: `Formato brasileiro padronizado: ${currentBrasilia}`
     });
 
     // Teste 7: Teste personalizado com input do usuário
@@ -167,7 +167,7 @@ export const TimeValidationPanel: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-blue-600" />
-            Validação Completa do Sistema de Tempo Unificado
+            Validação Completa do Sistema de Tempo Unificado (CORRIGIDO)
           </CardTitle>
           <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-700">
@@ -175,6 +175,9 @@ export const TimeValidationPanel: React.FC = () => {
             </p>
             <p className="text-xs text-blue-600 mt-1">
               Horário atual: {getCurrentBrasiliaTime()}
+            </p>
+            <p className="text-xs text-green-600 mt-1">
+              ✅ <strong>CORREÇÃO:</strong> Formato padronizado sem vírgula para consistência
             </p>
           </div>
         </CardHeader>

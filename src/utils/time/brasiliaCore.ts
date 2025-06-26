@@ -99,11 +99,23 @@ export const getCurrentBrasiliaDate = (): Date => {
 };
 
 /**
- * Obter horário atual formatado para Brasília
+ * CORRIGIDO: Obter horário atual formatado para Brasília (formato padronizado)
  */
 export const getCurrentBrasiliaTime = (): string => {
   const now = new Date();
-  return now.toLocaleString('pt-BR', { 
-    timeZone: 'America/Sao_Paulo' 
+  
+  // CORREÇÃO: Usar formatação manual para garantir consistência
+  const brasiliaTime = now.toLocaleString('pt-BR', { 
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit',
+    month: '2-digit', 
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
   });
+  
+  // Garantir formato consistente DD/MM/YYYY HH:mm:ss (sem vírgula)
+  return brasiliaTime.replace(',', '');
 };

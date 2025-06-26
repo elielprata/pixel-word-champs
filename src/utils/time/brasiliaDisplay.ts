@@ -34,6 +34,9 @@ export const formatDateForDisplay = (utcDateTime: string): string => {
   }
 };
 
+/**
+ * CORRIGIDO: Formatar data Brasília com formato padronizado
+ */
 export const formatBrasiliaDate = (date: Date | string | null | undefined, includeTime: boolean = true): string => {
   try {
     if (!date) return 'Data inválida';
@@ -41,9 +44,20 @@ export const formatBrasiliaDate = (date: Date | string | null | undefined, inclu
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     
     if (includeTime) {
-      return dateObj.toLocaleString('pt-BR', { 
-        timeZone: 'America/Sao_Paulo' 
+      // CORREÇÃO: Usar formatação manual para consistência
+      const formatted = dateObj.toLocaleString('pt-BR', { 
+        timeZone: 'America/Sao_Paulo',
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
       });
+      
+      // Garantir formato consistente sem vírgula
+      return formatted.replace(',', '');
     }
     
     return dateObj.toLocaleDateString('pt-BR', { 
