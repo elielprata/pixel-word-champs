@@ -8,7 +8,6 @@ import { MonitoringTab } from "@/components/admin/MonitoringTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 import { AdvancedSystemTab } from '@/components/admin/AdvancedSystemTab';
-import { ValidationTabContent } from './ValidationTabContent';
 import { logger } from '@/utils/logger';
 
 export const AdminPanelContent: React.FC = () => {
@@ -32,8 +31,8 @@ export const AdminPanelContent: React.FC = () => {
         <IntegrationsTab />
       </TabsContent>
 
-      <TabsContent value="validation">
-        <ValidationTabContent />
+      <TabsContent value="monitoring">
+        <MonitoringTab />
       </TabsContent>
 
       <TabsContent value="support">
@@ -41,10 +40,7 @@ export const AdminPanelContent: React.FC = () => {
       </TabsContent>
 
       <TabsContent value="advanced">
-        <div className="space-y-8">
-          <MonitoringTab />
-          <AdvancedSystemTab />
-        </div>
+        <AdvancedSystemTab />
       </TabsContent>
     </>
   );
