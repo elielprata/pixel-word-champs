@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { AlertTriangle, Calendar } from 'lucide-react';
 import { useAutomationSettings } from '@/hooks/useAutomationSettings';
 import { useResetScores } from '@/hooks/useResetScores';
 import { useWeeklyConfigSync } from '@/hooks/useWeeklyConfigSync';
@@ -68,7 +69,7 @@ export const useAutomationTabLogic = () => {
       return {
         message: `Reset deve ser executado AGORA (fim da semana ${weekStart} - ${weekEnd})`,
         color: "text-red-600",
-        icon: require('lucide-react').AlertTriangle
+        icon: AlertTriangle
       };
     }
     
@@ -79,7 +80,7 @@ export const useAutomationTabLogic = () => {
     return {
       message: `Próximo reset em ${diffDays} dia(s) - ${resetDate.toLocaleDateString('pt-BR')} às 00:00 (fim da semana ${weekStart} - ${weekEnd})`,
       color: "text-blue-600",
-      icon: require('lucide-react').Calendar
+      icon: Calendar
     };
   };
 
