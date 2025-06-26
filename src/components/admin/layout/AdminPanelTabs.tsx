@@ -1,19 +1,57 @@
 
 import React from 'react';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { logger } from '@/utils/logger';
+import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Users, 
+  Trophy, 
+  FileText, 
+  Settings, 
+  Bug, 
+  BarChart3, 
+  CreditCard, 
+  Zap,
+  Shield
+} from 'lucide-react';
 
-export const AdminPanelTabs = () => {
-  logger.debug('Renderizando abas do painel administrativo', undefined, 'ADMIN_PANEL_TABS');
-  
+export const AdminPanelTabs: React.FC = () => {
   return (
-    <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
-      <TabsTrigger value="users">Usuários</TabsTrigger>
-      <TabsTrigger value="rankings">Competições</TabsTrigger>
-      <TabsTrigger value="content">Conteúdo</TabsTrigger>
-      <TabsTrigger value="monitoring">Monitoramento</TabsTrigger>
-      <TabsTrigger value="support">Suporte</TabsTrigger>
-      <TabsTrigger value="advanced">Sistema Avançado</TabsTrigger>
+    <TabsList className="grid w-full grid-cols-9 mb-8">
+      <TabsTrigger value="users" className="flex items-center gap-2">
+        <Users className="h-4 w-4" />
+        <span className="hidden sm:inline">Usuários</span>
+      </TabsTrigger>
+      <TabsTrigger value="rankings" className="flex items-center gap-2">
+        <Trophy className="h-4 w-4" />
+        <span className="hidden sm:inline">Rankings</span>
+      </TabsTrigger>
+      <TabsTrigger value="game-content" className="flex items-center gap-2">
+        <FileText className="h-4 w-4" />
+        <span className="hidden sm:inline">Conteúdo</span>
+      </TabsTrigger>
+      <TabsTrigger value="payments" className="flex items-center gap-2">
+        <CreditCard className="h-4 w-4" />
+        <span className="hidden sm:inline">Pagamentos</span>
+      </TabsTrigger>
+      <TabsTrigger value="integrations" className="flex items-center gap-2">
+        <Zap className="h-4 w-4" />
+        <span className="hidden sm:inline">Integrações</span>
+      </TabsTrigger>
+      <TabsTrigger value="monitoring" className="flex items-center gap-2">
+        <BarChart3 className="h-4 w-4" />
+        <span className="hidden sm:inline">Monitoring</span>
+      </TabsTrigger>
+      <TabsTrigger value="support" className="flex items-center gap-2">
+        <Bug className="h-4 w-4" />
+        <span className="hidden sm:inline">Suporte</span>
+      </TabsTrigger>
+      <TabsTrigger value="advanced" className="flex items-center gap-2">
+        <Settings className="h-4 w-4" />
+        <span className="hidden sm:inline">Avançado</span>
+      </TabsTrigger>
+      <TabsTrigger value="validation" className="flex items-center gap-2">
+        <Shield className="h-4 w-4" />
+        <span className="hidden sm:inline">Validação</span>
+      </TabsTrigger>
     </TabsList>
   );
 };

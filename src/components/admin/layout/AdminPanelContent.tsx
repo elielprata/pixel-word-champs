@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import { UsersTab } from "@/components/admin/UsersTab";
@@ -9,8 +8,9 @@ import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 import { AdvancedSystemTab } from '@/components/admin/AdvancedSystemTab';
 import { logger } from '@/utils/logger';
+import { ValidationTabContent } from './ValidationTabContent';
 
-export const AdminPanelContent = () => {
+export const AdminPanelContent: React.FC = () => {
   logger.debug('Renderizando conteúdo do painel admin', undefined, 'ADMIN_PANEL_CONTENT');
   
   return (
@@ -37,6 +37,10 @@ export const AdminPanelContent = () => {
 
       <TabsContent value="advanced">
         <AdvancedSystemTab />
+      </TabsContent>
+
+      <TabsContent value="validation" className="space-y-6">
+        <ValidationTabContent />
       </TabsContent>
     </>
   );
