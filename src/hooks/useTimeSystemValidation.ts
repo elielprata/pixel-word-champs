@@ -25,123 +25,123 @@ export const useTimeSystemValidation = () => {
     const newChecks: ValidationCheck[] = [];
     const timestamp = getCurrentBrasiliaTime();
 
-    console.log('🔍 VALIDAÇÃO FINAL CORRIGIDA - Iniciando...', { timestamp });
+    console.log('🔍 VALIDAÇÃO DEFINITIVA COM PARSING MANUAL - Iniciando...', { timestamp });
 
-    // Check 1: Conversão crítica CORRIGIDA 23:00 Brasília → 02:00 UTC (próximo dia)
+    // Check 1: Conversão crítica DEFINITIVA 23:00 Brasília → 02:00 UTC (próximo dia)
     try {
       const brasiliaTime = '2025-06-26T23:00';
       const utcTime = convertBrasiliaInputToUTC(brasiliaTime);
-      const expectedUTC = '2025-06-27T02:00:00.000Z'; // CORREÇÃO: Próximo dia UTC
+      const expectedUTC = '2025-06-27T02:00:00.000Z'; // DEFINITIVO: Próximo dia UTC (+3h exato)
       
       newChecks.push({
-        name: 'Conversão Crítica CORRIGIDA 23:00 → UTC',
+        name: 'Conversão Crítica DEFINITIVA 23:00 → UTC (+3h)',
         status: utcTime === expectedUTC ? 'pass' : 'fail',
         message: utcTime === expectedUTC 
-          ? `✅ CORRETO: ${brasiliaTime} → ${utcTime} (próximo dia UTC)`
-          : `❌ ERRO: Esperado ${expectedUTC}, Atual: ${utcTime}`,
+          ? `✅ PARSING MANUAL CORRETO: ${brasiliaTime} → ${utcTime} (+3h exato)`
+          : `❌ ERRO PARSING: Esperado ${expectedUTC}, Atual: ${utcTime}`,
         timestamp
       });
     } catch (error) {
       newChecks.push({
-        name: 'Conversão Crítica CORRIGIDA 23:00 → UTC',
+        name: 'Conversão Crítica DEFINITIVA 23:00 → UTC (+3h)',
         status: 'fail',
-        message: `❌ Erro na conversão crítica: ${error}`,
+        message: `❌ Erro no parsing manual: ${error}`,
         timestamp
       });
     }
 
-    // Check 2: Conversão CORRIGIDA 15:30 Brasília → 18:30 UTC (mesmo dia)
+    // Check 2: Conversão DEFINITIVA 15:30 Brasília → 18:30 UTC (mesmo dia)
     try {
       const brasiliaTime = '2025-06-26T15:30';
       const utcTime = convertBrasiliaInputToUTC(brasiliaTime);
-      const expectedUTC = '2025-06-26T18:30:00.000Z'; // CORREÇÃO: Mesmo dia
+      const expectedUTC = '2025-06-26T18:30:00.000Z'; // DEFINITIVO: Mesmo dia (+3h exato)
       
       newChecks.push({
-        name: 'Conversão Padrão CORRIGIDA 15:30 → UTC',
+        name: 'Conversão Padrão DEFINITIVA 15:30 → UTC (+3h)',
         status: utcTime === expectedUTC ? 'pass' : 'fail',
         message: utcTime === expectedUTC 
-          ? `✅ CORRETO: ${brasiliaTime} → ${utcTime} (mesmo dia)`
-          : `❌ ERRO: Esperado ${expectedUTC}, Atual: ${utcTime}`,
+          ? `✅ PARSING MANUAL CORRETO: ${brasiliaTime} → ${utcTime} (+3h exato)`
+          : `❌ ERRO PARSING: Esperado ${expectedUTC}, Atual: ${utcTime}`,
         timestamp
       });
     } catch (error) {
       newChecks.push({
-        name: 'Conversão Padrão CORRIGIDA 15:30 → UTC',
+        name: 'Conversão Padrão DEFINITIVA 15:30 → UTC (+3h)',
         status: 'fail',
-        message: `❌ Erro na conversão padrão: ${error}`,
+        message: `❌ Erro no parsing padrão: ${error}`,
         timestamp
       });
     }
 
-    // Check 3: Formatação UTC → Brasília CORRIGIDA (reverso)
+    // Check 3: Formatação UTC → Brasília DEFINITIVA (reverso controlado)
     try {
       const utcTime = '2025-06-27T02:00:00.000Z'; // 23:00 Brasília do dia anterior
       const brasiliaDisplay = formatBrasiliaDate(utcTime, true);
-      const expectedDisplay = '26/06/2025 23:00:00'; // CORREÇÃO: Dia anterior em Brasília
+      const expectedDisplay = '26/06/2025 23:00:00'; // DEFINITIVO: Dia anterior em Brasília (-3h exato)
       
       newChecks.push({
-        name: 'Formatação UTC → Brasília CORRIGIDA',
+        name: 'Formatação UTC → Brasília DEFINITIVA (-3h)',
         status: brasiliaDisplay === expectedDisplay ? 'pass' : 'fail',
         message: brasiliaDisplay === expectedDisplay
-          ? `✅ CORRETO: UTC ${utcTime} → Brasília ${brasiliaDisplay}`
-          : `❌ ERRO: Esperado ${expectedDisplay}, Atual: ${brasiliaDisplay}`,
+          ? `✅ CONVERSÃO CONTROLADA CORRETA: UTC ${utcTime} → Brasília ${brasiliaDisplay} (-3h exato)`
+          : `❌ ERRO CONVERSÃO: Esperado ${expectedDisplay}, Atual: ${brasiliaDisplay}`,
         timestamp
       });
     } catch (error) {
       newChecks.push({
-        name: 'Formatação UTC → Brasília CORRIGIDA',
+        name: 'Formatação UTC → Brasília DEFINITIVA (-3h)',
         status: 'fail',
         message: `❌ Erro na formatação reversa: ${error}`,
         timestamp
       });
     }
 
-    // Check 4: Roundtrip crítico CORRIGIDO 23:00
+    // Check 4: Roundtrip crítico DEFINITIVO 23:00 (simetria perfeita)
     try {
       const originalInput = '2025-06-26T23:00';
       const toUTC = convertBrasiliaInputToUTC(originalInput);
       const backToBrasilia = formatUTCForDateTimeLocal(toUTC);
       
       newChecks.push({
-        name: 'Roundtrip Crítico CORRIGIDO 23:00',
+        name: 'Roundtrip Crítico DEFINITIVO 23:00 (Simetria)',
         status: originalInput === backToBrasilia ? 'pass' : 'fail',
         message: originalInput === backToBrasilia
-          ? `✅ CONSISTENTE: ${originalInput} → UTC → ${backToBrasilia}`
-          : `❌ PERDA: ${originalInput} → ${backToBrasilia} (via ${toUTC})`,
+          ? `✅ SIMETRIA PERFEITA: ${originalInput} → UTC → ${backToBrasilia} (parsing manual)`
+          : `❌ SIMETRIA QUEBRADA: ${originalInput} → ${backToBrasilia} (via ${toUTC})`,
         timestamp
       });
     } catch (error) {
       newChecks.push({
-        name: 'Roundtrip Crítico CORRIGIDO 23:00',
+        name: 'Roundtrip Crítico DEFINITIVO 23:00 (Simetria)',
         status: 'fail',
         message: `❌ Erro no roundtrip crítico: ${error}`,
         timestamp
       });
     }
 
-    // Check 5: Cálculo de duração CORRIGIDO respeitando limite
+    // Check 5: Cálculo de duração DEFINITIVO com limite preciso
     try {
       const startTime = '2025-06-26T22:00'; // 22:00
-      const duration = 3; // +3h = 01:00 (próximo dia sem limite)
+      const duration = 3; // +3h = 01:00 (próximo dia) → deve limitar em 23:59
       const endTimeUTC = calculateEndDateWithDuration(startTime, duration);
       const endTimeBrasilia = formatUTCForDateTimeLocal(endTimeUTC);
-      const expectedEnd = '2025-06-26T23:59'; // CORREÇÃO: Deve limitar em 23:59
       
-      const isWithinLimit = endTimeBrasilia <= expectedEnd + ':59';
+      // DEFINITIVO: Deve limitar em 23:59
+      const isWithinLimit = endTimeBrasilia.startsWith('2025-06-26T23:59') || endTimeBrasilia === '2025-06-26T23:59';
       
       newChecks.push({
-        name: 'Cálculo com Limite CORRIGIDO',
+        name: 'Cálculo com Limite DEFINITIVO (Parsing Manual)',
         status: isWithinLimit ? 'pass' : 'fail',
         message: isWithinLimit
-          ? `✅ LIMITADO: ${startTime} + ${duration}h → ${endTimeBrasilia} (respeitou 23:59)`
-          : `❌ ULTRAPASSOU: ${startTime} + ${duration}h → ${endTimeBrasilia}`,
+          ? `✅ LIMITE RESPEITADO: ${startTime} + ${duration}h → ${endTimeBrasilia} (parsing manual + limite 23:59)`
+          : `❌ LIMITE ULTRAPASSADO: ${startTime} + ${duration}h → ${endTimeBrasilia} (deveria ser 23:59)`,
         timestamp
       });
     } catch (error) {
       newChecks.push({
-        name: 'Cálculo com Limite CORRIGIDO',
+        name: 'Cálculo com Limite DEFINITIVO (Parsing Manual)',
         status: 'fail',
-        message: `❌ Erro no cálculo com limite: ${error}`,
+        message: `❌ Erro no cálculo com parsing manual: ${error}`,
         timestamp
       });
     }
@@ -152,39 +152,39 @@ export const useTimeSystemValidation = () => {
       const isValidFormat = /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(currentTime);
       
       newChecks.push({
-        name: 'Horário Atual Brasília',
+        name: 'Horário Atual Brasília (Conversão Controlada)',
         status: isValidFormat ? 'pass' : 'fail',
         message: isValidFormat
-          ? `✅ FORMATO CORRETO: ${currentTime}`
+          ? `✅ FORMATO CORRETO: ${currentTime} (conversão controlada -3h)`
           : `❌ FORMATO INVÁLIDO: ${currentTime}`,
         timestamp
       });
     } catch (error) {
       newChecks.push({
-        name: 'Horário Atual Brasília',
+        name: 'Horário Atual Brasília (Conversão Controlada)',
         status: 'fail',
         message: `❌ Erro ao obter horário: ${error}`,
         timestamp
       });
     }
 
-    // Check 7: Teste Edge Case CORRIGIDO - Meia-noite
+    // Check 7: Teste Edge Case DEFINITIVO - Meia-noite (parsing manual)
     try {
       const midnightInput = '2025-06-26T00:00';
       const midnightUTC = convertBrasiliaInputToUTC(midnightInput);
-      const expectedMidnightUTC = '2025-06-26T03:00:00.000Z'; // CORREÇÃO: Mesmo dia UTC
+      const expectedMidnightUTC = '2025-06-26T03:00:00.000Z'; // DEFINITIVO: Mesmo dia UTC (+3h exato)
       
       newChecks.push({
-        name: 'Edge Case CORRIGIDO - Meia-noite',
+        name: 'Edge Case DEFINITIVO - Meia-noite (Parsing Manual)',
         status: midnightUTC === expectedMidnightUTC ? 'pass' : 'fail',
         message: midnightUTC === expectedMidnightUTC
-          ? `✅ CORRETO: Meia-noite ${midnightInput} → ${midnightUTC}`
-          : `❌ ERRO: Esperado ${expectedMidnightUTC}, Atual: ${midnightUTC}`,
+          ? `✅ PARSING MANUAL CORRETO: Meia-noite ${midnightInput} → ${midnightUTC} (+3h exato)`
+          : `❌ ERRO PARSING: Esperado ${expectedMidnightUTC}, Atual: ${midnightUTC}`,
         timestamp
       });
     } catch (error) {
       newChecks.push({
-        name: 'Edge Case CORRIGIDO - Meia-noite',
+        name: 'Edge Case DEFINITIVO - Meia-noite (Parsing Manual)',
         status: 'fail',
         message: `❌ Erro no edge case meia-noite: ${error}`,
         timestamp
@@ -200,12 +200,13 @@ export const useTimeSystemValidation = () => {
     setSystemHealthy(healthy);
     setIsValidating(false);
 
-    console.log('📊 VALIDAÇÃO FINAL CORRIGIDA CONCLUÍDA:', {
+    console.log('📊 VALIDAÇÃO DEFINITIVA COM PARSING MANUAL CONCLUÍDA:', {
       timestamp,
       totalChecks,
       passedChecks,
       failedChecks: totalChecks - passedChecks,
       systemHealthy: healthy,
+      technique: 'Parsing manual + conversão controlada',
       detailedResults: newChecks.map(c => ({
         test: c.name,
         status: c.status,
