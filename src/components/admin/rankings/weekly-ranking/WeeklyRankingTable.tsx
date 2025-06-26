@@ -3,18 +3,20 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, Medal, Award, DollarSign } from 'lucide-react';
+
+interface RankingPlayer {
+  id: string;
+  username: string;
+  total_score: number;
+  position: number;
+  prize_amount: number;
+  payment_status: string;
+  pix_key?: string;
+}
 
 interface WeeklyRankingTableProps {
-  ranking: Array<{
-    id: string;
-    username: string;
-    total_score: number;
-    position: number;
-    prize_amount: number;
-    pix_key?: string;
-    pix_holder_name?: string;
-  }>;
+  ranking: RankingPlayer[];
 }
 
 export const WeeklyRankingTable: React.FC<WeeklyRankingTableProps> = ({
@@ -23,41 +25,48 @@ export const WeeklyRankingTable: React.FC<WeeklyRankingTableProps> = ({
   const getPositionIcon = (position: number) => {
     switch (position) {
       case 1:
-        return <Trophy className="h-4 w-4 text-yellow-500" />;
+        return <Trophy className="h-4 w-4 text-yellow-600" />;
       case 2:
-        return <Medal className="h-4 w-4 text-gray-400" />;
+        return <Medal className="h-4 w-4 text-gray-500" />;
       case 3:
         return <Award className="h-4 w-4 text-amber-600" />;
       default:
-        return <span className="text-sm font-medium text-gray-600">#{position}</span>;
+        return <span className="text-sm font-medium text-slate-600">#{position}</span>;
     }
   };
 
-  const getPositionBadge = (position: number) => {
-    if (position <= 3) {
-      return (
-        <Badge className={`${
-          position === 1 ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-          position === 2 ? 'bg-gray-100 text-gray-800 border-gray-200' :
-          'bg-amber-100 text-amber-800 border-amber-200'
-        }`}>
-          {position === 1 ? '🥇 1º' : position === 2 ? '🥈 2º' : '🥉 3º'}
-        </Badge>
-      );
+  const getPaymentStatusBadge = (status: string, amount: number) => {
+    if (amount === 0) {
+      return <Badge variant="secondary" className="text-xs">Sem Prêmio</Badge>;
     }
-    if (position <= 10) {
-      return <Badge variant="secondary">Top 10</Badge>;
+
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline" className="text-xs border-yellow-300 text-yellow-700">Pendente</Badge>;
+      case 'paid':
+        return <Badge variant="default" className="text-xs bg-green-600">Pago</Badge>;
+      case 'processing':
+        return <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">Processando</Badge>;
+      default:
+        return <Badge variant="secondary" className="text-xs">Não Elegível</Badge>;
     }
-    return <Badge variant="outline">#{position}</Badge>;
   };
 
   if (!ranking || ranking.length === 0) {
     return (
       <Card>
-        <CardContent className="p-8 text-center">
-          <Trophy className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500">Nenhum jogador no ranking ainda</p>
-          <p className="text-sm text-gray-400">Os jogadores aparecerão aqui conforme jogarem</p>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-yellow-600" />
+            Ranking Semanal
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-slate-500">
+            <Trophy className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+            <p className="text-lg font-medium">Nenhum participante ainda</p>
+            <p className="text-sm">Os jogadores aparecerão aqui conforme jogarem</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -68,63 +77,60 @@ export const WeeklyRankingTable: React.FC<WeeklyRankingTableProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-yellow-600" />
-          Ranking Atual da Semana
+          Ranking Semanal ({ranking.length} participantes)
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-lg overflow-hidden">
+        <div className="rounded-md border">
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead className="font-semibold w-20">Posição</TableHead>
-                <TableHead className="font-semibold">Jogador</TableHead>
-                <TableHead className="font-semibold text-center">Pontuação</TableHead>
-                <TableHead className="font-semibold text-center">Prêmio</TableHead>
-                <TableHead className="font-semibold text-center">PIX</TableHead>
+              <TableRow>
+                <TableHead className="w-16">Pos.</TableHead>
+                <TableHead>Jogador</TableHead>
+                <TableHead className="text-center">Pontuação</TableHead>
+                <TableHead className="text-center">Prêmio</TableHead>
+                <TableHead className="text-center">Status Pagamento</TableHead>
+                <TableHead className="text-center">PIX</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {ranking.map((player) => (
-                <TableRow 
-                  key={player.id} 
-                  className={`hover:bg-slate-50 ${
-                    player.position <= 3 ? 'bg-gradient-to-r from-yellow-50/30 to-transparent' : ''
-                  }`}
-                >
+                <TableRow key={player.id} className={player.position <= 3 ? 'bg-gradient-to-r from-yellow-50 to-transparent' : ''}>
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center">
                       {getPositionIcon(player.position)}
-                      {getPositionBadge(player.position)}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium text-gray-900">{player.username}</div>
+                    <div className="font-medium text-slate-900">
+                      {player.username}
+                    </div>
                   </TableCell>
                   <TableCell className="text-center">
-                    <div className="font-semibold text-blue-600">
-                      {player.total_score.toLocaleString()} pts
+                    <div className="font-bold text-blue-700">
+                      {player.total_score.toLocaleString()}
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
                     {player.prize_amount > 0 ? (
-                      <div className="font-semibold text-green-600">
+                      <div className="flex items-center justify-center gap-1 text-green-700 font-medium">
+                        <DollarSign className="h-4 w-4" />
                         R$ {player.prize_amount.toFixed(2)}
                       </div>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-slate-400">-</span>
                     )}
                   </TableCell>
                   <TableCell className="text-center">
+                    {getPaymentStatusBadge(player.payment_status, player.prize_amount)}
+                  </TableCell>
+                  <TableCell className="text-center">
                     {player.pix_key ? (
-                      <Badge className="bg-green-50 text-green-700 border-green-200">
-                        ✓ Configurado
-                      </Badge>
-                    ) : player.prize_amount > 0 ? (
-                      <Badge className="bg-orange-50 text-orange-700 border-orange-200">
-                        ⚠ Pendente
-                      </Badge>
+                      <div className="text-xs text-slate-600 max-w-24 truncate">
+                        {player.pix_key}
+                      </div>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-slate-400 text-xs">Não informado</span>
                     )}
                   </TableCell>
                 </TableRow>

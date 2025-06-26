@@ -1,75 +1,48 @@
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useMutation } from '@tanstack/react-query';
+import { useToast } from "@/hooks/use-toast";
 import { logger } from '@/utils/logger';
-
-interface ResetResult {
-  success: boolean;
-  profiles_reset: number;
-  rankings_cleared: number;
-  week_start: string;
-  week_end: string;
-  reset_at: string;
-}
+import { supabase } from '@/integrations/supabase/client';
 
 export const useWeeklyRankingReset = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (): Promise<ResetResult> => {
-      logger.info('Iniciando reset de pontuações semanais', undefined, 'WEEKLY_RANKING_RESET');
-      
+    mutationFn: async () => {
+      logger.info('🔄 Executando reset manual do ranking semanal', undefined, 'WEEKLY_RANKING_RESET');
+
       const { data, error } = await supabase.rpc('reset_weekly_scores_and_positions');
-      
+
       if (error) {
-        logger.error('Erro ao resetar pontuações', { error: error.message }, 'WEEKLY_RANKING_RESET');
+        logger.error('❌ Erro no reset do ranking semanal', { error: error.message }, 'WEEKLY_RANKING_RESET');
         throw error;
       }
-      
-      // Validação e conversão segura do tipo
-      if (!data || typeof data !== 'object') {
-        throw new Error('Dados inválidos retornados da função reset_weekly_scores_and_positions');
-      }
-      
-      const resetData = data as any;
-      
-      const result: ResetResult = {
-        success: resetData.success || true,
-        profiles_reset: resetData.profiles_reset || 0,
-        rankings_cleared: resetData.rankings_cleared || 0,
-        week_start: resetData.week_start,
-        week_end: resetData.week_end,
-        reset_at: resetData.reset_at
-      };
-      
-      logger.info('Reset executado com sucesso', { 
-        profiles_reset: result.profiles_reset,
-        rankings_cleared: result.rankings_cleared 
-      }, 'WEEKLY_RANKING_RESET');
-      
-      return result;
+
+      logger.info('✅ Reset do ranking semanal concluído', data, 'WEEKLY_RANKING_RESET');
+      return data;
     },
     onSuccess: (data) => {
       toast({
-        title: "Reset Executado com Sucesso!",
-        description: `${data.profiles_reset} perfis resetados e ${data.rankings_cleared} rankings limpos.`,
+        title: "Reset Concluído",
+        description: `${data.profiles_reset} perfis resetados e ${data.rankings_cleared} registros de ranking removidos.`,
       });
-      
-      // Invalidar todas as queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ['weeklyRanking'] });
-      queryClient.invalidateQueries({ queryKey: ['weeklyRankingStats'] });
-      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-      queryClient.invalidateQueries({ queryKey: ['realUserStats'] });
+
+      logger.info('🎉 Reset manual executado com sucesso', {
+        profiles_reset: data.profiles_reset,
+        rankings_cleared: data.rankings_cleared,
+        week_period: `${data.week_start} - ${data.week_end}`
+      }, 'WEEKLY_RANKING_RESET');
     },
     onError: (error: any) => {
-      logger.error('Erro no reset de pontuações', { error: error.message }, 'WEEKLY_RANKING_RESET');
+      const errorMessage = error?.message || 'Erro desconhecido no reset';
+      
       toast({
         title: "Erro no Reset",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
-    },
+
+      logger.error('❌ Erro no reset manual', { error: errorMessage }, 'WEEKLY_RANKING_RESET');
+    }
   });
 };
