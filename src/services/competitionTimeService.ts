@@ -1,55 +1,17 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
+import { competitionStatusService } from './competitionStatusService';
 
 class CompetitionTimeService {
   /**
-   * CORRIGIDO: Calcula o status correto sem double conversion
-   * Compara datas UTC diretamente e converte apenas para log/debug
+   * CORRIGIDO: Usa o novo serviço de status com validação robusta
    */
   calculateCorrectStatus(startDate: string, endDate: string): string {
-    // CORREÇÃO: Usar Date nativo sem conversões problemáticas
-    const now = new Date();
-    const startUTC = new Date(startDate);
-    const endUTC = new Date(endDate);
-
-    // Log para debug (usando conversão apenas para exibição)
-    logger.debug('Calculando status correto SEM double conversion', {
-      nowUTC: now.toISOString(),
-      startUTC: startUTC.toISOString(),
-      endUTC: endUTC.toISOString(),
-      nowBrasilia: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-      startBrasilia: startUTC.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-      endBrasilia: endUTC.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-      comparison: {
-        isBefore: now < startUTC,
-        isDuring: now >= startUTC && now <= endUTC,
-        isAfter: now > endUTC
-      }
-    }, 'COMPETITION_TIME_SERVICE');
-
-    // CORREÇÃO: Comparação direta de objetos Date (UTC com UTC)
-    if (now < startUTC) {
-      logger.debug('Status: scheduled (antes do início)', {
-        now: now.toISOString(),
-        start: startUTC.toISOString()
-      }, 'COMPETITION_TIME_SERVICE');
-      return 'scheduled';
-    } else if (now >= startUTC && now <= endUTC) {
-      logger.debug('Status: active (durante o período)', {
-        now: now.toISOString(),
-        start: startUTC.toISOString(),
-        end: endUTC.toISOString()
-      }, 'COMPETITION_TIME_SERVICE');
-      return 'active';
-    } else {
-      logger.debug('Status: completed (após o fim)', {
-        now: now.toISOString(),
-        end: endUTC.toISOString()
-      }, 'COMPETITION_TIME_SERVICE');
-      return 'completed';
-    }
+    return competitionStatusService.calculateCorrectStatus({
+      start_date: startDate,
+      end_date: endDate
+    });
   }
 
   /**
@@ -57,7 +19,7 @@ class CompetitionTimeService {
    */
   async updateCompetitionStatuses(): Promise<void> {
     try {
-      logger.info('🔄 Iniciando atualização automática de status de competições (CORRIGIDA)', undefined, 'COMPETITION_TIME_SERVICE');
+      logger.info('🔄 Iniciando atualização automática de status (VALIDAÇÃO ROBUSTA)', undefined, 'COMPETITION_TIME_SERVICE');
       
       const now = new Date();
       
@@ -70,7 +32,7 @@ class CompetitionTimeService {
       const { data: competitions, error: fetchError } = await supabase
         .from('custom_competitions')
         .select('id, title, start_date, end_date, status, competition_type')
-        .in('status', ['active', 'scheduled']);
+        .in('status', ['active', 'scheduled', 'completed']); // Incluir completed para correção
 
       if (fetchError) {
         logger.error('Erro ao buscar competições para atualização', { error: fetchError }, 'COMPETITION_TIME_SERVICE');
@@ -134,7 +96,7 @@ class CompetitionTimeService {
         }
       }
 
-      logger.info(`🎯 Atualização de status concluída (CORRIGIDA)`, {
+      logger.info(`🎯 Atualização de status concluída (VALIDAÇÃO ROBUSTA)`, {
         totalVerified: competitions.length,
         totalUpdated: updatedCount,
         timestamp: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
@@ -143,6 +105,13 @@ class CompetitionTimeService {
     } catch (error) {
       logger.error('❌ Erro crítico na atualização de status', { error }, 'COMPETITION_TIME_SERVICE');
     }
+  }
+
+  /**
+   * Força atualização de competições com status incorretos
+   */
+  async forceUpdateIncorrectStatuses(): Promise<void> {
+    return competitionStatusService.forceUpdateIncorrectStatuses();
   }
 
   /**
