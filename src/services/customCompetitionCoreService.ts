@@ -72,6 +72,29 @@ class CustomCompetitionCoreService {
     return this.createNewCompetition(competitionData);
   }
 
+  async deleteCompetition(competitionId: string): Promise<ServiceResponse> {
+    try {
+      secureLogger.info('Deletando competição', { competitionId }, 'CUSTOM_COMPETITION_SERVICE');
+      
+      const { error } = await supabase
+        .from('custom_competitions')
+        .delete()
+        .eq('id', competitionId);
+
+      if (error) {
+        secureLogger.error('Erro ao deletar competição', { competitionId, error }, 'CUSTOM_COMPETITION_SERVICE');
+        return { success: false, error: error.message };
+      }
+
+      secureLogger.info('Competição deletada com sucesso', { competitionId }, 'CUSTOM_COMPETITION_SERVICE');
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      secureLogger.error('Erro crítico na exclusão', { competitionId, error }, 'CUSTOM_COMPETITION_SERVICE');
+      return { success: false, error: errorMessage };
+    }
+  }
+
   async getCustomCompetitions(): Promise<ServiceResponse> {
     try {
       secureLogger.debug('Buscando competições customizadas', undefined, 'CUSTOM_COMPETITION_SERVICE');
