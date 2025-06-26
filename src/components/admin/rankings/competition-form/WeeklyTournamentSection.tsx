@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,12 +18,14 @@ interface WeeklyCompetition {
   max_participants: number;
   total_participants: number;
 }
+
 interface WeeklyTournamentSectionProps {
   weeklyTournamentId: string;
   weeklyTournaments: WeeklyCompetition[];
   onTournamentChange: (tournamentId: string) => void;
   competitionType?: string;
 }
+
 export const WeeklyTournamentSection = ({
   weeklyTournamentId,
   weeklyTournaments,
@@ -33,10 +36,12 @@ export const WeeklyTournamentSection = ({
   if (competitionType !== 'daily') {
     return null;
   }
+
   const formatDate = (dateString: string) => {
-    // Usar função padronizada - UTC para Brasília apenas na exibição
+    // CORRIGIDO: Usar função padronizada - UTC para Brasília apenas na exibição
     return formatBrasiliaDate(dateString, false);
   };
+
   const getStatusText = (competition: WeeklyCompetition) => {
     const actualStatus = competitionStatusService.calculateCorrectStatus({
       start_date: competition.start_date,
@@ -54,6 +59,7 @@ export const WeeklyTournamentSection = ({
         return 'Rascunho';
     }
   };
+
   const getStatusColor = (competition: WeeklyCompetition) => {
     const actualStatus = competitionStatusService.calculateCorrectStatus({
       start_date: competition.start_date,
@@ -71,6 +77,7 @@ export const WeeklyTournamentSection = ({
         return 'text-gray-600';
     }
   };
+
   const availableTournaments = weeklyTournaments.filter(tournament => {
     const actualStatus = competitionStatusService.calculateCorrectStatus({
       start_date: tournament.start_date,
@@ -79,28 +86,32 @@ export const WeeklyTournamentSection = ({
     });
     return actualStatus === 'active' || actualStatus === 'scheduled';
   });
-  return <div className="space-y-3">
+
+  return (
+    <div className="space-y-3">
       <Label htmlFor="weeklyTournament" className="flex items-center gap-2 text-sm font-medium">
         <Link className="h-3 w-3" />
         Vincular ao Torneio Semanal
         <span className="text-red-500">*</span>
       </Label>
       
-      
-      
       <Select value={weeklyTournamentId} onValueChange={onTournamentChange}>
         <SelectTrigger className="h-9">
           <SelectValue placeholder="Selecione um torneio semanal (obrigatório)" />
         </SelectTrigger>
         <SelectContent>
-          {availableTournaments.length === 0 ? <SelectItem value="no-tournaments" disabled>
+          {availableTournaments.length === 0 ? (
+            <SelectItem value="no-tournaments" disabled>
               <div className="flex items-center gap-2 py-1">
                 <Trophy className="h-3 w-3 text-slate-400" />
                 <span className="text-slate-400 text-xs">
                   Nenhuma competição semanal ativa disponível
                 </span>
               </div>
-            </SelectItem> : availableTournaments.map(tournament => <SelectItem key={tournament.id} value={tournament.id}>
+            </SelectItem>
+          ) : (
+            availableTournaments.map(tournament => (
+              <SelectItem key={tournament.id} value={tournament.id}>
                 <div className="flex flex-col py-1 w-full">
                   <div className="flex items-center gap-2">
                     <Trophy className="h-3 w-3 text-yellow-600" />
@@ -117,12 +128,18 @@ export const WeeklyTournamentSection = ({
                     <span>R$ {tournament.prize_pool.toFixed(2)}</span>
                   </div>
                 </div>
-              </SelectItem>)}
+              </SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
       
       <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-        {availableTournaments.length === 0 ? "É necessário ter uma competição semanal ativa para criar competições diárias." : "Os pontos desta competição diária serão transferidos automaticamente para o torneio semanal selecionado em tempo real."}
+        {availableTournaments.length === 0 
+          ? "É necessário ter uma competição semanal ativa para criar competições diárias." 
+          : "Os pontos desta competição diária serão transferidos automaticamente para o torneio semanal selecionado em tempo real."
+        }
       </p>
-    </div>;
+    </div>
+  );
 };

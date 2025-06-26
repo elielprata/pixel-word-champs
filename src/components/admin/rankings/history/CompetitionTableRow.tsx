@@ -43,6 +43,7 @@ export const CompetitionTableRow: React.FC<CompetitionTableRowProps> = ({
       </TableCell>
       <TableCell className="text-sm">
         <div>
+          {/* CORRIGIDO: Usar formatDate que já converte UTC → Brasília */}
           <p>{formatDate(competition.start_date)} -</p>
           <p>{formatDate(competition.end_date)}</p>
         </div>

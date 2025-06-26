@@ -58,9 +58,16 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         originalStatus: competition.status
       });
       
-      // Converter UTC para datetime-local (Brasília)
+      // CORRIGIDO: Converter UTC para datetime-local (Brasília) para exibição igual ao input
       const startDateLocal = formatUTCForDateTimeLocal(competition.start_date);
       const endDateLocal = formatUTCForDateTimeLocal(competition.end_date);
+      
+      console.log('🔄 Conversão UTC → Brasília para edição:', {
+        utcStart: competition.start_date,
+        brasiliaStart: startDateLocal,
+        utcEnd: competition.end_date,
+        brasiliaEnd: endDateLocal
+      });
       
       setFormData({
         title: competition.title,
@@ -93,7 +100,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
         const updateData = {
           title: formData.title,
           description: formData.description,
-          startDate: formData.startDate,  // Será convertido para UTC no serviço
+          startDate: formData.startDate,  // CORRIGIDO: Será convertido Brasília → UTC no serviço
           maxParticipants: 0
         };
 
@@ -169,7 +176,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
               required
             />
             <p className="text-xs text-blue-600 mt-1">
-              🇧🇷 Horário de Brasília
+              🇧🇷 Horário de Brasília (igual ao digitado)
             </p>
           </div>
 
@@ -183,9 +190,13 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
               required
               disabled={isDailyCompetition}
             />
-            {isDailyCompetition && (
+            {isDailyCompetition ? (
               <p className="text-xs text-green-600 mt-1">
                 ⚙️ Calculado automaticamente baseado na duração
+              </p>
+            ) : (
+              <p className="text-xs text-blue-600 mt-1">
+                🇧🇷 Horário de Brasília (igual ao digitado)
               </p>
             )}
           </div>
@@ -197,7 +208,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
             <div className="text-sm text-green-700 mt-1 space-y-1">
               <p>💰 Premiação: Sem prêmios em dinheiro</p>
               <p>🎯 Participação: Livre (todos os usuários podem participar)</p>
-              <p>⏰ Horários: Exibição em Brasília, processamento em UTC</p>
+              <p>⏰ Horários: Input = Exibição (Brasília), UTC apenas para storage</p>
               <p className="text-xs text-green-600 mt-1">
                 💡 Competições diárias focam no engajamento dos usuários
               </p>
@@ -211,6 +222,7 @@ export const EditCompetitionForm: React.FC<EditCompetitionFormProps> = ({
             <div className="text-sm text-green-700 mt-1 space-y-1">
               <p>💰 Premiação Total: R$ {paymentData.calculateTotalPrize().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
               <p>🎯 Participação: Livre (todos os usuários podem participar)</p>
+              <p>⏰ Horários: Input = Exibição (Brasília), UTC apenas para storage</p>
               <p className="text-xs text-green-600 mt-1">
                 💡 A premiação é calculada automaticamente com base na configuração de prêmios abaixo
               </p>

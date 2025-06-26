@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { competitionHistoryService } from '@/services/competitionHistoryService';
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 export const useCompetitionHistory = (competitionId?: string, userId?: string) => {
   const [history, setHistory] = useState<any[]>([]);
@@ -12,6 +13,12 @@ export const useCompetitionHistory = (competitionId?: string, userId?: string) =
     try {
       setIsLoading(true);
       setError(null);
+
+      console.log('🔍 Carregando histórico de competições:', {
+        competitionId,
+        userId,
+        timestamp: getCurrentBrasiliaTime()
+      });
 
       const historyData = await competitionHistoryService.getCompetitionHistory(
         competitionId, 
@@ -28,7 +35,9 @@ export const useCompetitionHistory = (competitionId?: string, userId?: string) =
 
     } catch (err) {
       setError('Erro ao carregar histórico de competições');
-      console.error('Erro no hook de histórico:', err);
+      console.error('❌ Erro no hook de histórico:', err, {
+        timestamp: getCurrentBrasiliaTime()
+      });
     } finally {
       setIsLoading(false);
     }

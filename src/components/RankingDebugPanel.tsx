@@ -7,6 +7,7 @@ import { DebugActionButtons } from '@/components/admin/debug/DebugActionButtons'
 import { RankingResultDisplay } from '@/components/admin/debug/RankingResultDisplay';
 import { ProtectionResultDisplay } from '@/components/admin/debug/ProtectionResultDisplay';
 import { useDebugActions } from '@/components/admin/debug/useDebugActions';
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 const RankingDebugPanel = () => {
   const {
@@ -32,6 +33,7 @@ const RankingDebugPanel = () => {
           {error && (
             <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded text-sm">
               <strong>Erro:</strong> {error}
+              <p className="text-xs mt-1">Timestamp: {getCurrentBrasiliaTime()}</p>
             </div>
           )}
           
@@ -52,7 +54,10 @@ const RankingDebugPanel = () => {
           <div className="bg-green-50 border border-green-200 rounded p-3">
             <p className="text-sm text-green-700 flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
-              ✅ <strong>Período Semanal Corrigido:</strong> As funções de cálculo foram atualizadas para garantir domingo a sábado.
+              ✅ <strong>Sistema de Tempo Unificado:</strong> Input = Exibição (Brasília), UTC apenas para storage.
+            </p>
+            <p className="text-xs text-green-600 mt-1">
+              Última atualização: {getCurrentBrasiliaTime()}
             </p>
           </div>
         </CardContent>

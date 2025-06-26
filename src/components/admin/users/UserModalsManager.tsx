@@ -7,7 +7,7 @@ import { DeleteUserModal } from './DeleteUserModal';
 import { EditUserModal } from '../EditUserModal';
 import { ResetScoresModal } from './ResetScoresModal';
 import { logger } from '@/utils/logger';
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 interface UserModalsManagerProps {
   selectedUser: AllUsersData | null;
@@ -41,7 +41,7 @@ export const UserModalsManager = ({
     showDeleteModal,
     showEditModal,
     showResetModal,
-    timestamp: formatBrasiliaDate(new Date())
+    timestamp: getCurrentBrasiliaTime()
   }, 'USER_MODALS_MANAGER');
 
   return (

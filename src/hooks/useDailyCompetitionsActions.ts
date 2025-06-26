@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { customCompetitionService } from '@/services/customCompetitionService';
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 interface DailyCompetition {
   id: string;
@@ -28,7 +29,8 @@ export const useDailyCompetitionsActions = () => {
       id: competition.id,
       title: competition.title,
       currentEditingCompetition: editingCompetition?.id,
-      currentModalOpen: isEditModalOpen
+      currentModalOpen: isEditModalOpen,
+      timestamp: getCurrentBrasiliaTime()
     });
     
     setEditingCompetition(competition);
@@ -40,43 +42,58 @@ export const useDailyCompetitionsActions = () => {
     setTimeout(() => {
       console.log('🔍 Hook: Verificação após setState:', {
         editingCompetitionId: editingCompetition?.id,
-        isModalOpen: isEditModalOpen
+        isModalOpen: isEditModalOpen,
+        timestamp: getCurrentBrasiliaTime()
       });
     }, 100);
   };
 
   const handleDelete = async (competition: DailyCompetition, onRefresh?: () => void) => {
-    console.log('🗑️ Tentando excluir competição diária:', competition.id);
+    console.log('🗑️ Tentando excluir competição diária:', competition.id, {
+      timestamp: getCurrentBrasiliaTime()
+    });
     
     const confirmDelete = window.confirm(`Tem certeza que deseja excluir a competição "${competition.title}"?`);
     if (!confirmDelete) {
-      console.log('❌ Exclusão cancelada pelo usuário');
+      console.log('❌ Exclusão cancelada pelo usuário', {
+        timestamp: getCurrentBrasiliaTime()
+      });
       return;
     }
 
     setDeletingId(competition.id);
     
     try {
-      console.log('📤 Chamando serviço de exclusão...');
+      console.log('📤 Chamando serviço de exclusão...', {
+        timestamp: getCurrentBrasiliaTime()
+      });
       const response = await customCompetitionService.deleteCompetition(competition.id);
       
       if (response.success) {
-        console.log('✅ Competição excluída com sucesso');
+        console.log('✅ Competição excluída com sucesso', {
+          timestamp: getCurrentBrasiliaTime()
+        });
         toast({
           title: "Competição excluída",
           description: `A competição "${competition.title}" foi excluída com sucesso.`,
         });
         
         if (onRefresh) {
-          console.log('🔄 Atualizando lista de competições...');
+          console.log('🔄 Atualizando lista de competições...', {
+            timestamp: getCurrentBrasiliaTime()
+          });
           onRefresh();
         }
       } else {
-        console.error('❌ Erro no serviço:', response.error);
+        console.error('❌ Erro no serviço:', response.error, {
+          timestamp: getCurrentBrasiliaTime()
+        });
         throw new Error(response.error || 'Erro ao excluir competição');
       }
     } catch (error) {
-      console.error('❌ Erro ao excluir competição:', error);
+      console.error('❌ Erro ao excluir competição:', error, {
+        timestamp: getCurrentBrasiliaTime()
+      });
       toast({
         title: "Erro ao excluir",
         description: error instanceof Error ? error.message : "Não foi possível excluir a competição. Tente novamente.",
@@ -88,7 +105,9 @@ export const useDailyCompetitionsActions = () => {
   };
 
   const handleCompetitionUpdated = (onRefresh?: () => void) => {
-    console.log('🔄 Competição diária atualizada, fechando modal e recarregando lista...');
+    console.log('🔄 Competição diária atualizada, fechando modal e recarregando lista...', {
+      timestamp: getCurrentBrasiliaTime()
+    });
     setIsEditModalOpen(false);
     setEditingCompetition(null);
     if (onRefresh) {
@@ -100,7 +119,8 @@ export const useDailyCompetitionsActions = () => {
   console.log('🎯 Hook: Estados atuais:', {
     editingCompetition: editingCompetition?.id,
     isEditModalOpen,
-    deletingId
+    deletingId,
+    timestamp: getCurrentBrasiliaTime()
   });
 
   return {

@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Clock } from 'lucide-react';
-import { getCurrentBrasiliaDate, formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 export const CompetitionTimeInfo: React.FC = () => {
-  const currentTime = getCurrentBrasiliaDate();
+  // CORRIGIDO: Usar função específica que já formata corretamente
+  const currentTime = getCurrentBrasiliaTime();
   
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
@@ -12,7 +13,10 @@ export const CompetitionTimeInfo: React.FC = () => {
       <div className="text-sm text-blue-700">
         <p className="font-medium">Horário de Referência: Brasília (UTC-3)</p>
         <p className="text-xs mt-1">
-          Agora: {formatBrasiliaDate(currentTime)}
+          Agora: {currentTime}
+        </p>
+        <p className="text-xs text-blue-600 mt-1">
+          💡 Input = Exibição (Brasília), UTC apenas para storage interno
         </p>
       </div>
     </div>

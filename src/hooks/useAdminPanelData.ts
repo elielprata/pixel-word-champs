@@ -2,6 +2,7 @@
 import { useAdminData } from './useAdminData';
 import { useRealUserStats } from './useRealUserStats';
 import { logger } from '@/utils/logger';
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 export const useAdminPanelData = () => {
   const adminData = useAdminData();
@@ -11,7 +12,10 @@ export const useAdminPanelData = () => {
   const hasError = adminData.hasError || userStats.error;
 
   const refreshAll = () => {
-    logger.info('Atualizando todos os dados do painel admin', undefined, 'ADMIN_PANEL_DATA');
+    // CORRIGIDO: Log com timestamp em Brasília
+    logger.info('Atualizando todos os dados do painel admin', { 
+      timestamp: getCurrentBrasiliaTime() 
+    }, 'ADMIN_PANEL_DATA');
     adminData.refetchAll();
     userStats.refetch();
   };

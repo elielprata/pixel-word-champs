@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWeeklyCompetitionAutoParticipation } from './useWeeklyCompetitionAutoParticipation';
 import { weeklyPositionService } from '@/services/weeklyPositionService';
 import { logger } from '@/utils/logger';
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 // HOOK DEPRECIADO - USE useGameSessionManager
 // Este hook está mantido apenas para compatibilidade com código existente
@@ -15,10 +16,14 @@ export const useGameSessionWithWeeklyUpdates = () => {
   const { activeWeeklyCompetition, updateWeeklyScore } = useWeeklyCompetitionAutoParticipation();
   const [currentSession, setCurrentSession] = useState<any>(null);
 
-  logger.warn('⚠️ useGameSessionWithWeeklyUpdates está DEPRECIADO - use useGameSessionManager');
+  logger.warn('⚠️ useGameSessionWithWeeklyUpdates está DEPRECIADO - use useGameSessionManager', {
+    timestamp: getCurrentBrasiliaTime()
+  });
 
   const createGameSession = async (boardData: any, level: number) => {
-    logger.warn('⚠️ createGameSession depreciado - sessões agora são criadas apenas quando completadas');
+    logger.warn('⚠️ createGameSession depreciado - sessões agora são criadas apenas quando completadas', {
+      timestamp: getCurrentBrasiliaTime()
+    });
     
     // Retornar sessão fake para compatibilidade
     const fakeSession = {
@@ -35,7 +40,9 @@ export const useGameSessionWithWeeklyUpdates = () => {
   };
 
   const updateGameSession = async (sessionId: string, updates: any) => {
-    logger.warn('⚠️ updateGameSession depreciado - use useGameSessionManager');
+    logger.warn('⚠️ updateGameSession depreciado - use useGameSessionManager', {
+      timestamp: getCurrentBrasiliaTime()
+    });
     
     if (currentSession && currentSession.id === sessionId) {
       setCurrentSession({ ...currentSession, ...updates });
