@@ -6,7 +6,6 @@ import { useResetScores } from '@/hooks/useResetScores';
 import { useWeeklyConfigSync } from '@/hooks/useWeeklyConfigSync';
 import { AutomationConfig } from '../../users/automation/types';
 import { getDefaultSettings } from '../../users/automation/utils';
-import { automationService } from '@/services/automationService';
 
 export const useAutomationTabLogic = () => {
   const { logs, isExecuting, executeManualReset, settings: currentSettings, saveSettings } = useAutomationSettings();
@@ -58,16 +57,16 @@ export const useAutomationTabLogic = () => {
     }
   };
 
+  // Usar EXCLUSIVAMENTE os dados sincronizados sem transformações adicionais
   const getNextResetInfo = () => {
     if (!syncedConfig) return null;
     
+    // Usar os dados EXATOS retornados pela função should_reset_weekly_ranking()
     const resetDate = new Date(syncedConfig.next_reset_date);
-    const weekStart = syncedConfig.current_week_start;
-    const weekEnd = syncedConfig.current_week_end;
     
     if (syncedConfig.should_reset) {
       return {
-        message: `Reset deve ser executado AGORA (fim da semana ${weekStart} - ${weekEnd})`,
+        message: `Reset deve ser executado AGORA (fim da semana ${syncedConfig.current_week_start} - ${syncedConfig.current_week_end})`,
         color: "text-red-600",
         icon: AlertTriangle
       };
@@ -78,7 +77,7 @@ export const useAutomationTabLogic = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     return {
-      message: `Próximo reset em ${diffDays} dia(s) - ${resetDate.toLocaleDateString('pt-BR')} às 00:00 (fim da semana ${weekStart} - ${weekEnd})`,
+      message: `Próximo reset em ${diffDays} dia(s) - ${resetDate.toLocaleDateString('pt-BR')} às 00:00 (fim da semana ${syncedConfig.current_week_start} - ${syncedConfig.current_week_end})`,
       color: "text-blue-600",
       icon: Calendar
     };
