@@ -19,6 +19,16 @@ export interface UnifiedCompetition {
   total_participants: number;
 }
 
+export interface CreateCompetitionData {
+  title: string;
+  description: string;
+  type: 'daily';
+  startDate: string;
+  endDate: string;
+  duration: number;
+  maxParticipants: number;
+}
+
 class UnifiedCompetitionService {
   async getAllCompetitions(): Promise<ApiResponse<UnifiedCompetition[]>> {
     try {
@@ -61,6 +71,11 @@ class UnifiedCompetitionService {
     }
   }
 
+  // Alias para compatibilidade
+  async getCompetitions(): Promise<ApiResponse<UnifiedCompetition[]>> {
+    return this.getAllCompetitions();
+  }
+
   async getCompetitionsByType(type: string): Promise<ApiResponse<UnifiedCompetition[]>> {
     try {
       logger.info('🔍 Buscando competições por tipo', { type }, 'UNIFIED_COMPETITIONS');
@@ -101,6 +116,71 @@ class UnifiedCompetitionService {
     } catch (error) {
       logger.error('❌ Erro ao buscar competições por tipo:', { error, type }, 'UNIFIED_COMPETITIONS');
       return createErrorResponse(handleServiceError(error, 'GET_COMPETITIONS_BY_TYPE'));
+    }
+  }
+
+  async createCompetition(data: CreateCompetitionData): Promise<ApiResponse<UnifiedCompetition>> {
+    try {
+      logger.info('🏗️ Criando nova competição', { 
+        title: data.title, 
+        type: data.type 
+      }, 'UNIFIED_COMPETITIONS');
+
+      // Converter datas para UTC para armazenamento
+      const startDateUTC = new Date(data.startDate).toISOString();
+      const endDateUTC = new Date(data.endDate).toISOString();
+
+      const competitionData = {
+        title: data.title,
+        description: data.description,
+        competition_type: 'challenge', // Sempre challenge para competições diárias
+        start_date: startDateUTC,
+        end_date: endDateUTC,
+        status: 'scheduled', // Status inicial sempre scheduled
+        prize_pool: 0, // Competições diárias não têm prêmio
+        max_participants: data.maxParticipants || 0,
+        theme: 'daily',
+        rules: {
+          duration_hours: data.duration,
+          type: 'daily_challenge'
+        }
+      };
+
+      const { data: competition, error } = await supabase
+        .from('custom_competitions')
+        .insert(competitionData)
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('❌ Erro ao criar competição:', { error }, 'UNIFIED_COMPETITIONS');
+        throw error;
+      }
+
+      logger.info('✅ Competição criada com sucesso', { 
+        id: competition.id,
+        title: competition.title,
+        timestamp: getCurrentBrasiliaTime()
+      }, 'UNIFIED_COMPETITIONS');
+
+      const unifiedCompetition: UnifiedCompetition = {
+        id: competition.id,
+        title: competition.title,
+        description: competition.description || '',
+        start_date: competition.start_date,
+        end_date: competition.end_date,
+        status: competition.status,
+        competition_type: competition.competition_type,
+        theme: competition.theme || '',
+        prize_pool: Number(competition.prize_pool) || 0,
+        max_participants: competition.max_participants || 0,
+        total_participants: 0
+      };
+
+      return createSuccessResponse(unifiedCompetition);
+    } catch (error) {
+      logger.error('❌ Erro ao criar competição:', { error }, 'UNIFIED_COMPETITIONS');
+      return createErrorResponse(handleServiceError(error, 'CREATE_COMPETITION'));
     }
   }
 
