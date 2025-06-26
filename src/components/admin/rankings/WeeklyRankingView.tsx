@@ -2,12 +2,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Trophy, Users, Calendar, Crown, Activity } from 'lucide-react';
+import { RefreshCw, Trophy, Users, Calendar, Crown } from 'lucide-react';
 import { WeeklyRankingControls } from './weekly-ranking/WeeklyRankingControls';
 import { WeeklyRankingTable } from './weekly-ranking/WeeklyRankingTable';
 import { WeeklyRankingStats } from './weekly-ranking/WeeklyRankingStats';
 import { WeeklyRankingHistory } from './weekly-ranking/WeeklyRankingHistory';
-import { WeeklyRankingDiagnostics } from './weekly-ranking/WeeklyRankingDiagnostics';
 import { AdvancedWeeklyStats } from './weekly-ranking/AdvancedWeeklyStats';
 import { WeeklyRankingResetPanel } from './weekly-ranking/WeeklyRankingResetPanel';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
@@ -52,8 +51,8 @@ export const WeeklyRankingView = () => {
     );
   }
 
-  // Garantir que stats tenha a propriedade config obrigatória
-  const extendedStats = stats ? {
+  // Garantir que stats tenha todas as propriedades obrigatórias
+  const safeStats = stats ? {
     ...stats,
     top_3_players: stats.top_3_players || [],
     config: stats.config || {
@@ -88,14 +87,10 @@ export const WeeklyRankingView = () => {
 
       {/* Tabs Principais */}
       <Tabs defaultValue="ranking" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="ranking" className="flex items-center gap-2">
             <Trophy className="h-4 w-4" />
             Ranking
-          </TabsTrigger>
-          <TabsTrigger value="diagnostics" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Diagnósticos
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
@@ -109,13 +104,9 @@ export const WeeklyRankingView = () => {
 
         <TabsContent value="ranking" className="mt-6">
           <div className="space-y-6">
-            <WeeklyRankingStats stats={extendedStats} />
+            <WeeklyRankingStats stats={safeStats} />
             <WeeklyRankingTable ranking={currentRanking} />
           </div>
-        </TabsContent>
-
-        <TabsContent value="diagnostics" className="mt-6">
-          <WeeklyRankingDiagnostics />
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
