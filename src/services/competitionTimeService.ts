@@ -6,28 +6,50 @@ import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 class CompetitionTimeService {
   /**
    * Calcula o status correto baseado nas datas UTC armazenadas no banco
+   * CORREÇÃO: Agora converte as datas UTC para Brasília antes de comparar
    */
   calculateCorrectStatus(startDate: string, endDate: string): string {
     // Usar timezone de Brasília para todos os cálculos
     const now = new Date();
     const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    
+    // CORREÇÃO CRÍTICA: Converter datas UTC do banco para Brasília
+    const startUTC = new Date(startDate);
+    const endUTC = new Date(endDate);
+    const startBrasilia = new Date(startUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const endBrasilia = new Date(endUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
 
-    logger.debug('Calculando status correto', {
+    logger.debug('Calculando status correto com timezone corrigido', {
       brasiliaTime: formatBrasiliaDate(brasiliaTime),
-      startDate: formatBrasiliaDate(start),
-      endDate: formatBrasiliaDate(end),
-      brasiliaISO: brasiliaTime.toISOString(),
-      startISO: start.toISOString(),
-      endISO: end.toISOString()
+      startDateUTC: startUTC.toISOString(),
+      endDateUTC: endUTC.toISOString(),
+      startDateBrasilia: formatBrasiliaDate(startBrasilia),
+      endDateBrasilia: formatBrasiliaDate(endBrasilia),
+      comparison: {
+        isBefore: brasiliaTime < startBrasilia,
+        isDuring: brasiliaTime >= startBrasilia && brasiliaTime <= endBrasilia,
+        isAfter: brasiliaTime > endBrasilia
+      }
     }, 'COMPETITION_TIME_SERVICE');
 
-    if (brasiliaTime < start) {
+    if (brasiliaTime < startBrasilia) {
+      logger.debug('Status: scheduled (antes do início)', {
+        brasiliaTime: formatBrasiliaDate(brasiliaTime),
+        startTime: formatBrasiliaDate(startBrasilia)
+      }, 'COMPETITION_TIME_SERVICE');
       return 'scheduled';
-    } else if (brasiliaTime >= start && brasiliaTime <= end) {
+    } else if (brasiliaTime >= startBrasilia && brasiliaTime <= endBrasilia) {
+      logger.debug('Status: active (durante o período)', {
+        brasiliaTime: formatBrasiliaDate(brasiliaTime),
+        startTime: formatBrasiliaDate(startBrasilia),
+        endTime: formatBrasiliaDate(endBrasilia)
+      }, 'COMPETITION_TIME_SERVICE');
       return 'active';
     } else {
+      logger.debug('Status: completed (após o fim)', {
+        brasiliaTime: formatBrasiliaDate(brasiliaTime),
+        endTime: formatBrasiliaDate(endBrasilia)
+      }, 'COMPETITION_TIME_SERVICE');
       return 'completed';
     }
   }
