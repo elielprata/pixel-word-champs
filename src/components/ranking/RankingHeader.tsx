@@ -18,20 +18,14 @@ interface RankingHeaderProps {
 }
 
 const RankingHeader = ({ weeklyCompetition, totalWeeklyPlayers }: RankingHeaderProps) => {
-  const formatTimeRemaining = () => {
-    if (!weeklyCompetition) return '';
-    
-    const now = new Date();
-    const endDate = new Date(weeklyCompetition.end_date);
-    const diff = endDate.getTime() - now.getTime();
-    
-    if (diff <= 0) return 'Finalizada';
-    
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
-    if (days > 0) return `${days}d ${hours}h`;
-    return `${hours}h`;
+  // CONFIAR APENAS NO STATUS DO BANCO DE DADOS
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active': return 'Ativa';
+      case 'completed': return 'Finalizada';
+      case 'scheduled': return 'Agendada';
+      default: return 'Indisponível';
+    }
   };
 
   return (
@@ -40,7 +34,9 @@ const RankingHeader = ({ weeklyCompetition, totalWeeklyPlayers }: RankingHeaderP
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           🏆 Ranking Semanal
         </h1>
-        <p className="text-gray-600">Competição em andamento</p>
+        <p className="text-gray-600">
+          {weeklyCompetition ? getStatusText(weeklyCompetition.status) : 'Sem competição ativa'}
+        </p>
       </div>
 
       {weeklyCompetition && (
@@ -54,9 +50,9 @@ const RankingHeader = ({ weeklyCompetition, totalWeeklyPlayers }: RankingHeaderP
             </div>
             <div className="text-center">
               <div className="text-lg font-bold text-blue-600">
-                {formatTimeRemaining()}
+                {getStatusText(weeklyCompetition.status)}
               </div>
-              <div className="text-xs text-gray-500">Restante</div>
+              <div className="text-xs text-gray-500">Status</div>
             </div>
           </div>
         </div>

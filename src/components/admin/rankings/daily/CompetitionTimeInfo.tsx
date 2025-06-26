@@ -4,7 +4,7 @@ import { Clock } from 'lucide-react';
 import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 export const CompetitionTimeInfo: React.FC = () => {
-  // CORRIGIDO: Usar função específica que já formata corretamente
+  // APENAS INFORMAÇÕES DE REFERÊNCIA - SEM CÁLCULOS DE STATUS
   const currentTime = getCurrentBrasiliaTime();
   
   return (
@@ -16,7 +16,7 @@ export const CompetitionTimeInfo: React.FC = () => {
           Agora: {currentTime}
         </p>
         <p className="text-xs text-blue-600 mt-1">
-          💡 Input = Exibição (Brasília), UTC apenas para storage interno
+          💡 Status controlado automaticamente pelo banco de dados
         </p>
       </div>
     </div>
