@@ -5,7 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users, Trash2, Clock } from 'lucide-react';
 import { UnifiedCompetition } from '@/types/competition';
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
+import { 
+  calculateDynamicStatus, 
+  getStatusText, 
+  getStatusColor, 
+  formatDateTimeBrasilia,
+  useDynamicCompetitionStatus 
+} from '@/utils/dynamicCompetitionStatus';
 
 interface CompetitionCardProps {
   competition: UnifiedCompetition;
@@ -13,30 +19,14 @@ interface CompetitionCardProps {
   isDeleting: boolean;
 }
 
-// Funções auxiliares simplificadas para status
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'active': return 'Ativa';
-    case 'scheduled': return 'Agendada';
-    case 'completed': return 'Finalizada';
-    default: return status;
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'active': return 'bg-green-100 text-green-800 border-green-200';
-    case 'scheduled': return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'completed': return 'bg-gray-100 text-gray-800 border-gray-200';
-    default: return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
-};
-
 export const CompetitionCard: React.FC<CompetitionCardProps> = ({
   competition,
   onDelete,
   isDeleting
 }) => {
+  // 🎯 STATUS DINÂMICO - Comparação UTC pura
+  const dynamicStatus = useDynamicCompetitionStatus(competition.startDate, competition.endDate);
+
   const calculateAndDisplayDuration = () => {
     // Priorizar duração fornecida
     if (competition.duration && competition.duration > 0) {
@@ -69,9 +59,9 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
             <div className="flex items-center gap-3 mb-2">
               <h4 className="font-semibold text-slate-800">{competition.title}</h4>
               
-              {/* Status do banco de dados */}
-              <Badge className={getStatusColor(competition.status)}>
-                {getStatusText(competition.status)}
+              {/* 🎯 STATUS DINÂMICO */}
+              <Badge className={getStatusColor(dynamicStatus)}>
+                {getStatusText(dynamicStatus)}
               </Badge>
               
               {competition.theme && (
@@ -86,12 +76,12 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Início: {formatBrasiliaDate(new Date(competition.startDate))}</span>
+                <span>Início: {formatDateTimeBrasilia(competition.startDate)}</span>
               </div>
               
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Fim: {formatBrasiliaDate(new Date(competition.endDate))}</span>
+                <span>Fim: {formatDateTimeBrasilia(competition.endDate)}</span>
               </div>
               
               <div className="flex items-center gap-1">
@@ -108,7 +98,7 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
             </div>
 
             <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-              <span className="text-blue-700">📝 Competição diária - Horários em Brasília (Status: {getStatusText(competition.status)})</span>
+              <span className="text-blue-700">📝 Competição diária - Horários em Brasília (Status: {getStatusText(dynamicStatus)})</span>
             </div>
           </div>
           

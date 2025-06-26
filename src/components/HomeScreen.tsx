@@ -1,9 +1,11 @@
-
 import React, { useEffect, useState } from 'react';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { useAuth } from '@/hooks/useAuth';
+import { useRealTimeCompetitionStatus } from '@/hooks/useRealTimeCompetitionStatus';
 import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
+import { useCompetitionFinalization } from '@/hooks/useCompetitionFinalization';
+import { TIMING_CONFIG } from '@/constants/app';
 import { Competition } from '@/types';
 import HomeHeader from './home/HomeHeader';
 import UserStatsCard from './home/UserStatsCard';
@@ -25,9 +27,15 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Manter apenas participação automática e atualização de ranking semanal
+  // Usar hook de status em tempo real
+  const { competitions: competitionsWithRealTimeStatus } = useRealTimeCompetitionStatus(competitions);
+
+  // Adicionar participação automática e atualização de ranking semanal
   useWeeklyCompetitionAutoParticipation();
   useWeeklyRankingUpdater();
+
+  // Adicionar hook de finalização automática para competições diárias
+  useCompetitionFinalization(competitionsWithRealTimeStatus);
 
   const loadCompetitions = async () => {
     try {
@@ -48,7 +56,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
           timestamp: formatBrasiliaDate(new Date())
         }, 'HOME_SCREEN');
         
-        // Mapear os dados para a interface Competition - confiar no status do banco
+        // Mapear os dados para a interface Competition - APENAS competições diárias ativas
         const mappedCompetitions: Competition[] = response.data
           .map(comp => ({
             id: comp.id,
@@ -57,7 +65,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
             theme: comp.theme || '',
             start_date: comp.start_date,
             end_date: comp.end_date,
-            status: comp.status || 'active', // Status já confiável do banco (cron job)
+            status: comp.status || 'active', // Status já atualizado pelo cron job
             type: 'daily' as const,
             prize_pool: Number(comp.prize_pool) || 0,
             total_participants: 0,
@@ -92,8 +100,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   useEffect(() => {
     loadCompetitions();
     
-    // Reduzir intervalo para 2 minutos - backend já atualiza a cada 5 minutos
-    const interval = setInterval(loadCompetitions, 120000); // 2 minutos
+    // Aumentar intervalo para 5 minutos, já que o cron job atualiza a cada 5 minutos
+    const interval = setInterval(loadCompetitions, 300000); // 5 minutos
     
     return () => clearInterval(interval);
   }, []);
@@ -113,7 +121,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
         )}
 
         <CompetitionsList
-          competitions={competitions}
+          competitions={competitionsWithRealTimeStatus}
           onStartChallenge={onStartChallenge}
           onRefresh={loadCompetitions}
         />
