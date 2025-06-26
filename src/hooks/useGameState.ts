@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGameScoring } from '@/hooks/useGameScoring';
@@ -212,23 +211,34 @@ export const useGameState = (
   }, [state.hintsUsed, state.foundWords, levelWords, boardData, getExtraWord]);
 
   const addFoundWord = useCallback((newFoundWord: FoundWord) => {
-    // PROTEÇÃO FINAL: Verificar duplicação uma última vez antes de adicionar ao estado
+    // PROTEÇÃO CRÍTICA DUPLA: Verificar duplicação uma última vez antes de adicionar ao estado
     const isAlreadyFound = state.foundWords.some(fw => fw.word === newFoundWord.word);
     if (isAlreadyFound) {
-      logger.error(`🚨 DUPLICAÇÃO EVITADA NO ESTADO FINAL - Palavra "${newFoundWord.word}" já existe`, {
+      logger.error(`🚨 DUPLICAÇÃO CRÍTICA EVITADA NO ESTADO FINAL - Palavra "${newFoundWord.word}" já existe`, {
         word: newFoundWord.word,
+        points: newFoundWord.points,
         existingWords: state.foundWords.map(fw => fw.word),
-        attemptedWord: newFoundWord
+        attemptedWord: newFoundWord,
+        totalWordsBeforeAttempt: state.foundWords.length
       }, 'GAME_STATE');
       return;
     }
 
-    logger.info(`📝 ADICIONANDO PALAVRA AO ESTADO - "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
+    // PROTEÇÃO ADICIONAL: Verificar se os pontos são válidos
+    if (newFoundWord.points <= 0) {
+      logger.error(`🚨 PONTUAÇÃO INVÁLIDA - Palavra "${newFoundWord.word}" com ${newFoundWord.points} pontos`, {
+        word: newFoundWord.word,
+        points: newFoundWord.points
+      }, 'GAME_STATE');
+      return;
+    }
+
+    logger.info(`📝 ADICIONANDO PALAVRA AO ESTADO (PROTEÇÃO DUPLA OK) - "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
       word: newFoundWord.word,
       points: newFoundWord.points,
       beforeCount: state.foundWords.length,
       afterCount: state.foundWords.length + 1,
-      allWordsAfter: [...state.foundWords.map(fw => fw.word), newFoundWord.word]
+      allWordsAfter: [...state.foundWords.map(fw => `${fw.word}(${fw.points}p)`), `${newFoundWord.word}(${newFoundWord.points}p)`]
     }, 'GAME_STATE');
     
     setState(prev => ({

@@ -9,6 +9,8 @@ interface FoundWord {
   points: number;
 }
 
+// HOOK DESATIVADO - A validação agora é feita apenas em useWordValidation
+// Este hook está mantido apenas para compatibilidade, mas não executa validação
 export const useGameValidation = (
   foundWords: FoundWord[],
   levelWords: string[]
@@ -16,38 +18,13 @@ export const useGameValidation = (
   const { getPointsForWord } = useGamePointsConfig();
 
   const validateAndAddWord = (word: string, positions: Position[]) => {
-    logger.info(`🔍 VALIDAÇÃO INICIADA - Palavra: "${word}"`, { 
-      word, 
-      existingWords: foundWords.map(fw => fw.word),
-      totalFound: foundWords.length 
+    logger.warn('🚨 useGameValidation DESATIVADO - Validação agora é feita apenas em useWordValidation', { 
+      word,
+      reason: 'Evitar duplicação de validação e pontuação'
     }, 'GAME_VALIDATION');
 
-    // Verificação 1: Palavra deve estar na lista do nível
-    if (!levelWords.includes(word)) {
-      logger.warn(`❌ Palavra "${word}" não está na lista do nível`, { word, levelWords }, 'GAME_VALIDATION');
-      return null;
-    }
-
-    // Verificação 2: PROTEÇÃO CRÍTICA - Palavra não pode ter sido encontrada antes
-    const isAlreadyFound = foundWords.some(fw => fw.word === word);
-    if (isAlreadyFound) {
-      logger.warn(`⚠️ DUPLICAÇÃO EVITADA NA VALIDAÇÃO - Palavra "${word}" já foi encontrada`, { 
-        word, 
-        existingWords: foundWords.map(fw => fw.word),
-        totalFound: foundWords.length
-      }, 'GAME_VALIDATION');
-      return null;
-    }
-
-    const points = getPointsForWord(word);
-    const validatedWord = { word, positions: [...positions], points };
-    
-    logger.info(`✅ Palavra validada com sucesso: "${word}" = ${points} pontos`, { 
-      validatedWord,
-      totalFoundWords: foundWords.length 
-    }, 'GAME_VALIDATION');
-    
-    return validatedWord;
+    // Retornar null para evitar processamento duplicado
+    return null;
   };
 
   return { validateAndAddWord };
