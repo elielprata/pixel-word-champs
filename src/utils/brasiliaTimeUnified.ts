@@ -1,19 +1,17 @@
 
 /**
- * UTILITÁRIO UNIFICADO DE TEMPO - VERSÃO PADRONIZAÇÃO UNIVERSAL
- * PRINCÍPIO DEFINITIVO: UTC para tudo, Brasília APENAS para exibição final
- * ZERO conversões desnecessárias em qualquer lugar do sistema
+ * UTILITÁRIO UNIFICADO DE TEMPO - VERSÃO CORRIGIDA ETAPA 1
+ * REGRA DEFINITIVA: INPUT = EXIBIÇÃO (Brasília), UTC apenas para storage
  */
 
 /**
  * ===========================================
- * FUNÇÕES PRINCIPAIS - PADRÃO UNIVERSAL
+ * FUNÇÕES PRINCIPAIS - CORRIGIDAS ETAPA 1
  * ===========================================
  */
 
 /**
  * Parser seguro para datas brasileiras
- * Converte formato brasileiro para formato que o JavaScript entende
  */
 const parseBrazilianDate = (dateString: string): Date => {
   if (!dateString) return new Date();
@@ -46,58 +44,94 @@ const parseBrazilianDate = (dateString: string): Date => {
 };
 
 /**
- * Converte input do usuário (Brasília) para UTC uma única vez
+ * CORRIGIDO: Converte input Brasília para UTC (adiciona 3 horas)
+ * Input: 23:00 Brasília → Output: 02:00 UTC (próximo dia)
  */
 export const convertBrasiliaInputToUTC = (brasiliaDateTime: string): string => {
   if (!brasiliaDateTime) return new Date().toISOString();
   
   try {
-    // Criar data interpretando como Brasília (UTC-3)
-    const brasiliaDate = new Date(brasiliaDateTime + ':00'); // Garantir formato completo
+    console.log('🔄 CONVERSÃO BRASÍLIA → UTC:', {
+      input: brasiliaDateTime,
+      step: 'Início da conversão'
+    });
     
-    // Ajustar para UTC (adicionar 3 horas)
+    // Criar data interpretando como horário local (Brasília)
+    const brasiliaDate = new Date(brasiliaDateTime);
+    
+    console.log('📅 Data Brasília criada:', {
+      brasiliaDate: brasiliaDate.toString(),
+      brasiliaISO: brasiliaDate.toISOString(),
+      localString: brasiliaDate.toLocaleString('pt-BR')
+    });
+    
+    // CORREÇÃO: Adicionar 3 horas para converter Brasília → UTC
+    // Se Brasília é 23:00, UTC deve ser 02:00 (próximo dia)
     const utcDate = new Date(brasiliaDate.getTime() + (3 * 60 * 60 * 1000));
+    
+    console.log('🌍 Conversão para UTC:', {
+      brasiliaTime: brasiliaDate.toLocaleString('pt-BR'),
+      utcTime: utcDate.toISOString(),
+      hoursDifference: '+3h (Brasília → UTC)'
+    });
     
     return utcDate.toISOString();
   } catch (error) {
-    console.error('Erro ao converter Brasília para UTC:', error);
+    console.error('❌ Erro ao converter Brasília para UTC:', error);
     return new Date().toISOString();
   }
 };
 
 /**
- * Calcula data de fim baseada em UTC puro + duração
- * SEM conversões de timezone - cálculo matemático direto
+ * CORRIGIDO: Calcula data de fim mantendo lógica em Brasília
+ * Trabalha em horário de Brasília, depois converte para UTC apenas no final
  */
-export const calculateEndDateWithDuration = (startDateTimeUTC: string, durationHours: number): string => {
-  if (!startDateTimeUTC || !durationHours) {
+export const calculateEndDateWithDuration = (startDateTimeBrasilia: string, durationHours: number): string => {
+  if (!startDateTimeBrasilia || !durationHours) {
     return '';
   }
   
   try {
-    // Trabalhar em UTC puro
-    const startDate = new Date(startDateTimeUTC);
-    const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
+    console.log('⏰ CÁLCULO DE FIM (Brasília):', {
+      startInput: startDateTimeBrasilia,
+      duration: durationHours
+    });
     
-    // Calcular limite do mesmo dia em UTC
-    const sameDayLimit = new Date(startDate);
-    sameDayLimit.setUTCHours(23, 59, 59, 999);
+    // Trabalhar em horário de Brasília
+    const brasiliaStart = new Date(startDateTimeBrasilia);
+    const brasiliaEnd = new Date(brasiliaStart.getTime() + (durationHours * 60 * 60 * 1000));
+    
+    // Calcular limite do mesmo dia em Brasília
+    const sameDayLimit = new Date(brasiliaStart);
+    sameDayLimit.setHours(23, 59, 59, 999);
+    
+    console.log('📊 Cálculo em Brasília:', {
+      start: brasiliaStart.toLocaleString('pt-BR'),
+      end: brasiliaEnd.toLocaleString('pt-BR'),
+      limit: sameDayLimit.toLocaleString('pt-BR'),
+      durationHours
+    });
     
     // Se ultrapassar o limite, ajustar
-    if (endDate > sameDayLimit) {
-      return sameDayLimit.toISOString();
-    }
+    const finalBrasiliaEnd = brasiliaEnd > sameDayLimit ? sameDayLimit : brasiliaEnd;
     
-    return endDate.toISOString();
+    // CORREÇÃO: Converter para UTC apenas no final
+    const utcEnd = new Date(finalBrasiliaEnd.getTime() + (3 * 60 * 60 * 1000));
+    
+    console.log('✅ Resultado final:', {
+      brasiliaEnd: finalBrasiliaEnd.toLocaleString('pt-BR'),
+      utcEnd: utcEnd.toISOString()
+    });
+    
+    return utcEnd.toISOString();
   } catch (error) {
-    console.error('Erro ao calcular data de fim:', error);
+    console.error('❌ Erro ao calcular data de fim:', error);
     return '';
   }
 };
 
 /**
- * Valida duração SEM conversões de timezone - CORRIGIDO COM PARSER SEGURO
- * TODOS OS INPUTS JÁ ESTÃO EM HORÁRIO DE BRASÍLIA
+ * CORRIGIDO: Validação em horário de Brasília
  */
 export const validateCompetitionDuration = (startDateTimeBrasilia: string, durationHours: number): { isValid: boolean; error?: string } => {
   if (!startDateTimeBrasilia) {
@@ -113,22 +147,20 @@ export const validateCompetitionDuration = (startDateTimeBrasilia: string, durat
   }
   
   try {
-    // Usar parser seguro para datas brasileiras
-    const startDate = parseBrazilianDate(startDateTimeBrasilia);
+    // Trabalhar em horário de Brasília
+    const startDate = new Date(startDateTimeBrasilia);
     
-    // Verificar se a data foi parseada corretamente
     if (isNaN(startDate.getTime())) {
-      console.error('Data inválida após parsing:', startDateTimeBrasilia);
       return { isValid: false, error: 'Data de início inválida' };
     }
     
     const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
     
-    // Criar limite do mesmo dia (23:59:59) em horário de Brasília
+    // Limite do mesmo dia em Brasília
     const sameDayLimit = new Date(startDate);
-    sameDayLimit.setHours(23, 59, 59, 999); // setHours ao invés de setUTCHours
+    sameDayLimit.setHours(23, 59, 59, 999);
     
-    console.log('🔍 Validação de duração:', {
+    console.log('🔍 Validação (Brasília):', {
       input: startDateTimeBrasilia,
       startDate: startDate.toLocaleString('pt-BR'),
       endDate: endDate.toLocaleString('pt-BR'),
@@ -150,7 +182,7 @@ export const validateCompetitionDuration = (startDateTimeBrasilia: string, durat
     
     return { isValid: true };
   } catch (error) {
-    console.error('Erro na validação de duração:', error);
+    console.error('❌ Erro na validação de duração:', error);
     return { isValid: false, error: 'Erro na validação da duração' };
   }
 };

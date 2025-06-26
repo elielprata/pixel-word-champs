@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CompetitionFormData, CompetitionValidationResult } from '@/types/competition';
 import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
 import { secureLogger } from '@/utils/secureLogger';
-import { validateCompetitionDuration, calculateEndDateWithDuration } from '@/utils/brasiliaTimeUnified';
+import { validateCompetitionDuration } from '@/utils/brasiliaTimeUnified';
 
 export const useUnifiedCompetitionForm = () => {
   const { toast } = useToast();
@@ -12,11 +12,11 @@ export const useUnifiedCompetitionForm = () => {
   const [formData, setFormData] = useState<CompetitionFormData>({
     title: '',
     description: '',
-    type: 'daily', // Apenas competições diárias
+    type: 'daily',
     startDate: '',
     endDate: '',
-    duration: 3, // Duração padrão de 3 horas
-    maxParticipants: 0 // Não usado mais - participação livre
+    duration: 3,
+    maxParticipants: 0
   });
 
   const updateField = useCallback((field: keyof CompetitionFormData, value: any) => {
@@ -25,10 +25,41 @@ export const useUnifiedCompetitionForm = () => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
-      // Recalcular endDate automaticamente quando startDate ou duration mudarem
+      // CORRIGIDO: Recalcular endDate mantendo tudo em Brasília
       if (field === 'startDate' || field === 'duration') {
         if (newData.startDate && newData.duration) {
-          newData.endDate = calculateEndDateWithDuration(newData.startDate, newData.duration);
+          try {
+            console.log('🔄 Recalculando endDate (Brasília):', {
+              startDate: newData.startDate,
+              duration: newData.duration
+            });
+            
+            // Calcular fim em horário de Brasília
+            const brasiliaStart = new Date(newData.startDate);
+            const brasiliaEnd = new Date(brasiliaStart.getTime() + (newData.duration * 60 * 60 * 1000));
+            
+            // Verificar limite do mesmo dia
+            const sameDayLimit = new Date(brasiliaStart);
+            sameDayLimit.setHours(23, 59, 59, 999);
+            
+            const finalBrasiliaEnd = brasiliaEnd > sameDayLimit ? sameDayLimit : brasiliaEnd;
+            
+            // Converter para formato datetime-local (sem conversão de timezone)
+            const year = finalBrasiliaEnd.getFullYear();
+            const month = (finalBrasiliaEnd.getMonth() + 1).toString().padStart(2, '0');
+            const day = finalBrasiliaEnd.getDate().toString().padStart(2, '0');
+            const hours = finalBrasiliaEnd.getHours().toString().padStart(2, '0');
+            const minutes = finalBrasiliaEnd.getMinutes().toString().padStart(2, '0');
+            
+            newData.endDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            console.log('✅ EndDate calculado (Brasília):', {
+              brasiliaEnd: finalBrasiliaEnd.toLocaleString('pt-BR'),
+              endDateFormat: newData.endDate
+            });
+          } catch (error) {
+            console.error('❌ Erro ao calcular endDate:', error);
+          }
         }
       }
       

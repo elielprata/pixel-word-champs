@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Save, X, Clock } from 'lucide-react';
 import { useUnifiedCompetitionForm } from '@/hooks/useUnifiedCompetitionForm';
-import { formatTimeForDisplay, validateCompetitionDuration, getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
+import { validateCompetitionDuration, getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 interface UnifiedCompetitionFormProps {
   onClose: () => void;
@@ -33,20 +32,39 @@ export const UnifiedCompetitionForm = ({
     submitForm(onSuccess);
   };
 
-  // Preview dos horários calculados
+  // CORRIGIDO: Preview mantém horários em Brasília (igual ao input)
   const getTimePreview = () => {
     if (!formData.startDate || !formData.duration) return null;
     
-    // Simular conversão para preview (sem afetar dados reais)
     try {
-      const startInput = new Date(formData.startDate + ':00');
+      console.log('🎯 Gerando preview (Brasília):', {
+        startDate: formData.startDate,
+        duration: formData.duration
+      });
+      
+      // Trabalhar direto com o input (já em Brasília)
+      const startInput = new Date(formData.startDate);
       const endInput = new Date(startInput.getTime() + (formData.duration * 60 * 60 * 1000));
       
+      // Verificar limite do mesmo dia
+      const sameDayLimit = new Date(startInput);
+      sameDayLimit.setHours(23, 59, 59, 999);
+      
+      const finalEnd = endInput > sameDayLimit ? sameDayLimit : endInput;
+      
       const startTime = startInput.toTimeString().slice(0, 5);
-      const endTime = endInput.toTimeString().slice(0, 5);
+      const endTime = finalEnd.toTimeString().slice(0, 5);
+      
+      console.log('✅ Preview gerado (Brasília):', {
+        startTime,
+        endTime,
+        startFull: startInput.toLocaleString('pt-BR'),
+        endFull: finalEnd.toLocaleString('pt-BR')
+      });
       
       return { startTime, endTime };
-    } catch {
+    } catch (error) {
+      console.error('❌ Erro no preview:', error);
       return null;
     }
   };
@@ -55,14 +73,7 @@ export const UnifiedCompetitionForm = ({
   const getDurationValidation = () => {
     if (!formData.startDate || !formData.duration) return null;
     
-    // Simular conversão UTC para validação
-    try {
-      const brasiliaDate = new Date(formData.startDate + ':00');
-      const utcDate = new Date(brasiliaDate.getTime() + (3 * 60 * 60 * 1000));
-      return validateCompetitionDuration(utcDate.toISOString(), formData.duration);
-    } catch {
-      return { isValid: false, error: 'Data inválida' };
-    }
+    return validateCompetitionDuration(formData.startDate, formData.duration);
   };
 
   const timePreview = getTimePreview();
@@ -119,7 +130,7 @@ export const UnifiedCompetitionForm = ({
                 required
               />
               <p className="text-xs text-blue-600">
-                🇧🇷 Horário de Brasília
+                🇧🇷 Horário de Brasília (será exibido igual ao digitado)
               </p>
             </div>
 
@@ -145,7 +156,7 @@ export const UnifiedCompetitionForm = ({
             </div>
           </div>
 
-          {/* Preview dos Horários */}
+          {/* CORRIGIDO: Preview mostra horários iguais ao input */}
           {timePreview && (
             <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
@@ -153,10 +164,13 @@ export const UnifiedCompetitionForm = ({
                 <span className="text-sm font-medium text-green-800">Preview - Horário de Brasília</span>
               </div>
               <div className="text-sm text-green-700 space-y-1">
-                <p>🟢 <strong>Início:</strong> {timePreview.startTime}</p>
-                <p>🔴 <strong>Término:</strong> {timePreview.endTime}</p>
+                <p>🟢 <strong>Início:</strong> {timePreview.startTime} (igual ao digitado)</p>
+                <p>🔴 <strong>Término:</strong> {timePreview.endTime} (calculado em Brasília)</p>
                 <p className="text-xs text-green-600">
                   ⏰ Duração: {formData.duration} {formData.duration === 1 ? 'hora' : 'horas'}
+                </p>
+                <p className="text-xs text-blue-600">
+                  💡 INPUT = EXIBIÇÃO (Brasília), UTC apenas para storage interno
                 </p>
               </div>
             </div>
