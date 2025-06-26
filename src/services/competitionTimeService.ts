@@ -1,17 +1,57 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
-import { competitionStatusService } from './competitionStatusService';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 class CompetitionTimeService {
   /**
-   * CORRIGIDO: Usa o novo serviço de status com validação robusta
+   * Calcula o status correto baseado nas datas UTC armazenadas no banco
+   * CORREÇÃO: Agora converte as datas UTC para Brasília antes de comparar
    */
   calculateCorrectStatus(startDate: string, endDate: string): string {
-    return competitionStatusService.calculateCorrectStatus({
-      start_date: startDate,
-      end_date: endDate
-    });
+    // Usar timezone de Brasília para todos os cálculos
+    const now = new Date();
+    const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    
+    // CORREÇÃO CRÍTICA: Converter datas UTC do banco para Brasília
+    const startUTC = new Date(startDate);
+    const endUTC = new Date(endDate);
+    const startBrasilia = new Date(startUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const endBrasilia = new Date(endUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+
+    logger.debug('Calculando status correto com timezone corrigido', {
+      brasiliaTime: formatBrasiliaDate(brasiliaTime),
+      startDateUTC: startUTC.toISOString(),
+      endDateUTC: endUTC.toISOString(),
+      startDateBrasilia: formatBrasiliaDate(startBrasilia),
+      endDateBrasilia: formatBrasiliaDate(endBrasilia),
+      comparison: {
+        isBefore: brasiliaTime < startBrasilia,
+        isDuring: brasiliaTime >= startBrasilia && brasiliaTime <= endBrasilia,
+        isAfter: brasiliaTime > endBrasilia
+      }
+    }, 'COMPETITION_TIME_SERVICE');
+
+    if (brasiliaTime < startBrasilia) {
+      logger.debug('Status: scheduled (antes do início)', {
+        brasiliaTime: formatBrasiliaDate(brasiliaTime),
+        startTime: formatBrasiliaDate(startBrasilia)
+      }, 'COMPETITION_TIME_SERVICE');
+      return 'scheduled';
+    } else if (brasiliaTime >= startBrasilia && brasiliaTime <= endBrasilia) {
+      logger.debug('Status: active (durante o período)', {
+        brasiliaTime: formatBrasiliaDate(brasiliaTime),
+        startTime: formatBrasiliaDate(startBrasilia),
+        endTime: formatBrasiliaDate(endBrasilia)
+      }, 'COMPETITION_TIME_SERVICE');
+      return 'active';
+    } else {
+      logger.debug('Status: completed (após o fim)', {
+        brasiliaTime: formatBrasiliaDate(brasiliaTime),
+        endTime: formatBrasiliaDate(endBrasilia)
+      }, 'COMPETITION_TIME_SERVICE');
+      return 'completed';
+    }
   }
 
   /**
@@ -19,20 +59,21 @@ class CompetitionTimeService {
    */
   async updateCompetitionStatuses(): Promise<void> {
     try {
-      logger.info('🔄 Iniciando atualização automática de status (VALIDAÇÃO ROBUSTA)', undefined, 'COMPETITION_TIME_SERVICE');
+      logger.info('🔄 Iniciando atualização automática de status de competições', undefined, 'COMPETITION_TIME_SERVICE');
       
-      const now = new Date();
+      const brasiliaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+      const brasiliaISO = brasiliaTime.toISOString();
       
       logger.debug('Horário de referência para atualizações', {
-        nowUTC: now.toISOString(),
-        nowBrasilia: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        brasiliaTime: formatBrasiliaDate(brasiliaTime),
+        brasiliaISO: brasiliaISO
       }, 'COMPETITION_TIME_SERVICE');
 
       // Buscar todas as competições ativas e agendadas
       const { data: competitions, error: fetchError } = await supabase
         .from('custom_competitions')
         .select('id, title, start_date, end_date, status, competition_type')
-        .in('status', ['active', 'scheduled', 'completed']); // Incluir completed para correção
+        .in('status', ['active', 'scheduled']);
 
       if (fetchError) {
         logger.error('Erro ao buscar competições para atualização', { error: fetchError }, 'COMPETITION_TIME_SERVICE');
@@ -96,22 +137,15 @@ class CompetitionTimeService {
         }
       }
 
-      logger.info(`🎯 Atualização de status concluída (VALIDAÇÃO ROBUSTA)`, {
+      logger.info(`🎯 Atualização de status concluída`, {
         totalVerified: competitions.length,
         totalUpdated: updatedCount,
-        timestamp: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        timestamp: formatBrasiliaDate(new Date())
       }, 'COMPETITION_TIME_SERVICE');
 
     } catch (error) {
       logger.error('❌ Erro crítico na atualização de status', { error }, 'COMPETITION_TIME_SERVICE');
     }
-  }
-
-  /**
-   * Força atualização de competições com status incorretos
-   */
-  async forceUpdateIncorrectStatuses(): Promise<void> {
-    return competitionStatusService.forceUpdateIncorrectStatuses();
   }
 
   /**

@@ -1,56 +1,70 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { competitionTimeService } from '@/services/competitionTimeService';
-import { competitionStatusService } from '@/services/competitionStatusService';
 import { logger } from '@/utils/logger';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 /**
  * Hook para status de competição em tempo real
- * CORRIGIDO: Agora usa serviço de status com validação robusta
+ * CORREÇÃO: Agora usa conversão correta de timezone para cálculos
  */
 export const useRealTimeCompetitionStatus = (competitions: any[]) => {
   const [lastUpdate, setLastUpdate] = useState(Date.now());
 
-  // CORRIGIDO: Função para calcular status em tempo real com validação robusta
+  // Função para calcular status em tempo real usando timezone de Brasília CORRIGIDO
   const calculateRealTimeStatus = useCallback((startDate: string, endDate: string) => {
-    try {
-      return competitionStatusService.calculateCorrectStatus({
-        start_date: startDate,
-        end_date: endDate
-      });
-    } catch (error) {
-      logger.error('Erro no cálculo de status em tempo real', { error, startDate, endDate }, 'REAL_TIME_STATUS');
-      return 'scheduled'; // Fallback seguro
+    // Usar timezone de Brasília para todos os cálculos
+    const now = new Date();
+    const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    
+    // CORREÇÃO CRÍTICA: Converter datas UTC do banco para Brasília
+    const startUTC = new Date(startDate);
+    const endUTC = new Date(endDate);
+    const startBrasilia = new Date(startUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const endBrasilia = new Date(endUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+
+    logger.debug('Calculando status em tempo real (CORRIGIDO)', {
+      brasiliaTime: formatBrasiliaDate(brasiliaTime),
+      startDateUTC: startUTC.toISOString(),
+      endDateUTC: endUTC.toISOString(),
+      startDateBrasilia: formatBrasiliaDate(startBrasilia),
+      endDateBrasilia: formatBrasiliaDate(endBrasilia),
+      comparison: {
+        isBefore: brasiliaTime < startBrasilia,
+        isDuring: brasiliaTime >= startBrasilia && brasiliaTime <= endBrasilia,
+        isAfter: brasiliaTime > endBrasilia
+      }
+    }, 'REAL_TIME_STATUS');
+
+    if (brasiliaTime < startBrasilia) {
+      return 'scheduled';
+    } else if (brasiliaTime >= startBrasilia && brasiliaTime <= endBrasilia) {
+      return 'active';
+    } else {
+      return 'completed';
     }
   }, []);
 
-  // CORRIGIDO: Função para calcular tempo restante em segundos
+  // Função para calcular tempo restante em segundos (CORRIGIDA)
   const calculateTimeRemaining = useCallback((endDate: string) => {
-    try {
-      const now = new Date();
-      const endUTC = new Date(endDate);
-      
-      if (isNaN(endUTC.getTime())) {
-        logger.warn('Data de fim inválida para cálculo de tempo restante', { endDate }, 'REAL_TIME_STATUS');
-        return 0;
-      }
-      
-      const diff = endUTC.getTime() - now.getTime();
-      
-      logger.debug('Calculando tempo restante (VALIDAÇÃO ROBUSTA)', {
-        nowUTC: now.toISOString(),
-        endUTC: endUTC.toISOString(),
-        nowBrasilia: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-        endBrasilia: endUTC.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-        diffMs: diff,
-        diffSeconds: Math.floor(diff / 1000)
-      }, 'REAL_TIME_STATUS');
-      
-      return Math.max(0, Math.floor(diff / 1000));
-    } catch (error) {
-      logger.error('Erro no cálculo de tempo restante', { error, endDate }, 'REAL_TIME_STATUS');
-      return 0;
-    }
+    const now = new Date();
+    const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    
+    // CORREÇÃO: Converter data UTC do banco para Brasília
+    const endUTC = new Date(endDate);
+    const endBrasilia = new Date(endUTC.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    
+    const diff = endBrasilia.getTime() - brasiliaTime.getTime();
+    
+    logger.debug('Calculando tempo restante (CORRIGIDO)', {
+      brasiliaTime: formatBrasiliaDate(brasiliaTime),
+      endDateUTC: endUTC.toISOString(),
+      endDateBrasilia: formatBrasiliaDate(endBrasilia),
+      diffMs: diff,
+      diffSeconds: Math.floor(diff / 1000)
+    }, 'REAL_TIME_STATUS');
+    
+    return Math.max(0, Math.floor(diff / 1000));
   }, []);
 
   // Função para verificar se precisa atualizar o banco
@@ -60,17 +74,6 @@ export const useRealTimeCompetitionStatus = (competitions: any[]) => {
       await competitionTimeService.updateCompetitionStatuses();
     } catch (error) {
       logger.error('Erro ao atualizar status no banco', { error }, 'REAL_TIME_STATUS');
-    }
-  }, []);
-
-  // Função para forçar correção de status incorretos
-  const forceCorrectStatuses = useCallback(async () => {
-    try {
-      logger.info('🔧 Forçando correção de status incorretos', undefined, 'REAL_TIME_STATUS');
-      await competitionTimeService.forceUpdateIncorrectStatuses();
-      setLastUpdate(Date.now()); // Forçar re-render
-    } catch (error) {
-      logger.error('Erro ao forçar correção de status', { error }, 'REAL_TIME_STATUS');
     }
   }, []);
 
@@ -101,14 +104,14 @@ export const useRealTimeCompetitionStatus = (competitions: any[]) => {
         isStatusOutdated
       };
     });
-  }, [competitions, calculateRealTimeStatus, calculateTimeRemaining, lastUpdate]);
+  }, [competitions, calculateRealTimeStatus, calculateTimeRemaining]);
 
   // Atualização a cada 30 segundos
   useEffect(() => {
     const interval = setInterval(() => {
       setLastUpdate(Date.now());
       logger.debug('Status tempo real atualizado', { 
-        timestamp: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        timestamp: formatBrasiliaDate(new Date())
       }, 'REAL_TIME_STATUS');
     }, 30000); // 30 segundos
 
@@ -141,22 +144,11 @@ export const useRealTimeCompetitionStatus = (competitions: any[]) => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [checkAndUpdateDatabase]);
 
-  // Auto-correção na inicialização
-  useEffect(() => {
-    // Executar correção forçada quando o hook é montado
-    const timer = setTimeout(() => {
-      forceCorrectStatuses();
-    }, 1000); // 1 segundo após montagem
-
-    return () => clearTimeout(timer);
-  }, [forceCorrectStatuses]);
-
   return {
     competitions: competitionsWithRealTimeStatus(),
     lastUpdate,
     calculateRealTimeStatus,
     calculateTimeRemaining,
-    refreshStatus: () => setLastUpdate(Date.now()),
-    forceCorrectStatuses // Expor função para correção manual
+    refreshStatus: () => setLastUpdate(Date.now())
   };
 };

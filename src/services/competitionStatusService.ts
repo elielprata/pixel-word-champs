@@ -1,236 +1,137 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/utils/logger';
+import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
+import { ApiResponse } from '@/types';
 
-class CompetitionStatusService {
-  /**
-   * CORRIGIDO: Validação robusta de dates + comparação UTC segura
-   */
-  calculateCorrectStatus(competition: { 
-    start_date: string; 
-    end_date: string; 
-    competition_type?: string 
-  }): 'scheduled' | 'active' | 'completed' {
+export class CompetitionStatusService {
+  async updateSingleCompetitionStatus(competitionId: string, newStatus: string): Promise<ApiResponse<void>> {
     try {
-      const now = new Date();
-      
-      // VALIDAÇÃO ROBUSTA: Verificar se as datas são válidas
-      const startUTC = this.parseUTCDateSafely(competition.start_date);
-      const endUTC = this.parseUTCDateSafely(competition.end_date);
-      
-      if (!startUTC || !endUTC) {
-        logger.error('Datas inválidas detectadas', {
-          start_date: competition.start_date,
-          end_date: competition.end_date,
-          startUTC: startUTC?.toISOString(),
-          endUTC: endUTC?.toISOString()
-        }, 'COMPETITION_STATUS_SERVICE');
-        return 'scheduled'; // Fallback seguro
-      }
+      console.log(`🔄 Atualizando status da competição ${competitionId} para: ${newStatus}`);
 
-      logger.debug('Calculando status correto com validação robusta', {
-        nowUTC: now.toISOString(),
-        startUTC: startUTC.toISOString(),
-        endUTC: endUTC.toISOString(),
-        nowBrasilia: now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-        startBrasilia: startUTC.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-        endBrasilia: endUTC.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-        comparison: {
-          isBefore: now < startUTC,
-          isDuring: now >= startUTC && now <= endUTC,
-          isAfter: now > endUTC
-        }
-      }, 'COMPETITION_STATUS_SERVICE');
-
-      // Comparação direta de Date objects UTC
-      if (now < startUTC) {
-        logger.debug('✅ Status: scheduled', { now: now.toISOString(), start: startUTC.toISOString() });
-        return 'scheduled';
-      } else if (now >= startUTC && now <= endUTC) {
-        logger.debug('✅ Status: active', { now: now.toISOString(), start: startUTC.toISOString(), end: endUTC.toISOString() });
-        return 'active';
-      } else {
-        logger.debug('✅ Status: completed', { now: now.toISOString(), end: endUTC.toISOString() });
-        return 'completed';
-      }
-    } catch (error) {
-      logger.error('❌ ERRO CRÍTICO no cálculo de status', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        competition,
-        stack: error instanceof Error ? error.stack : undefined
-      }, 'COMPETITION_STATUS_SERVICE');
-      return 'scheduled'; // Fallback seguro
-    }
-  }
-
-  /**
-   * Parse seguro de datas UTC com múltiplas tentativas
-   */
-  private parseUTCDateSafely(dateString: string): Date | null {
-    if (!dateString) {
-      logger.warn('Data string vazia ou nula', { dateString }, 'COMPETITION_STATUS_SERVICE');
-      return null;
-    }
-
-    try {
-      // Tentativa 1: Parse direto
-      let date = new Date(dateString);
-      if (this.isValidDate(date)) {
-        logger.debug('✅ Parse direto bem-sucedido', { 
-          input: dateString, 
-          output: date.toISOString() 
-        }, 'COMPETITION_STATUS_SERVICE');
-        return date;
-      }
-
-      // Tentativa 2: Adicionar Z se não tiver timezone
-      if (!dateString.includes('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
-        const dateWithZ = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
-        date = new Date(dateWithZ);
-        if (this.isValidDate(date)) {
-          logger.debug('✅ Parse com Z bem-sucedido', { 
-            input: dateString, 
-            modified: dateWithZ,
-            output: date.toISOString() 
-          }, 'COMPETITION_STATUS_SERVICE');
-          return date;
-        }
-      }
-
-      // Tentativa 3: Parse manual de ISO format
-      const isoMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?(?:Z|[+-]\d{2}:\d{2})?$/);
-      if (isoMatch) {
-        const [, year, month, day, hour, minute, second, ms] = isoMatch;
-        date = new Date(
-          parseInt(year), 
-          parseInt(month) - 1, 
-          parseInt(day), 
-          parseInt(hour), 
-          parseInt(minute), 
-          parseInt(second), 
-          parseInt(ms || '0')
-        );
-        if (this.isValidDate(date)) {
-          logger.debug('✅ Parse manual bem-sucedido', { 
-            input: dateString, 
-            output: date.toISOString() 
-          }, 'COMPETITION_STATUS_SERVICE');
-          return date;
-        }
-      }
-
-      logger.error('❌ Todas as tentativas de parse falharam', { 
-        dateString,
-        attempts: ['direct', 'withZ', 'manual']
-      }, 'COMPETITION_STATUS_SERVICE');
-      return null;
-    } catch (error) {
-      logger.error('❌ Erro no parse de data', { 
-        dateString, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      }, 'COMPETITION_STATUS_SERVICE');
-      return null;
-    }
-  }
-
-  /**
-   * Validação se Date é válida
-   */
-  private isValidDate(date: Date): boolean {
-    return date instanceof Date && !isNaN(date.getTime());
-  }
-
-  /**
-   * Força atualização manual dos status incorretos
-   */
-  async forceUpdateIncorrectStatuses(): Promise<void> {
-    try {
-      logger.info('🔄 FORÇANDO atualização de status incorretos', undefined, 'COMPETITION_STATUS_SERVICE');
-      
-      // Buscar todas as competições
-      const { data: competitions, error } = await supabase
-        .from('custom_competitions')
-        .select('id, title, start_date, end_date, status, competition_type');
-
-      if (error) {
-        logger.error('Erro ao buscar competições para correção', { error }, 'COMPETITION_STATUS_SERVICE');
-        return;
-      }
-
-      if (!competitions || competitions.length === 0) {
-        logger.info('Nenhuma competição encontrada para correção', undefined, 'COMPETITION_STATUS_SERVICE');
-        return;
-      }
-
-      let correctionCount = 0;
-      
-      for (const competition of competitions) {
-        const correctStatus = this.calculateCorrectStatus(competition);
-        
-        if (competition.status !== correctStatus) {
-          logger.warn('🔧 Corrigindo status incorreto', {
-            id: competition.id,
-            title: competition.title,
-            currentStatus: competition.status,
-            correctStatus: correctStatus,
-            startDate: competition.start_date,
-            endDate: competition.end_date
-          }, 'COMPETITION_STATUS_SERVICE');
-
-          const { error: updateError } = await supabase
-            .from('custom_competitions')
-            .update({
-              status: correctStatus,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', competition.id);
-
-          if (updateError) {
-            logger.error('Erro ao corrigir status', {
-              competitionId: competition.id,
-              error: updateError
-            }, 'COMPETITION_STATUS_SERVICE');
-          } else {
-            correctionCount++;
-            logger.info('✅ Status corrigido com sucesso', {
-              competitionId: competition.id,
-              title: competition.title,
-              oldStatus: competition.status,
-              newStatus: correctStatus
-            }, 'COMPETITION_STATUS_SERVICE');
-          }
-        }
-      }
-
-      logger.info(`🎯 Correção forçada concluída: ${correctionCount} competições corrigidas`, undefined, 'COMPETITION_STATUS_SERVICE');
-    } catch (error) {
-      logger.error('❌ Erro crítico na correção forçada', { error }, 'COMPETITION_STATUS_SERVICE');
-    }
-  }
-
-  /**
-   * Atualiza status de uma competição específica no banco
-   */
-  async updateSingleCompetitionStatus(competitionId: string, newStatus: string): Promise<boolean> {
-    try {
+      // Atualizar apenas o status, sem forçar updated_at 
+      // (o trigger do banco só modificará datas se elas realmente mudaram)
       const { error } = await supabase
         .from('custom_competitions')
-        .update({
-          status: newStatus,
-          updated_at: new Date().toISOString()
+        .update({ 
+          status: newStatus
+          // Removido: updated_at: new Date().toISOString() 
+          // O banco vai gerenciar isso automaticamente apenas quando necessário
         })
         .eq('id', competitionId);
 
-      if (error) {
-        logger.error('Erro ao atualizar status no banco', { competitionId, error }, 'COMPETITION_STATUS_SERVICE');
-        return false;
+      if (error) throw error;
+
+      console.log(`✅ Status da competição ${competitionId} atualizado para: ${newStatus}`);
+      return createSuccessResponse(undefined);
+    } catch (error) {
+      console.error(`❌ Erro ao atualizar status da competição ${competitionId}:`, error);
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_STATUS_UPDATE'));
+    }
+  }
+
+  async updateMultipleCompetitionsStatus(
+    competitionIds: string[], 
+    newStatus: string
+  ): Promise<ApiResponse<void>> {
+    try {
+      console.log(`🔄 Atualizando status de ${competitionIds.length} competições para: ${newStatus}`);
+
+      // Atualizar múltiplas competições de uma vez, apenas o status
+      const { error } = await supabase
+        .from('custom_competitions')
+        .update({ 
+          status: newStatus
+          // Removido: updated_at para evitar modificações desnecessárias
+        })
+        .in('id', competitionIds);
+
+      if (error) throw error;
+
+      console.log(`✅ Status de ${competitionIds.length} competições atualizado para: ${newStatus}`);
+      return createSuccessResponse(undefined);
+    } catch (error) {
+      console.error(`❌ Erro ao atualizar status de múltiplas competições:`, error);
+      return createErrorResponse(handleServiceError(error, 'MULTIPLE_COMPETITION_STATUS_UPDATE'));
+    }
+  }
+
+  async getCompetitionsByStatus(status: string): Promise<ApiResponse<any[]>> {
+    try {
+      console.log(`🔍 Buscando competições com status: ${status}`);
+
+      const { data, error } = await supabase
+        .from('custom_competitions')
+        .select('*')
+        .eq('status', status)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log(`📊 Encontradas ${data?.length || 0} competições com status: ${status}`);
+      return createSuccessResponse(data || []);
+    } catch (error) {
+      console.error(`❌ Erro ao buscar competições por status ${status}:`, error);
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_STATUS_QUERY'));
+    }
+  }
+
+  // Método específico para finalização que preserva integridade dos dados
+  async finalizeCompetition(competitionId: string): Promise<ApiResponse<void>> {
+    try {
+      console.log(`🏁 Finalizando competição: ${competitionId}`);
+
+      // Verificar se a competição existe e não está já finalizada
+      const { data: competition, error: fetchError } = await supabase
+        .from('custom_competitions')
+        .select('id, status, title, start_date, end_date')
+        .eq('id', competitionId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      if (!competition) {
+        throw new Error(`Competição ${competitionId} não encontrada`);
       }
 
-      logger.info('Status atualizado no banco', { competitionId, newStatus }, 'COMPETITION_STATUS_SERVICE');
-      return true;
+      if (competition.status === 'completed') {
+        console.log(`⚠️ Competição ${competitionId} já está finalizada`);
+        return createSuccessResponse(undefined);
+      }
+
+      // Atualizar apenas o status para completed
+      // O trigger corrigido não modificará as datas originais
+      const { error: updateError } = await supabase
+        .from('custom_competitions')
+        .update({ 
+          status: 'completed'
+          // Não incluir updated_at - deixar o banco gerenciar
+        })
+        .eq('id', competitionId);
+
+      if (updateError) throw updateError;
+
+      console.log(`✅ Competição "${competition.title}" finalizada com sucesso`);
+      console.log(`📅 Datas preservadas: ${competition.start_date} até ${competition.end_date}`);
+      
+      return createSuccessResponse(undefined);
     } catch (error) {
-      logger.error('Erro ao atualizar status', { competitionId, error }, 'COMPETITION_STATUS_SERVICE');
-      return false;
+      console.error(`❌ Erro ao finalizar competição ${competitionId}:`, error);
+      return createErrorResponse(handleServiceError(error, 'COMPETITION_FINALIZATION'));
+    }
+  }
+
+  // Método para calcular status correto baseado nas datas
+  calculateCorrectStatus(competition: { start_date: string; end_date: string; competition_type?: string }): string {
+    const now = new Date();
+    const startDate = new Date(competition.start_date);
+    const endDate = new Date(competition.end_date);
+
+    if (now < startDate) {
+      return 'scheduled';
+    } else if (now >= startDate && now <= endDate) {
+      return 'active';
+    } else {
+      return 'completed';
     }
   }
 }
