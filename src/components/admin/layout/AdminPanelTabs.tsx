@@ -7,13 +7,13 @@ import {
   FileText, 
   Settings, 
   Bug, 
-  BarChart3, 
-  Zap
+  Zap,
+  Shield
 } from 'lucide-react';
 
 export const AdminPanelTabs: React.FC = () => {
   return (
-    <TabsList className="grid w-full grid-cols-7 mb-8">
+    <TabsList className="grid w-full grid-cols-6 mb-8">
       <TabsTrigger value="users" className="flex items-center gap-2">
         <Users className="h-4 w-4" />
         <span className="hidden sm:inline">Usuários</span>
@@ -30,17 +30,13 @@ export const AdminPanelTabs: React.FC = () => {
         <Zap className="h-4 w-4" />
         <span className="hidden sm:inline">Integrações</span>
       </TabsTrigger>
-      <TabsTrigger value="monitoring" className="flex items-center gap-2">
-        <BarChart3 className="h-4 w-4" />
-        <span className="hidden sm:inline">Monitoring</span>
+      <TabsTrigger value="validation" className="flex items-center gap-2">
+        <Shield className="h-4 w-4" />
+        <span className="hidden sm:inline">Validação</span>
       </TabsTrigger>
       <TabsTrigger value="support" className="flex items-center gap-2">
         <Bug className="h-4 w-4" />
         <span className="hidden sm:inline">Suporte</span>
-      </TabsTrigger>
-      <TabsTrigger value="advanced" className="flex items-center gap-2">
-        <Settings className="h-4 w-4" />
-        <span className="hidden sm:inline">Avançado</span>
       </TabsTrigger>
     </TabsList>
   );

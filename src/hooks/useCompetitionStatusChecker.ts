@@ -11,7 +11,6 @@ export const useCompetitionStatusChecker = (enabled: boolean = true) => {
     if (!enabled) return;
 
     const checkAndUpdateStatuses = async () => {
-      // Evitar execuções simultâneas
       if (isRunningRef.current) return;
       
       isRunningRef.current = true;
@@ -25,7 +24,6 @@ export const useCompetitionStatusChecker = (enabled: boolean = true) => {
       }
     };
 
-    // Executar verificação a cada 10 minutos (reduzindo frequência)
     intervalRef.current = setInterval(checkAndUpdateStatuses, 10 * 60 * 1000);
 
     return () => {

@@ -4,10 +4,10 @@ import { TabsContent } from "@/components/ui/tabs";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { RankingsTab } from "@/components/admin/RankingsTab";
 import { GameContentTab } from "@/components/admin/GameContentTab";
-import { MonitoringTab } from "@/components/admin/MonitoringTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 import { AdvancedSystemTab } from '@/components/admin/AdvancedSystemTab';
+import { ValidationTabContent } from '@/components/admin/layout/ValidationTabContent';
 import { logger } from '@/utils/logger';
 
 export const AdminPanelContent: React.FC = () => {
@@ -31,16 +31,12 @@ export const AdminPanelContent: React.FC = () => {
         <IntegrationsTab />
       </TabsContent>
 
-      <TabsContent value="monitoring">
-        <MonitoringTab />
+      <TabsContent value="validation">
+        <ValidationTabContent />
       </TabsContent>
 
       <TabsContent value="support">
         <SupportTab />
-      </TabsContent>
-
-      <TabsContent value="advanced">
-        <AdvancedSystemTab />
       </TabsContent>
     </>
   );
