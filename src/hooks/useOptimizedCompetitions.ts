@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Competition } from '@/types';
 import { competitionService } from '@/services/competitionService';
 import { customCompetitionService } from '@/services/customCompetitionService';
-import { calculateCompetitionStatus } from '@/utils/brasiliaTimeUnified';
 import { logger, structuredLog } from '@/utils/logger';
 
 export const useOptimizedCompetitions = () => {
@@ -12,24 +11,22 @@ export const useOptimizedCompetitions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Memoizar competições ativas para evitar re-renderizações desnecessárias
+  // Confiar completamente no status do banco de dados
   const activeCompetitions = useMemo(() => {
-    return competitions.filter(comp => 
-      calculateCompetitionStatus(comp.start_date, comp.end_date) === 'active'
-    );
+    return competitions.filter(comp => comp.status === 'active');
   }, [competitions]);
 
   const dailyCompetition = useMemo(() => {
     return customCompetitions.find(comp => 
       comp.competition_type === 'challenge' && 
-      calculateCompetitionStatus(comp.start_date, comp.end_date) === 'active'
+      comp.status === 'active'
     ) || null;
   }, [customCompetitions]);
 
   const weeklyCompetition = useMemo(() => {
     return customCompetitions.find(comp => 
       comp.competition_type === 'tournament' && 
-      calculateCompetitionStatus(comp.start_date, comp.end_date) === 'active'
+      comp.status === 'active'
     ) || null;
   }, [customCompetitions]);
 
@@ -55,7 +52,7 @@ export const useOptimizedCompetitions = () => {
         throw new Error(customCompetitionsResponse.error || 'Erro ao carregar competições customizadas');
       }
 
-      logger.debug('Competições carregadas com sucesso');
+      logger.debug('Competições carregadas com sucesso - confiando no banco de dados');
     } catch (err) {
       const errorMessage = 'Erro ao carregar competições';
       setError(errorMessage);
@@ -68,13 +65,9 @@ export const useOptimizedCompetitions = () => {
   useEffect(() => {
     loadCompetitions();
     
-    // Configurar intervalo para atualizar status das competições
-    const interval = setInterval(() => {
-      // Força re-cálculo dos memos baseados em status
-      setCompetitions(prev => [...prev]);
-      setCustomCompetitions(prev => [...prev]);
-    }, 60000); // A cada minuto
-
+    // Atualizar a cada 2 minutos para buscar dados frescos do banco
+    const interval = setInterval(loadCompetitions, 120000);
+    
     return () => clearInterval(interval);
   }, []);
 

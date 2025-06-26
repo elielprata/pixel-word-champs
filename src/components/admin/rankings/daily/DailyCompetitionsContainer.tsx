@@ -2,7 +2,6 @@
 import React from 'react';
 import { Calendar } from 'lucide-react';
 import { DailyCompetitionCard } from './DailyCompetitionCard';
-import { useDailyCompetitionsLogic } from '@/hooks/useDailyCompetitionsLogic';
 
 interface DailyCompetition {
   id: string;
@@ -31,19 +30,22 @@ export const DailyCompetitionsContainer: React.FC<DailyCompetitionsContainerProp
   onDelete,
   deletingId
 }) => {
-  const { activeCompetitions } = useDailyCompetitionsLogic(competitions);
+  // Confiar completamente no status do banco de dados
+  const displayCompetitions = competitions.filter(comp => 
+    comp.status === 'active' || comp.status === 'scheduled' || comp.status === 'completed'
+  );
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
           <Calendar className="h-5 w-5 text-blue-600" />
-          Competições Diárias Ativas ({activeCompetitions.length})
+          Competições Diárias ({displayCompetitions.length})
         </h3>
       </div>
       
       <div className="grid gap-4">
-        {activeCompetitions.map((competition) => (
+        {displayCompetitions.map((competition) => (
           <DailyCompetitionCard
             key={competition.id}
             competition={competition}

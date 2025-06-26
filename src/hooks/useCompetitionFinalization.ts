@@ -24,6 +24,7 @@ export const useCompetitionFinalization = (competitions: Competition[]) => {
 
       for (const competition of competitions) {
         // Verificar se é uma competição que acabou de ser finalizada
+        // CONFIAR COMPLETAMENTE NO STATUS DO BANCO DE DADOS
         if (
           competition.status === 'completed' && 
           !processedCompetitions.current.has(competition.id)
@@ -35,7 +36,6 @@ export const useCompetitionFinalization = (competitions: Competition[]) => {
           }, 'COMPETITION_FINALIZATION');
 
           try {
-            // Apenas competições diárias são suportadas agora
             if (competition.competition_type === 'challenge') {
               await competitionFinalizationService.finalizeDailyCompetition(competition.id);
               logger.info('✅ Competição diária finalizada com sucesso', {
@@ -44,7 +44,6 @@ export const useCompetitionFinalization = (competitions: Competition[]) => {
               }, 'COMPETITION_FINALIZATION');
             }
 
-            // Marcar como processada
             processedCompetitions.current.add(competition.id);
           } catch (error) {
             logger.error('❌ Erro ao finalizar competição', {

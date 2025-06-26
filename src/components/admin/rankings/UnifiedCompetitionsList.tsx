@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { UnifiedCompetition } from '@/types/competition';
-import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 import { DeleteCompetitionModal } from './DeleteCompetitionModal';
 import { CompetitionCard } from './unified-list/CompetitionCard';
 import { EmptyState } from './unified-list/EmptyState';
@@ -19,9 +18,6 @@ export const UnifiedCompetitionsList: React.FC<UnifiedCompetitionsListProps> = (
   isLoading,
   onDelete
 }) => {
-  // Atualizar status automaticamente
-  useCompetitionStatusUpdater(competitions);
-
   const {
     deleteModalOpen,
     setDeleteModalOpen,
