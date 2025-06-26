@@ -2,7 +2,6 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, DollarSign, Settings, Calendar } from 'lucide-react';
-import { RankingHeader } from './rankings/RankingHeader';
 import { PaymentsTab } from './PaymentsTab';
 import { UnifiedCompetitionsView } from './rankings/UnifiedCompetitionsView';
 import { AutomationTabContent } from './rankings/AutomationTabContent';
@@ -10,99 +9,77 @@ import { WeeklyRankingView } from './rankings/weekly-ranking/WeeklyRankingView';
 
 export const RankingsTab = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
-        <RankingHeader />
-
-        {/* Main Content */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <Tabs defaultValue="competitions" className="w-full">
-            <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-              <TabsList className="grid w-full grid-cols-4 bg-white border border-slate-200">
-                <TabsTrigger 
-                  value="competitions" 
-                  className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
-                >
-                  <Trophy className="h-4 w-4" />
-                  Competições Diárias
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="weekly-ranking" 
-                  className="flex items-center gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700"
-                >
-                  <Calendar className="h-4 w-4" />
-                  Ranking Semanal
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="payments" 
-                  className="flex items-center gap-2 data-[state=active]:bg-green-50 data-[state=active]:text-green-700"
-                >
-                  <DollarSign className="h-4 w-4" />
-                  Pagamentos
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="automation" 
-                  className="flex items-center gap-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700"
-                >
-                  <Settings className="h-4 w-4" />
-                  Automação
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <div className="p-6">
-              <TabsContent value="competitions" className="mt-0">
-                <UnifiedCompetitionsView />
-              </TabsContent>
-
-              <TabsContent value="weekly-ranking" className="mt-0">
-                <div className="space-y-6">
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-purple-600" />
-                      Sistema de Ranking Semanal
-                    </h3>
-                    <p className="text-slate-600 text-sm">
-                      Gerencie o ranking semanal e visualize estatísticas avançadas
-                    </p>
-                  </div>
-                  <WeeklyRankingView />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="payments" className="mt-0">
-                <div className="space-y-6">
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-green-600" />
-                      Configurações de Pagamentos
-                    </h3>
-                    <p className="text-slate-600 text-sm">
-                      Configure prêmios individuais e em grupo para o sistema de rankings
-                    </p>
-                  </div>
-                  <PaymentsTab />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="automation" className="mt-0">
-                <div className="space-y-6">
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                      <Settings className="h-5 w-5 text-orange-600" />
-                      Sistema de Automação
-                    </h3>
-                    <p className="text-slate-600 text-sm">
-                      Configure reset automático após finalização de competições e execute resets manuais de emergência
-                    </p>
-                  </div>
-                  <AutomationTabContent />
-                </div>
-              </TabsContent>
-            </div>
-          </Tabs>
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Simple Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Trophy className="h-6 w-6 text-amber-600" />
+            <h1 className="text-2xl font-semibold text-slate-900">Sistema de Competições</h1>
+          </div>
+          <p className="text-slate-600">Gerencie competições, rankings e premiações</p>
         </div>
+
+        {/* Clean Tabs */}
+        <Tabs defaultValue="competitions" className="w-full">
+          <TabsList className="h-12 p-1 bg-white border border-slate-200 shadow-sm">
+            <TabsTrigger 
+              value="competitions" 
+              className="h-10 px-4 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900"
+            >
+              <Trophy className="h-4 w-4 mr-2" />
+              Competições Diárias
+            </TabsTrigger>
+            <TabsTrigger 
+              value="weekly-ranking" 
+              className="h-10 px-4 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Ranking Semanal
+            </TabsTrigger>
+            <TabsTrigger 
+              value="payments" 
+              className="h-10 px-4 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900"
+            >
+              <DollarSign className="h-4 w-4 mr-2" />
+              Pagamentos
+            </TabsTrigger>
+            <TabsTrigger 
+              value="automation" 
+              className="h-10 px-4 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Automação
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Content Areas */}
+          <div className="mt-6">
+            <TabsContent value="competitions" className="mt-0">
+              <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                <UnifiedCompetitionsView />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="weekly-ranking" className="mt-0">
+              <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                <WeeklyRankingView />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="payments" className="mt-0">
+              <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                <PaymentsTab />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="automation" className="mt-0">
+              <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                <AutomationTabContent />
+              </div>
+            </TabsContent>
+          </div>
+        </Tabs>
       </div>
     </div>
   );
