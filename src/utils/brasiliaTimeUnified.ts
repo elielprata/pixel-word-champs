@@ -1,3 +1,4 @@
+
 /**
  * UTILITÁRIO UNIFICADO DE TEMPO - VERSÃO PADRONIZAÇÃO UNIVERSAL
  * PRINCÍPIO DEFINITIVO: UTC para tudo, Brasília APENAS para exibição final
@@ -9,6 +10,40 @@
  * FUNÇÕES PRINCIPAIS - PADRÃO UNIVERSAL
  * ===========================================
  */
+
+/**
+ * Parser seguro para datas brasileiras
+ * Converte formato brasileiro para formato que o JavaScript entende
+ */
+const parseBrazilianDate = (dateString: string): Date => {
+  if (!dateString) return new Date();
+  
+  try {
+    // Se já está em formato ISO ou datetime-local, usar direto
+    if (dateString.includes('T') || dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
+      return new Date(dateString);
+    }
+    
+    // Se está em formato brasileiro DD/MM/YYYY HH:mm ou DD/MM/YYYY
+    if (dateString.includes('/')) {
+      const parts = dateString.split(' ');
+      const datePart = parts[0]; // DD/MM/YYYY
+      const timePart = parts[1] || '00:00'; // HH:mm (opcional)
+      
+      const [day, month, year] = datePart.split('/');
+      
+      // Converter para formato ISO: YYYY-MM-DDTHH:mm
+      const isoString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart}`;
+      return new Date(isoString);
+    }
+    
+    // Fallback para outros formatos
+    return new Date(dateString);
+  } catch (error) {
+    console.error('Erro ao fazer parse da data brasileira:', error, dateString);
+    return new Date();
+  }
+};
 
 /**
  * Converte input do usuário (Brasília) para UTC uma única vez
@@ -61,7 +96,7 @@ export const calculateEndDateWithDuration = (startDateTimeUTC: string, durationH
 };
 
 /**
- * Valida duração SEM conversões de timezone - CORRIGIDO
+ * Valida duração SEM conversões de timezone - CORRIGIDO COM PARSER SEGURO
  * TODOS OS INPUTS JÁ ESTÃO EM HORÁRIO DE BRASÍLIA
  */
 export const validateCompetitionDuration = (startDateTimeBrasilia: string, durationHours: number): { isValid: boolean; error?: string } => {
@@ -78,13 +113,29 @@ export const validateCompetitionDuration = (startDateTimeBrasilia: string, durat
   }
   
   try {
-    // Tratar input como já sendo horário de Brasília
-    const startDate = new Date(startDateTimeBrasilia);
+    // Usar parser seguro para datas brasileiras
+    const startDate = parseBrazilianDate(startDateTimeBrasilia);
+    
+    // Verificar se a data foi parseada corretamente
+    if (isNaN(startDate.getTime())) {
+      console.error('Data inválida após parsing:', startDateTimeBrasilia);
+      return { isValid: false, error: 'Data de início inválida' };
+    }
+    
     const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
     
     // Criar limite do mesmo dia (23:59:59) em horário de Brasília
     const sameDayLimit = new Date(startDate);
     sameDayLimit.setHours(23, 59, 59, 999); // setHours ao invés de setUTCHours
+    
+    console.log('🔍 Validação de duração:', {
+      input: startDateTimeBrasilia,
+      startDate: startDate.toLocaleString('pt-BR'),
+      endDate: endDate.toLocaleString('pt-BR'),
+      sameDayLimit: sameDayLimit.toLocaleString('pt-BR'),
+      durationHours,
+      isValid: endDate <= sameDayLimit
+    });
     
     if (endDate > sameDayLimit) {
       const maxEndTime = new Date(sameDayLimit);
