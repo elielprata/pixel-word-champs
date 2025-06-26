@@ -51,18 +51,18 @@ export const useWeeklyRanking = () => {
         throw statsError;
       }
 
-      if (statsData?.error) {
-        throw new Error(statsData.error);
+      if (statsData && typeof statsData === 'object' && 'error' in statsData) {
+        throw new Error(statsData.error as string);
       }
 
-      setStats(statsData);
+      setStats(statsData as WeeklyRankingStats);
 
       // Carregar ranking atual
-      if (statsData?.current_week_start) {
+      if (statsData && typeof statsData === 'object' && 'current_week_start' in statsData) {
         const { data: rankingData, error: rankingError } = await supabase
           .from('weekly_rankings')
           .select('*')
-          .eq('week_start', statsData.current_week_start)
+          .eq('week_start', (statsData as any).current_week_start)
           .order('position', { ascending: true });
 
         if (rankingError) {

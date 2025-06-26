@@ -45,18 +45,6 @@ export const WeeklyRankingView = () => {
     );
   }
 
-  // Garantir que stats tenha todas as propriedades obrigatórias
-  const safeStats = stats ? {
-    ...stats,
-    top_3_players: stats.top_3_players || [],
-    config: stats.config || {
-      start_day_of_week: 0,
-      duration_days: 7,
-      custom_start_date: null,
-      custom_end_date: null
-    }
-  } : null;
-
   return (
     <div className="space-y-6">
       {/* Header Simplificado */}
@@ -75,7 +63,7 @@ export const WeeklyRankingView = () => {
       </div>
 
       {/* Estatísticas Básicas */}
-      <WeeklyRankingStats stats={safeStats} />
+      <WeeklyRankingStats stats={stats} onConfigUpdated={refetch} />
 
       {/* Tabela de Ranking */}
       <WeeklyRankingTable ranking={currentRanking} />
