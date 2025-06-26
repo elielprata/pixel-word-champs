@@ -44,10 +44,27 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
     
     return colors[Math.abs(hash) % colors.length];
   }, [competition.id]);
+
+  // Função para normalizar o status - garantir apenas valores válidos
+  const normalizeStatus = (status: string): 'scheduled' | 'active' | 'completed' => {
+    switch (status) {
+      case 'active':
+        return 'active';
+      case 'scheduled':
+        return 'scheduled';
+      case 'completed':
+        return 'completed';
+      default:
+        // Fallback para status inválidos - usar 'scheduled' como padrão
+        return 'scheduled';
+    }
+  };
+
+  const normalizedStatus = normalizeStatus(competition.status);
   
   const timeDisplay = useMemo(() => {
-    if (competition.status === 'completed') return 'Finalizada';
-    if (competition.status === 'scheduled') return 'Em breve';
+    if (normalizedStatus === 'completed') return 'Finalizada';
+    if (normalizedStatus === 'scheduled') return 'Em breve';
     
     if (timeRemaining <= 0) return 'Finalizada';
     
@@ -58,10 +75,10 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
       return `${hours}h ${minutes}m`;
     }
     return `${minutes}m`;
-  }, [competition.status, timeRemaining]);
+  }, [normalizedStatus, timeRemaining]);
 
   // Só mostrar se for ativa ou agendada
-  if (competition.status === 'completed') {
+  if (normalizedStatus === 'completed') {
     return null;
   }
 
@@ -103,8 +120,8 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
               </h3>
               <div className="mt-1">
                 <CompetitionStatusBadge 
-                  status={competition.status} 
-                  isRealTime={competition.status === 'active'} 
+                  status={normalizedStatus} 
+                  isRealTime={normalizedStatus === 'active'} 
                 />
               </div>
             </div>
@@ -129,7 +146,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
         )}
 
         {/* Botão de ação baseado no status do banco */}
-        {competition.status === 'active' && (
+        {normalizedStatus === 'active' && (
           <Button 
             onClick={() => onJoin(competition.id)} 
             className="w-full h-9 text-sm font-bold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary hover:scale-105 transition-all duration-300 animate-bounce-in delay-300 group/button shadow-lg"
@@ -140,7 +157,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
           </Button>
         )}
 
-        {competition.status === 'scheduled' && (
+        {normalizedStatus === 'scheduled' && (
           <Button 
             disabled
             className="w-full h-9 text-sm font-bold bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed"
