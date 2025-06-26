@@ -2,13 +2,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Trophy, Users, Calendar, Crown } from 'lucide-react';
-import { WeeklyRankingControls } from './WeeklyRankingControls';
+import { RefreshCw, Trophy, Calendar } from 'lucide-react';
 import { WeeklyRankingTable } from './WeeklyRankingTable';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
 import { WeeklyRankingHistory } from './WeeklyRankingHistory';
 import { AdvancedWeeklyStats } from './AdvancedWeeklyStats';
-import { WeeklyRankingResetPanel } from './WeeklyRankingResetPanel';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
@@ -87,7 +85,7 @@ export const WeeklyRankingView = () => {
 
       {/* Tabs Principais */}
       <Tabs defaultValue="ranking" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="ranking" className="flex items-center gap-2">
             <Trophy className="h-4 w-4" />
             Ranking
@@ -95,10 +93,6 @@ export const WeeklyRankingView = () => {
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Histórico
-          </TabsTrigger>
-          <TabsTrigger value="controls" className="flex items-center gap-2">
-            <Crown className="h-4 w-4" />
-            Informações
           </TabsTrigger>
         </TabsList>
 
@@ -111,10 +105,6 @@ export const WeeklyRankingView = () => {
 
         <TabsContent value="history" className="mt-6">
           <WeeklyRankingHistory />
-        </TabsContent>
-
-        <TabsContent value="controls" className="mt-6">
-          <WeeklyRankingControls />
         </TabsContent>
       </Tabs>
     </div>
