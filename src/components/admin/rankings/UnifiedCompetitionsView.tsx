@@ -3,7 +3,7 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Trophy } from 'lucide-react';
 import { DailyCompetitionsView } from './DailyCompetitionsView';
-import { WeeklyRankingView } from './WeeklyRankingView';
+import { WeeklyRankingView } from './weekly-ranking/WeeklyRankingView';
 import { useUnifiedCompetitions } from '@/hooks/useUnifiedCompetitions';
 
 export const UnifiedCompetitionsView = () => {
