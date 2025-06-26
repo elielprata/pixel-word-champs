@@ -1,2 +1,2 @@
 
-export { WeeklyConfigModal } from './WeeklyConfigModalSimplified';
+export { WeeklyConfigModalSimple as WeeklyConfigModal } from './WeeklyConfigModalSimple';
