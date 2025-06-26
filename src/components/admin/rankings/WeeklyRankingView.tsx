@@ -57,10 +57,16 @@ export const WeeklyRankingView = () => {
     );
   }
 
-  // Ensure stats has the required top_3_players property
+  // Garantir que stats tenha a propriedade config obrigatória
   const extendedStats = stats ? {
     ...stats,
-    top_3_players: stats.top_3_players || []
+    top_3_players: stats.top_3_players || [],
+    config: stats.config || {
+      start_day_of_week: 0,
+      duration_days: 7,
+      custom_start_date: null,
+      custom_end_date: null
+    }
   } : null;
 
   return (

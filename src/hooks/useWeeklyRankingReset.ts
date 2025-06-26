@@ -4,11 +4,20 @@ import { useToast } from "@/hooks/use-toast";
 import { logger } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 
+interface ResetResponse {
+  success: boolean;
+  profiles_reset: number;
+  rankings_cleared: number;
+  week_start: string;
+  week_end: string;
+  reset_at: string;
+}
+
 export const useWeeklyRankingReset = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<ResetResponse> => {
       logger.info('🔄 Executando reset manual do ranking semanal', undefined, 'WEEKLY_RANKING_RESET');
 
       const { data, error } = await supabase.rpc('reset_weekly_scores_and_positions');
@@ -19,9 +28,9 @@ export const useWeeklyRankingReset = () => {
       }
 
       logger.info('✅ Reset do ranking semanal concluído', data, 'WEEKLY_RANKING_RESET');
-      return data;
+      return data as ResetResponse;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: ResetResponse) => {
       toast({
         title: "Reset Concluído",
         description: `${data.profiles_reset} perfis resetados e ${data.rankings_cleared} registros de ranking removidos.`,
