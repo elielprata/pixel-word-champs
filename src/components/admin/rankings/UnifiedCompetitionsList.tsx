@@ -11,14 +11,12 @@ import { useCompetitionActions } from './unified-list/useCompetitionActions';
 interface UnifiedCompetitionsListProps {
   competitions: UnifiedCompetition[];
   isLoading: boolean;
-  onEdit: (competition: UnifiedCompetition) => void;
   onDelete: (competition: UnifiedCompetition) => void;
 }
 
 export const UnifiedCompetitionsList: React.FC<UnifiedCompetitionsListProps> = ({
   competitions,
   isLoading,
-  onEdit,
   onDelete
 }) => {
   // Atualizar status automaticamente
@@ -48,7 +46,6 @@ export const UnifiedCompetitionsList: React.FC<UnifiedCompetitionsListProps> = (
           <CompetitionCard
             key={competition.id}
             competition={competition}
-            onEdit={onEdit}
             onDelete={handleDeleteClick}
             isDeleting={isDeletingId === competition.id}
           />

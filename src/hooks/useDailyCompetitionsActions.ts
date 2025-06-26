@@ -21,32 +21,6 @@ interface DailyCompetition {
 export const useDailyCompetitionsActions = () => {
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [editingCompetition, setEditingCompetition] = useState<DailyCompetition | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  const handleEdit = (competition: DailyCompetition) => {
-    console.log('🔧 Hook: handleEdit chamado para competição:', {
-      id: competition.id,
-      title: competition.title,
-      currentEditingCompetition: editingCompetition?.id,
-      currentModalOpen: isEditModalOpen,
-      timestamp: getCurrentBrasiliaTime()
-    });
-    
-    setEditingCompetition(competition);
-    setIsEditModalOpen(true);
-    
-    console.log('📝 Hook: Estados atualizados - editingCompetition:', competition.id, 'isEditModalOpen:', true);
-    
-    // Verificar se o estado foi realmente atualizado
-    setTimeout(() => {
-      console.log('🔍 Hook: Verificação após setState:', {
-        editingCompetitionId: editingCompetition?.id,
-        isModalOpen: isEditModalOpen,
-        timestamp: getCurrentBrasiliaTime()
-      });
-    }, 100);
-  };
 
   const handleDelete = async (competition: DailyCompetition, onRefresh?: () => void) => {
     console.log('🗑️ Tentando excluir competição diária:', competition.id, {
@@ -104,32 +78,8 @@ export const useDailyCompetitionsActions = () => {
     }
   };
 
-  const handleCompetitionUpdated = (onRefresh?: () => void) => {
-    console.log('🔄 Competição diária atualizada, fechando modal e recarregando lista...', {
-      timestamp: getCurrentBrasiliaTime()
-    });
-    setIsEditModalOpen(false);
-    setEditingCompetition(null);
-    if (onRefresh) {
-      onRefresh();
-    }
-  };
-
-  // Log dos estados atuais sempre que houver mudança
-  console.log('🎯 Hook: Estados atuais:', {
-    editingCompetition: editingCompetition?.id,
-    isEditModalOpen,
-    deletingId,
-    timestamp: getCurrentBrasiliaTime()
-  });
-
   return {
     deletingId,
-    editingCompetition,
-    isEditModalOpen,
-    setIsEditModalOpen,
-    handleEdit,
-    handleDelete,
-    handleCompetitionUpdated
+    handleDelete
   };
 };

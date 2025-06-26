@@ -2,8 +2,8 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Clock } from 'lucide-react';
-import { CompetitionActions } from './CompetitionActions';
+import { Button } from "@/components/ui/button";
+import { Calendar, Users, Clock, Trash2 } from 'lucide-react';
 import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
 import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
@@ -23,24 +23,17 @@ interface DailyCompetition {
 
 interface DailyCompetitionCardProps {
   competition: DailyCompetition;
-  onEdit: (competition: DailyCompetition) => void;
   onDelete: (competition: DailyCompetition) => void;
   isDeleting: boolean;
 }
 
 export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
   competition,
-  onEdit,
   onDelete,
   isDeleting
 }) => {
   // Adicionar hook para atualização automática de status
   useCompetitionStatusUpdater([competition]);
-
-  const handleEdit = () => {
-    console.log('🃏 Card: handleEdit executado para competição:', competition.id);
-    onEdit(competition);
-  };
 
   const handleDelete = () => {
     console.log('🃏 Card: handleDelete executado para competição:', competition.id);
@@ -114,12 +107,23 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
             </div>
           </div>
           
-          <CompetitionActions
-            competitionId={competition.id}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            isDeleting={isDeleting}
-          />
+          <div className="flex gap-2 ml-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+              title="Excluir competição"
+              type="button"
+            >
+              {isDeleting ? (
+                <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
+              ) : (
+                <Trash2 className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

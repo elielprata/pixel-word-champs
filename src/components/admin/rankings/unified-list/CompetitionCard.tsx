@@ -3,20 +3,18 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users, Edit, Trash2, Clock } from 'lucide-react';
+import { Calendar, Users, Trash2, Clock } from 'lucide-react';
 import { UnifiedCompetition } from '@/types/competition';
 import { formatDateForDisplay, formatTimeForDisplay } from '@/utils/brasiliaTimeUnified';
 
 interface CompetitionCardProps {
   competition: UnifiedCompetition;
-  onEdit: (competition: UnifiedCompetition) => void;
   onDelete: (competition: UnifiedCompetition) => void;
   isDeleting: boolean;
 }
 
 export const CompetitionCard: React.FC<CompetitionCardProps> = ({
   competition,
-  onEdit,
   onDelete,
   isDeleting
 }) => {
@@ -127,15 +125,6 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
           </div>
           
           <div className="flex gap-2 ml-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit(competition)}
-              className="h-8 w-8 p-0 hover:bg-blue-50"
-              title="Editar competição"
-            >
-              <Edit className="h-3 w-3" />
-            </Button>
             <Button
               variant="outline"
               size="sm"
