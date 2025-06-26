@@ -870,35 +870,26 @@ export type Database = {
       weekly_config: {
         Row: {
           created_at: string
-          custom_end_date: string | null
-          custom_start_date: string | null
-          duration_days: number
+          end_date: string
           id: string
           is_active: boolean
-          reference_date: string | null
-          start_day_of_week: number
+          start_date: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          custom_end_date?: string | null
-          custom_start_date?: string | null
-          duration_days?: number
+          end_date: string
           id?: string
           is_active?: boolean
-          reference_date?: string | null
-          start_day_of_week?: number
+          start_date: string
           updated_at?: string
         }
         Update: {
           created_at?: string
-          custom_end_date?: string | null
-          custom_start_date?: string | null
-          duration_days?: number
+          end_date?: string
           id?: string
           is_active?: boolean
-          reference_date?: string | null
-          start_day_of_week?: number
+          start_date?: string
           updated_at?: string
         }
         Relationships: []
@@ -1032,13 +1023,6 @@ export type Database = {
       calculate_prize_for_position: {
         Args: { user_position: number } | { user_position: number }
         Returns: number
-      }
-      calculate_week_from_reference: {
-        Args: { target_date: string; ref_date?: string }
-        Returns: {
-          week_start: string
-          week_end: string
-        }[]
       }
       check_user_availability: {
         Args: { check_username?: string; check_email?: string }
