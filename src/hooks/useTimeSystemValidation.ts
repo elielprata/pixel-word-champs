@@ -25,16 +25,16 @@ export const useTimeSystemValidation = () => {
     const newChecks: ValidationCheck[] = [];
     const timestamp = getCurrentBrasiliaTime();
 
-    console.log('🔍 VALIDAÇÃO FINAL COMPLETA - Iniciando...', { timestamp });
+    console.log('🔍 VALIDAÇÃO FINAL CORRIGIDA - Iniciando...', { timestamp });
 
-    // Check 1: Conversão crítica 23:00 Brasília → 02:00 UTC (próximo dia)
+    // Check 1: Conversão crítica CORRIGIDA 23:00 Brasília → 02:00 UTC (próximo dia)
     try {
       const brasiliaTime = '2025-06-26T23:00';
       const utcTime = convertBrasiliaInputToUTC(brasiliaTime);
-      const expectedUTC = '2025-06-27T02:00:00.000Z'; // Próximo dia!
+      const expectedUTC = '2025-06-27T02:00:00.000Z'; // CORREÇÃO: Próximo dia UTC
       
       newChecks.push({
-        name: 'Conversão Crítica 23:00 → UTC',
+        name: 'Conversão Crítica CORRIGIDA 23:00 → UTC',
         status: utcTime === expectedUTC ? 'pass' : 'fail',
         message: utcTime === expectedUTC 
           ? `✅ CORRETO: ${brasiliaTime} → ${utcTime} (próximo dia UTC)`
@@ -43,44 +43,44 @@ export const useTimeSystemValidation = () => {
       });
     } catch (error) {
       newChecks.push({
-        name: 'Conversão Crítica 23:00 → UTC',
+        name: 'Conversão Crítica CORRIGIDA 23:00 → UTC',
         status: 'fail',
         message: `❌ Erro na conversão crítica: ${error}`,
         timestamp
       });
     }
 
-    // Check 2: Conversão meio-dia 15:30 Brasília → 18:30 UTC
+    // Check 2: Conversão CORRIGIDA 15:30 Brasília → 18:30 UTC (mesmo dia)
     try {
       const brasiliaTime = '2025-06-26T15:30';
       const utcTime = convertBrasiliaInputToUTC(brasiliaTime);
-      const expectedUTC = '2025-06-26T18:30:00.000Z';
+      const expectedUTC = '2025-06-26T18:30:00.000Z'; // CORREÇÃO: Mesmo dia
       
       newChecks.push({
-        name: 'Conversão Padrão 15:30 → UTC',
+        name: 'Conversão Padrão CORRIGIDA 15:30 → UTC',
         status: utcTime === expectedUTC ? 'pass' : 'fail',
         message: utcTime === expectedUTC 
-          ? `✅ CORRETO: ${brasiliaTime} → ${utcTime}`
+          ? `✅ CORRETO: ${brasiliaTime} → ${utcTime} (mesmo dia)`
           : `❌ ERRO: Esperado ${expectedUTC}, Atual: ${utcTime}`,
         timestamp
       });
     } catch (error) {
       newChecks.push({
-        name: 'Conversão Padrão 15:30 → UTC',
+        name: 'Conversão Padrão CORRIGIDA 15:30 → UTC',
         status: 'fail',
         message: `❌ Erro na conversão padrão: ${error}`,
         timestamp
       });
     }
 
-    // Check 3: Formatação UTC → Brasília (reverso)
+    // Check 3: Formatação UTC → Brasília CORRIGIDA (reverso)
     try {
-      const utcTime = '2025-06-27T02:00:00.000Z'; // 23:00 Brasília
+      const utcTime = '2025-06-27T02:00:00.000Z'; // 23:00 Brasília do dia anterior
       const brasiliaDisplay = formatBrasiliaDate(utcTime, true);
-      const expectedDisplay = '26/06/2025 23:00:00'; // Mesmo dia Brasília!
+      const expectedDisplay = '26/06/2025 23:00:00'; // CORREÇÃO: Dia anterior em Brasília
       
       newChecks.push({
-        name: 'Formatação UTC → Brasília Display',
+        name: 'Formatação UTC → Brasília CORRIGIDA',
         status: brasiliaDisplay === expectedDisplay ? 'pass' : 'fail',
         message: brasiliaDisplay === expectedDisplay
           ? `✅ CORRETO: UTC ${utcTime} → Brasília ${brasiliaDisplay}`
@@ -89,21 +89,21 @@ export const useTimeSystemValidation = () => {
       });
     } catch (error) {
       newChecks.push({
-        name: 'Formatação UTC → Brasília Display',
+        name: 'Formatação UTC → Brasília CORRIGIDA',
         status: 'fail',
         message: `❌ Erro na formatação reversa: ${error}`,
         timestamp
       });
     }
 
-    // Check 4: Roundtrip crítico 23:00
+    // Check 4: Roundtrip crítico CORRIGIDO 23:00
     try {
       const originalInput = '2025-06-26T23:00';
       const toUTC = convertBrasiliaInputToUTC(originalInput);
       const backToBrasilia = formatUTCForDateTimeLocal(toUTC);
       
       newChecks.push({
-        name: 'Roundtrip Crítico 23:00',
+        name: 'Roundtrip Crítico CORRIGIDO 23:00',
         status: originalInput === backToBrasilia ? 'pass' : 'fail',
         message: originalInput === backToBrasilia
           ? `✅ CONSISTENTE: ${originalInput} → UTC → ${backToBrasilia}`
@@ -112,25 +112,25 @@ export const useTimeSystemValidation = () => {
       });
     } catch (error) {
       newChecks.push({
-        name: 'Roundtrip Crítico 23:00',
+        name: 'Roundtrip Crítico CORRIGIDO 23:00',
         status: 'fail',
         message: `❌ Erro no roundtrip crítico: ${error}`,
         timestamp
       });
     }
 
-    // Check 5: Cálculo de duração respeitando limite
+    // Check 5: Cálculo de duração CORRIGIDO respeitando limite
     try {
       const startTime = '2025-06-26T22:00'; // 22:00
-      const duration = 3; // +3h = 01:00 (próximo dia)
+      const duration = 3; // +3h = 01:00 (próximo dia sem limite)
       const endTimeUTC = calculateEndDateWithDuration(startTime, duration);
       const endTimeBrasilia = formatUTCForDateTimeLocal(endTimeUTC);
-      const expectedEnd = '2025-06-26T23:59'; // Deve limitar em 23:59
+      const expectedEnd = '2025-06-26T23:59'; // CORREÇÃO: Deve limitar em 23:59
       
       const isWithinLimit = endTimeBrasilia <= expectedEnd + ':59';
       
       newChecks.push({
-        name: 'Cálculo com Limite de Dia',
+        name: 'Cálculo com Limite CORRIGIDO',
         status: isWithinLimit ? 'pass' : 'fail',
         message: isWithinLimit
           ? `✅ LIMITADO: ${startTime} + ${duration}h → ${endTimeBrasilia} (respeitou 23:59)`
@@ -139,7 +139,7 @@ export const useTimeSystemValidation = () => {
       });
     } catch (error) {
       newChecks.push({
-        name: 'Cálculo com Limite de Dia',
+        name: 'Cálculo com Limite CORRIGIDO',
         status: 'fail',
         message: `❌ Erro no cálculo com limite: ${error}`,
         timestamp
@@ -168,14 +168,14 @@ export const useTimeSystemValidation = () => {
       });
     }
 
-    // Check 7: Teste Edge Case - Meia-noite
+    // Check 7: Teste Edge Case CORRIGIDO - Meia-noite
     try {
       const midnightInput = '2025-06-26T00:00';
       const midnightUTC = convertBrasiliaInputToUTC(midnightInput);
-      const expectedMidnightUTC = '2025-06-26T03:00:00.000Z';
+      const expectedMidnightUTC = '2025-06-26T03:00:00.000Z'; // CORREÇÃO: Mesmo dia UTC
       
       newChecks.push({
-        name: 'Edge Case - Meia-noite',
+        name: 'Edge Case CORRIGIDO - Meia-noite',
         status: midnightUTC === expectedMidnightUTC ? 'pass' : 'fail',
         message: midnightUTC === expectedMidnightUTC
           ? `✅ CORRETO: Meia-noite ${midnightInput} → ${midnightUTC}`
@@ -184,7 +184,7 @@ export const useTimeSystemValidation = () => {
       });
     } catch (error) {
       newChecks.push({
-        name: 'Edge Case - Meia-noite',
+        name: 'Edge Case CORRIGIDO - Meia-noite',
         status: 'fail',
         message: `❌ Erro no edge case meia-noite: ${error}`,
         timestamp
@@ -200,7 +200,7 @@ export const useTimeSystemValidation = () => {
     setSystemHealthy(healthy);
     setIsValidating(false);
 
-    console.log('📊 VALIDAÇÃO FINAL CONCLUÍDA:', {
+    console.log('📊 VALIDAÇÃO FINAL CORRIGIDA CONCLUÍDA:', {
       timestamp,
       totalChecks,
       passedChecks,
