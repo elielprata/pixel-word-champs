@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Users, DollarSign, Settings, Calendar, AlertCircle, Info } from 'lucide-react';
+import { Trophy, Users, DollarSign, Calendar, Settings } from 'lucide-react';
 import { WeeklyConfigModal } from './WeeklyConfigModal';
 import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
@@ -40,8 +40,8 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
 
   if (!stats) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="pb-2">
               <div className="h-4 bg-gray-200 rounded w-24"></div>
@@ -55,123 +55,68 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
     );
   }
 
-  const isCustomDates = stats.config?.custom_start_date && stats.config?.custom_end_date;
-  const hasReferenceDate = stats.config?.reference_date;
-
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Período Semanal */}
-        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700 flex items-center gap-2">
+        <Card className="border-slate-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Período Semanal
+              Período
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-lg font-bold text-blue-900">
+              <div className="text-lg font-semibold text-slate-900">
                 {formatBrasiliaDate(stats.current_week_start, false)} - {formatBrasiliaDate(stats.current_week_end, false)}
               </div>
-              <div className="flex items-center gap-2">
-                {isCustomDates ? (
-                  <div className="flex items-center gap-1 text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
-                    <AlertCircle className="h-3 w-3" />
-                    Datas Customizadas
-                  </div>
-                ) : hasReferenceDate ? (
-                  <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                    <Info className="h-3 w-3" />
-                    Sistema de Referência
-                  </div>
-                ) : (
-                  <div className="text-xs text-blue-600">
-                    Domingo a Sábado
-                  </div>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setConfigModalOpen(true)}
-                  className="ml-auto h-6 px-2 text-xs"
-                >
-                  <Settings className="h-3 w-3 mr-1" />
-                  Config
-                </Button>
-              </div>
-              {hasReferenceDate && (
-                <div className="text-xs text-blue-500 mt-1">
-                  Ref: {formatBrasiliaDate(stats.config.reference_date, false)}
-                </div>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfigModalOpen(true)}
+                className="h-7 px-3 text-xs"
+              >
+                <Settings className="h-3 w-3 mr-1" />
+                Configurar
+              </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Participantes */}
-        <Card className="border-green-200 bg-gradient-to-br from-green-50 to-green-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-700 flex items-center gap-2">
+        <Card className="border-slate-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <Users className="h-4 w-4" />
               Participantes
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-900">
+            <div className="text-2xl font-semibold text-slate-900">
               {stats.total_participants.toLocaleString()}
             </div>
-            <p className="text-xs text-green-600 mt-1">
-              Usuários ativos
+            <p className="text-xs text-slate-600 mt-1">
+              Jogadores ativos
             </p>
           </CardContent>
         </Card>
 
         {/* Pool de Prêmios */}
-        <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-yellow-700 flex items-center gap-2">
+        <Card className="border-slate-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
-              Pool de Prêmios
+              Prêmios
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-900">
+            <div className="text-2xl font-semibold text-slate-900">
               R$ {stats.total_prize_pool.toFixed(2)}
             </div>
-            <p className="text-xs text-yellow-600 mt-1">
-              Total disponível
+            <p className="text-xs text-slate-600 mt-1">
+              Total em prêmios
             </p>
-          </CardContent>
-        </Card>
-
-        {/* Pódio */}
-        <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700 flex items-center gap-2">
-              <Trophy className="h-4 w-4" />
-              Top 3
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.top_3_players.length > 0 ? (
-              <div className="space-y-1">
-                {stats.top_3_players.slice(0, 2).map((player, index) => (
-                  <div key={index} className="text-xs text-purple-800">
-                    <span className="font-medium">#{player.position}</span> {player.username}
-                  </div>
-                ))}
-                {stats.top_3_players.length > 2 && (
-                  <div className="text-xs text-purple-600">
-                    +{stats.top_3_players.length - 2} outros
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-sm text-purple-600">
-                Nenhum participante
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
