@@ -30,13 +30,16 @@ export const useWeeklyConfigSync = () => {
         throw error;
       }
       
+      // Type assertion para converter Json para o tipo específico
+      const resetData = data as any;
+      
       const configInfo: WeeklyConfigInfo = {
-        current_week_start: data.week_start,
-        current_week_end: data.week_end,
-        next_reset_date: data.next_reset_date,
-        should_reset: data.should_reset,
-        is_custom_dates: data.is_custom_dates,
-        config: data.config
+        current_week_start: resetData.week_start,
+        current_week_end: resetData.week_end,
+        next_reset_date: resetData.next_reset_date,
+        should_reset: resetData.should_reset,
+        is_custom_dates: resetData.is_custom_dates,
+        config: resetData.config
       };
       
       logger.info('✅ Configuração semanal sincronizada', { 
