@@ -5,7 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users, Trash2, Clock } from 'lucide-react';
 import { UnifiedCompetition } from '@/types/competition';
-import { formatDateForDisplay, formatTimeForDisplay } from '@/utils/brasiliaTimeUnified';
+import { 
+  calculateDynamicStatus, 
+  getStatusText, 
+  getStatusColor, 
+  formatDateTimeBrasilia,
+  useDynamicCompetitionStatus 
+} from '@/utils/dynamicCompetitionStatus';
 
 interface CompetitionCardProps {
   competition: UnifiedCompetition;
@@ -18,39 +24,8 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
   onDelete,
   isDeleting
 }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-700 border-green-200';
-      case 'scheduled': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'completed': return 'bg-purple-100 text-purple-700 border-purple-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Ativo';
-      case 'scheduled': return 'Agendado';
-      case 'completed': return 'Finalizado';
-      default: return 'Rascunho';
-    }
-  };
-
-  const formatDateTimeDisplay = (utcDateString: string, label: string) => {
-    if (!utcDateString) {
-      return 'Data inválida';
-    }
-
-    try {
-      const dateFormatted = formatDateForDisplay(utcDateString);
-      const timeFormatted = formatTimeForDisplay(utcDateString);
-      
-      return `${dateFormatted}, ${timeFormatted}`;
-    } catch (error) {
-      console.error(`Erro ao formatar ${label}:`, error);
-      return 'Data inválida';
-    }
-  };
+  // 🎯 STATUS DINÂMICO - Comparação UTC pura
+  const dynamicStatus = useDynamicCompetitionStatus(competition.startDate, competition.endDate);
 
   const calculateAndDisplayDuration = () => {
     // Priorizar duração fornecida
@@ -83,9 +58,12 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h4 className="font-semibold text-slate-800">{competition.title}</h4>
-              <Badge className={getStatusColor(competition.status)}>
-                {getStatusText(competition.status)}
+              
+              {/* 🎯 STATUS DINÂMICO */}
+              <Badge className={getStatusColor(dynamicStatus)}>
+                {getStatusText(dynamicStatus)}
               </Badge>
+              
               {competition.theme && (
                 <Badge variant="outline" className="text-xs">
                   {competition.theme}
@@ -98,12 +76,12 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Início: {formatDateTimeDisplay(competition.startDate, 'Início')}</span>
+                <span>Início: {formatDateTimeBrasilia(competition.startDate)}</span>
               </div>
               
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Fim: {formatDateTimeDisplay(competition.endDate, 'Fim')}</span>
+                <span>Fim: {formatDateTimeBrasilia(competition.endDate)}</span>
               </div>
               
               <div className="flex items-center gap-1">
@@ -120,7 +98,7 @@ export const CompetitionCard: React.FC<CompetitionCardProps> = ({
             </div>
 
             <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-              <span className="text-blue-700">📝 Competição diária - Horários em Brasília</span>
+              <span className="text-blue-700">📝 Competição diária - Horários em Brasília (Status: {getStatusText(dynamicStatus)})</span>
             </div>
           </div>
           

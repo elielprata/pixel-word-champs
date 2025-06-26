@@ -4,8 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users, Clock, Trash2 } from 'lucide-react';
-import { useCompetitionStatusUpdater } from '@/hooks/useCompetitionStatusUpdater';
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
+import { 
+  calculateDynamicStatus, 
+  getStatusText, 
+  getStatusColor, 
+  formatDateTimeBrasilia,
+  useDynamicCompetitionStatus 
+} from '@/utils/dynamicCompetitionStatus';
 
 interface DailyCompetition {
   id: string;
@@ -18,7 +23,6 @@ interface DailyCompetition {
   total_participants: number;
   theme: string;
   rules: any;
-  // Nota: prize_pool removido - competições diárias não têm prêmios
 }
 
 interface DailyCompetitionCardProps {
@@ -32,37 +36,12 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
   onDelete,
   isDeleting
 }) => {
-  // Adicionar hook para atualização automática de status
-  useCompetitionStatusUpdater([competition]);
+  // 🎯 STATUS DINÂMICO - Comparação UTC pura
+  const dynamicStatus = useDynamicCompetitionStatus(competition.start_date, competition.end_date);
 
   const handleDelete = () => {
     console.log('🃏 Card: handleDelete executado para competição:', competition.id);
     onDelete(competition);
-  };
-
-  const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
-    const date = new Date(dateString);
-    const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
-    
-    return `${formatBrasiliaDate(date, false)}, ${timeFormatted}`;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-700 border-green-200';
-      case 'scheduled': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'completed': return 'bg-purple-100 text-purple-700 border-purple-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Ativo';
-      case 'scheduled': return 'Agendado';
-      case 'completed': return 'Finalizado';
-      default: return 'Rascunho';
-    }
   };
 
   return (
@@ -72,9 +51,12 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h4 className="font-semibold text-slate-800">{competition.title}</h4>
-              <Badge className={getStatusColor(competition.status)}>
-                {getStatusText(competition.status)}
+              
+              {/* 🎯 STATUS DINÂMICO */}
+              <Badge className={getStatusColor(dynamicStatus)}>
+                {getStatusText(dynamicStatus)}
               </Badge>
+              
               {competition.theme && (
                 <Badge variant="outline" className="text-xs">
                   {competition.theme}
@@ -87,12 +69,12 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-slate-500" />
-                <span>Início: {formatDateTime(competition.start_date, false)}</span>
+                <span>Início: {formatDateTimeBrasilia(competition.start_date)}</span>
               </div>
               
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3 text-slate-500" />
-                <span>Fim: {formatDateTime(competition.end_date, true)}</span>
+                <span>Fim: {formatDateTimeBrasilia(competition.end_date)}</span>
               </div>
               
               <div className="flex items-center gap-1">
@@ -101,9 +83,8 @@ export const DailyCompetitionCard: React.FC<DailyCompetitionCardProps> = ({
               </div>
             </div>
 
-            {/* Aviso sobre ausência de prêmios */}
             <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-              <span className="text-blue-700">📝 Competição diária - Sem premiação em dinheiro</span>
+              <span className="text-blue-700">📝 Competição diária - Horários em Brasília (Status: {getStatusText(dynamicStatus)})</span>
             </div>
           </div>
           
