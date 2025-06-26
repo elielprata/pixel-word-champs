@@ -15,8 +15,6 @@ export const AutomationTabContent = () => {
     settings,
     showTestSection,
     showEmergencyReset,
-    resetStatus,
-    nextResetInfo,
     isExecuting,
     isResettingScores,
     setSettings,
@@ -50,15 +48,12 @@ export const AutomationTabContent = () => {
             <CardHeader className="bg-gradient-to-r from-orange-50 to-yellow-50">
               <CardTitle className="flex items-center gap-2 text-orange-800">
                 <Settings className="h-5 w-5" />
-                Automação de Reset Baseado em Tempo
+                Automação de Reset Sincronizada (Baseado em Tempo)
               </CardTitle>
             </CardHeader>
             
             <CardContent className="p-6 space-y-6">
-              <AutomationSystemStatus 
-                resetStatus={resetStatus} 
-                nextResetInfo={nextResetInfo} 
-              />
+              <AutomationSystemStatus />
 
               <AutomationSettingsSection
                 settings={settings}
