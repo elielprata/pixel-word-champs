@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGameScoring } from '@/hooks/useGameScoring';
@@ -195,12 +196,6 @@ export const useGameState = (
       hintsUsed: state.hintsUsed + 1,
       positionsCount: wordPlacement.positions.length
     }, 'GAME_STATE');
-
-    toast({
-      title: "Dica revelada!",
-      description: `Palavra destacada: ${hintWord}`,
-      variant: "default"
-    });
 
     // Remover destaque após 3 segundos
     setTimeout(() => {

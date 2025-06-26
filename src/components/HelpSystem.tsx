@@ -65,12 +65,6 @@ const HelpSystem = ({ onHintUsed, onReviveUsed, hintsRemaining, canUseRevive }: 
         const mockWords = ['CASA', 'GATO', 'LIVRO', 'VERDE', 'PIANO'];
         const revealedWord = mockWords[Math.floor(Math.random() * mockWords.length)];
         onHintUsed(revealedWord);
-        
-        toast({
-          title: "Dica revelada!",
-          description: `Palavra encontrada: ${revealedWord}`,
-          variant: "default"
-        });
       } else {
         onReviveUsed();
         
