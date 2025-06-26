@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -6,14 +5,15 @@ import { createSuccessResponse, createErrorResponse, handleServiceError } from '
 export class DailyCompetitionCoreService {
   async getActiveDailyCompetitions(): Promise<ApiResponse<any[]>> {
     try {
-      console.log('🔍 Buscando competições diárias ativas...');
+      console.log('🔍 Buscando competições diárias...');
 
-      // Buscar apenas competições diárias ativas
+      // IMPORTANTE: Agora que temos cron job atualizando status automaticamente,
+      // podemos confiar no campo 'status' do banco de dados
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
         .eq('competition_type', 'challenge')
-        .eq('status', 'active');
+        .in('status', ['active', 'scheduled']); // Incluir agendadas também
 
       if (error) {
         console.error('❌ Erro na consulta SQL:', error);
@@ -25,11 +25,15 @@ export class DailyCompetitionCoreService {
         return createSuccessResponse([]);
       }
 
-      console.log(`✅ Total de competições diárias ativas encontradas: ${data.length}`);
+      // Filtrar para mostrar apenas competições ativas no frontend
+      const activeCompetitions = data.filter(comp => comp.status === 'active');
+
+      console.log(`✅ Total de competições encontradas: ${data.length}`);
+      console.log(`✅ Competições ativas para exibir: ${activeCompetitions.length}`);
       
       // Log detalhado de cada competição encontrada
-      data.forEach((comp, index) => {
-        console.log(`📋 Competição ${index + 1}:`, {
+      activeCompetitions.forEach((comp, index) => {
+        console.log(`📋 Competição ativa ${index + 1}:`, {
           id: comp.id,
           title: comp.title,
           status: comp.status,
@@ -38,9 +42,9 @@ export class DailyCompetitionCoreService {
         });
       });
 
-      return createSuccessResponse(data);
+      return createSuccessResponse(activeCompetitions);
     } catch (error) {
-      console.error('❌ Erro ao buscar competições diárias ativas:', error);
+      console.error('❌ Erro ao buscar competições diárias:', error);
       return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_DAILY_COMPETITIONS'));
     }
   }
@@ -105,6 +109,28 @@ export class DailyCompetitionCoreService {
     } catch (error) {
       console.error('❌ Erro ao carregar ranking:', error);
       return createErrorResponse(handleServiceError(error, 'GET_DAILY_COMPETITION_RANKING'));
+    }
+  }
+
+  /**
+   * Força atualização manual do status das competições (útil para debug)
+   */
+  async forceStatusUpdate(): Promise<ApiResponse<any>> {
+    try {
+      console.log('🔄 Forçando atualização manual de status...');
+      
+      const { data, error } = await supabase.rpc('update_daily_competitions_status');
+      
+      if (error) {
+        console.error('❌ Erro ao forçar atualização:', error);
+        throw error;
+      }
+
+      console.log('✅ Atualização forçada concluída:', data);
+      return createSuccessResponse(data);
+    } catch (error) {
+      console.error('❌ Erro na atualização forçada:', error);
+      return createErrorResponse(handleServiceError(error, 'FORCE_STATUS_UPDATE'));
     }
   }
 }

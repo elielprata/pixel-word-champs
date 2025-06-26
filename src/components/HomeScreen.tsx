@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { dailyCompetitionService } from '@/services/dailyCompetitionService';
 import { useAuth } from '@/hooks/useAuth';
@@ -57,9 +56,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
           timestamp: formatBrasiliaDate(new Date())
         }, 'HOME_SCREEN');
         
-        // Mapear os dados para a interface Competition - APENAS competições diárias
+        // Mapear os dados para a interface Competition - APENAS competições diárias ativas
         const mappedCompetitions: Competition[] = response.data
-          .filter(comp => comp.competition_type === 'challenge') // Garantir que são apenas diárias
           .map(comp => ({
             id: comp.id,
             title: comp.title,
@@ -67,15 +65,15 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
             theme: comp.theme || '',
             start_date: comp.start_date,
             end_date: comp.end_date,
-            status: comp.status || 'active',
-            type: 'daily' as const, // Forçar tipo diário
+            status: comp.status || 'active', // Status já atualizado pelo cron job
+            type: 'daily' as const,
             prize_pool: Number(comp.prize_pool) || 0,
             total_participants: 0,
             max_participants: comp.max_participants || 1000,
             is_active: comp.status === 'active',
             created_at: comp.created_at || '',
             updated_at: comp.updated_at || '',
-            competition_type: comp.competition_type // Adicionar para o hook de finalização
+            competition_type: comp.competition_type
           }));
         
         setCompetitions(mappedCompetitions);
@@ -102,8 +100,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   useEffect(() => {
     loadCompetitions();
     
-    // Reduzir intervalo para 2 minutos para atualização mais frequente
-    const interval = setInterval(loadCompetitions, 120000);
+    // Aumentar intervalo para 5 minutos, já que o cron job atualiza a cada 5 minutos
+    const interval = setInterval(loadCompetitions, 300000); // 5 minutos
     
     return () => clearInterval(interval);
   }, []);
