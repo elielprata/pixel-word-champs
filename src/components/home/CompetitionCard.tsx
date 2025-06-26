@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Zap, Clock, Play, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,9 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Competition } from '@/types';
 import { CompetitionStatusBadge } from '@/components/CompetitionStatusBadge';
 import { 
-  calculateDynamicStatus, 
-  getStatusText, 
-  useDynamicCompetitionStatus 
+  formatDateTimeBrasilia 
 } from '@/utils/dynamicCompetitionStatus';
 
 interface CompetitionCardProps {
@@ -17,10 +16,10 @@ interface CompetitionCardProps {
 }
 
 const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
-  // 🎯 STATUS DINÂMICO - Comparação UTC pura
-  const dynamicStatus = useDynamicCompetitionStatus(competition.start_date, competition.end_date);
+  // Usar status diretamente do backend (já corrigido pelo cron job)
+  const backendStatus = competition.status;
   
-  // Calcular tempo restante baseado no status dinâmico
+  // Calcular tempo restante baseado na data de fim
   const timeRemaining = useMemo(() => {
     try {
       const now = new Date();
@@ -31,9 +30,6 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
       return 0;
     }
   }, [competition.end_date]);
-
-  // Verificar se há inconsistência de status
-  const isStatusOutdated = competition.status !== dynamicStatus;
   
   const bgGradient = useMemo(() => {
     const colors = [
@@ -56,8 +52,8 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   }, [competition.id]);
   
   const timeDisplay = useMemo(() => {
-    if (dynamicStatus === 'completed') return 'Finalizada';
-    if (dynamicStatus === 'scheduled') return 'Em breve';
+    if (backendStatus === 'completed') return 'Finalizada';
+    if (backendStatus === 'scheduled') return 'Em breve';
     
     if (timeRemaining <= 0) return 'Finalizada';
     
@@ -68,10 +64,10 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
       return `${hours}h ${minutes}m`;
     }
     return `${minutes}m`;
-  }, [dynamicStatus, timeRemaining]);
+  }, [backendStatus, timeRemaining]);
 
-  // Só mostrar se for ativa ou agendada
-  if (dynamicStatus === 'completed') {
+  // Só mostrar se for ativa ou agendada (confiar no backend)
+  if (backendStatus === 'completed') {
     return null;
   }
 
@@ -101,7 +97,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
       </div>
 
       <CardContent className="p-4 relative">
-        {/* Header com status dinâmico */}
+        {/* Header com status do backend */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300 animate-bounce-in">
@@ -113,16 +109,16 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
               </h3>
               <div className="mt-1">
                 <CompetitionStatusBadge 
-                  status={dynamicStatus} 
-                  isRealTime={dynamicStatus === 'active'} 
-                  isStatusOutdated={isStatusOutdated}
-                  calculatedStatus={dynamicStatus}
+                  status={backendStatus} 
+                  isRealTime={backendStatus === 'active'} 
+                  isStatusOutdated={false}
+                  calculatedStatus={backendStatus}
                 />
               </div>
             </div>
           </div>
           
-          {/* Tempo restante atualizado dinamicamente */}
+          {/* Tempo restante */}
           <div className="bg-gradient-to-r from-accent/80 to-accent/60 rounded-lg px-3 py-1.5 border border-border/50 hover:from-primary/15 hover:to-primary/10 transition-all duration-300 animate-scale-in">
             <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-primary animate-pulse" />
@@ -133,19 +129,6 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
           </div>
         </div>
 
-        {/* Alerta de inconsistência de status */}
-        {isStatusOutdated && (
-          <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-            <div className="text-xs text-orange-700">
-              <div className="font-medium">Status inconsistente detectado</div>
-              <div className="text-orange-600">
-                Banco: {competition.status} | Calculado: {dynamicStatus}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Descrição compacta */}
         {competition.description && (
           <p className="text-muted-foreground text-xs mb-3 leading-relaxed line-clamp-2 animate-fade-in delay-100">
@@ -153,8 +136,19 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
           </p>
         )}
 
-        {/* Botão de ação baseado no status dinâmico */}
-        {dynamicStatus === 'active' && (
+        {/* Informações de horário */}
+        <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+          <div className="text-blue-700">
+            <div className="font-medium">📅 Período (Brasília):</div>
+            <div className="text-blue-600 mt-1">
+              Início: {formatDateTimeBrasilia(competition.start_date)}<br/>
+              Fim: {formatDateTimeBrasilia(competition.end_date)}
+            </div>
+          </div>
+        </div>
+
+        {/* Botão de ação baseado no status do backend */}
+        {backendStatus === 'active' && (
           <Button 
             onClick={() => onJoin(competition.id)} 
             className="w-full h-9 text-sm font-bold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary hover:scale-105 transition-all duration-300 animate-bounce-in delay-300 group/button shadow-lg"
@@ -165,7 +159,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
           </Button>
         )}
 
-        {dynamicStatus === 'scheduled' && (
+        {backendStatus === 'scheduled' && (
           <Button 
             disabled
             className="w-full h-9 text-sm font-bold bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed"
