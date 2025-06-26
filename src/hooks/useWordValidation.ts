@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { isLinearPath } from '@/hooks/word-selection/validateLinearPath';
 import { logger } from '@/utils/logger';
@@ -27,9 +27,12 @@ export const useWordValidation = ({
   getPointsForWord
 }: UseWordValidationProps) => {
 
+  // CORREÇÃO: Usar useRef ao invés de propriedade da função
+  const isExecutingRef = useRef(false);
+
   const validateAndConfirmWord = useCallback((selectedPositions: Position[]) => {
     // PROTEÇÃO CRÍTICA: Verificar se a função já está sendo executada
-    if (validateAndConfirmWord.isExecuting) {
+    if (isExecutingRef.current) {
       logger.warn('🚨 DUPLICAÇÃO EVITADA - validateAndConfirmWord já está executando', {
         positions: selectedPositions
       }, 'WORD_VALIDATION');
@@ -37,7 +40,7 @@ export const useWordValidation = ({
     }
 
     // Marcar como executando
-    (validateAndConfirmWord as any).isExecuting = true;
+    isExecutingRef.current = true;
 
     try {
       // Validação 1: Verificar se há posições selecionadas
@@ -142,7 +145,7 @@ export const useWordValidation = ({
     } finally {
       // Liberar o lock após um breve delay para evitar chamadas múltiplas
       setTimeout(() => {
-        (validateAndConfirmWord as any).isExecuting = false;
+        isExecutingRef.current = false;
       }, 100);
     }
 
