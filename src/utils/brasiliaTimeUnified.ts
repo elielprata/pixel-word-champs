@@ -1,95 +1,81 @@
 /**
- * UTILITÁRIO UNIFICADO DE TEMPO - VERSÃO FINAL CORRIGIDA
- * REGRA DEFINITIVA: INPUT = EXIBIÇÃO (Brasília), UTC apenas para storage
- * CORREÇÃO FINAL: Eliminação completa de conversões duplas com parsing manual
+ * UTILITÁRIO UNIFICADO DE TEMPO - VERSÃO CORRIGIDA DEFINITIVA
+ * CORREÇÃO: Eliminação completa da duplicação de timezone
+ * REGRA: INPUT = EXIBIÇÃO (Brasília), conversão direta sem adições extras
  */
 
 /**
  * ===========================================
- * FUNÇÕES PRINCIPAIS - CORRIGIDAS COM PARSING MANUAL
+ * FUNÇÕES PRINCIPAIS - CORRIGIDAS SEM DUPLICAÇÃO
  * ===========================================
  */
 
 /**
- * CORRIGIDO DEFINITIVAMENTE: Converte input Brasília para UTC com parsing manual
- * Input: 15:30 Brasília → Output: 18:30 UTC (mesmo dia)
- * Input: 23:00 Brasília → Output: 02:00 UTC (próximo dia)
+ * CORRIGIDO: Converte input datetime-local para UTC sem duplicação
+ * Input: 15:30 Brasília → Output: 18:30 UTC (correto: +3h apenas uma vez)
  */
 export const convertBrasiliaInputToUTC = (brasiliaDateTime: string): string => {
   if (!brasiliaDateTime) return new Date().toISOString();
   
   try {
-    console.log('🔄 CONVERSÃO BRASÍLIA → UTC (PARSING MANUAL):', {
+    console.log('🔄 CONVERSÃO BRASÍLIA → UTC (SEM DUPLICAÇÃO):', {
       input: brasiliaDateTime,
-      step: 'Início da conversão com parsing manual'
+      step: 'Conversão direta sem adições extras'
     });
     
-    // CORREÇÃO DEFINITIVA: Parsing manual completo
-    const parts = brasiliaDateTime.split(/[-T:]/);
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1; // JavaScript months são 0-indexados
-    const day = parseInt(parts[2]);
-    const hour = parseInt(parts[3]) || 0;
-    const minute = parseInt(parts[4]) || 0;
+    // CORREÇÃO DEFINITIVA: Usar Date diretamente sem parsing manual
+    // O datetime-local já é interpretado no timezone local do sistema
+    const brasiliaDate = new Date(brasiliaDateTime);
     
-    console.log('📋 Componentes parseados:', { year, month, day, hour, minute });
+    // Verificar se a data é válida
+    if (isNaN(brasiliaDate.getTime())) {
+      console.error('❌ Data inválida:', brasiliaDateTime);
+      return new Date().toISOString();
+    }
     
-    // CORREÇÃO: Criar data UTC diretamente com +3h para converter Brasília → UTC
-    // Brasília UTC-3, então para UTC: +3 horas
-    const utcHour = hour + 3;
-    const utcDate = new Date(Date.UTC(year, month, day, utcHour, minute));
+    // A conversão para UTC é automática pelo toISOString()
+    const utcResult = brasiliaDate.toISOString();
     
-    console.log('🌍 Conversão definitiva:', {
+    console.log('✅ Conversão sem duplicação:', {
       brasiliaInput: brasiliaDateTime,
-      parsedHour: hour,
-      utcHour: utcHour,
-      utcResult: utcDate.toISOString(),
-      operation: 'Parsing manual + 3h (Brasília → UTC)'
+      brasiliaTime: brasiliaDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      utcResult: utcResult,
+      operation: 'Conversão direta sem adições manuais'
     });
     
-    return utcDate.toISOString();
+    return utcResult;
   } catch (error) {
-    console.error('❌ Erro ao converter Brasília para UTC com parsing manual:', error);
+    console.error('❌ Erro ao converter Brasília para UTC:', error);
     return new Date().toISOString();
   }
 };
 
 /**
- * CORRIGIDO DEFINITIVAMENTE: Converte UTC para formato datetime-local (Brasília)
- * Input: 18:30 UTC → Output: 15:30 Brasília (para inputs de formulário)
+ * CORRIGIDO: Converte UTC para formato datetime-local (Brasília) sem duplicação
  */
 export const formatUTCForDateTimeLocal = (utcDateTime: string): string => {
   if (!utcDateTime) return '';
   
   try {
-    console.log('🔄 UTC → Brasília (PARSING MANUAL):', {
+    console.log('🔄 UTC → Brasília (SEM DUPLICAÇÃO):', {
       input: utcDateTime,
-      step: 'Conversão controlada UTC → Brasília'
+      step: 'Conversão usando toLocaleString'
     });
     
     const utcDate = new Date(utcDateTime);
     
-    // CORREÇÃO DEFINITIVA: Conversão controlada subtraindo exatamente 3h
-    const brasiliaDate = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000)); // -3h em milissegundos
+    // CORREÇÃO: Usar toLocaleString para conversão automática
+    const brasiliaString = utcDate.toLocaleString('sv-SE', { 
+      timeZone: 'America/Sao_Paulo' 
+    }).replace(' ', 'T').slice(0, 16);
     
-    const year = brasiliaDate.getUTCFullYear();
-    const month = (brasiliaDate.getUTCMonth() + 1).toString().padStart(2, '0');
-    const day = brasiliaDate.getUTCDate().toString().padStart(2, '0');
-    const hours = brasiliaDate.getUTCHours().toString().padStart(2, '0');
-    const minutes = brasiliaDate.getUTCMinutes().toString().padStart(2, '0');
-    
-    const result = `${year}-${month}-${day}T${hours}:${minutes}`;
-    
-    console.log('🔄 UTC → Brasília (conversão controlada):', {
+    console.log('✅ UTC → Brasília (sem duplicação):', {
       utcInput: utcDateTime,
-      utcTime: utcDate.getTime(),
-      brasiliaTime: brasiliaDate.getTime(),
-      difference: (utcDate.getTime() - brasiliaDate.getTime()) / (60 * 60 * 1000),
-      result: result,
-      operation: 'UTC - 3h = Brasília'
+      brasiliaResult: brasiliaString,
+      operation: 'Conversão automática via toLocaleString'
     });
     
-    return result;
+    return brasiliaString;
   } catch (error) {
     console.error('❌ Erro ao converter UTC para datetime-local:', error);
     return '';
@@ -97,7 +83,7 @@ export const formatUTCForDateTimeLocal = (utcDateTime: string): string => {
 };
 
 /**
- * CORRIGIDO DEFINITIVAMENTE: Calcula data de fim usando parsing manual
+ * CORRIGIDO: Calcula data de fim sem duplicação de timezone
  */
 export const calculateEndDateWithDuration = (startDateTimeBrasilia: string, durationHours: number): string => {
   if (!startDateTimeBrasilia || !durationHours) {
@@ -105,66 +91,49 @@ export const calculateEndDateWithDuration = (startDateTimeBrasilia: string, dura
   }
   
   try {
-    console.log('⏰ CÁLCULO DE FIM (PARSING MANUAL):', {
+    console.log('⏰ CÁLCULO DE FIM (SEM DUPLICAÇÃO):', {
       startInput: startDateTimeBrasilia,
       duration: durationHours
     });
     
-    // CORREÇÃO: Parsing manual do horário de início
-    const parts = startDateTimeBrasilia.split(/[-T:]/);
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    const day = parseInt(parts[2]);
-    const hour = parseInt(parts[3]) || 0;
-    const minute = parseInt(parts[4]) || 0;
+    // CORREÇÃO: Trabalhar diretamente com Date sem conversões manuais
+    const startDate = new Date(startDateTimeBrasilia);
     
-    // Calcular fim em Brasília (horário local)
-    const endHour = hour + durationHours;
+    // Calcular fim adicionando duração em milissegundos
+    const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
     
-    // Verificar se ultrapassa 23:59 do mesmo dia
-    const maxHour = 23;
-    const maxMinute = 59;
+    // Verificar limite do mesmo dia (23:59:59)
+    const sameDayLimit = new Date(startDate);
+    sameDayLimit.setHours(23, 59, 59, 999);
     
-    let finalHour = endHour;
-    let finalMinute = minute;
-    let finalDay = day;
-    let finalMonth = month;
-    let finalYear = year;
+    const finalEndDate = endDate > sameDayLimit ? sameDayLimit : endDate;
     
-    if (endHour > maxHour || (endHour === maxHour && minute > maxMinute)) {
-      // Limitar ao final do dia
-      finalHour = maxHour;
-      finalMinute = maxMinute;
-    }
-    
-    // Criar string de fim em Brasília
-    const finalBrasiliaString = `${finalYear}-${(finalMonth + 1).toString().padStart(2, '0')}-${finalDay.toString().padStart(2, '0')}T${finalHour.toString().padStart(2, '0')}:${finalMinute.toString().padStart(2, '0')}`;
-    
-    console.log('📊 Cálculo com parsing manual:', {
-      startParsed: { year, month, day, hour, minute },
-      endCalculated: { finalYear, finalMonth, finalDay, finalHour, finalMinute },
-      brasiliaEnd: finalBrasiliaString,
-      wasLimited: endHour > maxHour || (endHour === maxHour && minute > maxMinute)
+    console.log('📊 Cálculo sem duplicação:', {
+      startTime: startDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      calculatedEnd: endDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      finalEnd: finalEndDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      wasLimited: endDate > sameDayLimit,
+      durationUsed: durationHours
     });
     
-    // Converter resultado para UTC usando a função corrigida
-    const utcResult = convertBrasiliaInputToUTC(finalBrasiliaString);
+    // Converter resultado final para UTC
+    const utcResult = finalEndDate.toISOString();
     
-    console.log('✅ Resultado final (PARSING MANUAL):', {
-      brasiliaEnd: finalBrasiliaString,
+    console.log('✅ Resultado final (SEM DUPLICAÇÃO):', {
+      brasiliaEnd: finalEndDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       utcEnd: utcResult,
-      conversion: 'Usando função de parsing manual'
+      conversion: 'Conversão direta sem duplicação'
     });
     
     return utcResult;
   } catch (error) {
-    console.error('❌ Erro ao calcular data de fim com parsing manual:', error);
+    console.error('❌ Erro ao calcular data de fim:', error);
     return '';
   }
 };
 
 /**
- * CORRIGIDO DEFINITIVAMENTE: Validação usando parsing manual
+ * CORRIGIDO: Validação sem duplicação de timezone
  */
 export const validateCompetitionDuration = (startDateTimeBrasilia: string, durationHours: number): { isValid: boolean; error?: string } => {
   if (!startDateTimeBrasilia) {
@@ -180,50 +149,45 @@ export const validateCompetitionDuration = (startDateTimeBrasilia: string, durat
   }
   
   try {
-    // CORREÇÃO: Usar parsing manual
-    const parts = startDateTimeBrasilia.split(/[-T:]/);
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    const day = parseInt(parts[2]);
-    const hour = parseInt(parts[3]) || 0;
-    const minute = parseInt(parts[4]) || 0;
+    console.log('🔍 Validação (SEM DUPLICAÇÃO):', {
+      input: startDateTimeBrasilia,
+      duration: durationHours
+    });
     
-    if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute)) {
+    // CORREÇÃO: Usar Date diretamente
+    const startDate = new Date(startDateTimeBrasilia);
+    
+    if (isNaN(startDate.getTime())) {
       return { isValid: false, error: 'Data de início inválida' };
     }
     
-    const endHour = hour + durationHours;
-    const endMinute = minute;
+    const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
     
-    // Limite do mesmo dia em Brasília (23:59)
-    const maxHour = 23;
-    const maxMinute = 59;
+    // Limite do mesmo dia (23:59:59)
+    const sameDayLimit = new Date(startDate);
+    sameDayLimit.setHours(23, 59, 59, 999);
     
-    console.log('🔍 Validação (PARSING MANUAL):', {
-      input: startDateTimeBrasilia,
-      parsedComponents: { year, month, day, hour, minute },
-      endHour: endHour,
-      endMinute: endMinute,
-      maxHour: maxHour,
-      maxMinute: maxMinute,
-      durationHours,
-      willExceedLimit: endHour > maxHour || (endHour === maxHour && endMinute > maxMinute)
+    console.log('🔍 Validação sem duplicação:', {
+      startTime: startDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      endTime: endDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      limit: sameDayLimit.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      willExceed: endDate > sameDayLimit,
+      duration: durationHours
     });
     
-    if (endHour > maxHour || (endHour === maxHour && endMinute > maxMinute)) {
-      const maxDurationHours = maxHour - hour;
-      const maxDurationMinutes = maxMinute - minute;
-      const totalMaxDuration = maxDurationHours + (maxDurationMinutes / 60);
+    if (endDate > sameDayLimit) {
+      const maxDurationMs = sameDayLimit.getTime() - startDate.getTime();
+      const maxDurationHours = Math.floor(maxDurationMs / (60 * 60 * 1000));
       
       return { 
         isValid: false, 
-        error: `Duração máxima para este horário é de ${Math.floor(totalMaxDuration)} horas (até 23:59 do mesmo dia)` 
+        error: `Duração máxima para este horário é de ${maxDurationHours} horas (até 23:59 do mesmo dia)` 
       };
     }
     
     return { isValid: true };
   } catch (error) {
-    console.error('❌ Erro na validação de duração com parsing manual:', error);
+    console.error('❌ Erro na validação de duração:', error);
     return { isValid: false, error: 'Erro na validação da duração' };
   }
 };
@@ -239,11 +203,11 @@ export const formatTimeForDisplay = (utcDateTime: string): string => {
   
   try {
     const utcDate = new Date(utcDateTime);
-    const brasiliaDate = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
-    
-    const hours = brasiliaDate.getUTCHours().toString().padStart(2, '0');
-    const minutes = brasiliaDate.getUTCMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    return utcDate.toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   } catch (error) {
     console.error('Erro ao formatar horário:', error);
     return '';
@@ -255,12 +219,9 @@ export const formatDateForDisplay = (utcDateTime: string): string => {
   
   try {
     const utcDate = new Date(utcDateTime);
-    const brasiliaDate = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
-    
-    const day = brasiliaDate.getUTCDate().toString().padStart(2, '0');
-    const month = (brasiliaDate.getUTCMonth() + 1).toString().padStart(2, '0');
-    const year = brasiliaDate.getUTCFullYear();
-    return `${day}/${month}/${year}`;
+    return utcDate.toLocaleDateString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo' 
+    });
   } catch (error) {
     console.error('Erro ao formatar data:', error);
     return 'Data inválida';
@@ -272,21 +233,16 @@ export const formatBrasiliaDate = (date: Date | string | null | undefined, inclu
     if (!date) return 'Data inválida';
     
     const dateObj = typeof date === 'string' ? new Date(date) : date;
-    const brasiliaTime = new Date(dateObj.getTime() - (3 * 60 * 60 * 1000));
     
-    const day = brasiliaTime.getUTCDate().toString().padStart(2, '0');
-    const month = (brasiliaTime.getUTCMonth() + 1).toString().padStart(2, '0');
-    const year = brasiliaTime.getUTCFullYear();
-    
-    if (!includeTime) {
-      return `${day}/${month}/${year}`;
+    if (includeTime) {
+      return dateObj.toLocaleString('pt-BR', { 
+        timeZone: 'America/Sao_Paulo' 
+      });
     }
     
-    const hours = brasiliaTime.getUTCHours().toString().padStart(2, '0');
-    const minutes = brasiliaTime.getUTCMinutes().toString().padStart(2, '0');
-    const seconds = brasiliaTime.getUTCSeconds().toString().padStart(2, '0');
-    
-    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    return dateObj.toLocaleDateString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo' 
+    });
   } catch (error) {
     console.error('Erro ao formatar data Brasília:', error);
     return 'Data inválida';
@@ -322,36 +278,26 @@ export const getCurrentBrasiliaDate = (): Date => {
 };
 
 /**
- * CORRIGIDO: Obter horário atual formatado para Brasília
+ * Obter horário atual formatado para Brasília
  */
 export const getCurrentBrasiliaTime = (): string => {
   const now = new Date();
-  const brasiliaTime = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-  
-  const year = brasiliaTime.getUTCFullYear();
-  const month = (brasiliaTime.getUTCMonth() + 1).toString().padStart(2, '0');
-  const day = brasiliaTime.getUTCDate().toString().padStart(2, '0');
-  const hours = brasiliaTime.getUTCHours().toString().padStart(2, '0');
-  const minutes = brasiliaTime.getUTCMinutes().toString().padStart(2, '0');
-  
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
+  return now.toLocaleString('pt-BR', { 
+    timeZone: 'America/Sao_Paulo' 
+  });
 };
 
 /**
- * CORRIGIDO: Formatar data para inputs
+ * Formatar data para inputs
  */
 export const formatDateInputToDisplay = (dateString: string): string => {
   if (!dateString) return '';
   
   try {
     const date = new Date(dateString);
-    const brasiliaDate = new Date(date.getTime() - (3 * 60 * 60 * 1000));
-    
-    const day = brasiliaDate.getUTCDate().toString().padStart(2, '0');
-    const month = (brasiliaDate.getUTCMonth() + 1).toString().padStart(2, '0');
-    const year = brasiliaDate.getUTCFullYear();
-    
-    return `${day}/${month}/${year}`;
+    return date.toLocaleDateString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo' 
+    });
   } catch (error) {
     console.error('Erro ao formatar data para input:', error);
     return '';
