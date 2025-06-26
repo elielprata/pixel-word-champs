@@ -25,7 +25,7 @@ export const useTimeSystemValidation = () => {
     const newChecks: ValidationCheck[] = [];
     const timestamp = getCurrentBrasiliaTime();
 
-    console.log('🔍 VALIDAÇÃO DEFINITIVA COM PARSING MANUAL - Iniciando...', { timestamp });
+    console.log('🔍 VALIDAÇÃO FINAL COM FORMATAÇÃO CORRIGIDA - Iniciando...', { timestamp });
 
     // Check 1: Conversão crítica DEFINITIVA 23:00 Brasília → 02:00 UTC (próximo dia)
     try {
@@ -146,22 +146,30 @@ export const useTimeSystemValidation = () => {
       });
     }
 
-    // Check 6: Horário atual Brasília válido
+    // Check 6: CORRIGIDO FINAL - Horário atual Brasília (formato garantido)
     try {
       const currentTime = getCurrentBrasiliaTime();
-      const isValidFormat = /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(currentTime);
+      const isValidFormat = /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/.test(currentTime);
+      
+      console.log('🔍 TESTE FINAL getCurrentBrasiliaTime:', {
+        currentTime,
+        isValidFormat,
+        regex: '/^\\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}:\\d{2}$/',
+        length: currentTime.length,
+        charCodes: currentTime.split('').map(c => c.charCodeAt(0))
+      });
       
       newChecks.push({
-        name: 'Horário Atual Brasília (Conversão Controlada)',
+        name: 'Horário Atual Brasília FINAL (Formato Garantido)',
         status: isValidFormat ? 'pass' : 'fail',
         message: isValidFormat
-          ? `✅ FORMATO CORRETO: ${currentTime} (conversão controlada -3h)`
-          : `❌ FORMATO INVÁLIDO: ${currentTime}`,
+          ? `✅ FORMATO FINAL CORRETO: ${currentTime} (DD/MM/YYYY HH:mm:ss sem vírgula)`
+          : `❌ FORMATO INVÁLIDO: "${currentTime}" (esperado DD/MM/YYYY HH:mm:ss)`,
         timestamp
       });
     } catch (error) {
       newChecks.push({
-        name: 'Horário Atual Brasília (Conversão Controlada)',
+        name: 'Horário Atual Brasília FINAL (Formato Garantido)',
         status: 'fail',
         message: `❌ Erro ao obter horário: ${error}`,
         timestamp
@@ -200,13 +208,13 @@ export const useTimeSystemValidation = () => {
     setSystemHealthy(healthy);
     setIsValidating(false);
 
-    console.log('📊 VALIDAÇÃO DEFINITIVA COM PARSING MANUAL CONCLUÍDA:', {
+    console.log('📊 VALIDAÇÃO FINAL COM FORMATAÇÃO CORRIGIDA CONCLUÍDA:', {
       timestamp,
       totalChecks,
       passedChecks,
       failedChecks: totalChecks - passedChecks,
       systemHealthy: healthy,
-      technique: 'Parsing manual + conversão controlada',
+      technique: 'Formatação final corrigida + parsing manual',
       detailedResults: newChecks.map(c => ({
         test: c.name,
         status: c.status,

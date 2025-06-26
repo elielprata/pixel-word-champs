@@ -99,23 +99,38 @@ export const getCurrentBrasiliaDate = (): Date => {
 };
 
 /**
- * CORRIGIDO: Obter horário atual formatado para Brasília (formato padronizado)
+ * CORRIGIDO FINAL: Obter horário atual formatado para Brasília (formato garantido)
  */
 export const getCurrentBrasiliaTime = (): string => {
   const now = new Date();
   
-  // CORREÇÃO: Usar formatação manual para garantir consistência
-  const brasiliaTime = now.toLocaleString('pt-BR', { 
-    timeZone: 'America/Sao_Paulo',
-    day: '2-digit',
-    month: '2-digit', 
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
-  
-  // Garantir formato consistente DD/MM/YYYY HH:mm:ss (sem vírgula)
-  return brasiliaTime.replace(',', '');
+  try {
+    // CORREÇÃO FINAL: Formatação manual para garantir consistência absoluta
+    const brasiliaTime = now.toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    
+    // Garantir formato padronizado DD/MM/YYYY HH:mm:ss
+    const cleanedTime = brasiliaTime.replace(/,\s*/g, ' ').trim();
+    
+    console.log('🕐 FORMATAÇÃO FINAL getCurrentBrasiliaTime:', {
+      original: brasiliaTime,
+      cleaned: cleanedTime,
+      regex: /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/.test(cleanedTime)
+    });
+    
+    return cleanedTime;
+  } catch (error) {
+    console.error('❌ Erro ao formatar horário atual:', error);
+    // Fallback manual em caso de erro
+    const fallback = now.toISOString().replace('T', ' ').slice(0, 19);
+    return fallback;
+  }
 };
