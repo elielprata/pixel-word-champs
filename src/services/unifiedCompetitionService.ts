@@ -2,23 +2,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { ApiResponse } from '@/types';
+import { UnifiedCompetition, CompetitionFormData } from '@/types/competition';
 import { logger } from '@/utils/logger';
 import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
-export interface UnifiedCompetition {
-  id: string;
-  title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  competition_type: string;
-  theme: string;
-  prize_pool: number;
-  max_participants: number;
-  total_participants: number;
-}
-
+// Usar a interface correta do types/competition.ts
 export interface CreateCompetitionData {
   title: string;
   description: string;
@@ -49,19 +37,20 @@ class UnifiedCompetitionService {
         timestamp: getCurrentBrasiliaTime()
       }, 'UNIFIED_COMPETITIONS');
 
-      // Mapear para formato unificado - CONFIAR NO STATUS DO BANCO
+      // Mapear para o formato correto da interface UnifiedCompetition
       const unifiedCompetitions: UnifiedCompetition[] = (competitions || []).map(comp => ({
         id: comp.id,
         title: comp.title,
         description: comp.description || '',
-        start_date: comp.start_date,
-        end_date: comp.end_date,
-        status: comp.status, // USAR APENAS STATUS DO BANCO
-        competition_type: comp.competition_type,
+        type: 'daily', // Sempre daily para este serviço
+        status: comp.status as 'draft' | 'scheduled' | 'active' | 'completed',
+        startDate: comp.start_date,
+        endDate: comp.end_date,
+        maxParticipants: comp.max_participants || 0,
         theme: comp.theme || '',
-        prize_pool: Number(comp.prize_pool) || 0,
-        max_participants: comp.max_participants || 0,
-        total_participants: 0 // Pode ser calculado separadamente se necessário
+        totalParticipants: 0,
+        createdAt: comp.created_at,
+        updatedAt: comp.updated_at
       }));
 
       return createSuccessResponse(unifiedCompetitions);
@@ -83,7 +72,7 @@ class UnifiedCompetitionService {
       const { data: competitions, error } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('competition_type', type)
+        .eq('competition_type', 'challenge') // Sempre challenge para competições diárias
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -91,19 +80,20 @@ class UnifiedCompetitionService {
         throw error;
       }
 
-      // Mapear para formato unificado - CONFIAR NO STATUS DO BANCO
+      // Mapear para o formato correto da interface UnifiedCompetition
       const unifiedCompetitions: UnifiedCompetition[] = (competitions || []).map(comp => ({
         id: comp.id,
         title: comp.title,
         description: comp.description || '',
-        start_date: comp.start_date,
-        end_date: comp.end_date,
-        status: comp.status, // USAR APENAS STATUS DO BANCO
-        competition_type: comp.competition_type,
+        type: 'daily',
+        status: comp.status as 'draft' | 'scheduled' | 'active' | 'completed',
+        startDate: comp.start_date,
+        endDate: comp.end_date,
+        maxParticipants: comp.max_participants || 0,
         theme: comp.theme || '',
-        prize_pool: Number(comp.prize_pool) || 0,
-        max_participants: comp.max_participants || 0,
-        total_participants: 0
+        totalParticipants: 0,
+        createdAt: comp.created_at,
+        updatedAt: comp.updated_at
       }));
 
       logger.info('✅ Competições por tipo carregadas', { 
@@ -163,18 +153,20 @@ class UnifiedCompetitionService {
         timestamp: getCurrentBrasiliaTime()
       }, 'UNIFIED_COMPETITIONS');
 
+      // Mapear para o formato correto da interface UnifiedCompetition
       const unifiedCompetition: UnifiedCompetition = {
         id: competition.id,
         title: competition.title,
         description: competition.description || '',
-        start_date: competition.start_date,
-        end_date: competition.end_date,
-        status: competition.status,
-        competition_type: competition.competition_type,
+        type: 'daily',
+        status: competition.status as 'draft' | 'scheduled' | 'active' | 'completed',
+        startDate: competition.start_date,
+        endDate: competition.end_date,
+        maxParticipants: competition.max_participants || 0,
         theme: competition.theme || '',
-        prize_pool: Number(competition.prize_pool) || 0,
-        max_participants: competition.max_participants || 0,
-        total_participants: 0
+        totalParticipants: 0,
+        createdAt: competition.created_at,
+        updatedAt: competition.updated_at
       };
 
       return createSuccessResponse(unifiedCompetition);
