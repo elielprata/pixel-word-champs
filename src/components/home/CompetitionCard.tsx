@@ -1,5 +1,6 @@
+
 import React, { useMemo } from 'react';
-import { Zap, Clock, Play } from 'lucide-react';
+import { Zap, Clock, Play, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Competition } from '@/types';
@@ -27,6 +28,9 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
     calculateTimeRemaining(competition.end_date),
     [competition.end_date, calculateTimeRemaining]
   );
+
+  // Verificar se há inconsistência de status
+  const isStatusOutdated = competition.status !== currentStatus;
   
   const bgGradient = useMemo(() => {
     const colors = [
@@ -108,6 +112,8 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
                 <CompetitionStatusBadge 
                   status={currentStatus} 
                   isRealTime={currentStatus === 'active'} 
+                  isStatusOutdated={isStatusOutdated}
+                  calculatedStatus={currentStatus}
                 />
               </div>
             </div>
@@ -123,6 +129,19 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
             </div>
           </div>
         </div>
+
+        {/* Alerta de inconsistência de status */}
+        {isStatusOutdated && (
+          <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-orange-700">
+              <div className="font-medium">Status inconsistente detectado</div>
+              <div className="text-orange-600">
+                Banco: {competition.status} | Calculado: {currentStatus}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Descrição compacta */}
         {competition.description && (
