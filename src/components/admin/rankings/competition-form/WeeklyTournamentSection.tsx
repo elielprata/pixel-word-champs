@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, Trophy, Calendar, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { competitionStatusService } from '@/services/competitionStatusService';
 import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface WeeklyCompetition {
@@ -42,13 +41,9 @@ export const WeeklyTournamentSection = ({
     return formatBrasiliaDate(dateString, false);
   };
 
+  // CONFIAR APENAS NO STATUS DO BANCO DE DADOS
   const getStatusText = (competition: WeeklyCompetition) => {
-    const actualStatus = competitionStatusService.calculateCorrectStatus({
-      start_date: competition.start_date,
-      end_date: competition.end_date,
-      competition_type: 'tournament'
-    });
-    switch (actualStatus) {
+    switch (competition.status) {
       case 'active':
         return 'Ativo';
       case 'scheduled':
@@ -61,12 +56,7 @@ export const WeeklyTournamentSection = ({
   };
 
   const getStatusColor = (competition: WeeklyCompetition) => {
-    const actualStatus = competitionStatusService.calculateCorrectStatus({
-      start_date: competition.start_date,
-      end_date: competition.end_date,
-      competition_type: 'tournament'
-    });
-    switch (actualStatus) {
+    switch (competition.status) {
       case 'active':
         return 'text-green-600';
       case 'scheduled':
@@ -78,13 +68,9 @@ export const WeeklyTournamentSection = ({
     }
   };
 
+  // CONFIAR APENAS NO STATUS DO BANCO DE DADOS
   const availableTournaments = weeklyTournaments.filter(tournament => {
-    const actualStatus = competitionStatusService.calculateCorrectStatus({
-      start_date: tournament.start_date,
-      end_date: tournament.end_date,
-      competition_type: 'tournament'
-    });
-    return actualStatus === 'active' || actualStatus === 'scheduled';
+    return tournament.status === 'active' || tournament.status === 'scheduled';
   });
 
   return (

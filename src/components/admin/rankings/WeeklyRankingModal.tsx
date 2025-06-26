@@ -6,7 +6,6 @@ import { Trophy, Users, Calendar, Medal, Crown } from 'lucide-react';
 import PlayerAvatar from '@/components/ui/PlayerAvatar';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { competitionStatusService } from '@/services/competitionStatusService';
 import { rankingQueryService } from '@/services/rankingQueryService';
 import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 import {
@@ -86,13 +85,8 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
     }
   }, [open, competitionId]);
 
-  // Usar o serviço centralizado para verificar se a competição está ativa
-  const isCompetitionActive = (startDate: string, endDate: string): boolean => {
-    const status = competitionStatusService.calculateCorrectStatus({
-      start_date: startDate,
-      end_date: endDate,
-      competition_type: 'tournament'
-    });
+  // CONFIAR APENAS NO STATUS DO BANCO DE DADOS
+  const isCompetitionActive = (status: string): boolean => {
     return status === 'active';
   };
 
@@ -117,9 +111,6 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
 
       console.log('✅ Competição carregada:', competitionData);
 
-      // Verificar se a competição está ativa usando o serviço centralizado
-      const isActive = isCompetitionActive(competitionData.start_date, competitionData.end_date);
-      
       // Buscar configurações de prêmio do banco de dados
       const { data: prizeData, error: prizeError } = await supabase
         .from('prize_configurations')
@@ -263,12 +254,12 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
                     </div>
                     <div className="text-right">
                       <Badge className={
-                        isCompetitionActive(competition.start_date, competition.end_date) ? 'bg-green-100 text-green-700 border-green-200' :
-                        new Date() < new Date(competition.start_date) ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                        competition.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' :
+                        competition.status === 'scheduled' ? 'bg-blue-100 text-blue-700 border-blue-200' :
                         'bg-purple-100 text-purple-700 border-purple-200'
                       }>
-                        {isCompetitionActive(competition.start_date, competition.end_date) ? 'Ativo' : 
-                         new Date() < new Date(competition.start_date) ? 'Aguardando Início' : 'Finalizado'}
+                        {competition.status === 'active' ? 'Ativo' : 
+                         competition.status === 'scheduled' ? 'Aguardando Início' : 'Finalizado'}
                       </Badge>
                     </div>
                   </div>
