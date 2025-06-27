@@ -88,7 +88,7 @@ export const AutomationMonitoring: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -122,80 +122,82 @@ export const AutomationMonitoring: React.FC = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {logs.map((log) => (
                 <Card key={log.id} className="border-l-4 border-l-blue-500">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-2 pt-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base flex items-center gap-2">
+                      <CardTitle className="text-sm flex items-center gap-2">
                         {getStatusIcon(log.execution_status)}
                         {getAutomationTypeLabel(log.automation_type)}
                       </CardTitle>
                       {getStatusBadge(log.execution_status)}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="font-medium text-gray-700">Executado em:</p>
-                        <p className="text-gray-600">
+                  <CardContent className="space-y-2 pt-0">
+                    {/* Informações principais em linha */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3 w-3 text-gray-500" />
+                        <span className="font-medium">Executado:</span>
+                        <span className="text-gray-600">
                           {log.executed_at ? formatDateTime(log.executed_at) : 'Não executado'}
-                        </p>
+                        </span>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-700">Usuários Afetados:</p>
-                        <p className="text-gray-600 flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {log.affected_users}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-3 w-3 text-gray-500" />
+                        <span className="font-medium">Usuários:</span>
+                        <span className="text-gray-600">{log.affected_users}</span>
                       </div>
                     </div>
 
                     {/* Error Message */}
                     {log.error_message && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-red-800 text-sm font-medium">Erro:</p>
-                        <p className="text-red-700 text-sm">{log.error_message}</p>
+                      <div className="bg-red-50 border border-red-200 rounded p-2">
+                        <p className="text-red-800 text-xs font-medium">Erro:</p>
+                        <p className="text-red-700 text-xs">{log.error_message}</p>
                       </div>
                     )}
 
-                    {/* Competition Details */}
+                    {/* Competition Details - Compacto */}
                     {log.settings_snapshot && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Detalhes da Operação:</p>
-                        <div className="space-y-2 text-xs">
+                      <div className="bg-gray-50 rounded p-2">
+                        <p className="text-xs font-medium text-gray-700 mb-1">Detalhes da Operação:</p>
+                        <div className="space-y-1 text-xs">
                           {log.settings_snapshot.finalized_competition && (
-                            <div>
-                              <span className="font-medium">Competição Finalizada:</span>
-                              <span className="ml-2">
+                            <div className="flex flex-wrap items-center gap-1">
+                              <span className="font-medium text-gray-600">Finalizada:</span>
+                              <span className="text-gray-600">
                                 {formatDateForDisplay(log.settings_snapshot.finalized_competition.start_date)} - 
                                 {formatDateForDisplay(log.settings_snapshot.finalized_competition.end_date)}
                               </span>
                             </div>
                           )}
                           {log.settings_snapshot.activated_competition && (
-                            <div>
-                              <span className="font-medium">Competição Ativada:</span>
-                              <span className="ml-2">
+                            <div className="flex flex-wrap items-center gap-1">
+                              <span className="font-medium text-gray-600">Ativada:</span>
+                              <span className="text-gray-600">
                                 {formatDateForDisplay(log.settings_snapshot.activated_competition.start_date)} - 
                                 {formatDateForDisplay(log.settings_snapshot.activated_competition.end_date)}
                               </span>
                             </div>
                           )}
-                          {log.settings_snapshot.snapshot_id && (
-                            <div>
-                              <span className="font-medium">Snapshot ID:</span>
-                              <span className="ml-2 font-mono text-gray-600">
-                                {log.settings_snapshot.snapshot_id}
-                              </span>
-                            </div>
-                          )}
-                          {log.settings_snapshot.profiles_reset && (
-                            <div>
-                              <span className="font-medium">Perfis Resetados:</span>
-                              <span className="ml-2">{log.settings_snapshot.profiles_reset}</span>
-                            </div>
-                          )}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {log.settings_snapshot.snapshot_id && (
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium text-gray-600">Snapshot:</span>
+                                <span className="font-mono text-gray-600 text-xs truncate">
+                                  {log.settings_snapshot.snapshot_id.substring(0, 8)}...
+                                </span>
+                              </div>
+                            )}
+                            {log.settings_snapshot.profiles_reset && (
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium text-gray-600">Perfis Reset:</span>
+                                <span className="text-gray-600">{log.settings_snapshot.profiles_reset}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -207,7 +209,7 @@ export const AutomationMonitoring: React.FC = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
+            <div className="flex items-center justify-center gap-2 mt-4">
               <Button
                 variant="outline"
                 size="sm"
