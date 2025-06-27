@@ -95,11 +95,16 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
         });
       }
     } else {
-      toast({
-        title: "Erro",
-        description: `Erro ao ativar competições: ${result.error}`,
-        variant: "destructive",
-      });
+      // Verificar se é erro de competição ativa duplicada
+      if (result.error && result.error.includes('idx_weekly_config_active')) {
+        setActiveCompetitionErrorOpen(true);
+      } else {
+        toast({
+          title: "Erro",
+          description: `Erro ao ativar competições: ${result.error}`,
+          variant: "destructive",
+        });
+      }
     }
   };
 
