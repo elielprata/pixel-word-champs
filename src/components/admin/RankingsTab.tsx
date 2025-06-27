@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, DollarSign, Settings, Calendar } from 'lucide-react';
+import { Trophy, DollarSign, Calendar } from 'lucide-react';
 import { PaymentsTab } from './PaymentsTab';
 import { UnifiedCompetitionsView } from './rankings/UnifiedCompetitionsView';
-import { AutomationTabContent } from './rankings/AutomationTabContent';
 import { WeeklyRankingView } from './rankings/weekly-ranking/WeeklyRankingView';
 
 export const RankingsTab = () => {
@@ -44,13 +43,6 @@ export const RankingsTab = () => {
               <DollarSign className="h-4 w-4 mr-2" />
               Pagamentos
             </TabsTrigger>
-            <TabsTrigger 
-              value="automation" 
-              className="h-10 px-4 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Automação
-            </TabsTrigger>
           </TabsList>
 
           {/* Content Areas */}
@@ -70,12 +62,6 @@ export const RankingsTab = () => {
             <TabsContent value="payments" className="mt-0">
               <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
                 <PaymentsTab />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="automation" className="mt-0">
-              <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
-                <AutomationTabContent />
               </div>
             </TabsContent>
           </div>

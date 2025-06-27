@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, UserCheck, UserX, RefreshCw, Zap } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useResetScores } from '@/hooks/useResetScores';
-import { useUsers } from '@/hooks/useUsers';
+import { useUsersQuery } from '@/hooks/useUsersQuery';
+import { useBanUserMutation } from '@/hooks/useBanUserMutation';
+import { useUnbanUserMutation } from '@/hooks/useUnbanUserMutation';
 import { ResetScoresModal } from './ResetScoresModal';
 
 export const UserManagement = () => {
@@ -16,16 +19,14 @@ export const UserManagement = () => {
   const [showResetModal, setShowResetModal] = useState(false);
   
   const { 
-    users, 
+    data: users = [], 
     isLoading, 
     error, 
-    refetchUsers,
-    banUser,
-    unbanUser,
-    isBanningUser,
-    isUnbanningUser
-  } = useUsers();
+    refetch: refetchUsers
+  } = useUsersQuery();
 
+  const { mutate: banUser, isPending: isBanningUser } = useBanUserMutation();
+  const { mutate: unbanUser, isPending: isUnbanningUser } = useUnbanUserMutation();
   const { resetAllScores, isResettingScores } = useResetScores();
 
   // Filtrar usuários baseado no termo de busca
@@ -38,23 +39,27 @@ export const UserManagement = () => {
   const bannedUsers = filteredUsers.filter(user => user.is_banned);
 
   const handleBanUser = async (userId: string, reason: string) => {
-    const success = await banUser(userId, reason);
-    if (success) {
-      toast({
-        title: "Usuário banido",
-        description: "O usuário foi banido com sucesso.",
-      });
-    }
+    banUser({ userId, reason }, {
+      onSuccess: () => {
+        toast({
+          title: "Usuário banido",
+          description: "O usuário foi banido com sucesso.",
+        });
+        refetchUsers();
+      }
+    });
   };
 
   const handleUnbanUser = async (userId: string) => {
-    const success = await unbanUser(userId);
-    if (success) {
-      toast({
-        title: "Usuário desbanido",
-        description: "O usuário foi desbanido com sucesso.",
-      });
-    }
+    unbanUser(userId, {
+      onSuccess: () => {
+        toast({
+          title: "Usuário desbanido",
+          description: "O usuário foi desbanido com sucesso.",
+        });
+        refetchUsers();
+      }
+    });
   };
 
   const handleResetScores = async (password: string) => {
@@ -90,7 +95,7 @@ export const UserManagement = () => {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">Erro ao carregar usuários: {error}</p>
+        <p className="text-red-800">Erro ao carregar usuários: {error.message}</p>
         <Button onClick={refetchUsers} variant="outline" className="mt-2">
           <RefreshCw className="h-4 w-4 mr-2" />
           Tentar novamente

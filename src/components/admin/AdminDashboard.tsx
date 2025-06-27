@@ -2,9 +2,8 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Trophy, BarChart3, Settings } from 'lucide-react';
+import { Users, BarChart3 } from 'lucide-react';
 import { UserManagement } from './users/UserManagement';
-import { CompetitionManagement } from './competitions/CompetitionManagement';
 import { WeeklyRankingView } from './rankings/weekly-ranking/WeeklyRankingView';
 
 export const AdminDashboard = () => {
@@ -17,14 +16,10 @@ export const AdminDashboard = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Usuários
-          </TabsTrigger>
-          <TabsTrigger value="competitions" className="flex items-center gap-2">
-            <Trophy className="h-4 w-4" />
-            Competições
           </TabsTrigger>
           <TabsTrigger value="rankings" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -42,20 +37,6 @@ export const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <UserManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="competitions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                Gerenciamento de Competições
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CompetitionManagement />
             </CardContent>
           </Card>
         </TabsContent>
