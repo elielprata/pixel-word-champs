@@ -1172,6 +1172,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      update_weekly_competitions_status: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       update_weekly_ranking: {
         Args: Record<PropertyKey, never>
         Returns: undefined
