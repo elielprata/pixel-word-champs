@@ -33,11 +33,11 @@ interface WeeklyConfigModalTabsProps {
   onEdit: (competition: WeeklyConfig) => void;
   onDelete: (competition: WeeklyConfig) => void;
   onDeleteCompleted: (competition: any) => void;
-  onActivate: () => void;
+  onActivate: () => Promise<void>;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
-  onSchedule: () => void;
-  onFinalize: () => void;
+  onSchedule: () => Promise<void>;
+  onFinalize: () => Promise<void>;
   onPageChange: (page: number) => void;
 }
 
