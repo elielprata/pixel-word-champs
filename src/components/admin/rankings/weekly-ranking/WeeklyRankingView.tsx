@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Trophy, Settings } from 'lucide-react';
+import { RefreshCw, Trophy, Settings, Award } from 'lucide-react';
 import { WeeklyRankingTable } from './WeeklyRankingTable';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
 import { WeeklyConfigModal } from './WeeklyConfigModal';
+import { PrizeConfigModal } from '../PrizeConfigModal';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
@@ -12,6 +13,7 @@ import { Loader2 } from 'lucide-react';
 export const WeeklyRankingView = () => {
   const { toast } = useToast();
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [prizeConfigModalOpen, setPrizeConfigModalOpen] = useState(false);
   const { 
     currentRanking, 
     stats, 
@@ -75,6 +77,14 @@ export const WeeklyRankingView = () => {
             <Settings className="h-4 w-4" />
             Configurar Competição
           </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setPrizeConfigModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Award className="h-4 w-4" />
+            Configurar Premiação
+          </Button>
           <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar
@@ -93,6 +103,12 @@ export const WeeklyRankingView = () => {
         open={configModalOpen}
         onOpenChange={setConfigModalOpen}
         onConfigUpdated={handleConfigUpdated}
+      />
+
+      {/* Modal de Configuração de Premiação */}
+      <PrizeConfigModal
+        open={prizeConfigModalOpen}
+        onOpenChange={setPrizeConfigModalOpen}
       />
     </div>
   );
