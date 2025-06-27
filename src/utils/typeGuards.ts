@@ -1,4 +1,5 @@
 
+
 import { Json } from '@/integrations/supabase/types';
 
 // Interface para Winner conforme usado no código
@@ -51,9 +52,9 @@ function isFinalizeResult(obj: any): obj is FinalizeResult {
 export function parseWinnersData(data: Json | Json[]): Winner[] {
   try {
     if (Array.isArray(data)) {
-      // Filtrar e converter explicitamente para Winner[]
+      // Filtrar e converter com conversão dupla para evitar erro TypeScript
       const filtered = data.filter(isWinner);
-      return filtered as Winner[];
+      return (filtered as unknown) as Winner[];
     }
     return [];
   } catch (error) {
@@ -98,3 +99,4 @@ export function parseFinalizeResult(data: Json): FinalizeResult {
 }
 
 export type { Winner, FinalizeResult };
+
