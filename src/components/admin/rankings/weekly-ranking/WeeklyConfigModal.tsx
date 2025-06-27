@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { useWeeklyCompetitionActivation } from '@/hooks/useWeeklyCompetitionActi
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { DeleteCompetitionModal } from './DeleteCompetitionModal';
 import { DeleteCompletedCompetitionModal } from './DeleteCompletedCompetitionModal';
+import { ActiveCompetitionErrorModal } from './ActiveCompetitionErrorModal';
 import { WeeklyConfigOverview } from './WeeklyConfigOverview';
 import { WeeklyConfigScheduler } from './WeeklyConfigScheduler';
 import { WeeklyConfigFinalizer } from './WeeklyConfigFinalizer';
@@ -45,6 +45,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteCompletedModalOpen, setDeleteCompletedModalOpen] = useState(false);
+  const [activeCompetitionErrorOpen, setActiveCompetitionErrorOpen] = useState(false);
   const [selectedCompetition, setSelectedCompetition] = useState<WeeklyConfig | null>(null);
   const [historyPage, setHistoryPage] = useState(1);
 
@@ -124,16 +125,27 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
         setNewStartDate(nextStart.toISOString().split('T')[0]);
         setNewEndDate(nextEnd.toISOString().split('T')[0]);
       } else {
-        throw new Error(result.error);
+        // Verificar se é erro de competição ativa duplicada
+        if (result.error && result.error.includes('idx_weekly_config_active')) {
+          setActiveCompetitionErrorOpen(true);
+        } else {
+          throw new Error(result.error);
+        }
       }
 
     } catch (error: any) {
       console.error('Erro ao agendar nova competição:', error);
-      toast({
-        title: "Erro",
-        description: `Erro ao agendar competição: ${error.message}`,
-        variant: "destructive",
-      });
+      
+      // Verificar se é erro de competição ativa duplicada
+      if (error.message && error.message.includes('idx_weekly_config_active')) {
+        setActiveCompetitionErrorOpen(true);
+      } else {
+        toast({
+          title: "Erro",
+          description: `Erro ao agendar competição: ${error.message}`,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -299,6 +311,12 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
         onOpenChange={setDeleteCompletedModalOpen}
         competition={selectedCompetition}
         onSuccess={handleModalSuccess}
+      />
+
+      <ActiveCompetitionErrorModal
+        open={activeCompetitionErrorOpen}
+        onOpenChange={setActiveCompetitionErrorOpen}
+        activeCompetition={activeConfig}
       />
     </>
   );
