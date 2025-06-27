@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
+import { useWeeklyCompetitionHistory } from '@/hooks/useWeeklyCompetitionHistory';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { DeleteCompetitionModal } from './DeleteCompetitionModal';
 import { CompetitionCard } from './CompetitionCard';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
-import { Calendar, Plus, Trophy, AlertCircle } from 'lucide-react';
+import { Calendar, Plus, Trophy, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface WeeklyConfig {
   id: string;
@@ -41,18 +42,24 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedCompetition, setSelectedCompetition] = useState<WeeklyConfig | null>(null);
+  const [historyPage, setHistoryPage] = useState(1);
 
   const {
     activeConfig,
     scheduledConfigs,
-    completedConfigs,
     isLoading: configsLoading,
     loadConfigurations,
     scheduleCompetition,
     finalizeCompetition
   } = useWeeklyConfig();
 
-  // Valores padrão para nova competição
+  const {
+    historyData,
+    isLoading: historyLoading,
+    totalPages,
+    refetch: refetchHistory
+  } = useWeeklyCompetitionHistory(historyPage, 5);
+
   React.useEffect(() => {
     if (open && !newStartDate && !newEndDate) {
       const nextStart = new Date();
@@ -321,24 +328,90 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
             <TabsContent value="history" className="space-y-4">
               <div>
-                <h3 className="font-medium text-gray-700 mb-2">
+                <h3 className="font-medium text-gray-700 mb-4">
                   Competições Finalizadas
                 </h3>
-                {completedConfigs.length === 0 ? (
+                
+                {historyLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+                  </div>
+                ) : historyData.length === 0 ? (
                   <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
                     <Trophy className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                     <p className="text-gray-600">Nenhuma competição finalizada ainda</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    {completedConfigs.map((config) => (
-                      <CompetitionCard
-                        key={config.id}
-                        competition={config}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                      />
+                  <div className="space-y-4">
+                    {historyData.map((config) => (
+                      <div key={config.id} className="p-4 bg-white border border-gray-200 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2 text-gray-800">
+                            <Trophy className="h-4 w-4" />
+                            <span className="font-medium text-sm">Finalizada</span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            ID: {config.id.slice(0, 8)}...
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="font-medium text-gray-800">
+                            {formatDateForDisplay(config.start_date)} - {formatDateForDisplay(config.end_date)}
+                          </p>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-500">Participantes:</span>
+                              <span className="ml-1 font-medium">{config.stats?.totalParticipants || 0}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Premiação:</span>
+                              <span className="ml-1 font-medium">R$ {(config.stats?.totalPrizePool || 0).toFixed(2)}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Ganhadores:</span>
+                              <span className="ml-1 font-medium">{config.stats?.winnersCount || 0}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Finalizada em:</span>
+                              <span className="ml-1 font-medium">
+                                {config.completed_at ? new Date(config.completed_at).toLocaleDateString('pt-BR') : '-'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs text-gray-400">
+                            Criada em: {new Date(config.created_at).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                      </div>
                     ))}
+
+                    {/* Paginação */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-2 pt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setHistoryPage(prev => Math.max(1, prev - 1))}
+                          disabled={historyPage === 1}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <span className="text-sm text-gray-600">
+                          Página {historyPage} de {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setHistoryPage(prev => Math.min(totalPages, prev + 1))}
+                          disabled={historyPage === totalPages}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

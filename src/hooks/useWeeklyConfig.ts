@@ -42,13 +42,13 @@ export const useWeeklyConfig = () => {
 
       setScheduledConfigs((scheduledData || []) as WeeklyConfig[]);
 
-      // Carregar competições finalizadas (últimas 5)
+      // Carregar competições finalizadas (últimas 10, ordenadas por data de finalização)
       const { data: completedData, error: completedError } = await supabase
         .from('weekly_config')
         .select('*')
         .eq('status', 'completed')
         .order('completed_at', { ascending: false })
-        .limit(5);
+        .limit(10);
 
       if (completedError) {
         throw completedError;
