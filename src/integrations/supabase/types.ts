@@ -859,29 +859,74 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_competitions_snapshot: {
+        Row: {
+          competition_id: string
+          created_at: string
+          end_date: string
+          finalized_at: string
+          id: string
+          rankings_data: Json
+          start_date: string
+          total_participants: number
+          total_prize_pool: number
+          winners_data: Json
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          end_date: string
+          finalized_at?: string
+          id?: string
+          rankings_data: Json
+          start_date: string
+          total_participants?: number
+          total_prize_pool?: number
+          winners_data: Json
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          end_date?: string
+          finalized_at?: string
+          id?: string
+          rankings_data?: Json
+          start_date?: string
+          total_participants?: number
+          total_prize_pool?: number
+          winners_data?: Json
+        }
+        Relationships: []
+      }
       weekly_config: {
         Row: {
+          activated_at: string | null
+          completed_at: string | null
           created_at: string
           end_date: string
           id: string
-          is_active: boolean
           start_date: string
+          status: string | null
           updated_at: string
         }
         Insert: {
+          activated_at?: string | null
+          completed_at?: string | null
           created_at?: string
           end_date: string
           id?: string
-          is_active?: boolean
           start_date: string
+          status?: string | null
           updated_at?: string
         }
         Update: {
+          activated_at?: string | null
+          completed_at?: string | null
           created_at?: string
           end_date?: string
           id?: string
-          is_active?: boolean
           start_date?: string
+          status?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1029,6 +1074,10 @@ export type Database = {
         Returns: number
       }
       diagnose_ranking_system: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      finalize_weekly_competition: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }

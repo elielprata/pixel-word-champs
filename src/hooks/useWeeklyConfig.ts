@@ -6,80 +6,109 @@ interface WeeklyConfig {
   id: string;
   start_date: string;
   end_date: string;
-  is_active: boolean;
+  status: 'active' | 'scheduled' | 'completed';
+  activated_at?: string;
+  completed_at?: string;
   created_at: string;
   updated_at: string;
 }
 
 export const useWeeklyConfig = () => {
-  const [config, setConfig] = useState<WeeklyConfig | null>(null);
+  const [activeConfig, setActiveConfig] = useState<WeeklyConfig | null>(null);
+  const [scheduledConfigs, setScheduledConfigs] = useState<WeeklyConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadConfig = async () => {
+  const loadConfigurations = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const { data, error: queryError } = await supabase
+      // Carregar competição ativa
+      const { data: activeData, error: activeError } = await supabase
         .from('weekly_config')
         .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
+        .eq('status', 'active')
         .maybeSingle();
 
-      if (queryError) {
-        throw queryError;
+      if (activeError && activeError.code !== 'PGRST116') {
+        throw activeError;
       }
 
-      setConfig(data);
+      setActiveConfig(activeData);
+
+      // Carregar competições agendadas
+      const { data: scheduledData, error: scheduledError } = await supabase
+        .from('weekly_config')
+        .select('*')
+        .eq('status', 'scheduled')
+        .order('start_date', { ascending: true });
+
+      if (scheduledError) {
+        throw scheduledError;
+      }
+
+      setScheduledConfigs(scheduledData || []);
+
     } catch (err: any) {
-      console.error('Erro ao carregar configuração semanal:', err);
-      setError(err.message || 'Erro ao carregar configuração');
+      console.error('Erro ao carregar configurações:', err);
+      setError(err.message || 'Erro ao carregar configurações');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updateConfig = async (startDate: string, endDate: string) => {
+  const scheduleCompetition = async (startDate: string, endDate: string) => {
     try {
-      // Desativar configurações existentes
-      await supabase
-        .from('weekly_config')
-        .update({ is_active: false })
-        .eq('is_active', true);
-
-      // Criar nova configuração
       const { data, error } = await supabase
         .from('weekly_config')
         .insert({
           start_date: startDate,
           end_date: endDate,
-          is_active: true
+          status: 'scheduled'
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      setConfig(data);
-      return { success: true };
+      await loadConfigurations();
+      return { success: true, data };
     } catch (err: any) {
-      console.error('Erro ao atualizar configuração:', err);
+      console.error('Erro ao agendar competição:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const finalizeCompetition = async () => {
+    try {
+      const { data, error } = await supabase.rpc('finalize_weekly_competition');
+
+      if (error) throw error;
+
+      if (data.success) {
+        await loadConfigurations();
+        return { success: true, data };
+      } else {
+        throw new Error(data.error || 'Erro desconhecido');
+      }
+    } catch (err: any) {
+      console.error('Erro ao finalizar competição:', err);
       return { success: false, error: err.message };
     }
   };
 
   useEffect(() => {
-    loadConfig();
+    loadConfigurations();
   }, []);
 
   return {
-    config,
+    activeConfig,
+    scheduledConfigs,
     isLoading,
     error,
-    loadConfig,
-    updateConfig
+    loadConfigurations,
+    scheduleCompetition,
+    finalizeCompetition
   };
 };

@@ -8,13 +8,23 @@ interface WeeklyConfigInfo {
   current_week_end: string;
   next_reset_date: string;
   should_reset: boolean;
+  active_competition?: {
+    id: string;
+    start_date: string;
+    end_date: string;
+  };
+  scheduled_competition?: {
+    id: string;
+    start_date: string;
+    end_date: string;
+  };
 }
 
 export const useWeeklyConfigSync = () => {
   return useQuery({
     queryKey: ['weeklyConfigSync'],
     queryFn: async (): Promise<WeeklyConfigInfo> => {
-      logger.info('🔄 Sincronizando configuração semanal (datas customizadas)', undefined, 'WEEKLY_CONFIG_SYNC');
+      logger.info('🔄 Sincronizando configuração semanal (duplo período)', undefined, 'WEEKLY_CONFIG_SYNC');
       
       const { data, error } = await supabase.rpc('should_reset_weekly_ranking');
       
@@ -27,15 +37,17 @@ export const useWeeklyConfigSync = () => {
       const resetData = data as any;
       
       const configInfo: WeeklyConfigInfo = {
-        current_week_start: resetData.week_start,
-        current_week_end: resetData.week_end,
+        current_week_start: resetData.active_competition?.start_date || '',
+        current_week_end: resetData.active_competition?.end_date || '',
         next_reset_date: resetData.next_reset_date,
-        should_reset: resetData.should_reset
+        should_reset: resetData.should_reset,
+        active_competition: resetData.active_competition,
+        scheduled_competition: resetData.scheduled_competition
       };
       
-      logger.info('✅ Configuração semanal sincronizada (datas customizadas)', { 
-        period: `${configInfo.current_week_start} - ${configInfo.current_week_end}`,
-        nextReset: configInfo.next_reset_date,
+      logger.info('✅ Configuração semanal sincronizada (duplo período)', { 
+        activeCompetition: configInfo.active_competition,
+        scheduledCompetition: configInfo.scheduled_competition,
         shouldReset: configInfo.should_reset
       }, 'WEEKLY_CONFIG_SYNC');
       

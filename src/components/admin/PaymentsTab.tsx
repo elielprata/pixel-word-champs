@@ -1,88 +1,38 @@
 
-import React, { useState } from 'react';
-import { usePaymentData } from '@/hooks/usePaymentData';
-import { PaymentHeader } from './payments/PaymentHeader';
-import { PaymentStatsCards } from './payments/PaymentStatsCards';
-import { IndividualPrizesSection } from './payments/IndividualPrizesSection';
-import { GroupPrizesSection } from './payments/GroupPrizesSection';
-import { logger } from '@/utils/logger';
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DollarSign, Trophy, CreditCard } from 'lucide-react';
+import { WinnersManagementTab } from './rankings/payments/WinnersManagementTab';
 
 export const PaymentsTab = () => {
-  const {
-    individualPrizes,
-    groupPrizes,
-    editingRow,
-    editingGroup,
-    editIndividualValue,
-    editGroupPrize,
-    isLoading,
-    setEditIndividualValue,
-    setEditGroupPrize,
-    handleEditIndividual,
-    handleSaveIndividual,
-    handleEditGroup,
-    handleSaveGroup,
-    handleToggleGroup,
-    handleCancel,
-    calculateTotalPrize,
-    calculateTotalWinners
-  } = usePaymentData();
-
-  const totalPrize = calculateTotalPrize();
-  const totalWinners = calculateTotalWinners();
-
-  logger.debug('Renderizando aba de pagamentos', { 
-    totalPrize,
-    totalWinners,
-    isLoading,
-    individualPrizesCount: individualPrizes?.length,
-    groupPrizesCount: groupPrizes?.length
-  }, 'PAYMENTS_TAB');
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-            <span className="ml-3">Carregando configurações de premiação...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <PaymentHeader totalPrize={totalPrize} totalWinners={totalWinners} />
+      <Tabs defaultValue="winners" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="winners" className="flex items-center gap-2">
+            <Trophy className="h-4 w-4" />
+            Ganhadores
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Pagamentos
+          </TabsTrigger>
+        </TabsList>
 
-      <PaymentStatsCards 
-        individualPrizes={individualPrizes}
-        groupPrizes={groupPrizes}
-        totalPrize={totalPrize}
-        totalWinners={totalWinners}
-      />
+        <TabsContent value="winners" className="mt-6">
+          <WinnersManagementTab />
+        </TabsContent>
 
-      <IndividualPrizesSection
-        individualPrizes={individualPrizes}
-        editingRow={editingRow}
-        editIndividualValue={editIndividualValue}
-        setEditIndividualValue={setEditIndividualValue}
-        onEditIndividual={handleEditIndividual}
-        onSaveIndividual={handleSaveIndividual}
-        onCancel={handleCancel}
-      />
-
-      <GroupPrizesSection
-        groupPrizes={groupPrizes}
-        editingGroup={editingGroup}
-        editGroupPrize={editGroupPrize}
-        setEditGroupPrize={setEditGroupPrize}
-        onEditGroup={handleEditGroup}
-        onSaveGroup={handleSaveGroup}
-        onToggleGroup={handleToggleGroup}
-        onCancel={handleCancel}
-      />
+        <TabsContent value="payments" className="mt-6">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+            <div className="text-center text-gray-500 py-12">
+              <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="mb-2">Sistema de Pagamentos</p>
+              <p className="text-sm">Em desenvolvimento - integração com gateways de pagamento</p>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

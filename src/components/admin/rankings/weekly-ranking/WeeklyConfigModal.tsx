@@ -1,11 +1,14 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
+import { Calendar, Plus, Clock } from 'lucide-react';
 
 interface WeeklyConfigModalProps {
   open: boolean;
@@ -20,58 +23,77 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [activeConfig, setActiveConfig] = useState<any>(null);
+  const [scheduledConfigs, setScheduledConfigs] = useState<any[]>([]);
+  const [newStartDate, setNewStartDate] = useState('');
+  const [newEndDate, setNewEndDate] = useState('');
 
-  // Carregar configuração atual quando o modal abrir
+  // Carregar configurações quando o modal abrir
   React.useEffect(() => {
     if (open) {
-      loadCurrentConfig();
+      loadConfigurations();
     }
   }, [open]);
 
-  const loadCurrentConfig = async () => {
+  const loadConfigurations = async () => {
     try {
-      const { data, error } = await supabase
+      // Carregar competição ativa
+      const { data: activeData, error: activeError } = await supabase
         .from('weekly_config')
         .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
+        .eq('status', 'active')
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao carregar configuração:', error);
-        return;
+      if (activeError && activeError.code !== 'PGRST116') {
+        console.error('Erro ao carregar configuração ativa:', activeError);
+      } else {
+        setActiveConfig(activeData);
       }
 
-      if (data) {
-        // Usar as datas diretamente do banco (já são strings no formato YYYY-MM-DD)
-        setStartDate(data.start_date || '');
-        setEndDate(data.end_date || '');
+      // Carregar competições agendadas
+      const { data: scheduledData, error: scheduledError } = await supabase
+        .from('weekly_config')
+        .select('*')
+        .eq('status', 'scheduled')
+        .order('start_date', { ascending: true });
+
+      if (scheduledError) {
+        console.error('Erro ao carregar configurações agendadas:', scheduledError);
       } else {
-        // Valores padrão: competição da próxima semana
-        const today = new Date();
-        const nextWeek = new Date(today);
-        nextWeek.setDate(today.getDate() + 7);
-        const weekAfter = new Date(nextWeek);
-        weekAfter.setDate(nextWeek.getDate() + 6);
+        setScheduledConfigs(scheduledData || []);
+      }
+
+      // Valores padrão para nova competição
+      if (scheduledData && scheduledData.length > 0) {
+        const lastScheduled = scheduledData[scheduledData.length - 1];
+        const nextStart = new Date(lastScheduled.end_date);
+        nextStart.setDate(nextStart.getDate() + 1);
+        const nextEnd = new Date(nextStart);
+        nextEnd.setDate(nextEnd.getDate() + 6);
         
-        setStartDate(nextWeek.toISOString().split('T')[0]);
-        setEndDate(weekAfter.toISOString().split('T')[0]);
+        setNewStartDate(nextStart.toISOString().split('T')[0]);
+        setNewEndDate(nextEnd.toISOString().split('T')[0]);
+      } else if (activeData) {
+        const nextStart = new Date(activeData.end_date);
+        nextStart.setDate(nextStart.getDate() + 1);
+        const nextEnd = new Date(nextStart);
+        nextEnd.setDate(nextEnd.getDate() + 6);
+        
+        setNewStartDate(nextStart.toISOString().split('T')[0]);
+        setNewEndDate(nextEnd.toISOString().split('T')[0]);
       }
     } catch (error) {
-      console.error('Erro ao carregar configuração:', error);
+      console.error('Erro ao carregar configurações:', error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar configuração atual",
+        description: "Erro ao carregar configurações",
         variant: "destructive",
       });
     }
   };
 
-  const handleSave = async () => {
-    if (!startDate || !endDate) {
+  const handleScheduleNew = async () => {
+    if (!newStartDate || !newEndDate) {
       toast({
         title: "Erro",
         description: "Por favor, preencha ambas as datas",
@@ -80,7 +102,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
       return;
     }
 
-    if (new Date(startDate) >= new Date(endDate)) {
+    if (new Date(newStartDate) >= new Date(newEndDate)) {
       toast({
         title: "Erro",
         description: "A data de início deve ser anterior à data de fim",
@@ -92,36 +114,75 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
     try {
       setIsLoading(true);
 
-      // Desativar configurações existentes
-      await supabase
-        .from('weekly_config')
-        .update({ is_active: false })
-        .eq('is_active', true);
-
-      // Criar nova configuração com datas simples (sem conversão de fuso)
+      // Criar nova competição agendada
       const { error: insertError } = await supabase
         .from('weekly_config')
         .insert({
-          start_date: startDate,
-          end_date: endDate,
-          is_active: true
+          start_date: newStartDate,
+          end_date: newEndDate,
+          status: 'scheduled'
         });
 
       if (insertError) throw insertError;
 
       toast({
         title: "Sucesso!",
-        description: `Competição configurada de ${formatDateForDisplay(startDate)} a ${formatDateForDisplay(endDate)}`,
+        description: `Nova competição agendada de ${formatDateForDisplay(newStartDate)} a ${formatDateForDisplay(newEndDate)}`,
       });
 
       onConfigUpdated();
-      onOpenChange(false);
+      loadConfigurations();
+      
+      // Limpar campos
+      setNewStartDate('');
+      setNewEndDate('');
 
     } catch (error: any) {
-      console.error('Erro ao salvar configuração:', error);
+      console.error('Erro ao agendar nova competição:', error);
       toast({
         title: "Erro",
-        description: `Erro ao salvar configuração: ${error.message}`,
+        description: `Erro ao agendar competição: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFinalize = async () => {
+    if (!activeConfig) {
+      toast({
+        title: "Erro",
+        description: "Nenhuma competição ativa para finalizar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const { data, error } = await supabase.rpc('finalize_weekly_competition');
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "Competição Finalizada!",
+          description: `Competição finalizada com ${data.winners_count} ganhadores. Dados salvos no histórico.`,
+        });
+
+        onConfigUpdated();
+        onOpenChange(false);
+      } else {
+        throw new Error(data.error || 'Erro desconhecido');
+      }
+
+    } catch (error: any) {
+      console.error('Erro ao finalizar competição:', error);
+      toast({
+        title: "Erro",
+        description: `Erro ao finalizar competição: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -131,57 +192,141 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Configurar Período da Competição</DialogTitle>
+          <DialogTitle>Gerenciar Competições Semanais</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="start-date">Data de Início</Label>
-            <Input
-              id="start-date"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="end-date">Data de Fim</Label>
-            <Input
-              id="end-date"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full"
-            />
-          </div>
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="schedule">Agendar Nova</TabsTrigger>
+            <TabsTrigger value="finalize">Finalizar Atual</TabsTrigger>
+          </TabsList>
 
-          {startDate && endDate && (
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
-                <strong>Período da Competição:</strong><br />
-                {formatDateForDisplay(startDate)} até {formatDateForDisplay(endDate)}
-              </p>
+          <TabsContent value="overview" className="space-y-4">
+            <div className="space-y-4">
+              {/* Competição Ativa */}
+              {activeConfig && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-800 mb-2">
+                    <Calendar className="h-4 w-4" />
+                    <span className="font-medium">Competição Ativa</span>
+                  </div>
+                  <p className="text-green-700">
+                    {formatDateForDisplay(activeConfig.start_date)} até {formatDateForDisplay(activeConfig.end_date)}
+                  </p>
+                </div>
+              )}
+
+              {/* Competições Agendadas */}
+              <div className="space-y-2">
+                <h3 className="font-medium text-gray-700">Competições Agendadas ({scheduledConfigs.length})</h3>
+                {scheduledConfigs.length === 0 ? (
+                  <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg text-center">
+                    <p className="text-orange-700">Nenhuma competição agendada</p>
+                    <p className="text-orange-600 text-sm">Configure pelo menos uma para evitar interrupções</p>
+                  </div>
+                ) : (
+                  scheduledConfigs.map((config, index) => (
+                    <div key={config.id} className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-blue-800">
+                        <Clock className="h-4 w-4" />
+                        <span className="font-medium">Competição {index + 1}</span>
+                      </div>
+                      <p className="text-blue-700">
+                        {formatDateForDisplay(config.start_date)} até {formatDateForDisplay(config.end_date)}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          )}
-        </div>
+          </TabsContent>
 
-        <div className="flex justify-end gap-2">
+          <TabsContent value="schedule" className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-start-date">Data de Início</Label>
+                <Input
+                  id="new-start-date"
+                  type="date"
+                  value={newStartDate}
+                  onChange={(e) => setNewStartDate(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="new-end-date">Data de Fim</Label>
+                <Input
+                  id="new-end-date"
+                  type="date"
+                  value={newEndDate}
+                  onChange={(e) => setNewEndDate(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              {newStartDate && newEndDate && (
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    <strong>Nova Competição:</strong><br />
+                    {formatDateForDisplay(newStartDate)} até {formatDateForDisplay(newEndDate)}
+                  </p>
+                </div>
+              )}
+
+              <Button 
+                onClick={handleScheduleNew}
+                disabled={isLoading || !newStartDate || !newEndDate}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {isLoading ? 'Agendando...' : 'Agendar Competição'}
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="finalize" className="space-y-4">
+            {activeConfig ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <h3 className="font-medium text-amber-800 mb-2">Finalizar Competição Atual</h3>
+                  <p className="text-amber-700 text-sm mb-3">
+                    Período: {formatDateForDisplay(activeConfig.start_date)} até {formatDateForDisplay(activeConfig.end_date)}
+                  </p>
+                  <div className="text-amber-700 text-sm space-y-1">
+                    <p>✓ Criará backup dos ganhadores</p>
+                    <p>✓ Resetará pontuações dos usuários</p>
+                    <p>✓ Ativará próxima competição (se agendada)</p>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handleFinalize}
+                  disabled={isLoading}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  {isLoading ? 'Finalizando...' : 'Finalizar Competição e Resetar'}
+                </Button>
+              </div>
+            ) : (
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                <p className="text-gray-600">Nenhuma competição ativa para finalizar</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex justify-end">
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSave}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Salvando...' : 'Salvar'}
+            Fechar
           </Button>
         </div>
       </DialogContent>
