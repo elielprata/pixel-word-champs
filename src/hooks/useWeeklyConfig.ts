@@ -2,17 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { parseFinalizeResult, type FinalizeResult } from '@/utils/typeGuards';
-
-interface WeeklyConfig {
-  id: string;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'scheduled' | 'completed';
-  activated_at?: string;
-  completed_at?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { WeeklyConfig, WeeklyConfigRpcResponse, isWeeklyConfigRpcResponse } from '@/types/weeklyConfig';
 
 export const useWeeklyConfig = () => {
   const [activeConfig, setActiveConfig] = useState<WeeklyConfig | null>(null);
@@ -106,11 +96,14 @@ export const useWeeklyConfig = () => {
 
       if (error) throw error;
 
-      if (data.success) {
+      // Type casting com validação
+      const response = data as unknown as WeeklyConfigRpcResponse;
+      
+      if (isWeeklyConfigRpcResponse(response) && response.success) {
         await loadConfigurations();
-        return { success: true, data };
+        return { success: true, data: response };
       } else {
-        throw new Error(data.error);
+        throw new Error(response?.error || 'Erro desconhecido');
       }
     } catch (err: any) {
       console.error('Erro ao atualizar competição:', err);
@@ -127,11 +120,14 @@ export const useWeeklyConfig = () => {
 
       if (error) throw error;
 
-      if (data.success) {
+      // Type casting com validação
+      const response = data as unknown as WeeklyConfigRpcResponse;
+      
+      if (isWeeklyConfigRpcResponse(response) && response.success) {
         await loadConfigurations();
-        return { success: true, data };
+        return { success: true, data: response };
       } else {
-        throw new Error(data.error);
+        throw new Error(response?.error || 'Erro desconhecido');
       }
     } catch (err: any) {
       console.error('Erro ao atualizar data de fim da competição ativa:', err);
@@ -147,11 +143,14 @@ export const useWeeklyConfig = () => {
 
       if (error) throw error;
 
-      if (data.success) {
+      // Type casting com validação
+      const response = data as unknown as WeeklyConfigRpcResponse;
+      
+      if (isWeeklyConfigRpcResponse(response) && response.success) {
         await loadConfigurations();
-        return { success: true, data };
+        return { success: true, data: response };
       } else {
-        throw new Error(data.error);
+        throw new Error(response?.error || 'Erro desconhecido');
       }
     } catch (err: any) {
       console.error('Erro ao excluir competição:', err);

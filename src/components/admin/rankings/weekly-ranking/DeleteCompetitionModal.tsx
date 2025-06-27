@@ -14,17 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
 import { Trash2, AlertTriangle } from 'lucide-react';
-
-interface WeeklyConfig {
-  id: string;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'scheduled' | 'completed';
-  activated_at?: string;
-  completed_at?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { WeeklyConfig, WeeklyConfigRpcResponse, isWeeklyConfigRpcResponse } from '@/types/weeklyConfig';
 
 interface DeleteCompetitionModalProps {
   open: boolean;
@@ -54,15 +44,18 @@ export const DeleteCompetitionModal: React.FC<DeleteCompetitionModalProps> = ({
 
       if (error) throw error;
 
-      if (data.success) {
+      // Type casting com validação
+      const response = data as unknown as WeeklyConfigRpcResponse;
+
+      if (isWeeklyConfigRpcResponse(response) && response.success) {
         toast({
           title: "Competição Excluída!",
-          description: data.message,
+          description: response.message || 'Competição excluída com sucesso',
         });
         onSuccess();
         onOpenChange(false);
       } else {
-        throw new Error(data.error);
+        throw new Error(response?.error || 'Erro desconhecido');
       }
 
     } catch (error: any) {

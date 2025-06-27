@@ -3,17 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { formatDateForDisplay } from '@/utils/dateFormatters';
 import { Calendar, Clock, Edit, Trash2, CheckCircle } from 'lucide-react';
-
-interface WeeklyConfig {
-  id: string;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'scheduled' | 'completed';
-  activated_at?: string;
-  completed_at?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { WeeklyConfig } from '@/types/weeklyConfig';
 
 interface CompetitionCardProps {
   competition: WeeklyConfig;

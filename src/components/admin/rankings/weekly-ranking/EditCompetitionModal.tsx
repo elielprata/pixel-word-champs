@@ -8,17 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
 import { Calendar, AlertTriangle } from 'lucide-react';
-
-interface WeeklyConfig {
-  id: string;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'scheduled' | 'completed';
-  activated_at?: string;
-  completed_at?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { WeeklyConfig, WeeklyConfigRpcResponse, isWeeklyConfigRpcResponse } from '@/types/weeklyConfig';
 
 interface EditCompetitionModalProps {
   open: boolean;
@@ -69,7 +59,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     try {
       setIsLoading(true);
 
-      let result;
+      let response: WeeklyConfigRpcResponse;
       if (competition.status === 'active') {
         // Para competições ativas, só permite alterar a data de fim
         const { data, error } = await supabase.rpc('update_active_competition_end_date', {
@@ -78,7 +68,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
         });
 
         if (error) throw error;
-        result = data;
+        response = data as unknown as WeeklyConfigRpcResponse;
       } else {
         // Para competições agendadas, permite alterar ambas as datas
         const { data, error } = await supabase.rpc('update_scheduled_competition', {
@@ -88,18 +78,18 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
         });
 
         if (error) throw error;
-        result = data;
+        response = data as unknown as WeeklyConfigRpcResponse;
       }
 
-      if (result.success) {
+      if (isWeeklyConfigRpcResponse(response) && response.success) {
         toast({
           title: "Sucesso!",
-          description: result.message,
+          description: response.message || 'Competição atualizada com sucesso',
         });
         onSuccess();
         onOpenChange(false);
       } else {
-        throw new Error(result.error);
+        throw new Error(response?.error || 'Erro desconhecido');
       }
 
     } catch (error: any) {
