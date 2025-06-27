@@ -40,7 +40,7 @@ export const AutomationSystemStatus: React.FC<AutomationSystemStatusProps> = () 
 
   if (!syncedConfig) return null;
 
-  // Formatação clara da próxima execução usando sistema unificado
+  // Formatação clara da próxima execução
   const formatNextReset = () => {
     const resetDate = new Date(syncedConfig.next_reset_date);
     const weekStart = formatDateForDisplay(syncedConfig.current_week_start);
@@ -81,7 +81,7 @@ export const AutomationSystemStatus: React.FC<AutomationSystemStatusProps> = () 
         <div className="flex items-center gap-2">
           <Clock className="h-3 w-3 text-blue-600" />
           <span className="text-blue-700">
-            <strong>Tipo:</strong> {syncedConfig.is_custom_dates ? 'Datas Customizadas' : 'Configuração Padrão (Domingo a Sábado)'}
+            <strong>Tipo:</strong> Datas Customizadas
           </span>
         </div>
         
@@ -91,8 +91,7 @@ export const AutomationSystemStatus: React.FC<AutomationSystemStatusProps> = () 
         </div>
         
         <div className="text-xs text-blue-600 mt-2 bg-white px-2 py-1 rounded border">
-          <strong>Configuração:</strong> Início {syncedConfig.config.start_day_of_week === 0 ? 'Domingo' : `Dia ${syncedConfig.config.start_day_of_week}`} | 
-          Duração {syncedConfig.config.duration_days} dias | 
+          <strong>Configuração:</strong> Período customizado de {formatDateForDisplay(syncedConfig.current_week_start)} até {formatDateForDisplay(syncedConfig.current_week_end)} | 
           Verificação diária às 00:00
         </div>
       </div>
