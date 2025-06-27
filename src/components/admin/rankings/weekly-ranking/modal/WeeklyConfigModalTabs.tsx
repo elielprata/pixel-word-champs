@@ -5,6 +5,7 @@ import { WeeklyConfigOverview } from '../WeeklyConfigOverview';
 import { WeeklyConfigScheduler } from '../WeeklyConfigScheduler';
 import { WeeklyConfigFinalizer } from '../WeeklyConfigFinalizer';
 import { WeeklyConfigHistory } from '../WeeklyConfigHistory';
+import { AutomationMonitoring } from '../AutomationMonitoring';
 
 interface WeeklyConfig {
   id: string;
@@ -69,12 +70,13 @@ export const WeeklyConfigModalTabs: React.FC<WeeklyConfigModalTabsProps> = ({
 
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="overview">Visão Geral</TabsTrigger>
         <TabsTrigger value="schedule">Agendar Nova</TabsTrigger>
         <TabsTrigger value="finalize" className={hasEndedCompetitions ? "bg-amber-100" : ""}>
           Finalizar Atual
         </TabsTrigger>
+        <TabsTrigger value="automation">Monitoramento</TabsTrigger>
         <TabsTrigger value="history">Histórico Semanal</TabsTrigger>
       </TabsList>
 
@@ -111,6 +113,10 @@ export const WeeklyConfigModalTabs: React.FC<WeeklyConfigModalTabsProps> = ({
           isLoading={isLoading}
           hasNoActiveOrScheduled={hasNoActiveOrScheduled}
         />
+      </TabsContent>
+
+      <TabsContent value="automation" className="space-y-4">
+        <AutomationMonitoring />
       </TabsContent>
 
       <TabsContent value="history" className="space-y-4">
