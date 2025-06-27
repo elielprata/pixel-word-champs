@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
-import { competitionValidationService } from '@/services/competitionValidationService';
 import { useAuth } from '@/hooks/useAuth';
 
 export const useChallengeGameLogic = (challengeId: string) => {
@@ -31,23 +30,23 @@ export const useChallengeGameLogic = (challengeId: string) => {
       
       console.log('🎮 Inicializando sessão de jogo para competição:', challengeId);
       
+      // Verificar se a competição existe em custom_competitions
       setLoadingStep('Validando competição...');
-      // Primeiro, descobrir em qual tabela a competição existe
-      const competitionTable = await competitionValidationService.getCompetitionTable(challengeId);
-      console.log('🔍 Tabela da competição:', competitionTable);
-      
-      if (!competitionTable) {
-        console.error('❌ Competição não encontrada em nenhuma tabela:', challengeId);
+      const { data: competition, error: competitionError } = await supabase
+        .from('custom_competitions')
+        .select('id, title, status')
+        .eq('id', challengeId)
+        .single();
+
+      if (competitionError) {
+        console.error('❌ Competição não encontrada:', competitionError);
         setError('Competição não encontrada. Verifique se o ID está correto.');
         return;
       }
-      
-      // Validar se a competição está ativa
-      const competitionValidation = await competitionValidationService.validateCompetition(challengeId);
-      
-      if (!competitionValidation.success) {
-        console.error('❌ Competição inválida:', competitionValidation.error);
-        setError(`Competição não disponível: ${competitionValidation.error}`);
+
+      if (competition.status !== 'active') {
+        console.error('❌ Competição não está ativa:', competition.status);
+        setError(`Competição não está ativa: ${competition.status}`);
         return;
       }
 

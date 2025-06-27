@@ -8,7 +8,6 @@ import {
 } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { dailyCompetitionService } from './dailyCompetitionService';
-import { competitionValidationService } from './competitionValidationService';
 import { logger } from '@/utils/logger';
 
 class GameService {
@@ -31,29 +30,13 @@ class GameService {
         words_found: [],
         total_score: 0,
         time_elapsed: 0,
-        is_completed: false, // Agora permitido
+        is_completed: false,
       };
 
-      // Adicionar competition_id se fornecido
+      // Adicionar competition_id se fornecido (sem constraint de foreign key)
       if (config.competitionId) {
-        try {
-          const competitionTable = await competitionValidationService.getCompetitionTable(config.competitionId);
-          
-          if (competitionTable === 'competitions') {
-            sessionData.competition_id = config.competitionId;
-            logger.debug('Competição encontrada em competitions - usando foreign key', { competitionId: config.competitionId }, 'GAME_SERVICE');
-          } else if (competitionTable === 'custom_competitions') {
-            logger.debug('Competição encontrada em custom_competitions - armazenando em metadata', { competitionId: config.competitionId }, 'GAME_SERVICE');
-            sessionData.board = { 
-              ...board, 
-              _custom_competition_id: config.competitionId 
-            };
-          } else {
-            logger.warn('Competição não encontrada, criando sessão sem vinculação', { competitionId: config.competitionId }, 'GAME_SERVICE');
-          }
-        } catch (validationError) {
-          logger.warn('Erro na validação da competição, criando sessão sem vinculação', { error: validationError, competitionId: config.competitionId }, 'GAME_SERVICE');
-        }
+        logger.debug('Adicionando competição à sessão', { competitionId: config.competitionId }, 'GAME_SERVICE');
+        sessionData.competition_id = config.competitionId;
       }
 
       const { data, error } = await supabase
@@ -226,15 +209,10 @@ class GameService {
   }
 
   private mapGameSession(data: any): GameSession {
-    let customCompetitionId = null;
-    if (data.board && typeof data.board === 'object' && data.board._custom_competition_id) {
-      customCompetitionId = data.board._custom_competition_id;
-    }
-
     return {
       id: data.id,
       user_id: data.user_id,
-      competition_id: data.competition_id || customCompetitionId,
+      competition_id: data.competition_id, // Agora pode ser null sem problemas
       level: data.level,
       board: data.board as string[][],
       words_found: this.parseWordsFound(data.words_found),

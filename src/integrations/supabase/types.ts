@@ -383,15 +383,7 @@ export type Database = {
           user_id?: string
           words_found?: Json | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "game_sessions_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       game_settings: {
         Row: {
