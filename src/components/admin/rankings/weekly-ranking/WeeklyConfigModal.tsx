@@ -11,7 +11,7 @@ import { EditCompetitionModal } from './EditCompetitionModal';
 import { DeleteCompetitionModal } from './DeleteCompetitionModal';
 import { CompetitionCard } from './CompetitionCard';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
-import { Calendar, Plus, Trophy, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Plus, Trophy, AlertCircle, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 
 interface WeeklyConfig {
   id: string;
@@ -47,10 +47,12 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   const {
     activeConfig,
     scheduledConfigs,
+    lastCompletedConfig,
     isLoading: configsLoading,
     loadConfigurations,
     scheduleCompetition,
-    finalizeCompetition
+    finalizeCompetition,
+    calculateNextDates
   } = useWeeklyConfig();
 
   const {
@@ -62,21 +64,12 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
   React.useEffect(() => {
     if (open && !newStartDate && !newEndDate) {
-      const nextStart = new Date();
-      if (scheduledConfigs.length > 0) {
-        const lastScheduled = scheduledConfigs[scheduledConfigs.length - 1];
-        nextStart.setTime(new Date(lastScheduled.end_date).getTime() + 24 * 60 * 60 * 1000);
-      } else if (activeConfig) {
-        nextStart.setTime(new Date(activeConfig.end_date).getTime() + 24 * 60 * 60 * 1000);
-      }
-      
-      const nextEnd = new Date(nextStart);
-      nextEnd.setDate(nextEnd.getDate() + 6);
-      
-      setNewStartDate(nextStart.toISOString().split('T')[0]);
-      setNewEndDate(nextEnd.toISOString().split('T')[0]);
+      // Usar a função de cálculo inteligente de datas
+      const nextDates = calculateNextDates();
+      setNewStartDate(nextDates.startDate);
+      setNewEndDate(nextDates.endDate);
     }
-  }, [open, scheduledConfigs, activeConfig, newStartDate, newEndDate]);
+  }, [open, activeConfig, scheduledConfigs, lastCompletedConfig, calculateNextDates, newStartDate, newEndDate]);
 
   const handleScheduleNew = async () => {
     if (!newStartDate || !newEndDate) {
@@ -188,6 +181,9 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
     onConfigUpdated();
   };
 
+  // Verificar se não há configurações ativas nem agendadas
+  const hasNoActiveOrScheduled = !activeConfig && scheduledConfigs.length === 0;
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -211,6 +207,22 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* Aviso quando não há configurações ativas */}
+                  {hasNoActiveOrScheduled && (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Info className="h-5 w-5 text-blue-600" />
+                        <h3 className="font-medium text-blue-800">Sistema Pronto para Nova Configuração</h3>
+                      </div>
+                      <p className="text-blue-700 text-sm mb-2">
+                        Não há competições ativas ou agendadas no momento.
+                      </p>
+                      <p className="text-blue-600 text-sm">
+                        Use a aba "Agendar Nova" para configurar uma nova competição semanal.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Competição Ativa */}
                   {activeConfig && (
                     <div>
@@ -253,6 +265,21 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
             <TabsContent value="schedule" className="space-y-4">
               <div className="space-y-4">
+                {/* Indicador de referência para cálculo de datas */}
+                {(lastCompletedConfig || activeConfig) && (
+                  <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+                    <p>
+                      <strong>Referência:</strong> {' '}
+                      {activeConfig ? 
+                        `Competição ativa (${formatDateForDisplay(activeConfig.start_date)} - ${formatDateForDisplay(activeConfig.end_date)})` :
+                        lastCompletedConfig ?
+                        `Última competição finalizada (${formatDateForDisplay(lastCompletedConfig.start_date)} - ${formatDateForDisplay(lastCompletedConfig.end_date)})` :
+                        'Data atual'
+                      }
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="new-start-date">Data de Início</Label>
                   <Input
@@ -322,6 +349,11 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
               ) : (
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
                   <p className="text-gray-600">Nenhuma competição ativa para finalizar</p>
+                  {hasNoActiveOrScheduled && (
+                    <p className="text-gray-500 text-sm mt-2">
+                      Configure uma nova competição na aba "Agendar Nova"
+                    </p>
+                  )}
                 </div>
               )}
             </TabsContent>

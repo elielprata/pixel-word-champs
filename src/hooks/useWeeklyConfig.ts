@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { parseFinalizeResult, type FinalizeResult } from '@/utils/typeGuards';
@@ -8,6 +7,7 @@ export const useWeeklyConfig = () => {
   const [activeConfig, setActiveConfig] = useState<WeeklyConfig | null>(null);
   const [scheduledConfigs, setScheduledConfigs] = useState<WeeklyConfig[]>([]);
   const [completedConfigs, setCompletedConfigs] = useState<WeeklyConfig[]>([]);
+  const [lastCompletedConfig, setLastCompletedConfig] = useState<WeeklyConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +54,13 @@ export const useWeeklyConfig = () => {
         throw completedError;
       }
 
-      setCompletedConfigs((completedData || []) as WeeklyConfig[]);
+      const completedList = (completedData || []) as WeeklyConfig[];
+      setCompletedConfigs(completedList);
+      
+      // Definir a última competição finalizada para uso como referência
+      if (completedList.length > 0) {
+        setLastCompletedConfig(completedList[0]);
+      }
 
     } catch (err: any) {
       console.error('Erro ao carregar configurações:', err);
@@ -62,6 +68,39 @@ export const useWeeklyConfig = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Função para calcular próximas datas baseada na última configuração disponível
+  const calculateNextDates = () => {
+    let referenceEndDate: Date;
+    
+    if (scheduledConfigs.length > 0) {
+      // Se há competições agendadas, usar a última como referência
+      const lastScheduled = scheduledConfigs[scheduledConfigs.length - 1];
+      referenceEndDate = new Date(lastScheduled.end_date);
+    } else if (activeConfig) {
+      // Se há competição ativa, usar ela como referência
+      referenceEndDate = new Date(activeConfig.end_date);
+    } else if (lastCompletedConfig) {
+      // Se há apenas competições finalizadas, usar a última como referência
+      referenceEndDate = new Date(lastCompletedConfig.end_date);
+    } else {
+      // Fallback: usar data atual
+      referenceEndDate = new Date();
+    }
+    
+    // Calcular próxima data de início (dia seguinte à última data de fim)
+    const nextStart = new Date(referenceEndDate);
+    nextStart.setDate(nextStart.getDate() + 1);
+    
+    // Calcular data de fim (7 dias depois do início)
+    const nextEnd = new Date(nextStart);
+    nextEnd.setDate(nextEnd.getDate() + 6);
+    
+    return {
+      startDate: nextStart.toISOString().split('T')[0],
+      endDate: nextEnd.toISOString().split('T')[0]
+    };
   };
 
   const scheduleCompetition = async (startDate: string, endDate: string) => {
@@ -187,6 +226,7 @@ export const useWeeklyConfig = () => {
     activeConfig,
     scheduledConfigs,
     completedConfigs,
+    lastCompletedConfig,
     isLoading,
     error,
     loadConfigurations,
@@ -194,6 +234,7 @@ export const useWeeklyConfig = () => {
     updateCompetition,
     updateActiveCompetitionEndDate,
     deleteCompetition,
-    finalizeCompetition
+    finalizeCompetition,
+    calculateNextDates
   };
 };
