@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Info, Calendar, Clock, AlertTriangle } from 'lucide-react';
-import { formatDateInputToDisplay } from '@/utils/brasiliaTimeUnified';
+import { formatDateForDisplay } from '@/utils/dateFormatters';
 import { useWeeklyConfigSync } from '@/hooks/useWeeklyConfigSync';
 
 interface AutomationSystemStatusProps {
@@ -43,8 +43,8 @@ export const AutomationSystemStatus: React.FC<AutomationSystemStatusProps> = () 
   // Formatação clara da próxima execução usando sistema unificado
   const formatNextReset = () => {
     const resetDate = new Date(syncedConfig.next_reset_date);
-    const weekStart = formatDateInputToDisplay(syncedConfig.current_week_start);
-    const weekEnd = formatDateInputToDisplay(syncedConfig.current_week_end);
+    const weekStart = formatDateForDisplay(syncedConfig.current_week_start);
+    const weekEnd = formatDateForDisplay(syncedConfig.current_week_end);
     
     if (syncedConfig.should_reset) {
       return {
@@ -74,7 +74,7 @@ export const AutomationSystemStatus: React.FC<AutomationSystemStatusProps> = () 
         <div className="flex items-center gap-2">
           <Calendar className="h-3 w-3 text-blue-600" />
           <span className="text-blue-700">
-            <strong>Período Atual:</strong> {formatDateInputToDisplay(syncedConfig.current_week_start)} - {formatDateInputToDisplay(syncedConfig.current_week_end)}
+            <strong>Período Atual:</strong> {formatDateForDisplay(syncedConfig.current_week_start)} - {formatDateForDisplay(syncedConfig.current_week_end)}
           </span>
         </div>
         
