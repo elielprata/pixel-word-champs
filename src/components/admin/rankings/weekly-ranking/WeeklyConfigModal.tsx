@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { useWeeklyCompetitionHistory } from '@/hooks/useWeeklyCompetitionHistory
 import { useWeeklyCompetitionActivation } from '@/hooks/useWeeklyCompetitionActivation';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { DeleteCompetitionModal } from './DeleteCompetitionModal';
+import { DeleteCompletedCompetitionModal } from './DeleteCompletedCompetitionModal';
 import { WeeklyConfigOverview } from './WeeklyConfigOverview';
 import { WeeklyConfigScheduler } from './WeeklyConfigScheduler';
 import { WeeklyConfigFinalizer } from './WeeklyConfigFinalizer';
@@ -42,6 +44,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   const [newEndDate, setNewEndDate] = useState('');
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteCompletedModalOpen, setDeleteCompletedModalOpen] = useState(false);
   const [selectedCompetition, setSelectedCompetition] = useState<WeeklyConfig | null>(null);
   const [historyPage, setHistoryPage] = useState(1);
 
@@ -186,8 +189,14 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
     setDeleteModalOpen(true);
   };
 
+  const handleDeleteCompleted = (competition: any) => {
+    setSelectedCompetition(competition);
+    setDeleteCompletedModalOpen(true);
+  };
+
   const handleModalSuccess = () => {
     loadConfigurations();
+    refetchHistory();
     onConfigUpdated();
   };
 
@@ -250,6 +259,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
                 totalPages={totalPages}
                 currentPage={historyPage}
                 onPageChange={setHistoryPage}
+                onDeleteCompleted={handleDeleteCompleted}
               />
             </TabsContent>
           </Tabs>
@@ -276,6 +286,13 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
       <DeleteCompetitionModal
         open={deleteModalOpen}
         onOpenChange={setDeleteModalOpen}
+        competition={selectedCompetition}
+        onSuccess={handleModalSuccess}
+      />
+
+      <DeleteCompletedCompetitionModal
+        open={deleteCompletedModalOpen}
+        onOpenChange={setDeleteCompletedModalOpen}
         competition={selectedCompetition}
         onSuccess={handleModalSuccess}
       />

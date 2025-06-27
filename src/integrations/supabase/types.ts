@@ -1073,6 +1073,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      delete_completed_competition: {
+        Args: { competition_id: string }
+        Returns: Json
+      }
       delete_scheduled_competition: {
         Args: { competition_id: string }
         Returns: Json
