@@ -38,9 +38,9 @@ interface WeeklyConfigTabsProps {
   onEdit: (competition: WeeklyConfig) => void;
   onDelete: (competition: WeeklyConfig) => void;
   onDeleteCompleted: (competition: any) => void;
-  onActivate: () => void;
-  onSchedule: () => void;
-  onFinalize: () => void;
+  onActivate: () => Promise<void>;
+  onSchedule: () => Promise<void>;
+  onFinalize: () => Promise<void>;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
   onPageChange: (page: number) => void;
