@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { WeeklyConfig } from '@/types/weeklyConfig';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
+import { checkDateOverlap } from '@/utils/dateOverlapValidation';
 
 interface WeeklyConfigSchedulerProps {
   newStartDate: string;
@@ -41,10 +42,41 @@ export const WeeklyConfigScheduler: React.FC<WeeklyConfigSchedulerProps> = ({
       return;
     }
 
-    if (new Date(newStartDate) >= new Date(newEndDate)) {
+    if (new Date(newStartDate) > new Date(newEndDate)) {
       toast({
         title: "Erro",
-        description: "A data de início deve ser anterior à data de fim",
+        description: "A data de início deve ser anterior ou igual à data de fim",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar se as datas não estão no passado
+    const today = new Date().toISOString().split('T')[0];
+    if (newStartDate < today) {
+      toast({
+        title: "Erro",
+        description: "A data de início não pode ser anterior ao dia de hoje",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newEndDate < today) {
+      toast({
+        title: "Erro",
+        description: "A data de fim não pode ser anterior ao dia de hoje",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar sobreposição com outras competições
+    const overlapResult = await checkDateOverlap(newStartDate, newEndDate);
+    if (overlapResult.hasOverlap) {
+      toast({
+        title: "Erro",
+        description: overlapResult.errorMessage || 'As datas se sobrepõem com outra competição',
         variant: "destructive",
       });
       return;

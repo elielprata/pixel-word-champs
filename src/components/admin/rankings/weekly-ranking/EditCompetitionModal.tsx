@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
 import { Calendar, AlertTriangle } from 'lucide-react';
 import { WeeklyConfig, WeeklyConfigRpcResponse, isWeeklyConfigRpcResponse } from '@/types/weeklyConfig';
+import { checkDateOverlap } from '@/utils/dateOverlapValidation';
 
 interface EditCompetitionModalProps {
   open: boolean;
@@ -35,7 +36,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     }
   }, [competition, open]);
 
-  const validateDates = (start: string, end: string, isActive: boolean) => {
+  const validateDates = async (start: string, end: string, isActive: boolean) => {
     const today = new Date().toISOString().split('T')[0];
     
     if (isActive) {
@@ -58,6 +59,12 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
         return "A data de fim não pode ser anterior ao dia de hoje";
       }
     }
+
+    // Verificar sobreposição com outras competições
+    const overlapResult = await checkDateOverlap(start, end, competition?.id);
+    if (overlapResult.hasOverlap) {
+      return overlapResult.errorMessage || 'As datas se sobrepõem com outra competição';
+    }
     
     return null;
   };
@@ -75,7 +82,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     }
 
     const isActive = competition.status === 'active';
-    const validationError = validateDates(startDate, endDate, isActive);
+    const validationError = await validateDates(startDate, endDate, isActive);
     
     if (validationError) {
       toast({
