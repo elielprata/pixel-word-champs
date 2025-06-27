@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
@@ -57,8 +56,44 @@ export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
     }
   };
 
+  // Função para verificar se é erro de competição ativa duplicada
+  const isActiveCompetitionError = (error: any): boolean => {
+    if (!error) return false;
+    
+    const errorMessage = typeof error === 'string' ? error : error.message || '';
+    const errorCode = error.code || '';
+    
+    console.log('🔍 Verificando erro:', { errorMessage, errorCode, fullError: error });
+    
+    // Verificar código PostgreSQL para duplicate key
+    if (errorCode === '23505') {
+      console.log('✅ Erro 23505 detectado (duplicate key)');
+      return true;
+    }
+    
+    // Verificar mensagem contendo o índice de competição ativa
+    if (errorMessage.includes('idx_weekly_config_active') || 
+        errorMessage.includes('duplicate key value violates unique constraint')) {
+      console.log('✅ Erro de competição ativa detectado na mensagem');
+      return true;
+    }
+    
+    return false;
+  };
+
   const handleActivateCompetitions = async () => {
+    console.log('🚀 Tentando ativar competições...');
+    
+    // Verificar se já existe competição ativa antes de tentar ativar
+    if (activeConfig) {
+      console.log('⚠️ Competição ativa já existe:', activeConfig);
+      setActiveCompetitionErrorOpen(true);
+      return;
+    }
+
     const result = await activateWeeklyCompetitions();
+    
+    console.log('📊 Resultado da ativação:', result);
     
     if (result.success && result.data) {
       if (result.data.updated_count > 0) {
@@ -75,8 +110,11 @@ export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
         });
       }
     } else {
+      console.log('❌ Erro na ativação:', result.error);
+      
       // Verificar se é erro de competição ativa duplicada
-      if (result.error && result.error.includes('idx_weekly_config_active')) {
+      if (isActiveCompetitionError(result.error)) {
+        console.log('🎯 Detectado erro de competição ativa - abrindo modal');
         setActiveCompetitionErrorOpen(true);
       } else {
         toast({
@@ -91,6 +129,7 @@ export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
   const handleScheduleNew = async () => {
     try {
       setIsLoading(true);
+      console.log('📅 Tentando agendar nova competição...');
 
       const result = await scheduleCompetition(newStartDate, newEndDate);
 
@@ -110,8 +149,11 @@ export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
         setNewStartDate(nextStart.toISOString().split('T')[0]);
         setNewEndDate(nextEnd.toISOString().split('T')[0]);
       } else {
+        console.log('❌ Erro ao agendar:', result.error);
+        
         // Verificar se é erro de competição ativa duplicada
-        if (result.error && result.error.includes('idx_weekly_config_active')) {
+        if (isActiveCompetitionError(result.error)) {
+          console.log('🎯 Detectado erro de competição ativa no agendamento');
           setActiveCompetitionErrorOpen(true);
         } else {
           throw new Error(result.error);
@@ -119,10 +161,11 @@ export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
       }
 
     } catch (error: any) {
-      console.error('Erro ao agendar nova competição:', error);
+      console.error('💥 Erro ao agendar nova competição:', error);
       
       // Verificar se é erro de competição ativa duplicada
-      if (error.message && error.message.includes('idx_weekly_config_active')) {
+      if (isActiveCompetitionError(error)) {
+        console.log('🎯 Detectado erro de competição ativa na exception');
         setActiveCompetitionErrorOpen(true);
       } else {
         toast({

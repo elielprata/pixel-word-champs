@@ -22,12 +22,27 @@ export const useWeeklyCompetitionActivation = () => {
   const activateWeeklyCompetitions = async () => {
     try {
       setIsActivating(true);
+      console.log('🔄 Chamando função RPC update_weekly_competitions_status...');
 
       const { data, error } = await supabase.rpc('update_weekly_competitions_status');
 
       if (error) {
-        throw error;
+        console.error('❌ Erro do Supabase RPC:', error);
+        
+        // Preservar informações completas do erro
+        return {
+          success: false,
+          error: {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint,
+            ...error
+          }
+        };
       }
+
+      console.log('✅ Sucesso na chamada RPC:', data);
 
       // Conversão segura de Json para nossa interface
       const result = data as unknown as ActivationResult;
@@ -37,10 +52,18 @@ export const useWeeklyCompetitionActivation = () => {
         data: result
       };
     } catch (err: any) {
-      console.error('Erro ao ativar competições semanais:', err);
+      console.error('💥 Erro na função activateWeeklyCompetitions:', err);
+      
+      // Preservar informações completas do erro
       return {
         success: false,
-        error: err.message
+        error: {
+          message: err.message,
+          code: err.code,
+          details: err.details,
+          hint: err.hint,
+          ...err
+        }
       };
     } finally {
       setIsActivating(false);
