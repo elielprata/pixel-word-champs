@@ -17,6 +17,7 @@ interface WeeklyConfig {
 export const useWeeklyConfig = () => {
   const [activeConfig, setActiveConfig] = useState<WeeklyConfig | null>(null);
   const [scheduledConfigs, setScheduledConfigs] = useState<WeeklyConfig[]>([]);
+  const [completedConfigs, setCompletedConfigs] = useState<WeeklyConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +26,7 @@ export const useWeeklyConfig = () => {
       setIsLoading(true);
       setError(null);
 
-      // Carregar competição ativa (corrigido: usar status = 'active')
+      // Carregar competição ativa
       const { data: activeData, error: activeError } = await supabase
         .from('weekly_config')
         .select('*')
@@ -50,6 +51,20 @@ export const useWeeklyConfig = () => {
       }
 
       setScheduledConfigs((scheduledData || []) as WeeklyConfig[]);
+
+      // Carregar competições finalizadas (últimas 5)
+      const { data: completedData, error: completedError } = await supabase
+        .from('weekly_config')
+        .select('*')
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(5);
+
+      if (completedError) {
+        throw completedError;
+      }
+
+      setCompletedConfigs((completedData || []) as WeeklyConfig[]);
 
     } catch (err: any) {
       console.error('Erro ao carregar configurações:', err);
@@ -77,6 +92,69 @@ export const useWeeklyConfig = () => {
       return { success: true, data };
     } catch (err: any) {
       console.error('Erro ao agendar competição:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const updateCompetition = async (competitionId: string, startDate: string, endDate: string) => {
+    try {
+      const { data, error } = await supabase.rpc('update_scheduled_competition', {
+        competition_id: competitionId,
+        new_start_date: startDate,
+        new_end_date: endDate
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        await loadConfigurations();
+        return { success: true, data };
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      console.error('Erro ao atualizar competição:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const updateActiveCompetitionEndDate = async (competitionId: string, endDate: string) => {
+    try {
+      const { data, error } = await supabase.rpc('update_active_competition_end_date', {
+        competition_id: competitionId,
+        new_end_date: endDate
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        await loadConfigurations();
+        return { success: true, data };
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      console.error('Erro ao atualizar data de fim da competição ativa:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const deleteCompetition = async (competitionId: string) => {
+    try {
+      const { data, error } = await supabase.rpc('delete_scheduled_competition', {
+        competition_id: competitionId
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        await loadConfigurations();
+        return { success: true, data };
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      console.error('Erro ao excluir competição:', err);
       return { success: false, error: err.message };
     }
   };
@@ -109,10 +187,14 @@ export const useWeeklyConfig = () => {
   return {
     activeConfig,
     scheduledConfigs,
+    completedConfigs,
     isLoading,
     error,
     loadConfigurations,
     scheduleCompetition,
+    updateCompetition,
+    updateActiveCompetitionEndDate,
+    deleteCompetition,
     finalizeCompetition
   };
 };

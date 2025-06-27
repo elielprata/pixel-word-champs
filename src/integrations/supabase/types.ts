@@ -1073,6 +1073,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      delete_scheduled_competition: {
+        Args: { competition_id: string }
+        Returns: Json
+      }
       diagnose_ranking_system: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -1136,6 +1140,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      update_active_competition_end_date: {
+        Args: { competition_id: string; new_end_date: string }
+        Returns: Json
+      }
       update_competition_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1151,6 +1159,14 @@ export type Database = {
       update_daily_ranking: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      update_scheduled_competition: {
+        Args: {
+          competition_id: string
+          new_start_date: string
+          new_end_date: string
+        }
+        Returns: Json
       }
       update_user_best_weekly_position: {
         Args: Record<PropertyKey, never>
