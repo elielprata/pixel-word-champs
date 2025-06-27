@@ -1,5 +1,17 @@
 
-// Interface para o retorno das funções RPC de competições semanais
+import React from 'react';
+
+export interface WeeklyConfig {
+  id: string;
+  start_date: string;
+  end_date: string;
+  status: 'scheduled' | 'active' | 'ended' | 'completed';
+  activated_at?: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface WeeklyConfigRpcResponse {
   success: boolean;
   message?: string;
@@ -7,19 +19,33 @@ export interface WeeklyConfigRpcResponse {
   data?: any;
 }
 
-// Type guard para verificar se o retorno é uma resposta válida
-export function isWeeklyConfigRpcResponse(data: any): data is WeeklyConfigRpcResponse {
-  return data && typeof data === 'object' && typeof data.success === 'boolean';
-}
-
-// Interface para as configurações semanais
-export interface WeeklyConfig {
+export interface CompetitionSnapshot {
   id: string;
+  competition_id: string;
   start_date: string;
   end_date: string;
-  status: 'active' | 'scheduled' | 'completed';
-  activated_at?: string;
-  completed_at?: string;
+  total_participants: number;
+  total_prize_pool: number;
+  winners_data: any[];
+  rankings_data: any[];
+  finalized_at: string;
   created_at: string;
-  updated_at: string;
 }
+
+export interface UnifiedCompetitionHistoryItem {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  type: 'weekly' | 'daily';
+  total_participants: number;
+  total_prize_pool: number;
+  winners_count: number;
+  finalized_at: string;
+  snapshot_exists: boolean;
+}
+
+export const isWeeklyConfigRpcResponse = (data: any): data is WeeklyConfigRpcResponse => {
+  return data && typeof data === 'object' && 'success' in data;
+};

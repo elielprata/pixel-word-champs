@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
-import { useWeeklyCompetitionHistory } from '@/hooks/useWeeklyCompetitionHistory';
+import { useUnifiedCompetitionHistory } from '@/hooks/useUnifiedCompetitionHistory';
 import { useWeeklyCompetitionActivation } from '@/hooks/useWeeklyCompetitionActivation';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { DeleteCompetitionModal } from './DeleteCompetitionModal';
@@ -13,14 +12,14 @@ import { DeleteCompletedCompetitionModal } from './DeleteCompletedCompetitionMod
 import { WeeklyConfigOverview } from './WeeklyConfigOverview';
 import { WeeklyConfigScheduler } from './WeeklyConfigScheduler';
 import { WeeklyConfigFinalizer } from './WeeklyConfigFinalizer';
-import { WeeklyConfigHistory } from './WeeklyConfigHistory';
+import { UnifiedCompetitionHistory } from './UnifiedCompetitionHistory';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
 
 interface WeeklyConfig {
   id: string;
   start_date: string;
   end_date: string;
-  status: 'active' | 'scheduled' | 'completed';
+  status: 'active' | 'scheduled' | 'ended' | 'completed';
   activated_at?: string;
   completed_at?: string;
   created_at: string;
@@ -62,11 +61,11 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   const { activateWeeklyCompetitions, isActivating } = useWeeklyCompetitionActivation();
 
   const {
-    historyData,
+    historyData: unifiedHistoryData,
     isLoading: historyLoading,
-    totalPages,
+    totalPages: historyTotalPages,
     refetch: refetchHistory
-  } = useWeeklyCompetitionHistory(historyPage, 5);
+  } = useUnifiedCompetitionHistory(historyPage, 10);
 
   React.useEffect(() => {
     if (open && !newStartDate && !newEndDate) {
@@ -116,7 +115,6 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
         onConfigUpdated();
         
-        // Limpar campos e calcular próximas datas
         const nextStart = new Date(newEndDate);
         nextStart.setDate(nextStart.getDate() + 1);
         const nextEnd = new Date(nextStart);
@@ -141,10 +139,10 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   };
 
   const handleFinalize = async () => {
-    if (!activeConfig) {
+    if (!activeConfig && !scheduledConfigs.some(c => c.status === 'ended')) {
       toast({
         title: "Erro",
-        description: "Nenhuma competição ativa para finalizar",
+        description: "Nenhuma competição ativa ou finalizada para processar",
         variant: "destructive",
       });
       return;
@@ -158,10 +156,11 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
       if (result.success) {
         toast({
           title: "Competição Finalizada!",
-          description: `Competição finalizada com ${result.data.winners_count || 0} ganhadores. Dados salvos no histórico.`,
+          description: `Competição finalizada com ${result.data.winners_count || 0} ganhadores. Snapshot criado com sucesso.`,
         });
 
         onConfigUpdated();
+        refetchHistory(); // Atualizar histórico unificado
         onOpenChange(false);
       } else {
         throw new Error(result.error);
@@ -201,6 +200,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   };
 
   const hasNoActiveOrScheduled = !activeConfig && scheduledConfigs.length === 0;
+  const hasEndedCompetitions = scheduledConfigs.some(c => c.status === 'ended');
 
   return (
     <>
@@ -214,8 +214,10 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Visão Geral</TabsTrigger>
               <TabsTrigger value="schedule">Agendar Nova</TabsTrigger>
-              <TabsTrigger value="finalize">Finalizar Atual</TabsTrigger>
-              <TabsTrigger value="history">Histórico</TabsTrigger>
+              <TabsTrigger value="finalize" className={hasEndedCompetitions ? "bg-amber-100" : ""}>
+                Finalizar Atual
+              </TabsTrigger>
+              <TabsTrigger value="history">Histórico Unificado</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
@@ -246,6 +248,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
             <TabsContent value="finalize" className="space-y-4">
               <WeeklyConfigFinalizer
                 activeConfig={activeConfig}
+                scheduledConfigs={scheduledConfigs}
                 onFinalize={handleFinalize}
                 isLoading={isLoading}
                 hasNoActiveOrScheduled={hasNoActiveOrScheduled}
@@ -253,13 +256,12 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
             </TabsContent>
 
             <TabsContent value="history" className="space-y-4">
-              <WeeklyConfigHistory
-                historyData={historyData}
+              <UnifiedCompetitionHistory
+                historyData={unifiedHistoryData}
                 isLoading={historyLoading}
-                totalPages={totalPages}
+                totalPages={historyTotalPages}
                 currentPage={historyPage}
                 onPageChange={setHistoryPage}
-                onDeleteCompleted={handleDeleteCompleted}
               />
             </TabsContent>
           </Tabs>
