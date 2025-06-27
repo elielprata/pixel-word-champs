@@ -10,6 +10,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
 import { Calendar, Plus, Clock } from 'lucide-react';
 
+interface WeeklyConfig {
+  id: string;
+  start_date: string;
+  end_date: string;
+  status: 'active' | 'scheduled' | 'completed';
+  activated_at?: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface FinalizeResult {
+  success: boolean;
+  error?: string;
+  winners_count?: number;
+}
+
 interface WeeklyConfigModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,8 +40,8 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [activeConfig, setActiveConfig] = useState<any>(null);
-  const [scheduledConfigs, setScheduledConfigs] = useState<any[]>([]);
+  const [activeConfig, setActiveConfig] = useState<WeeklyConfig | null>(null);
+  const [scheduledConfigs, setScheduledConfigs] = useState<WeeklyConfig[]>([]);
   const [newStartDate, setNewStartDate] = useState('');
   const [newEndDate, setNewEndDate] = useState('');
 
@@ -47,7 +64,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
       if (activeError && activeError.code !== 'PGRST116') {
         console.error('Erro ao carregar configuração ativa:', activeError);
       } else {
-        setActiveConfig(activeData);
+        setActiveConfig(activeData as WeeklyConfig);
       }
 
       // Carregar competições agendadas
@@ -60,7 +77,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
       if (scheduledError) {
         console.error('Erro ao carregar configurações agendadas:', scheduledError);
       } else {
-        setScheduledConfigs(scheduledData || []);
+        setScheduledConfigs((scheduledData || []) as WeeklyConfig[]);
       }
 
       // Valores padrão para nova competição
@@ -166,16 +183,18 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
       if (error) throw error;
 
-      if (data.success) {
+      const result = data as FinalizeResult;
+
+      if (result.success) {
         toast({
           title: "Competição Finalizada!",
-          description: `Competição finalizada com ${data.winners_count} ganhadores. Dados salvos no histórico.`,
+          description: `Competição finalizada com ${result.winners_count || 0} ganhadores. Dados salvos no histórico.`,
         });
 
         onConfigUpdated();
         onOpenChange(false);
       } else {
-        throw new Error(data.error || 'Erro desconhecido');
+        throw new Error(result.error || 'Erro desconhecido');
       }
 
     } catch (error: any) {

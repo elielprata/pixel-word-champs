@@ -51,7 +51,22 @@ export const WinnersManagementTab = () => {
 
       if (error) throw error;
 
-      setSnapshots(data || []);
+      // Parse dos dados JSONB e conversão de tipo
+      const parsedSnapshots = (data || []).map(item => ({
+        ...item,
+        winners_data: Array.isArray(item.winners_data) 
+          ? item.winners_data as Winner[]
+          : typeof item.winners_data === 'string' 
+            ? JSON.parse(item.winners_data)
+            : [],
+        rankings_data: Array.isArray(item.rankings_data) 
+          ? item.rankings_data 
+          : typeof item.rankings_data === 'string' 
+            ? JSON.parse(item.rankings_data)
+            : []
+      })) as CompetitionSnapshot[];
+
+      setSnapshots(parsedSnapshots);
     } catch (error: any) {
       console.error('Erro ao carregar snapshots:', error);
       toast({

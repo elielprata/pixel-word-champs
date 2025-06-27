@@ -13,6 +13,16 @@ interface WeeklyConfig {
   updated_at: string;
 }
 
+interface FinalizeResult {
+  success: boolean;
+  error?: string;
+  winners_count?: number;
+  snapshot_id?: string;
+  finalized_competition?: any;
+  activated_competition?: any;
+  profiles_reset?: number;
+}
+
 export const useWeeklyConfig = () => {
   const [activeConfig, setActiveConfig] = useState<WeeklyConfig | null>(null);
   const [scheduledConfigs, setScheduledConfigs] = useState<WeeklyConfig[]>([]);
@@ -35,7 +45,7 @@ export const useWeeklyConfig = () => {
         throw activeError;
       }
 
-      setActiveConfig(activeData);
+      setActiveConfig(activeData as WeeklyConfig | null);
 
       // Carregar competições agendadas
       const { data: scheduledData, error: scheduledError } = await supabase
@@ -48,7 +58,7 @@ export const useWeeklyConfig = () => {
         throw scheduledError;
       }
 
-      setScheduledConfigs(scheduledData || []);
+      setScheduledConfigs((scheduledData || []) as WeeklyConfig[]);
 
     } catch (err: any) {
       console.error('Erro ao carregar configurações:', err);
@@ -86,11 +96,13 @@ export const useWeeklyConfig = () => {
 
       if (error) throw error;
 
-      if (data.success) {
+      const result = data as FinalizeResult;
+      
+      if (result.success) {
         await loadConfigurations();
-        return { success: true, data };
+        return { success: true, data: result };
       } else {
-        throw new Error(data.error || 'Erro desconhecido');
+        throw new Error(result.error || 'Erro desconhecido');
       }
     } catch (err: any) {
       console.error('Erro ao finalizar competição:', err);
