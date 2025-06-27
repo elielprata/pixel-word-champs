@@ -1,15 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Trophy } from 'lucide-react';
+import { RefreshCw, Trophy, Settings } from 'lucide-react';
 import { WeeklyRankingTable } from './WeeklyRankingTable';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
+import { WeeklyConfigModal } from './WeeklyConfigModal';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
 
 export const WeeklyRankingView = () => {
   const { toast } = useToast();
+  const [configModalOpen, setConfigModalOpen] = useState(false);
   const { 
     currentRanking, 
     stats, 
@@ -23,6 +25,14 @@ export const WeeklyRankingView = () => {
     toast({
       title: "Atualizado",
       description: "Ranking semanal atualizado com sucesso!",
+    });
+  };
+
+  const handleConfigUpdated = () => {
+    refetch();
+    toast({
+      title: "Configuração atualizada",
+      description: "Configurações do ranking semanal foram atualizadas!",
     });
   };
 
@@ -47,7 +57,7 @@ export const WeeklyRankingView = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header Simplificado */}
+      {/* Header com botões */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
@@ -56,10 +66,20 @@ export const WeeklyRankingView = () => {
           </h2>
           <p className="text-sm text-slate-600">Classificação dos jogadores da semana</p>
         </div>
-        <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setConfigModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Configurar Competição
+          </Button>
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* Estatísticas Básicas */}
@@ -67,6 +87,13 @@ export const WeeklyRankingView = () => {
 
       {/* Tabela de Ranking */}
       <WeeklyRankingTable ranking={currentRanking} />
+
+      {/* Modal de Configuração */}
+      <WeeklyConfigModal
+        open={configModalOpen}
+        onOpenChange={setConfigModalOpen}
+        onConfigUpdated={handleConfigUpdated}
+      />
     </div>
   );
 };
