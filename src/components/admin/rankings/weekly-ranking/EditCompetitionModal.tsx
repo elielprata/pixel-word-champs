@@ -35,6 +35,33 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
     }
   }, [competition, open]);
 
+  const validateDates = (start: string, end: string, isActive: boolean) => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (isActive) {
+      // Para competições ativas, apenas validar se a data de fim não está no passado
+      if (end < today) {
+        return "A data de fim não pode ser anterior ao dia de hoje";
+      }
+    } else {
+      // Para competições agendadas, permitir start_date = end_date, mas não start_date > end_date
+      if (start > end) {
+        return "A data de início deve ser anterior ou igual à data de fim";
+      }
+      
+      // Validar se as datas não estão no passado
+      if (start < today) {
+        return "A data de início não pode ser anterior ao dia de hoje";
+      }
+      
+      if (end < today) {
+        return "A data de fim não pode ser anterior ao dia de hoje";
+      }
+    }
+    
+    return null;
+  };
+
   const handleSave = async () => {
     if (!competition) return;
 
@@ -47,10 +74,13 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
       return;
     }
 
-    if (new Date(startDate) >= new Date(endDate)) {
+    const isActive = competition.status === 'active';
+    const validationError = validateDates(startDate, endDate, isActive);
+    
+    if (validationError) {
       toast({
         title: "Erro",
-        description: "A data de início deve ser anterior à data de fim",
+        description: validationError,
         variant: "destructive",
       });
       return;
@@ -60,7 +90,7 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
       setIsLoading(true);
 
       let response: WeeklyConfigRpcResponse;
-      if (competition.status === 'active') {
+      if (isActive) {
         // Para competições ativas, só permite alterar a data de fim
         const { data, error } = await supabase.rpc('update_active_competition_end_date', {
           competition_id: competition.id,
@@ -165,6 +195,11 @@ export const EditCompetitionModal: React.FC<EditCompetitionModalProps> = ({
               <strong>Período:</strong><br />
               {formatDateForDisplay(startDate)} até {formatDateForDisplay(endDate)}
             </p>
+            {isActive && (
+              <p className="text-xs text-blue-600 mt-1">
+                💡 Competições ativas podem ter o mesmo dia de início e fim estendido
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
