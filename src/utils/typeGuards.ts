@@ -51,7 +51,9 @@ function isFinalizeResult(obj: any): obj is FinalizeResult {
 export function parseWinnersData(data: Json | Json[]): Winner[] {
   try {
     if (Array.isArray(data)) {
-      return data.filter(isWinner);
+      // Filtrar e converter explicitamente para Winner[]
+      const filtered = data.filter(isWinner);
+      return filtered as Winner[];
     }
     return [];
   } catch (error) {
