@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 import { supabase } from '@/integrations/supabase/client';
 
 interface WeeklyConfigModalProps {
@@ -47,6 +46,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
       }
 
       if (data) {
+        // Usar as datas diretamente do banco (já são strings no formato YYYY-MM-DD)
         setStartDate(data.start_date || '');
         setEndDate(data.end_date || '');
       } else {
@@ -98,7 +98,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
         .update({ is_active: false })
         .eq('is_active', true);
 
-      // Criar nova configuração
+      // Criar nova configuração com datas simples (sem conversão de fuso)
       const { error: insertError } = await supabase
         .from('weekly_config')
         .insert({
@@ -111,7 +111,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
       toast({
         title: "Sucesso!",
-        description: `Competição configurada de ${formatBrasiliaDate(startDate, false)} a ${formatBrasiliaDate(endDate, false)}`,
+        description: `Competição configurada de ${startDate} a ${endDate}`,
       });
 
       onConfigUpdated();
@@ -163,7 +163,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
             <div className="p-3 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-700">
                 <strong>Período da Competição:</strong><br />
-                {formatBrasiliaDate(startDate, false)} até {formatBrasiliaDate(endDate, false)}
+                {startDate} até {endDate}
               </p>
             </div>
           )}

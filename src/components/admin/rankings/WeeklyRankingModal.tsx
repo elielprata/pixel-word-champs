@@ -7,7 +7,6 @@ import PlayerAvatar from '@/components/ui/PlayerAvatar';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { rankingQueryService } from '@/services/rankingQueryService';
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 import {
   Table,
   TableBody,
@@ -169,9 +168,20 @@ export const WeeklyRankingModal: React.FC<WeeklyRankingModalProps> = ({
     }
   };
 
+  // Formatação simples de data sem conversão de fuso horário
+  const formatSimpleDate = (dateString: string) => {
+    if (!dateString) return '';
+    
+    // Se for uma data ISO com hora, extrair apenas a parte da data
+    const dateOnly = dateString.includes('T') ? dateString.split('T')[0] : dateString;
+    
+    // Converter YYYY-MM-DD para DD/MM/YYYY
+    const [year, month, day] = dateOnly.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   const formatDateTime = (dateString: string, isEndDate: boolean = false) => {
-    // Usar função padronizada - UTC para Brasília apenas na exibição
-    const dateFormatted = formatBrasiliaDate(dateString, false);
+    const dateFormatted = formatSimpleDate(dateString);
     const timeFormatted = isEndDate ? '23:59:59' : '00:00:00';
     return `${dateFormatted}, ${timeFormatted}`;
   };
