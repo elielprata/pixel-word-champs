@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
 import { useWeeklyCompetitionHistory } from '@/hooks/useWeeklyCompetitionHistory';
+import { useWeeklyCompetitionActivation } from '@/hooks/useWeeklyCompetitionActivation';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { DeleteCompetitionModal } from './DeleteCompetitionModal';
 import { WeeklyConfigOverview } from './WeeklyConfigOverview';
@@ -56,6 +56,8 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
     calculateNextDates
   } = useWeeklyConfig();
 
+  const { activateWeeklyCompetitions, isActivating } = useWeeklyCompetitionActivation();
+
   const {
     historyData,
     isLoading: historyLoading,
@@ -70,6 +72,32 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
       setNewEndDate(nextDates.endDate);
     }
   }, [open, activeConfig, scheduledConfigs, lastCompletedConfig, calculateNextDates, newStartDate, newEndDate]);
+
+  const handleActivateCompetitions = async () => {
+    const result = await activateWeeklyCompetitions();
+    
+    if (result.success && result.data) {
+      if (result.data.updated_count > 0) {
+        toast({
+          title: "Competições Atualizadas!",
+          description: `${result.data.updated_count} competição(ões) foram atualizadas com sucesso.`,
+        });
+        await loadConfigurations();
+        onConfigUpdated();
+      } else {
+        toast({
+          title: "Nenhuma Atualização",
+          description: "Todas as competições já estão com o status correto.",
+        });
+      }
+    } else {
+      toast({
+        title: "Erro",
+        description: `Erro ao ativar competições: ${result.error}`,
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleScheduleNew = async () => {
     try {
@@ -188,6 +216,8 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
                 isLoading={configsLoading}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onActivate={handleActivateCompetitions}
+                isActivating={isActivating}
               />
             </TabsContent>
 
@@ -228,7 +258,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}
+              disabled={isLoading || isActivating}
             >
               Fechar
             </Button>
