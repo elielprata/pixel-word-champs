@@ -29,7 +29,8 @@ export const useWeeklyCompetitionActivation = () => {
         throw error;
       }
 
-      const result = data as ActivationResult;
+      // Conversão segura de Json para nossa interface
+      const result = data as unknown as ActivationResult;
       
       return {
         success: true,
