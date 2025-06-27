@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface WeeklyRankingStats {
-  current_week_start: string;
-  current_week_end: string;
+  current_week_start: string | null;
+  current_week_end: string | null;
   total_participants: number;
   total_prize_pool: number;
   last_update: string;
@@ -17,7 +17,11 @@ interface WeeklyRankingStats {
   config: {
     start_date: string;
     end_date: string;
-  };
+    status: string;
+  } | null;
+  no_active_competition?: boolean;
+  competition_status?: string;
+  message?: string;
 }
 
 interface WeeklyRankingEntry {
@@ -51,17 +55,12 @@ export const useWeeklyRanking = () => {
         throw statsError;
       }
 
-      // Verificar se há erro nos dados retornados
-      if (statsData && typeof statsData === 'object' && 'error' in statsData) {
-        throw new Error(statsData.error as string);
-      }
-
       // Converter Json para WeeklyRankingStats usando unknown primeiro
       const convertedStats = statsData as unknown as WeeklyRankingStats;
       setStats(convertedStats);
 
-      // Carregar ranking atual
-      if (convertedStats && convertedStats.current_week_start) {
+      // Carregar ranking atual se houver configuração
+      if (convertedStats && convertedStats.current_week_start && !convertedStats.no_active_competition) {
         const { data: rankingData, error: rankingError } = await supabase
           .from('weekly_rankings')
           .select('*')
@@ -74,6 +73,7 @@ export const useWeeklyRanking = () => {
 
         setCurrentRanking(rankingData || []);
       } else {
+        // Se não há competição ativa, limpar ranking
         setCurrentRanking([]);
       }
 
