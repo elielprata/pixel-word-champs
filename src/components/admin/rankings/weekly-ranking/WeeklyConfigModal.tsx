@@ -70,6 +70,14 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
     }
   };
 
+  // Função para formatar data YYYY-MM-DD para DD/MM/YYYY
+  const formatDateForDisplay = (dateString: string): string => {
+    if (!dateString) return '';
+    
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   const handleSave = async () => {
     if (!startDate || !endDate) {
       toast({
@@ -111,7 +119,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
       toast({
         title: "Sucesso!",
-        description: `Competição configurada de ${startDate} a ${endDate}`,
+        description: `Competição configurada de ${formatDateForDisplay(startDate)} a ${formatDateForDisplay(endDate)}`,
       });
 
       onConfigUpdated();
@@ -163,7 +171,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
             <div className="p-3 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-700">
                 <strong>Período da Competição:</strong><br />
-                {startDate} até {endDate}
+                {formatDateForDisplay(startDate)} até {formatDateForDisplay(endDate)}
               </p>
             </div>
           )}
