@@ -25,8 +25,8 @@ export const UserManagement = () => {
     refetch: refetchUsers
   } = useUsersQuery();
 
-  const { mutate: banUser, isPending: isBanningUser } = useBanUserMutation();
-  const { mutate: unbanUser, isPending: isUnbanningUser } = useUnbanUserMutation();
+  const { banUser, isBanningUser } = useBanUserMutation();
+  const { unbanUser, isUnbanningUser } = useUnbanUserMutation();
   const { resetAllScores, isResettingScores } = useResetScores();
 
   // Filtrar usuários baseado no termo de busca
@@ -39,27 +39,13 @@ export const UserManagement = () => {
   const bannedUsers = filteredUsers.filter(user => user.is_banned);
 
   const handleBanUser = async (userId: string, reason: string) => {
-    banUser({ userId, reason }, {
-      onSuccess: () => {
-        toast({
-          title: "Usuário banido",
-          description: "O usuário foi banido com sucesso.",
-        });
-        refetchUsers();
-      }
-    });
+    // Note: This will need to be updated to include adminPassword when modal is implemented
+    banUser({ userId, reason, adminPassword: 'temp' });
   };
 
   const handleUnbanUser = async (userId: string) => {
-    unbanUser(userId, {
-      onSuccess: () => {
-        toast({
-          title: "Usuário desbanido",
-          description: "O usuário foi desbanido com sucesso.",
-        });
-        refetchUsers();
-      }
-    });
+    // Note: This will need to be updated to include adminPassword when modal is implemented
+    unbanUser({ userId, adminPassword: 'temp' });
   };
 
   const handleResetScores = async (password: string) => {
@@ -79,6 +65,10 @@ export const UserManagement = () => {
     }
   };
 
+  const handleRefresh = () => {
+    refetchUsers();
+  };
+
   const getUserStatusBadge = (user: any) => {
     if (user.is_banned) {
       return <Badge variant="destructive">Banido</Badge>;
@@ -96,7 +86,7 @@ export const UserManagement = () => {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <p className="text-red-800">Erro ao carregar usuários: {error.message}</p>
-        <Button onClick={refetchUsers} variant="outline" className="mt-2">
+        <Button onClick={handleRefresh} variant="outline" className="mt-2">
           <RefreshCw className="h-4 w-4 mr-2" />
           Tentar novamente
         </Button>
@@ -131,7 +121,7 @@ export const UserManagement = () => {
             Reset Geral
           </Button>
           
-          <Button onClick={refetchUsers} variant="outline" disabled={isLoading}>
+          <Button onClick={handleRefresh} variant="outline" disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
