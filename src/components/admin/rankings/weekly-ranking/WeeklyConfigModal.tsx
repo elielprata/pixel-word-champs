@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
-import { useUnifiedCompetitionHistory } from '@/hooks/useUnifiedCompetitionHistory';
+import { useWeeklyCompetitionHistory } from '@/hooks/useWeeklyCompetitionHistory';
 import { useWeeklyCompetitionActivation } from '@/hooks/useWeeklyCompetitionActivation';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { DeleteCompetitionModal } from './DeleteCompetitionModal';
@@ -12,7 +13,7 @@ import { DeleteCompletedCompetitionModal } from './DeleteCompletedCompetitionMod
 import { WeeklyConfigOverview } from './WeeklyConfigOverview';
 import { WeeklyConfigScheduler } from './WeeklyConfigScheduler';
 import { WeeklyConfigFinalizer } from './WeeklyConfigFinalizer';
-import { UnifiedCompetitionHistory } from './UnifiedCompetitionHistory';
+import { WeeklyConfigHistory } from './WeeklyConfigHistory';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
 
 interface WeeklyConfig {
@@ -61,11 +62,11 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   const { activateWeeklyCompetitions, isActivating } = useWeeklyCompetitionActivation();
 
   const {
-    historyData: unifiedHistoryData,
+    historyData: weeklyHistoryData,
     isLoading: historyLoading,
     totalPages: historyTotalPages,
     refetch: refetchHistory
-  } = useUnifiedCompetitionHistory(historyPage, 10);
+  } = useWeeklyCompetitionHistory(historyPage, 10);
 
   React.useEffect(() => {
     if (open && !newStartDate && !newEndDate) {
@@ -160,7 +161,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
         });
 
         onConfigUpdated();
-        refetchHistory(); // Atualizar histórico unificado
+        refetchHistory(); // Atualizar histórico semanal
         onOpenChange(false);
       } else {
         throw new Error(result.error);
@@ -217,7 +218,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
               <TabsTrigger value="finalize" className={hasEndedCompetitions ? "bg-amber-100" : ""}>
                 Finalizar Atual
               </TabsTrigger>
-              <TabsTrigger value="history">Histórico Unificado</TabsTrigger>
+              <TabsTrigger value="history">Histórico Semanal</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
@@ -256,12 +257,13 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
             </TabsContent>
 
             <TabsContent value="history" className="space-y-4">
-              <UnifiedCompetitionHistory
-                historyData={unifiedHistoryData}
+              <WeeklyConfigHistory
+                historyData={weeklyHistoryData}
                 isLoading={historyLoading}
                 totalPages={historyTotalPages}
                 currentPage={historyPage}
                 onPageChange={setHistoryPage}
+                onDeleteCompleted={handleDeleteCompleted}
               />
             </TabsContent>
           </Tabs>

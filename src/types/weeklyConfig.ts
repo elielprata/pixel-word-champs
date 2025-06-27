@@ -32,20 +32,6 @@ export interface CompetitionSnapshot {
   created_at: string;
 }
 
-export interface UnifiedCompetitionHistoryItem {
-  id: string;
-  title: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  type: 'weekly' | 'daily';
-  total_participants: number;
-  total_prize_pool: number;
-  winners_count: number;
-  finalized_at: string;
-  snapshot_exists: boolean;
-}
-
 export const isWeeklyConfigRpcResponse = (data: any): data is WeeklyConfigRpcResponse => {
   return data && typeof data === 'object' && 'success' in data;
 };

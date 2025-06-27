@@ -91,8 +91,7 @@ export const WeeklyConfigOverview: React.FC<WeeklyConfigOverviewProps> = ({
         <div>
           <h3 className="font-medium text-gray-700 mb-3">Competição Ativa</h3>
           <CompetitionCard
-            config={activeConfig}
-            isActive={true}
+            competition={activeConfig}
             onEdit={onEdit}
             onDelete={onDelete}
           />
@@ -107,8 +106,7 @@ export const WeeklyConfigOverview: React.FC<WeeklyConfigOverviewProps> = ({
             {scheduledConfigs.filter(config => config.status === 'scheduled').map((config) => (
               <CompetitionCard
                 key={config.id}
-                config={config}
-                isActive={false}
+                competition={config}
                 onEdit={onEdit}
                 onDelete={onDelete}
               />
