@@ -9,7 +9,8 @@ interface CompetitionHistoryStats {
   winnersCount: number;
 }
 
-interface CompetitionHistoryItem extends WeeklyConfig {
+interface CompetitionHistoryItem extends Omit<WeeklyConfig, 'status'> {
+  status: string; // Permitir qualquer string do banco
   stats?: CompetitionHistoryStats;
 }
 
@@ -64,7 +65,7 @@ export const useWeeklyCompetitionHistory = (page: number = 1, pageSize: number =
                   totalPrizePool: Number(snapshotData.total_prize_pool) || 0,
                   winnersCount
                 }
-              };
+              } as CompetitionHistoryItem;
             }
 
             // Fallback: buscar dados do ranking semanal
@@ -85,7 +86,7 @@ export const useWeeklyCompetitionHistory = (page: number = 1, pageSize: number =
                 totalPrizePool,
                 winnersCount
               }
-            };
+            } as CompetitionHistoryItem;
           } catch (error) {
             console.error('Erro ao buscar stats para competição:', config.id, error);
             return {
@@ -95,7 +96,7 @@ export const useWeeklyCompetitionHistory = (page: number = 1, pageSize: number =
                 totalPrizePool: 0,
                 winnersCount: 0
               }
-            };
+            } as CompetitionHistoryItem;
           }
         })
       );
