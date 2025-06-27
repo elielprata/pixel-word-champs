@@ -1,17 +1,18 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
 import { useWeeklyCompetitionHistory } from '@/hooks/useWeeklyCompetitionHistory';
 import { EditCompetitionModal } from './EditCompetitionModal';
 import { DeleteCompetitionModal } from './DeleteCompetitionModal';
-import { CompetitionCard } from './CompetitionCard';
+import { WeeklyConfigOverview } from './WeeklyConfigOverview';
+import { WeeklyConfigScheduler } from './WeeklyConfigScheduler';
+import { WeeklyConfigFinalizer } from './WeeklyConfigFinalizer';
+import { WeeklyConfigHistory } from './WeeklyConfigHistory';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
-import { Calendar, Plus, Trophy, AlertCircle, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 
 interface WeeklyConfig {
   id: string;
@@ -64,7 +65,6 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
   React.useEffect(() => {
     if (open && !newStartDate && !newEndDate) {
-      // Usar a função de cálculo inteligente de datas
       const nextDates = calculateNextDates();
       setNewStartDate(nextDates.startDate);
       setNewEndDate(nextDates.endDate);
@@ -72,24 +72,6 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   }, [open, activeConfig, scheduledConfigs, lastCompletedConfig, calculateNextDates, newStartDate, newEndDate]);
 
   const handleScheduleNew = async () => {
-    if (!newStartDate || !newEndDate) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha ambas as datas",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (new Date(newStartDate) >= new Date(newEndDate)) {
-      toast({
-        title: "Erro",
-        description: "A data de início deve ser anterior à data de fim",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setIsLoading(true);
 
@@ -181,7 +163,6 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
     onConfigUpdated();
   };
 
-  // Verificar se não há configurações ativas nem agendadas
   const hasNoActiveOrScheduled = !activeConfig && scheduledConfigs.length === 0;
 
   return (
@@ -201,252 +182,45 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
-              {configsLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Aviso quando não há configurações ativas */}
-                  {hasNoActiveOrScheduled && (
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Info className="h-5 w-5 text-blue-600" />
-                        <h3 className="font-medium text-blue-800">Sistema Pronto para Nova Configuração</h3>
-                      </div>
-                      <p className="text-blue-700 text-sm mb-2">
-                        Não há competições ativas ou agendadas no momento.
-                      </p>
-                      <p className="text-blue-600 text-sm">
-                        Use a aba "Agendar Nova" para configurar uma nova competição semanal.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Competição Ativa */}
-                  {activeConfig && (
-                    <div>
-                      <h3 className="font-medium text-gray-700 mb-2">Competição Ativa</h3>
-                      <CompetitionCard
-                        competition={activeConfig}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                      />
-                    </div>
-                  )}
-
-                  {/* Competições Agendadas */}
-                  <div>
-                    <h3 className="font-medium text-gray-700 mb-2">
-                      Competições Agendadas ({scheduledConfigs.length})
-                    </h3>
-                    {scheduledConfigs.length === 0 ? (
-                      <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg text-center">
-                        <AlertCircle className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-                        <p className="text-orange-700">Nenhuma competição agendada</p>
-                        <p className="text-orange-600 text-sm">Configure pelo menos uma para evitar interrupções</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {scheduledConfigs.map((config) => (
-                          <CompetitionCard
-                            key={config.id}
-                            competition={config}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              <WeeklyConfigOverview
+                activeConfig={activeConfig}
+                scheduledConfigs={scheduledConfigs}
+                isLoading={configsLoading}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             </TabsContent>
 
             <TabsContent value="schedule" className="space-y-4">
-              <div className="space-y-4">
-                {/* Indicador de referência para cálculo de datas */}
-                {(lastCompletedConfig || activeConfig) && (
-                  <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
-                    <p>
-                      <strong>Referência:</strong> {' '}
-                      {activeConfig ? 
-                        `Competição ativa (${formatDateForDisplay(activeConfig.start_date)} - ${formatDateForDisplay(activeConfig.end_date)})` :
-                        lastCompletedConfig ?
-                        `Última competição finalizada (${formatDateForDisplay(lastCompletedConfig.start_date)} - ${formatDateForDisplay(lastCompletedConfig.end_date)})` :
-                        'Data atual'
-                      }
-                    </p>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="new-start-date">Data de Início</Label>
-                  <Input
-                    id="new-start-date"
-                    type="date"
-                    value={newStartDate}
-                    onChange={(e) => setNewStartDate(e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="new-end-date">Data de Fim</Label>
-                  <Input
-                    id="new-end-date"
-                    type="date"
-                    value={newEndDate}
-                    onChange={(e) => setNewEndDate(e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-
-                {newStartDate && newEndDate && (
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-700">
-                      <strong>Nova Competição:</strong><br />
-                      {formatDateForDisplay(newStartDate)} até {formatDateForDisplay(newEndDate)}
-                    </p>
-                  </div>
-                )}
-
-                <Button 
-                  onClick={handleScheduleNew}
-                  disabled={isLoading || !newStartDate || !newEndDate}
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {isLoading ? 'Agendando...' : 'Agendar Competição'}
-                </Button>
-              </div>
+              <WeeklyConfigScheduler
+                newStartDate={newStartDate}
+                newEndDate={newEndDate}
+                onStartDateChange={setNewStartDate}
+                onEndDateChange={setNewEndDate}
+                onSchedule={handleScheduleNew}
+                isLoading={isLoading}
+                lastCompletedConfig={lastCompletedConfig}
+                activeConfig={activeConfig}
+              />
             </TabsContent>
 
             <TabsContent value="finalize" className="space-y-4">
-              {activeConfig ? (
-                <div className="space-y-4">
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <h3 className="font-medium text-amber-800 mb-2">Finalizar Competição Atual</h3>
-                    <p className="text-amber-700 text-sm mb-3">
-                      Período: {formatDateForDisplay(activeConfig.start_date)} até {formatDateForDisplay(activeConfig.end_date)}
-                    </p>
-                    <div className="text-amber-700 text-sm space-y-1">
-                      <p>✓ Criará backup dos ganhadores</p>
-                      <p>✓ Resetará pontuações dos usuários</p>
-                      <p>✓ Ativará próxima competição (se agendada)</p>
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={handleFinalize}
-                    disabled={isLoading}
-                    variant="destructive"
-                    className="w-full"
-                  >
-                    {isLoading ? 'Finalizando...' : 'Finalizar Competição e Resetar'}
-                  </Button>
-                </div>
-              ) : (
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
-                  <p className="text-gray-600">Nenhuma competição ativa para finalizar</p>
-                  {hasNoActiveOrScheduled && (
-                    <p className="text-gray-500 text-sm mt-2">
-                      Configure uma nova competição na aba "Agendar Nova"
-                    </p>
-                  )}
-                </div>
-              )}
+              <WeeklyConfigFinalizer
+                activeConfig={activeConfig}
+                onFinalize={handleFinalize}
+                isLoading={isLoading}
+                hasNoActiveOrScheduled={hasNoActiveOrScheduled}
+              />
             </TabsContent>
 
             <TabsContent value="history" className="space-y-4">
-              <div>
-                <h3 className="font-medium text-gray-700 mb-4">
-                  Competições Finalizadas
-                </h3>
-                
-                {historyLoading ? (
-                  <div className="flex justify-center py-8">
-                    <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-                  </div>
-                ) : historyData.length === 0 ? (
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
-                    <Trophy className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600">Nenhuma competição finalizada ainda</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {historyData.map((config) => (
-                      <div key={config.id} className="p-4 bg-white border border-gray-200 rounded-lg">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2 text-gray-800">
-                            <Trophy className="h-4 w-4" />
-                            <span className="font-medium text-sm">Finalizada</span>
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            ID: {config.id.slice(0, 8)}...
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <p className="font-medium text-gray-800">
-                            {formatDateForDisplay(config.start_date)} - {formatDateForDisplay(config.end_date)}
-                          </p>
-                          
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-500">Participantes:</span>
-                              <span className="ml-1 font-medium">{config.stats?.totalParticipants || 0}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Premiação:</span>
-                              <span className="ml-1 font-medium">R$ {(config.stats?.totalPrizePool || 0).toFixed(2)}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Ganhadores:</span>
-                              <span className="ml-1 font-medium">{config.stats?.winnersCount || 0}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Finalizada em:</span>
-                              <span className="ml-1 font-medium">
-                                {config.completed_at ? new Date(config.completed_at).toLocaleDateString('pt-BR') : '-'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <p className="text-xs text-gray-400">
-                            Criada em: {new Date(config.created_at).toLocaleDateString('pt-BR')}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Paginação */}
-                    {totalPages > 1 && (
-                      <div className="flex items-center justify-center gap-2 pt-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setHistoryPage(prev => Math.max(1, prev - 1))}
-                          disabled={historyPage === 1}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <span className="text-sm text-gray-600">
-                          Página {historyPage} de {totalPages}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setHistoryPage(prev => Math.min(totalPages, prev + 1))}
-                          disabled={historyPage === totalPages}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              <WeeklyConfigHistory
+                historyData={historyData}
+                isLoading={historyLoading}
+                totalPages={totalPages}
+                currentPage={historyPage}
+                onPageChange={setHistoryPage}
+              />
             </TabsContent>
           </Tabs>
 
