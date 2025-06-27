@@ -25,7 +25,7 @@ export const useWeeklyConfig = () => {
       setIsLoading(true);
       setError(null);
 
-      // Carregar competição ativa
+      // Carregar competição ativa (corrigido: usar status = 'active')
       const { data: activeData, error: activeError } = await supabase
         .from('weekly_config')
         .select('*')
