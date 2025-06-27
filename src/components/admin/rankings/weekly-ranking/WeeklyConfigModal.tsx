@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { formatDateForDisplay } from '@/utils/dateFormatters';
 
 interface WeeklyConfigModalProps {
   open: boolean;
@@ -68,14 +68,6 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
         variant: "destructive",
       });
     }
-  };
-
-  // Função para formatar data YYYY-MM-DD para DD/MM/YYYY
-  const formatDateForDisplay = (dateString: string): string => {
-    if (!dateString) return '';
-    
-    const [year, month, day] = dateString.split('-');
-    return `${day}/${month}/${year}`;
   };
 
   const handleSave = async () => {

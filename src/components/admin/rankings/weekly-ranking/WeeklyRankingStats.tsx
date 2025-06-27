@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trophy, Users, DollarSign, Calendar, Settings } from 'lucide-react';
 import { WeeklyConfigModal } from './WeeklyConfigModal';
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
+import { formatDateForDisplay } from '@/utils/dateFormatters';
 
 interface WeeklyStats {
   current_week_start: string;
@@ -66,7 +66,7 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
           <CardContent>
             <div className="space-y-2">
               <div className="text-lg font-semibold text-slate-900">
-                {formatBrasiliaDate(stats.current_week_start, false)} - {formatBrasiliaDate(stats.current_week_end, false)}
+                {formatDateForDisplay(stats.current_week_start)} - {formatDateForDisplay(stats.current_week_end)}
               </div>
               <Button
                 variant="outline"
