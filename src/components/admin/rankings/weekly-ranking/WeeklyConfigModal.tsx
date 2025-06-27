@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
+import { parseFinalizeResult, type FinalizeResult } from '@/utils/typeGuards';
 import { Calendar, Plus, Clock } from 'lucide-react';
 
 interface WeeklyConfig {
@@ -19,12 +20,6 @@ interface WeeklyConfig {
   completed_at?: string;
   created_at: string;
   updated_at: string;
-}
-
-interface FinalizeResult {
-  success: boolean;
-  error?: string;
-  winners_count?: number;
 }
 
 interface WeeklyConfigModalProps {
@@ -183,7 +178,8 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
       if (error) throw error;
 
-      const result = data as FinalizeResult;
+      // Usar parsing seguro para converter o resultado
+      const result = parseFinalizeResult(data);
 
       if (result.success) {
         toast({

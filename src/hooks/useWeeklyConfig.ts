@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { parseFinalizeResult, type FinalizeResult } from '@/utils/typeGuards';
 
 interface WeeklyConfig {
   id: string;
@@ -11,16 +12,6 @@ interface WeeklyConfig {
   completed_at?: string;
   created_at: string;
   updated_at: string;
-}
-
-interface FinalizeResult {
-  success: boolean;
-  error?: string;
-  winners_count?: number;
-  snapshot_id?: string;
-  finalized_competition?: any;
-  activated_competition?: any;
-  profiles_reset?: number;
 }
 
 export const useWeeklyConfig = () => {
@@ -96,7 +87,8 @@ export const useWeeklyConfig = () => {
 
       if (error) throw error;
 
-      const result = data as FinalizeResult;
+      // Usar parsing seguro para converter o resultado
+      const result = parseFinalizeResult(data);
       
       if (result.success) {
         await loadConfigurations();

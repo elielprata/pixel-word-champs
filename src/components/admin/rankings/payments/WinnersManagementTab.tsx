@@ -6,18 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { formatDateForDisplay } from '@/utils/dateFormatters';
+import { parseWinnersData, parseRankingsData, type Winner } from '@/utils/typeGuards';
 import { Trophy, Calendar, DollarSign, Users, Download, Eye } from 'lucide-react';
-
-interface Winner {
-  user_id: string;
-  username: string;
-  position: number;
-  total_score: number;
-  prize_amount: number;
-  pix_key?: string;
-  pix_holder_name?: string;
-  payment_status: string;
-}
 
 interface CompetitionSnapshot {
   id: string;
@@ -51,19 +41,11 @@ export const WinnersManagementTab = () => {
 
       if (error) throw error;
 
-      // Parse dos dados JSONB e conversão de tipo
+      // Parse dos dados JSONB com parsing seguro
       const parsedSnapshots = (data || []).map(item => ({
         ...item,
-        winners_data: Array.isArray(item.winners_data) 
-          ? item.winners_data as Winner[]
-          : typeof item.winners_data === 'string' 
-            ? JSON.parse(item.winners_data)
-            : [],
-        rankings_data: Array.isArray(item.rankings_data) 
-          ? item.rankings_data 
-          : typeof item.rankings_data === 'string' 
-            ? JSON.parse(item.rankings_data)
-            : []
+        winners_data: parseWinnersData(item.winners_data),
+        rankings_data: parseRankingsData(item.rankings_data)
       })) as CompetitionSnapshot[];
 
       setSnapshots(parsedSnapshots);
