@@ -54,7 +54,6 @@ const XPProgressSection = ({ permanentXP, temporaryScore, gamesPlayed }: XPProgr
             </div>
             <div className="text-2xl font-bold text-blue-600">{permanentXP.toLocaleString()}</div>
             <div className="text-sm text-blue-700">XP Permanente</div>
-            <div className="text-xs text-gray-500 mt-1">Nunca zera</div>
           </div>
           
           <div className="bg-purple-50 p-4 rounded-lg text-center">
@@ -63,7 +62,6 @@ const XPProgressSection = ({ permanentXP, temporaryScore, gamesPlayed }: XPProgr
             </div>
             <div className="text-2xl font-bold text-purple-600">{temporaryScore.toLocaleString()}</div>
             <div className="text-sm text-purple-700">Pontos Competição</div>
-            <div className="text-xs text-gray-500 mt-1">Para ranking semanal</div>
           </div>
         </div>
 
@@ -71,16 +69,6 @@ const XPProgressSection = ({ permanentXP, temporaryScore, gamesPlayed }: XPProgr
         <div className="text-center p-3 bg-gray-50 rounded-lg">
           <span className="text-lg font-semibold text-gray-700">{gamesPlayed}</span>
           <span className="text-sm text-gray-600 ml-2">jogos completados</span>
-        </div>
-
-        {/* Info Box */}
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <h4 className="font-semibold text-blue-900 mb-2">Como funciona o XP?</h4>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• <strong>XP Permanente:</strong> Nunca zera, representa seu progresso real</li>
-            <li>• <strong>Pontos de Competição:</strong> Usados para ranking semanal, podem zerar</li>
-            <li>• <strong>Nível:</strong> Baseado apenas no XP permanente (1000 XP = 1 nível)</li>
-          </ul>
         </div>
       </CardContent>
     </Card>
