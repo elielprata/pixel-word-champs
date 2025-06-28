@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -7,8 +6,7 @@ import { MonthlyInviteStatsCards } from './monthly-invite/MonthlyInviteStatsCard
 import { MonthlyInviteRankingTable } from './monthly-invite/MonthlyInviteRankingTable';
 import { MonthlyPrizeConfigModal } from './monthly-invite/MonthlyPrizeConfigModal';
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Trophy, Users, Gift, Settings, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertCircle, Trophy, RefreshCw } from "lucide-react";
 
 export const MonthlyInviteTab = () => {
   const { data, isLoading, error, refreshRanking, refetch } = useMonthlyInviteCompetitionSimplified();
@@ -140,38 +138,6 @@ export const MonthlyInviteTab = () => {
 
   const { competition, rankings, stats } = data;
   const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-  const hasParticipants = data.has_participants || (rankings && rankings.length > 0);
-
-  // Card informativo quando não há participantes - seguindo padrão visual
-  const NoParticipantsCard = () => (
-    <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-3 text-blue-800">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Users className="h-5 w-5 text-blue-700" />
-          </div>
-          Aguardando Participantes
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-4">
-          <p className="text-blue-700 leading-relaxed">
-            A competição está configurada e ativa, mas ainda não há participantes com convites utilizados.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg border border-blue-200">
-              <Gift className="h-5 w-5 text-blue-600 flex-shrink-0" />
-              <span className="text-sm text-blue-700">Configure os prêmios clicando em "Configurar Premiação"</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg border border-blue-200">
-              <Trophy className="h-5 w-5 text-blue-600 flex-shrink-0" />
-              <span className="text-sm text-blue-700">Participantes aparecerão quando utilizarem convites</span>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
 
   return (
     <div className="space-y-6">
@@ -190,7 +156,6 @@ export const MonthlyInviteTab = () => {
             variant="outline"
             className="bg-white hover:bg-slate-50"
           >
-            <Settings className="w-4 h-4 mr-2" />
             Configurar Premiação
           </Button>
           <Button
@@ -220,9 +185,6 @@ export const MonthlyInviteTab = () => {
         competition={competition}
         onRefresh={refetch}
       />
-
-      {/* Card de aguardando participantes */}
-      {!hasParticipants && <NoParticipantsCard />}
 
       {/* Tabela de ranking */}
       <MonthlyInviteRankingTable rankings={rankings} />
