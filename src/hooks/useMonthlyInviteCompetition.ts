@@ -78,7 +78,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
       if (userPointsResponse.status === 'rejected' || (userPointsResponse.status === 'fulfilled' && !userPointsResponse.value.success)) {
         const errorMsg = userPointsResponse.status === 'rejected' 
           ? userPointsResponse.reason 
-          : userPointsResponse.value.error;
+          : (userPointsResponse.status === 'fulfilled' ? userPointsResponse.value.error : 'Erro desconhecido');
         logger.warn('Erro ao carregar pontos do usuário', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
       }
 
@@ -109,7 +109,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
       if (statsResponse.status === 'rejected' || (statsResponse.status === 'fulfilled' && !statsResponse.value.success)) {
         const errorMsg = statsResponse.status === 'rejected' 
           ? statsResponse.reason 
-          : statsResponse.value.error;
+          : (statsResponse.status === 'fulfilled' ? statsResponse.value.error : 'Erro desconhecido');
         logger.warn('Erro ao carregar estatísticas', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
       }
 
