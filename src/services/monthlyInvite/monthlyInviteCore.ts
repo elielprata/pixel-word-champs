@@ -52,15 +52,24 @@ export class MonthlyInviteCoreService {
           return inviteMonth === targetMonth;
         });
 
-        data = {
+        // Retornar dados básicos sem campos de tabela específica
+        const result = {
           invite_points: currentMonthInvites.length * 50,
           invites_count: currentMonthInvites.length,
           active_invites_count: currentMonthInvites.length,
           month_year: targetMonth
         };
+
+        return createSuccessResponse(result);
       }
 
-      const result = data || {
+      // Se encontrou dados na tabela, retornar apenas os campos necessários
+      const result = data ? {
+        invite_points: data.invite_points,
+        invites_count: data.invites_count,
+        active_invites_count: data.active_invites_count,
+        month_year: data.month_year
+      } : {
         invite_points: 0,
         invites_count: 0,
         active_invites_count: 0,
