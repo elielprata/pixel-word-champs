@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar } from 'lucide-react';
+import { Calendar, Trophy, Users } from 'lucide-react';
 import { useMonthlyInviteCompetition } from '@/hooks/useMonthlyInviteCompetition';
 import LoadingState from './home/LoadingState';
 import { CompetitionHeader } from './monthly-invite/CompetitionHeader';
@@ -27,14 +27,23 @@ const MonthlyInviteCompetition = ({ suppressLoading = false }: MonthlyInviteComp
   }
 
   if (error || !data) {
+    const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    
     return (
-      <Card className="border-orange-200 bg-orange-50">
+      <Card className="border-blue-200 bg-blue-50">
         <CardContent className="p-4 text-center">
-          <Calendar className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-          <p className="text-orange-700 font-medium">Competição Mensal Indisponível</p>
-          <p className="text-sm text-orange-600 mt-1">
-            {error || 'Não foi possível carregar os dados da competição'}
+          <div className="flex items-center justify-center mb-3">
+            <Trophy className="w-8 h-8 text-blue-500 mr-2" />
+            <Calendar className="w-8 h-8 text-blue-500" />
+          </div>
+          <p className="text-blue-800 font-medium mb-2">Competição de Indicações de {currentMonth}</p>
+          <p className="text-sm text-blue-700 mb-2">
+            Participe automaticamente indicando seus amigos!
           </p>
+          <div className="flex items-center justify-center text-xs text-blue-600 mt-3">
+            <Users className="w-4 h-4 mr-1" />
+            <span>Competição mensal • Sem necessidade de cadastro adicional</span>
+          </div>
         </CardContent>
       </Card>
     );
