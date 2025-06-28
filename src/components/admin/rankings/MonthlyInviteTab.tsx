@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +8,7 @@ import { MonthlyInviteStatsCards } from './monthly-invite/MonthlyInviteStatsCard
 import { MonthlyInviteRankingTable } from './monthly-invite/MonthlyInviteRankingTable';
 import { MonthlyPrizeConfigModal } from './monthly-invite/MonthlyPrizeConfigModal';
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Trophy, Users, Gift } from "lucide-react";
+import { AlertCircle, Trophy, Users, Gift, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const MonthlyInviteTab = () => {
@@ -82,33 +83,40 @@ export const MonthlyInviteTab = () => {
   if (isLoading) {
     return (
       <div className="space-y-6">
+        {/* Header skeleton */}
         <div className="flex justify-between items-center">
-          <Skeleton className="h-8 w-64" />
+          <div>
+            <Skeleton className="h-8 w-80 mb-2" />
+            <Skeleton className="h-5 w-48" />
+          </div>
           <div className="flex gap-2">
-            <Skeleton className="h-9 w-32" />
-            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-10 w-36" />
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-40" />
           </div>
         </div>
         
+        {/* Stats cards skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24" />
+            <Skeleton key={i} className="h-32" />
           ))}
         </div>
         
-        <Skeleton className="h-64" />
+        {/* Table skeleton */}
+        <Skeleton className="h-96" />
       </div>
     );
   }
 
-  // Error state
+  // Error state seguindo padrão do WeeklyRankingView
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Erro ao Carregar Dados</h3>
-        <p className="text-gray-600 mb-4">{error}</p>
-        <Button onClick={refetch}>
+      <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-50 rounded-lg border border-slate-200">
+        <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+        <h3 className="text-xl font-semibold text-slate-900 mb-2">Erro ao Carregar Dados</h3>
+        <p className="text-slate-600 mb-6 max-w-md">{error}</p>
+        <Button onClick={refetch} size="lg">
           Tentar Novamente
         </Button>
       </div>
@@ -118,11 +126,13 @@ export const MonthlyInviteTab = () => {
   // Verificar se existe uma competição configurada
   if (!data?.competition) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <div className="text-6xl mb-4">📅</div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhuma Competição Configurada</h3>
-        <p className="text-gray-600 mb-4">Não foi possível encontrar ou criar a competição mensal</p>
-        <Button onClick={refetch}>
+      <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-50 rounded-lg border border-slate-200">
+        <Calendar className="h-16 w-16 text-slate-400 mb-4" />
+        <h3 className="text-xl font-semibold text-slate-900 mb-2">Nenhuma Competição Configurada</h3>
+        <p className="text-slate-600 mb-6 max-w-md">
+          Não foi possível encontrar ou criar a competição mensal
+        </p>
+        <Button onClick={refetch} size="lg">
           Tentar Novamente
         </Button>
       </div>
@@ -133,27 +143,31 @@ export const MonthlyInviteTab = () => {
   const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   const hasParticipants = data.has_participants || (rankings && rankings.length > 0);
 
-  // Exibir card informativo quando não há participantes
+  // Card informativo quando não há participantes - seguindo padrão visual
   const NoParticipantsCard = () => (
-    <Card className="border-blue-200 bg-blue-50">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-blue-800">
-          <Users className="h-5 w-5" />
+    <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-3 text-blue-800">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Users className="h-5 w-5 text-blue-700" />
+          </div>
           Aguardando Participantes
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <p className="text-blue-700">
+      <CardContent className="pt-0">
+        <div className="space-y-4">
+          <p className="text-blue-700 leading-relaxed">
             A competição está configurada e ativa, mas ainda não há participantes com convites utilizados.
           </p>
-          <div className="flex items-center gap-2 text-sm text-blue-600">
-            <Gift className="h-4 w-4" />
-            <span>Configure os prêmios clicando no botão "Configurar Prêmios"</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-blue-600">
-            <Trophy className="h-4 w-4" />
-            <span>Os participantes aparecerão assim que utilizarem códigos de convite</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg border border-blue-200">
+              <Gift className="h-5 w-5 text-blue-600 flex-shrink-0" />
+              <span className="text-sm text-blue-700">Configure os prêmios clicando em "Configurar Prêmios"</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg border border-blue-200">
+              <Trophy className="h-5 w-5 text-blue-600 flex-shrink-0" />
+              <span className="text-sm text-blue-700">Participantes aparecerão quando utilizarem convites</span>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -162,14 +176,42 @@ export const MonthlyInviteTab = () => {
 
   return (
     <div className="space-y-6">
-      <MonthlyInviteHeader
-        currentMonth={currentMonth}
-        isRefreshing={isRefreshing}
-        onRefreshRanking={handleRefreshRanking}
-        onExportWinners={exportWinners}
-        onConfigurePrizes={() => setShowPrizeConfig(true)}
-      />
+      {/* Header padronizado */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-1">Competição Mensal de Indicações</h2>
+          <p className="text-slate-600">{currentMonth}</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowPrizeConfig(true)}
+            variant="outline"
+            className="bg-white hover:bg-slate-50"
+          >
+            <Gift className="w-4 h-4 mr-2" />
+            Configurar Prêmios
+          </Button>
+          <Button
+            onClick={handleRefreshRanking}
+            disabled={isRefreshing}
+            variant="outline"
+            className="bg-white hover:bg-slate-50"
+          >
+            <Trophy className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Atualizar Ranking
+          </Button>
+          <Button 
+            onClick={exportWinners} 
+            variant="outline"
+            className="bg-white hover:bg-slate-50"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Exportar Ganhadores
+          </Button>
+        </div>
+      </div>
 
+      {/* Stats cards */}
       <MonthlyInviteStatsCards
         stats={stats}
         rankings={rankings}
@@ -177,10 +219,13 @@ export const MonthlyInviteTab = () => {
         onRefresh={refetch}
       />
 
+      {/* Card de aguardando participantes */}
       {!hasParticipants && <NoParticipantsCard />}
 
+      {/* Tabela de ranking */}
       <MonthlyInviteRankingTable rankings={rankings} />
 
+      {/* Modal de configuração de prêmios */}
       <MonthlyPrizeConfigModal
         open={showPrizeConfig}
         onOpenChange={setShowPrizeConfig}
