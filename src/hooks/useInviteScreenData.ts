@@ -43,11 +43,18 @@ export const useInviteScreenData = () => {
       const response = await optimizedInviteService.getOptimizedInviteData();
       
       if (response.success && response.data) {
+        // Type assertion adequada para os dados retornados
+        const responseData = response.data as {
+          inviteCode?: string;
+          invitedFriends?: any[];
+          stats?: { totalPoints: number; activeFriends: number; totalInvites: number };
+        };
+
         setData(prev => ({
           ...prev,
-          inviteCode: response.data?.inviteCode || '',
-          invitedFriends: response.data?.invitedFriends || [],
-          stats: response.data?.stats || { totalPoints: 0, activeFriends: 0, totalInvites: 0 },
+          inviteCode: responseData.inviteCode || '',
+          invitedFriends: responseData.invitedFriends || [],
+          stats: responseData.stats || { totalPoints: 0, activeFriends: 0, totalInvites: 0 },
           error: null
         }));
       } else {
