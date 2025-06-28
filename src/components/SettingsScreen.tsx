@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -119,19 +120,19 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   ];
 
   return (
-    <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Configurações</h1>
-          <p className="text-sm text-gray-600">Personalize sua experiência</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-3 pb-20">
+      <div className="max-w-md mx-auto space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Configurações</h1>
+            <p className="text-sm text-gray-600">Personalize sua experiência</p>
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-4">
         {/* Grupos de configurações com switches */}
         {settingsGroups.map((group, groupIndex) => (
           <Card key={groupIndex} className="shadow-sm border-0">
@@ -192,15 +193,15 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             </CardContent>
           </Card>
         ))}
-      </div>
 
-      {/* Informações do app */}
-      <div className="text-center mt-6 pt-4 border-t border-gray-200">
-        <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
-          <Smartphone className="w-4 h-4" />
-          <span>Letra Arena v1.0.0</span>
+        {/* Informações do app */}
+        <div className="text-center mt-6 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
+            <Smartphone className="w-4 h-4" />
+            <span>Letra Arena v1.0.0</span>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Feito com ❤️ para gamers brasileiros</p>
         </div>
-        <p className="text-xs text-gray-400 mt-1">Feito com ❤️ para gamers brasileiros</p>
       </div>
     </div>
   );
