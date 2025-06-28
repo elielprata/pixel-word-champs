@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { monthlyInvitePrizesService, MonthlyInvitePrize } from '@/services/monthlyInvite/monthlyInvitePrizes';
 import { useToast } from '@/hooks/use-toast';
@@ -24,7 +23,7 @@ export const useMonthlyInvitePrizes = (competitionId?: string) => {
       const response = await monthlyInvitePrizesService.getMonthlyPrizes(competitionId);
       
       if (response.success) {
-        setPrizes(response.data);
+        setPrizes(response.data as MonthlyInvitePrize[]);
       } else {
         setError(response.error || 'Erro ao carregar prêmios');
       }
