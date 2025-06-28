@@ -8,7 +8,8 @@ import { MonthlyInviteStatsCards } from './monthly-invite/MonthlyInviteStatsCard
 import { MonthlyInviteRankingTable } from './monthly-invite/MonthlyInviteRankingTable';
 import { MonthlyPrizeConfigModal } from './monthly-invite/MonthlyPrizeConfigModal';
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Trophy, Users, Gift } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const MonthlyInviteTab = () => {
   const { data, isLoading, error, refreshRanking, refetch } = useMonthlyInviteCompetitionSimplified();
@@ -115,15 +116,15 @@ export const MonthlyInviteTab = () => {
     );
   }
 
-  // No competition state
-  if (data?.no_active_competition) {
+  // Verificar se existe uma competição configurada
+  if (!data?.competition) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
         <div className="text-6xl mb-4">📅</div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhuma Competição Ativa</h3>
-        <p className="text-gray-600 mb-4">{data.message}</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhuma Competição Configurada</h3>
+        <p className="text-gray-600 mb-4">Não foi possível encontrar ou criar a competição mensal</p>
         <Button onClick={refetch}>
-          Verificar Novamente
+          Tentar Novamente
         </Button>
       </div>
     );
@@ -131,6 +132,34 @@ export const MonthlyInviteTab = () => {
 
   const { competition, rankings, stats } = data;
   const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const hasParticipants = data.has_participants || (rankings && rankings.length > 0);
+
+  // Exibir card informativo quando não há participantes
+  const NoParticipantsCard = () => (
+    <Card className="border-blue-200 bg-blue-50">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-blue-800">
+          <Users className="h-5 w-5" />
+          Aguardando Participantes
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <p className="text-blue-700">
+            A competição está configurada e ativa, mas ainda não há participantes com convites utilizados.
+          </p>
+          <div className="flex items-center gap-2 text-sm text-blue-600">
+            <Gift className="h-4 w-4" />
+            <span>Configure os prêmios clicando no botão "Configurar Prêmios"</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-blue-600">
+            <Trophy className="h-4 w-4" />
+            <span>Os participantes aparecerão assim que utilizarem códigos de convite</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
@@ -148,6 +177,8 @@ export const MonthlyInviteTab = () => {
         competition={competition}
         onRefresh={refetch}
       />
+
+      {!hasParticipants && <NoParticipantsCard />}
 
       <MonthlyInviteRankingTable rankings={rankings} />
 
