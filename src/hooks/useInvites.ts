@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { optimizedInviteService, type OptimizedInviteData } from '@/services/optimizedInviteService';
 import { useAuth } from './useAuth';
+import { logger } from '@/utils/logger';
 
 export const useInvites = () => {
   const [data, setData] = useState<OptimizedInviteData | null>(null);
@@ -24,13 +25,19 @@ export const useInvites = () => {
       if (response.success && response.data) {
         setData(response.data as OptimizedInviteData);
         setError(null);
+        
+        logger.debug('Dados de convite carregados', {
+          totalPoints: response.data.stats.totalPoints,
+          activeFriends: response.data.stats.activeFriends,
+          userLevel: response.data.stats.userLevel
+        }, 'USE_INVITES');
       } else {
         setError(response.error || 'Erro ao carregar dados de convites');
         setData(null);
       }
     } catch (err) {
       setError('Erro ao carregar dados de convites');
-      console.error('Erro ao carregar dados de convites:', err);
+      logger.error('Erro ao carregar dados de convites:', err, 'USE_INVITES');
     } finally {
       setIsLoading(false);
     }
@@ -49,13 +56,13 @@ export const useInvites = () => {
     loadInviteData();
   }, [isAuthenticated]);
 
-  // Auto-refresh a cada 2 minutos
+  // Auto-refresh com intervalo reduzido para dados mais frescos
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const interval = setInterval(() => {
       loadInviteData();
-    }, 2 * 60 * 1000); // 2 minutos
+    }, 90 * 1000); // 1.5 minutos
 
     return () => clearInterval(interval);
   }, [isAuthenticated]);
@@ -63,7 +70,17 @@ export const useInvites = () => {
   return {
     inviteCode: data?.inviteCode || '',
     invitedFriends: data?.invitedFriends || [],
-    stats: data?.stats || { totalPoints: 0, activeFriends: 0, totalInvites: 0 },
+    stats: data?.stats || { 
+      totalPoints: 0, 
+      activeFriends: 0, 
+      totalInvites: 0,
+      monthlyPoints: 0,
+      userLevel: 1,
+      nextLevel: 2,
+      levelProgress: 0,
+      totalScore: 0,
+      experiencePoints: 0
+    },
     isLoading,
     error,
     useInviteCode,

@@ -15,12 +15,22 @@ export interface InvitedFriend {
   reward: number;
   level: number;
   avatar_url?: string;
+  total_score: number;
+  games_played: number;
+  invited_at: string;
+  activated_at?: string;
 }
 
 export interface InviteStats {
   totalPoints: number;
   activeFriends: number;
   totalInvites: number;
+  monthlyPoints: number;
+  userLevel: number;
+  nextLevel: number;
+  levelProgress: number;
+  totalScore: number;
+  experiencePoints: number;
 }
 
 interface RpcResponse {
@@ -31,7 +41,7 @@ interface RpcResponse {
 
 class OptimizedInviteService {
   private cache: Map<string, { data: OptimizedInviteData; timestamp: number }> = new Map();
-  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+  private readonly CACHE_TTL = 3 * 60 * 1000; // 3 minutos para dados mais frescos
 
   async getOptimizedInviteData() {
     try {
@@ -60,13 +70,23 @@ class OptimizedInviteService {
         return createErrorResponse(error.message);
       }
 
-      // Type assertion segura para o tipo correto
+      // Processar dados da RPC
       const rpcData = data as unknown as RpcResponse;
 
       const optimizedData: OptimizedInviteData = {
         inviteCode: rpcData.inviteCode || '',
         invitedFriends: rpcData.invitedFriends || [],
-        stats: rpcData.stats || { totalPoints: 0, activeFriends: 0, totalInvites: 0 }
+        stats: {
+          totalPoints: rpcData.stats?.totalPoints || 0,
+          activeFriends: rpcData.stats?.activeFriends || 0,
+          totalInvites: rpcData.stats?.totalInvites || 0,
+          monthlyPoints: rpcData.stats?.monthlyPoints || 0,
+          userLevel: rpcData.stats?.userLevel || 1,
+          nextLevel: rpcData.stats?.nextLevel || 2,
+          levelProgress: rpcData.stats?.levelProgress || 0,
+          totalScore: rpcData.stats?.totalScore || 0,
+          experiencePoints: rpcData.stats?.experiencePoints || 0
+        }
       };
 
       // Atualizar cache
@@ -77,7 +97,9 @@ class OptimizedInviteService {
 
       logger.info('Dados otimizados carregados com sucesso', { 
         userId: user.id, 
-        cacheUpdated: true 
+        totalPoints: optimizedData.stats.totalPoints,
+        activeFriends: optimizedData.stats.activeFriends,
+        userLevel: optimizedData.stats.userLevel
       }, 'OPTIMIZED_INVITE_SERVICE');
 
       return createSuccessResponse(optimizedData);
