@@ -56,52 +56,88 @@ export const useInviteMonitoringData = (filters: MonitoringFilters) => {
           avatar_url,
           is_banned,
           banned_at,
-          ban_reason,
-          invites!invites_invited_by_fkey(
-            id,
-            code,
-            used_by,
-            created_at,
-            used_at,
-            profiles!invites_used_by_fkey(
-              id,
-              username,
-              games_played,
-              total_score,
-              created_at
-            )
-          ),
-          invite_rewards!invite_rewards_user_id_fkey(
-            id,
-            reward_amount,
-            status,
-            processed_at,
-            invited_user_id
-          )
-        `)
-        .not('invites', 'is', null);
+          ban_reason
+        `);
 
       if (usersError) {
         throw new Error(`Erro ao buscar usuários: ${usersError.message}`);
       }
 
+      if (!usersData || !Array.isArray(usersData)) {
+        throw new Error('Dados de usuários inválidos');
+      }
+
+      // Buscar convites separadamente
+      const { data: invitesData, error: invitesError } = await supabase
+        .from('invites')
+        .select(`
+          id,
+          code,
+          invited_by,
+          used_by,
+          created_at,
+          used_at
+        `);
+
+      if (invitesError) {
+        throw new Error(`Erro ao buscar convites: ${invitesError.message}`);
+      }
+
+      // Buscar perfis dos usuários convidados
+      const { data: invitedProfilesData, error: invitedProfilesError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          username,
+          games_played,
+          total_score,
+          created_at
+        `);
+
+      if (invitedProfilesError) {
+        throw new Error(`Erro ao buscar perfis convidados: ${invitedProfilesError.message}`);
+      }
+
+      // Buscar recompensas de convite
+      const { data: rewardsData, error: rewardsError } = await supabase
+        .from('invite_rewards')
+        .select(`
+          id,
+          user_id,
+          invited_user_id,
+          reward_amount,
+          status,
+          processed_at
+        `);
+
+      if (rewardsError) {
+        throw new Error(`Erro ao buscar recompensas: ${rewardsError.message}`);
+      }
+
       // Processar dados e calcular scores de suspeita
       const processedUsers: MonitoringUser[] = usersData
-        .filter(user => user.invites && user.invites.length > 0)
         .map(user => {
-          const invites = user.invites || [];
-          const rewards = user.invite_rewards || [];
+          // Filtrar convites deste usuário
+          const userInvites = invitesData?.filter(invite => invite.invited_by === user.id) || [];
           
-          const totalInvites = invites.length;
-          const processedInvites = rewards.filter(r => r.status === 'processed').length;
-          const pendingInvites = rewards.filter(r => r.status === 'pending').length;
-          const totalRewards = rewards.reduce((sum, r) => sum + (r.reward_amount || 0), 0);
+          if (userInvites.length === 0) {
+            return null; // Usuário sem convites
+          }
+
+          // Filtrar recompensas deste usuário
+          const userRewards = rewardsData?.filter(reward => reward.user_id === user.id) || [];
+          
+          const totalInvites = userInvites.length;
+          const processedInvites = userRewards.filter(r => r.status === 'processed').length;
+          const pendingInvites = userRewards.filter(r => r.status === 'pending').length;
+          const totalRewards = userRewards.reduce((sum, r) => sum + (r.reward_amount || 0), 0);
 
           // Calcular score de suspeita
           let suspicionScore = 0;
           
           // Muitas indicações em pouco tempo
-          const recentInvites = invites.filter(inv => {
+          const recentInvites = userInvites.filter(inv => {
+            if (!inv.created_at) return false;
             const inviteDate = new Date(inv.created_at);
             const daysDiff = (Date.now() - inviteDate.getTime()) / (1000 * 60 * 60 * 24);
             return daysDiff <= 7;
@@ -111,8 +147,13 @@ export const useInviteMonitoringData = (filters: MonitoringFilters) => {
           else if (recentInvites.length >= 5) suspicionScore += 30;
 
           // Usuários indicados inativos
-          const inactiveInvites = invites.filter(inv => 
-            inv.profiles && inv.profiles.games_played === 0
+          const invitedUsers = userInvites
+            .filter(inv => inv.used_by)
+            .map(inv => invitedProfilesData?.find(profile => profile.id === inv.used_by))
+            .filter(Boolean);
+
+          const inactiveInvites = invitedUsers.filter(profile => 
+            profile && profile.games_played === 0
           );
           const inactiveRate = totalInvites > 0 ? inactiveInvites.length / totalInvites : 0;
           
@@ -120,9 +161,9 @@ export const useInviteMonitoringData = (filters: MonitoringFilters) => {
           else if (inactiveRate >= 0.5) suspicionScore += 20;
 
           // Padrões de nomenclatura similar
-          const usernames = invites
-            .filter(inv => inv.profiles?.username)
-            .map(inv => inv.profiles.username.toLowerCase());
+          const usernames = invitedUsers
+            .filter(profile => profile?.username)
+            .map(profile => profile!.username.toLowerCase());
           
           const similarNames = usernames.filter(name => 
             usernames.some(otherName => 
@@ -149,25 +190,27 @@ export const useInviteMonitoringData = (filters: MonitoringFilters) => {
             pending_invites: pendingInvites,
             total_rewards: totalRewards,
             suspicion_score: Math.min(suspicionScore, 100),
-            last_invite_date: invites.length > 0 ? 
-              invites.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at 
+            last_invite_date: userInvites.length > 0 ? 
+              userInvites.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0].created_at 
               : undefined,
-            invite_timeline: invites.map(inv => ({
+            invite_timeline: userInvites.map(inv => ({
               date: inv.created_at,
-              invited_user: inv.profiles?.username || 'Usuário desconhecido',
+              invited_user: invitedProfilesData?.find(p => p.id === inv.used_by)?.username || 'Usuário desconhecido',
               status: inv.used_by ? 'used' : 'pending'
             })),
-            invited_users: invites.filter(inv => inv.profiles).map(inv => ({
-              id: inv.profiles.id,
-              username: inv.profiles.username,
-              games_played: inv.profiles.games_played,
-              total_score: inv.profiles.total_score,
-              created_at: inv.profiles.created_at,
-              invite_date: inv.created_at
+            invited_users: invitedUsers.filter(Boolean).map(profile => ({
+              id: profile!.id,
+              username: profile!.username,
+              games_played: profile!.games_played,
+              total_score: profile!.total_score,
+              created_at: profile!.created_at,
+              invite_date: userInvites.find(inv => inv.used_by === profile!.id)?.created_at
             }))
           };
         })
-        .filter(user => {
+        .filter((user): user is MonitoringUser => {
+          if (!user) return false;
+          
           // Aplicar filtros
           if (filters.minInvites > 0 && user.total_invites < filters.minInvites) return false;
           

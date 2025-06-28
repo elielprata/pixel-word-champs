@@ -69,14 +69,6 @@ export const InviteMonitoringTable = ({
     setShowDetailModal(true);
   };
 
-  const handleBanUser = async (reason: string, adminPassword: string) => {
-    if (selectedUser) {
-      await onBanUser(selectedUser.id, reason, adminPassword);
-      setShowBanModal(false);
-      setSelectedUser(null);
-    }
-  };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('pt-BR');
@@ -231,9 +223,7 @@ export const InviteMonitoringTable = ({
               setShowBanModal(false);
               setSelectedUser(null);
             }}
-            onConfirm={handleBanUser}
-            userName={selectedUser.username}
-            isLoading={isBanningUser}
+            user={selectedUser}
           />
           
           <UserDetailModal
