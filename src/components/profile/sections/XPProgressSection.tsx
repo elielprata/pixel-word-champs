@@ -1,21 +1,20 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Star, Trophy, Zap } from 'lucide-react';
 import { gameScoreService } from '@/services/gameScoreService';
-
 interface XPProgressSectionProps {
   permanentXP: number; // experience_points
   temporaryScore: number; // total_score
   gamesPlayed: number;
 }
-
-const XPProgressSection = ({ permanentXP, temporaryScore, gamesPlayed }: XPProgressSectionProps) => {
+const XPProgressSection = ({
+  permanentXP,
+  temporaryScore,
+  gamesPlayed
+}: XPProgressSectionProps) => {
   const levelInfo = gameScoreService.calculateLevelProgress(permanentXP);
-
-  return (
-    <Card className="shadow-sm border-0">
+  return <Card className="shadow-sm border-0">
       <CardHeader className="pb-4">
         <CardTitle className="text-lg flex items-center gap-2">
           <Star className="w-5 h-5 text-yellow-500" />
@@ -53,7 +52,7 @@ const XPProgressSection = ({ permanentXP, temporaryScore, gamesPlayed }: XPProgr
               <Zap className="w-5 h-5 text-blue-600" />
             </div>
             <div className="text-2xl font-bold text-blue-600">{permanentXP.toLocaleString()}</div>
-            <div className="text-sm text-blue-700">XP Permanente</div>
+            <div className="text-sm text-blue-700">XP</div>
           </div>
           
           <div className="bg-purple-50 p-4 rounded-lg text-center">
@@ -71,8 +70,6 @@ const XPProgressSection = ({ permanentXP, temporaryScore, gamesPlayed }: XPProgr
           <span className="text-sm text-gray-600 ml-2">jogos completados</span>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default XPProgressSection;
