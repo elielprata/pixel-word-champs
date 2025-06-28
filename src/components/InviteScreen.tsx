@@ -13,6 +13,8 @@ import GamifiedInviteStats from './invite/GamifiedInviteStats';
 import MyInviteRanking from './invite/MyInviteRanking';
 import MyInviteCode from './invite/MyInviteCode';
 import MyInvitedFriends from './invite/MyInvitedFriends';
+import MonthlyPrizeDisplay from './invite/MonthlyPrizeDisplay';
+import { useMonthlyInviteCompetitionSimplified } from '@/hooks/useMonthlyInviteCompetitionSimplified';
 
 const InviteScreen = () => {
   const { toast } = useToast();
@@ -24,6 +26,9 @@ const InviteScreen = () => {
     isLoading,
     error
   } = useInvites();
+
+  // Buscar dados da competição mensal para premiação
+  const { data: monthlyData, isLoading: monthlyLoading } = useMonthlyInviteCompetitionSimplified();
 
   const handleCopyCode = () => {
     if (!inviteCode) return;
@@ -61,6 +66,14 @@ const InviteScreen = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-3 pb-20">
       <div className="max-w-md mx-auto space-y-4">
         <InviteHeader />
+
+        {/* Premiação do Mês */}
+        {!monthlyLoading && monthlyData && (
+          <MonthlyPrizeDisplay 
+            topPerformers={monthlyData.stats?.topPerformers || []}
+            totalPrizePool={monthlyData.stats?.totalPrizePool || 0}
+          />
+        )}
 
         {/* Minha Posição no Ranking */}
         <MyInviteRanking />
