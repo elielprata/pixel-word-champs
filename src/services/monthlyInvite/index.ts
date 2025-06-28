@@ -2,11 +2,13 @@
 import { MonthlyInviteCoreService } from './monthlyInviteCore';
 import { MonthlyInviteCompetitionService } from './monthlyInviteCompetition';
 import { MonthlyInviteStatsService } from './monthlyInviteStats';
+import { MonthlyInvitePrizesService } from './monthlyInvitePrizes';
 
 class MonthlyInviteService {
   private coreService = new MonthlyInviteCoreService();
   private competitionService = new MonthlyInviteCompetitionService();
   private statsService = new MonthlyInviteStatsService();
+  private prizesService = new MonthlyInvitePrizesService();
 
   // Métodos do core service
   getCurrentMonth() {
@@ -37,6 +39,27 @@ class MonthlyInviteService {
   // Métodos do stats service
   async getMonthlyStats(monthYear?: string) {
     return this.statsService.getMonthlyStats(monthYear);
+  }
+
+  // Métodos do prizes service
+  async getMonthlyPrizes(competitionId?: string) {
+    return this.prizesService.getMonthlyPrizes(competitionId);
+  }
+
+  async updatePrize(prizeId: string, updates: any) {
+    return this.prizesService.updatePrize(prizeId, updates);
+  }
+
+  async createPrize(competitionId: string, position: number, prizeAmount: number, description?: string) {
+    return this.prizesService.createPrize(competitionId, position, prizeAmount, description);
+  }
+
+  async deletePrize(prizeId: string) {
+    return this.prizesService.deletePrize(prizeId);
+  }
+
+  async togglePrizeStatus(prizeId: string, active: boolean) {
+    return this.prizesService.togglePrizeStatus(prizeId, active);
   }
 }
 

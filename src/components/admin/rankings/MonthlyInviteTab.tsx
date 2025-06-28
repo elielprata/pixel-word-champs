@@ -6,10 +6,12 @@ import { useMonthlyInviteCompetition } from '@/hooks/useMonthlyInviteCompetition
 import { MonthlyInviteHeader } from './monthly-invite/MonthlyInviteHeader';
 import { MonthlyInviteStatsCards } from './monthly-invite/MonthlyInviteStatsCards';
 import { MonthlyInviteRankingTable } from './monthly-invite/MonthlyInviteRankingTable';
+import { MonthlyPrizeConfigModal } from './monthly-invite/MonthlyPrizeConfigModal';
 
 export const MonthlyInviteTab = () => {
   const { data, refreshRanking } = useMonthlyInviteCompetition();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showPrizeConfig, setShowPrizeConfig] = useState(false);
   const { toast } = useToast();
 
   const handleRefreshRanking = async () => {
@@ -95,6 +97,7 @@ export const MonthlyInviteTab = () => {
         isRefreshing={isRefreshing}
         onRefreshRanking={handleRefreshRanking}
         onExportWinners={exportWinners}
+        onConfigurePrizes={() => setShowPrizeConfig(true)}
       />
 
       <MonthlyInviteStatsCards
@@ -104,6 +107,12 @@ export const MonthlyInviteTab = () => {
       />
 
       <MonthlyInviteRankingTable rankings={rankings} />
+
+      <MonthlyPrizeConfigModal
+        open={showPrizeConfig}
+        onOpenChange={setShowPrizeConfig}
+        competitionId={competition?.id}
+      />
     </div>
   );
 };
