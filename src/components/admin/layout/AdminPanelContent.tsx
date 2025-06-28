@@ -8,6 +8,7 @@ import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 import { AdvancedSystemTab } from '@/components/admin/AdvancedSystemTab';
 import { ValidationTabContent } from '@/components/admin/layout/ValidationTabContent';
+import { InviteDashboard } from '@/components/admin/InviteDashboard';
 import { logger } from '@/utils/logger';
 
 export const AdminPanelContent: React.FC = () => {
@@ -25,6 +26,10 @@ export const AdminPanelContent: React.FC = () => {
 
       <TabsContent value="game-content">
         <GameContentTab />
+      </TabsContent>
+
+      <TabsContent value="invites">
+        <InviteDashboard />
       </TabsContent>
 
       <TabsContent value="integrations">
