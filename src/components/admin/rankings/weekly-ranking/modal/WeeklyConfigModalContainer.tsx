@@ -64,7 +64,11 @@ export const WeeklyConfigModalContainer: React.FC<WeeklyConfigModalContainerProp
               onPageChange={handlers.onPageChange}
             />
             
-            <WeeklyConfigModalActions onClose={() => onOpenChange(false)} />
+            <WeeklyConfigModalActions 
+              onClose={() => onOpenChange(false)}
+              isLoading={modalData.isLoading || false}
+              isActivating={modalData.isActivating || false}
+            />
           </WeeklyConfigModalErrorBoundary>
         </DialogContent>
       </Dialog>
