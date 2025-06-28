@@ -19,11 +19,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     );
 
-    const { username, email } = await req.json();
+    const { username, email, phone } = await req.json();
 
-    if (!username && !email) {
+    if (!username && !email && !phone) {
       return new Response(
-        JSON.stringify({ error: 'Username ou email deve ser fornecido' }),
+        JSON.stringify({ error: 'Username, email ou phone deve ser fornecido' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -31,11 +31,12 @@ serve(async (req) => {
       );
     }
 
-    console.log('Verificando disponibilidade:', { username, email });
+    console.log('Verificando disponibilidade:', { username, email, phone });
 
     const { data, error } = await supabaseClient.rpc('check_user_availability', {
       check_username: username || null,
-      check_email: email || null
+      check_email: email || null,
+      check_phone: phone || null
     });
 
     if (error) {

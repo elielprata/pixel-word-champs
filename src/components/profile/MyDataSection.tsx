@@ -1,10 +1,11 @@
 
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useToast } from "@/hooks/use-toast";
+import { useUsernameVerification } from '@/hooks/useUsernameVerification';
+import { usePhoneVerification } from '@/hooks/usePhoneVerification';
 import DataSectionHeader from './sections/DataSectionHeader';
 import AvatarSection from './sections/AvatarSection';
 import UsernameSection from './sections/UsernameSection';
@@ -28,8 +29,33 @@ const MyDataSection = () => {
   const [showPixKey, setShowPixKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Hooks de verificação
+  const usernameCheck = useUsernameVerification(editData.username);
+  const phoneCheck = usePhoneVerification(editData.phone, user?.phone);
+
   const isValidUsername = (username: string) => {
     return username.trim().length >= 3 && username.trim().length <= 30;
+  };
+
+  // Verificar se há conflitos de duplicidade
+  const hasUsernameConflict = () => {
+    if (!isEditing || editData.username === user?.username) return false;
+    return editData.username.length >= 3 && usernameCheck.exists;
+  };
+
+  const hasPhoneConflict = () => {
+    if (!isEditing) return false;
+    const cleanPhone = editData.phone.replace(/\D/g, '');
+    const cleanCurrentPhone = (user?.phone || '').replace(/\D/g, '');
+    if (cleanPhone === cleanCurrentPhone) return false;
+    return cleanPhone.length >= 10 && phoneCheck.exists;
+  };
+
+  const canSave = () => {
+    if (!isValidUsername(editData.username)) return false;
+    if (hasUsernameConflict() || hasPhoneConflict()) return false;
+    if (usernameCheck.checking || phoneCheck.checking) return false;
+    return true;
   };
 
   const handleStartEdit = () => {
@@ -55,10 +81,10 @@ const MyDataSection = () => {
   };
 
   const handleSave = async () => {
-    if (!isValidUsername(editData.username)) {
+    if (!canSave()) {
       toast({
-        title: "Nome inválido",
-        description: "O nome deve ter entre 3 e 30 caracteres.",
+        title: "Não é possível salvar",
+        description: "Verifique os dados informados e tente novamente.",
         variant: "destructive",
       });
       return;
@@ -112,6 +138,7 @@ const MyDataSection = () => {
         isLoading={isLoading}
         isValidUsername={isValidUsername}
         editUsername={editData.username}
+        canSave={canSave()}
         onStartEdit={handleStartEdit}
         onCancelEdit={handleCancelEdit}
         onSave={handleSave}
@@ -155,6 +182,15 @@ const MyDataSection = () => {
           onToggleShowPixKey={() => setShowPixKey(!showPixKey)}
         />
 
+        {isEditing && (hasUsernameConflict() || hasPhoneConflict()) && (
+          <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+            <p className="text-sm text-red-800">
+              <strong>Atenção:</strong> Alguns dados já estão em uso por outro usuário. 
+              Corrija os conflitos antes de salvar.
+            </p>
+          </div>
+        )}
+
         {isEditing && (
           <div className="bg-blue-50 p-3 rounded-lg border">
             <p className="text-sm text-blue-800">
@@ -169,4 +205,3 @@ const MyDataSection = () => {
 };
 
 export default MyDataSection;
-
