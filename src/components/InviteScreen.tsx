@@ -66,12 +66,10 @@ const InviteScreen = () => {
       <div className="max-w-md mx-auto space-y-4">
         <InviteHeader />
 
-        {/* Premiação do Mês - Exibir prêmios configurados */}
-        {!monthlyLoading && monthlyData?.stats?.configuredPrizes && (
-          <MonthlyPrizeDisplay 
-            configuredPrizes={monthlyData.stats.configuredPrizes}
-          />
-        )}
+        {/* Premiação do Mês - SEMPRE exibir, mesmo durante carregamento */}
+        <MonthlyPrizeDisplay 
+          configuredPrizes={monthlyData?.stats?.configuredPrizes || []}
+        />
 
         {/* Minha Posição no Ranking */}
         <MyInviteRanking />
