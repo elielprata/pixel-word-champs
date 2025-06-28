@@ -3,12 +3,11 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMonthlyInviteCompetitionSimplified } from '@/hooks/useMonthlyInviteCompetitionSimplified';
-import { MonthlyInviteHeader } from './monthly-invite/MonthlyInviteHeader';
 import { MonthlyInviteStatsCards } from './monthly-invite/MonthlyInviteStatsCards';
 import { MonthlyInviteRankingTable } from './monthly-invite/MonthlyInviteRankingTable';
 import { MonthlyPrizeConfigModal } from './monthly-invite/MonthlyPrizeConfigModal';
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Trophy, Users, Gift, Calendar } from "lucide-react";
+import { AlertCircle, Trophy, Users, Gift, Settings, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const MonthlyInviteTab = () => {
@@ -127,7 +126,7 @@ export const MonthlyInviteTab = () => {
   if (!data?.competition) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-50 rounded-lg border border-slate-200">
-        <Calendar className="h-16 w-16 text-slate-400 mb-4" />
+        <Trophy className="h-16 w-16 text-slate-400 mb-4" />
         <h3 className="text-xl font-semibold text-slate-900 mb-2">Nenhuma Competição Configurada</h3>
         <p className="text-slate-600 mb-6 max-w-md">
           Não foi possível encontrar ou criar a competição mensal
@@ -162,7 +161,7 @@ export const MonthlyInviteTab = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg border border-blue-200">
               <Gift className="h-5 w-5 text-blue-600 flex-shrink-0" />
-              <span className="text-sm text-blue-700">Configure os prêmios clicando em "Configurar Prêmios"</span>
+              <span className="text-sm text-blue-700">Configure os prêmios clicando em "Configurar Premiação"</span>
             </div>
             <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg border border-blue-200">
               <Trophy className="h-5 w-5 text-blue-600 flex-shrink-0" />
@@ -176,11 +175,14 @@ export const MonthlyInviteTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header padronizado */}
+      {/* Header padronizado seguindo exatamente o padrão do Ranking Semanal */}
       <div className="flex justify-between items-start">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-1">Competição Mensal de Indicações</h2>
-          <p className="text-slate-600">{currentMonth}</p>
+          <div className="flex items-center gap-2 mb-1">
+            <Trophy className="w-6 h-6 text-amber-500" />
+            <h2 className="text-2xl font-bold text-slate-900">Competição Mensal de Indicações</h2>
+          </div>
+          <p className="text-slate-600">Classificação dos participantes do mês - {currentMonth}</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -188,8 +190,8 @@ export const MonthlyInviteTab = () => {
             variant="outline"
             className="bg-white hover:bg-slate-50"
           >
-            <Gift className="w-4 h-4 mr-2" />
-            Configurar Prêmios
+            <Settings className="w-4 h-4 mr-2" />
+            Configurar Premiação
           </Button>
           <Button
             onClick={handleRefreshRanking}
@@ -197,15 +199,15 @@ export const MonthlyInviteTab = () => {
             variant="outline"
             className="bg-white hover:bg-slate-50"
           >
-            <Trophy className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Atualizar Ranking
+            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Atualizar
           </Button>
           <Button 
             onClick={exportWinners} 
             variant="outline"
             className="bg-white hover:bg-slate-50"
           >
-            <Calendar className="w-4 h-4 mr-2" />
+            <Trophy className="w-4 h-4 mr-2" />
             Exportar Ganhadores
           </Button>
         </div>
