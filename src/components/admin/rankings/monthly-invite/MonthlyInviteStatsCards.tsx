@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, DollarSign, Trophy, Calendar, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { useMonthlyInvitePrizes } from '@/hooks/useMonthlyInvitePrizes';
 import { monthlyInviteUnifiedService } from '@/services/monthlyInvite/monthlyInviteUnified';
 import { useToast } from '@/hooks/use-toast';
 
@@ -23,18 +22,7 @@ interface MonthlyInviteStatsCardsProps {
 }
 
 export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefresh }: MonthlyInviteStatsCardsProps) => {
-  const { databasePrizePool, calculateTotalPrizePool, forceRecalculation, isLoading } = useMonthlyInvitePrizes(competition?.id);
   const { toast } = useToast();
-  
-  // Calcular valores dinamicamente
-  const calculatedTotal = calculateTotalPrizePool();
-  const dynamicPrizePool = Math.max(calculatedTotal, databasePrizePool, competition?.total_prize_pool || 0);
-  const isDesynchronized = Math.abs(databasePrizePool - calculatedTotal) > 0.01;
-
-  const handleSyncPrizes = async () => {
-    await forceRecalculation();
-    onRefresh?.();
-  };
 
   const handleRefreshData = async () => {
     try {
@@ -57,8 +45,8 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
     }
   };
 
-  // Usar dados das stats ao invés de props separadas - seguindo padrão semanal
   const totalParticipants = stats?.totalParticipants || 0;
+  const totalPrizePool = stats?.totalPrizePool || 0;
   const winnersCount = rankings?.filter((r: any) => r.prize_amount > 0).length || 0;
   const competitionStatus = competition?.status || 'inactive';
 
@@ -87,32 +75,11 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
 
       <Card>
         <CardContent className="p-6 text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <DollarSign className="w-8 h-8 text-green-500" />
-            {isDesynchronized && (
-              <Button
-                onClick={handleSyncPrizes}
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                disabled={isLoading}
-                title="Sincronizar valores"
-              >
-                <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
-              </Button>
-            )}
-          </div>
+          <DollarSign className="w-8 h-8 text-green-500 mx-auto mb-2" />
           <div className="text-2xl font-bold text-green-600">
-            R$ {dynamicPrizePool.toFixed(2)}
+            R$ {totalPrizePool.toFixed(2)}
           </div>
-          <div className="text-sm text-gray-600">
-            Total Prêmios
-            {isDesynchronized && (
-              <span className="text-amber-600 block text-xs">
-                (Calculado: R$ {calculatedTotal.toFixed(2)})
-              </span>
-            )}
-          </div>
+          <div className="text-sm text-gray-600">Total Prêmios</div>
         </CardContent>
       </Card>
 
