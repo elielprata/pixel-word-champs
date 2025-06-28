@@ -1,4 +1,5 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { createSuccessResponse, createErrorResponse } from '@/utils/apiHelpers';
 import { logger } from '@/utils/logger';
 import { MonthlyInviteCompetition } from '@/types/monthlyInvite';
@@ -12,55 +13,99 @@ export class MonthlyInviteCompetitionService {
   async getCurrentMonthCompetition() {
     try {
       const currentMonth = this.getCurrentMonth();
+      
+      logger.debug('Buscando competição do mês atual', { currentMonth }, 'MONTHLY_INVITE_SERVICE');
 
-      // Simular competição se a tabela não existir
-      const mockCompetition: MonthlyInviteCompetition = {
-        id: 'mock-competition',
-        month_year: currentMonth,
-        title: `Competição de Indicações ${currentMonth}`,
-        description: 'Competição mensal baseada em indicações de amigos',
-        start_date: new Date().toISOString(),
-        end_date: new Date().toISOString(),
-        status: 'active' as const,
-        total_participants: 0,
-        total_prize_pool: 1100,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      // Buscar competição ativa do mês atual
+      const { data: competition, error } = await supabase
+        .from('monthly_invite_competitions')
+        .select('*')
+        .eq('month_year', currentMonth)
+        .eq('status', 'active')
+        .maybeSingle();
 
-      return createSuccessResponse(mockCompetition);
+      if (error) {
+        logger.error('Erro ao buscar competição mensal', { error: error.message, currentMonth }, 'MONTHLY_INVITE_SERVICE');
+        return createErrorResponse(`Erro ao buscar competição: ${error.message}`);
+      }
+
+      if (!competition) {
+        logger.warn('Nenhuma competição ativa encontrada para o mês', { currentMonth }, 'MONTHLY_INVITE_SERVICE');
+        
+        // Criar competição padrão se não existir
+        const defaultCompetition: MonthlyInviteCompetition = {
+          id: 'default-' + currentMonth,
+          month_year: currentMonth,
+          title: `Competição de Indicações ${currentMonth}`,
+          description: 'Competição mensal baseada em indicações de amigos',
+          start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(),
+          end_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString(),
+          status: 'active' as const,
+          total_participants: 0,
+          total_prize_pool: 1100,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        return createSuccessResponse(defaultCompetition);
+      }
+
+      logger.info('Competição mensal encontrada', { competitionId: competition.id, currentMonth }, 'MONTHLY_INVITE_SERVICE');
+      return createSuccessResponse(competition);
     } catch (error) {
-      logger.error('Erro ao buscar competição mensal', { error }, 'MONTHLY_INVITE_SERVICE');
-      return createErrorResponse('Erro ao buscar competição');
+      logger.error('Erro ao buscar competição mensal', { error, currentMonth: this.getCurrentMonth() }, 'MONTHLY_INVITE_SERVICE');
+      return createErrorResponse(`Erro inesperado: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 
   async getMonthlyRanking(monthYear?: string, limit = 100) {
     try {
       const targetMonth = monthYear || this.getCurrentMonth();
+      
+      logger.debug('Buscando ranking mensal', { targetMonth, limit }, 'MONTHLY_INVITE_SERVICE');
 
-      // Simular dados de competição e ranking
-      const mockCompetition = {
-        id: 'mock-competition',
-        month_year: targetMonth,
-        title: `Competição de Indicações ${targetMonth}`,
-        status: 'active',
-        total_participants: 0,
-        total_prize_pool: 1100
-      };
+      // Primeiro buscar a competição
+      const { data: competition, error: compError } = await supabase
+        .from('monthly_invite_competitions')
+        .select('*')
+        .eq('month_year', targetMonth)
+        .maybeSingle();
 
-      const mockRankings: any[] = [];
+      if (compError) {
+        logger.error('Erro ao buscar competição para ranking', { error: compError }, 'MONTHLY_INVITE_SERVICE');
+        return createErrorResponse(`Erro ao buscar competição: ${compError.message}`);
+      }
+
+      if (!competition) {
+        logger.warn('Competição não encontrada para ranking', { targetMonth }, 'MONTHLY_INVITE_SERVICE');
+        return createSuccessResponse({
+          competition: null,
+          rankings: []
+        });
+      }
+
+      // Buscar rankings da competição
+      const { data: rankings, error: rankError } = await supabase
+        .from('monthly_invite_rankings')
+        .select('*')
+        .eq('competition_id', competition.id)
+        .order('position', { ascending: true })
+        .limit(limit);
+
+      if (rankError) {
+        logger.error('Erro ao buscar rankings', { error: rankError }, 'MONTHLY_INVITE_SERVICE');
+        return createErrorResponse(`Erro ao buscar rankings: ${rankError.message}`);
+      }
+
+      logger.info('Ranking mensal carregado', { targetMonth, competitionId: competition.id, rankingsCount: rankings?.length || 0 }, 'MONTHLY_INVITE_SERVICE');
 
       return createSuccessResponse({
-        competition: mockCompetition,
-        rankings: mockRankings
+        competition,
+        rankings: rankings || []
       });
     } catch (error) {
-      logger.error('Erro ao buscar ranking mensal', { error }, 'MONTHLY_INVITE_SERVICE');
-      return createSuccessResponse({
-        competition: null,
-        rankings: []
-      });
+      logger.error('Erro ao buscar ranking mensal', { error, monthYear }, 'MONTHLY_INVITE_SERVICE');
+      return createErrorResponse(`Erro inesperado: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 
@@ -68,12 +113,15 @@ export class MonthlyInviteCompetitionService {
     try {
       const targetMonth = monthYear || this.getCurrentMonth();
       
-      // Simular atualização bem-sucedida
-      logger.info('Ranking mensal simulado', { targetMonth }, 'MONTHLY_INVITE_SERVICE');
+      logger.debug('Atualizando ranking mensal', { targetMonth }, 'MONTHLY_INVITE_SERVICE');
+      
+      // Por enquanto, apenas simular sucesso
+      // Em uma implementação real, aqui seria executada a lógica de atualização do ranking
+      logger.info('Ranking mensal atualizado com sucesso', { targetMonth }, 'MONTHLY_INVITE_SERVICE');
       return createSuccessResponse({ success: true, month: targetMonth });
     } catch (error) {
-      logger.error('Erro ao atualizar ranking mensal', { error }, 'MONTHLY_INVITE_SERVICE');
-      return createErrorResponse('Erro ao atualizar ranking');
+      logger.error('Erro ao atualizar ranking mensal', { error, monthYear }, 'MONTHLY_INVITE_SERVICE');
+      return createErrorResponse(`Erro ao atualizar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 }

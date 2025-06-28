@@ -32,8 +32,11 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
     setError(null);
 
     try {
+      logger.debug('Iniciando carregamento de dados da competição mensal', { userId: user?.id, monthYear }, 'MONTHLY_INVITE_HOOK');
+
       // Se não estiver autenticado, criar dados padrão
       if (!isAuthenticated || !user?.id) {
+        logger.info('Usuário não autenticado, retornando dados padrão', undefined, 'MONTHLY_INVITE_HOOK');
         const defaultData: MonthlyInviteData = {
           userPoints: {
             invite_points: 0,
@@ -54,7 +57,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
         return;
       }
 
-      // Load all data in parallel
+      // Carregar todos os dados em paralelo
       const [userPointsResponse, rankingResponse, userPositionResponse, statsResponse] = await Promise.allSettled([
         monthlyInviteService.getUserMonthlyPoints(user.id, monthYear),
         monthlyInviteService.getMonthlyRanking(monthYear),
@@ -62,7 +65,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
         monthlyInviteService.getMonthlyStats(monthYear)
       ]);
 
-      // Process results with fallbacks
+      // Processar resultados e log de erros específicos
       const userPoints = userPointsResponse.status === 'fulfilled' && userPointsResponse.value.success
         ? userPointsResponse.value.data
         : {
@@ -72,9 +75,23 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
             month_year: monthYear || new Date().toISOString().slice(0, 7)
           };
 
+      if (userPointsResponse.status === 'rejected' || (userPointsResponse.status === 'fulfilled' && !userPointsResponse.value.success)) {
+        const errorMsg = userPointsResponse.status === 'rejected' 
+          ? userPointsResponse.reason 
+          : userPointsResponse.value.error;
+        logger.warn('Erro ao carregar pontos do usuário', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
+      }
+
       const rankingData = rankingResponse.status === 'fulfilled' && rankingResponse.value.success
         ? rankingResponse.value.data
         : { competition: null, rankings: [] };
+
+      if (rankingResponse.status === 'rejected' || (rankingResponse.status === 'fulfilled' && !rankingResponse.value.success)) {
+        const errorMsg = rankingResponse.status === 'rejected' 
+          ? rankingResponse.reason 
+          : rankingResponse.value.error;
+        logger.warn('Erro ao carregar ranking', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
+      }
 
       const userPosition = userPositionResponse.status === 'fulfilled' && userPositionResponse.value.success
         ? userPositionResponse.value.data
@@ -88,7 +105,14 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
             topPerformers: []
           };
 
-      setData({
+      if (statsResponse.status === 'rejected' || (statsResponse.status === 'fulfilled' && !statsResponse.value.success)) {
+        const errorMsg = statsResponse.status === 'rejected' 
+          ? statsResponse.reason 
+          : statsResponse.value.error;
+        logger.warn('Erro ao carregar estatísticas', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
+      }
+
+      const finalData: MonthlyInviteData = {
         userPoints: userPoints || {
           invite_points: 0,
           invites_count: 0,
@@ -99,30 +123,21 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
         rankings: rankingData.rankings || [],
         userPosition,
         stats: statsData
-      });
+      };
+
+      logger.info('Dados da competição mensal carregados com sucesso', { 
+        userId: user.id, 
+        hasCompetition: !!finalData.competition,
+        rankingsCount: finalData.rankings.length,
+        userPoints: finalData.userPoints.invite_points
+      }, 'MONTHLY_INVITE_HOOK');
+
+      setData(finalData);
 
     } catch (err) {
-      logger.error('Erro ao carregar competição mensal', { error: err }, 'MONTHLY_INVITE_HOOK');
-      
-      // Em caso de erro, definir dados padrão ao invés de erro
-      const fallbackData: MonthlyInviteData = {
-        userPoints: {
-          invite_points: 0,
-          invites_count: 0,
-          active_invites_count: 0,
-          month_year: monthYear || new Date().toISOString().slice(0, 7)
-        },
-        competition: null,
-        rankings: [],
-        userPosition: null,
-        stats: {
-          totalParticipants: 0,
-          totalPrizePool: 0,
-          topPerformers: []
-        }
-      };
-      setData(fallbackData);
-      setError(null); // Não mostrar erro, apenas dados padrão
+      const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
+      logger.error('Erro crítico ao carregar competição mensal', { error: err, userId: user?.id }, 'MONTHLY_INVITE_HOOK');
+      setError(errorMsg);
       
     } finally {
       setIsLoading(false);
@@ -131,9 +146,11 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
 
   const refreshRanking = async () => {
     try {
+      logger.debug('Atualizando ranking mensal', { monthYear }, 'MONTHLY_INVITE_HOOK');
       const response = await monthlyInviteService.refreshMonthlyRanking(monthYear);
       if (response.success) {
-        await loadData(); // Reload all data
+        await loadData(); // Recarregar todos os dados
+        logger.info('Ranking atualizado e dados recarregados', undefined, 'MONTHLY_INVITE_HOOK');
       }
       return response;
     } catch (error) {

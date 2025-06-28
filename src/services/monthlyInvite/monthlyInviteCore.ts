@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { createSuccessResponse } from '@/utils/apiHelpers';
+import { createSuccessResponse, createErrorResponse } from '@/utils/apiHelpers';
 import { logger } from '@/utils/logger';
 
 export class MonthlyInviteCoreService {
@@ -13,6 +13,8 @@ export class MonthlyInviteCoreService {
     try {
       const targetMonth = monthYear || this.getCurrentMonth();
       
+      logger.debug('Buscando pontos mensais do usuário', { userId, targetMonth }, 'MONTHLY_INVITE_SERVICE');
+      
       // Se não há userId, retornar dados padrão
       if (!userId) {
         return createSuccessResponse({
@@ -23,78 +25,117 @@ export class MonthlyInviteCoreService {
         });
       }
 
-      // Primeiro, tentar buscar da tabela monthly_invite_points se existir
-      let { data, error } = await supabase
+      // Primeiro, tentar buscar da tabela monthly_invite_points
+      const { data: monthlyData, error: monthlyError } = await supabase
         .from('monthly_invite_points')
         .select('*')
         .eq('user_id', userId)
         .eq('month_year', targetMonth)
         .maybeSingle();
 
-      if (error) {
-        logger.warn('Tabela monthly_invite_points não existe, calculando diretamente', { error }, 'MONTHLY_INVITE_SERVICE');
-        
-        // Fallback: calcular baseado na tabela invites
-        const { data: invitesData, error: invitesError } = await supabase
-          .from('invites')
-          .select('*')
-          .eq('invited_by', userId)
-          .not('used_by', 'is', null);
-
-        if (invitesError) {
-          throw invitesError;
-        }
-
-        // Filtrar convites do mês atual
-        const currentMonthInvites = (invitesData || []).filter(invite => {
-          const inviteDate = new Date(invite.created_at);
-          const inviteMonth = `${inviteDate.getFullYear()}-${String(inviteDate.getMonth() + 1).padStart(2, '0')}`;
-          return inviteMonth === targetMonth;
-        });
-
-        // Retornar dados básicos sem campos de tabela específica
-        const result = {
-          invite_points: currentMonthInvites.length * 50,
-          invites_count: currentMonthInvites.length,
-          active_invites_count: currentMonthInvites.length,
-          month_year: targetMonth
-        };
-
-        return createSuccessResponse(result);
+      if (monthlyError) {
+        logger.warn('Erro ao buscar monthly_invite_points, calculando dinamicamente', { error: monthlyError }, 'MONTHLY_INVITE_SERVICE');
       }
 
-      // Se encontrou dados na tabela, retornar apenas os campos necessários
-      const result = data ? {
-        invite_points: data.invite_points,
-        invites_count: data.invites_count,
-        active_invites_count: data.active_invites_count,
-        month_year: data.month_year
-      } : {
-        invite_points: 0,
-        invites_count: 0,
-        active_invites_count: 0,
+      // Se encontrou dados na tabela, usar eles
+      if (monthlyData) {
+        logger.info('Dados mensais encontrados na tabela', { userId, targetMonth }, 'MONTHLY_INVITE_SERVICE');
+        return createSuccessResponse({
+          invite_points: monthlyData.invite_points,
+          invites_count: monthlyData.invites_count,
+          active_invites_count: monthlyData.active_invites_count,
+          month_year: monthlyData.month_year
+        });
+      }
+
+      // Se não encontrou, calcular baseado na tabela invites
+      const { data: invitesData, error: invitesError } = await supabase
+        .from('invites')
+        .select(`
+          *,
+          profiles:used_by (
+            id,
+            games_played
+          )
+        `)
+        .eq('invited_by', userId)
+        .not('used_by', 'is', null);
+
+      if (invitesError) {
+        logger.error('Erro ao buscar convites do usuário', { error: invitesError, userId }, 'MONTHLY_INVITE_SERVICE');
+        throw invitesError;
+      }
+
+      // Filtrar convites do mês atual baseado na data de uso
+      const currentMonthInvites = (invitesData || []).filter(invite => {
+        if (!invite.used_at) return false;
+        const inviteDate = new Date(invite.used_at);
+        const inviteMonth = `${inviteDate.getFullYear()}-${String(inviteDate.getMonth() + 1).padStart(2, '0')}`;
+        return inviteMonth === targetMonth;
+      });
+
+      // Contar convites ativos (usuários que jogaram pelo menos 1 jogo)
+      const activeInvites = currentMonthInvites.filter(invite => {
+        const profile = invite.profiles as any;
+        return profile?.games_played > 0;
+      });
+
+      const result = {
+        invite_points: activeInvites.length * 50, // 50 pontos por convite ativo
+        invites_count: currentMonthInvites.length,
+        active_invites_count: activeInvites.length,
         month_year: targetMonth
       };
 
+      logger.info('Pontos mensais calculados dinamicamente', { userId, targetMonth, result }, 'MONTHLY_INVITE_SERVICE');
       return createSuccessResponse(result);
+
     } catch (error) {
-      logger.error('Erro ao buscar pontos mensais', { error }, 'MONTHLY_INVITE_SERVICE');
-      // Retornar dados padrão em caso de erro
-      return createSuccessResponse({
-        invite_points: 0,
-        invites_count: 0,
-        active_invites_count: 0,
-        month_year: monthYear || this.getCurrentMonth()
-      });
+      logger.error('Erro ao buscar pontos mensais', { error, userId, monthYear }, 'MONTHLY_INVITE_SERVICE');
+      return createErrorResponse(`Erro ao buscar pontos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 
   async getUserMonthlyPosition(userId?: string, monthYear?: string) {
     try {
-      // Por enquanto, retornar null (usuário não está no ranking)
+      const targetMonth = monthYear || this.getCurrentMonth();
+      
+      if (!userId) {
+        return createSuccessResponse(null);
+      }
+
+      logger.debug('Buscando posição mensal do usuário', { userId, targetMonth }, 'MONTHLY_INVITE_SERVICE');
+
+      // Verificar se existe ranking na tabela monthly_invite_rankings
+      const { data: rankingData, error: rankingError } = await supabase
+        .from('monthly_invite_rankings')
+        .select('position, prize_amount')
+        .eq('user_id', userId)
+        .eq('competition_id', (select) => 
+          select
+            .from('monthly_invite_competitions')
+            .select('id')
+            .eq('month_year', targetMonth)
+            .single()
+        )
+        .maybeSingle();
+
+      if (rankingError) {
+        logger.warn('Erro ao buscar ranking mensal ou usuário não está no ranking', { error: rankingError }, 'MONTHLY_INVITE_SERVICE');
+        return createSuccessResponse(null);
+      }
+
+      if (rankingData) {
+        logger.info('Posição mensal encontrada', { userId, position: rankingData.position }, 'MONTHLY_INVITE_SERVICE');
+        return createSuccessResponse({
+          position: rankingData.position,
+          prize_amount: rankingData.prize_amount
+        });
+      }
+
       return createSuccessResponse(null);
     } catch (error) {
-      logger.error('Erro ao buscar posição do usuário', { error }, 'MONTHLY_INVITE_SERVICE');
+      logger.error('Erro ao buscar posição do usuário', { error, userId }, 'MONTHLY_INVITE_SERVICE');
       return createSuccessResponse(null);
     }
   }
