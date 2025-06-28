@@ -50,49 +50,53 @@ const CompactInviteInfo = ({ stats, inviteCode, onCopyCode }: CompactInviteInfoP
 
         {/* Seção Superior: Nível e Código lado a lado */}
         <div className="flex gap-4 mb-4">
-          {/* Nível do Usuário */}
+          {/* Nível do Usuário - Reorganizado */}
           <div className="flex-1 bg-white/20 backdrop-blur-sm rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{levelInfo.icon}</span>
-                <div>
-                  <span className="font-bold text-sm">{levelInfo.level}</span>
-                  <span className="text-xs opacity-75 ml-1">Nv. {currentLevel}</span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">{levelInfo.icon}</div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-base">{levelInfo.level}</span>
+                  <span className="text-xs opacity-75">Nível {currentLevel}</span>
                 </div>
               </div>
-              <Badge className="bg-white/30 text-white border-white/30 text-xs">
+              <Badge className="bg-white/30 text-white border-white/30 text-xs px-3 py-1">
                 {stats.totalPoints} XP
               </Badge>
             </div>
             
-            <div className="mt-2">
-              <div className="flex justify-between text-xs opacity-90 mb-1">
+            {/* Barra de Progresso */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs opacity-90">
                 <span>Nv. {currentLevel}</span>
                 <span>Nv. {nextLevel}</span>
               </div>
               <Progress 
                 value={levelProgress} 
-                className="h-1.5 bg-white/20"
+                className="h-2 bg-white/20"
               />
+              <div className="text-center text-xs opacity-80">
+                {Math.round(levelProgress)}% para o próximo nível
+              </div>
             </div>
           </div>
 
           {/* Código Mágico */}
           <div className="flex-1 bg-white/20 backdrop-blur-sm rounded-xl p-4">
-            <div className="flex items-center gap-1 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <Gift className="w-4 h-4" />
               <span className="text-sm font-medium">Seu Código</span>
             </div>
-            <div className="text-center mb-2">
-              <p className="text-lg font-bold tracking-wider">{inviteCode}</p>
+            <div className="text-center mb-3">
+              <p className="text-xl font-bold tracking-wider">{inviteCode}</p>
             </div>
             <Button 
               onClick={onCopyCode}
               size="sm"
-              className="w-full bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white text-xs h-7"
+              className="w-full bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white text-xs h-8"
             >
               <Copy className="w-3 h-3 mr-1" />
-              Copiar
+              Copiar Código
             </Button>
           </div>
         </div>
