@@ -2,7 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { createSuccessResponse } from '@/utils/apiHelpers';
 import { logger } from '@/utils/logger';
-import { MonthlyInviteUserData } from '@/types/monthlyInvite';
 
 export class MonthlyInviteCoreService {
   getCurrentMonth(): string {
@@ -61,7 +60,7 @@ export class MonthlyInviteCoreService {
         };
       }
 
-      const result: MonthlyInviteUserData = data || {
+      const result = data || {
         invite_points: 0,
         invites_count: 0,
         active_invites_count: 0,

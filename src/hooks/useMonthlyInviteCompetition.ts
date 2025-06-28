@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { monthlyInviteService } from '@/services/monthlyInviteService';
+import { monthlyInviteService } from '@/services/monthlyInvite';
 import { useAuth } from './useAuth';
 import { logger } from '@/utils/logger';
 
