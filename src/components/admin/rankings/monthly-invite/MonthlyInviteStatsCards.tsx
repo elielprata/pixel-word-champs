@@ -46,7 +46,8 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
   };
 
   const totalParticipants = stats?.totalParticipants || 0;
-  const totalPrizePool = stats?.totalPrizePool || 0;
+  // Usar o valor da competição ou das stats, priorizando o da competição
+  const totalPrizePool = competition?.total_prize_pool || stats?.totalPrizePool || 0;
   const winnersCount = rankings?.filter((r: any) => r.prize_amount > 0).length || 0;
   const competitionStatus = competition?.status || 'inactive';
 
