@@ -26,18 +26,12 @@ class GameScoreService {
       // Converter pontos do jogo para XP permanente (1:1 por enquanto)
       const experiencePointsToAdd = gamePoints;
 
-      // Atualizar ambos os campos: total_score (temporário) e experience_points (permanente)
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          total_score: `COALESCE(total_score, 0) + ${gamePoints}`,
-          experience_points: `COALESCE(experience_points, 0) + ${experiencePointsToAdd}`,
-          games_played: `COALESCE(games_played, 0) + 1`,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId)
-        .select('total_score, experience_points, games_played')
-        .single();
+      // Usar RPC para atualizar com expressões SQL
+      const { data, error } = await supabase.rpc('update_user_scores', {
+        p_user_id: userId,
+        p_game_points: gamePoints,
+        p_experience_points: experiencePointsToAdd
+      });
 
       if (error) {
         throw error;
@@ -45,12 +39,12 @@ class GameScoreService {
 
       logger.info('Pontuação atualizada com sucesso', { 
         userId,
-        newTotalScore: data.total_score,
-        newExperiencePoints: data.experience_points,
-        newGamesPlayed: data.games_played
+        newTotalScore: data?.[0]?.total_score,
+        newExperiencePoints: data?.[0]?.experience_points,
+        newGamesPlayed: data?.[0]?.games_played
       }, 'GAME_SCORE_SERVICE');
 
-      return createSuccessResponse(data as ScoreUpdateResult);
+      return createSuccessResponse(data?.[0] as ScoreUpdateResult);
     } catch (error) {
       logger.error('Erro ao atualizar pontuação do jogo', { 
         error, 
