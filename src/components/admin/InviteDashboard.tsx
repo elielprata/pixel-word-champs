@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useInviteVerification } from '@/hooks/useInviteVerification';
+import { InvitesTabHeader } from '@/components/admin/layout/InvitesTabHeader';
 import { 
   Users, 
   UserPlus, 
@@ -99,29 +100,26 @@ export const InviteDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Dashboard de Indicações</h2>
-          <p className="text-slate-600">Gerencie o sistema de recompensas por indicações</p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            onClick={loadStats} 
-            variant="outline"
-            disabled={isLoadingStats}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingStats ? 'animate-spin' : ''}`} />
-            Atualizar Stats
-          </Button>
-          <Button 
-            onClick={handleManualVerification}
-            disabled={isVerifying}
-          >
-            <CheckCircle className={`w-4 h-4 mr-2 ${isVerifying ? 'animate-spin' : ''}`} />
-            {isVerifying ? 'Verificando...' : 'Verificar Convites'}
-          </Button>
-        </div>
+      {/* Header padronizado */}
+      <InvitesTabHeader />
+
+      {/* Ações */}
+      <div className="flex justify-end gap-2">
+        <Button 
+          onClick={loadStats} 
+          variant="outline"
+          disabled={isLoadingStats}
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingStats ? 'animate-spin' : ''}`} />
+          Atualizar Stats
+        </Button>
+        <Button 
+          onClick={handleManualVerification}
+          disabled={isVerifying}
+        >
+          <CheckCircle className={`w-4 h-4 mr-2 ${isVerifying ? 'animate-spin' : ''}`} />
+          {isVerifying ? 'Verificando...' : 'Verificar Convites'}
+        </Button>
       </div>
 
       {/* Stats Cards Grid */}
