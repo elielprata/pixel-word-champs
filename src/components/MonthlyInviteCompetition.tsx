@@ -2,243 +2,205 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Users, Gift, Star, RefreshCw } from 'lucide-react';
+import { Trophy, Users, Calendar, Star, Gift, Timer } from 'lucide-react';
 import { useMonthlyInviteCompetition } from '@/hooks/useMonthlyInviteCompetition';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from "@/hooks/use-toast";
 import LoadingState from './home/LoadingState';
 
 const MonthlyInviteCompetition = () => {
-  const { data, isLoading, error, refreshRanking } = useMonthlyInviteCompetition();
-  const { isAuthenticated } = useAuth();
-  const { toast } = useToast();
-
-  const handleRefresh = async () => {
-    const result = await refreshRanking();
-    if (result.success) {
-      toast({
-        title: "Ranking atualizado",
-        description: "Os dados da competição foram atualizados com sucesso.",
-      });
-    } else {
-      toast({
-        title: "Erro ao atualizar",
-        description: "Não foi possível atualizar o ranking.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (!isAuthenticated) {
-    return (
-      <Card>
-        <CardContent className="text-center py-8">
-          <h3 className="text-lg font-semibold mb-2">Competição Mensal de Indicações</h3>
-          <p className="text-gray-600">Faça login para participar da competição mensal</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const { data, isLoading, error } = useMonthlyInviteCompetition();
 
   if (isLoading) {
-    return <LoadingState />;
-  }
-
-  if (error) {
     return (
-      <Card>
-        <CardContent className="text-center py-8">
-          <h3 className="text-lg font-semibold mb-2 text-red-600">Erro ao carregar</h3>
-          <p className="text-gray-600">{error}</p>
-        </CardContent>
-      </Card>
+      <div className="p-4">
+        <LoadingState />
+      </div>
     );
   }
 
-  if (!data) {
-    return null;
+  if (error || !data) {
+    return (
+      <Card className="border-orange-200 bg-orange-50">
+        <CardContent className="p-4 text-center">
+          <Calendar className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+          <p className="text-orange-700 font-medium">Competição Mensal Indisponível</p>
+          <p className="text-sm text-orange-600 mt-1">
+            {error || 'Não foi possível carregar os dados da competição'}
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   const { userPoints, competition, rankings, userPosition, stats } = data;
   const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  
+  // Calculate days remaining in month
+  const now = new Date();
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const daysRemaining = Math.ceil((endOfMonth.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  // Calculate progress to next milestone
+  const nextMilestone = Math.ceil(userPoints.invite_points / 250) * 250;
+  const milestoneProgress = nextMilestone > 0 ? (userPoints.invite_points / nextMilestone) * 100 : 0;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <Card className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-        <CardHeader>
+    <div className="space-y-4">
+      {/* Competition Header */}
+      <Card className="border-0 bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <Gift className="w-6 h-6" />
-                Competição Mensal de Indicações
-              </CardTitle>
-              <p className="text-purple-100 mt-2">{currentMonth}</p>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <Trophy className="w-6 h-6" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Competição de Indicações</CardTitle>
+                <p className="text-purple-100 text-sm">{currentMonth}</p>
+              </div>
             </div>
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              onClick={handleRefresh}
-              className="bg-white/20 hover:bg-white/30 text-white border-0"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Atualizar
-            </Button>
+            <div className="text-right">
+              <div className="flex items-center gap-1">
+                <Timer className="w-4 h-4" />
+                <span className="text-sm">{daysRemaining} dias restantes</span>
+              </div>
+            </div>
           </div>
         </CardHeader>
       </Card>
 
       {/* User Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="border-0 bg-gradient-to-br from-green-50 to-emerald-50">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{userPoints.invite_points}</div>
-            <div className="text-sm text-gray-600">Pontos do Mês</div>
+            <div className="flex items-center justify-center mb-2">
+              <Gift className="w-5 h-5 text-green-600 mr-1" />
+              <span className="text-2xl font-bold text-green-700">
+                {userPoints.invite_points}
+              </span>
+            </div>
+            <p className="text-sm text-green-600">Pontos Mensais</p>
           </CardContent>
         </Card>
-        
-        <Card>
+
+        <Card className="border-0 bg-gradient-to-br from-blue-50 to-cyan-50">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{userPoints.invites_count}</div>
-            <div className="text-sm text-gray-600">Convites Enviados</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{userPoints.active_invites_count}</div>
-            <div className="text-sm text-gray-600">Amigos Ativos</div>
+            <div className="flex items-center justify-center mb-2">
+              <Users className="w-5 h-5 text-blue-600 mr-1" />
+              <span className="text-2xl font-bold text-blue-700">
+                {userPosition?.position || '--'}
+              </span>
+            </div>
+            <p className="text-sm text-blue-600">Posição Atual</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* User Position */}
+      {/* User Position Card */}
       {userPosition && (
-        <Card>
+        <Card className="border-purple-200 bg-purple-50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  {userPosition.position}
-                </div>
-                <div>
-                  <h3 className="font-semibold">Sua Posição</h3>
-                  <p className="text-sm text-gray-600">
-                    {userPosition.position}º lugar com {userPosition.invite_points} pontos
-                  </p>
+              <div>
+                <p className="font-medium text-purple-800">
+                  Você está em {userPosition.position}º lugar
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge 
+                    variant={userPosition.prize_amount > 0 ? 'default' : 'secondary'}
+                    className={userPosition.prize_amount > 0 ? 'bg-green-100 text-green-700' : ''}
+                  >
+                    {userPosition.prize_amount > 0 
+                      ? `Prêmio: R$ ${userPosition.prize_amount}` 
+                      : 'Sem prêmio'
+                    }
+                  </Badge>
                 </div>
               </div>
-              {userPosition.prize_amount > 0 && (
-                <Badge variant="default" className="bg-green-100 text-green-800">
-                  Prêmio: R$ {userPosition.prize_amount}
-                </Badge>
-              )}
+              <Star className="w-8 h-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Competition Info */}
-      {competition && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" />
-              Informações da Competição
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className="text-sm text-gray-600">Status:</span>
-                <Badge 
-                  variant={competition.status === 'active' ? 'default' : 'secondary'}
-                  className="ml-2"
-                >
-                  {competition.status === 'active' ? 'Ativa' : 
-                   competition.status === 'completed' ? 'Finalizada' : 'Agendada'}
-                </Badge>
-              </div>
-              <div>
-                <span className="text-sm text-gray-600">Participantes: </span>
-                <span className="font-semibold">{stats.totalParticipants}</span>
-              </div>
-            </div>
-            
+      {/* Progress to Next Milestone */}
+      <Card className="border-0 bg-white shadow-sm">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-medium text-gray-800">Próximo Marco</span>
+            <span className="text-sm text-gray-600">
+              {userPoints.invite_points}/{nextMilestone} pontos
+            </span>
+          </div>
+          <Progress value={milestoneProgress} className="h-2 mb-2" />
+          <p className="text-xs text-gray-500">
+            Faltam {Math.max(0, nextMilestone - userPoints.invite_points)} pontos para o próximo marco
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Competition Stats */}
+      <Card className="border-0 bg-white shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-amber-500" />
+            Estatísticas da Competição
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <span className="text-sm text-gray-600">Período: </span>
-              <span className="font-semibold">
-                {new Date(competition.start_date).toLocaleDateString('pt-BR')} até{' '}
-                {new Date(competition.end_date).toLocaleDateString('pt-BR')}
-              </span>
+              <div className="text-lg font-bold text-blue-600">
+                {stats.totalParticipants}
+              </div>
+              <div className="text-xs text-gray-600">Participantes</div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div>
+              <div className="text-lg font-bold text-green-600">
+                R$ {stats.totalPrizePool?.toFixed(2) || '0.00'}
+              </div>
+              <div className="text-xs text-gray-600">Total em Prêmios</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Top Performers */}
-      {stats.topPerformers.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-yellow-500" />
-              Top 3 do Mês
-            </CardTitle>
+      {/* Top 3 Rankings */}
+      {stats.topPerformers && stats.topPerformers.length > 0 && (
+        <Card className="border-0 bg-white shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Top 3 do Mês</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {stats.topPerformers.map((performer, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                      index === 0 ? 'bg-yellow-500' :
-                      index === 1 ? 'bg-gray-400' : 'bg-orange-400'
-                    }`}>
-                      {performer.position}
-                    </div>
-                    <div>
-                      <p className="font-medium">{performer.username}</p>
-                      <p className="text-sm text-gray-600">
-                        {performer.active_invites_count} amigos ativos
-                      </p>
-                    </div>
+          <CardContent className="pt-0">
+            <div className="space-y-2">
+              {stats.topPerformers.slice(0, 3).map((performer: any, index: number) => (
+                <div 
+                  key={index}
+                  className={`flex items-center gap-3 p-2 rounded-lg ${
+                    index === 0 ? 'bg-yellow-50 border border-yellow-200' :
+                    index === 1 ? 'bg-gray-50 border border-gray-200' :
+                    'bg-orange-50 border border-orange-200'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                    index === 0 ? 'bg-yellow-500' :
+                    index === 1 ? 'bg-gray-400' :
+                    'bg-orange-500'
+                  }`}>
+                    {index + 1}
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-purple-600">{performer.invite_points} pts</p>
-                  </div>
+                  <span className="font-medium text-gray-800 flex-1">
+                    {performer.username}
+                  </span>
+                  <span className="text-sm font-medium text-purple-600">
+                    {performer.invite_points} pts
+                  </span>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
       )}
-
-      {/* How it Works */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Como Funciona</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-bold">1</div>
-            <p className="text-sm">Convide amigos usando seu código de indicação</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
-            <p className="text-sm">Ganhe 50 pontos por cada amigo que se cadastrar</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
-            <p className="text-sm">Pontos extras quando seus amigos começam a jogar</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-bold">4</div>
-            <p className="text-sm">Compete no ranking mensal por prêmios exclusivos</p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

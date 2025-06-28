@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, DollarSign, Calendar } from 'lucide-react';
+import { Trophy, DollarSign, Calendar, Gift } from 'lucide-react';
 import { PaymentsTab } from './PaymentsTab';
 import { UnifiedCompetitionsView } from './rankings/UnifiedCompetitionsView';
 import { WeeklyRankingView } from './rankings/weekly-ranking/WeeklyRankingView';
+import { MonthlyInviteTab } from './rankings/MonthlyInviteTab';
 
 export const RankingsTab = () => {
   return (
@@ -37,6 +38,13 @@ export const RankingsTab = () => {
               Ranking Semanal
             </TabsTrigger>
             <TabsTrigger 
+              value="monthly-invites" 
+              className="h-10 px-4 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900"
+            >
+              <Gift className="h-4 w-4 mr-2" />
+              Competição Mensal
+            </TabsTrigger>
+            <TabsTrigger 
               value="payments" 
               className="h-10 px-4 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900"
             >
@@ -56,6 +64,12 @@ export const RankingsTab = () => {
             <TabsContent value="weekly-ranking" className="mt-0">
               <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
                 <WeeklyRankingView />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="monthly-invites" className="mt-0">
+              <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                <MonthlyInviteTab />
               </div>
             </TabsContent>
 

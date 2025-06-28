@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingState from './home/LoadingState';
+import MonthlyInviteCompetition from './MonthlyInviteCompetition';
 import { logger } from '@/utils/logger';
 
 const InviteScreen = () => {
@@ -84,6 +85,11 @@ const InviteScreen = () => {
         </div>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Convide & Ganhe XP</h1>
         <p className="text-gray-600">Ambos ganham 50XP quando se cadastram!</p>
+      </div>
+
+      {/* Monthly Competition Section */}
+      <div className="mb-6">
+        <MonthlyInviteCompetition />
       </div>
 
       {/* Stats Cards */}
