@@ -10,6 +10,12 @@ interface MonthlyInviteData {
     totalParticipants: number;
     totalPrizePool: number;
     topPerformers: any[];
+    configuredPrizes?: Array<{
+      position: number;
+      prize_amount: number;
+      active: boolean;
+      description?: string;
+    }>;
   };
   no_active_competition?: boolean;
   has_participants?: boolean;
@@ -35,7 +41,8 @@ export const useMonthlyInviteCompetitionSimplified = (monthYear?: string) => {
         setData(response.data);
         logger.info('Dados consolidados carregados com sucesso', { 
           hasCompetition: !!response.data?.competition,
-          rankingsCount: response.data?.rankings?.length || 0
+          rankingsCount: response.data?.rankings?.length || 0,
+          hasConfiguredPrizes: !!response.data?.stats?.configuredPrizes?.length
         }, 'MONTHLY_INVITE_HOOK_SIMPLIFIED');
       } else {
         throw new Error(response.error || 'Erro desconhecido');

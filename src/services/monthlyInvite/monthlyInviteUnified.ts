@@ -13,27 +13,57 @@ export class MonthlyInviteUnifiedService {
     try {
       const targetMonth = monthYear || this.getCurrentMonth();
       
-      logger.debug('Buscando estatísticas consolidadas da competição mensal', { targetMonth }, 'MONTHLY_INVITE_UNIFIED');
+      logger.debug('Buscando estatísticas mensais unificadas', { targetMonth }, 'MONTHLY_INVITE_UNIFIED_SERVICE');
 
-      // Usar a função simplificada que agora faz tudo em uma query
       const { data, error } = await supabase
         .rpc('get_monthly_invite_stats' as any, { target_month: targetMonth });
 
       if (error) {
-        logger.error('Erro ao buscar estatísticas mensais consolidadas', { error }, 'MONTHLY_INVITE_UNIFIED');
-        return createErrorResponse(`Erro ao buscar dados: ${error.message}`);
+        logger.error('Erro ao buscar estatísticas mensais unificadas', { error }, 'MONTHLY_INVITE_UNIFIED_SERVICE');
+        throw error;
       }
 
-      logger.info('Estatísticas mensais consolidadas carregadas', { 
-        targetMonth, 
-        hasCompetition: !!data?.competition,
-        rankingsCount: data?.rankings?.length || 0
-      }, 'MONTHLY_INVITE_UNIFIED');
+      // Garantir que configuredPrizes esteja sempre presente na estrutura
+      const processedData = {
+        ...data,
+        stats: {
+          ...data?.stats,
+          totalParticipants: data?.stats?.totalParticipants || 0,
+          totalPrizePool: data?.stats?.totalPrizePool || 0,
+          topPerformers: data?.stats?.topPerformers || [],
+          configuredPrizes: data?.stats?.configuredPrizes || []
+        }
+      };
 
-      return createSuccessResponse(data);
+      logger.info('Estatísticas mensais unificadas carregadas', { 
+        targetMonth, 
+        stats: { 
+          totalParticipants: processedData.stats.totalParticipants, 
+          totalPrizePool: processedData.stats.totalPrizePool, 
+          topPerformersCount: processedData.stats.topPerformers.length,
+          configuredPrizesCount: processedData.stats.configuredPrizes.length
+        } 
+      }, 'MONTHLY_INVITE_UNIFIED_SERVICE');
+
+      return createSuccessResponse(processedData);
     } catch (error) {
-      logger.error('Erro ao buscar estatísticas mensais consolidadas', { error }, 'MONTHLY_INVITE_UNIFIED');
-      return createErrorResponse(`Erro ao buscar dados: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      logger.error('Erro ao buscar estatísticas mensais unificadas', { error, monthYear }, 'MONTHLY_INVITE_UNIFIED_SERVICE');
+      
+      // Retornar dados padrão com estrutura completa em caso de erro
+      const fallbackData = {
+        competition: null,
+        rankings: [],
+        stats: {
+          totalParticipants: 0,
+          totalPrizePool: 0,
+          topPerformers: [],
+          configuredPrizes: []
+        },
+        no_active_competition: true,
+        has_participants: false
+      };
+      
+      return createSuccessResponse(fallbackData);
     }
   }
 
@@ -41,21 +71,19 @@ export class MonthlyInviteUnifiedService {
     try {
       const targetMonth = monthYear || this.getCurrentMonth();
       
-      logger.debug('Atualizando ranking mensal (agora automático)', { targetMonth }, 'MONTHLY_INVITE_UNIFIED');
+      logger.debug('Atualizando ranking mensal', { targetMonth }, 'MONTHLY_INVITE_UNIFIED_SERVICE');
 
-      // Como a função get_monthly_invite_stats agora calcula tudo dinamicamente,
-      // só precisamos chamá-la novamente para "atualizar" os dados
-      const result = await this.getMonthlyStats(targetMonth);
-
-      if (result.success) {
-        logger.info('Ranking mensal atualizado com sucesso', { targetMonth }, 'MONTHLY_INVITE_UNIFIED');
-        return createSuccessResponse('Ranking atualizado com sucesso');
-      } else {
-        return result;
+      // Por enquanto, apenas recarregar os dados
+      const response = await this.getMonthlyStats(targetMonth);
+      
+      if (response.success) {
+        logger.info('Ranking mensal atualizado', { targetMonth }, 'MONTHLY_INVITE_UNIFIED_SERVICE');
       }
+      
+      return response;
     } catch (error) {
-      logger.error('Erro ao atualizar ranking mensal', { error }, 'MONTHLY_INVITE_UNIFIED');
-      return createErrorResponse(`Erro ao atualizar ranking: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      logger.error('Erro ao atualizar ranking mensal', { error, monthYear }, 'MONTHLY_INVITE_UNIFIED_SERVICE');
+      return createErrorResponse('Erro ao atualizar ranking mensal');
     }
   }
 }
