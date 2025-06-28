@@ -7,13 +7,12 @@ import LoadingState from './home/LoadingState';
 import MonthlyInviteCompetition from './MonthlyInviteCompetition';
 import { logger } from '@/utils/logger';
 import InviteHeader from './invite/InviteHeader';
-import InviteStatsCards from './invite/InviteStatsCards';
-import ProgressToRewardCard from './invite/ProgressToRewardCard';
-import InviteCodeCard from './invite/InviteCodeCard';
-import HowItWorksCard from './invite/HowItWorksCard';
-import FriendsListCard from './invite/FriendsListCard';
 import UnauthenticatedView from './invite/UnauthenticatedView';
 import ErrorView from './invite/ErrorView';
+import GamifiedInviteStats from './invite/GamifiedInviteStats';
+import MyInviteRanking from './invite/MyInviteRanking';
+import MyInviteCode from './invite/MyInviteCode';
+import MyInvitedFriends from './invite/MyInvitedFriends';
 
 const InviteScreen = () => {
   const { toast } = useToast();
@@ -63,23 +62,25 @@ const InviteScreen = () => {
       <div className="max-w-md mx-auto space-y-4">
         <InviteHeader />
 
-        {/* Monthly Competition Section */}
+        {/* Minha Posição no Ranking */}
+        <MyInviteRanking />
+
+        {/* Estatísticas Gamificadas */}
+        <GamifiedInviteStats stats={stats} />
+
+        {/* Competição Mensal */}
         <div className="mb-6">
           <MonthlyInviteCompetition suppressLoading={true} />
         </div>
 
-        <InviteStatsCards stats={stats} />
-
-        <ProgressToRewardCard stats={stats} />
-
-        <InviteCodeCard 
+        {/* Meu Código de Convite */}
+        <MyInviteCode 
           inviteCode={inviteCode}
           onCopyCode={handleCopyCode}
         />
 
-        <HowItWorksCard />
-
-        <FriendsListCard invitedFriends={invitedFriends} />
+        {/* Meus Amigos Indicados */}
+        <MyInvitedFriends invitedFriends={invitedFriends} />
       </div>
     </div>
   );
