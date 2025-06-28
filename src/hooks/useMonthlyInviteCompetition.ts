@@ -113,8 +113,18 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
         logger.warn('Erro ao carregar estatísticas', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
       }
 
+      // Helper function to validate userPoints structure
+      const isValidUserPoints = (data: any): data is { invite_points: number; invites_count: number; active_invites_count: number; month_year: string } => {
+        return data && 
+               typeof data === 'object' && 
+               typeof data.invite_points === 'number' &&
+               typeof data.invites_count === 'number' &&
+               typeof data.active_invites_count === 'number' &&
+               typeof data.month_year === 'string';
+      };
+
       const finalData: MonthlyInviteData = {
-        userPoints: userPoints && typeof userPoints === 'object' && 'invite_points' in userPoints ? userPoints : {
+        userPoints: isValidUserPoints(userPoints) ? userPoints : {
           invite_points: 0,
           invites_count: 0,
           active_invites_count: 0,
