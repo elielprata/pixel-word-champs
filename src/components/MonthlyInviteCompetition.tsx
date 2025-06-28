@@ -30,9 +30,7 @@ const MonthlyInviteCompetition = ({
       month: 'long',
       year: 'numeric'
     });
-    return <Card className="border-blue-200 bg-blue-50">
-        
-      </Card>;
+    return;
   }
   const {
     userPoints,
