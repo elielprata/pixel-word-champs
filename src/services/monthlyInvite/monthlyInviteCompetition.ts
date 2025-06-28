@@ -37,45 +37,28 @@ export class MonthlyInviteCompetitionService {
     try {
       const targetMonth = monthYear || this.getCurrentMonth();
       
-      logger.debug('Buscando ranking mensal', { targetMonth, limit }, 'MONTHLY_INVITE_COMPETITION');
+      logger.debug('Buscando ranking mensal via função simplificada', { targetMonth, limit }, 'MONTHLY_INVITE_COMPETITION');
 
-      // Buscar competição do mês
-      const { data: competition, error: compError } = await supabase
-        .from('monthly_invite_competitions')
-        .select('*')
-        .eq('month_year', targetMonth)
-        .maybeSingle();
+      // Usar a função simplificada
+      const { data, error } = await supabase
+        .rpc('get_monthly_invite_stats' as any, { target_month: targetMonth });
 
-      if (compError) {
-        logger.error('Erro ao buscar competição para ranking', { error: compError }, 'MONTHLY_INVITE_COMPETITION');
-        return createSuccessResponse({ competition: null, rankings: [] });
+      if (error) {
+        logger.error('Erro ao buscar ranking mensal', { error }, 'MONTHLY_INVITE_COMPETITION');
+        return createErrorResponse(`Erro ao buscar ranking: ${error.message}`);
       }
 
-      if (!competition) {
-        return createSuccessResponse({ competition: null, rankings: [] });
-      }
-
-      // Buscar ranking da competição
-      const { data: rankings, error: rankingError } = await supabase
-        .from('monthly_invite_rankings')
-        .select('*')
-        .eq('competition_id', competition.id)
-        .order('position', { ascending: true })
-        .limit(limit);
-
-      if (rankingError) {
-        logger.error('Erro ao buscar ranking mensal', { error: rankingError }, 'MONTHLY_INVITE_COMPETITION');
-        return createErrorResponse(`Erro ao buscar ranking: ${rankingError.message}`);
-      }
+      // Limitar resultados se necessário
+      const rankings = data?.rankings ? data.rankings.slice(0, limit) : [];
 
       logger.info('Ranking mensal carregado', { 
-        competitionId: competition.id, 
-        rankingsCount: rankings?.length || 0 
+        competitionId: data?.competition?.id, 
+        rankingsCount: rankings.length 
       }, 'MONTHLY_INVITE_COMPETITION');
 
       return createSuccessResponse({
-        competition,
-        rankings: rankings || []
+        competition: data?.competition || null,
+        rankings
       });
     } catch (error) {
       logger.error('Erro ao buscar ranking mensal', { error }, 'MONTHLY_INVITE_COMPETITION');
@@ -87,19 +70,17 @@ export class MonthlyInviteCompetitionService {
     try {
       const targetMonth = monthYear || this.getCurrentMonth();
       
-      logger.debug('Atualizando ranking mensal', { targetMonth }, 'MONTHLY_INVITE_COMPETITION');
+      logger.debug('Ranking agora é calculado dinamicamente', { targetMonth }, 'MONTHLY_INVITE_COMPETITION');
 
-      // Executar função que popula dados e ranking - usar casting para contornar limitação TypeScript
-      const { data, error } = await supabase
-        .rpc('populate_monthly_invite_ranking' as any, { target_month: targetMonth });
-
-      if (error) {
-        logger.error('Erro ao atualizar ranking mensal', { error }, 'MONTHLY_INVITE_COMPETITION');
-        return createErrorResponse(`Erro ao atualizar ranking: ${error.message}`);
+      // Como tudo é calculado dinamicamente, só precisamos buscar os dados atualizados
+      const result = await this.getMonthlyRanking(targetMonth);
+      
+      if (result.success) {
+        logger.info('Ranking mensal "atualizado" (dados dinâmicos)', { targetMonth }, 'MONTHLY_INVITE_COMPETITION');
+        return createSuccessResponse('Ranking atualizado com sucesso');
+      } else {
+        return result;
       }
-
-      logger.info('Ranking mensal atualizado com sucesso', { targetMonth, data }, 'MONTHLY_INVITE_COMPETITION');
-      return createSuccessResponse(data);
     } catch (error) {
       logger.error('Erro ao atualizar ranking mensal', { error }, 'MONTHLY_INVITE_COMPETITION');
       return createErrorResponse(`Erro ao atualizar ranking: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);

@@ -15,7 +15,7 @@ export class MonthlyInviteUnifiedService {
       
       logger.debug('Buscando estatísticas consolidadas da competição mensal', { targetMonth }, 'MONTHLY_INVITE_UNIFIED');
 
-      // Usar a nova função consolidada - seguindo padrão do ranking semanal
+      // Usar a função simplificada que agora faz tudo em uma query
       const { data, error } = await supabase
         .rpc('get_monthly_invite_stats' as any, { target_month: targetMonth });
 
@@ -41,18 +41,18 @@ export class MonthlyInviteUnifiedService {
     try {
       const targetMonth = monthYear || this.getCurrentMonth();
       
-      logger.debug('Atualizando ranking mensal', { targetMonth }, 'MONTHLY_INVITE_UNIFIED');
+      logger.debug('Atualizando ranking mensal (agora automático)', { targetMonth }, 'MONTHLY_INVITE_UNIFIED');
 
-      const { data, error } = await supabase
-        .rpc('populate_monthly_invite_ranking' as any, { target_month: targetMonth });
+      // Como a função get_monthly_invite_stats agora calcula tudo dinamicamente,
+      // só precisamos chamá-la novamente para "atualizar" os dados
+      const result = await this.getMonthlyStats(targetMonth);
 
-      if (error) {
-        logger.error('Erro ao atualizar ranking mensal', { error }, 'MONTHLY_INVITE_UNIFIED');
-        return createErrorResponse(`Erro ao atualizar ranking: ${error.message}`);
+      if (result.success) {
+        logger.info('Ranking mensal atualizado com sucesso', { targetMonth }, 'MONTHLY_INVITE_UNIFIED');
+        return createSuccessResponse('Ranking atualizado com sucesso');
+      } else {
+        return result;
       }
-
-      logger.info('Ranking mensal atualizado com sucesso', { targetMonth }, 'MONTHLY_INVITE_UNIFIED');
-      return createSuccessResponse(data);
     } catch (error) {
       logger.error('Erro ao atualizar ranking mensal', { error }, 'MONTHLY_INVITE_UNIFIED');
       return createErrorResponse(`Erro ao atualizar ranking: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
