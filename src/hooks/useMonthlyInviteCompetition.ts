@@ -100,6 +100,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
       const statsData = statsResponse.status === 'fulfilled' && statsResponse.value.success
         ? statsResponse.value.data
         : {
+            competition: null,
             totalParticipants: 0,
             totalPrizePool: 0,
             topPerformers: []
@@ -119,10 +120,14 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
           active_invites_count: 0,
           month_year: monthYear || new Date().toISOString().slice(0, 7)
         },
-        competition: rankingData.competition,
-        rankings: rankingData.rankings || [],
+        competition: rankingData?.competition || null,
+        rankings: rankingData?.rankings || [],
         userPosition,
-        stats: statsData
+        stats: {
+          totalParticipants: statsData?.totalParticipants || 0,
+          totalPrizePool: statsData?.totalPrizePool || 0,
+          topPerformers: statsData?.topPerformers || []
+        }
       };
 
       logger.info('Dados da competição mensal carregados com sucesso', { 

@@ -66,8 +66,14 @@ export class MonthlyInviteStatsService {
         }
       }
 
+      // Cast competition status to proper type
+      const competitionWithProperStatus = competition ? {
+        ...competition,
+        status: competition.status as 'scheduled' | 'active' | 'completed'
+      } : null;
+
       const stats: MonthlyInviteStats = {
-        competition,
+        competition: competitionWithProperStatus,
         totalParticipants,
         totalPrizePool,
         topPerformers

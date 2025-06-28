@@ -106,18 +106,24 @@ export class MonthlyInviteCoreService {
 
       logger.debug('Buscando posição mensal do usuário', { userId, targetMonth }, 'MONTHLY_INVITE_SERVICE');
 
+      // Primeiro buscar a competição do mês
+      const { data: competition, error: compError } = await supabase
+        .from('monthly_invite_competitions')
+        .select('id')
+        .eq('month_year', targetMonth)
+        .maybeSingle();
+
+      if (compError || !competition) {
+        logger.warn('Competição não encontrada para buscar ranking', { error: compError, targetMonth }, 'MONTHLY_INVITE_SERVICE');
+        return createSuccessResponse(null);
+      }
+
       // Verificar se existe ranking na tabela monthly_invite_rankings
       const { data: rankingData, error: rankingError } = await supabase
         .from('monthly_invite_rankings')
         .select('position, prize_amount')
         .eq('user_id', userId)
-        .eq('competition_id', (select) => 
-          select
-            .from('monthly_invite_competitions')
-            .select('id')
-            .eq('month_year', targetMonth)
-            .single()
-        )
+        .eq('competition_id', competition.id)
         .maybeSingle();
 
       if (rankingError) {
