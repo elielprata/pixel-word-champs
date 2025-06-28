@@ -37,6 +37,20 @@ export const MonthlyInviteTab = () => {
     }
   };
 
+  const handlePrizeConfigClick = () => {
+    // Verificar se há dados da competição antes de abrir o modal
+    if (!data?.competition?.id) {
+      toast({
+        title: "Competição não encontrada",
+        description: "Aguarde o carregamento da competição ou tente atualizar a página.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setShowPrizeConfig(true);
+  };
+
   const exportWinners = () => {
     if (!data?.rankings || data.rankings.length === 0) {
       toast({
@@ -152,9 +166,10 @@ export const MonthlyInviteTab = () => {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => setShowPrizeConfig(true)}
+            onClick={handlePrizeConfigClick}
             variant="outline"
             className="bg-white hover:bg-slate-50"
+            disabled={!competition?.id}
           >
             Configurar Premiação
           </Button>
@@ -189,12 +204,14 @@ export const MonthlyInviteTab = () => {
       {/* Tabela de ranking */}
       <MonthlyInviteRankingTable rankings={rankings} />
 
-      {/* Modal de configuração de prêmios */}
-      <MonthlyPrizeConfigModal
-        open={showPrizeConfig}
-        onOpenChange={setShowPrizeConfig}
-        competitionId={competition?.id}
-      />
+      {/* Modal de configuração de prêmios - só renderizar se tiver competição válida */}
+      {competition?.id && (
+        <MonthlyPrizeConfigModal
+          open={showPrizeConfig}
+          onOpenChange={setShowPrizeConfig}
+          competitionId={competition.id}
+        />
+      )}
     </div>
   );
 };
