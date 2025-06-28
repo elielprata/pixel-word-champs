@@ -41,8 +41,8 @@ export const useInviteVerification = () => {
         return { success: false, error: error.message };
       }
 
-      // Tipar o resultado corretamente
-      const result = data as InviteVerificationResult;
+      // Tipar o resultado corretamente usando conversão segura
+      const result = data as unknown as InviteVerificationResult;
       
       logger.info('Verificação manual concluída com sucesso', { data: result }, 'INVITE_VERIFICATION');
       
