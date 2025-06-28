@@ -65,6 +65,11 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
           topPerformers: []
         };
 
+        // Safely handle statsResponse.data
+        const statsData = statsResponse.data && typeof statsResponse.data === 'object' 
+          ? statsResponse.data as any 
+          : {};
+
         setData({
           userPoints: userPointsResponse.data ? {
             ...defaultUserPoints,
@@ -73,10 +78,10 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
           competition: (rankingResponse.data as any)?.competition || null,
           rankings: (rankingResponse.data as any)?.rankings || [],
           userPosition: userPositionResponse.data || null,
-          stats: (statsResponse.data as any) ? {
+          stats: {
             ...defaultStats,
-            ...(statsResponse.data as any)
-          } : defaultStats
+            ...statsData
+          }
         });
       } else {
         setError('Erro ao carregar dados da competição mensal');
