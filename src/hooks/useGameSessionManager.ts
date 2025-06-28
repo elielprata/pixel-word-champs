@@ -15,6 +15,12 @@ interface SessionData {
   isCompleted: boolean;
 }
 
+interface ScoreUpdateResult {
+  total_score: number;
+  experience_points: number;
+  games_played: number;
+}
+
 export const useGameSessionManager = () => {
   const [currentSession, setCurrentSession] = useState<SessionData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,11 +112,13 @@ export const useGameSessionManager = () => {
         );
 
         if (scoreResponse.success && scoreResponse.data) {
+          const scores = scoreResponse.data as ScoreUpdateResult;
+          
           logger.info('Sessão completada e pontuações atualizadas', {
             sessionId: currentSession.sessionId,
             gamePoints: currentSession.totalScore,
-            newTotalScore: scoreResponse.data.total_score,
-            newExperiencePoints: scoreResponse.data.experience_points
+            newTotalScore: scores.total_score,
+            newExperiencePoints: scores.experience_points
           }, 'SESSION_MANAGER');
 
           const completedSession = {
@@ -122,7 +130,7 @@ export const useGameSessionManager = () => {
           setCurrentSession(completedSession);
           return {
             session: completedSession,
-            scores: scoreResponse.data
+            scores: scores
           };
         } else {
           throw new Error('Erro ao atualizar pontuações');

@@ -57,10 +57,10 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
             active_invites_count: 0,
             month_year: monthYear || new Date().toISOString().slice(0, 7)
           },
-          competition: rankingResponse.data?.competition || null,
-          rankings: rankingResponse.data?.rankings || [],
+          competition: (rankingResponse.data as any)?.competition || null,
+          rankings: (rankingResponse.data as any)?.rankings || [],
           userPosition: userPositionResponse.data || null,
-          stats: statsResponse.data || {
+          stats: (statsResponse.data as any) || {
             totalParticipants: 0,
             totalPrizePool: 0,
             topPerformers: []
