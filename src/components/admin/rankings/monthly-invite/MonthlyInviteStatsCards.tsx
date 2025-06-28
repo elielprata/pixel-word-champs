@@ -17,6 +17,7 @@ interface MonthlyInviteStatsCardsProps {
   competition: {
     id?: string;
     status?: string;
+    total_prize_pool?: number;
   } | null;
   onRefresh?: () => void;
 }
@@ -25,12 +26,14 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
   const { databasePrizePool, calculateTotalPrizePool, forceRecalculation, isLoading } = useMonthlyInvitePrizes(competition?.id);
   const { toast } = useToast();
   
-  // Verificar se há dessincronização
+  // Calcular valores dinamicamente
   const calculatedTotal = calculateTotalPrizePool();
+  const dynamicPrizePool = Math.max(calculatedTotal, databasePrizePool, competition?.total_prize_pool || 0);
   const isDesynchronized = Math.abs(databasePrizePool - calculatedTotal) > 0.01;
 
   const handleSyncPrizes = async () => {
     await forceRecalculation();
+    onRefresh?.();
   };
 
   const handleRefreshData = async () => {
@@ -56,7 +59,6 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
 
   // Usar dados das stats ao invés de props separadas - seguindo padrão semanal
   const totalParticipants = stats?.totalParticipants || 0;
-  const totalPrizePool = stats?.totalPrizePool || 0;
   const winnersCount = rankings?.filter((r: any) => r.prize_amount > 0).length || 0;
   const competitionStatus = competition?.status || 'inactive';
 
@@ -101,7 +103,7 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
             )}
           </div>
           <div className="text-2xl font-bold text-green-600">
-            R$ {totalPrizePool.toFixed(2)}
+            R$ {dynamicPrizePool.toFixed(2)}
           </div>
           <div className="text-sm text-gray-600">
             Total Prêmios
