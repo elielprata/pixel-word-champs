@@ -16,26 +16,7 @@ export interface Invite {
   invited_user_score: number;
 }
 
-export interface InviteReward {
-  id: string;
-  user_id: string;
-  invited_user_id: string;
-  invite_code: string;
-  reward_amount: number;
-  status: string;
-  created_at: string;
-  processed_at?: string;
-}
-
-export interface InvitedFriend {
-  name: string;
-  status: 'Ativo' | 'Pendente';
-  reward: number;
-  level: number;
-  avatar_url?: string;
-}
-
-class InviteService {
+class InviteCoreService {
   async generateInviteCode() {
     try {
       logger.debug('Gerando código de convite', undefined, 'INVITE_SERVICE');
@@ -80,85 +61,6 @@ class InviteService {
     } catch (error) {
       logger.error('Erro ao gerar código de convite', { error }, 'INVITE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'generateInviteCode'));
-    }
-  }
-
-  async getUserInvites() {
-    try {
-      logger.debug('Buscando convites do usuário', undefined, 'INVITE_SERVICE');
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        logger.warn('Usuário não autenticado ao buscar convites', undefined, 'INVITE_SERVICE');
-        return createErrorResponse('Usuário não autenticado');
-      }
-
-      const { data, error } = await supabase
-        .from('invites')
-        .select('*')
-        .eq('invited_by', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        logger.error('Erro ao buscar convites', { error: error.message, userId: user.id }, 'INVITE_SERVICE');
-        return createErrorResponse(error.message);
-      }
-
-      logger.info('Convites do usuário carregados', { userId: user.id, count: data?.length || 0 }, 'INVITE_SERVICE');
-      return createSuccessResponse(data || []);
-    } catch (error) {
-      logger.error('Erro ao buscar convites do usuário', { error }, 'INVITE_SERVICE');
-      return createErrorResponse(handleServiceError(error, 'getUserInvites'));
-    }
-  }
-
-  async getInvitedFriends() {
-    try {
-      logger.debug('Buscando amigos convidados', undefined, 'INVITE_SERVICE');
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        logger.warn('Usuário não autenticado ao buscar amigos', undefined, 'INVITE_SERVICE');
-        return createErrorResponse('Usuário não autenticado');
-      }
-
-      const { data: invites, error } = await supabase
-        .from('invites')
-        .select(`
-          *,
-          profiles:used_by (
-            username,
-            avatar_url,
-            total_score,
-            games_played
-          )
-        `)
-        .eq('invited_by', user.id)
-        .not('used_by', 'is', null);
-
-      if (error) {
-        logger.error('Erro ao buscar amigos convidados', { error: error.message, userId: user.id }, 'INVITE_SERVICE');
-        return createErrorResponse(error.message);
-      }
-
-      const friends: InvitedFriend[] = (invites || []).map(invite => {
-        const profile = invite.profiles as any;
-        const isActive = profile?.games_played > 0;
-        
-        return {
-          name: profile?.username || 'Usuário',
-          status: isActive ? 'Ativo' : 'Pendente',
-          reward: isActive ? 50 : 0,
-          level: Math.floor((profile?.total_score || 0) / 1000) + 1,
-          avatar_url: profile?.avatar_url
-        };
-      });
-
-      logger.info('Amigos convidados carregados', { userId: user.id, count: friends.length }, 'INVITE_SERVICE');
-      return createSuccessResponse(friends);
-    } catch (error) {
-      logger.error('Erro ao buscar amigos convidados', { error }, 'INVITE_SERVICE');
-      return createErrorResponse(handleServiceError(error, 'getInvitedFriends'));
     }
   }
 
@@ -221,46 +123,32 @@ class InviteService {
     }
   }
 
-  async getInviteStats() {
+  async getUserInvites() {
     try {
-      logger.debug('Buscando estatísticas de convites', undefined, 'INVITE_SERVICE');
+      logger.debug('Buscando convites do usuário', undefined, 'INVITE_SERVICE');
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        logger.warn('Usuário não autenticado ao buscar estatísticas', undefined, 'INVITE_SERVICE');
+        logger.warn('Usuário não autenticado ao buscar convites', undefined, 'INVITE_SERVICE');
         return createErrorResponse('Usuário não autenticado');
       }
 
-      const { data: rewards } = await supabase
-        .from('invite_rewards')
-        .select('reward_amount')
-        .eq('user_id', user.id)
-        .eq('status', 'processed');
-
-      const totalPoints = (rewards || []).reduce((sum, reward) => sum + reward.reward_amount, 0);
-
-      const { data: usedInvites } = await supabase
+      const { data, error } = await supabase
         .from('invites')
-        .select(`
-          id,
-          profiles:used_by (games_played)
-        `)
+        .select('*')
         .eq('invited_by', user.id)
-        .not('used_by', 'is', null);
+        .order('created_at', { ascending: false });
 
-      const activeFriends = (usedInvites || []).filter(invite => {
-        const profile = invite.profiles as any;
-        return profile?.games_played > 0;
-      }).length;
+      if (error) {
+        logger.error('Erro ao buscar convites', { error: error.message, userId: user.id }, 'INVITE_SERVICE');
+        return createErrorResponse(error.message);
+      }
 
-      const totalInvites = (usedInvites || []).length;
-
-      const stats = { totalPoints, activeFriends, totalInvites };
-      logger.info('Estatísticas de convites carregadas', { userId: user.id, stats }, 'INVITE_SERVICE');
-      return createSuccessResponse(stats);
+      logger.info('Convites do usuário carregados', { userId: user.id, count: data?.length || 0 }, 'INVITE_SERVICE');
+      return createSuccessResponse(data || []);
     } catch (error) {
-      logger.error('Erro ao buscar estatísticas de convites', { error }, 'INVITE_SERVICE');
-      return createErrorResponse(handleServiceError(error, 'getInviteStats'));
+      logger.error('Erro ao buscar convites do usuário', { error }, 'INVITE_SERVICE');
+      return createErrorResponse(handleServiceError(error, 'getUserInvites'));
     }
   }
 
@@ -274,4 +162,4 @@ class InviteService {
   }
 }
 
-export const inviteService = new InviteService();
+export const inviteCoreService = new InviteCoreService();
