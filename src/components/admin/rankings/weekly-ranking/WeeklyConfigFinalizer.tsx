@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Trophy, CheckCircle } from 'lucide-react';
 import { WeeklyConfig } from '@/types/weeklyConfig';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
+import { FinalizationConfirmationDialog } from './FinalizationConfirmationDialog';
 
 interface WeeklyConfigFinalizerProps {
   activeConfig: WeeklyConfig | null;
@@ -20,8 +21,19 @@ export const WeeklyConfigFinalizer: React.FC<WeeklyConfigFinalizerProps> = ({
   isLoading,
   hasNoActiveOrScheduled
 }) => {
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
+  
   const endedCompetitions = scheduledConfigs.filter(config => config.status === 'ended');
   const hasEndedCompetitions = endedCompetitions.length > 0;
+
+  const handleFinalizationClick = () => {
+    setConfirmationDialogOpen(true);
+  };
+
+  const handleConfirmFinalization = () => {
+    setConfirmationDialogOpen(false);
+    onFinalize();
+  };
 
   return (
     <div className="space-y-6">
@@ -67,7 +79,7 @@ export const WeeklyConfigFinalizer: React.FC<WeeklyConfigFinalizerProps> = ({
             ))}
           </div>
           <Button 
-            onClick={onFinalize}
+            onClick={handleFinalizationClick}
             disabled={isLoading}
             className="bg-amber-600 hover:bg-amber-700 text-white"
           >
@@ -113,7 +125,7 @@ export const WeeklyConfigFinalizer: React.FC<WeeklyConfigFinalizerProps> = ({
             </ul>
           </div>
           <Button 
-            onClick={onFinalize}
+            onClick={handleFinalizationClick}
             disabled={isLoading}
             variant="outline"
             className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
@@ -146,6 +158,16 @@ export const WeeklyConfigFinalizer: React.FC<WeeklyConfigFinalizerProps> = ({
           </p>
         </div>
       )}
+
+      {/* Dialog de Confirmação */}
+      <FinalizationConfirmationDialog
+        open={confirmationDialogOpen}
+        onOpenChange={setConfirmationDialogOpen}
+        onConfirm={handleConfirmFinalization}
+        isLoading={isLoading}
+        activeConfig={activeConfig}
+        endedCompetitions={endedCompetitions}
+      />
     </div>
   );
 };
