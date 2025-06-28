@@ -120,13 +120,13 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
           active_invites_count: 0,
           month_year: monthYear || new Date().toISOString().slice(0, 7)
         },
-        competition: rankingData?.competition || null,
-        rankings: rankingData?.rankings || [],
+        competition: (rankingData as any)?.competition || null,
+        rankings: (rankingData as any)?.rankings || [],
         userPosition,
         stats: {
-          totalParticipants: statsData?.totalParticipants || 0,
-          totalPrizePool: statsData?.totalPrizePool || 0,
-          topPerformers: statsData?.topPerformers || []
+          totalParticipants: (statsData as any)?.totalParticipants || 0,
+          totalPrizePool: (statsData as any)?.totalPrizePool || 0,
+          topPerformers: (statsData as any)?.topPerformers || []
         }
       };
 
