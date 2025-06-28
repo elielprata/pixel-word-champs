@@ -78,7 +78,10 @@ const AvatarUpload = ({ currentAvatar, fallback, onAvatarUpdate, size = 'lg' }: 
   return (
     <div className="relative inline-block">
       <Avatar className={`${sizeClasses[size]} border-4 border-white shadow-lg cursor-pointer hover:opacity-80 transition-opacity`} onClick={handleUploadClick}>
-        <AvatarImage src={currentAvatar} />
+        <AvatarImage 
+          src={currentAvatar} 
+          className="object-cover w-full h-full"
+        />
         <AvatarFallback 
           className="text-gray-700 text-lg font-bold bg-white cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-center"
         >
