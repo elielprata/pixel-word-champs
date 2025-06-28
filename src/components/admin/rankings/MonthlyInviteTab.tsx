@@ -2,14 +2,16 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useMonthlyInviteCompetition } from '@/hooks/useMonthlyInviteCompetition';
+import { useMonthlyInviteCompetitionSimplified } from '@/hooks/useMonthlyInviteCompetitionSimplified';
 import { MonthlyInviteHeader } from './monthly-invite/MonthlyInviteHeader';
 import { MonthlyInviteStatsCards } from './monthly-invite/MonthlyInviteStatsCards';
 import { MonthlyInviteRankingTable } from './monthly-invite/MonthlyInviteRankingTable';
 import { MonthlyPrizeConfigModal } from './monthly-invite/MonthlyPrizeConfigModal';
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle } from "lucide-react";
 
 export const MonthlyInviteTab = () => {
-  const { data, refreshRanking, refetch } = useMonthlyInviteCompetition();
+  const { data, isLoading, error, refreshRanking, refetch } = useMonthlyInviteCompetitionSimplified();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showPrizeConfig, setShowPrizeConfig] = useState(false);
   const { toast } = useToast();
@@ -35,10 +37,6 @@ export const MonthlyInviteTab = () => {
     } finally {
       setIsRefreshing(false);
     }
-  };
-
-  const handleDataRefresh = () => {
-    refetch();
   };
 
   const exportWinners = () => {
@@ -80,12 +78,52 @@ export const MonthlyInviteTab = () => {
     });
   };
 
-  if (!data) {
+  // Loading skeleton seguindo padrão do WeeklyRankingView
+  if (isLoading) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-red-600 mb-4">Erro ao carregar dados</p>
-        <Button onClick={() => window.location.reload()}>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-8 w-64" />
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-9 w-32" />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+        
+        <Skeleton className="h-64" />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Erro ao Carregar Dados</h3>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <Button onClick={refetch}>
           Tentar Novamente
+        </Button>
+      </div>
+    );
+  }
+
+  // No competition state
+  if (data?.no_active_competition) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <div className="text-6xl mb-4">📅</div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhuma Competição Ativa</h3>
+        <p className="text-gray-600 mb-4">{data.message}</p>
+        <Button onClick={refetch}>
+          Verificar Novamente
         </Button>
       </div>
     );
@@ -108,7 +146,7 @@ export const MonthlyInviteTab = () => {
         stats={stats}
         rankings={rankings}
         competition={competition}
-        onRefresh={handleDataRefresh}
+        onRefresh={refetch}
       />
 
       <MonthlyInviteRankingTable rankings={rankings} />

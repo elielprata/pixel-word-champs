@@ -4,19 +4,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Users, DollarSign, Trophy, Calendar, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useMonthlyInvitePrizes } from '@/hooks/useMonthlyInvitePrizes';
-import { monthlyInviteService } from '@/services/monthlyInvite';
+import { monthlyInviteUnifiedService } from '@/services/monthlyInvite/monthlyInviteUnified';
 import { useToast } from '@/hooks/use-toast';
 
 interface MonthlyInviteStatsCardsProps {
   stats: {
     totalParticipants: number;
     totalPrizePool: number;
+    topPerformers?: any[];
   };
   rankings: any[];
   competition: {
     id?: string;
     status?: string;
-  };
+  } | null;
   onRefresh?: () => void;
 }
 
@@ -34,7 +35,7 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
 
   const handleRefreshData = async () => {
     try {
-      const response = await monthlyInviteService.refreshMonthlyRanking();
+      const response = await monthlyInviteUnifiedService.refreshMonthlyRanking();
       if (response.success) {
         toast({
           title: "Dados atualizados",
@@ -53,6 +54,12 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
     }
   };
 
+  // Usar dados das stats ao invés de props separadas - seguindo padrão semanal
+  const totalParticipants = stats?.totalParticipants || 0;
+  const totalPrizePool = stats?.totalPrizePool || 0;
+  const winnersCount = rankings?.filter((r: any) => r.prize_amount > 0).length || 0;
+  const competitionStatus = competition?.status || 'inactive';
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
@@ -70,7 +77,7 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
             </Button>
           </div>
           <div className="text-2xl font-bold text-blue-600">
-            {stats.totalParticipants}
+            {totalParticipants}
           </div>
           <div className="text-sm text-gray-600">Participantes</div>
         </CardContent>
@@ -94,7 +101,7 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
             )}
           </div>
           <div className="text-2xl font-bold text-green-600">
-            R$ {databasePrizePool.toFixed(2)}
+            R$ {totalPrizePool.toFixed(2)}
           </div>
           <div className="text-sm text-gray-600">
             Total Prêmios
@@ -111,7 +118,7 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
         <CardContent className="p-6 text-center">
           <Trophy className="w-8 h-8 text-amber-500 mx-auto mb-2" />
           <div className="text-2xl font-bold text-amber-600">
-            {rankings.filter((r: any) => r.prize_amount > 0).length}
+            {winnersCount}
           </div>
           <div className="text-sm text-gray-600">Ganhadores</div>
         </CardContent>
@@ -121,7 +128,9 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefres
         <CardContent className="p-6 text-center">
           <Calendar className="w-8 h-8 text-purple-500 mx-auto mb-2" />
           <div className="text-2xl font-bold text-purple-600">
-            {competition?.status === 'active' ? 'Ativa' : 'Finalizada'}
+            {competitionStatus === 'active' ? 'Ativa' : 
+             competitionStatus === 'completed' ? 'Finalizada' : 
+             competitionStatus === 'scheduled' ? 'Agendada' : 'Inativa'}
           </div>
           <div className="text-sm text-gray-600">Status</div>
         </CardContent>

@@ -1323,6 +1323,10 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: Json
       }
+      get_monthly_invite_stats: {
+        Args: { target_month?: string }
+        Returns: Json
+      }
       get_users_with_real_emails: {
         Args: Record<PropertyKey, never>
         Returns: {

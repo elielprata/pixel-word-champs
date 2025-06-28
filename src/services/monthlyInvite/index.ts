@@ -3,14 +3,25 @@ import { MonthlyInviteCoreService } from './monthlyInviteCore';
 import { MonthlyInviteCompetitionService } from './monthlyInviteCompetition';
 import { MonthlyInviteStatsService } from './monthlyInviteStats';
 import { MonthlyInvitePrizesService } from './monthlyInvitePrizes';
+import { MonthlyInviteUnifiedService } from './monthlyInviteUnified';
 
 class MonthlyInviteService {
   private coreService = new MonthlyInviteCoreService();
   private competitionService = new MonthlyInviteCompetitionService();
   private statsService = new MonthlyInviteStatsService();
   private prizesService = new MonthlyInvitePrizesService();
+  private unifiedService = new MonthlyInviteUnifiedService();
 
-  // Métodos do core service
+  // Métodos do unified service (recomendado para novos usos)
+  async getMonthlyStats(monthYear?: string) {
+    return this.unifiedService.getMonthlyStats(monthYear);
+  }
+
+  async refreshMonthlyRanking(monthYear?: string) {
+    return this.unifiedService.refreshMonthlyRanking(monthYear);
+  }
+
+  // Métodos do core service (manter para compatibilidade)
   getCurrentMonth() {
     return this.coreService.getCurrentMonth();
   }
@@ -23,7 +34,7 @@ class MonthlyInviteService {
     return this.coreService.getUserMonthlyPosition(userId, monthYear);
   }
 
-  // Métodos do competition service
+  // Métodos do competition service (manter para compatibilidade)
   async getCurrentMonthCompetition() {
     return this.competitionService.getCurrentMonthCompetition();
   }
@@ -32,12 +43,8 @@ class MonthlyInviteService {
     return this.competitionService.getMonthlyRanking(monthYear, limit);
   }
 
-  async refreshMonthlyRanking(monthYear?: string) {
-    return this.competitionService.refreshMonthlyRanking(monthYear);
-  }
-
-  // Métodos do stats service
-  async getMonthlyStats(monthYear?: string) {
+  // Métodos do stats service (manter para compatibilidade)
+  async getMonthlyStatsLegacy(monthYear?: string) {
     return this.statsService.getMonthlyStats(monthYear);
   }
 
