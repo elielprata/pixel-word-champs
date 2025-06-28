@@ -83,7 +83,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
       }
 
       const rankingData = rankingResponse.status === 'fulfilled' && rankingResponse.value.success
-        ? rankingResponse.value.data
+        ? userPointsResponse.value.data
         : { competition: null, rankings: [] };
 
       if (rankingResponse.status === 'rejected' || (rankingResponse.status === 'fulfilled' && !rankingResponse.value.success)) {
