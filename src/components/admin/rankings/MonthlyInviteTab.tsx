@@ -9,7 +9,7 @@ import { MonthlyInviteRankingTable } from './monthly-invite/MonthlyInviteRanking
 import { MonthlyPrizeConfigModal } from './monthly-invite/MonthlyPrizeConfigModal';
 
 export const MonthlyInviteTab = () => {
-  const { data, refreshRanking } = useMonthlyInviteCompetition();
+  const { data, refreshRanking, refetch } = useMonthlyInviteCompetition();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showPrizeConfig, setShowPrizeConfig] = useState(false);
   const { toast } = useToast();
@@ -35,6 +35,10 @@ export const MonthlyInviteTab = () => {
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  const handleDataRefresh = () => {
+    refetch();
   };
 
   const exportWinners = () => {
@@ -104,6 +108,7 @@ export const MonthlyInviteTab = () => {
         stats={stats}
         rankings={rankings}
         competition={competition}
+        onRefresh={handleDataRefresh}
       />
 
       <MonthlyInviteRankingTable rankings={rankings} />

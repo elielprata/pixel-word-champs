@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Users, DollarSign, Trophy, Calendar, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useMonthlyInvitePrizes } from '@/hooks/useMonthlyInvitePrizes';
+import { monthlyInviteService } from '@/services/monthlyInvite';
+import { useToast } from '@/hooks/use-toast';
 
 interface MonthlyInviteStatsCardsProps {
   stats: {
@@ -15,10 +17,12 @@ interface MonthlyInviteStatsCardsProps {
     id?: string;
     status?: string;
   };
+  onRefresh?: () => void;
 }
 
-export const MonthlyInviteStatsCards = ({ stats, rankings, competition }: MonthlyInviteStatsCardsProps) => {
+export const MonthlyInviteStatsCards = ({ stats, rankings, competition, onRefresh }: MonthlyInviteStatsCardsProps) => {
   const { databasePrizePool, calculateTotalPrizePool, forceRecalculation, isLoading } = useMonthlyInvitePrizes(competition?.id);
+  const { toast } = useToast();
   
   // Verificar se há dessincronização
   const calculatedTotal = calculateTotalPrizePool();
@@ -28,11 +32,43 @@ export const MonthlyInviteStatsCards = ({ stats, rankings, competition }: Monthl
     await forceRecalculation();
   };
 
+  const handleRefreshData = async () => {
+    try {
+      const response = await monthlyInviteService.refreshMonthlyRanking();
+      if (response.success) {
+        toast({
+          title: "Dados atualizados",
+          description: "Participantes e ranking foram recalculados com base nos convites reais.",
+        });
+        onRefresh?.();
+      } else {
+        throw new Error(response.error || 'Erro ao atualizar dados');
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar",
+        description: "Não foi possível atualizar os dados.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
         <CardContent className="p-6 text-center">
-          <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Users className="w-8 h-8 text-blue-500" />
+            <Button
+              onClick={handleRefreshData}
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              title="Atualizar dados dos participantes"
+            >
+              <RefreshCw className="w-3 h-3" />
+            </Button>
+          </div>
           <div className="text-2xl font-bold text-blue-600">
             {stats.totalParticipants}
           </div>

@@ -16,6 +16,9 @@ export class MonthlyInviteStatsService {
       
       logger.debug('Buscando estatísticas mensais', { targetMonth }, 'MONTHLY_INVITE_SERVICE');
 
+      // Primeiro, garantir que os dados estão atualizados
+      await this.updateMonthlyData(targetMonth);
+
       // Buscar competição do mês
       const { data: competition, error: compError } = await supabase
         .from('monthly_invite_competitions')
@@ -33,40 +36,20 @@ export class MonthlyInviteStatsService {
       let topPerformers: any[] = [];
 
       if (competition) {
-        // Verificar se existem participantes primeiro
-        const { count: participantsCount, error: partCountError } = await supabase
+        // Usar os dados já calculados e armazenados na competição
+        totalParticipants = competition.total_participants || 0;
+        totalPrizePool = Number(competition.total_prize_pool) || 0;
+
+        // Buscar top performers do ranking
+        const { data: topRankings, error: topError } = await supabase
           .from('monthly_invite_rankings')
-          .select('*', { count: 'exact', head: true })
-          .eq('competition_id', competition.id);
+          .select('username, invite_points, position')
+          .eq('competition_id', competition.id)
+          .order('position', { ascending: true })
+          .limit(3);
 
-        if (!partCountError && participantsCount !== null) {
-          totalParticipants = participantsCount;
-        }
-
-        // Só buscar prêmios se há dados na tabela
-        if (totalParticipants > 0) {
-          // Calcular pool de prêmios total
-          const { data: prizes, error: prizeError } = await supabase
-            .from('monthly_invite_prizes')
-            .select('prize_amount')
-            .eq('competition_id', competition.id)
-            .eq('active', true);
-
-          if (!prizeError && prizes && prizes.length > 0) {
-            totalPrizePool = prizes.reduce((sum, prize) => sum + Number(prize.prize_amount), 0);
-          }
-
-          // Buscar top performers
-          const { data: topRankings, error: topError } = await supabase
-            .from('monthly_invite_rankings')
-            .select('username, invite_points, position')
-            .eq('competition_id', competition.id)
-            .order('position', { ascending: true })
-            .limit(3);
-
-          if (!topError && topRankings && topRankings.length > 0) {
-            topPerformers = topRankings;
-          }
+        if (!topError && topRankings && topRankings.length > 0) {
+          topPerformers = topRankings;
         }
       }
 
@@ -104,6 +87,32 @@ export class MonthlyInviteStatsService {
       };
       
       return createSuccessResponse(fallbackStats);
+    }
+  }
+
+  private async updateMonthlyData(targetMonth: string) {
+    try {
+      // Executar função que atualiza dados mensais baseado nos convites reais
+      const { data, error } = await supabase
+        .rpc('populate_monthly_competition_and_points', { target_month: targetMonth });
+
+      if (error) {
+        logger.warn('Erro ao atualizar dados mensais', { error, targetMonth }, 'MONTHLY_INVITE_SERVICE');
+        return;
+      }
+
+      // Executar função que popula o ranking
+      const { data: rankingData, error: rankingError } = await supabase
+        .rpc('populate_monthly_invite_ranking', { target_month: targetMonth });
+
+      if (rankingError) {
+        logger.warn('Erro ao atualizar ranking mensal', { error: rankingError, targetMonth }, 'MONTHLY_INVITE_SERVICE');
+        return;
+      }
+
+      logger.debug('Dados mensais atualizados com sucesso', { targetMonth, data, rankingData }, 'MONTHLY_INVITE_SERVICE');
+    } catch (error) {
+      logger.warn('Erro ao atualizar dados mensais', { error, targetMonth }, 'MONTHLY_INVITE_SERVICE');
     }
   }
 }
