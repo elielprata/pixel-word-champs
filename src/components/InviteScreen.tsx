@@ -59,26 +59,28 @@ const InviteScreen = () => {
   }
 
   return (
-    <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen">
-      <InviteHeader />
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-3 pb-20">
+      <div className="max-w-md mx-auto space-y-4">
+        <InviteHeader />
 
-      {/* Monthly Competition Section */}
-      <div className="mb-6">
-        <MonthlyInviteCompetition suppressLoading={true} />
+        {/* Monthly Competition Section */}
+        <div className="mb-6">
+          <MonthlyInviteCompetition suppressLoading={true} />
+        </div>
+
+        <InviteStatsCards stats={stats} />
+
+        <ProgressToRewardCard stats={stats} />
+
+        <InviteCodeCard 
+          inviteCode={inviteCode}
+          onCopyCode={handleCopyCode}
+        />
+
+        <HowItWorksCard />
+
+        <FriendsListCard invitedFriends={invitedFriends} />
       </div>
-
-      <InviteStatsCards stats={stats} />
-
-      <ProgressToRewardCard stats={stats} />
-
-      <InviteCodeCard 
-        inviteCode={inviteCode}
-        onCopyCode={handleCopyCode}
-      />
-
-      <HowItWorksCard />
-
-      <FriendsListCard invitedFriends={invitedFriends} />
     </div>
   );
 };

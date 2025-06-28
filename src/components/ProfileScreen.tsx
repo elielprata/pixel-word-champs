@@ -101,54 +101,58 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
 
   if (showMyData) {
     return (
-      <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
-        {/* Header com botão voltar */}
-        <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => setShowMyData(false)}>
-            <ChevronRight className="w-5 h-5 rotate-180" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">Meus Dados</h1>
-            <p className="text-sm text-gray-600">Gerencie suas informações pessoais</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-3 pb-20">
+        <div className="max-w-md mx-auto space-y-4">
+          {/* Header com botão voltar */}
+          <div className="flex items-center gap-3 mb-6">
+            <Button variant="ghost" size="icon" onClick={() => setShowMyData(false)}>
+              <ChevronRight className="w-5 h-5 rotate-180" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">Meus Dados</h1>
+              <p className="text-sm text-gray-600">Gerencie suas informações pessoais</p>
+            </div>
           </div>
-        </div>
 
-        <MyDataSection />
+          <MyDataSection />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">Seu Perfil</h1>
-        <p className="text-sm text-gray-600">Estatísticas e progressão</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-3 pb-20">
+      <div className="max-w-md mx-auto space-y-4">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">Seu Perfil</h1>
+          <p className="text-sm text-gray-600">Estatísticas e progressão</p>
+        </div>
+
+        {/* Card principal do jogador com novo sistema XP */}
+        <ProfileHeader
+          user={user}
+          currentAvatar={currentAvatar}
+          currentLevel={currentLevel}
+          nextLevel={nextLevel}
+          progress={progress}
+          onAvatarUpdate={handleAvatarUpdate}
+          getAvatarFallback={getAvatarFallback}
+          formatXP={formatXP}
+        />
+
+        {/* Estatísticas compactas */}
+        <ProfileStatsGrid user={user} />
+
+        {/* Menu de ações */}
+        <ProfileMenu
+          onMyData={handleMyData}
+          onAchievements={handleAchievements}
+          onSettings={onNavigateToSettings}
+          onHelp={handleHelp}
+          onLogout={handleLogout}
+        />
       </div>
-
-      {/* Card principal do jogador com novo sistema XP */}
-      <ProfileHeader
-        user={user}
-        currentAvatar={currentAvatar}
-        currentLevel={currentLevel}
-        nextLevel={nextLevel}
-        progress={progress}
-        onAvatarUpdate={handleAvatarUpdate}
-        getAvatarFallback={getAvatarFallback}
-        formatXP={formatXP}
-      />
-
-      {/* Estatísticas compactas */}
-      <ProfileStatsGrid user={user} />
-
-      {/* Menu de ações */}
-      <ProfileMenu
-        onMyData={handleMyData}
-        onAchievements={handleAchievements}
-        onSettings={onNavigateToSettings}
-        onHelp={handleHelp}
-        onLogout={handleLogout}
-      />
     </div>
   );
 };
