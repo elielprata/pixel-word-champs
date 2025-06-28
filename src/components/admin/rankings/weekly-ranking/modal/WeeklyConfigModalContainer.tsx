@@ -1,21 +1,64 @@
 
 import React from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { WeeklyConfigModalTabs } from './WeeklyConfigModalTabs';
-import { WeeklyConfigModalHeader } from './WeeklyConfigModalHeader';
-import { WeeklyConfigModalActions } from './WeeklyConfigModalActions';
 import { EditCompetitionModal } from '../EditCompetitionModal';
 import { DeleteCompetitionModal } from '../DeleteCompetitionModal';
 import { DeleteCompletedCompetitionModal } from '../DeleteCompletedCompetitionModal';
-import { WeeklyConfigModalErrorBoundary } from './WeeklyConfigModalErrorBoundary';
+import { WeeklyConfigModalHeader } from './WeeklyConfigModalHeader';
+import { WeeklyConfigModalTabs } from './WeeklyConfigModalTabs';
+import { WeeklyConfigModalActions } from './WeeklyConfigModalActions';
+
+interface WeeklyConfig {
+  id: string;
+  start_date: string;
+  end_date: string;
+  status: 'active' | 'scheduled' | 'ended' | 'completed';
+  activated_at?: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface WeeklyConfigModalContainerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  modalData: any;
-  modalStates: any;
-  onModalStatesChange: any;
-  handlers: any;
+  modalData: {
+    activeConfig: WeeklyConfig | null;
+    scheduledConfigs: WeeklyConfig[];
+    lastCompletedConfig: WeeklyConfig | null;
+    configsLoading: boolean;
+    isActivating: boolean;
+    isLoading: boolean;
+    newStartDate: string;
+    newEndDate: string;
+    historyPage: number;
+    weeklyHistoryData: any;
+    historyLoading: boolean;
+    historyTotalPages: number;
+    selectedCompetition: WeeklyConfig | null;
+  };
+  modalStates: {
+    editModalOpen: boolean;
+    deleteModalOpen: boolean;
+    deleteCompletedModalOpen: boolean;
+  };
+  onModalStatesChange: {
+    setEditModalOpen: (open: boolean) => void;
+    setDeleteModalOpen: (open: boolean) => void;
+    setDeleteCompletedModalOpen: (open: boolean) => void;
+  };
+  handlers: {
+    onEdit: (competition: WeeklyConfig) => void;
+    onDelete: (competition: WeeklyConfig) => void;
+    onDeleteCompleted: (competition: any) => void;
+    onActivate: () => Promise<void>;
+    onStartDateChange: (date: string) => void;
+    onEndDateChange: (date: string) => void;
+    onSchedule: () => Promise<void>;
+    onFinalize: () => Promise<void>;
+    onPageChange: (page: number) => void;
+    onModalSuccess: () => void;
+  };
 }
 
 export const WeeklyConfigModalContainer: React.FC<WeeklyConfigModalContainerProps> = ({
@@ -26,54 +69,44 @@ export const WeeklyConfigModalContainer: React.FC<WeeklyConfigModalContainerProp
   onModalStatesChange,
   handlers
 }) => {
-  console.log('WeeklyConfigModalContainer renderizando:', { 
-    open, 
-    modalDataKeys: Object.keys(modalData || {}),
-    hasActiveConfig: !!modalData?.activeConfig,
-    hasScheduled: modalData?.scheduledConfigs?.length || 0
-  });
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <WeeklyConfigModalErrorBoundary>
-            <WeeklyConfigModalHeader />
-            
-            <WeeklyConfigModalTabs
-              activeConfig={modalData.activeConfig}
-              scheduledConfigs={modalData.scheduledConfigs || []}
-              lastCompletedConfig={modalData.lastCompletedConfig}
-              configsLoading={modalData.configsLoading}
-              isActivating={modalData.isActivating}
-              isLoading={modalData.isLoading}
-              newStartDate={modalData.newStartDate}
-              newEndDate={modalData.newEndDate}
-              historyPage={modalData.historyPage}
-              weeklyHistoryData={modalData.weeklyHistoryData}
-              historyLoading={modalData.historyLoading}
-              historyTotalPages={modalData.historyTotalPages}
-              onEdit={handlers.onEdit}
-              onDelete={handlers.onDelete}
-              onDeleteCompleted={handlers.onDeleteCompleted}
-              onActivate={handlers.onActivate}
-              onStartDateChange={handlers.onStartDateChange}
-              onEndDateChange={handlers.onEndDateChange}
-              onSchedule={handlers.onSchedule}
-              onFinalize={handlers.onFinalize}
-              onPageChange={handlers.onPageChange}
-            />
-            
-            <WeeklyConfigModalActions 
-              onClose={() => onOpenChange(false)}
-              isLoading={modalData.isLoading || false}
-              isActivating={modalData.isActivating || false}
-            />
-          </WeeklyConfigModalErrorBoundary>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <WeeklyConfigModalHeader />
+          
+          <WeeklyConfigModalTabs
+            activeConfig={modalData.activeConfig}
+            scheduledConfigs={modalData.scheduledConfigs}
+            lastCompletedConfig={modalData.lastCompletedConfig}
+            configsLoading={modalData.configsLoading}
+            isActivating={modalData.isActivating}
+            isLoading={modalData.isLoading}
+            newStartDate={modalData.newStartDate}
+            newEndDate={modalData.newEndDate}
+            historyPage={modalData.historyPage}
+            weeklyHistoryData={modalData.weeklyHistoryData}
+            historyLoading={modalData.historyLoading}
+            historyTotalPages={modalData.historyTotalPages}
+            onEdit={handlers.onEdit}
+            onDelete={handlers.onDelete}
+            onDeleteCompleted={handlers.onDeleteCompleted}
+            onActivate={handlers.onActivate}
+            onStartDateChange={handlers.onStartDateChange}
+            onEndDateChange={handlers.onEndDateChange}
+            onSchedule={handlers.onSchedule}
+            onFinalize={handlers.onFinalize}
+            onPageChange={handlers.onPageChange}
+          />
+
+          <WeeklyConfigModalActions
+            onClose={() => onOpenChange(false)}
+            isLoading={modalData.isLoading}
+            isActivating={modalData.isActivating}
+          />
         </DialogContent>
       </Dialog>
 
-      {/* Modals Adicionais */}
       <EditCompetitionModal
         open={modalStates.editModalOpen}
         onOpenChange={onModalStatesChange.setEditModalOpen}
