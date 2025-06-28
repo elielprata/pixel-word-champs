@@ -50,21 +50,33 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
       const statsResponse = await monthlyInviteService.getMonthlyStats(monthYear);
 
       if (userPointsResponse.success && rankingResponse.success && statsResponse.success) {
+        // Garantir que userPoints sempre tenha as propriedades necessárias
+        const defaultUserPoints = {
+          invite_points: 0,
+          invites_count: 0,
+          active_invites_count: 0,
+          month_year: monthYear || new Date().toISOString().slice(0, 7)
+        };
+
+        // Garantir que stats sempre tenha as propriedades necessárias
+        const defaultStats = {
+          totalParticipants: 0,
+          totalPrizePool: 0,
+          topPerformers: []
+        };
+
         setData({
-          userPoints: userPointsResponse.data || {
-            invite_points: 0,
-            invites_count: 0,
-            active_invites_count: 0,
-            month_year: monthYear || new Date().toISOString().slice(0, 7)
-          },
+          userPoints: userPointsResponse.data ? {
+            ...defaultUserPoints,
+            ...userPointsResponse.data
+          } : defaultUserPoints,
           competition: (rankingResponse.data as any)?.competition || null,
           rankings: (rankingResponse.data as any)?.rankings || [],
           userPosition: userPositionResponse.data || null,
-          stats: (statsResponse.data as any) || {
-            totalParticipants: 0,
-            totalPrizePool: 0,
-            topPerformers: []
-          }
+          stats: (statsResponse.data as any) ? {
+            ...defaultStats,
+            ...(statsResponse.data as any)
+          } : defaultStats
         });
       } else {
         setError('Erro ao carregar dados da competição mensal');

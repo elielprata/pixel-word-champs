@@ -1391,6 +1391,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      update_user_scores: {
+        Args: {
+          p_user_id: string
+          p_game_points: number
+          p_experience_points: number
+        }
+        Returns: {
+          total_score: number
+          experience_points: number
+          games_played: number
+        }[]
+      }
       update_weekly_competitions_status: {
         Args: Record<PropertyKey, never>
         Returns: Json
