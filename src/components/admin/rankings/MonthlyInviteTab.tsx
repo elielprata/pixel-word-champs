@@ -7,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useMonthlyInviteCompetition } from '@/hooks/useMonthlyInviteCompetition';
 import { monthlyInviteService } from '@/services/monthlyInviteService';
 import { RefreshCw, Trophy, Users, Calendar, DollarSign, Download } from 'lucide-react';
-import LoadingState from '@/components/home/LoadingState';
 
 export const MonthlyInviteTab = () => {
   const { data, isLoading, error, refreshRanking } = useMonthlyInviteCompetition();
@@ -75,10 +74,6 @@ export const MonthlyInviteTab = () => {
       description: "Lista de ganhadores exportada com sucesso.",
     });
   };
-
-  if (isLoading) {
-    return <LoadingState />;
-  }
 
   if (error || !data) {
     return (
