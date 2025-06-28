@@ -71,7 +71,7 @@ const InviteScreen = () => {
         {!monthlyLoading && monthlyData && (
           <MonthlyPrizeDisplay 
             topPerformers={monthlyData.stats?.topPerformers || []}
-            totalPrizePool={monthlyData.stats?.totalPrizePool || 0}
+            totalPrizePool={0}
           />
         )}
 
