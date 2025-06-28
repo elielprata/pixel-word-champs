@@ -18,10 +18,12 @@ export interface Invite {
 
 export interface InvitedFriend {
   name: string;
-  status: 'Ativo' | 'Pendente';
+  status: 'Ativo' | 'Parcialmente Ativo' | 'Pendente';
   reward: number;
   level: number;
   avatar_url?: string;
+  days_played?: number;
+  progress_to_full_reward?: number;
 }
 
 export interface InviteReward {
@@ -86,12 +88,24 @@ class InviteService {
 
   async useInviteCode(code: string) {
     try {
-      logger.info('Usando código de convite', { code }, 'INVITE_SERVICE');
+      logger.info('Usando código de convite com novo sistema', { code }, 'INVITE_SERVICE');
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         logger.warn('Usuário não autenticado ao usar convite', undefined, 'INVITE_SERVICE');
         return createErrorResponse('Usuário não autenticado');
+      }
+
+      // Verificar se o usuário já usou algum código de convite
+      const { data: existingUse } = await supabase
+        .from('invites')
+        .select('id')
+        .eq('used_by', user.id)
+        .single();
+
+      if (existingUse) {
+        logger.warn('Usuário já usou um código de convite', { userId: user.id }, 'INVITE_SERVICE');
+        return createErrorResponse('Você já usou um código de convite');
       }
 
       const { data: invite, error: fetchError } = await supabase
@@ -112,6 +126,7 @@ class InviteService {
         return createErrorResponse('Você não pode usar seu próprio código de convite');
       }
 
+      // Marcar convite como usado
       const { error: updateError } = await supabase
         .from('invites')
         .update({
@@ -125,17 +140,28 @@ class InviteService {
         return createErrorResponse(updateError.message);
       }
 
-      await supabase
+      // Criar reward imediato com 5 pontos (status 'partial')
+      const { error: rewardError } = await supabase
         .from('invite_rewards')
         .insert({
           user_id: invite.invited_by,
           invited_user_id: user.id,
           invite_code: code,
-          reward_amount: 50,
-          status: 'pending'
+          reward_amount: 5,
+          status: 'partial'
         });
 
-      logger.info('Código de convite usado com sucesso', { code, userId: user.id, invitedBy: invite.invited_by }, 'INVITE_SERVICE');
+      if (rewardError) {
+        logger.error('Erro ao criar reward parcial', { error: rewardError.message, code, userId: user.id }, 'INVITE_SERVICE');
+        // Não bloquear o processo se não conseguir criar o reward
+      }
+
+      logger.info('Código de convite usado com sucesso - reward parcial criado', { 
+        code, 
+        userId: user.id, 
+        invitedBy: invite.invited_by 
+      }, 'INVITE_SERVICE');
+
       return createSuccessResponse(true);
     } catch (error) {
       logger.error('Erro ao usar código de convite', { error, code }, 'INVITE_SERVICE');
@@ -175,7 +201,7 @@ class InviteService {
   // Friends management
   async getInvitedFriends() {
     try {
-      logger.debug('Buscando amigos convidados', undefined, 'INVITE_SERVICE');
+      logger.debug('Buscando amigos convidados com novo sistema', undefined, 'INVITE_SERVICE');
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -192,6 +218,11 @@ class InviteService {
             avatar_url,
             total_score,
             games_played
+          ),
+          invite_rewards!inner (
+            reward_amount,
+            status,
+            processed_at
           )
         `)
         .eq('invited_by', user.id)
@@ -204,18 +235,29 @@ class InviteService {
 
       const friends: InvitedFriend[] = (invites || []).map(invite => {
         const profile = invite.profiles as any;
-        const isActive = profile?.games_played > 0;
+        const reward = invite.invite_rewards?.[0] as any;
+        
+        let status: 'Ativo' | 'Parcialmente Ativo' | 'Pendente';
+        if (reward?.status === 'processed') {
+          status = 'Ativo';
+        } else if (reward?.status === 'partial') {
+          status = 'Parcialmente Ativo';
+        } else {
+          status = 'Pendente';
+        }
         
         return {
           name: profile?.username || 'Usuário',
-          status: isActive ? 'Ativo' : 'Pendente',
-          reward: isActive ? 50 : 0,
+          status,
+          reward: reward?.reward_amount || 0,
           level: Math.floor((profile?.total_score || 0) / 1000) + 1,
-          avatar_url: profile?.avatar_url
+          avatar_url: profile?.avatar_url,
+          days_played: profile?.games_played || 0,
+          progress_to_full_reward: Math.min(100, (profile?.games_played || 0) * 20)
         };
       });
 
-      logger.info('Amigos convidados carregados', { userId: user.id, count: friends.length }, 'INVITE_SERVICE');
+      logger.info('Amigos convidados carregados com novo sistema', { userId: user.id, count: friends.length }, 'INVITE_SERVICE');
       return createSuccessResponse(friends);
     } catch (error) {
       logger.error('Erro ao buscar amigos convidados', { error }, 'INVITE_SERVICE');
@@ -226,7 +268,7 @@ class InviteService {
   // Statistics
   async getInviteStats() {
     try {
-      logger.debug('Buscando estatísticas de convites', undefined, 'INVITE_SERVICE');
+      logger.debug('Buscando estatísticas de convites com novo sistema', undefined, 'INVITE_SERVICE');
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -236,30 +278,22 @@ class InviteService {
 
       const { data: rewards } = await supabase
         .from('invite_rewards')
-        .select('reward_amount')
-        .eq('user_id', user.id)
-        .eq('status', 'processed');
+        .select('reward_amount, status')
+        .eq('user_id', user.id);
 
       const totalPoints = (rewards || []).reduce((sum, reward) => sum + reward.reward_amount, 0);
+      const activeFriends = (rewards || []).filter(reward => reward.status === 'processed').length;
+      const partialFriends = (rewards || []).filter(reward => reward.status === 'partial').length;
+      const totalInvites = (rewards || []).length;
 
-      const { data: usedInvites } = await supabase
-        .from('invites')
-        .select(`
-          id,
-          profiles:used_by (games_played)
-        `)
-        .eq('invited_by', user.id)
-        .not('used_by', 'is', null);
-
-      const activeFriends = (usedInvites || []).filter(invite => {
-        const profile = invite.profiles as any;
-        return profile?.games_played > 0;
-      }).length;
-
-      const totalInvites = (usedInvites || []).length;
-
-      const stats = { totalPoints, activeFriends, totalInvites };
-      logger.info('Estatísticas de convites carregadas', { userId: user.id, stats }, 'INVITE_SERVICE');
+      const stats = { 
+        totalPoints, 
+        activeFriends, 
+        totalInvites,
+        partialFriends
+      };
+      
+      logger.info('Estatísticas de convites carregadas com novo sistema', { userId: user.id, stats }, 'INVITE_SERVICE');
       return createSuccessResponse(stats);
     } catch (error) {
       logger.error('Erro ao buscar estatísticas de convites', { error }, 'INVITE_SERVICE');

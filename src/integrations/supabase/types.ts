@@ -928,6 +928,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_days: {
+        Row: {
+          activity_date: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_date: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_date?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_reports: {
         Row: {
           assigned_to: string | null
@@ -1286,6 +1307,10 @@ export type Database = {
       calculate_prize_for_position: {
         Args: { user_position: number } | { user_position: number }
         Returns: number
+      }
+      check_and_activate_invites: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       check_user_availability: {
         Args: { check_username?: string; check_email?: string }

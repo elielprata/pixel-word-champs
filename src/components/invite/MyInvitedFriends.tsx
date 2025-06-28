@@ -2,11 +2,12 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Star, Zap, Crown, Clock, CheckCircle } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
+import { Users, Zap, Star, Calendar, Trophy } from 'lucide-react';
 
 interface InvitedFriend {
   name: string;
-  status: 'Ativo' | 'Pendente';
+  status: 'Ativo' | 'Parcialmente Ativo' | 'Pendente';
   reward: number;
   level: number;
   avatar_url?: string;
@@ -14,6 +15,8 @@ interface InvitedFriend {
   games_played: number;
   invited_at: string;
   activated_at?: string;
+  days_played?: number;
+  progress_to_full_reward?: number;
 }
 
 interface MyInvitedFriendsProps {
@@ -21,167 +24,120 @@ interface MyInvitedFriendsProps {
 }
 
 const MyInvitedFriends = ({ invitedFriends }: MyInvitedFriendsProps) => {
-  const activeFriends = invitedFriends.filter(friend => friend.status === 'Ativo');
-  const pendingFriends = invitedFriends.filter(friend => friend.status === 'Pendente');
-
-  const getFriendIcon = (friend: InvitedFriend) => {
-    if (friend.status === 'Ativo' && friend.level >= 15) return '👑';
-    if (friend.status === 'Ativo' && friend.level >= 10) return '🏆';
-    if (friend.status === 'Ativo' && friend.level >= 5) return '🌟';
-    if (friend.status === 'Ativo') return '✨';
-    return '⏳';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Ativo':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'Parcialmente Ativo':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
   };
 
-  const getFriendBadgeColor = (friend: InvitedFriend) => {
-    if (friend.status === 'Ativo' && friend.level >= 10) return 'bg-yellow-100 text-yellow-800';
-    if (friend.status === 'Ativo') return 'bg-green-100 text-green-700';
-    return 'bg-orange-100 text-orange-700';
-  };
-
-  const formatRelativeDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (diffInDays === 0) return 'Hoje';
-      if (diffInDays === 1) return 'Ontem';
-      if (diffInDays < 7) return `${diffInDays} dias atrás`;
-      if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} semanas atrás`;
-      
-      // Formato simples para datas antigas
-      return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    } catch {
-      return 'Data inválida';
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'Ativo':
+        return <Trophy className="w-3 h-3" />;
+      case 'Parcialmente Ativo':
+        return <Calendar className="w-3 h-3" />;
+      default:
+        return <Users className="w-3 h-3" />;
     }
   };
 
   return (
-    <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
+    <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-sm">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
           <Users className="w-5 h-5" />
-          Minha Equipe ({invitedFriends.length})
-          {activeFriends.length > 0 && (
-            <Badge className="bg-green-100 text-green-700 ml-2">
-              {activeFriends.length} ativos
-            </Badge>
-          )}
+          Meus Convites ({invitedFriends.length})
         </CardTitle>
       </CardHeader>
       <CardContent>
         {invitedFriends.length > 0 ? (
-          <div className="space-y-3">
-            {/* Estatísticas Rápidas Melhoradas */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl p-4 mb-4">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-2xl font-bold">{invitedFriends.length}</p>
-                  <p className="text-xs opacity-90">Total</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-green-200">{activeFriends.length}</p>
-                  <p className="text-xs opacity-90">Ativos</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-yellow-200">
-                    {invitedFriends.reduce((sum, friend) => sum + friend.reward, 0)}
-                  </p>
-                  <p className="text-xs opacity-90">XP Total</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Lista de Amigos Melhorada */}
+          <div className="space-y-4">
             {invitedFriends.map((friend, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+              <div key={index} className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full flex items-center justify-center text-white font-semibold">
                       {friend.avatar_url ? (
-                        <img src={friend.avatar_url} alt={friend.name} className="w-12 h-12 rounded-full object-cover" />
+                        <img src={friend.avatar_url} alt={friend.name} className="w-10 h-10 rounded-full object-cover" />
                       ) : (
-                        friend.name.charAt(0).toUpperCase()
+                        friend.name.charAt(0)
                       )}
                     </div>
-                    <div className="absolute -top-1 -right-1 text-lg">
-                      {getFriendIcon(friend)}
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-gray-800">{friend.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge className={`text-xs ${getFriendBadgeColor(friend)}`}>
-                        {friend.status === 'Ativo' ? (
+                    <div>
+                      <p className="font-medium text-gray-800">{friend.name}</p>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant="secondary"
+                          className={`text-xs ${getStatusColor(friend.status)} flex items-center gap-1`}
+                        >
+                          {getStatusIcon(friend.status)}
+                          {friend.status}
+                        </Badge>
+                        {friend.level > 0 && (
                           <div className="flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" />
-                            Ativo
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            Pendente
+                            <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                            <span className="text-xs text-gray-600">Nível {friend.level}</span>
                           </div>
                         )}
-                      </Badge>
-                      {friend.level > 1 && (
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                          <span className="text-xs text-gray-600 font-medium">Nv. {friend.level}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                      <span>Convidado {formatRelativeDate(friend.invited_at)}</span>
-                      {friend.activated_at && (
-                        <span>• Ativo desde {formatRelativeDate(friend.activated_at)}</span>
-                      )}
-                    </div>
-                    {friend.status === 'Ativo' && (
-                      <div className="flex items-center gap-4 mt-1 text-xs text-gray-600">
-                        <span>{friend.total_score.toLocaleString()} pontos</span>
-                        <span>• {friend.games_played} jogos</span>
                       </div>
-                    )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-1">
+                      <Zap className="w-4 h-4 text-purple-600" />
+                      <p className="font-bold text-purple-600">+{friend.reward}</p>
+                    </div>
+                    <p className="text-xs text-gray-500">XP</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1">
-                    <Zap className="w-4 h-4 text-green-600" />
-                    <p className="font-bold text-green-600">+{friend.reward}</p>
+
+                {/* Progresso para recompensa completa */}
+                {friend.status === 'Parcialmente Ativo' && friend.progress_to_full_reward !== undefined && (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Progresso para 50 XP</span>
+                      <span className="text-gray-600">{Math.round(friend.progress_to_full_reward)}%</span>
+                    </div>
+                    <Progress 
+                      value={friend.progress_to_full_reward} 
+                      className="h-2"
+                    />
+                    <p className="text-xs text-gray-500">
+                      {friend.days_played || 0}/5 dias de atividade • 
+                      {friend.days_played && friend.days_played >= 5 
+                        ? ' Pronto para ativação!' 
+                        : ` Faltam ${5 - (friend.days_played || 0)} dias`
+                      }
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500">XP</p>
+                )}
+
+                {/* Informações adicionais */}
+                <div className="mt-3 flex justify-between text-xs text-gray-500">
+                  <span>
+                    {friend.games_played} jogos • {friend.total_score} pontos
+                  </span>
+                  {friend.activated_at && (
+                    <span>
+                      Ativado em {new Date(friend.activated_at).toLocaleDateString('pt-BR')}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
-
-            {/* Dica para mais convites com metas progressivas */}
-            {invitedFriends.length < 10 && (
-              <div className="mt-4 bg-gradient-to-r from-purple-100 to-blue-100 rounded-xl p-4 text-center">
-                <Crown className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                {invitedFriends.length < 5 ? (
-                  <p className="text-sm font-medium text-purple-800">
-                    Convide mais {5 - invitedFriends.length} amigos para ganhar 100 XP bônus!
-                  </p>
-                ) : (
-                  <p className="text-sm font-medium text-purple-800">
-                    Alcance 10 convites para se tornar um Mestre dos Convites!
-                  </p>
-                )}
-              </div>
-            )}
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500">
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users className="w-8 h-8 text-purple-400" />
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="font-medium mb-1">Sua equipe está vazia</p>
-            <p className="text-sm">Comece convidando seus amigos para formar sua equipe!</p>
+            <p className="font-medium mb-1">Nenhum convite ainda</p>
+            <p className="text-sm">Copie seu código e convide amigos para ganharem XP!</p>
           </div>
         )}
       </CardContent>

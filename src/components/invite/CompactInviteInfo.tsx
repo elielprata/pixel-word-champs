@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Users, Gift, Star, Zap, Crown, Copy } from 'lucide-react';
+import { Trophy, Users, Gift, Star, Zap, Crown, Copy, Clock } from 'lucide-react';
 
 interface CompactInviteInfoProps {
   stats: {
@@ -17,6 +17,7 @@ interface CompactInviteInfoProps {
     levelProgress?: number;
     totalScore?: number;
     experiencePoints?: number;
+    partialFriends?: number;
   };
   inviteCode: string;
   onCopyCode: () => void;
@@ -101,22 +102,24 @@ const CompactInviteInfo = ({ stats, inviteCode, onCopyCode }: CompactInviteInfoP
           </div>
         </div>
 
-        {/* Grid de Estatísticas (2x2) */}
+        {/* Grid de Estatísticas (2x2) - Atualizado para novo sistema */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
             <div className="flex justify-center mb-1">
-              <Users className="w-5 h-5 text-blue-200" />
+              <Users className="w-5 h-5 text-green-200" />
             </div>
             <p className="text-lg font-bold">{stats.activeFriends}</p>
             <p className="text-xs opacity-80">Amigos Ativos</p>
+            <p className="text-xs opacity-60">(50 XP cada)</p>
           </div>
           
           <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
             <div className="flex justify-center mb-1">
-              <Gift className="w-5 h-5 text-green-200" />
+              <Clock className="w-5 h-5 text-yellow-200" />
             </div>
-            <p className="text-lg font-bold">{stats.totalInvites}</p>
-            <p className="text-xs opacity-80">Total Convites</p>
+            <p className="text-lg font-bold">{stats.partialFriends || 0}</p>
+            <p className="text-xs opacity-80">Parcialmente Ativos</p>
+            <p className="text-xs opacity-60">(5 XP cada)</p>
           </div>
 
           <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
@@ -129,27 +132,24 @@ const CompactInviteInfo = ({ stats, inviteCode, onCopyCode }: CompactInviteInfoP
 
           <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
             <div className="flex justify-center mb-1">
-              <Zap className="w-5 h-5 text-yellow-300" />
+              <Gift className="w-5 h-5 text-blue-200" />
             </div>
-            <p className="text-lg font-bold">50</p>
-            <p className="text-xs opacity-80">XP por Cadastro</p>
+            <p className="text-lg font-bold">{stats.totalInvites}</p>
+            <p className="text-xs opacity-80">Total Convites</p>
           </div>
         </div>
 
-        {/* Seção Final: Próximo Objetivo */}
+        {/* Seção Final: Sistema de Recompensas */}
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Star className="w-4 h-4 text-yellow-300" />
-            <span className="text-sm font-medium">Próximo Objetivo</span>
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="w-4 h-4 text-yellow-300" />
+            <span className="text-sm font-medium">Sistema de Recompensas</span>
           </div>
-          <p className="text-xs opacity-90">
-            {stats.activeFriends < 5 
-              ? `Convide mais ${5 - stats.activeFriends} amigos para ganhar 100 XP bônus!`
-              : stats.activeFriends < 10
-              ? `Convide mais ${10 - stats.activeFriends} amigos para alcançar 10 convites ativos!`
-              : 'Parabéns! Você é um mestre dos convites!'
-            }
-          </p>
+          <div className="text-xs opacity-90 space-y-1">
+            <p>• <strong>5 XP imediatos</strong> quando alguém usa seu código</p>
+            <p>• <strong>+45 XP extras</strong> quando jogam por 5 dias diferentes</p>
+            <p>• <strong>Total: 50 XP</strong> por amigo totalmente ativo</p>
+          </div>
         </div>
       </CardContent>
     </Card>
