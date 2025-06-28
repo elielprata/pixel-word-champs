@@ -114,7 +114,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
       }
 
       const finalData: MonthlyInviteData = {
-        userPoints: userPoints || {
+        userPoints: userPoints && typeof userPoints === 'object' && 'invite_points' in userPoints ? userPoints : {
           invite_points: 0,
           invites_count: 0,
           active_invites_count: 0,
