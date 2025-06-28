@@ -28,72 +28,102 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
   const { isAuthenticated, user } = useAuth();
 
   const loadData = async () => {
-    if (!isAuthenticated) {
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      // Load user points
-      const userPointsResponse = await monthlyInviteService.getUserMonthlyPoints(user?.id, monthYear);
-      
-      // Load ranking data
-      const rankingResponse = await monthlyInviteService.getMonthlyRanking(monthYear);
-      
-      // Load user position
-      const userPositionResponse = await monthlyInviteService.getUserMonthlyPosition(user?.id, monthYear);
-      
-      // Load stats
-      const statsResponse = await monthlyInviteService.getMonthlyStats(monthYear);
+      // Se não estiver autenticado, criar dados padrão
+      if (!isAuthenticated || !user?.id) {
+        const defaultData: MonthlyInviteData = {
+          userPoints: {
+            invite_points: 0,
+            invites_count: 0,
+            active_invites_count: 0,
+            month_year: monthYear || new Date().toISOString().slice(0, 7)
+          },
+          competition: null,
+          rankings: [],
+          userPosition: null,
+          stats: {
+            totalParticipants: 0,
+            totalPrizePool: 0,
+            topPerformers: []
+          }
+        };
+        setData(defaultData);
+        return;
+      }
 
-      if (userPointsResponse.success && rankingResponse.success && statsResponse.success) {
-        // Garantir que userPoints sempre tenha as propriedades necessárias
-        const defaultUserPoints = {
+      // Load all data in parallel
+      const [userPointsResponse, rankingResponse, userPositionResponse, statsResponse] = await Promise.allSettled([
+        monthlyInviteService.getUserMonthlyPoints(user.id, monthYear),
+        monthlyInviteService.getMonthlyRanking(monthYear),
+        monthlyInviteService.getUserMonthlyPosition(user.id, monthYear),
+        monthlyInviteService.getMonthlyStats(monthYear)
+      ]);
+
+      // Process results with fallbacks
+      const userPoints = userPointsResponse.status === 'fulfilled' && userPointsResponse.value.success
+        ? userPointsResponse.value.data
+        : {
+            invite_points: 0,
+            invites_count: 0,
+            active_invites_count: 0,
+            month_year: monthYear || new Date().toISOString().slice(0, 7)
+          };
+
+      const rankingData = rankingResponse.status === 'fulfilled' && rankingResponse.value.success
+        ? rankingResponse.value.data
+        : { competition: null, rankings: [] };
+
+      const userPosition = userPositionResponse.status === 'fulfilled' && userPositionResponse.value.success
+        ? userPositionResponse.value.data
+        : null;
+
+      const statsData = statsResponse.status === 'fulfilled' && statsResponse.value.success
+        ? statsResponse.value.data
+        : {
+            totalParticipants: 0,
+            totalPrizePool: 0,
+            topPerformers: []
+          };
+
+      setData({
+        userPoints: userPoints || {
           invite_points: 0,
           invites_count: 0,
           active_invites_count: 0,
           month_year: monthYear || new Date().toISOString().slice(0, 7)
-        };
+        },
+        competition: rankingData.competition,
+        rankings: rankingData.rankings || [],
+        userPosition,
+        stats: statsData
+      });
 
-        // Garantir que stats sempre tenha as propriedades necessárias
-        const defaultStats = {
+    } catch (err) {
+      logger.error('Erro ao carregar competição mensal', { error: err }, 'MONTHLY_INVITE_HOOK');
+      
+      // Em caso de erro, definir dados padrão ao invés de erro
+      const fallbackData: MonthlyInviteData = {
+        userPoints: {
+          invite_points: 0,
+          invites_count: 0,
+          active_invites_count: 0,
+          month_year: monthYear || new Date().toISOString().slice(0, 7)
+        },
+        competition: null,
+        rankings: [],
+        userPosition: null,
+        stats: {
           totalParticipants: 0,
           totalPrizePool: 0,
           topPerformers: []
-        };
-
-        // Safely handle statsResponse.data
-        const statsData = statsResponse.data && typeof statsResponse.data === 'object' 
-          ? statsResponse.data as any 
-          : {};
-
-        // Safely handle userPointsResponse.data
-        const userPointsData = userPointsResponse.data && typeof userPointsResponse.data === 'object'
-          ? userPointsResponse.data as any
-          : {};
-
-        setData({
-          userPoints: {
-            ...defaultUserPoints,
-            ...userPointsData
-          },
-          competition: (rankingResponse.data as any)?.competition || null,
-          rankings: (rankingResponse.data as any)?.rankings || [],
-          userPosition: userPositionResponse.data || null,
-          stats: {
-            ...defaultStats,
-            ...statsData
-          }
-        });
-      } else {
-        setError('Erro ao carregar dados da competição mensal');
-      }
-    } catch (err) {
-      logger.error('Erro ao carregar competição mensal', { error: err }, 'MONTHLY_INVITE_HOOK');
-      setError('Erro ao carregar dados da competição');
+        }
+      };
+      setData(fallbackData);
+      setError(null); // Não mostrar erro, apenas dados padrão
+      
     } finally {
       setIsLoading(false);
     }
