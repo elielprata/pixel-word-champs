@@ -16,7 +16,7 @@ export class MonthlyInviteStatsService {
       
       logger.debug('Buscando estatísticas mensais', { targetMonth }, 'MONTHLY_INVITE_SERVICE');
 
-      // Usar a função simplificada que faz tudo
+      // Usar a função atualizada que inclui prêmios configurados
       const { data, error } = await supabase
         .rpc('get_monthly_invite_stats' as any, { target_month: targetMonth });
 
@@ -30,7 +30,8 @@ export class MonthlyInviteStatsService {
         competition: data?.competition || null,
         totalParticipants: data?.stats?.totalParticipants || 0,
         totalPrizePool: data?.stats?.totalPrizePool || 0,
-        topPerformers: data?.stats?.topPerformers || []
+        topPerformers: data?.stats?.topPerformers || [],
+        configuredPrizes: data?.stats?.configuredPrizes || []
       };
 
       logger.info('Estatísticas mensais carregadas', { 
@@ -38,7 +39,8 @@ export class MonthlyInviteStatsService {
         stats: { 
           totalParticipants: stats.totalParticipants, 
           totalPrizePool: stats.totalPrizePool, 
-          topPerformersCount: stats.topPerformers.length 
+          topPerformersCount: stats.topPerformers.length,
+          configuredPrizesCount: stats.configuredPrizes?.length || 0
         } 
       }, 'MONTHLY_INVITE_SERVICE');
 
@@ -51,7 +53,8 @@ export class MonthlyInviteStatsService {
         competition: null,
         totalParticipants: 0,
         totalPrizePool: 0,
-        topPerformers: []
+        topPerformers: [],
+        configuredPrizes: []
       };
       
       return createSuccessResponse(fallbackStats);

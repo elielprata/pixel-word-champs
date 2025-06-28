@@ -51,4 +51,10 @@ export interface MonthlyInviteStats {
   totalParticipants: number;
   totalPrizePool: number;
   topPerformers: any[];
+  configuredPrizes?: Array<{
+    position: number;
+    prize_amount: number;
+    active: boolean;
+    description?: string;
+  }>;
 }

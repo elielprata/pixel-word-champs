@@ -3,17 +3,18 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Crown, Trophy, Medal } from 'lucide-react';
 
-interface MonthlyPrizeDisplayProps {
-  topPerformers: Array<{
-    username: string;
-    invite_points: number;
-    position: number;
-    prize_amount: number;
-  }>;
-  totalPrizePool: number;
+interface ConfiguredPrize {
+  position: number;
+  prize_amount: number;
+  active: boolean;
+  description?: string;
 }
 
-const MonthlyPrizeDisplay = ({ topPerformers }: MonthlyPrizeDisplayProps) => {
+interface MonthlyPrizeDisplayProps {
+  configuredPrizes: ConfiguredPrize[];
+}
+
+const MonthlyPrizeDisplay = ({ configuredPrizes }: MonthlyPrizeDisplayProps) => {
   const getPrizeIcon = (position: number) => {
     switch (position) {
       case 1: return <Crown className="w-4 h-4 text-yellow-500" />;
@@ -32,8 +33,8 @@ const MonthlyPrizeDisplay = ({ topPerformers }: MonthlyPrizeDisplayProps) => {
     }
   };
 
-  // Filtrar apenas posições com prêmios ativos (valor > 0)
-  const activePrizes = topPerformers?.filter(performer => performer.prize_amount > 0) || [];
+  // Filtrar apenas prêmios ativos e ordenar por posição
+  const activePrizes = configuredPrizes?.filter(prize => prize.active)?.sort((a, b) => a.position - b.position) || [];
 
   if (activePrizes.length === 0) {
     return null;
@@ -49,19 +50,19 @@ const MonthlyPrizeDisplay = ({ topPerformers }: MonthlyPrizeDisplayProps) => {
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-2">
-          {activePrizes.slice(0, 3).map((performer) => (
+          {activePrizes.slice(0, 3).map((prize) => (
             <div 
-              key={performer.position}
+              key={prize.position}
               className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50"
             >
               <div className="flex items-center gap-2">
-                {getPrizeIcon(performer.position)}
+                {getPrizeIcon(prize.position)}
                 <span className="text-sm font-medium text-gray-700">
-                  {performer.position}º lugar
+                  {prize.position}º lugar
                 </span>
               </div>
-              <span className={`text-sm font-bold ${getPrizeColor(performer.position)}`}>
-                R$ {performer.prize_amount.toFixed(2)}
+              <span className={`text-sm font-bold ${getPrizeColor(prize.position)}`}>
+                R$ {prize.prize_amount.toFixed(2)}
               </span>
             </div>
           ))}

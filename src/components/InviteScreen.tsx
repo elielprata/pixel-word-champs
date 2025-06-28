@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useInvites } from '@/hooks/useInvites';
@@ -27,7 +26,7 @@ const InviteScreen = () => {
     error
   } = useInvites();
 
-  // Buscar dados da competição mensal para premiação
+  // Buscar dados da competição mensal
   const { data: monthlyData, isLoading: monthlyLoading } = useMonthlyInviteCompetitionSimplified();
 
   const handleCopyCode = () => {
@@ -67,11 +66,10 @@ const InviteScreen = () => {
       <div className="max-w-md mx-auto space-y-4">
         <InviteHeader />
 
-        {/* Premiação do Mês */}
-        {!monthlyLoading && monthlyData && (
+        {/* Premiação do Mês - Exibir prêmios configurados */}
+        {!monthlyLoading && monthlyData?.stats?.configuredPrizes && (
           <MonthlyPrizeDisplay 
-            topPerformers={monthlyData.stats?.topPerformers || []}
-            totalPrizePool={0}
+            configuredPrizes={monthlyData.stats.configuredPrizes}
           />
         )}
 
