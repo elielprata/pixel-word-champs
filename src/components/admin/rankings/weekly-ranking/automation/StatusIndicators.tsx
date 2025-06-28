@@ -12,7 +12,7 @@ interface StatusIndicatorsProps {
   status: string;
 }
 
-export const StatusIndicators: React.FC<StatusIndicatorsProps> = ({ status }) => {
+export const getStatusIndicators = (status: string) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':

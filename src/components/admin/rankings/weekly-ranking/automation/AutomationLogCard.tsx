@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, Users } from 'lucide-react';
-import { StatusIndicators } from './StatusIndicators';
+import { getStatusIndicators } from './StatusIndicators';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
 
 interface AutomationLog {
@@ -22,7 +22,7 @@ interface AutomationLogCardProps {
 }
 
 export const AutomationLogCard: React.FC<AutomationLogCardProps> = ({ log }) => {
-  const { icon, badge } = StatusIndicators({ status: log.execution_status });
+  const { icon, badge } = getStatusIndicators(log.execution_status);
 
   const getAutomationTypeLabel = (type: string) => {
     switch (type) {
