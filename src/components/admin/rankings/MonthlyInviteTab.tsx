@@ -1,21 +1,27 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMonthlyInviteCompetitionSimplified } from '@/hooks/useMonthlyInviteCompetitionSimplified';
+import { MonthlyInviteHeader } from './monthly-invite/MonthlyInviteHeader';
 import { MonthlyInviteStatsCards } from './monthly-invite/MonthlyInviteStatsCards';
 import { MonthlyInviteRankingTable } from './monthly-invite/MonthlyInviteRankingTable';
 import { MonthlyPrizeConfigModal } from './monthly-invite/MonthlyPrizeConfigModal';
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Trophy, Users, Gift, Settings, RefreshCw } from "lucide-react";
+import { AlertCircle, Trophy, Users, Gift } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 export const MonthlyInviteTab = () => {
-  const { data, isLoading, error, refreshRanking, refetch } = useMonthlyInviteCompetitionSimplified();
+  const {
+    data,
+    isLoading,
+    error,
+    refreshRanking,
+    refetch
+  } = useMonthlyInviteCompetitionSimplified();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showPrizeConfig, setShowPrizeConfig] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleRefreshRanking = async () => {
     setIsRefreshing(true);
     try {
@@ -23,7 +29,7 @@ export const MonthlyInviteTab = () => {
       if (result?.success) {
         toast({
           title: "Ranking Atualizado",
-          description: "O ranking mensal foi atualizado com sucesso.",
+          description: "O ranking mensal foi atualizado com sucesso."
         });
       } else {
         throw new Error(result?.error || 'Erro desconhecido');
@@ -32,207 +38,122 @@ export const MonthlyInviteTab = () => {
       toast({
         title: "Erro ao Atualizar",
         description: "Não foi possível atualizar o ranking.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsRefreshing(false);
     }
   };
-
   const exportWinners = () => {
     if (!data?.rankings || data.rankings.length === 0) {
       toast({
         title: "Nenhum Dado",
         description: "Não há dados para exportar.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     const winners = data.rankings.filter((r: any) => r.prize_amount > 0);
-    const csvContent = [
-      ['Posição', 'Usuário', 'Pontos', 'Convites', 'Prêmio', 'Status', 'Chave PIX', 'Nome PIX'],
-      ...winners.map((winner: any) => [
-        winner.position,
-        winner.username,
-        winner.invite_points,
-        winner.invites_count,
-        `R$ ${winner.prize_amount}`,
-        winner.payment_status,
-        winner.pix_key || '',
-        winner.pix_holder_name || ''
-      ])
-    ].map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const csvContent = [['Posição', 'Usuário', 'Pontos', 'Convites', 'Prêmio', 'Status', 'Chave PIX', 'Nome PIX'], ...winners.map((winner: any) => [winner.position, winner.username, winner.invite_points, winner.invites_count, `R$ ${winner.prize_amount}`, winner.payment_status, winner.pix_key || '', winner.pix_holder_name || ''])].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], {
+      type: 'text/csv'
+    });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `ranking-mensal-indicacoes-${new Date().toISOString().slice(0, 7)}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
-
     toast({
       title: "Exportação Concluída",
-      description: "Lista de ganhadores exportada com sucesso.",
+      description: "Lista de ganhadores exportada com sucesso."
     });
   };
 
   // Loading skeleton seguindo padrão do WeeklyRankingView
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        {/* Header skeleton */}
+    return <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
-            <Skeleton className="h-8 w-80 mb-2" />
-            <Skeleton className="h-5 w-48" />
-          </div>
+          <Skeleton className="h-8 w-64" />
           <div className="flex gap-2">
-            <Skeleton className="h-10 w-36" />
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-10 w-40" />
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-9 w-32" />
           </div>
         </div>
         
-        {/* Stats cards skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
         </div>
         
-        {/* Table skeleton */}
-        <Skeleton className="h-96" />
-      </div>
-    );
+        <Skeleton className="h-64" />
+      </div>;
   }
 
-  // Error state seguindo padrão do WeeklyRankingView
+  // Error state
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-50 rounded-lg border border-slate-200">
-        <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">Erro ao Carregar Dados</h3>
-        <p className="text-slate-600 mb-6 max-w-md">{error}</p>
-        <Button onClick={refetch} size="lg">
+    return <div className="flex flex-col items-center justify-center p-8 text-center">
+        <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Erro ao Carregar Dados</h3>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <Button onClick={refetch}>
           Tentar Novamente
         </Button>
-      </div>
-    );
+      </div>;
   }
 
   // Verificar se existe uma competição configurada
   if (!data?.competition) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-50 rounded-lg border border-slate-200">
-        <Trophy className="h-16 w-16 text-slate-400 mb-4" />
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">Nenhuma Competição Configurada</h3>
-        <p className="text-slate-600 mb-6 max-w-md">
-          Não foi possível encontrar ou criar a competição mensal
-        </p>
-        <Button onClick={refetch} size="lg">
+    return <div className="flex flex-col items-center justify-center p-8 text-center">
+        <div className="text-6xl mb-4">📅</div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhuma Competição Configurada</h3>
+        <p className="text-gray-600 mb-4">Não foi possível encontrar ou criar a competição mensal</p>
+        <Button onClick={refetch}>
           Tentar Novamente
         </Button>
-      </div>
-    );
+      </div>;
   }
+  const {
+    competition,
+    rankings,
+    stats
+  } = data;
+  const currentMonth = new Date().toLocaleDateString('pt-BR', {
+    month: 'long',
+    year: 'numeric'
+  });
+  const hasParticipants = data.has_participants || rankings && rankings.length > 0;
 
-  const { competition, rankings, stats } = data;
-  const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-  const hasParticipants = data.has_participants || (rankings && rankings.length > 0);
-
-  // Card informativo quando não há participantes - seguindo padrão visual
-  const NoParticipantsCard = () => (
-    <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-3 text-blue-800">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Users className="h-5 w-5 text-blue-700" />
-          </div>
+  // Exibir card informativo quando não há participantes
+  const NoParticipantsCard = () => <Card className="border-blue-200 bg-blue-50">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-blue-800">
+          <Users className="h-5 w-5" />
           Aguardando Participantes
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-4">
-          <p className="text-blue-700 leading-relaxed">
-            A competição está configurada e ativa, mas ainda não há participantes com convites utilizados.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg border border-blue-200">
-              <Gift className="h-5 w-5 text-blue-600 flex-shrink-0" />
-              <span className="text-sm text-blue-700">Configure os prêmios clicando em "Configurar Premiação"</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg border border-blue-200">
-              <Trophy className="h-5 w-5 text-blue-600 flex-shrink-0" />
-              <span className="text-sm text-blue-700">Participantes aparecerão quando utilizarem convites</span>
-            </div>
+      <CardContent>
+        <div className="space-y-3">
+          
+          <div className="flex items-center gap-2 text-sm text-blue-600">
+            <Gift className="h-4 w-4" />
+            <span>Configure os prêmios clicando no botão "Configurar Prêmios"</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-blue-600">
+            <Trophy className="h-4 w-4" />
+            <span>Os participantes aparecerão assim que utilizarem códigos de convite</span>
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
+  return <div className="space-y-6">
+      <MonthlyInviteHeader currentMonth={currentMonth} isRefreshing={isRefreshing} onRefreshRanking={handleRefreshRanking} onExportWinners={exportWinners} onConfigurePrizes={() => setShowPrizeConfig(true)} />
 
-  return (
-    <div className="space-y-6">
-      {/* Header padronizado seguindo exatamente o padrão do Ranking Semanal */}
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Trophy className="w-6 h-6 text-amber-500" />
-            <h2 className="text-2xl font-bold text-slate-900">Competição Mensal de Indicações</h2>
-          </div>
-          <p className="text-slate-600">Classificação dos participantes do mês - {currentMonth}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => setShowPrizeConfig(true)}
-            variant="outline"
-            className="bg-white hover:bg-slate-50"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Configurar Premiação
-          </Button>
-          <Button
-            onClick={handleRefreshRanking}
-            disabled={isRefreshing}
-            variant="outline"
-            className="bg-white hover:bg-slate-50"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
-          <Button 
-            onClick={exportWinners} 
-            variant="outline"
-            className="bg-white hover:bg-slate-50"
-          >
-            <Trophy className="w-4 h-4 mr-2" />
-            Exportar Ganhadores
-          </Button>
-        </div>
-      </div>
+      <MonthlyInviteStatsCards stats={stats} rankings={rankings} competition={competition} onRefresh={refetch} />
 
-      {/* Stats cards */}
-      <MonthlyInviteStatsCards
-        stats={stats}
-        rankings={rankings}
-        competition={competition}
-        onRefresh={refetch}
-      />
-
-      {/* Card de aguardando participantes */}
       {!hasParticipants && <NoParticipantsCard />}
 
-      {/* Tabela de ranking */}
       <MonthlyInviteRankingTable rankings={rankings} />
 
-      {/* Modal de configuração de prêmios */}
-      <MonthlyPrizeConfigModal
-        open={showPrizeConfig}
-        onOpenChange={setShowPrizeConfig}
-        competitionId={competition?.id}
-      />
-    </div>
-  );
+      <MonthlyPrizeConfigModal open={showPrizeConfig} onOpenChange={setShowPrizeConfig} competitionId={competition?.id} />
+    </div>;
 };
