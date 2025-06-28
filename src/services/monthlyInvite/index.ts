@@ -61,6 +61,14 @@ class MonthlyInviteService {
   async togglePrizeStatus(prizeId: string, active: boolean) {
     return this.prizesService.togglePrizeStatus(prizeId, active);
   }
+
+  async getCompetitionTotalPrizePool(competitionId: string) {
+    return this.prizesService.getCompetitionTotalPrizePool(competitionId);
+  }
+
+  async recalculateCompetitionPrizePool(competitionId: string) {
+    return this.prizesService.recalculateCompetitionPrizePool(competitionId);
+  }
 }
 
 export const monthlyInviteService = new MonthlyInviteService();

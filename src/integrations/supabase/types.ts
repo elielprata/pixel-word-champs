@@ -1354,6 +1354,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      recalculate_competition_prize_pool: {
+        Args: { comp_id: string }
+        Returns: number
+      }
       refresh_ranking_view: {
         Args: Record<PropertyKey, never>
         Returns: undefined

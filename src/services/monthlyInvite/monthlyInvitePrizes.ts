@@ -57,7 +57,8 @@ export class MonthlyInvitePrizesService {
         return createErrorResponse(`Erro ao atualizar prêmio: ${error.message}`);
       }
 
-      logger.info('Prêmio atualizado com sucesso', { prizeId }, 'MONTHLY_PRIZES_SERVICE');
+      // O trigger SQL já faz a sincronização automática
+      logger.info('Prêmio atualizado com sucesso - sincronização automática via trigger', { prizeId }, 'MONTHLY_PRIZES_SERVICE');
       return createSuccessResponse(data);
     } catch (error) {
       logger.error('Erro ao atualizar prêmio', { error }, 'MONTHLY_PRIZES_SERVICE');
@@ -86,7 +87,8 @@ export class MonthlyInvitePrizesService {
         return createErrorResponse(`Erro ao criar prêmio: ${error.message}`);
       }
 
-      logger.info('Prêmio criado com sucesso', { prizeId: data.id }, 'MONTHLY_PRIZES_SERVICE');
+      // O trigger SQL já faz a sincronização automática
+      logger.info('Prêmio criado com sucesso - sincronização automática via trigger', { prizeId: data.id }, 'MONTHLY_PRIZES_SERVICE');
       return createSuccessResponse(data);
     } catch (error) {
       logger.error('Erro ao criar prêmio', { error }, 'MONTHLY_PRIZES_SERVICE');
@@ -108,7 +110,8 @@ export class MonthlyInvitePrizesService {
         return createErrorResponse(`Erro ao excluir prêmio: ${error.message}`);
       }
 
-      logger.info('Prêmio excluído com sucesso', { prizeId }, 'MONTHLY_PRIZES_SERVICE');
+      // O trigger SQL já faz a sincronização automática
+      logger.info('Prêmio excluído com sucesso - sincronização automática via trigger', { prizeId }, 'MONTHLY_PRIZES_SERVICE');
       return createSuccessResponse({ success: true });
     } catch (error) {
       logger.error('Erro ao excluir prêmio', { error }, 'MONTHLY_PRIZES_SERVICE');
@@ -132,11 +135,54 @@ export class MonthlyInvitePrizesService {
         return createErrorResponse(`Erro ao alterar status: ${error.message}`);
       }
 
-      logger.info('Status do prêmio alterado', { prizeId, active }, 'MONTHLY_PRIZES_SERVICE');
+      // O trigger SQL já faz a sincronização automática
+      logger.info('Status do prêmio alterado - sincronização automática via trigger', { prizeId, active }, 'MONTHLY_PRIZES_SERVICE');
       return createSuccessResponse(data);
     } catch (error) {
       logger.error('Erro ao alterar status do prêmio', { error }, 'MONTHLY_PRIZES_SERVICE');
       return createErrorResponse(`Erro ao alterar status: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    }
+  }
+
+  async getCompetitionTotalPrizePool(competitionId: string) {
+    try {
+      logger.debug('Buscando total do pool de prêmios da competição', { competitionId }, 'MONTHLY_PRIZES_SERVICE');
+
+      const { data, error } = await supabase
+        .from('monthly_invite_competitions')
+        .select('total_prize_pool')
+        .eq('id', competitionId)
+        .single();
+
+      if (error) {
+        logger.error('Erro ao buscar total do pool de prêmios', { error }, 'MONTHLY_PRIZES_SERVICE');
+        return createErrorResponse(`Erro ao buscar total: ${error.message}`);
+      }
+
+      return createSuccessResponse(data?.total_prize_pool || 0);
+    } catch (error) {
+      logger.error('Erro ao buscar total do pool de prêmios', { error }, 'MONTHLY_PRIZES_SERVICE');
+      return createErrorResponse(`Erro ao buscar total: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    }
+  }
+
+  async recalculateCompetitionPrizePool(competitionId: string) {
+    try {
+      logger.debug('Recalculando pool de prêmios da competição', { competitionId }, 'MONTHLY_PRIZES_SERVICE');
+
+      const { data, error } = await supabase
+        .rpc('recalculate_competition_prize_pool', { comp_id: competitionId });
+
+      if (error) {
+        logger.error('Erro ao recalcular pool de prêmios', { error }, 'MONTHLY_PRIZES_SERVICE');
+        return createErrorResponse(`Erro ao recalcular: ${error.message}`);
+      }
+
+      logger.info('Pool de prêmios recalculado com sucesso', { competitionId, newTotal: data }, 'MONTHLY_PRIZES_SERVICE');
+      return createSuccessResponse(data);
+    } catch (error) {
+      logger.error('Erro ao recalcular pool de prêmios', { error }, 'MONTHLY_PRIZES_SERVICE');
+      return createErrorResponse(`Erro ao recalcular: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 }
