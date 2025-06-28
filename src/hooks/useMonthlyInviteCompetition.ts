@@ -65,7 +65,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
         monthlyInviteService.getMonthlyStats(monthYear)
       ]);
 
-      // Processar resultados e log de erros específicos
+      // Processar resultados e log de erros específicos apenas se críticos
       const userPoints = userPointsResponse.status === 'fulfilled' && userPointsResponse.value.success
         ? userPointsResponse.value.data
         : {
@@ -75,23 +75,9 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
             month_year: monthYear || new Date().toISOString().slice(0, 7)
           };
 
-      if (userPointsResponse.status === 'rejected' || (userPointsResponse.status === 'fulfilled' && !userPointsResponse.value.success)) {
-        const errorMsg = userPointsResponse.status === 'rejected' 
-          ? userPointsResponse.reason 
-          : (userPointsResponse.status === 'fulfilled' ? userPointsResponse.value.error : 'Erro desconhecido');
-        logger.warn('Erro ao carregar pontos do usuário', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
-      }
-
       const rankingData = rankingResponse.status === 'fulfilled' && rankingResponse.value.success
         ? rankingResponse.value.data
         : { competition: null, rankings: [] };
-
-      if (rankingResponse.status === 'rejected' || (rankingResponse.status === 'fulfilled' && !rankingResponse.value.success)) {
-        const errorMsg = rankingResponse.status === 'rejected' 
-          ? rankingResponse.reason 
-          : (rankingResponse.status === 'fulfilled' ? rankingResponse.value.error : 'Erro desconhecido');
-        logger.warn('Erro ao carregar ranking', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
-      }
 
       const userPosition = userPositionResponse.status === 'fulfilled' && userPositionResponse.value.success
         ? userPositionResponse.value.data
@@ -106,11 +92,26 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
             topPerformers: []
           };
 
+      // Log de erros apenas para depuração, não para mostrar ao usuário
+      if (userPointsResponse.status === 'rejected' || (userPointsResponse.status === 'fulfilled' && !userPointsResponse.value.success)) {
+        const errorMsg = userPointsResponse.status === 'rejected' 
+          ? userPointsResponse.reason 
+          : (userPointsResponse.status === 'fulfilled' ? userPointsResponse.value.error : 'Erro desconhecido');
+        logger.debug('Erro ao carregar pontos do usuário (usando fallback)', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
+      }
+
+      if (rankingResponse.status === 'rejected' || (rankingResponse.status === 'fulfilled' && !rankingResponse.value.success)) {
+        const errorMsg = rankingResponse.status === 'rejected' 
+          ? rankingResponse.reason 
+          : (rankingResponse.status === 'fulfilled' ? rankingResponse.value.error : 'Erro desconhecido');
+        logger.debug('Erro ao carregar ranking (usando fallback)', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
+      }
+
       if (statsResponse.status === 'rejected' || (statsResponse.status === 'fulfilled' && !statsResponse.value.success)) {
         const errorMsg = statsResponse.status === 'rejected' 
           ? statsResponse.reason 
           : (statsResponse.status === 'fulfilled' ? statsResponse.value.error : 'Erro desconhecido');
-        logger.warn('Erro ao carregar estatísticas', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
+        logger.debug('Erro ao carregar estatísticas (usando fallback)', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
       }
 
       // Helper function to validate userPoints structure
@@ -152,7 +153,9 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
       logger.error('Erro crítico ao carregar competição mensal', { error: err, userId: user?.id }, 'MONTHLY_INVITE_HOOK');
-      setError(errorMsg);
+      
+      // Só mostrar erro se for realmente crítico (não conseguiu carregar nenhum dado)
+      setError('Erro ao carregar dados da competição');
       
     } finally {
       setIsLoading(false);

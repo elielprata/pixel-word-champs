@@ -53,7 +53,7 @@ export class MonthlyInviteCoreService {
         .from('invites')
         .select(`
           *,
-          profiles:used_by (
+          profiles!used_by (
             id,
             games_played
           )
