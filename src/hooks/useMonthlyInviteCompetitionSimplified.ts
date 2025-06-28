@@ -12,6 +12,7 @@ interface MonthlyInviteData {
     topPerformers: any[];
   };
   no_active_competition?: boolean;
+  has_participants?: boolean;
   message?: string;
   last_update?: string;
 }
