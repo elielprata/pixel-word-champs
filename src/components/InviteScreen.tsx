@@ -64,7 +64,7 @@ const InviteScreen = () => {
 
       {/* Monthly Competition Section */}
       <div className="mb-6">
-        <MonthlyInviteCompetition />
+        <MonthlyInviteCompetition suppressLoading={true} />
       </div>
 
       <InviteStatsCards stats={stats} />

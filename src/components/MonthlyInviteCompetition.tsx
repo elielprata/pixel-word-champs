@@ -11,10 +11,14 @@ import { ProgressCard } from './monthly-invite/ProgressCard';
 import { CompetitionStatsCard } from './monthly-invite/CompetitionStatsCard';
 import { TopPerformersCard } from './monthly-invite/TopPerformersCard';
 
-const MonthlyInviteCompetition = () => {
+interface MonthlyInviteCompetitionProps {
+  suppressLoading?: boolean;
+}
+
+const MonthlyInviteCompetition = ({ suppressLoading = false }: MonthlyInviteCompetitionProps) => {
   const { data, isLoading, error } = useMonthlyInviteCompetition();
 
-  if (isLoading) {
+  if (isLoading && !suppressLoading) {
     return (
       <div className="p-4">
         <LoadingState />
