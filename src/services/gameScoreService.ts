@@ -30,9 +30,9 @@ class GameScoreService {
       const { data, error } = await supabase
         .from('profiles')
         .update({
-          total_score: supabase.raw(`COALESCE(total_score, 0) + ${gamePoints}`),
-          experience_points: supabase.raw(`COALESCE(experience_points, 0) + ${experiencePointsToAdd}`),
-          games_played: supabase.raw(`COALESCE(games_played, 0) + 1`),
+          total_score: supabase.sql`COALESCE(total_score, 0) + ${gamePoints}`,
+          experience_points: supabase.sql`COALESCE(experience_points, 0) + ${experiencePointsToAdd}`,
+          games_played: supabase.sql`COALESCE(games_played, 0) + 1`,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId)

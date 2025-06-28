@@ -31,7 +31,7 @@ export const useGameSessionManager = () => {
     setError(null);
 
     try {
-      const response = await gameService.startGameSession({
+      const response = await gameService.createGameSession({
         level,
         competitionId
       });
@@ -66,7 +66,7 @@ export const useGameSessionManager = () => {
     if (!currentSession || !user) return false;
 
     try {
-      const response = await gameService.addWordFound(currentSession.sessionId, word, points, positions);
+      const response = await gameService.submitWord(currentSession.sessionId, word, positions, points);
       
       if (response.success) {
         setCurrentSession(prev => prev ? {
@@ -95,11 +95,7 @@ export const useGameSessionManager = () => {
     setIsLoading(true);
     try {
       // Complete the game session
-      const sessionResponse = await gameService.completeGameSession(
-        currentSession.sessionId,
-        currentSession.totalScore,
-        timeElapsed
-      );
+      const sessionResponse = await gameService.completeGameSession(currentSession.sessionId);
 
       if (sessionResponse.success) {
         // Update both temporary and permanent scores using new service
@@ -109,7 +105,7 @@ export const useGameSessionManager = () => {
           competitionId
         );
 
-        if (scoreResponse.success) {
+        if (scoreResponse.success && scoreResponse.data) {
           logger.info('Sessão completada e pontuações atualizadas', {
             sessionId: currentSession.sessionId,
             gamePoints: currentSession.totalScore,
