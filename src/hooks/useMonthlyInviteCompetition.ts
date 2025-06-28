@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { monthlyInviteService } from '@/services/monthlyInviteService';
 import { useAuth } from './useAuth';
@@ -70,11 +69,16 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
           ? statsResponse.data as any 
           : {};
 
+        // Safely handle userPointsResponse.data
+        const userPointsData = userPointsResponse.data && typeof userPointsResponse.data === 'object'
+          ? userPointsResponse.data as any
+          : {};
+
         setData({
-          userPoints: userPointsResponse.data ? {
+          userPoints: {
             ...defaultUserPoints,
-            ...userPointsResponse.data
-          } : defaultUserPoints,
+            ...userPointsData
+          },
           competition: (rankingResponse.data as any)?.competition || null,
           rankings: (rankingResponse.data as any)?.rankings || [],
           userPosition: userPositionResponse.data || null,
