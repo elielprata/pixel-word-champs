@@ -1,42 +1,33 @@
 
 import React from 'react';
 import { TabsContent } from "@/components/ui/tabs";
-import { UsersTab } from "@/components/admin/UsersTab";
-import { RankingsTab } from "@/components/admin/RankingsTab";
-import { GameContentTab } from "@/components/admin/GameContentTab";
-import { SupportTab } from "@/components/admin/SupportTab";
-import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
-import { AdvancedSystemTab } from '@/components/admin/AdvancedSystemTab';
-import { ValidationTabContent } from '@/components/admin/layout/ValidationTabContent';
-import { logger } from '@/utils/logger';
+import { UserManagement } from '../users/UserManagement';
+import { InviteDashboard } from '../InviteDashboard';
+import { RankingsTab } from '../RankingsTab';
+import { AdminAnalytics } from '../AdminAnalytics';
+import { SystemTab } from '../SystemTab';
 
-export const AdminPanelContent: React.FC = () => {
-  logger.debug('Renderizando conteúdo do painel admin', undefined, 'ADMIN_PANEL_CONTENT');
-  
+export const AdminPanelContent = () => {
   return (
     <>
       <TabsContent value="users">
-        <UsersTab />
+        <UserManagement />
+      </TabsContent>
+
+      <TabsContent value="invites">
+        <InviteDashboard />
       </TabsContent>
 
       <TabsContent value="rankings">
         <RankingsTab />
       </TabsContent>
 
-      <TabsContent value="game-content">
-        <GameContentTab />
+      <TabsContent value="analytics">
+        <AdminAnalytics />
       </TabsContent>
 
-      <TabsContent value="integrations">
-        <IntegrationsTab />
-      </TabsContent>
-
-      <TabsContent value="validation">
-        <ValidationTabContent />
-      </TabsContent>
-
-      <TabsContent value="support">
-        <SupportTab />
+      <TabsContent value="system">
+        <SystemTab />
       </TabsContent>
     </>
   );
