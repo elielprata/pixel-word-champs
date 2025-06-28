@@ -83,13 +83,13 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
       }
 
       const rankingData = rankingResponse.status === 'fulfilled' && rankingResponse.value.success
-        ? userPointsResponse.value.data
+        ? rankingResponse.value.data
         : { competition: null, rankings: [] };
 
       if (rankingResponse.status === 'rejected' || (rankingResponse.status === 'fulfilled' && !rankingResponse.value.success)) {
         const errorMsg = rankingResponse.status === 'rejected' 
           ? rankingResponse.reason 
-          : rankingResponse.value.error;
+          : (rankingResponse.status === 'fulfilled' ? rankingResponse.value.error : 'Erro desconhecido');
         logger.warn('Erro ao carregar ranking', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
       }
 
