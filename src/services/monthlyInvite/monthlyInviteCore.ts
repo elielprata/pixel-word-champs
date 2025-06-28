@@ -34,7 +34,7 @@ export class MonthlyInviteCoreService {
         .maybeSingle();
 
       if (monthlyError) {
-        logger.warn('Erro ao buscar monthly_invite_points, calculando dinamicamente', { error: monthlyError }, 'MONTHLY_INVITE_SERVICE');
+        logger.debug('Erro ao buscar monthly_invite_points, calculando dinamicamente', { error: monthlyError }, 'MONTHLY_INVITE_SERVICE');
       }
 
       // Se encontrou dados na tabela, usar eles
@@ -48,7 +48,7 @@ export class MonthlyInviteCoreService {
         });
       }
 
-      // Se não encontrou, calcular baseado na tabela invites
+      // Se não encontrou, calcular baseado na tabela invites com join otimizado
       const { data: invitesData, error: invitesError } = await supabase
         .from('invites')
         .select(`
@@ -114,7 +114,7 @@ export class MonthlyInviteCoreService {
         .maybeSingle();
 
       if (compError || !competition) {
-        logger.warn('Competição não encontrada para buscar ranking', { error: compError, targetMonth }, 'MONTHLY_INVITE_SERVICE');
+        logger.debug('Competição não encontrada para buscar ranking', { error: compError, targetMonth }, 'MONTHLY_INVITE_SERVICE');
         return createSuccessResponse(null);
       }
 
@@ -127,7 +127,7 @@ export class MonthlyInviteCoreService {
         .maybeSingle();
 
       if (rankingError) {
-        logger.warn('Erro ao buscar ranking mensal ou usuário não está no ranking', { error: rankingError }, 'MONTHLY_INVITE_SERVICE');
+        logger.debug('Erro ao buscar ranking mensal ou usuário não está no ranking', { error: rankingError }, 'MONTHLY_INVITE_SERVICE');
         return createSuccessResponse(null);
       }
 

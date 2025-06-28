@@ -488,7 +488,22 @@ export type Database = {
           used_at?: string | null
           used_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_invites_used_by_profiles"
+            columns: ["used_by"]
+            isOneToOne: false
+            referencedRelation: "mv_current_weekly_ranking"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_invites_used_by_profiles"
+            columns: ["used_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       level_words: {
         Row: {

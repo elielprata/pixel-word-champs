@@ -57,7 +57,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
         return;
       }
 
-      // Carregar todos os dados em paralelo
+      // Carregar todos os dados em paralelo com melhor tratamento de erros
       const [userPointsResponse, rankingResponse, userPositionResponse, statsResponse] = await Promise.allSettled([
         monthlyInviteService.getUserMonthlyPoints(user.id, monthYear),
         monthlyInviteService.getMonthlyRanking(monthYear),
@@ -65,7 +65,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
         monthlyInviteService.getMonthlyStats(monthYear)
       ]);
 
-      // Processar resultados e log de erros específicos apenas se críticos
+      // Processar resultados com fallbacks seguros
       const userPoints = userPointsResponse.status === 'fulfilled' && userPointsResponse.value.success
         ? userPointsResponse.value.data
         : {
@@ -91,28 +91,6 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
             totalPrizePool: 0,
             topPerformers: []
           };
-
-      // Log de erros apenas para depuração, não para mostrar ao usuário
-      if (userPointsResponse.status === 'rejected' || (userPointsResponse.status === 'fulfilled' && !userPointsResponse.value.success)) {
-        const errorMsg = userPointsResponse.status === 'rejected' 
-          ? userPointsResponse.reason 
-          : (userPointsResponse.status === 'fulfilled' ? userPointsResponse.value.error : 'Erro desconhecido');
-        logger.debug('Erro ao carregar pontos do usuário (usando fallback)', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
-      }
-
-      if (rankingResponse.status === 'rejected' || (rankingResponse.status === 'fulfilled' && !rankingResponse.value.success)) {
-        const errorMsg = rankingResponse.status === 'rejected' 
-          ? rankingResponse.reason 
-          : (rankingResponse.status === 'fulfilled' ? rankingResponse.value.error : 'Erro desconhecido');
-        logger.debug('Erro ao carregar ranking (usando fallback)', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
-      }
-
-      if (statsResponse.status === 'rejected' || (statsResponse.status === 'fulfilled' && !statsResponse.value.success)) {
-        const errorMsg = statsResponse.status === 'rejected' 
-          ? statsResponse.reason 
-          : (statsResponse.status === 'fulfilled' ? statsResponse.value.error : 'Erro desconhecido');
-        logger.debug('Erro ao carregar estatísticas (usando fallback)', { error: errorMsg }, 'MONTHLY_INVITE_HOOK');
-      }
 
       // Helper function to validate userPoints structure
       const isValidUserPoints = (data: any): data is { invite_points: number; invites_count: number; active_invites_count: number; month_year: string } => {
