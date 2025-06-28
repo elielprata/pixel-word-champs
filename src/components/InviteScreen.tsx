@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useInvites } from '@/hooks/useInvites';
@@ -8,11 +9,10 @@ import { logger } from '@/utils/logger';
 import InviteHeader from './invite/InviteHeader';
 import UnauthenticatedView from './invite/UnauthenticatedView';
 import ErrorView from './invite/ErrorView';
-import GamifiedInviteStats from './invite/GamifiedInviteStats';
 import MyInviteRanking from './invite/MyInviteRanking';
-import MyInviteCode from './invite/MyInviteCode';
 import MyInvitedFriends from './invite/MyInvitedFriends';
 import MonthlyPrizeDisplay from './invite/MonthlyPrizeDisplay';
+import CompactInviteInfo from './invite/CompactInviteInfo';
 import { useMonthlyInviteCompetitionSimplified } from '@/hooks/useMonthlyInviteCompetitionSimplified';
 
 const InviteScreen = () => {
@@ -74,19 +74,17 @@ const InviteScreen = () => {
         {/* Minha Posição no Ranking */}
         <MyInviteRanking />
 
-        {/* Estatísticas Gamificadas */}
-        <GamifiedInviteStats stats={stats} />
+        {/* Estatísticas Compactas com Código de Convite */}
+        <CompactInviteInfo 
+          stats={stats}
+          inviteCode={inviteCode}
+          onCopyCode={handleCopyCode}
+        />
 
         {/* Competição Mensal */}
         <div className="mb-6">
           <MonthlyInviteCompetition suppressLoading={true} />
         </div>
-
-        {/* Meu Código de Convite */}
-        <MyInviteCode 
-          inviteCode={inviteCode}
-          onCopyCode={handleCopyCode}
-        />
 
         {/* Meus Amigos Indicados */}
         <MyInvitedFriends invitedFriends={invitedFriends} />
