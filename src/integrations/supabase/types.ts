@@ -523,6 +523,210 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_invite_competitions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          end_date: string
+          id: string
+          month_year: string
+          start_date: string
+          status: string
+          title: string
+          total_participants: number
+          total_prize_pool: number
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          end_date: string
+          id?: string
+          month_year: string
+          start_date: string
+          status?: string
+          title: string
+          total_participants?: number
+          total_prize_pool?: number
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          month_year?: string
+          start_date?: string
+          status?: string
+          title?: string
+          total_participants?: number
+          total_prize_pool?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      monthly_invite_points: {
+        Row: {
+          active_invites_count: number
+          created_at: string
+          id: string
+          invite_points: number
+          invites_count: number
+          last_updated: string
+          month_year: string
+          user_id: string
+        }
+        Insert: {
+          active_invites_count?: number
+          created_at?: string
+          id?: string
+          invite_points?: number
+          invites_count?: number
+          last_updated?: string
+          month_year: string
+          user_id: string
+        }
+        Update: {
+          active_invites_count?: number
+          created_at?: string
+          id?: string
+          invite_points?: number
+          invites_count?: number
+          last_updated?: string
+          month_year?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_invite_points_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_current_weekly_ranking"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "monthly_invite_points_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_invite_prizes: {
+        Row: {
+          active: boolean
+          competition_id: string
+          created_at: string
+          description: string | null
+          id: string
+          position: number
+          prize_amount: number
+        }
+        Insert: {
+          active?: boolean
+          competition_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          position: number
+          prize_amount?: number
+        }
+        Update: {
+          active?: boolean
+          competition_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          position?: number
+          prize_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_invite_prizes_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_invite_competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_invite_rankings: {
+        Row: {
+          active_invites_count: number
+          competition_id: string
+          created_at: string
+          id: string
+          invite_points: number
+          invites_count: number
+          payment_status: string
+          pix_holder_name: string | null
+          pix_key: string | null
+          position: number
+          prize_amount: number
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          active_invites_count?: number
+          competition_id: string
+          created_at?: string
+          id?: string
+          invite_points?: number
+          invites_count?: number
+          payment_status?: string
+          pix_holder_name?: string | null
+          pix_key?: string | null
+          position: number
+          prize_amount?: number
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          active_invites_count?: number
+          competition_id?: string
+          created_at?: string
+          id?: string
+          invite_points?: number
+          invites_count?: number
+          payment_status?: string
+          pix_holder_name?: string | null
+          pix_key?: string | null
+          position?: number
+          prize_amount?: number
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_invite_rankings_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_invite_competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_invite_rankings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_current_weekly_ranking"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "monthly_invite_rankings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_history: {
         Row: {
           created_at: string
@@ -662,6 +866,7 @@ export type Database = {
           games_played: number | null
           id: string
           is_banned: boolean | null
+          phone: string | null
           pix_holder_name: string | null
           pix_key: string | null
           total_score: number | null
@@ -680,6 +885,7 @@ export type Database = {
           games_played?: number | null
           id: string
           is_banned?: boolean | null
+          phone?: string | null
           pix_holder_name?: string | null
           pix_key?: string | null
           total_score?: number | null
@@ -698,6 +904,7 @@ export type Database = {
           games_played?: number | null
           id?: string
           is_banned?: boolean | null
+          phone?: string | null
           pix_holder_name?: string | null
           pix_key?: string | null
           total_score?: number | null
@@ -1057,6 +1264,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_monthly_invite_ranking: {
+        Args: { target_month?: string }
+        Returns: Json
+      }
       calculate_prize_for_position: {
         Args: { user_position: number } | { user_position: number }
         Returns: number
@@ -1162,6 +1373,10 @@ export type Database = {
       }
       update_daily_ranking: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_monthly_invite_points: {
+        Args: { p_user_id: string; p_points_to_add?: number }
         Returns: undefined
       }
       update_scheduled_competition: {
