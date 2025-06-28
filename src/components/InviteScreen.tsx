@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
-import { useInviteScreenData } from '@/hooks/useInviteScreenData';
-import { InviteScreenSkeleton } from './invite/InviteScreenSkeleton';
-import { MonthlyCompetitionWrapper } from './invite/MonthlyCompetitionWrapper';
+import LoadingState from './home/LoadingState';
+import MonthlyInviteCompetition from './MonthlyInviteCompetition';
 import { logger } from '@/utils/logger';
 import InviteHeader from './invite/InviteHeader';
 import InviteStatsCards from './invite/InviteStatsCards';
@@ -22,11 +22,9 @@ const InviteScreen = () => {
     inviteCode,
     invitedFriends,
     stats,
-    monthlyCompetition,
     isLoading,
-    error,
-    useInviteCode
-  } = useInviteScreenData();
+    error
+  } = useInvites();
 
   const handleCopyCode = () => {
     if (!inviteCode) return;
@@ -48,7 +46,7 @@ const InviteScreen = () => {
   }
 
   if (isLoading) {
-    return <InviteScreenSkeleton />;
+    return <LoadingState />;
   }
 
   if (error) {
@@ -64,9 +62,9 @@ const InviteScreen = () => {
     <div className="p-4 pb-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 min-h-screen">
       <InviteHeader />
 
-      {/* Monthly Competition Section - Agora controlado centralmente */}
+      {/* Monthly Competition Section */}
       <div className="mb-6">
-        <MonthlyCompetitionWrapper monthlyData={monthlyCompetition} />
+        <MonthlyInviteCompetition />
       </div>
 
       <InviteStatsCards stats={stats} />
