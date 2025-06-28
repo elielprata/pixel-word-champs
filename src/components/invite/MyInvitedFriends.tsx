@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Star, Zap, Crown, Clock, CheckCircle } from 'lucide-react';
-import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface InvitedFriend {
   name: string;
@@ -49,7 +48,13 @@ const MyInvitedFriends = ({ invitedFriends }: MyInvitedFriendsProps) => {
       if (diffInDays === 1) return 'Ontem';
       if (diffInDays < 7) return `${diffInDays} dias atrás`;
       if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} semanas atrás`;
-      return formatBrasiliaDate(date, 'dd/MM/yyyy');
+      
+      // Formato simples para datas antigas
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
     } catch {
       return 'Data inválida';
     }

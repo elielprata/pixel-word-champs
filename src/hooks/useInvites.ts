@@ -23,7 +23,7 @@ export const useInvites = () => {
       const response = await optimizedInviteService.getOptimizedInviteData();
       
       if (response.success && response.data) {
-        setData(response.data as OptimizedInviteData);
+        setData(response.data);
         setError(null);
         
         logger.debug('Dados de convite carregados', {
