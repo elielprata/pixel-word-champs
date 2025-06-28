@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { monthlyInviteService } from '@/services/monthlyInvite';
 import { useAuth } from './useAuth';
 import { logger } from '@/utils/logger';
@@ -26,17 +26,40 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated, user } = useAuth();
+  
+  // Controle de estado para evitar múltiplas chamadas
+  const isLoadingRef = useRef(false);
+  const lastLoadedParamsRef = useRef<string>('');
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
+  const abortControllerRef = useRef<AbortController>();
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    // Criar parâmetros únicos para identificar se já carregamos esses dados
+    const loadParams = `${user?.id || 'anonymous'}-${monthYear || 'current'}-${isAuthenticated}`;
+    
+    // Se já estamos carregando os mesmos parâmetros, não fazer nada
+    if (isLoadingRef.current && lastLoadedParamsRef.current === loadParams) {
+      return;
+    }
+
+    // Cancelar requisição anterior se existir
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Criar novo AbortController
+    abortControllerRef.current = new AbortController();
+
+    isLoadingRef.current = true;
+    lastLoadedParamsRef.current = loadParams;
     setIsLoading(true);
     setError(null);
 
     try {
-      logger.debug('Iniciando carregamento de dados da competição mensal', { userId: user?.id, monthYear }, 'MONTHLY_INVITE_HOOK');
+      logger.debug('Carregando dados da competição mensal', { userId: user?.id, monthYear }, 'MONTHLY_INVITE_HOOK');
 
       // Se não estiver autenticado, criar dados padrão
       if (!isAuthenticated || !user?.id) {
-        logger.info('Usuário não autenticado, retornando dados padrão', undefined, 'MONTHLY_INVITE_HOOK');
         const defaultData: MonthlyInviteData = {
           userPoints: {
             invite_points: 0,
@@ -64,6 +87,11 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
         monthlyInviteService.getUserMonthlyPosition(user.id, monthYear),
         monthlyInviteService.getMonthlyStats(monthYear)
       ]);
+
+      // Verificar se a requisição foi cancelada
+      if (abortControllerRef.current?.signal.aborted) {
+        return;
+      }
 
       // Processar resultados com fallbacks seguros
       const userPoints = userPointsResponse.status === 'fulfilled' && userPointsResponse.value.success
@@ -119,26 +147,33 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
         }
       };
 
-      logger.info('Dados da competição mensal carregados com sucesso', { 
-        userId: user.id, 
-        hasCompetition: !!finalData.competition,
-        rankingsCount: finalData.rankings.length,
-        userPoints: finalData.userPoints.invite_points
-      }, 'MONTHLY_INVITE_HOOK');
+      // Verificar novamente se não foi cancelada antes de setar o estado
+      if (!abortControllerRef.current?.signal.aborted) {
+        logger.info('Dados da competição mensal carregados', { 
+          userId: user.id, 
+          hasCompetition: !!finalData.competition,
+          rankingsCount: finalData.rankings.length
+        }, 'MONTHLY_INVITE_HOOK');
 
-      setData(finalData);
+        setData(finalData);
+      }
 
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
-      logger.error('Erro crítico ao carregar competição mensal', { error: err, userId: user?.id }, 'MONTHLY_INVITE_HOOK');
-      
-      // Só mostrar erro se for realmente crítico (não conseguiu carregar nenhum dado)
-      setError('Erro ao carregar dados da competição');
+      // Só processar erro se não foi cancelada
+      if (!abortControllerRef.current?.signal.aborted) {
+        const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
+        logger.error('Erro ao carregar competição mensal', { error: err, userId: user?.id }, 'MONTHLY_INVITE_HOOK');
+        setError('Erro ao carregar dados da competição');
+      }
       
     } finally {
-      setIsLoading(false);
+      // Só atualizar loading se não foi cancelada
+      if (!abortControllerRef.current?.signal.aborted) {
+        setIsLoading(false);
+        isLoadingRef.current = false;
+      }
     }
-  };
+  }, [isAuthenticated, user?.id, monthYear]);
 
   const refreshRanking = async () => {
     try {
@@ -155,9 +190,46 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
     }
   };
 
+  // useEffect otimizado com debounce e controle de estado
   useEffect(() => {
-    loadData();
-  }, [isAuthenticated, user?.id, monthYear]);
+    // Limpar timeout anterior
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Só executar se a autenticação estiver definida (não undefined)
+    if (isAuthenticated === undefined) {
+      return;
+    }
+
+    // Debounce para evitar múltiplas chamadas rápidas
+    debounceTimeoutRef.current = setTimeout(() => {
+      loadData();
+    }, 100); // 100ms de debounce
+
+    // Cleanup quando o componente desmontar ou dependências mudarem
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [loadData]);
+
+  // Cleanup geral quando o componente desmontar
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      isLoadingRef.current = false;
+    };
+  }, []);
 
   return {
     data,

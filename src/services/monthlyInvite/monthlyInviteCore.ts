@@ -13,9 +13,7 @@ export class MonthlyInviteCoreService {
     try {
       const targetMonth = monthYear || this.getCurrentMonth();
       
-      logger.debug('Buscando pontos mensais do usuário', { userId, targetMonth }, 'MONTHLY_INVITE_SERVICE');
-      
-      // Se não há userId, retornar dados padrão
+      // Se não há userId, retornar dados padrão sem log desnecessário
       if (!userId) {
         return createSuccessResponse({
           invite_points: 0,
@@ -33,13 +31,8 @@ export class MonthlyInviteCoreService {
         .eq('month_year', targetMonth)
         .maybeSingle();
 
-      if (monthlyError) {
-        logger.debug('Erro ao buscar monthly_invite_points, calculando dinamicamente', { error: monthlyError }, 'MONTHLY_INVITE_SERVICE');
-      }
-
       // Se encontrou dados na tabela, usar eles
-      if (monthlyData) {
-        logger.info('Dados mensais encontrados na tabela', { userId, targetMonth }, 'MONTHLY_INVITE_SERVICE');
+      if (monthlyData && !monthlyError) {
         return createSuccessResponse({
           invite_points: monthlyData.invite_points,
           invites_count: monthlyData.invites_count,
@@ -87,7 +80,11 @@ export class MonthlyInviteCoreService {
         month_year: targetMonth
       };
 
-      logger.info('Pontos mensais calculados dinamicamente', { userId, targetMonth, result }, 'MONTHLY_INVITE_SERVICE');
+      // Log apenas quando relevante (quando há dados ou erro)
+      if (result.invite_points > 0 || result.invites_count > 0) {
+        logger.debug('Pontos mensais calculados', { userId, targetMonth, result }, 'MONTHLY_INVITE_SERVICE');
+      }
+
       return createSuccessResponse(result);
 
     } catch (error) {
@@ -104,8 +101,6 @@ export class MonthlyInviteCoreService {
         return createSuccessResponse(null);
       }
 
-      logger.debug('Buscando posição mensal do usuário', { userId, targetMonth }, 'MONTHLY_INVITE_SERVICE');
-
       // Primeiro buscar a competição do mês
       const { data: competition, error: compError } = await supabase
         .from('monthly_invite_competitions')
@@ -114,7 +109,6 @@ export class MonthlyInviteCoreService {
         .maybeSingle();
 
       if (compError || !competition) {
-        logger.debug('Competição não encontrada para buscar ranking', { error: compError, targetMonth }, 'MONTHLY_INVITE_SERVICE');
         return createSuccessResponse(null);
       }
 
@@ -126,20 +120,18 @@ export class MonthlyInviteCoreService {
         .eq('competition_id', competition.id)
         .maybeSingle();
 
-      if (rankingError) {
-        logger.debug('Erro ao buscar ranking mensal ou usuário não está no ranking', { error: rankingError }, 'MONTHLY_INVITE_SERVICE');
+      if (rankingError || !rankingData) {
         return createSuccessResponse(null);
       }
 
-      if (rankingData) {
-        logger.info('Posição mensal encontrada', { userId, position: rankingData.position }, 'MONTHLY_INVITE_SERVICE');
-        return createSuccessResponse({
-          position: rankingData.position,
-          prize_amount: rankingData.prize_amount
-        });
-      }
+      // Log apenas quando encontrar posição
+      logger.debug('Posição mensal encontrada', { userId, position: rankingData.position }, 'MONTHLY_INVITE_SERVICE');
+      
+      return createSuccessResponse({
+        position: rankingData.position,
+        prize_amount: rankingData.prize_amount
+      });
 
-      return createSuccessResponse(null);
     } catch (error) {
       logger.error('Erro ao buscar posição do usuário', { error, userId }, 'MONTHLY_INVITE_SERVICE');
       return createSuccessResponse(null);
