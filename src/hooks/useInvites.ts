@@ -23,13 +23,14 @@ export const useInvites = () => {
       const response = await optimizedInviteService.getOptimizedInviteData();
       
       if (response.success && response.data) {
-        setData(response.data);
+        setData(response.data as OptimizedInviteData);
         setError(null);
         
+        const typedData = response.data as OptimizedInviteData;
         logger.debug('Dados de convite carregados', {
-          totalPoints: response.data.stats.totalPoints,
-          activeFriends: response.data.stats.activeFriends,
-          userLevel: response.data.stats.userLevel
+          totalPoints: typedData.stats.totalPoints,
+          activeFriends: typedData.stats.activeFriends,
+          userLevel: typedData.stats.userLevel
         }, 'USE_INVITES');
       } else {
         setError(response.error || 'Erro ao carregar dados de convites');
