@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useInviteVerification } from '@/hooks/useInviteVerification';
 import { InvitesTabHeader } from './layout/InvitesTabHeader';
 import { InviteMonthlyCompetition } from './invite/InviteMonthlyCompetition';
+import { InviteMonitoring } from './invite/InviteMonitoring';
 import { 
   Users, 
   UserPlus, 
@@ -16,7 +17,8 @@ import {
   RefreshCw,
   TrendingUp,
   BarChart3,
-  Trophy
+  Trophy,
+  Shield
 } from 'lucide-react';
 
 export const InviteDashboard = () => {
@@ -123,6 +125,13 @@ export const InviteDashboard = () => {
               <Trophy className="h-4 w-4 mr-2" />
               Competição Mensal
             </TabsTrigger>
+            <TabsTrigger 
+              value="monitoring" 
+              className="h-10 px-4 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Monitoramento
+            </TabsTrigger>
           </TabsList>
 
           <div className="mt-6">
@@ -216,6 +225,10 @@ export const InviteDashboard = () => {
 
             <TabsContent value="monthly-competition" className="mt-0">
               <InviteMonthlyCompetition />
+            </TabsContent>
+
+            <TabsContent value="monitoring" className="mt-0">
+              <InviteMonitoring />
             </TabsContent>
           </div>
         </Tabs>
