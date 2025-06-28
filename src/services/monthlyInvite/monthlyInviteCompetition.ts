@@ -89,9 +89,9 @@ export class MonthlyInviteCompetitionService {
       
       logger.debug('Atualizando ranking mensal', { targetMonth }, 'MONTHLY_INVITE_COMPETITION');
 
-      // Executar função que popula dados e ranking
+      // Executar função que popula dados e ranking - usar casting para contornar limitação TypeScript
       const { data, error } = await supabase
-        .rpc('populate_monthly_invite_ranking', { target_month: targetMonth });
+        .rpc('populate_monthly_invite_ranking' as any, { target_month: targetMonth });
 
       if (error) {
         logger.error('Erro ao atualizar ranking mensal', { error }, 'MONTHLY_INVITE_COMPETITION');

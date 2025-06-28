@@ -92,18 +92,18 @@ export class MonthlyInviteStatsService {
 
   private async updateMonthlyData(targetMonth: string) {
     try {
-      // Executar função que atualiza dados mensais baseado nos convites reais
+      // Executar função que atualiza dados mensais baseado nos convites reais - usar casting para contornar limitação TypeScript
       const { data, error } = await supabase
-        .rpc('populate_monthly_competition_and_points', { target_month: targetMonth });
+        .rpc('populate_monthly_competition_and_points' as any, { target_month: targetMonth });
 
       if (error) {
         logger.warn('Erro ao atualizar dados mensais', { error, targetMonth }, 'MONTHLY_INVITE_SERVICE');
         return;
       }
 
-      // Executar função que popula o ranking
+      // Executar função que popula o ranking - usar casting para contornar limitação TypeScript
       const { data: rankingData, error: rankingError } = await supabase
-        .rpc('populate_monthly_invite_ranking', { target_month: targetMonth });
+        .rpc('populate_monthly_invite_ranking' as any, { target_month: targetMonth });
 
       if (rankingError) {
         logger.warn('Erro ao atualizar ranking mensal', { error: rankingError, targetMonth }, 'MONTHLY_INVITE_SERVICE');
