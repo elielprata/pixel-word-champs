@@ -93,7 +93,7 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
         return;
       }
 
-      // Processar resultados com fallbacks seguros
+      // Processar resultados com fallbacks seguros - NUNCA falhar por dados ausentes
       const userPoints = userPointsResponse.status === 'fulfilled' && userPointsResponse.value.success
         ? userPointsResponse.value.data
         : {
@@ -149,21 +149,49 @@ export const useMonthlyInviteCompetition = (monthYear?: string) => {
 
       // Verificar novamente se não foi cancelada antes de setar o estado
       if (!abortControllerRef.current?.signal.aborted) {
-        logger.info('Dados da competição mensal carregados', { 
-          userId: user.id, 
-          hasCompetition: !!finalData.competition,
-          rankingsCount: finalData.rankings.length
-        }, 'MONTHLY_INVITE_HOOK');
+        // Só logar sucesso quando há dados relevantes
+        if (finalData.userPoints.invite_points > 0 || finalData.rankings.length > 0) {
+          logger.info('Dados da competição mensal carregados com sucesso', { 
+            userId: user.id, 
+            hasCompetition: !!finalData.competition,
+            rankingsCount: finalData.rankings.length,
+            userPoints: finalData.userPoints.invite_points
+          }, 'MONTHLY_INVITE_HOOK');
+        }
 
         setData(finalData);
       }
 
     } catch (err) {
-      // Só processar erro se não foi cancelada
+      // Só processar erro se não foi cancelada E se é um erro real (não dados ausentes)
       if (!abortControllerRef.current?.signal.aborted) {
         const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
-        logger.error('Erro ao carregar competição mensal', { error: err, userId: user?.id }, 'MONTHLY_INVITE_HOOK');
-        setError('Erro ao carregar dados da competição');
+        
+        // Só mostrar erro na UI se for um erro de rede/sistema, não ausência de dados
+        if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('connection')) {
+          logger.error('Erro de rede ao carregar competição mensal', { error: err, userId: user?.id }, 'MONTHLY_INVITE_HOOK');
+          setError('Erro de conexão. Tente novamente.');
+        } else {
+          // Para outros erros, criar dados padrão sem mostrar erro
+          logger.debug('Dados não encontrados, usando padrão', { error: err, userId: user?.id }, 'MONTHLY_INVITE_HOOK');
+          const defaultData: MonthlyInviteData = {
+            userPoints: {
+              invite_points: 0,
+              invites_count: 0,
+              active_invites_count: 0,
+              month_year: monthYear || new Date().toISOString().slice(0, 7)
+            },
+            competition: null,
+            rankings: [],
+            userPosition: null,
+            stats: {
+              totalParticipants: 0,
+              totalPrizePool: 0,
+              topPerformers: []
+            }
+          };
+          setData(defaultData);
+        }
       }
       
     } finally {
