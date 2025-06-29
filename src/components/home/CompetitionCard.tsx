@@ -14,7 +14,11 @@ interface CompetitionCardProps {
 }
 
 const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
-  const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const [timeRemaining, setTimeRemaining] = useState<{
+    text: string;
+    percentage: number;
+    totalSeconds: number;
+  }>({ text: '', percentage: 0, totalSeconds: 0 });
   
   // Confiar completamente no status do banco de dados
   const status = competition.status as 'scheduled' | 'active' | 'completed';
@@ -39,16 +43,17 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
     return colors[Math.abs(hash) % colors.length];
   }, [competition.id]);
 
-  // Timer regressivo para competições agendadas
+  // Timer e progresso para competições
   useEffect(() => {
-    if (status === 'scheduled') {
-      const updateTimer = () => {
-        const now = new Date();
+    const updateTimer = () => {
+      const now = new Date();
+      
+      if (status === 'scheduled') {
         const start = new Date(competition.start_date);
         const diff = start.getTime() - now.getTime();
         
         if (diff <= 0) {
-          setTimeRemaining('Iniciando...');
+          setTimeRemaining({ text: 'Iniciando...', percentage: 100, totalSeconds: 0 });
           return;
         }
         
@@ -56,26 +61,113 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         
+        let text = '';
         if (days > 0) {
-          setTimeRemaining(`${days}d ${hours}h ${minutes}m`);
+          text = `${days}d ${hours}h ${minutes}m`;
         } else if (hours > 0) {
-          setTimeRemaining(`${hours}h ${minutes}m`);
+          text = `${hours}h ${minutes}m`;
         } else {
-          setTimeRemaining(`${minutes}m`);
+          text = `${minutes}m`;
         }
-      };
-      
-      updateTimer();
-      const interval = setInterval(updateTimer, 60000); // Atualiza a cada minuto
-      
-      return () => clearInterval(interval);
-    }
-  }, [status, competition.start_date]);
+        
+        setTimeRemaining({ text, percentage: 0, totalSeconds: Math.floor(diff / 1000) });
+      } else if (status === 'active') {
+        const start = new Date(competition.start_date);
+        const end = new Date(competition.end_date);
+        const totalDuration = end.getTime() - start.getTime();
+        const elapsed = now.getTime() - start.getTime();
+        const remaining = end.getTime() - now.getTime();
+        
+        if (remaining <= 0) {
+          setTimeRemaining({ text: 'Finalizado', percentage: 100, totalSeconds: 0 });
+          return;
+        }
+        
+        const percentage = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+        const hours = Math.floor(remaining / (1000 * 60 * 60));
+        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+        
+        let text = '';
+        if (hours > 0) {
+          text = `${hours}h ${minutes}m`;
+        } else if (minutes > 0) {
+          text = `${minutes}m ${seconds}s`;
+        } else {
+          text = `${seconds}s`;
+        }
+        
+        setTimeRemaining({ text, percentage, totalSeconds: Math.floor(remaining / 1000) });
+      }
+    };
+    
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    
+    return () => clearInterval(interval);
+  }, [status, competition.start_date, competition.end_date]);
 
   // Só mostrar competições ativas ou agendadas
   if (status === 'completed') {
     return null;
   }
+
+  // Componente de barra circular
+  const CircularProgress = ({ percentage, size = 80 }: { percentage: number; size?: number }) => {
+    const radius = (size - 8) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const strokeDasharray = `${circumference} ${circumference}`;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+    
+    return (
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg
+          className="transform -rotate-90"
+          width={size}
+          height={size}
+        >
+          {/* Background circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="currentColor"
+            strokeWidth="4"
+            fill="none"
+            className="text-gray-200"
+          />
+          {/* Progress circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="currentColor"
+            strokeWidth="4"
+            fill="none"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            className={status === 'active' ? 'text-green-500' : 'text-blue-500'}
+            style={{
+              transition: 'stroke-dashoffset 0.5s ease-in-out',
+            }}
+          />
+        </svg>
+        {/* Center content */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            {status === 'active' ? (
+              <Zap className="w-5 h-5 mx-auto text-green-600 mb-1" />
+            ) : (
+              <Clock className="w-5 h-5 mx-auto text-blue-600 mb-1" />
+            )}
+            <div className="text-xs font-bold text-gray-700">
+              {status === 'active' ? Math.round(percentage) + '%' : '⏰'}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Card className={`relative border-0 bg-gradient-to-br ${bgGradient} backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] animate-fade-in group overflow-hidden`}>
@@ -97,16 +189,16 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
 
       <CardContent className="p-4 relative">
         {/* Header gamificado */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-2 flex-1">
             <div className="p-1.5 bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
               {status === 'active' ? (
-                <Zap className="w-4 h-4 text-primary-foreground animate-pulse" />
+                <Zap className="w-4 h-4 text-primary-foreground" />
               ) : (
                 <Clock className="w-4 h-4 text-primary-foreground" />
               )}
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="font-bold text-base text-foreground leading-tight group-hover:text-primary transition-colors duration-300">
                 {competition.title}
               </h3>
@@ -120,6 +212,11 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
               </div>
             </div>
           </div>
+          
+          {/* Barra de progresso circular */}
+          <div className="shrink-0">
+            <CircularProgress percentage={timeRemaining.percentage} size={70} />
+          </div>
         </div>
 
         {/* Descrição compacta */}
@@ -129,14 +226,17 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
           </p>
         )}
 
-        {/* Timer regressivo para competições agendadas */}
-        {status === 'scheduled' && timeRemaining && (
-          <div className="mb-3 p-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-200/50 rounded-xl">
+        {/* Contador de tempo */}
+        {timeRemaining.text && (
+          <div className="mb-3 p-3 bg-gradient-to-r from-slate-500/10 to-slate-600/10 border border-slate-200/50 rounded-xl">
             <div className="flex items-center justify-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-600" />
               <div className="text-center">
-                <div className="text-blue-700 font-bold text-sm">⏰ Inicia em:</div>
-                <div className="text-blue-800 font-bold text-lg animate-pulse">{timeRemaining}</div>
+                <div className={`font-bold text-sm mb-1 ${status === 'active' ? 'text-green-700' : 'text-blue-700'}`}>
+                  {status === 'active' ? '⏱️ Tempo Restante:' : '⏰ Inicia em:'}
+                </div>
+                <div className={`font-bold text-lg ${status === 'active' ? 'text-green-800' : 'text-blue-800'}`}>
+                  {timeRemaining.text}
+                </div>
               </div>
             </div>
           </div>
@@ -163,8 +263,8 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
             size="sm"
           >
             <Play className="w-4 h-4 mr-2 group-hover/button:scale-110 transition-transform duration-200" />
-            <span className="group-hover/button:animate-pulse flex items-center gap-1">
-              ⚡ JOGAR AGORA ⚡
+            <span className="flex items-center gap-1">
+              🎮 PARTICIPAR AGORA
             </span>
           </Button>
         )}
@@ -177,7 +277,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
           >
             <Clock className="w-4 h-4 mr-2" />
             <span className="flex items-center gap-1">
-              🎮 AGUARDANDO INÍCIO
+              📅 AGUARDANDO INÍCIO
             </span>
           </Button>
         )}
