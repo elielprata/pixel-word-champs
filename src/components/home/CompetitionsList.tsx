@@ -46,13 +46,13 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
       {activeCompetitions.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-800">Competições Ativas</h2>
+            <h2 className="text-lg font-bold text-gray-900">Competições Ativas</h2>
             <Button onClick={onRefresh} variant="ghost" size="sm" className="h-8 w-8 p-0">
               <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-0">
             {activeCompetitions.map((competition) => (
               <CompetitionCard
                 key={competition.id}
@@ -68,16 +68,20 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
       {/* Próximas Competições (Agendadas) */}
       {scheduledCompetitions.length > 0 && (
         <div>
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Próximas Competições</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Próximas Competições</h2>
           
-          <div className="space-y-3">
-            {scheduledCompetitions.map((competition) => (
-              <CompetitionCard
-                key={competition.id}
-                competition={competition}
-                onJoin={handleJoin}
-                onViewRanking={handleViewRanking}
-              />
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+            {scheduledCompetitions.map((competition, index) => (
+              <div key={competition.id}>
+                <CompetitionCard
+                  competition={competition}
+                  onJoin={handleJoin}
+                  onViewRanking={handleViewRanking}
+                />
+                {index < scheduledCompetitions.length - 1 && (
+                  <div className="border-b border-gray-100 mx-4"></div>
+                )}
+              </div>
             ))}
           </div>
         </div>
