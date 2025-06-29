@@ -1,13 +1,16 @@
+
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
+
 interface CompetitionStatusBadgeProps {
   status: 'scheduled' | 'active' | 'completed';
   isRealTime?: boolean;
   isStatusOutdated?: boolean; // Deprecated - sempre false agora
   calculatedStatus?: string; // Deprecated - não usado mais
 }
-export const CompetitionStatusBadge: React.FC<CompetitionStatusBadgeProps> = ({
-  status,
+
+export const CompetitionStatusBadge: React.FC<CompetitionStatusBadgeProps> = ({ 
+  status, 
   isRealTime = false
 }) => {
   const getStatusConfig = (status: string) => {
@@ -38,6 +41,16 @@ export const CompetitionStatusBadge: React.FC<CompetitionStatusBadgeProps> = ({
         };
     }
   };
+
   const config = getStatusConfig(status);
-  return;
+
+  return (
+    <Badge className={`${config.className} flex items-center gap-1`}>
+      <span>{config.indicator}</span>
+      {config.text}
+      {isRealTime && status === 'active' && (
+        <span className="ml-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+      )}
+    </Badge>
+  );
 };
