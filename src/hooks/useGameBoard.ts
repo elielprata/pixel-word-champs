@@ -15,6 +15,12 @@ interface GameBoardProps {
   onRevive?: () => void;
 }
 
+interface FoundWord {
+  word: string;
+  positions: Array<{row: number, col: number}>;
+  points: number;
+}
+
 export const useGameBoard = ({
   level,
   timeLeft,
@@ -60,8 +66,10 @@ export const useGameBoard = ({
   // Estado do jogo - AGORA COM boardData - DECLARADO ANTES DO USO
   const gameState = useGameState(levelWords, timeLeft, onLevelComplete, boardData);
 
-  // ✅ CORREÇÃO: Função integrada para salvar palavra encontrada
-  const handleWordFound = useCallback(async (word: string, positions: Array<{row: number, col: number}>, points: number) => {
+  // ✅ CORREÇÃO: Função integrada para salvar palavra encontrada - ASSINATURA CORRIGIDA
+  const handleWordFound = useCallback(async (foundWord: FoundWord) => {
+    const { word, positions, points } = foundWord;
+    
     logger.info('🎯 Palavra encontrada - iniciando salvamento', {
       word,
       points,
@@ -86,7 +94,7 @@ export const useGameBoard = ({
       }
 
       // 2. Adicionar palavra ao estado local (sempre funciona)
-      gameState.addFoundWord({ word, positions, points });
+      gameState.addFoundWord(foundWord);
       
       logger.info('✅ Palavra adicionada ao estado local', {
         word,
@@ -102,7 +110,7 @@ export const useGameBoard = ({
       }, 'GAME_BOARD');
       
       // Mesmo com erro, adicionar localmente
-      gameState.addFoundWord({ word, positions, points });
+      gameState.addFoundWord(foundWord);
     }
   }, [currentSession, addWordFound, gameState]);
 
@@ -113,7 +121,7 @@ export const useGameBoard = ({
     hintHighlightedCells: gameState.hintHighlightedCells,
     boardData,
     levelWords,
-    onWordFound: handleWordFound  // ✅ USANDO FUNÇÃO INTEGRADA
+    onWordFound: handleWordFound  // ✅ USANDO FUNÇÃO INTEGRADA COM ASSINATURA CORRETA
   });
 
   // ✅ CORREÇÃO: Inicializar sessão quando tudo estiver pronto
