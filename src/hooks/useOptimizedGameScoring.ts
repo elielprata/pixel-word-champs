@@ -91,7 +91,7 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
       logger.error('❌ Erro ao registrar conclusão do nível (background):', error);
       // ⚡ IMPORTANTE: Não impedir que o usuário continue jogando
       // Em caso de erro, apenas logar mas não rejeitar a promise
-      await resetSession().catch(() => {}); // Tentar limpar, mas não falhar se não conseguir
+      resetSession(); // Tentar limpar, sem await nem catch já que é void
       // Re-throw para que o caller possa tratar se necessário
       throw error;
     } finally {
