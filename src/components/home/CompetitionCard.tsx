@@ -3,8 +3,8 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Competition } from '@/types';
 import { CompetitionCardHeader } from './CompetitionCardHeader';
+import { CompetitionCardContent } from './CompetitionCardContent';
 import { CompetitionCardButton } from './CompetitionCardButton';
-import { CompetitionCardDecorations } from './CompetitionCardDecorations';
 
 interface CompetitionCardProps {
   competition: Competition;
@@ -23,14 +23,14 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   
   const bgGradient = useMemo(() => {
     const colors = [
-      'from-blue-50/80 to-indigo-100/60',
-      'from-purple-50/80 to-violet-100/60', 
-      'from-pink-50/80 to-rose-100/60',
-      'from-green-50/80 to-emerald-100/60',
-      'from-yellow-50/80 to-amber-100/60',
-      'from-orange-50/80 to-red-100/60',
-      'from-teal-50/80 to-cyan-100/60',
-      'from-slate-50/80 to-gray-100/60'
+      'from-purple-50/90 to-indigo-100/70',
+      'from-blue-50/90 to-cyan-100/70', 
+      'from-green-50/90 to-emerald-100/70',
+      'from-pink-50/90 to-rose-100/70',
+      'from-yellow-50/90 to-amber-100/70',
+      'from-orange-50/90 to-red-100/70',
+      'from-teal-50/90 to-blue-100/70',
+      'from-violet-50/90 to-purple-100/70'
     ];
     
     const hash = competition.id.split('').reduce((a, b) => {
@@ -106,14 +106,30 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   }
 
   return (
-    <Card className={`relative border-0 bg-gradient-to-br ${bgGradient} backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] animate-fade-in group overflow-hidden`}>
-      <CompetitionCardDecorations />
+    <Card className={`relative border-0 bg-gradient-to-br ${bgGradient} backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-fade-in group overflow-hidden`}>
+      {/* Decorative elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-3 right-6 w-2 h-2 bg-blue-400/40 rounded-full animate-pulse" style={{ animationDelay: '0s', animationDuration: '3s' }}></div>
+        <div className="absolute top-6 right-10 w-1.5 h-1.5 bg-purple-400/30 rounded-full animate-pulse" style={{ animationDelay: '1s', animationDuration: '4s' }}></div>
+        <div className="absolute bottom-4 left-6 w-1 h-1 bg-green-400/40 rounded-full animate-pulse" style={{ animationDelay: '2s', animationDuration: '3.5s' }}></div>
+        
+        <div className="absolute top-3 left-16 text-lg text-blue-400/30 animate-pulse font-bold" style={{ animationDelay: '0.5s', animationDuration: '5s' }}>⚡</div>
+        <div className="absolute bottom-3 right-16 text-lg text-purple-400/25 animate-pulse font-bold" style={{ animationDelay: '2.5s', animationDuration: '4s' }}>🎮</div>
+        <div className="absolute top-8 right-20 text-lg text-green-400/20 animate-pulse font-bold" style={{ animationDelay: '1.5s', animationDuration: '6s' }}>🏆</div>
+      </div>
 
-      <CardContent className="p-3 relative">
+      <CardContent className="p-4 relative">
         <CompetitionCardHeader
           title={competition.title}
           status={status}
           timeRemaining={timeRemaining}
+        />
+
+        <CompetitionCardContent
+          description={competition.description}
+          theme={competition.theme}
+          totalParticipants={competition.total_participants}
+          maxParticipants={competition.max_participants}
         />
 
         <CompetitionCardButton
