@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGameScoring } from '@/hooks/useGameScoring';
@@ -229,7 +230,7 @@ export const useGameState = (
       return;
     }
 
-    logger.info(`📝 ADICIONANDO PALAVRA AO ESTADO (PROTEÇÃO DUPLA OK) - "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
+    logger.info(`📝 ADICIONANDO PALAVRA AO ESTADO VISUAL IMEDIATAMENTE - "${newFoundWord.word}" = ${newFoundWord.points} pontos`, {
       word: newFoundWord.word,
       points: newFoundWord.points,
       beforeCount: state.foundWords.length,
@@ -237,7 +238,14 @@ export const useGameState = (
       allWordsAfter: [...state.foundWords.map(fw => `${fw.word}(${fw.points}p)`), `${newFoundWord.word}(${newFoundWord.points}p)`]
     }, 'GAME_STATE');
     
-    // ✅ CORREÇÃO CRÍTICA: Salvar palavra no banco IMEDIATAMENTE
+    // ✅ CORREÇÃO CRÍTICA: Atualizar estado visual IMEDIATAMENTE
+    setState(prev => ({
+      ...prev,
+      foundWords: [...prev.foundWords, newFoundWord],
+      permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
+    }));
+
+    // ⚡ Tentar salvar no banco em BACKGROUND (não bloquear experiência visual)
     try {
       const success = await addWordToSession(
         newFoundWord.word, 
@@ -245,34 +253,33 @@ export const useGameState = (
         newFoundWord.positions
       );
       
-      if (!success) {
-        logger.error(`❌ FALHA AO SALVAR PALAVRA NO BANCO: "${newFoundWord.word}"`, {
+      if (success) {
+        logger.info(`✅ PALAVRA SALVA NO BANCO COM SUCESSO (BACKGROUND): "${newFoundWord.word}"`, {
           word: newFoundWord.word,
           points: newFoundWord.points
         }, 'GAME_STATE');
-        return;
+      } else {
+        logger.error(`❌ FALHA AO SALVAR PALAVRA NO BANCO (BACKGROUND): "${newFoundWord.word}"`, {
+          word: newFoundWord.word,
+          points: newFoundWord.points,
+          note: 'Usuário pode continuar jogando, tentaremos novamente'
+        }, 'GAME_STATE');
+        
+        // TODO: Implementar retry logic aqui se necessário
+        // Por enquanto, apenas logamos o erro mas não impactamos a experiência
       }
       
-      logger.info(`✅ PALAVRA SALVA NO BANCO COM SUCESSO: "${newFoundWord.word}"`, {
-        word: newFoundWord.word,
-        points: newFoundWord.points
-      }, 'GAME_STATE');
-      
     } catch (error) {
-      logger.error(`❌ ERRO CRÍTICO AO SALVAR PALAVRA NO BANCO: "${newFoundWord.word}"`, {
+      logger.error(`❌ ERRO CRÍTICO AO SALVAR PALAVRA NO BANCO (BACKGROUND): "${newFoundWord.word}"`, {
         word: newFoundWord.word,
         points: newFoundWord.points,
-        error
+        error,
+        note: 'Usuário pode continuar jogando, mas dados podem não persistir'
       }, 'GAME_STATE');
-      return;
+      
+      // TODO: Implementar retry logic aqui se necessário
+      // Por enquanto, apenas logamos o erro mas não impactamos a experiência
     }
-
-    // Só adicionar ao estado local APÓS sucesso no banco
-    setState(prev => ({
-      ...prev,
-      foundWords: [...prev.foundWords, newFoundWord],
-      permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
-    }));
     
   }, [state.foundWords, addWordToSession]);
 
