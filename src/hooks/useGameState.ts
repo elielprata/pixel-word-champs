@@ -62,31 +62,33 @@ export const useGameState = (
     });
   }, [levelWords]);
 
-  // Game Over quando tempo acaba
+  // Game Over quando tempo acaba (mas apenas se o nível não foi completado)
   useEffect(() => {
-    if (timeLeft === 0 && !state.showGameOver && !state.isLevelCompleted) {
+    if (timeLeft === 0 && !state.showLevelComplete && !state.isLevelCompleted && !isLevelCompleted) {
       logger.info('⏰ Tempo esgotado - Game Over', { 
         foundWords: state.foundWords.length,
         targetWords: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED 
       }, 'GAME_STATE');
       setState(prev => ({ ...prev, showGameOver: true }));
     }
-  }, [timeLeft, state.showGameOver, state.isLevelCompleted, state.foundWords.length]);
+  }, [timeLeft, state.showLevelComplete, state.isLevelCompleted, isLevelCompleted, state.foundWords.length]);
 
-  // Level complete quando atinge o número necessário de palavras
+  // Level complete quando atinge o número necessário de palavras - CORRIGIDO
   useEffect(() => {
     if (isLevelCompleted && !state.showLevelComplete && !state.isLevelCompleted) {
-      logger.info(`🎉 Nível COMPLETADO!`, {
+      logger.info(`🎉 Nível COMPLETADO! Exibindo modal de vitória`, {
         foundWordsCount: state.foundWords.length,
         totalWordsRequired: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
         foundWords: state.foundWords.map(fw => fw.word),
         levelScore: currentLevelScore
       }, 'GAME_STATE');
       
+      // PRIMEIRA PRIORIDADE: Mostrar o modal de nível completado
       setState(prev => ({ 
         ...prev, 
         showLevelComplete: true, 
-        isLevelCompleted: true 
+        isLevelCompleted: true,
+        showGameOver: false // Garantir que game over não apareça junto
       }));
       
       // Notificar level complete via callback
