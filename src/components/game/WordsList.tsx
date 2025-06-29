@@ -70,16 +70,11 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
                 </span>
               </div>
               
-              {/* Pontos ou indicador ultra compacto */}
+              {/* Pontos - apenas quando encontrada */}
               <div className="flex items-center flex-shrink-0 ml-1">
                 {isFound && foundWord && (
                   <span className="text-xs font-bold text-white bg-black/20 px-1 py-0.5 rounded-full border border-white/20">
                     +{foundWord.points}
-                  </span>
-                )}
-                {!isFound && (
-                  <span className="text-xs text-gray-500">
-                    {getPointsForWord(word)}
                   </span>
                 )}
               </div>
