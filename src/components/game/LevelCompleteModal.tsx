@@ -135,13 +135,6 @@ const LevelCompleteModal = ({
                 <span className="font-bold">Finalizar Jogo</span>
               </Button>
             </div>
-
-            {/* Indicador de progresso salvo */}
-            <div className="mt-4 p-2 bg-green-900/20 rounded-lg border border-green-600/30">
-              <p className="text-sm text-green-700 font-medium">
-                ✅ Progresso salvo automaticamente!
-              </p>
-            </div>
           </div>
           
           {/* Efeitos de brilho nos cantos */}

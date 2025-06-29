@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckCircle, Star, Target, Sparkles } from 'lucide-react';
+import { CheckCircle, Star, Target, Lock, Sparkles } from 'lucide-react';
 import { useGamePointsConfig } from '@/hooks/useGamePointsConfig';
 
 interface FoundWord {
@@ -19,6 +19,15 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
   const { getPointsForWord } = useGamePointsConfig();
 
   const TOTAL_WORDS = 5;
+
+  // Identificar apenas a palavra com maior pontuação
+  const wordsWithPoints = levelWords.map(word => ({
+    word,
+    points: getPointsForWord(word)
+  }));
+  
+  const sortedByPoints = [...wordsWithPoints].sort((a, b) => b.points - a.points);
+  const hiddenWords = new Set([sortedByPoints[0]?.word]);
 
   return (
     <div className="p-2 space-y-2">
@@ -40,12 +49,13 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
         </div>
       </div>
       
-      {/* Grid horizontal compacto - todas as palavras visíveis */}
+      {/* Grid horizontal compacto - palavras como chips sem truncamento */}
       <div className="grid grid-cols-2 gap-1">
         {levelWords.map((word, index) => {
           const foundWordIndex = foundWords.findIndex(fw => fw.word === word);
           const isFound = foundWordIndex !== -1;
           const foundWord = foundWords[foundWordIndex];
+          const isHidden = hiddenWords.has(word);
           
           return (
             <div 
@@ -54,28 +64,39 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
                 relative flex items-center justify-between px-1.5 py-1 rounded-lg transition-all duration-300 transform hover:scale-[1.02] border text-xs
                 ${isFound 
                   ? `bg-gradient-to-r ${getWordColor(foundWordIndex)} text-white shadow-sm border-white/30 animate-bounce-in` 
-                  : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 text-gray-700 hover:from-gray-100 hover:to-gray-200 hover:border-gray-300 shadow-sm'
+                  : isHidden
+                    ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-sm border-purple-300'
+                    : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 text-gray-700 hover:from-gray-100 hover:to-gray-200 hover:border-gray-300 shadow-sm'
                 }
               `}
             >
-              {/* Ícone e palavra - todas visíveis */}
+              {/* Ícone e palavra - sem truncamento */}
               <div className="flex items-center gap-1 flex-1 min-w-0">
                 {isFound && (
                   <CheckCircle className="w-2.5 h-2.5 text-white flex-shrink-0" />
                 )}
+                {isHidden && !isFound && (
+                  <Lock className="w-2.5 h-2.5 text-white/90 flex-shrink-0" />
+                )}
                 <span className={`font-bold text-xs whitespace-nowrap ${
-                  isFound ? 'text-white' : 'text-gray-700'
+                  isFound || isHidden ? 'text-white' : 'text-gray-700'
                 }`}>
-                  {word}
+                  {isHidden && !isFound 
+                    ? `${word.length} Letras` 
+                    : word
+                  }
                 </span>
               </div>
               
-              {/* Pontos - apenas quando encontrada */}
+              {/* Pontos ou indicador ultra compacto */}
               <div className="flex items-center flex-shrink-0 ml-1">
                 {isFound && foundWord && (
                   <span className="text-xs font-bold text-white bg-black/20 px-1 py-0.5 rounded-full border border-white/20">
                     +{foundWord.points}
                   </span>
+                )}
+                {isHidden && !isFound && (
+                  <Star className="w-2 h-2 text-yellow-300" />
                 )}
               </div>
 

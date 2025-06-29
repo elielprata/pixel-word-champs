@@ -24,6 +24,16 @@ export const useGameInteractions = (
 ) => {
   const { getPointsForWord } = useGamePointsConfig();
 
+  // "Palavra extra" com maior pontuação (não pode receber dica)
+  const getExtraWord = (): string | null => {
+    const wordsWithPoints = levelWords.map(word => ({
+      word,
+      points: getPointsForWord(word)
+    }));
+    const sorted = [...wordsWithPoints].sort((a, b) => b.points - a.points);
+    return sorted[0]?.word || null;
+  };
+
   const useHint = () => {
     if (hintsUsed >= 1) {
       toast({
@@ -34,15 +44,19 @@ export const useGameInteractions = (
       return;
     }
 
-    // Encontrar primeira palavra não encontrada (qualquer uma)
+    const extraWord = getExtraWord();
+
+    // Encontrar primeira palavra não encontrada que NÃO é a extra
     const hintWord = levelWords.find(
-      (word) => !foundWords.some(fw => fw.word === word)
+      (word) =>
+        !foundWords.some(fw => fw.word === word) &&
+        word !== extraWord
     );
 
     if (!hintWord) {
       toast({
         title: "Dica indisponível",
-        description: "Todas as palavras já foram encontradas!",
+        description: "A dica não pode ser usada na palavra de Desafio Extra. Tente encontrá-la por conta própria!",
         variant: "destructive"
       });
       return;
