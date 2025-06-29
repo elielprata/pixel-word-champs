@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGameScoring } from '@/hooks/useGameScoring';
@@ -251,12 +250,6 @@ export const useGameState = (
           word: newFoundWord.word,
           points: newFoundWord.points
         }, 'GAME_STATE');
-        
-        toast({
-          title: "Erro ao salvar palavra",
-          description: "A palavra foi encontrada mas não foi salva. Tente novamente.",
-          variant: "destructive"
-        });
         return;
       }
       
@@ -271,12 +264,6 @@ export const useGameState = (
         points: newFoundWord.points,
         error
       }, 'GAME_STATE');
-      
-      toast({
-        title: "Erro crítico",
-        description: "Falha ao salvar progresso. Contate o suporte.",
-        variant: "destructive"
-      });
       return;
     }
 
