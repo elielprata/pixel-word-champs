@@ -14,6 +14,14 @@ interface CompetitionsListProps {
 }
 
 const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: CompetitionsListProps) => {
+  // Filtrar e limitar competições agendadas a no máximo 3
+  const scheduledCompetitions = competitions
+    .filter(comp => comp.status === 'scheduled')
+    .slice(0, 3);
+
+  // Filtrar competições ativas
+  const activeCompetitions = competitions.filter(comp => comp.status === 'active');
+
   const handleJoin = (competitionId: string) => {
     onStartChallenge(competitionId);
   };
@@ -21,6 +29,8 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
   const handleViewRanking = (competitionId: string) => {
     console.log('Ver ranking da competição:', competitionId);
   };
+
+  const totalCompetitions = activeCompetitions.length + scheduledCompetitions.length;
 
   return (
     <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
@@ -30,7 +40,7 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
             <div className="p-1.5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
               <Calendar className="w-4 h-4 text-white" />
             </div>
-            Competições Diárias ({competitions.length})
+            Competições ({totalCompetitions})
           </CardTitle>
           <Button onClick={onRefresh} variant="ghost" size="sm" className="h-8 w-8 p-0">
             <RefreshCw className="w-4 h-4" />
@@ -39,11 +49,22 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
       </CardHeader>
 
       <CardContent className="p-3 pt-0">
-        {competitions.length === 0 ? (
+        {totalCompetitions === 0 ? (
           <EmptyCompetitionsState onRefresh={onRefresh} />
         ) : (
           <div className="space-y-3">
-            {competitions.map((competition) => (
+            {/* Competições Ativas */}
+            {activeCompetitions.map((competition) => (
+              <CompetitionCard
+                key={competition.id}
+                competition={competition}
+                onJoin={handleJoin}
+                onViewRanking={handleViewRanking}
+              />
+            ))}
+            
+            {/* Competições Agendadas (máximo 3) */}
+            {scheduledCompetitions.map((competition) => (
               <CompetitionCard
                 key={competition.id}
                 competition={competition}
