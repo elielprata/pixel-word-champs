@@ -54,9 +54,11 @@ export const useGameBoard = ({
     calculateLevelData,
     registerLevelCompletion,
     discardIncompleteLevel,
-    initializeSession,
     isUpdatingScore
   } = useOptimizedGameScoring(level, boardData);
+
+  // Estado do jogo - AGORA COM boardData - DECLARADO ANTES DO USO
+  const gameState = useGameState(levelWords, timeLeft, onLevelComplete, boardData);
 
   // ✅ CORREÇÃO: Função integrada para salvar palavra encontrada
   const handleWordFound = useCallback(async (word: string, positions: Array<{row: number, col: number}>, points: number) => {
@@ -103,9 +105,6 @@ export const useGameBoard = ({
       gameState.addFoundWord({ word, positions, points });
     }
   }, [currentSession, addWordFound, gameState]);
-
-  // Estado do jogo - AGORA COM boardData
-  const gameState = useGameState(levelWords, timeLeft, onLevelComplete, boardData);
 
   // Interações com células - ATUALIZADO para usar nossa função integrada
   const cellInteractions = useCellInteractions({
