@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -102,6 +101,12 @@ export const useGameSessionManager = () => {
         positionsCount: positions.length
       }, 'SESSION_MANAGER');
 
+      // Converter positions para JSON compatível com Supabase
+      const positionsJson = positions.map(pos => ({
+        row: pos.row,
+        col: pos.col
+      }));
+
       // Salvar na tabela words_found
       const { error: wordError } = await supabase
         .from('words_found')
@@ -109,7 +114,7 @@ export const useGameSessionManager = () => {
           session_id: currentSession.sessionId,
           word,
           points,
-          positions: positions,
+          positions: positionsJson as any, // Cast necessário para Json type
           found_at: new Date().toISOString()
         });
 

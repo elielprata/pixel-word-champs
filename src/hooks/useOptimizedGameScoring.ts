@@ -11,6 +11,12 @@ interface FoundWord {
   points: number;
 }
 
+interface ScoreUpdateResult {
+  total_score: number;
+  experience_points: number;
+  games_played: number;
+}
+
 export const useOptimizedGameScoring = (level: number, boardData: any) => {
   const [isUpdatingScore, setIsUpdatingScore] = useState(false);
   const [currentSession, setCurrentSession] = useState<any>(null);
@@ -98,12 +104,13 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
         const response = await gameScoreService.updateGameScore(user.id, currentLevelScore);
         
         if (response.success && response.data) {
+          const scoreData = response.data as ScoreUpdateResult;
           logger.info('✅ PONTUAÇÃO DO PERFIL ATUALIZADA COM SUCESSO', {
             userId: user.id,
             gamePoints: currentLevelScore,
-            newTotalScore: response.data.total_score,
-            newExperiencePoints: response.data.experience_points,
-            newGamesPlayed: response.data.games_played,
+            newTotalScore: scoreData.total_score,
+            newExperiencePoints: scoreData.experience_points,
+            newGamesPlayed: scoreData.games_played,
             level
           });
         } else {

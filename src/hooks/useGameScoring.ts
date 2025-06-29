@@ -10,6 +10,12 @@ interface FoundWord {
   points: number;
 }
 
+interface ScoreUpdateResult {
+  total_score: number;
+  experience_points: number;
+  games_played: number;
+}
+
 export const useGameScoring = (foundWords: FoundWord[], level: number) => {
   const [isUpdatingScore, setIsUpdatingScore] = useState(false);
   const { user } = useAuth();
@@ -52,12 +58,13 @@ export const useGameScoring = (foundWords: FoundWord[], level: number) => {
       const response = await gameScoreService.updateGameScore(user.id, gamePoints);
       
       if (response.success && response.data) {
+        const scoreData = response.data as ScoreUpdateResult;
         logger.info('✅ PONTUAÇÃO ATUALIZADA COM SUCESSO no perfil do usuário', {
           userId: user.id,
           gamePoints,
-          newTotalScore: response.data.total_score,
-          newExperiencePoints: response.data.experience_points,
-          newGamesPlayed: response.data.games_played,
+          newTotalScore: scoreData.total_score,
+          newExperiencePoints: scoreData.experience_points,
+          newGamesPlayed: scoreData.games_played,
           level
         }, 'GAME_SCORING');
       } else {
