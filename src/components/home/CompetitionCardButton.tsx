@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Play, Gamepad } from 'lucide-react';
 
 interface CompetitionCardButtonProps {
   status: 'scheduled' | 'active' | 'completed';
@@ -19,8 +20,8 @@ export const CompetitionCardButton = ({
         onClick={() => onJoin(competitionId)} 
         className="w-full bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center space-x-3 hover:from-green-500 hover:to-green-600 transition-all"
       >
-        <span className="text-white text-2xl">▶</span>
-        <span className="text-white text-2xl">🎮</span>
+        <Play className="text-white" size={20} fill="white" />
+        <Gamepad className="text-white" size={20} />
         <span className="text-white text-lg font-bold tracking-wide">PARTICIPAR AGORA</span>
       </button>
     );
