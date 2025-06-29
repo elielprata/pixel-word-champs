@@ -48,7 +48,7 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
   const registerLevelCompletion = useCallback(async (foundWords: FoundWord[], timeElapsed: number): Promise<void> => {
     if (isUpdatingScore) {
       logger.warn('⚠️ Já está registrando conclusão, ignorando nova tentativa');
-      return;
+      return Promise.resolve();
     }
 
     const { currentLevelScore, isLevelCompleted } = calculateLevelData(foundWords);
@@ -92,6 +92,8 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
       // ⚡ IMPORTANTE: Não impedir que o usuário continue jogando
       // Em caso de erro, apenas logar mas não rejeitar a promise
       await resetSession().catch(() => {}); // Tentar limpar, mas não falhar se não conseguir
+      // Re-throw para que o caller possa tratar se necessário
+      throw error;
     } finally {
       setIsUpdatingScore(false);
     }
