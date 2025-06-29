@@ -44,20 +44,16 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
     return { currentLevelScore, isLevelCompleted };
   }, []);
 
+  // ✅ CORREÇÃO: registerLevelCompletion agora é não-bloqueante e pode falhar sem impactar o usuário
   const registerLevelCompletion = useCallback(async (foundWords: FoundWord[], timeElapsed: number) => {
     if (isUpdatingScore) {
       logger.warn('⚠️ Já está registrando conclusão, ignorando nova tentativa');
       return;
     }
 
-    if (!currentSession) {
-      logger.error('❌ Tentativa de completar nível sem sessão ativa');
-      throw new Error('Sessão não encontrada');
-    }
-
     const { currentLevelScore, isLevelCompleted } = calculateLevelData(foundWords);
 
-    // VALIDAÇÃO RIGOROSA: Verificar múltiplas condições antes de prosseguir
+    // VALIDAÇÃO: Verificar se realmente completou
     if (!isLevelCompleted || foundWords.length < TOTAL_WORDS_REQUIRED) {
       logger.error(`❌ VALIDAÇÃO FALHOU: Apenas ${foundWords.length} de ${TOTAL_WORDS_REQUIRED} palavras encontradas`);
       await resetSession();
@@ -75,7 +71,13 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
     try {
       logger.info(`🔄 Registrando conclusão VALIDADA do nível ${level}: ${foundWords.length} palavras, ${currentLevelScore} pontos`);
 
-      // ✅ CORREÇÃO: As palavras já foram salvas individualmente no useGameState
+      // Verificar se temos uma sessão ativa
+      if (!currentSession) {
+        logger.warn('⚠️ Tentando completar nível sem sessão ativa, criando uma nova...');
+        await initializeSession();
+      }
+
+      // As palavras já foram salvas individualmente no useGameState
       // Agora só precisamos completar a sessão
       const result = await completeSession(timeElapsed);
 
@@ -86,14 +88,14 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
       }
 
     } catch (error) {
-      logger.error('❌ Erro crítico ao registrar conclusão do nível:', error);
-      // Em caso de erro, garantir que a sessão seja descartada
-      await resetSession();
-      throw error;
+      logger.error('❌ Erro ao registrar conclusão do nível (background):', error);
+      // ⚡ IMPORTANTE: Não impedir que o usuário continue jogando
+      // Em caso de erro, apenas logar mas não rejeitar a promise
+      await resetSession().catch(() => {}); // Tentar limpar, mas não falhar se não conseguir
     } finally {
       setIsUpdatingScore(false);
     }
-  }, [level, isUpdatingScore, calculateLevelData, completeSession, resetSession, currentSession]);
+  }, [level, isUpdatingScore, calculateLevelData, completeSession, resetSession, currentSession, initializeSession]);
 
   const discardIncompleteLevel = useCallback(async () => {
     logger.info(`🗑️ Descartando nível ${level} incompleto - sessão não será salva`);

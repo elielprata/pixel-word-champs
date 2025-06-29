@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useOptimizedBoard } from './useOptimizedBoard';
 import { useGameState } from './useGameState';
@@ -25,6 +26,7 @@ export const useGameBoard = ({
   const [showGameOver, setShowGameOver] = useState(false);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
   const gameInitialized = useRef(false);
+  const levelCompletionHandled = useRef(false);
 
   // Hook para board otimizado
   const { 
@@ -77,24 +79,36 @@ export const useGameBoard = ({
     }
   }, [boardError]);
 
-  // Verificar conclusão do nível
+  // ✅ CORREÇÃO CRÍTICA: Modal aparece IMEDIATAMENTE baseado no estado local
   useEffect(() => {
     const { isLevelCompleted, currentLevelScore } = calculateLevelData(gameState.foundWords);
     
-    if (isLevelCompleted && !showLevelComplete && !isUpdatingScore) {
-      logger.info('🏆 Nível completado! Registrando...', { 
+    // Modal aparece imediatamente quando 5 palavras são encontradas
+    if (isLevelCompleted && !showLevelComplete && !levelCompletionHandled.current) {
+      logger.info('🏆 Nível completado! Mostrando modal IMEDIATAMENTE', { 
         level, 
         score: currentLevelScore,
         wordsFound: gameState.foundWords.length 
       });
       
-      // Registrar conclusão do nível
+      setShowLevelComplete(true);
+      levelCompletionHandled.current = true;
+      
+      // Notificar callback imediatamente
+      onLevelComplete(currentLevelScore);
+      
+      // ⚡ Registrar conclusão no banco em BACKGROUND (não bloquear modal)
       registerLevelCompletion(gameState.foundWords, 0).then(() => {
-        setShowLevelComplete(true);
-        onLevelComplete(currentLevelScore);
+        logger.info('✅ Sessão salva no banco com sucesso (background)', {
+          level,
+          score: currentLevelScore
+        });
+      }).catch((error) => {
+        logger.error('❌ Erro ao salvar sessão no banco (background):', error);
+        // Usuário já viu o modal e pode continuar jogando
       });
     }
-  }, [gameState.foundWords, calculateLevelData, showLevelComplete, isUpdatingScore, registerLevelCompletion, onLevelComplete, level]);
+  }, [gameState.foundWords, calculateLevelData, showLevelComplete, registerLevelCompletion, onLevelComplete, level]);
 
   // Game over quando tempo acabar
   useEffect(() => {
