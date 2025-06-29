@@ -44,8 +44,8 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
     return { currentLevelScore, isLevelCompleted };
   }, []);
 
-  // ✅ CORREÇÃO: registerLevelCompletion agora é não-bloqueante e pode falhar sem impactar o usuário
-  const registerLevelCompletion = useCallback(async (foundWords: FoundWord[], timeElapsed: number) => {
+  // ✅ CORREÇÃO: registerLevelCompletion agora retorna Promise e é não-bloqueante
+  const registerLevelCompletion = useCallback(async (foundWords: FoundWord[], timeElapsed: number): Promise<void> => {
     if (isUpdatingScore) {
       logger.warn('⚠️ Já está registrando conclusão, ignorando nova tentativa');
       return;
