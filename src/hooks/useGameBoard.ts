@@ -4,6 +4,7 @@ import { useOptimizedBoard } from './useOptimizedBoard';
 import { useGameState } from './useGameState';
 import { useCellInteractions } from './useCellInteractions';
 import { useOptimizedGameScoring } from './useOptimizedGameScoring';
+import { useGameSessionManager } from './useGameSessionManager';
 import { logger } from '@/utils/logger';
 
 interface GameBoardProps {
@@ -38,6 +39,15 @@ export const useGameBoard = ({
     isWordSelectionError
   } = useOptimizedBoard(level);
 
+  // ✅ NOVA INTEGRAÇÃO: Hook para gerenciar sessões
+  const {
+    currentSession,
+    addWordFound,
+    startNewSession,
+    completeSession,
+    resetSession
+  } = useGameSessionManager();
+
   // Hook para pontuação otimizada
   const {
     TOTAL_WORDS_REQUIRED,
@@ -48,28 +58,94 @@ export const useGameBoard = ({
     isUpdatingScore
   } = useOptimizedGameScoring(level, boardData);
 
+  // ✅ CORREÇÃO: Função integrada para salvar palavra encontrada
+  const handleWordFound = useCallback(async (word: string, positions: Array<{row: number, col: number}>, points: number) => {
+    logger.info('🎯 Palavra encontrada - iniciando salvamento', {
+      word,
+      points,
+      positionsCount: positions.length,
+      hasSession: !!currentSession,
+      sessionId: currentSession?.sessionId
+    }, 'GAME_BOARD');
+
+    try {
+      // 1. Salvar palavra na sessão do banco
+      const wordSaved = await addWordFound(word, points, positions);
+      
+      if (!wordSaved) {
+        logger.error('❌ Falha ao salvar palavra na sessão', { word, points }, 'GAME_BOARD');
+        // Continuar mesmo se falhar - palavra será adicionada localmente
+      } else {
+        logger.info('✅ Palavra salva na sessão com sucesso', { 
+          word, 
+          points,
+          sessionId: currentSession?.sessionId 
+        }, 'GAME_BOARD');
+      }
+
+      // 2. Adicionar palavra ao estado local (sempre funciona)
+      gameState.addFoundWord({ word, positions, points });
+      
+      logger.info('✅ Palavra adicionada ao estado local', {
+        word,
+        points,
+        totalWordsFound: gameState.foundWords.length + 1
+      }, 'GAME_BOARD');
+
+    } catch (error) {
+      logger.error('❌ Erro crítico ao processar palavra encontrada', {
+        error,
+        word,
+        points
+      }, 'GAME_BOARD');
+      
+      // Mesmo com erro, adicionar localmente
+      gameState.addFoundWord({ word, positions, points });
+    }
+  }, [currentSession, addWordFound, gameState]);
+
   // Estado do jogo - AGORA COM boardData
   const gameState = useGameState(levelWords, timeLeft, onLevelComplete, boardData);
 
-  // Interações com células - ATUALIZADO para incluir validação de palavras
+  // Interações com células - ATUALIZADO para usar nossa função integrada
   const cellInteractions = useCellInteractions({
     foundWords: gameState.foundWords,
     permanentlyMarkedCells: gameState.permanentlyMarkedCells,
     hintHighlightedCells: gameState.hintHighlightedCells,
     boardData,
     levelWords,
-    onWordFound: gameState.addFoundWord
+    onWordFound: handleWordFound  // ✅ USANDO FUNÇÃO INTEGRADA
   });
 
-  // Inicializar sessão quando o jogo estiver pronto
+  // ✅ CORREÇÃO: Inicializar sessão quando tudo estiver pronto
   useEffect(() => {
-    if (boardData && levelWords.length > 0 && !gameInitialized.current) {
-      initializeSession();
-      gameInitialized.current = true;
-      setIsLoading(false);
-      logger.info('🎮 Jogo inicializado - sessão em memória criada', { level });
+    if (boardData && levelWords.length > 0 && !gameInitialized.current && !currentSession) {
+      logger.info('🔄 Inicializando sessão do jogo', { 
+        level,
+        boardDataExists: !!boardData,
+        levelWordsCount: levelWords.length
+      }, 'GAME_BOARD');
+
+      startNewSession(level, boardData).then((session) => {
+        if (session) {
+          logger.info('✅ Sessão inicializada com sucesso', {
+            sessionId: session.sessionId,
+            level
+          }, 'GAME_BOARD');
+          gameInitialized.current = true;
+          setIsLoading(false);
+        } else {
+          logger.error('❌ Falha ao inicializar sessão', { level }, 'GAME_BOARD');
+          setError('Falha ao inicializar sessão de jogo');
+          setIsLoading(false);
+        }
+      }).catch((error) => {
+        logger.error('❌ Erro crítico ao inicializar sessão', { error, level }, 'GAME_BOARD');
+        setError('Erro ao inicializar jogo');
+        setIsLoading(false);
+      });
     }
-  }, [boardData, levelWords, initializeSession, level]);
+  }, [boardData, levelWords, startNewSession, level, currentSession]);
 
   // Verificar se há erro na seleção de palavras/board
   useEffect(() => {
@@ -79,56 +155,100 @@ export const useGameBoard = ({
     }
   }, [boardError]);
 
-  // ✅ CORREÇÃO CRÍTICA: Modal aparece IMEDIATAMENTE baseado no estado local
+  // ✅ CORREÇÃO CRÍTICA: Verificar conclusão do nível e finalizar sessão
   useEffect(() => {
     const { isLevelCompleted, currentLevelScore } = calculateLevelData(gameState.foundWords);
     
-    // Modal aparece imediatamente quando 5 palavras são encontradas
     if (isLevelCompleted && !showLevelComplete && !levelCompletionHandled.current) {
-      logger.info('🏆 Nível completado! Mostrando modal IMEDIATAMENTE', { 
+      logger.info('🏆 Nível completado! Finalizando sessão...', { 
         level, 
         score: currentLevelScore,
-        wordsFound: gameState.foundWords.length 
-      });
+        wordsFound: gameState.foundWords.length,
+        sessionId: currentSession?.sessionId
+      }, 'GAME_BOARD');
       
-      setShowLevelComplete(true);
       levelCompletionHandled.current = true;
-      
-      // Notificar callback imediatamente
+      setShowLevelComplete(true);
       onLevelComplete(currentLevelScore);
       
-      // ⚡ Registrar conclusão no banco em BACKGROUND (não bloquear modal)
-      registerLevelCompletion(gameState.foundWords, 0).then(() => {
-        logger.info('✅ Sessão salva no banco com sucesso (background)', {
+      // ✅ NOVO: Completar sessão no banco em background
+      if (currentSession) {
+        completeSession(0).then(() => {
+          logger.info('✅ Sessão completada no banco', {
+            sessionId: currentSession.sessionId,
+            level,
+            score: currentLevelScore
+          }, 'GAME_BOARD');
+          
+          // Depois registrar conclusão para atualizar perfil do usuário
+          return registerLevelCompletion(gameState.foundWords, 0);
+        }).then(() => {
+          logger.info('✅ Pontuação do perfil atualizada', {
+            level,
+            score: currentLevelScore
+          }, 'GAME_BOARD');
+        }).catch((error) => {
+          logger.error('❌ Erro ao finalizar sessão ou atualizar perfil', {
+            error,
+            level,
+            sessionId: currentSession.sessionId
+          }, 'GAME_BOARD');
+        });
+      } else {
+        logger.warn('⚠️ Nível completado sem sessão ativa', {
           level,
           score: currentLevelScore
-        });
-      }).catch((error) => {
-        logger.error('❌ Erro ao salvar sessão no banco (background):', error);
-        // Usuário já viu o modal e pode continuar jogando
-      });
+        }, 'GAME_BOARD');
+      }
     }
-  }, [gameState.foundWords, calculateLevelData, showLevelComplete, registerLevelCompletion, onLevelComplete, level]);
+  }, [gameState.foundWords, calculateLevelData, showLevelComplete, registerLevelCompletion, onLevelComplete, level, currentSession, completeSession]);
 
   // Game over quando tempo acabar
   useEffect(() => {
     if (timeLeft <= 0 && !showLevelComplete && !showGameOver) {
-      logger.info('⏰ Tempo esgotado - nível não completado', { level, foundWords: gameState.foundWords.length });
+      logger.info('⏰ Tempo esgotado - descartando sessão incompleta', { 
+        level, 
+        foundWords: gameState.foundWords.length,
+        sessionId: currentSession?.sessionId
+      }, 'GAME_BOARD');
+      
+      // Resetar sessão local e descartar progresso
+      resetSession();
       discardIncompleteLevel();
       setShowGameOver(true);
     }
-  }, [timeLeft, showLevelComplete, showGameOver, discardIncompleteLevel, level, gameState.foundWords.length]);
+  }, [timeLeft, showLevelComplete, showGameOver, discardIncompleteLevel, resetSession, level, gameState.foundWords.length, currentSession]);
 
   const handleGoHome = useCallback(() => {
-    logger.info('🏠 Voltando ao menu - descartando progresso', { level });
+    logger.info('🏠 Voltando ao menu - descartando progresso', { 
+      level,
+      sessionId: currentSession?.sessionId
+    }, 'GAME_BOARD');
+    resetSession();
     discardIncompleteLevel();
-  }, [discardIncompleteLevel, level]);
+  }, [discardIncompleteLevel, resetSession, level, currentSession]);
 
   const closeGameOver = useCallback(() => {
     setShowGameOver(false);
   }, []);
 
   const { currentLevelScore } = calculateLevelData(gameState.foundWords);
+
+  // ✅ LOG DE DEBUG: Estado atual
+  useEffect(() => {
+    logger.debug('🎮 Estado atual do GameBoard', {
+      level,
+      isLoading: isLoading || boardLoading,
+      hasError: !!error,
+      hasSession: !!currentSession,
+      sessionId: currentSession?.sessionId,
+      foundWordsCount: gameState.foundWords.length,
+      targetWords: TOTAL_WORDS_REQUIRED,
+      currentScore: currentLevelScore,
+      gameInitialized: gameInitialized.current,
+      levelCompletionHandled: levelCompletionHandled.current
+    }, 'GAME_BOARD');
+  }, [level, isLoading, boardLoading, error, currentSession, gameState.foundWords.length, currentLevelScore, TOTAL_WORDS_REQUIRED]);
 
   return {
     isLoading: isLoading || boardLoading,

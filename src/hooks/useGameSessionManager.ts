@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -164,13 +165,20 @@ export const useGameSessionManager = () => {
       if (wordsError) throw wordsError;
 
       const totalScore = wordsData?.reduce((sum, word) => sum + word.points, 0) || 0;
+      const wordsCount = wordsData?.length || 0;
+
+      logger.info('📊 Dados da sessão calculados', {
+        sessionId: currentSession.sessionId,
+        totalScore,
+        wordsCount
+      }, 'SESSION_MANAGER');
 
       if (totalScore <= 0) {
         throw new Error('Sessão não pode ser completada com pontuação zero');
       }
 
-      if (wordsData?.length < 5) {
-        throw new Error(`Sessão não pode ser completada com apenas ${wordsData?.length} palavras`);
+      if (wordsCount < 5) {
+        throw new Error(`Sessão não pode ser completada com apenas ${wordsCount} palavras`);
       }
 
       // Marcar sessão como completada
@@ -189,7 +197,7 @@ export const useGameSessionManager = () => {
       logger.info('✅ Sessão marcada como completada no banco', {
         sessionId: currentSession.sessionId,
         totalScore,
-        wordsCount: wordsData?.length,
+        wordsCount: wordsCount,
         timeElapsed
       }, 'SESSION_MANAGER');
 
@@ -211,7 +219,8 @@ export const useGameSessionManager = () => {
   // ✅ RESETAR sessão (limpar estado local)
   const resetSession = useCallback(() => {
     logger.info('🔄 Resetando sessão local', {
-      hadSession: !!currentSession
+      hadSession: !!currentSession,
+      sessionId: currentSession?.sessionId
     }, 'SESSION_MANAGER');
     
     setCurrentSession(null);
