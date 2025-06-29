@@ -32,6 +32,52 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
+  // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onCellStart(rowIndex, colIndex);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const touch = e.touches[0];
+    if (!touch) return;
+    
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!element) return;
+    
+    const cellAttr = element.closest("[data-cell]");
+    if (cellAttr) {
+      const row = parseInt(cellAttr.getAttribute("data-row") || "0");
+      const col = parseInt(cellAttr.getAttribute("data-col") || "0");
+      onCellMove(row, col);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onCellEnd();
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onCellStart(rowIndex, colIndex);
+  };
+
+  const handleMouseEnter = () => {
+    if (isDragging) {
+      onCellMove(rowIndex, colIndex);
+    }
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onCellEnd();
+  };
+
   // Hierarquia visual gamificada: Dica > Palavra encontrada > Seleção atual > Normal
   const getCellClasses = () => {
     const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95";
@@ -41,7 +87,7 @@ const GameCell = ({
     }
     
     if (isPermanentlyMarked && wordColor) {
-      return `${baseClasses} bg-gradient-to-br ${wordColor} text-white shadow-lg animate-bounce-in`;
+      return `${baseClasses} ${wordColor} text-white shadow-lg animate-bounce-in`;
     }
     
     if (isSelected) {
@@ -72,29 +118,16 @@ const GameCell = ({
         userSelect: "none",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
+        touchAction: "none",
         padding: 0,
         margin: 0,
       }}
-      onMouseDown={() => onCellStart(rowIndex, colIndex)}
-      onMouseEnter={() => isDragging && onCellMove(rowIndex, colIndex)}
-      onMouseUp={() => onCellEnd()}
-      onTouchStart={(e) => {
-        e.preventDefault();
-        onCellStart(rowIndex, colIndex);
-      }}
-      onTouchMove={(e) => {
-        const touch = e.touches[0];
-        if (!touch) return;
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        if (!element) return;
-        const cellAttr = element.closest("[data-cell]");
-        if (cellAttr) {
-          const row = parseInt(cellAttr.getAttribute("data-row") || "0");
-          const col = parseInt(cellAttr.getAttribute("data-col") || "0");
-          onCellMove(row, col);
-        }
-      }}
-      onTouchEnd={() => onCellEnd()}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
+      onMouseUp={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       data-cell="true"
       data-row={rowIndex}
       data-col={colIndex}

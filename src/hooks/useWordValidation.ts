@@ -1,5 +1,4 @@
 
-
 import { useCallback, useRef } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { isLinearPath } from '@/hooks/word-selection/validateLinearPath';
@@ -27,20 +26,35 @@ export const useWordValidation = ({
   getPointsForWord
 }: UseWordValidationProps) => {
 
-  // CORREÇÃO: Usar useRef ao invés de propriedade da função
+  // ✅ PROTEÇÃO ROBUSTA: Lock com timeout
   const isExecutingRef = useRef(false);
+  const lastExecutionRef = useRef(0);
 
   const validateAndConfirmWord = useCallback((selectedPositions: Position[]) => {
-    // PROTEÇÃO CRÍTICA: Verificar se a função já está sendo executada
+    const now = Date.now();
+    const timeSinceLastExecution = now - lastExecutionRef.current;
+    
+    // ✅ DEBOUNCE: Não executar se foi chamado recentemente (< 200ms)
+    if (timeSinceLastExecution < 200) {
+      logger.debug('🚫 Validação ignorada - debounce ativo', {
+        timeSinceLastExecution,
+        positions: selectedPositions
+      }, 'WORD_VALIDATION');
+      return false;
+    }
+
+    // ✅ PROTEÇÃO CRÍTICA: Verificar se já está executando
     if (isExecutingRef.current) {
       logger.warn('🚨 DUPLICAÇÃO EVITADA - validateAndConfirmWord já está executando', {
-        positions: selectedPositions
+        positions: selectedPositions,
+        timeSinceLastExecution
       }, 'WORD_VALIDATION');
       return false;
     }
 
     // Marcar como executando
     isExecutingRef.current = true;
+    lastExecutionRef.current = now;
 
     try {
       // Validação 1: Verificar se há posições selecionadas
@@ -51,7 +65,7 @@ export const useWordValidation = ({
         return false;
       }
 
-      // Validação 2: Verificar se a trajetória é linear (horizontal, vertical ou diagonal)
+      // Validação 2: Verificar se a trajetória é linear
       if (!isLinearPath(selectedPositions)) {
         logger.debug('Trajetória de seleção inválida - não é linear', { 
           positions: selectedPositions 
@@ -80,26 +94,26 @@ export const useWordValidation = ({
         wordLength: word.length 
       });
 
-      // Validação 4: Verificar se a palavra é válida (está na lista de palavras do nível)
+      // Validação 4: Verificar se a palavra é válida
       if (!levelWords.includes(word)) {
         logger.debug('Palavra não encontrada na lista do nível', { 
           word, 
-          availableWords: levelWords 
+          availableWordsCount: levelWords.length
         });
         return false;
       }
 
-      // Validação 5: PROTEÇÃO CRÍTICA - Verificar se a palavra já foi encontrada
+      // Validação 5: PROTEÇÃO CRÍTICA - Verificar duplicação
       const alreadyFound = foundWords.some(fw => fw.word === word);
       if (alreadyFound) {
-        logger.warn('🚨 DUPLICAÇÃO EVITADA - Palavra já encontrada anteriormente', { 
+        logger.warn('🚨 DUPLICAÇÃO EVITADA - Palavra já encontrada', { 
           word,
-          existingWords: foundWords.map(fw => fw.word)
+          existingWordsCount: foundWords.length
         });
         return false;
       }
 
-      // Se chegou até aqui, a palavra é válida!
+      // ✅ PALAVRA VÁLIDA: Processar uma única vez
       const points = getPointsForWord(word);
       const foundWord: FoundWord = {
         word,
@@ -107,29 +121,35 @@ export const useWordValidation = ({
         points
       };
 
-      logger.info('✅ PALAVRA VÁLIDA CONFIRMADA - CHAMANDO onWordFound UMA ÚNICA VEZ', { 
+      const wordId = `${word}-${now}`;
+      
+      logger.info('✅ PALAVRA VÁLIDA CONFIRMADA - PROCESSANDO UMA ÚNICA VEZ', { 
+        wordId,
         word, 
         points, 
         positionsCount: selectedPositions.length,
         beforeFoundWordsCount: foundWords.length
       });
 
-      // CRÍTICO: Chamar callback para adicionar ao estado do jogo APENAS UMA VEZ
+      // ✅ CRÍTICO: Chamar callback para adicionar ao estado APENAS UMA VEZ
       onWordFound(foundWord);
       
       logger.info('📝 onWordFound executado com sucesso', {
+        wordId,
         word,
-        points,
-        afterCall: 'Palavra deve ser adicionada ao estado'
+        points
       });
 
       return true;
 
     } finally {
-      // Liberar o lock após um breve delay para evitar chamadas múltiplas
+      // ✅ LIBERAÇÃO COM DELAY: Evitar chamadas múltiplas rapidamente
       setTimeout(() => {
         isExecutingRef.current = false;
-      }, 100);
+        logger.debug('🔓 Lock de validação liberado', {
+          word: selectedPositions.length > 0 ? 'processada' : 'vazia'
+        });
+      }, 300); // Delay maior para proteção adicional
     }
 
   }, [boardData, levelWords, foundWords, onWordFound, getPointsForWord]);
@@ -138,4 +158,3 @@ export const useWordValidation = ({
     validateAndConfirmWord
   };
 };
-

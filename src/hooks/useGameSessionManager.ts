@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { logger } from '@/utils/logger';
@@ -20,17 +20,34 @@ interface Position {
 export const useGameSessionManager = () => {
   const [currentSession, setCurrentSession] = useState<GameSession | null>(null);
   const [isSessionActive, setIsSessionActive] = useState(false);
+  const sessionRef = useRef<GameSession | null>(null);
   const { user } = useAuth();
 
-  // ✅ INICIAR nova sessão no banco
+  // ✅ SESSÃO ESTÁVEL: Manter referência sincronizada
+  const updateSession = useCallback((session: GameSession | null) => {
+    setCurrentSession(session);
+    sessionRef.current = session;
+    setIsSessionActive(!!session);
+  }, []);
+
+  // ✅ INICIAR nova sessão com proteção
   const startNewSession = useCallback(async (level: number, boardData?: any): Promise<GameSession | null> => {
     if (!user?.id) {
       logger.error('❌ Não é possível iniciar sessão sem usuário autenticado', {}, 'SESSION_MANAGER');
       return null;
     }
 
+    // Verificar se já existe sessão ativa
+    if (sessionRef.current) {
+      logger.warn('⚠️ Sessão já existe, retornando sessão atual', {
+        existingSessionId: sessionRef.current.sessionId,
+        level
+      }, 'SESSION_MANAGER');
+      return sessionRef.current;
+    }
+
     try {
-      logger.info('🔄 Iniciando nova sessão de jogo no banco', {
+      logger.info('🔄 Iniciando nova sessão ESTÁVEL no banco', {
         userId: user.id,
         level,
         hasBoardData: !!boardData
@@ -61,10 +78,9 @@ export const useGameSessionManager = () => {
         boardData: data.board
       };
 
-      setCurrentSession(session);
-      setIsSessionActive(true);
+      updateSession(session);
 
-      logger.info('✅ Sessão criada com sucesso no banco', {
+      logger.info('✅ Sessão ESTÁVEL criada com sucesso no banco', {
         sessionId: data.id,
         userId: user.id,
         level
@@ -80,13 +96,17 @@ export const useGameSessionManager = () => {
       }, 'SESSION_MANAGER');
       return null;
     }
-  }, [user?.id]);
+  }, [user?.id, updateSession]);
 
-  // ✅ ADICIONAR palavra encontrada na sessão
+  // ✅ ADICIONAR palavra com verificação de sessão
   const addWordFound = useCallback(async (word: string, points: number, positions: Position[]): Promise<boolean> => {
-    if (!currentSession || !user?.id) {
+    const activeSession = sessionRef.current || currentSession;
+    
+    if (!activeSession || !user?.id) {
       logger.error('❌ Não é possível adicionar palavra sem sessão ativa', {
-        hasSession: !!currentSession,
+        hasSession: !!activeSession,
+        hasCurrentSession: !!currentSession,
+        hasRefSession: !!sessionRef.current,
         hasUser: !!user?.id,
         word,
         points
@@ -95,8 +115,8 @@ export const useGameSessionManager = () => {
     }
 
     try {
-      logger.info('🔄 Adicionando palavra encontrada na sessão', {
-        sessionId: currentSession.sessionId,
+      logger.info('🔄 Adicionando palavra à sessão ESTÁVEL', {
+        sessionId: activeSession.sessionId,
         word,
         points,
         positionsCount: positions.length
@@ -112,17 +132,17 @@ export const useGameSessionManager = () => {
       const { error: wordError } = await supabase
         .from('words_found')
         .insert({
-          session_id: currentSession.sessionId,
+          session_id: activeSession.sessionId,
           word,
           points,
-          positions: positionsJson as any, // Cast necessário para Json type
+          positions: positionsJson as any,
           found_at: new Date().toISOString()
         });
 
       if (wordError) throw wordError;
 
-      logger.info('✅ Palavra salva com sucesso na sessão', {
-        sessionId: currentSession.sessionId,
+      logger.info('✅ Palavra salva com sucesso na sessão ESTÁVEL', {
+        sessionId: activeSession.sessionId,
         word,
         points
       }, 'SESSION_MANAGER');
@@ -132,7 +152,7 @@ export const useGameSessionManager = () => {
     } catch (error) {
       logger.error('❌ Erro ao salvar palavra na sessão', {
         error,
-        sessionId: currentSession?.sessionId,
+        sessionId: activeSession?.sessionId,
         word,
         points
       }, 'SESSION_MANAGER');
@@ -140,35 +160,37 @@ export const useGameSessionManager = () => {
     }
   }, [currentSession, user?.id]);
 
-  // ✅ COMPLETAR sessão e atualizar pontuação total
+  // ✅ COMPLETAR sessão com verificação robusta
   const completeSession = useCallback(async (timeElapsed: number): Promise<boolean> => {
-    if (!currentSession || !user?.id) {
+    const activeSession = sessionRef.current || currentSession;
+    
+    if (!activeSession || !user?.id) {
       logger.error('❌ Não é possível completar sessão sem sessão ativa', {
-        hasSession: !!currentSession,
+        hasSession: !!activeSession,
         hasUser: !!user?.id
       }, 'SESSION_MANAGER');
       return false;
     }
 
     try {
-      logger.info('🔄 Completando sessão no banco', {
-        sessionId: currentSession.sessionId,
+      logger.info('🔄 Completando sessão ESTÁVEL no banco', {
+        sessionId: activeSession.sessionId,
         timeElapsed
       }, 'SESSION_MANAGER');
 
-      // Primeiro, calcular o total de pontos das palavras encontradas
+      // Calcular total de pontos das palavras encontradas
       const { data: wordsData, error: wordsError } = await supabase
         .from('words_found')
         .select('points')
-        .eq('session_id', currentSession.sessionId);
+        .eq('session_id', activeSession.sessionId);
 
       if (wordsError) throw wordsError;
 
       const totalScore = wordsData?.reduce((sum, word) => sum + word.points, 0) || 0;
       const wordsCount = wordsData?.length || 0;
 
-      logger.info('📊 Dados da sessão calculados', {
-        sessionId: currentSession.sessionId,
+      logger.info('📊 Dados finais da sessão ESTÁVEL', {
+        sessionId: activeSession.sessionId,
         totalScore,
         wordsCount
       }, 'SESSION_MANAGER');
@@ -190,42 +212,42 @@ export const useGameSessionManager = () => {
           time_elapsed: timeElapsed,
           total_score: totalScore
         })
-        .eq('id', currentSession.sessionId);
+        .eq('id', activeSession.sessionId);
 
       if (sessionError) throw sessionError;
 
-      logger.info('✅ Sessão marcada como completada no banco', {
-        sessionId: currentSession.sessionId,
+      logger.info('✅ Sessão ESTÁVEL completada no banco', {
+        sessionId: activeSession.sessionId,
         totalScore,
-        wordsCount: wordsCount,
+        wordsCount,
         timeElapsed
       }, 'SESSION_MANAGER');
 
-      // Limpar sessão atual
-      setCurrentSession(null);
-      setIsSessionActive(false);
+      // Limpar sessão atual após completar
+      updateSession(null);
 
       return true;
 
     } catch (error) {
       logger.error('❌ Erro ao completar sessão', {
         error,
-        sessionId: currentSession?.sessionId
+        sessionId: activeSession?.sessionId
       }, 'SESSION_MANAGER');
       return false;
     }
-  }, [currentSession, user?.id]);
+  }, [currentSession, user?.id, updateSession]);
 
-  // ✅ RESETAR sessão (limpar estado local)
+  // ✅ RESETAR sessão com limpeza completa
   const resetSession = useCallback(() => {
-    logger.info('🔄 Resetando sessão local', {
-      hadSession: !!currentSession,
-      sessionId: currentSession?.sessionId
+    const hadSession = sessionRef.current || currentSession;
+    
+    logger.info('🔄 Resetando sessão ESTÁVEL', {
+      hadSession: !!hadSession,
+      sessionId: hadSession?.sessionId
     }, 'SESSION_MANAGER');
     
-    setCurrentSession(null);
-    setIsSessionActive(false);
-  }, [currentSession]);
+    updateSession(null);
+  }, [currentSession, updateSession]);
 
   return {
     currentSession,
