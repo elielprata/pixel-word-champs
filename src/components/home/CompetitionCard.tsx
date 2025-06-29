@@ -176,14 +176,6 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
           </p>
         </div>
       </div>
-      <div className="text-right">
-        <div className={`font-bold ${
-          competition.type === 'weekly' ? 'text-blue-600' : 'text-orange-600'
-        }`}>
-          {competition.prize_pool} pts
-        </div>
-        <div className="text-gray-400 text-xs">Prêmio</div>
-      </div>
     </div>
   );
 };
