@@ -208,7 +208,7 @@ export const useInviteMonitoringData = (filters: MonitoringFilters) => {
             }))
           };
         })
-        .filter((user): user is MonitoringUser => {
+        .filter((user) => {
           if (!user) return false;
           
           // Aplicar filtros
