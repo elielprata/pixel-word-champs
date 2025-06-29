@@ -104,19 +104,7 @@ export const useGameState = (
     }
   }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, currentLevelScore, updateUserScore, onLevelComplete]);
 
-  // Função para obter a palavra extra (com maior pontuação)
-  const getExtraWord = useCallback((): string | null => {
-    if (!levelWords || levelWords.length === 0) return null;
-    
-    const wordsWithPoints = levelWords.map(word => ({
-      word,
-      points: getPointsForWord(word)
-    }));
-    const sorted = [...wordsWithPoints].sort((a, b) => b.points - a.points);
-    return sorted[0]?.word || null;
-  }, [levelWords, getPointsForWord]);
-
-  // Sistema de dicas CORRIGIDO e unificado
+  // Sistema de dicas SIMPLIFICADO - permite dica para qualquer palavra
   const useHint = useCallback(() => {
     logger.info('💡 Dica solicitada', { 
       hintsUsed: state.hintsUsed, 
@@ -146,24 +134,18 @@ export const useGameState = (
       return;
     }
 
-    const extraWord = getExtraWord();
-    logger.info('🎯 Palavra extra identificada', { extraWord }, 'GAME_STATE');
-
-    // Encontrar primeira palavra não encontrada que NÃO é a extra
+    // Encontrar primeira palavra não encontrada (qualquer uma)
     const hintWord = levelWords.find(
-      (word) =>
-        !state.foundWords.some(fw => fw.word === word) &&
-        word !== extraWord
+      (word) => !state.foundWords.some(fw => fw.word === word)
     );
 
     if (!hintWord) {
       toast({
         title: "Dica indisponível",
-        description: "A dica não pode ser usada na palavra de Desafio Extra. Tente encontrá-la por conta própria!",
+        description: "Todas as palavras já foram encontradas!",
         variant: "destructive"
       });
-      logger.warn('Dica bloqueada - apenas palavra extra disponível', { 
-        extraWord, 
+      logger.warn('Dica bloqueada - todas as palavras encontradas', { 
         foundWords: state.foundWords.map(fw => fw.word) 
       }, 'GAME_STATE');
       return;
@@ -205,7 +187,7 @@ export const useGameState = (
       logger.info('🔄 Destaque da dica removido', { word: hintWord }, 'GAME_STATE');
     }, 3000);
 
-  }, [state.hintsUsed, state.foundWords, levelWords, boardData, getExtraWord]);
+  }, [state.hintsUsed, state.foundWords, levelWords, boardData]);
 
   const addFoundWord = useCallback((newFoundWord: FoundWord) => {
     // PROTEÇÃO CRÍTICA DUPLA: Verificar duplicação uma última vez antes de adicionar ao estado
