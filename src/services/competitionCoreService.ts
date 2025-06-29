@@ -7,17 +7,17 @@ import { logger } from '@/utils/logger';
 export class CompetitionCoreService {
   async getActiveCompetitions(): Promise<ApiResponse<Competition[]>> {
     try {
-      logger.debug('Buscando competições ativas na tabela custom_competitions', undefined, 'COMPETITION_CORE_SERVICE');
+      logger.debug('Buscando competições ativas e agendadas na tabela custom_competitions', undefined, 'COMPETITION_CORE_SERVICE');
 
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
-        .eq('status', 'active')
+        .in('status', ['active', 'scheduled']) // Incluir competições agendadas
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      logger.info('Competições ativas encontradas', { count: data?.length || 0 }, 'COMPETITION_CORE_SERVICE');
+      logger.info('Competições ativas e agendadas encontradas', { count: data?.length || 0 }, 'COMPETITION_CORE_SERVICE');
 
       const competitions = data?.map(comp => ({
         id: comp.id,
@@ -42,7 +42,7 @@ export class CompetitionCoreService {
       logger.debug('Preservando datas originais das competições mapeadas', undefined, 'COMPETITION_CORE_SERVICE');
       return createSuccessResponse(competitions);
     } catch (error) {
-      logger.error('Erro ao buscar competições ativas', { error }, 'COMPETITION_CORE_SERVICE');
+      logger.error('Erro ao buscar competições ativas e agendadas', { error }, 'COMPETITION_CORE_SERVICE');
       return createErrorResponse(handleServiceError(error, 'COMPETITION_GET_ACTIVE'));
     }
   }

@@ -6,15 +6,22 @@ import { customCompetitionService } from '@/services/customCompetitionService';
 import { logger, structuredLog } from '@/utils/logger';
 
 export const useOptimizedCompetitions = () => {
-  const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [allCompetitions, setAllCompetitions] = useState<Competition[]>([]);
   const [customCompetitions, setCustomCompetitions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Confiar completamente no status do banco de dados
+  // Retornar todas as competições (ativas E agendadas) para a lista principal
+  const competitions = useMemo(() => {
+    return allCompetitions.filter(comp => 
+      comp.status === 'active' || comp.status === 'scheduled'
+    );
+  }, [allCompetitions]);
+
+  // Manter filtro específico para competições ativas apenas
   const activeCompetitions = useMemo(() => {
-    return competitions.filter(comp => comp.status === 'active');
-  }, [competitions]);
+    return allCompetitions.filter(comp => comp.status === 'active');
+  }, [allCompetitions]);
 
   const dailyCompetition = useMemo(() => {
     return customCompetitions.find(comp => 
@@ -41,7 +48,8 @@ export const useOptimizedCompetitions = () => {
       ]);
 
       if (competitionsResponse.success) {
-        setCompetitions(competitionsResponse.data || []);
+        // Agora incluindo todas as competições, não apenas as ativas
+        setAllCompetitions(competitionsResponse.data || []);
       } else {
         throw new Error(competitionsResponse.error || 'Erro ao carregar competições');
       }
@@ -52,7 +60,7 @@ export const useOptimizedCompetitions = () => {
         throw new Error(customCompetitionsResponse.error || 'Erro ao carregar competições customizadas');
       }
 
-      logger.debug('Competições carregadas com sucesso - confiando no banco de dados');
+      logger.debug('Competições carregadas com sucesso - incluindo agendadas e ativas');
     } catch (err) {
       const errorMessage = 'Erro ao carregar competições';
       setError(errorMessage);
@@ -72,8 +80,9 @@ export const useOptimizedCompetitions = () => {
   }, []);
 
   return {
-    competitions: activeCompetitions,
+    competitions, // Agora inclui ativas E agendadas
     customCompetitions,
+    activeCompetitions, // Apenas ativas (para casos específicos)
     dailyCompetition,
     weeklyCompetition,
     isLoading,
