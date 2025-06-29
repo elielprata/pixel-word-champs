@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGameScoring } from '@/hooks/useGameScoring';
 import { useGamePointsConfig } from '@/hooks/useGamePointsConfig';
+import { useGameSessionManager } from '@/hooks/useGameSessionManager';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/utils/logger';
 import { GAME_CONSTANTS } from '@/constants/game';
@@ -40,6 +41,7 @@ export const useGameState = (
   });
 
   const { getPointsForWord } = useGamePointsConfig();
+  const { addWordFound: addWordToSession } = useGameSessionManager();
 
   // Usar hook especializado de pontuação
   const { 
@@ -205,7 +207,7 @@ export const useGameState = (
 
   }, [state.hintsUsed, state.foundWords, levelWords, boardData, getExtraWord]);
 
-  const addFoundWord = useCallback((newFoundWord: FoundWord) => {
+  const addFoundWord = useCallback(async (newFoundWord: FoundWord) => {
     // PROTEÇÃO CRÍTICA DUPLA: Verificar duplicação uma última vez antes de adicionar ao estado
     const isAlreadyFound = state.foundWords.some(fw => fw.word === newFoundWord.word);
     if (isAlreadyFound) {
@@ -236,12 +238,56 @@ export const useGameState = (
       allWordsAfter: [...state.foundWords.map(fw => `${fw.word}(${fw.points}p)`), `${newFoundWord.word}(${newFoundWord.points}p)`]
     }, 'GAME_STATE');
     
+    // ✅ CORREÇÃO CRÍTICA: Salvar palavra no banco IMEDIATAMENTE
+    try {
+      const success = await addWordToSession(
+        newFoundWord.word, 
+        newFoundWord.points, 
+        newFoundWord.positions
+      );
+      
+      if (!success) {
+        logger.error(`❌ FALHA AO SALVAR PALAVRA NO BANCO: "${newFoundWord.word}"`, {
+          word: newFoundWord.word,
+          points: newFoundWord.points
+        }, 'GAME_STATE');
+        
+        toast({
+          title: "Erro ao salvar palavra",
+          description: "A palavra foi encontrada mas não foi salva. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      logger.info(`✅ PALAVRA SALVA NO BANCO COM SUCESSO: "${newFoundWord.word}"`, {
+        word: newFoundWord.word,
+        points: newFoundWord.points
+      }, 'GAME_STATE');
+      
+    } catch (error) {
+      logger.error(`❌ ERRO CRÍTICO AO SALVAR PALAVRA NO BANCO: "${newFoundWord.word}"`, {
+        word: newFoundWord.word,
+        points: newFoundWord.points,
+        error
+      }, 'GAME_STATE');
+      
+      toast({
+        title: "Erro crítico",
+        description: "Falha ao salvar progresso. Contate o suporte.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Só adicionar ao estado local APÓS sucesso no banco
     setState(prev => ({
       ...prev,
       foundWords: [...prev.foundWords, newFoundWord],
       permanentlyMarkedCells: [...prev.permanentlyMarkedCells, ...newFoundWord.positions]
     }));
-  }, [state.foundWords]);
+    
+  }, [state.foundWords, addWordToSession]);
 
   return {
     ...state,

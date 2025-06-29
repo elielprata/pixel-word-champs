@@ -12,7 +12,7 @@ interface FoundWord {
 export const useOptimizedGameScoring = (level: number, boardData: any) => {
   const [isUpdatingScore, setIsUpdatingScore] = useState(false);
   const [currentSession, setCurrentSession] = useState<any>(null);
-  const { startNewSession, addWordFound, completeSession, resetSession } = useGameSessionManager();
+  const { startNewSession, completeSession, resetSession } = useGameSessionManager();
   
   // ETAPA 4: Constante para total de palavras necessárias
   const TOTAL_WORDS_REQUIRED = 5;
@@ -20,13 +20,21 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
   // Inicializar sessão no banco
   const initializeSession = useCallback(async () => {
     try {
-      const session = await startNewSession(level, boardData);
-      setCurrentSession(session);
-      logger.info('🎮 Sessão inicializada no banco', { sessionId: session?.sessionId });
+      logger.info('🔄 Iniciando nova sessão de jogo no banco', { level });
+      const session = await startNewSession(level);
+      if (session) {
+        setCurrentSession(session);
+        logger.info('✅ Sessão inicializada no banco com sucesso', { 
+          sessionId: session.sessionId,
+          level 
+        });
+      } else {
+        logger.error('❌ Falha ao inicializar sessão', { level });
+      }
     } catch (error) {
-      logger.error('❌ Erro ao inicializar sessão', { error });
+      logger.error('❌ Erro crítico ao inicializar sessão', { error, level });
     }
-  }, [level, boardData, startNewSession]);
+  }, [level, startNewSession]);
 
   // Calcular dados do nível atual baseado nas palavras encontradas
   const calculateLevelData = useCallback((foundWords: FoundWord[]) => {
@@ -40,6 +48,11 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
     if (isUpdatingScore) {
       logger.warn('⚠️ Já está registrando conclusão, ignorando nova tentativa');
       return;
+    }
+
+    if (!currentSession) {
+      logger.error('❌ Tentativa de completar nível sem sessão ativa');
+      throw new Error('Sessão não encontrada');
     }
 
     const { currentLevelScore, isLevelCompleted } = calculateLevelData(foundWords);
@@ -62,10 +75,11 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
     try {
       logger.info(`🔄 Registrando conclusão VALIDADA do nível ${level}: ${foundWords.length} palavras, ${currentLevelScore} pontos`);
 
-      // Registrar sessão COMPLETADA no banco com validações rigorosas
-      const session = await completeSession(timeElapsed);
+      // ✅ CORREÇÃO: As palavras já foram salvas individualmente no useGameState
+      // Agora só precisamos completar a sessão
+      const result = await completeSession(timeElapsed);
 
-      if (session) {
+      if (result) {
         logger.info(`✅ Nível ${level} completado e registrado: ${currentLevelScore} pontos, ${foundWords.length} palavras`);
       } else {
         throw new Error('Falha ao registrar sessão no banco de dados');
@@ -79,11 +93,12 @@ export const useOptimizedGameScoring = (level: number, boardData: any) => {
     } finally {
       setIsUpdatingScore(false);
     }
-  }, [level, isUpdatingScore, calculateLevelData, completeSession, resetSession]);
+  }, [level, isUpdatingScore, calculateLevelData, completeSession, resetSession, currentSession]);
 
   const discardIncompleteLevel = useCallback(async () => {
     logger.info(`🗑️ Descartando nível ${level} incompleto - sessão não será salva`);
     await resetSession();
+    setCurrentSession(null);
   }, [level, resetSession]);
 
   return {
