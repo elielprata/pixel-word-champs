@@ -1,9 +1,11 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useOptimizedBoard } from './useOptimizedBoard';
 import { useGameState } from './useGameState';
 import { useCellInteractions } from './useCellInteractions';
 import { useOptimizedGameScoring } from './useOptimizedGameScoring';
 import { logger } from '@/utils/logger';
+import { GAME_CONSTANTS } from '@/constants/game';
 
 interface GameBoardProps {
   level: number;
@@ -25,6 +27,7 @@ export const useGameBoard = ({
   const [showGameOver, setShowGameOver] = useState(false);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
   const gameInitialized = useRef(false);
+  const levelCompleteProcessed = useRef(false);
 
   // Hook para board otimizado
   const { 
@@ -46,10 +49,10 @@ export const useGameBoard = ({
     isUpdatingScore
   } = useOptimizedGameScoring(level, boardData);
 
-  // Estado do jogo - AGORA COM boardData
-  const gameState = useGameState(levelWords, timeLeft, onLevelComplete, boardData);
+  // Estado do jogo - AGORA SIMPLIFICADO
+  const gameState = useGameState(levelWords, boardData);
 
-  // Interações com células - ATUALIZADO para incluir validação de palavras
+  // Interações com células
   const cellInteractions = useCellInteractions({
     foundWords: gameState.foundWords,
     permanentlyMarkedCells: gameState.permanentlyMarkedCells,
@@ -64,6 +67,7 @@ export const useGameBoard = ({
     if (boardData && levelWords.length > 0 && !gameInitialized.current) {
       initializeSession();
       gameInitialized.current = true;
+      levelCompleteProcessed.current = false; // Reset do processamento
       setIsLoading(false);
       logger.info('🎮 Jogo inicializado - sessão em memória criada', { level });
     }
@@ -77,33 +81,61 @@ export const useGameBoard = ({
     }
   }, [boardError]);
 
-  // Verificar conclusão do nível
+  // LÓGICA CONSOLIDADA DE DETECÇÃO DE CONCLUSÃO DO NÍVEL
   useEffect(() => {
-    const { isLevelCompleted, currentLevelScore } = calculateLevelData(gameState.foundWords);
+    const wordsFoundCount = gameState.foundWords.length;
+    const isLevelCompleted = wordsFoundCount >= GAME_CONSTANTS.TOTAL_WORDS_REQUIRED;
     
-    if (isLevelCompleted && !showLevelComplete && !isUpdatingScore) {
-      logger.info('🏆 Nível completado! Registrando...', { 
+    logger.debug('🔍 Verificando conclusão do nível', { 
+      wordsFoundCount, 
+      totalRequired: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
+      isLevelCompleted,
+      showLevelComplete,
+      levelCompleteProcessed: levelCompleteProcessed.current
+    }, 'GAME_BOARD');
+
+    if (isLevelCompleted && !showLevelComplete && !levelCompleteProcessed.current) {
+      levelCompleteProcessed.current = true; // Marcar como processado IMEDIATAMENTE
+      
+      logger.info('🏆 NÍVEL COMPLETADO! Exibindo modal de vitória', { 
         level, 
-        score: currentLevelScore,
-        wordsFound: gameState.foundWords.length 
-      });
+        wordsFoundCount,
+        totalRequired: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
+        foundWords: gameState.foundWords.map(fw => fw.word),
+        currentScore: gameState.currentLevelScore
+      }, 'GAME_BOARD');
+      
+      // PRIORIDADE MÁXIMA: Exibir modal de nível completado
+      setShowLevelComplete(true);
+      setShowGameOver(false); // Garantir que game over não apareça
       
       // Registrar conclusão do nível
       registerLevelCompletion(gameState.foundWords, 0).then(() => {
-        setShowLevelComplete(true);
-        onLevelComplete(currentLevelScore);
+        logger.info('📊 Pontuação registrada no banco', { 
+          score: gameState.currentLevelScore 
+        }, 'GAME_BOARD');
+        
+        // Notificar conclusão do nível
+        onLevelComplete(gameState.currentLevelScore);
       });
     }
-  }, [gameState.foundWords, calculateLevelData, showLevelComplete, isUpdatingScore, registerLevelCompletion, onLevelComplete, level]);
+  }, [gameState.foundWords, showLevelComplete, gameState.currentLevelScore, registerLevelCompletion, onLevelComplete, level]);
 
-  // Game over quando tempo acabar
+  // Game over quando tempo acabar (mas apenas se o nível não foi completado)
   useEffect(() => {
-    if (timeLeft <= 0 && !showLevelComplete && !showGameOver) {
-      logger.info('⏰ Tempo esgotado - nível não completado', { level, foundWords: gameState.foundWords.length });
+    const wordsFoundCount = gameState.foundWords.length;
+    const isLevelCompleted = wordsFoundCount >= GAME_CONSTANTS.TOTAL_WORDS_REQUIRED;
+    
+    if (timeLeft <= 0 && !isLevelCompleted && !showLevelComplete && !showGameOver) {
+      logger.info('⏰ Tempo esgotado - nível não completado', { 
+        level, 
+        foundWords: wordsFoundCount,
+        totalRequired: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED
+      });
       discardIncompleteLevel();
       setShowGameOver(true);
     }
-  }, [timeLeft, showLevelComplete, showGameOver, discardIncompleteLevel, level, gameState.foundWords.length]);
+  }, [timeLeft, showLevelComplete, showGameOver, gameState.foundWords.length, discardIncompleteLevel, level]);
 
   const handleGoHome = useCallback(() => {
     logger.info('🏠 Voltando ao menu - descartando progresso', { level });
@@ -114,7 +146,10 @@ export const useGameBoard = ({
     setShowGameOver(false);
   }, []);
 
-  const { currentLevelScore } = calculateLevelData(gameState.foundWords);
+  const closeLevelComplete = useCallback(() => {
+    setShowLevelComplete(false);
+    levelCompleteProcessed.current = false; // Reset para permitir nova detecção
+  }, []);
 
   return {
     isLoading: isLoading || boardLoading,
@@ -130,7 +165,7 @@ export const useGameBoard = ({
       foundWords: gameState.foundWords,
       levelWords,
       hintsUsed: gameState.hintsUsed,
-      currentLevelScore
+      currentLevelScore: gameState.currentLevelScore
     },
     modalProps: {
       showGameOver,
@@ -149,7 +184,8 @@ export const useGameBoard = ({
     gameActions: {
       useHint: gameState.useHint,
       handleGoHome,
-      closeGameOver
+      closeGameOver,
+      closeLevelComplete
     }
   };
 };

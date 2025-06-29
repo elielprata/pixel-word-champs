@@ -14,7 +14,7 @@ interface GameModalsProps {
   showGameOver: boolean;
   showLevelComplete: boolean;
   foundWords: FoundWord[];
-  totalWords: number; // Este prop será ignorado, sempre usaremos 5
+  totalWords: number;
   level: number;
   canRevive: boolean;
   onRevive: () => void;
@@ -27,7 +27,7 @@ const GameModals = ({
   showGameOver,
   showLevelComplete,
   foundWords,
-  totalWords, // Ignorado, sempre usamos 5
+  totalWords,
   level,
   canRevive,
   onRevive,
@@ -35,22 +35,20 @@ const GameModals = ({
   onAdvanceLevel,
   onStopGame
 }: GameModalsProps) => {
-  // ETAPA 2: Sempre usar 5 como total de palavras
-  const TOTAL_WORDS = 5;
   const totalScore = foundWords.reduce((sum, fw) => sum + fw.points, 0);
 
-  logger.debug('🎭 Renderizando GameModals', { 
+  logger.debug('🎭 Renderizando GameModals CONSOLIDADO', { 
     showGameOver, 
     showLevelComplete, 
     totalScore, 
     level,
     foundWordsCount: foundWords.length,
-    totalWords: TOTAL_WORDS, // Log com valor fixo
+    totalWords,
     foundWords: foundWords.map(fw => fw.word)
   }, 'GAME_MODALS');
 
   const handleAdvanceLevelClick = () => {
-    logger.info('▶️ Avançando para próximo nível', { 
+    logger.info('▶️ Usuário clicou em Próximo Nível', { 
       level,
       currentScore: totalScore 
     }, 'GAME_MODALS');
@@ -58,7 +56,7 @@ const GameModals = ({
   };
 
   const handleStayLevel = () => {
-    logger.info('🛑 Usuário escolheu parar no nível', { 
+    logger.info('🛑 Usuário escolheu Finalizar Jogo', { 
       level,
       finalScore: totalScore 
     }, 'GAME_MODALS');
@@ -70,7 +68,7 @@ const GameModals = ({
       level,
       finalScore: totalScore 
     }, 'GAME_MODALS');
-    onStopGame();
+    onGoHome();
   };
 
   const handleRevive = () => {
@@ -83,11 +81,11 @@ const GameModals = ({
 
   // Log específico quando modal de nível completo deveria aparecer
   if (showLevelComplete) {
-    logger.info('🏆 Modal de nível completado deve estar visível', {
+    logger.info('🏆 Modal de nível completado VISÍVEL AGORA', {
       level,
       totalScore,
       foundWordsCount: foundWords.length,
-      totalWords: TOTAL_WORDS
+      totalWords
     }, 'GAME_MODALS');
   }
 
@@ -97,7 +95,7 @@ const GameModals = ({
         isOpen={showGameOver}
         score={totalScore}
         wordsFound={foundWords.length}
-        totalWords={TOTAL_WORDS}
+        totalWords={totalWords}
         onRevive={handleRevive}
         onGoHome={handleGameOverStop}
         canRevive={canRevive}

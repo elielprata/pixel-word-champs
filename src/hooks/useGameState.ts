@@ -1,11 +1,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
-import { useGameScoring } from '@/hooks/useGameScoring';
 import { useGamePointsConfig } from '@/hooks/useGamePointsConfig';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/utils/logger';
-import { GAME_CONSTANTS } from '@/constants/game';
 
 interface FoundWord {
   word: string;
@@ -16,37 +14,22 @@ interface FoundWord {
 interface GameState {
   foundWords: FoundWord[];
   hintsUsed: number;
-  showGameOver: boolean;
-  showLevelComplete: boolean;
   hintHighlightedCells: Position[];
   permanentlyMarkedCells: Position[];
-  isLevelCompleted: boolean;
 }
 
 export const useGameState = (
   levelWords: string[],
-  timeLeft?: number,
-  onLevelComplete?: (levelScore: number) => void,
   boardData?: { board: string[][]; placedWords: any[] }
 ) => {
   const [state, setState] = useState<GameState>({
     foundWords: [],
     hintsUsed: 0,
-    showGameOver: false,
-    showLevelComplete: false,
     hintHighlightedCells: [],
-    permanentlyMarkedCells: [],
-    isLevelCompleted: false
+    permanentlyMarkedCells: []
   });
 
   const { getPointsForWord } = useGamePointsConfig();
-
-  // Usar hook especializado de pontuação
-  const { 
-    currentLevelScore, 
-    isLevelCompleted, 
-    updateUserScore 
-  } = useGameScoring(state.foundWords, 1); // level default 1
 
   // Reset state quando muda as palavras do nível
   useEffect(() => {
@@ -54,57 +37,12 @@ export const useGameState = (
     setState({
       foundWords: [],
       hintsUsed: 0,
-      showGameOver: false,
-      showLevelComplete: false,
       hintHighlightedCells: [],
-      permanentlyMarkedCells: [],
-      isLevelCompleted: false
+      permanentlyMarkedCells: []
     });
   }, [levelWords]);
 
-  // Game Over quando tempo acaba (mas apenas se o nível não foi completado)
-  useEffect(() => {
-    if (timeLeft === 0 && !state.showLevelComplete && !state.isLevelCompleted && !isLevelCompleted) {
-      logger.info('⏰ Tempo esgotado - Game Over', { 
-        foundWords: state.foundWords.length,
-        targetWords: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED 
-      }, 'GAME_STATE');
-      setState(prev => ({ ...prev, showGameOver: true }));
-    }
-  }, [timeLeft, state.showLevelComplete, state.isLevelCompleted, isLevelCompleted, state.foundWords.length]);
-
-  // Level complete quando atinge o número necessário de palavras - CORRIGIDO
-  useEffect(() => {
-    if (isLevelCompleted && !state.showLevelComplete && !state.isLevelCompleted) {
-      logger.info(`🎉 Nível COMPLETADO! Exibindo modal de vitória`, {
-        foundWordsCount: state.foundWords.length,
-        totalWordsRequired: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
-        foundWords: state.foundWords.map(fw => fw.word),
-        levelScore: currentLevelScore
-      }, 'GAME_STATE');
-      
-      // PRIMEIRA PRIORIDADE: Mostrar o modal de nível completado
-      setState(prev => ({ 
-        ...prev, 
-        showLevelComplete: true, 
-        isLevelCompleted: true,
-        showGameOver: false // Garantir que game over não apareça junto
-      }));
-      
-      // Notificar level complete via callback
-      if (onLevelComplete) {
-        logger.info(`📞 CALLBACK - Notificando level complete: ${currentLevelScore} pontos`, {
-          score: currentLevelScore
-        }, 'GAME_STATE');
-        onLevelComplete(currentLevelScore);
-      }
-      
-      // Registrar pontos no banco
-      updateUserScore(currentLevelScore);
-    }
-  }, [isLevelCompleted, state.showLevelComplete, state.isLevelCompleted, state.foundWords, currentLevelScore, updateUserScore, onLevelComplete]);
-
-  // Sistema de dicas SIMPLIFICADO - permite dica para qualquer palavra
+  // Sistema de dicas - permite dica para qualquer palavra
   const useHint = useCallback(() => {
     logger.info('💡 Dica solicitada', { 
       hintsUsed: state.hintsUsed, 
@@ -227,6 +165,9 @@ export const useGameState = (
     }));
   }, [state.foundWords]);
 
+  // Calcular pontuação atual
+  const currentLevelScore = state.foundWords.reduce((sum, fw) => sum + fw.points, 0);
+
   return {
     ...state,
     currentLevelScore,
@@ -240,15 +181,6 @@ export const useGameState = (
     },
     setHintHighlightedCells: (positions: Position[]) => {
       setState(prev => ({ ...prev, hintHighlightedCells: positions }));
-    },
-    setShowGameOver: (value: boolean) => {
-      setState(prev => ({ ...prev, showGameOver: value }));
-    },
-    setShowLevelComplete: (value: boolean) => {
-      setState(prev => ({ ...prev, showLevelComplete: value }));
-    },
-    setIsLevelCompleted: (value: boolean) => {
-      setState(prev => ({ ...prev, isLevelCompleted: value }));
     }
   };
 };

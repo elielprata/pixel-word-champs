@@ -58,11 +58,29 @@ const GameBoardContent = ({
     }
   };
 
+  const handleAdvanceLevel = () => {
+    logger.info('▶️ Avançando para próximo nível', { 
+      level,
+      currentScore: gameStateProps.currentLevelScore 
+    }, 'GAME_BOARD_CONTENT');
+    gameActions.closeLevelComplete();
+    onAdvanceLevel();
+  };
+
+  const handleStopGame = () => {
+    logger.info('🛑 Finalizando jogo', { 
+      level,
+      finalScore: gameStateProps.currentLevelScore 
+    }, 'GAME_BOARD_CONTENT');
+    gameActions.closeLevelComplete();
+    onStopGame();
+  };
+
   if (isLoading || error) {
     return null; // Será tratado no componente pai
   }
 
-  logger.debug('🎮 Renderizando GameBoardContent SIMPLIFICADO', {
+  logger.debug('🎮 Renderizando GameBoardContent CONSOLIDADO', {
     level,
     timeLeft,
     foundWordsCount: gameStateProps.foundWords.length,
@@ -99,8 +117,8 @@ const GameBoardContent = ({
         canRevive={canRevive}
         onRevive={handleReviveClick}
         onGoHome={gameActions.handleGoHome}
-        onAdvanceLevel={onAdvanceLevel}
-        onStopGame={onStopGame}
+        onAdvanceLevel={handleAdvanceLevel}
+        onStopGame={handleStopGame}
       />
     </>
   );
