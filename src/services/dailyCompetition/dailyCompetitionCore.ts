@@ -7,13 +7,12 @@ export class DailyCompetitionCoreService {
     try {
       console.log('🔍 Buscando competições diárias...');
 
-      // IMPORTANTE: Agora que temos cron job atualizando status automaticamente,
-      // podemos confiar no campo 'status' do banco de dados
+      // IMPORTANTE: Incluir tanto ativas quanto agendadas para exibição
       const { data, error } = await supabase
         .from('custom_competitions')
         .select('*')
         .eq('competition_type', 'challenge')
-        .in('status', ['active', 'scheduled']); // Incluir agendadas também
+        .in('status', ['active', 'scheduled']); // Incluir competições agendadas também
 
       if (error) {
         console.error('❌ Erro na consulta SQL:', error);
@@ -25,15 +24,12 @@ export class DailyCompetitionCoreService {
         return createSuccessResponse([]);
       }
 
-      // Filtrar para mostrar apenas competições ativas no frontend
-      const activeCompetitions = data.filter(comp => comp.status === 'active');
-
       console.log(`✅ Total de competições encontradas: ${data.length}`);
-      console.log(`✅ Competições ativas para exibir: ${activeCompetitions.length}`);
+      console.log(`✅ Competições para exibir (ativas + agendadas): ${data.length}`);
       
       // Log detalhado de cada competição encontrada
-      activeCompetitions.forEach((comp, index) => {
-        console.log(`📋 Competição ativa ${index + 1}:`, {
+      data.forEach((comp, index) => {
+        console.log(`📋 Competição ${index + 1}:`, {
           id: comp.id,
           title: comp.title,
           status: comp.status,
@@ -42,7 +38,7 @@ export class DailyCompetitionCoreService {
         });
       });
 
-      return createSuccessResponse(activeCompetitions);
+      return createSuccessResponse(data);
     } catch (error) {
       console.error('❌ Erro ao buscar competições diárias:', error);
       return createErrorResponse(handleServiceError(error, 'GET_ACTIVE_DAILY_COMPETITIONS'));
