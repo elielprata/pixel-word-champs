@@ -42,39 +42,39 @@ const CompactInviteInfo = ({ stats, inviteCode, onCopyCode }: CompactInviteInfoP
 
   return (
     <Card className="border-0 bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xl">
-      <CardContent className="p-6">
-        {/* Cabeçalho Unificado */}
-        <div className="flex items-center gap-2 mb-4">
-          <Trophy className="w-5 h-5" />
-          <h3 className="font-bold text-lg">Suas Estatísticas & Código Mágico</h3>
+      <CardContent className="p-3 sm:p-4 md:p-6">
+        {/* Cabeçalho Unificado - Responsivo */}
+        <div className="flex items-center gap-2 mb-3 md:mb-4">
+          <Trophy className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+          <h3 className="font-bold text-sm sm:text-base md:text-lg truncate">Suas Estatísticas & Código Mágico</h3>
         </div>
 
-        {/* Seção Superior: Nível e Código lado a lado */}
-        <div className="flex gap-4 mb-4">
-          {/* Nível do Usuário - Reorganizado */}
-          <div className="flex-1 bg-white/20 backdrop-blur-sm rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="text-2xl">{levelInfo.icon}</div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-base">{levelInfo.level}</span>
+        {/* Seção Superior: Layout responsivo - coluna em mobile, lado a lado em desktop */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-3 md:mb-4">
+          {/* Nível do Usuário - Compacto para mobile */}
+          <div className="flex-1 bg-white/20 backdrop-blur-sm rounded-xl p-3 md:p-4">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="text-xl sm:text-2xl shrink-0">{levelInfo.icon}</div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-bold text-sm sm:text-base truncate">{levelInfo.level}</span>
                   <span className="text-xs opacity-75">Nível {currentLevel}</span>
                 </div>
               </div>
-              <Badge className="bg-white/30 text-white border-white/30 text-xs px-3 py-1">
+              <Badge className="bg-white/30 text-white border-white/30 text-xs px-2 py-1 shrink-0">
                 {stats.totalPoints} XP
               </Badge>
             </div>
             
-            {/* Barra de Progresso */}
-            <div className="space-y-2">
+            {/* Barra de Progresso - Compacta */}
+            <div className="space-y-1 sm:space-y-2">
               <div className="flex justify-between text-xs opacity-90">
                 <span>Nv. {currentLevel}</span>
                 <span>Nv. {nextLevel}</span>
               </div>
               <Progress 
                 value={levelProgress} 
-                className="h-2 bg-white/20"
+                className="h-1.5 sm:h-2 bg-white/20"
               />
               <div className="text-center text-xs opacity-80">
                 {Math.round(levelProgress)}% para o próximo nível
@@ -82,70 +82,70 @@ const CompactInviteInfo = ({ stats, inviteCode, onCopyCode }: CompactInviteInfoP
             </div>
           </div>
 
-          {/* Código Mágico */}
-          <div className="flex-1 bg-white/20 backdrop-blur-sm rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Gift className="w-4 h-4" />
-              <span className="text-sm font-medium">Seu Código</span>
+          {/* Código Mágico - Compacto para mobile */}
+          <div className="flex-1 bg-white/20 backdrop-blur-sm rounded-xl p-3 md:p-4">
+            <div className="flex items-center gap-2 mb-2 md:mb-3">
+              <Gift className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">Seu Código</span>
             </div>
-            <div className="text-center mb-3">
-              <p className="text-xl font-bold tracking-wider">{inviteCode}</p>
+            <div className="text-center mb-2 md:mb-3">
+              <p className="text-base sm:text-lg md:text-xl font-bold tracking-wider break-all">{inviteCode}</p>
             </div>
             <Button 
               onClick={onCopyCode}
               size="sm"
-              className="w-full bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white text-xs h-8"
+              className="w-full bg-white/20 backdrop-blur-sm hover:bg-white/30 border-0 text-white text-xs h-7 sm:h-8"
             >
-              <Copy className="w-3 h-3 mr-1" />
-              Copiar Código
+              <Copy className="w-3 h-3 mr-1 shrink-0" />
+              <span className="truncate">Copiar Código</span>
             </Button>
           </div>
         </div>
 
-        {/* Grid de Estatísticas (2x2) - Atualizado para novo sistema */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
+        {/* Grid de Estatísticas - Responsivo com espaçamentos menores */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 md:mb-4">
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2 sm:p-3 text-center">
             <div className="flex justify-center mb-1">
-              <Users className="w-5 h-5 text-green-200" />
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-green-200" />
             </div>
-            <p className="text-lg font-bold">{stats.activeFriends}</p>
-            <p className="text-xs opacity-80">Amigos Ativos</p>
+            <p className="text-base sm:text-lg font-bold">{stats.activeFriends}</p>
+            <p className="text-xs opacity-80 leading-tight">Amigos Ativos</p>
             <p className="text-xs opacity-60">(50 XP cada)</p>
           </div>
           
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2 sm:p-3 text-center">
             <div className="flex justify-center mb-1">
-              <Clock className="w-5 h-5 text-yellow-200" />
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-200" />
             </div>
-            <p className="text-lg font-bold">{stats.partialFriends || 0}</p>
-            <p className="text-xs opacity-80">Parcialmente Ativos</p>
+            <p className="text-base sm:text-lg font-bold">{stats.partialFriends || 0}</p>
+            <p className="text-xs opacity-80 leading-tight">Parcialmente Ativos</p>
             <p className="text-xs opacity-60">(5 XP cada)</p>
           </div>
 
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2 sm:p-3 text-center">
             <div className="flex justify-center mb-1">
-              <Crown className="w-5 h-5 text-yellow-300" />
+              <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300" />
             </div>
-            <p className="text-lg font-bold">{stats.monthlyPoints || 0}</p>
-            <p className="text-xs opacity-80">Pontos no Mês</p>
+            <p className="text-base sm:text-lg font-bold">{stats.monthlyPoints || 0}</p>
+            <p className="text-xs opacity-80 leading-tight">Pontos no Mês</p>
           </div>
 
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2 sm:p-3 text-center">
             <div className="flex justify-center mb-1">
-              <Gift className="w-5 h-5 text-blue-200" />
+              <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-blue-200" />
             </div>
-            <p className="text-lg font-bold">{stats.totalInvites}</p>
-            <p className="text-xs opacity-80">Total Convites</p>
+            <p className="text-base sm:text-lg font-bold">{stats.totalInvites}</p>
+            <p className="text-xs opacity-80 leading-tight">Total Convites</p>
           </div>
         </div>
 
-        {/* Seção Final: Sistema de Recompensas */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
+        {/* Seção Final: Sistema de Recompensas - Texto menor em mobile */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 sm:p-3">
           <div className="flex items-center gap-2 mb-2">
-            <Zap className="w-4 h-4 text-yellow-300" />
-            <span className="text-sm font-medium">Sistema de Recompensas</span>
+            <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-300 shrink-0" />
+            <span className="text-xs sm:text-sm font-medium">Sistema de Recompensas</span>
           </div>
-          <div className="text-xs opacity-90 space-y-1">
+          <div className="text-xs opacity-90 space-y-1 leading-relaxed">
             <p>• <strong>5 XP imediatos</strong> quando alguém usa seu código</p>
             <p>• <strong>+45 XP extras</strong> quando jogam por 5 dias diferentes</p>
             <p>• <strong>Total: 50 XP</strong> por amigo totalmente ativo</p>

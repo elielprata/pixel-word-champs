@@ -36,11 +36,11 @@ const GamifiedInviteStats = ({ stats }: GamifiedInviteStatsProps) => {
 
   return (
     <Card className="border-0 bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xl">
-      <CardContent className="p-4 md:p-6">
+      <CardContent className="p-3 sm:p-4 md:p-6">
         {/* Título da Seção */}
         <div className="flex items-center gap-2 mb-3 md:mb-4">
-          <Trophy className="w-4 h-4 md:w-5 md:h-5" />
-          <h3 className="font-bold text-base md:text-lg">Suas Estatísticas</h3>
+          <Trophy className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+          <h3 className="font-bold text-sm sm:text-base md:text-lg truncate">Suas Estatísticas</h3>
         </div>
 
         {/* Status do Jogador com Nível Atualizado */}
@@ -49,7 +49,7 @@ const GamifiedInviteStats = ({ stats }: GamifiedInviteStatsProps) => {
             <div className="flex-1 min-w-0">
               <p className="text-xs md:text-sm opacity-90">Nível Atual</p>
               <div className="flex items-center gap-2">
-                <span className="text-lg md:text-2xl">{levelInfo.icon}</span>
+                <span className="text-lg md:text-2xl shrink-0">{levelInfo.icon}</span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                     <span className="font-bold text-sm md:text-xl truncate">{levelInfo.level}</span>
@@ -71,7 +71,7 @@ const GamifiedInviteStats = ({ stats }: GamifiedInviteStatsProps) => {
             </div>
             <Progress 
               value={levelProgress} 
-              className="h-2 bg-white/20"
+              className="h-1.5 sm:h-2 bg-white/20"
             />
             <p className="text-xs opacity-75 mt-1 text-center">
               {Math.round(levelProgress)}% para o próximo nível
@@ -81,26 +81,26 @@ const GamifiedInviteStats = ({ stats }: GamifiedInviteStatsProps) => {
 
         {/* Grid de Estatísticas Expandido */}
         <div className="grid grid-cols-2 gap-2 md:gap-3 mb-3 md:mb-4">
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 md:p-4 text-center">
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2 sm:p-3 md:p-4 text-center">
             <div className="flex justify-center mb-1 md:mb-2">
               <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-200" />
             </div>
-            <p className="text-lg md:text-2xl font-bold">{stats.activeFriends}</p>
+            <p className="text-base sm:text-lg md:text-2xl font-bold">{stats.activeFriends}</p>
             <p className="text-xs opacity-80">Amigos Ativos</p>
           </div>
           
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 md:p-4 text-center">
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2 sm:p-3 md:p-4 text-center">
             <div className="flex justify-center mb-1 md:mb-2">
               <Gift className="w-4 h-4 md:w-6 md:h-6 text-green-200" />
             </div>
-            <p className="text-lg md:text-2xl font-bold">{stats.totalInvites}</p>
+            <p className="text-base sm:text-lg md:text-2xl font-bold">{stats.totalInvites}</p>
             <p className="text-xs opacity-80">Total Convites</p>
           </div>
         </div>
 
         {/* Estatísticas Mensais */}
         {stats.monthlyPoints !== undefined && (
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-3 md:mb-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 sm:p-3 mb-3 md:mb-4">
             <div className="flex items-center gap-2 mb-2">
               <Crown className="w-3 h-3 md:w-4 md:h-4 text-yellow-300" />
               <span className="text-xs md:text-sm font-medium">Performance Mensal</span>
@@ -116,7 +116,7 @@ const GamifiedInviteStats = ({ stats }: GamifiedInviteStatsProps) => {
         )}
 
         {/* Próximo Objetivo */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 sm:p-3">
           <div className="flex items-center gap-2 mb-2">
             <Star className="w-3 h-3 md:w-4 md:h-4 text-yellow-300" />
             <span className="text-xs md:text-sm font-medium">Próximo Objetivo</span>

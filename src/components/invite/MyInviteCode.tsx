@@ -14,15 +14,15 @@ const MyInviteCode = ({ inviteCode, onCopyCode }: MyInviteCodeProps) => {
 
   return (
     <Card className="border-0 bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl">
-      <CardContent className="p-4 md:p-6">
+      <CardContent className="p-3 sm:p-4 md:p-6">
         <div className="flex items-center gap-2 mb-3 md:mb-4">
           <Gift className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-          <h3 className="font-bold text-base md:text-lg truncate">Seu Código Mágico</h3>
+          <h3 className="font-bold text-sm sm:text-base md:text-lg truncate">Seu Código Mágico</h3>
         </div>
 
         <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 md:p-4 mb-3 md:mb-4">
           <div className="text-center mb-2 md:mb-3">
-            <p className="text-xl md:text-3xl font-bold tracking-wider break-all">{inviteCode}</p>
+            <p className="text-lg sm:text-xl md:text-3xl font-bold tracking-wider break-all">{inviteCode}</p>
           </div>
           
           <div className="flex items-center justify-center gap-2 text-xs md:text-sm opacity-90">
