@@ -5,7 +5,7 @@
  */
 
 /**
- * CORRIGIDO: Validação sem duplicação de timezone
+ * CORRIGIDO: Validação com formato datetime-local correto
  */
 export const validateCompetitionDuration = (startDateTimeBrasilia: string, durationHours: number): { isValid: boolean; error?: string } => {
   if (!startDateTimeBrasilia) {
@@ -21,16 +21,40 @@ export const validateCompetitionDuration = (startDateTimeBrasilia: string, durat
   }
   
   try {
-    console.log('🔍 Validação (SEM DUPLICAÇÃO):', {
+    console.log('🔍 Validação CORRIGIDA:', {
       input: startDateTimeBrasilia,
-      duration: durationHours
+      inputType: typeof startDateTimeBrasilia,
+      duration: durationHours,
+      isDatetimeLocal: startDateTimeBrasilia.includes('T')
     });
     
-    // CORREÇÃO: Usar Date diretamente
-    const startDate = new Date(startDateTimeBrasilia);
+    // CORREÇÃO: Verificar se é formato datetime-local (YYYY-MM-DDTHH:mm)
+    let startDate: Date;
+    
+    if (startDateTimeBrasilia.includes('T')) {
+      // Formato datetime-local: YYYY-MM-DDTHH:mm
+      startDate = new Date(startDateTimeBrasilia);
+      console.log('📅 Parsing formato datetime-local:', {
+        original: startDateTimeBrasilia,
+        parsed: startDate.toISOString(),
+        isValid: !isNaN(startDate.getTime())
+      });
+    } else {
+      // Fallback para outros formatos (não deveria acontecer com datetime-local)
+      startDate = new Date(startDateTimeBrasilia);
+      console.log('📅 Parsing formato alternativo:', {
+        original: startDateTimeBrasilia,
+        parsed: startDate.toISOString(),
+        isValid: !isNaN(startDate.getTime())
+      });
+    }
     
     if (isNaN(startDate.getTime())) {
-      return { isValid: false, error: 'Data de início inválida' };
+      console.error('❌ Data inválida:', {
+        input: startDateTimeBrasilia,
+        parsedTime: startDate.getTime()
+      });
+      return { isValid: false, error: 'Data de início inválida - formato não reconhecido' };
     }
     
     const endDate = new Date(startDate.getTime() + (durationHours * 60 * 60 * 1000));
@@ -39,12 +63,13 @@ export const validateCompetitionDuration = (startDateTimeBrasilia: string, durat
     const sameDayLimit = new Date(startDate);
     sameDayLimit.setHours(23, 59, 59, 999);
     
-    console.log('🔍 Validação sem duplicação:', {
+    console.log('🔍 Validação de duração:', {
       startTime: startDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       endTime: endDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       limit: sameDayLimit.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       willExceed: endDate > sameDayLimit,
-      duration: durationHours
+      duration: durationHours,
+      startDateInput: startDateTimeBrasilia
     });
     
     if (endDate > sameDayLimit) {
@@ -59,8 +84,12 @@ export const validateCompetitionDuration = (startDateTimeBrasilia: string, durat
     
     return { isValid: true };
   } catch (error) {
-    console.error('❌ Erro na validação de duração:', error);
-    return { isValid: false, error: 'Erro na validação da duração' };
+    console.error('❌ Erro na validação de duração:', {
+      error: error.message,
+      input: startDateTimeBrasilia,
+      duration: durationHours
+    });
+    return { isValid: false, error: 'Erro na validação da duração: ' + error.message };
   }
 };
 
@@ -76,12 +105,17 @@ export const validateBrasiliaDateRange = (startDate: string, endDate: string): {
     const start = new Date(startDate);
     const end = new Date(endDate);
     
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return { isValid: false, error: 'Formato de data inválido' };
+    }
+    
     if (start >= end) {
       return { isValid: false, error: 'Data de início deve ser anterior à data de fim' };
     }
     
     return { isValid: true };
   } catch (error) {
-    return { isValid: false, error: 'Datas inválidas' };
+    console.error('❌ Erro na validação de range:', error);
+    return { isValid: false, error: 'Datas inválidas: ' + error.message };
   }
 };
