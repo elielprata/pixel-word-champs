@@ -1,11 +1,9 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { Zap, Clock, Play, Calendar, Trophy } from 'lucide-react';
+import { Zap, Clock, Play } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Competition } from '@/types';
-import { CompetitionStatusBadge } from '@/components/CompetitionStatusBadge';
-import { formatDateTimeBrasilia } from '@/utils/dynamicCompetitionStatus';
 
 interface CompetitionCardProps {
   competition: Competition;
@@ -112,15 +110,15 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
     return null;
   }
 
-  // Componente de barra circular
-  const CircularProgress = ({ percentage, size = 80 }: { percentage: number; size?: number }) => {
+  // Componente de barra circular integrada com tempo
+  const CircularProgressWithTime = ({ percentage, timeText, size = 90 }: { percentage: number; timeText: string; size?: number }) => {
     const radius = (size - 8) / 2;
     const circumference = radius * 2 * Math.PI;
     const strokeDasharray = `${circumference} ${circumference}`;
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
     
     return (
-      <div className="relative" style={{ width: size, height: size }}>
+      <div className="relative flex flex-col items-center" style={{ width: size, height: size + 20 }}>
         <svg
           className="transform -rotate-90"
           width={size}
@@ -165,6 +163,10 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
             </div>
           </div>
         </div>
+        {/* Tempo restante abaixo da barra */}
+        <div className={`text-center mt-1 font-bold text-sm ${status === 'active' ? 'text-green-700' : 'text-blue-700'}`}>
+          {timeText}
+        </div>
       </div>
     );
   };
@@ -188,8 +190,8 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
       </div>
 
       <CardContent className="p-4 relative">
-        {/* Header gamificado */}
-        <div className="flex items-center gap-3 mb-3">
+        {/* Header compacto */}
+        <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center gap-2 flex-1">
             <div className="p-1.5 bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
               {status === 'active' ? (
@@ -202,58 +204,25 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
               <h3 className="font-bold text-base text-foreground leading-tight group-hover:text-primary transition-colors duration-300">
                 {competition.title}
               </h3>
-              <div className="mt-1">
-                <CompetitionStatusBadge 
-                  status={status} 
-                  isRealTime={status === 'active'} 
-                  isStatusOutdated={false}
-                  calculatedStatus={status}
-                />
-              </div>
             </div>
           </div>
           
-          {/* Barra de progresso circular */}
+          {/* Barra de progresso circular com tempo integrado */}
           <div className="shrink-0">
-            <CircularProgress percentage={timeRemaining.percentage} size={70} />
+            <CircularProgressWithTime 
+              percentage={timeRemaining.percentage} 
+              timeText={timeRemaining.text}
+              size={80} 
+            />
           </div>
         </div>
 
-        {/* Descrição compacta */}
+        {/* Descrição compacta (opcional) */}
         {competition.description && (
           <p className="text-muted-foreground text-xs mb-3 leading-relaxed line-clamp-2 animate-fade-in delay-100">
             {competition.description}
           </p>
         )}
-
-        {/* Contador de tempo */}
-        {timeRemaining.text && (
-          <div className="mb-3 p-3 bg-gradient-to-r from-slate-500/10 to-slate-600/10 border border-slate-200/50 rounded-xl">
-            <div className="flex items-center justify-center gap-2">
-              <div className="text-center">
-                <div className={`font-bold text-sm mb-1 ${status === 'active' ? 'text-green-700' : 'text-blue-700'}`}>
-                  {status === 'active' ? '⏱️ Tempo Restante:' : '⏰ Inicia em:'}
-                </div>
-                <div className={`font-bold text-lg ${status === 'active' ? 'text-green-800' : 'text-blue-800'}`}>
-                  {timeRemaining.text}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Informações de período simplificadas */}
-        <div className="mb-3 p-2 bg-slate-50/80 border border-slate-200/50 rounded-lg text-xs">
-          <div className="text-slate-700">
-            <div className="font-medium flex items-center gap-1">
-              <Trophy className="w-3 h-3" />
-              Período da Competição:
-            </div>
-            <div className="text-slate-600 mt-1 text-xs">
-              {formatDateTimeBrasilia(competition.start_date)} até {formatDateTimeBrasilia(competition.end_date)}
-            </div>
-          </div>
-        </div>
 
         {/* Botão de ação gamificado */}
         {status === 'active' && (
