@@ -106,7 +106,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
                 {competition.title}
               </h3>
               <p className="text-gray-500 text-sm">
-                Caça Palavras
+                {competition.description || 'Caça Palavras'}
               </p>
             </div>
           </div>
