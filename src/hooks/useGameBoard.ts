@@ -28,6 +28,7 @@ export const useGameBoard = ({
   const [showLevelComplete, setShowLevelComplete] = useState(false);
   const gameInitialized = useRef(false);
   const levelCompleteProcessed = useRef(false);
+  const isProcessingCompletion = useRef(false);
 
   // Hook para board otimizado
   const { 
@@ -67,7 +68,8 @@ export const useGameBoard = ({
     if (boardData && levelWords.length > 0 && !gameInitialized.current) {
       initializeSession();
       gameInitialized.current = true;
-      levelCompleteProcessed.current = false; // Reset do processamento
+      levelCompleteProcessed.current = false;
+      isProcessingCompletion.current = false;
       setIsLoading(false);
       logger.info('🎮 Jogo inicializado - sessão em memória criada', { level });
     }
@@ -81,7 +83,7 @@ export const useGameBoard = ({
     }
   }, [boardError]);
 
-  // LÓGICA CONSOLIDADA DE DETECÇÃO DE CONCLUSÃO DO NÍVEL
+  // LÓGICA CONSOLIDADA DE DETECÇÃO DE CONCLUSÃO DO NÍVEL - PRIORIDADE MÁXIMA
   useEffect(() => {
     const wordsFoundCount = gameState.foundWords.length;
     const isLevelCompleted = wordsFoundCount >= GAME_CONSTANTS.TOTAL_WORDS_REQUIRED;
@@ -91,13 +93,17 @@ export const useGameBoard = ({
       totalRequired: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
       isLevelCompleted,
       showLevelComplete,
-      levelCompleteProcessed: levelCompleteProcessed.current
+      showGameOver,
+      levelCompleteProcessed: levelCompleteProcessed.current,
+      isProcessingCompletion: isProcessingCompletion.current
     }, 'GAME_BOARD');
 
-    if (isLevelCompleted && !showLevelComplete && !levelCompleteProcessed.current) {
-      levelCompleteProcessed.current = true; // Marcar como processado IMEDIATAMENTE
+    // PRIORIDADE MÁXIMA: Se o nível foi completado, não mostrar game over
+    if (isLevelCompleted && !levelCompleteProcessed.current && !isProcessingCompletion.current) {
+      isProcessingCompletion.current = true;
+      levelCompleteProcessed.current = true;
       
-      logger.info('🏆 NÍVEL COMPLETADO! Exibindo modal de vitória', { 
+      logger.info('🏆 NÍVEL COMPLETADO! Processando conclusão', { 
         level, 
         wordsFoundCount,
         totalRequired: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
@@ -105,28 +111,34 @@ export const useGameBoard = ({
         currentScore: gameState.currentLevelScore
       }, 'GAME_BOARD');
       
-      // PRIORIDADE MÁXIMA: Exibir modal de nível completado
+      // GARANTIR que game over não apareça quando nível foi completado
+      setShowGameOver(false);
       setShowLevelComplete(true);
-      setShowGameOver(false); // Garantir que game over não apareça
       
-      // Registrar conclusão do nível
+      // Registrar conclusão do nível com dados completos
       registerLevelCompletion(gameState.foundWords, 0).then(() => {
-        logger.info('📊 Pontuação registrada no banco', { 
-          score: gameState.currentLevelScore 
+        logger.info('📊 Pontuação registrada no banco com sucesso', { 
+          score: gameState.currentLevelScore,
+          foundWords: gameState.foundWords.length
         }, 'GAME_BOARD');
         
-        // Notificar conclusão do nível
+        // Notificar conclusão do nível APÓS salvar
         onLevelComplete(gameState.currentLevelScore);
+        isProcessingCompletion.current = false;
+      }).catch((error) => {
+        logger.error('❌ Erro ao registrar conclusão do nível', { error }, 'GAME_BOARD');
+        isProcessingCompletion.current = false;
       });
     }
-  }, [gameState.foundWords, showLevelComplete, gameState.currentLevelScore, registerLevelCompletion, onLevelComplete, level]);
+  }, [gameState.foundWords, showLevelComplete, gameState.currentLevelScore, registerLevelCompletion, onLevelComplete, level, showGameOver]);
 
-  // Game over quando tempo acabar (mas apenas se o nível não foi completado)
+  // Game over APENAS quando tempo acabar E nível NÃO foi completado
   useEffect(() => {
     const wordsFoundCount = gameState.foundWords.length;
     const isLevelCompleted = wordsFoundCount >= GAME_CONSTANTS.TOTAL_WORDS_REQUIRED;
     
-    if (timeLeft <= 0 && !isLevelCompleted && !showLevelComplete && !showGameOver) {
+    // NUNCA mostrar game over se nível foi completado
+    if (timeLeft <= 0 && !isLevelCompleted && !showLevelComplete && !showGameOver && !levelCompleteProcessed.current) {
       logger.info('⏰ Tempo esgotado - nível não completado', { 
         level, 
         foundWords: wordsFoundCount,
@@ -147,9 +159,11 @@ export const useGameBoard = ({
   }, []);
 
   const closeLevelComplete = useCallback(() => {
+    logger.info('🔄 Fechando modal de nível completado', { level }, 'GAME_BOARD');
     setShowLevelComplete(false);
-    levelCompleteProcessed.current = false; // Reset para permitir nova detecção
-  }, []);
+    levelCompleteProcessed.current = false;
+    isProcessingCompletion.current = false;
+  }, [level]);
 
   return {
     isLoading: isLoading || boardLoading,

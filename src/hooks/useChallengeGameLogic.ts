@@ -1,153 +1,247 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { gameService } from '@/services/gameService';
-import { competitionParticipationService } from '@/services/competitionParticipationService';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useGameSessionManager } from './useGameSessionManager';
+import { useChallengeProgress } from './useChallengeProgress';
+import { logger } from '@/utils/logger';
 
 export const useChallengeGameLogic = (challengeId: string) => {
-  const { user } = useAuth();
   const [currentLevel, setCurrentLevel] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
-  const [gameSession, setGameSession] = useState<any>(null);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [hasMarkedParticipation, setHasMarkedParticipation] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [loadingStep, setLoadingStep] = useState<string>('Iniciando...');
+  const [loadingStep, setLoadingStep] = useState<string>('');
+  
+  // Refs para prevenir múltiplas execuções
+  const isProcessingLevelComplete = useRef(false);
+  const sessionCompletionInProgress = useRef(false);
 
-  const maxLevels = 20;
+  const {
+    currentSession,
+    isLoading: sessionLoading,
+    error: sessionError,
+    startNewSession,
+    completeSession,
+    resetSession
+  } = useGameSessionManager();
+
+  const {
+    progress,
+    isLoading: progressLoading,
+    updateChallengeProgress,
+    completeChallengeProgress
+  } = useChallengeProgress(challengeId);
 
   useEffect(() => {
-    initializeGameSession();
-  }, [challengeId]);
-
-  const initializeGameSession = async () => {
-    try {
+    const initializeGame = async () => {
       setIsLoading(true);
+      setLoadingStep('Iniciando desafio...');
       setError(null);
-      setLoadingStep('Preparando sessão...');
-      
-      console.log('🎮 Inicializando sessão de jogo para competição:', challengeId);
-      
-      // Verificar se a competição existe em custom_competitions
-      setLoadingStep('Validando competição...');
-      const { data: competition, error: competitionError } = await supabase
-        .from('custom_competitions')
-        .select('id, title, status')
-        .eq('id', challengeId)
-        .single();
-
-      if (competitionError) {
-        console.error('❌ Competição não encontrada:', competitionError);
-        setError('Competição não encontrada. Verifique se o ID está correto.');
-        return;
+  
+      try {
+        // Carregar progresso existente
+        setLoadingStep('Carregando progresso...');
+        if (progress) {
+          setCurrentLevel(progress.current_level);
+          setTotalScore(progress.total_score);
+        }
+  
+        // Iniciar nova sessão de jogo
+        setLoadingStep('Iniciando sessão de jogo...');
+        const session = await startNewSession(currentLevel, challengeId);
+        if (!session) {
+          throw new Error('Falha ao iniciar sessão de jogo');
+        }
+  
+        setIsGameStarted(true);
+        logger.info('Desafio iniciado com sucesso', { 
+          challengeId, 
+          currentLevel, 
+          totalScore 
+        }, 'CHALLENGE_GAME_LOGIC');
+      } catch (err) {
+        const errorMessage = (err instanceof Error) ? err.message : 'Erro ao iniciar desafio';
+        setError(errorMessage);
+        logger.error('Erro ao iniciar desafio', { 
+          error: err, 
+          challengeId 
+        }, 'CHALLENGE_GAME_LOGIC');
+      } finally {
+        setIsLoading(false);
+        setLoadingStep('');
       }
-
-      if (competition.status !== 'active') {
-        console.error('❌ Competição não está ativa:', competition.status);
-        setError(`Competição não está ativa: ${competition.status}`);
-        return;
-      }
-
-      console.log('✅ Competição validada, criando sessão de jogo...');
-      setLoadingStep('Criando sessão de jogo...');
-      
-      // Criar uma nova sessão de jogo para esta competição
-      const sessionResponse = await gameService.createGameSession({
-        level: 1,
-        boardSize: 10,
-        competitionId: challengeId
-      });
-
-      if (!sessionResponse.success) {
-        console.error('❌ Erro ao criar sessão:', sessionResponse.error);
-        setError(sessionResponse.error || 'Erro ao criar sessão de jogo');
-        return;
-      }
-
-      const session = sessionResponse.data;
-      console.log('✅ Sessão de jogo criada:', session.id);
-      
-      setGameSession(session);
-      setCurrentLevel(session.level || 1);
-      setTotalScore(session.total_score || 0);
-      setIsGameStarted(true);
-      setLoadingStep('Sessão criada com sucesso!');
-      
-    } catch (error) {
-      console.error('❌ Erro inesperado ao inicializar sessão:', error);
-      setError('Erro inesperado ao carregar o jogo. Tente novamente.');
-    } finally {
-      setIsLoading(false);
+    };
+  
+    if (challengeId) {
+      initializeGame();
     }
-  };
+  
+    return () => {
+      setIsGameStarted(false);
+      isProcessingLevelComplete.current = false;
+      sessionCompletionInProgress.current = false;
+    };
+  }, [challengeId, startNewSession, progress, currentLevel]);
 
-  const markParticipationAsCompleted = async () => {
-    if (hasMarkedParticipation || !user) {
-      console.log('Participação já foi marcada como concluída ou usuário não logado');
+  const handleLevelComplete = useCallback(async (levelScore: number) => {
+    // PROTEÇÃO: Evitar múltiplas execuções simultâneas
+    if (isProcessingLevelComplete.current) {
+      logger.warn('⚠️ Conclusão de nível já está sendo processada', { 
+        currentLevel, 
+        levelScore 
+      }, 'CHALLENGE_GAME_LOGIC');
+      return;
+    }
+
+    isProcessingLevelComplete.current = true;
+
+    try {
+      logger.info('🏆 Processando conclusão do nível', { 
+        currentLevel, 
+        levelScore,
+        totalScore: totalScore + levelScore
+      }, 'CHALLENGE_GAME_LOGIC');
+
+      // Atualizar pontuação total IMEDIATAMENTE
+      const newTotalScore = totalScore + levelScore;
+      setTotalScore(newTotalScore);
+
+      // Salvar progresso no banco de dados
+      await updateChallengeProgress(currentLevel, newTotalScore);
+
+      logger.info('✅ Conclusão do nível processada com sucesso', { 
+        currentLevel, 
+        levelScore, 
+        newTotalScore 
+      }, 'CHALLENGE_GAME_LOGIC');
+
+    } catch (error) {
+      logger.error('❌ Erro ao processar conclusão do nível', { 
+        error, 
+        currentLevel, 
+        levelScore 
+      }, 'CHALLENGE_GAME_LOGIC');
+      setError('Erro ao salvar progresso do nível');
+    } finally {
+      isProcessingLevelComplete.current = false;
+    }
+  }, [currentLevel, totalScore, updateChallengeProgress]);
+
+  const handleAdvanceLevel = useCallback(() => {
+    logger.info('▶️ Avançando para próximo nível', { 
+      currentLevel,
+      nextLevel: currentLevel + 1,
+      totalScore 
+    }, 'CHALLENGE_GAME_LOGIC');
+
+    // Reset dos refs de proteção
+    isProcessingLevelComplete.current = false;
+    sessionCompletionInProgress.current = false;
+
+    if (currentLevel >= 20) {
+      setGameCompleted(true);
+      logger.info('🎉 Jogo completado - 20 níveis finalizados!', { 
+        totalScore 
+      }, 'CHALLENGE_GAME_LOGIC');
+    } else {
+      setCurrentLevel(prev => prev + 1);
+    }
+  }, [currentLevel, totalScore]);
+
+  const handleStopGame = useCallback(async () => {
+    // PROTEÇÃO: Evitar múltiplas execuções simultâneas
+    if (sessionCompletionInProgress.current) {
+      logger.warn('⚠️ Finalização de sessão já está sendo processada', {}, 'CHALLENGE_GAME_LOGIC');
+      return;
+    }
+
+    sessionCompletionInProgress.current = true;
+
+    try {
+      logger.info('🛑 Finalizando jogo', { 
+        currentLevel, 
+        totalScore,
+        gameCompleted: false
+      }, 'CHALLENGE_GAME_LOGIC');
+
+      await markParticipationAsCompleted();
+
+    } catch (error) {
+      logger.error('❌ Erro ao finalizar jogo', { error }, 'CHALLENGE_GAME_LOGIC');
+    } finally {
+      sessionCompletionInProgress.current = false;
+    }
+  }, [currentLevel, totalScore]);
+
+  const markParticipationAsCompleted = useCallback(async () => {
+    if (!currentSession) {
+      logger.warn('⚠️ Não há sessão ativa para completar', {}, 'CHALLENGE_GAME_LOGIC');
       return;
     }
 
     try {
-      console.log('🏁 Marcando participação como concluída...');
-      await competitionParticipationService.markUserAsParticipated(challengeId, user.id);
-      if (gameSession?.id) {
-        await gameService.completeGameSession(gameSession.id);
-      }
-      setHasMarkedParticipation(true);
-      console.log('✅ Participação marcada como concluída');
-    } catch (error) {
-      console.error('❌ Erro ao marcar participação:', error);
-    }
-  };
+      logger.info('📊 Finalizando sessão de jogo', { 
+        sessionId: currentSession.sessionId,
+        totalScore,
+        currentLevel
+      }, 'CHALLENGE_GAME_LOGIC');
 
-  const handleTimeUp = () => {
-    console.log('Tempo esgotado!');
-  };
-
-  const handleLevelComplete = async (levelScore: number) => {
-    const newTotalScore = totalScore + levelScore;
-    setTotalScore(newTotalScore);
-    
-    console.log(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Pontos já registrados no banco de dados.`);
-  };
-
-  const handleAdvanceLevel = () => {
-    if (currentLevel < maxLevels) {
-      setCurrentLevel(prev => prev + 1);
-      setIsGameStarted(false);
-      setTimeout(() => {
-        setIsGameStarted(true);
-      }, 100);
+      // Completar a sessão no banco
+      const result = await completeSession(0, challengeId);
       
-      console.log(`Avançando para o nível ${currentLevel + 1}`);
-    } else {
-      setGameCompleted(true);
-      console.log('Você completou todos os 20 níveis!');
+      if (result?.session) {
+        // Atualizar progresso final do desafio
+        await completeChallengeProgress(totalScore);
+        
+        logger.info('✅ Participação marcada como completada', { 
+          totalScore, 
+          currentLevel 
+        }, 'CHALLENGE_GAME_LOGIC');
+      }
+    } catch (error) {
+      logger.error('❌ Erro ao marcar participação como completada', { 
+        error 
+      }, 'CHALLENGE_GAME_LOGIC');
     }
-  };
+  }, [currentSession, totalScore, currentLevel, completeSession, completeChallengeProgress, challengeId]);
 
-  const handleRetry = () => {
-    console.log('🔄 Tentando novamente...');
-    setError(null);
-    setGameSession(null);
+  const handleTimeUp = useCallback(() => {
+    logger.info('⏰ Tempo esgotado', { 
+      currentLevel, 
+      totalScore 
+    }, 'CHALLENGE_GAME_LOGIC');
+    handleStopGame();
+  }, [handleStopGame, currentLevel, totalScore]);
+
+  const handleRetry = useCallback(() => {
+    logger.info('🔄 Retentando iniciar o jogo', { 
+      challengeId, 
+      currentLevel, 
+      totalScore 
+    }, 'CHALLENGE_GAME_LOGIC');
+    resetSession();
+    setCurrentLevel(1);
+    setTotalScore(0);
     setIsGameStarted(false);
-    initializeGameSession();
-  };
+    setGameCompleted(false);
+    setError(null);
+    isProcessingLevelComplete.current = false;
+    sessionCompletionInProgress.current = false;
+  }, [challengeId, resetSession]);
 
   return {
     currentLevel,
     totalScore,
-    gameSession,
+    gameSession: currentSession,
     isGameStarted,
     gameCompleted,
-    isLoading,
-    error,
+    isLoading: isLoading || sessionLoading || progressLoading,
+    error: error || sessionError,
     loadingStep,
     handleTimeUp,
     handleLevelComplete,
     handleAdvanceLevel,
+    handleStopGame,
     handleRetry,
     markParticipationAsCompleted
   };
