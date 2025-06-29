@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Competition } from '@/types';
 import { CompetitionCardHeader } from './CompetitionCardHeader';
 import { CompetitionCardButton } from './CompetitionCardButton';
-import { CompetitionCardDecorations } from './CompetitionCardDecorations';
 
 interface CompetitionCardProps {
   competition: Competition;
@@ -22,24 +21,20 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   const status = competition.status as 'scheduled' | 'active' | 'completed';
   
   const bgGradient = useMemo(() => {
-    const colors = [
-      'from-blue-50/80 to-indigo-100/60',
-      'from-purple-50/80 to-violet-100/60', 
-      'from-pink-50/80 to-rose-100/60',
-      'from-green-50/80 to-emerald-100/60',
-      'from-yellow-50/80 to-amber-100/60',
-      'from-orange-50/80 to-red-100/60',
-      'from-teal-50/80 to-cyan-100/60',
-      'from-slate-50/80 to-gray-100/60'
-    ];
-    
-    const hash = competition.id.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    
-    return colors[Math.abs(hash) % colors.length];
-  }, [competition.id]);
+    if (status === 'active') {
+      return 'from-purple-50/90 to-purple-100/70 border-purple-200/50';
+    } else {
+      return 'from-orange-50/90 to-orange-100/70 border-orange-200/50';
+    }
+  }, [status]);
+
+  const iconBg = useMemo(() => {
+    if (status === 'active') {
+      return 'bg-gradient-to-br from-purple-500 to-purple-600';
+    } else {
+      return 'bg-gradient-to-br from-orange-500 to-orange-600';
+    }
+  }, [status]);
 
   useEffect(() => {
     const updateTimer = () => {
@@ -54,17 +49,14 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
           return;
         }
         
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         
         let text = '';
-        if (days > 0) {
-          text = `${days}d ${hours}h`;
-        } else if (hours > 0) {
-          text = `${hours}h ${minutes}m`;
+        if (hours > 0) {
+          text = `Inicia em ${hours}h ${minutes}m`;
         } else {
-          text = `${minutes}m`;
+          text = `Inicia em ${minutes}m`;
         }
         
         setTimeRemaining({ text, percentage: 0, totalSeconds: Math.floor(diff / 1000) });
@@ -106,21 +98,74 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   }
 
   return (
-    <Card className={`relative border-0 bg-gradient-to-br ${bgGradient} backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] animate-fade-in group overflow-hidden`}>
-      <CompetitionCardDecorations />
+    <Card className={`border bg-gradient-to-br ${bgGradient} shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden`}>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-4">
+          {/* Ícone da competição */}
+          <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
+            {status === 'active' ? (
+              <span className="text-white text-lg font-bold">⚡</span>
+            ) : (
+              <span className="text-white text-lg font-bold">📅</span>
+            )}
+          </div>
 
-      <CardContent className="p-3 relative">
-        <CompetitionCardHeader
-          title={competition.title}
-          status={status}
-          timeRemaining={timeRemaining}
-        />
+          {/* Conteúdo da competição */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <h3 className="font-bold text-base text-slate-800 mb-1 line-clamp-1">
+                  {competition.title}
+                </h3>
+                <p className="text-sm text-slate-600 mb-2">
+                  {competition.description || 'Caça Palavras'}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {timeRemaining.text}
+                </p>
+              </div>
 
-        <CompetitionCardButton
-          status={status}
-          competitionId={competition.id}
-          onJoin={onJoin}
-        />
+              {/* Indicador de progresso (apenas para ativas) */}
+              {status === 'active' && (
+                <div className="text-right flex-shrink-0">
+                  <div className="w-12 h-12 relative">
+                    <svg className="w-12 h-12 transform -rotate-90" viewBox="0 0 36 36">
+                      <path
+                        className="text-gray-200"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        fill="none"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                      <path
+                        className="text-green-500"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        fill="none"
+                        strokeDasharray={`${timeRemaining.percentage}, 100`}
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs font-bold text-green-600">
+                        {Math.round(timeRemaining.percentage)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Botão de ação */}
+            <div className="mt-3">
+              <CompetitionCardButton
+                status={status}
+                competitionId={competition.id}
+                onJoin={onJoin}
+              />
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

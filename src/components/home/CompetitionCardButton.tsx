@@ -18,10 +18,10 @@ export const CompetitionCardButton = ({
     return (
       <Button 
         onClick={() => onJoin(competitionId)} 
-        className="w-full h-9 text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-all duration-300 shadow-lg border-0"
+        className="w-full h-11 text-sm font-bold bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:scale-105 transition-all duration-300 shadow-md border-0 rounded-xl"
         size="sm"
       >
-        <Play className="w-3.5 h-3.5 mr-2" />
+        <Play className="w-4 h-4 mr-2" />
         🎮 PARTICIPAR AGORA
       </Button>
     );
@@ -31,11 +31,11 @@ export const CompetitionCardButton = ({
     return (
       <Button 
         disabled
-        className="w-full h-9 text-sm font-bold bg-gradient-to-r from-blue-400 to-indigo-500 cursor-not-allowed opacity-75"
+        className="w-full h-11 text-sm font-bold bg-gradient-to-r from-orange-400 to-orange-500 cursor-not-allowed opacity-75 rounded-xl"
         size="sm"
       >
-        <Clock className="w-3.5 h-3.5 mr-2" />
-        📅 AGUARDANDO
+        <Clock className="w-4 h-4 mr-2" />
+        📅 EM BREVE
       </Button>
     );
   }
