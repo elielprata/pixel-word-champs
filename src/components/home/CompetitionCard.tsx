@@ -1,6 +1,6 @@
 
-import React, { useMemo } from 'react';
-import { Zap, Clock, Play } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Zap, Clock, Play, Calendar, Trophy } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Competition } from '@/types';
@@ -14,8 +14,9 @@ interface CompetitionCardProps {
 }
 
 const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
-  // 🎯 CONFIAR COMPLETAMENTE NO STATUS DO BANCO DE DADOS
-  // O cron job já mantém os status corretos, não precisamos calcular nada
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
+  
+  // Confiar completamente no status do banco de dados
   const status = competition.status as 'scheduled' | 'active' | 'completed';
   
   const bgGradient = useMemo(() => {
@@ -37,16 +38,39 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
     
     return colors[Math.abs(hash) % colors.length];
   }, [competition.id]);
-  
-  // Display simples baseado apenas no status do banco
-  const timeDisplay = useMemo(() => {
-    switch (status) {
-      case 'completed': return 'Finalizada';
-      case 'scheduled': return 'Em breve';
-      case 'active': return 'Ativa agora';
-      default: return 'Indisponível';
+
+  // Timer regressivo para competições agendadas
+  useEffect(() => {
+    if (status === 'scheduled') {
+      const updateTimer = () => {
+        const now = new Date();
+        const start = new Date(competition.start_date);
+        const diff = start.getTime() - now.getTime();
+        
+        if (diff <= 0) {
+          setTimeRemaining('Iniciando...');
+          return;
+        }
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (days > 0) {
+          setTimeRemaining(`${days}d ${hours}h ${minutes}m`);
+        } else if (hours > 0) {
+          setTimeRemaining(`${hours}h ${minutes}m`);
+        } else {
+          setTimeRemaining(`${minutes}m`);
+        }
+      };
+      
+      updateTimer();
+      const interval = setInterval(updateTimer, 60000); // Atualiza a cada minuto
+      
+      return () => clearInterval(interval);
     }
-  }, [status]);
+  }, [status, competition.start_date]);
 
   // Só mostrar competições ativas ou agendadas
   if (status === 'completed') {
@@ -55,35 +79,32 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
 
   return (
     <Card className={`relative border-0 bg-gradient-to-br ${bgGradient} backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] animate-fade-in group overflow-hidden`}>
-      {/* Elementos flutuantes coloridos com diferentes tamanhos e animações */}
+      {/* Elementos flutuantes gamificados */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Bolinhas pequenas */}
+        {/* Partículas animadas */}
         <div className="absolute top-2 right-8 w-1 h-1 bg-blue-400/70 rounded-full animate-pulse" style={{ animationDelay: '0s', animationDuration: '2s' }}></div>
         <div className="absolute top-6 right-12 w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-pulse" style={{ animationDelay: '0.5s', animationDuration: '3s' }}></div>
         <div className="absolute bottom-8 left-6 w-1 h-1 bg-green-400/60 rounded-full animate-pulse" style={{ animationDelay: '1s', animationDuration: '2.5s' }}></div>
         <div className="absolute bottom-4 right-6 w-0.5 h-0.5 bg-pink-400/70 rounded-full animate-pulse" style={{ animationDelay: '1.5s', animationDuration: '2s' }}></div>
         <div className="absolute top-12 left-4 w-2 h-2 bg-orange-400/50 rounded-full animate-pulse" style={{ animationDelay: '2s', animationDuration: '4s' }}></div>
-        <div className="absolute bottom-12 right-4 w-1 h-1 bg-cyan-400/60 rounded-full animate-pulse" style={{ animationDelay: '0.8s', animationDuration: '3.5s' }}></div>
         
-        {/* Bolinhas médias */}
-        <div className="absolute top-4 left-12 w-2.5 h-2.5 bg-indigo-300/40 rounded-full animate-pulse" style={{ animationDelay: '1.2s', animationDuration: '4.5s' }}></div>
-        <div className="absolute bottom-6 left-16 w-2 h-2 bg-teal-300/50 rounded-full animate-pulse" style={{ animationDelay: '2.5s', animationDuration: '3.2s' }}></div>
-        
-        {/* Símbolos coloridos */}
-        <div className="absolute top-3 left-16 text-xs text-blue-400/60 animate-pulse font-bold" style={{ animationDelay: '0.3s', animationDuration: '4s' }}>★</div>
-        <div className="absolute bottom-6 right-16 text-xs text-purple-400/50 animate-pulse font-bold" style={{ animationDelay: '2s', animationDuration: '3s' }}>◆</div>
-        <div className="absolute top-8 right-20 text-xs text-green-400/45 animate-pulse font-bold" style={{ animationDelay: '1.2s', animationDuration: '3.5s' }}>♦</div>
-        <div className="absolute bottom-10 left-8 text-sm text-pink-400/40 animate-pulse font-bold" style={{ animationDelay: '3s', animationDuration: '5s' }}>★</div>
-        <div className="absolute top-14 right-8 text-xs text-orange-400/55 animate-pulse font-bold" style={{ animationDelay: '0.7s', animationDuration: '2.8s' }}>◆</div>
-        <div className="absolute bottom-14 right-12 text-xs text-cyan-400/45 animate-pulse font-bold" style={{ animationDelay: '1.8s', animationDuration: '4.2s' }}>♦</div>
+        {/* Símbolos gamificados */}
+        <div className="absolute top-3 left-16 text-xs text-blue-400/60 animate-pulse font-bold" style={{ animationDelay: '0.3s', animationDuration: '4s' }}>⚡</div>
+        <div className="absolute bottom-6 right-16 text-xs text-purple-400/50 animate-pulse font-bold" style={{ animationDelay: '2s', animationDuration: '3s' }}>🎮</div>
+        <div className="absolute top-8 right-20 text-xs text-green-400/45 animate-pulse font-bold" style={{ animationDelay: '1.2s', animationDuration: '3.5s' }}>🏆</div>
+        <div className="absolute bottom-10 left-8 text-sm text-pink-400/40 animate-pulse font-bold" style={{ animationDelay: '3s', animationDuration: '5s' }}>💎</div>
       </div>
 
       <CardContent className="p-4 relative">
-        {/* Header com status do banco */}
+        {/* Header gamificado */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300 animate-bounce-in">
-              <Zap className="w-4 h-4 text-primary-foreground animate-pulse" />
+            <div className="p-1.5 bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
+              {status === 'active' ? (
+                <Zap className="w-4 h-4 text-primary-foreground animate-pulse" />
+              ) : (
+                <Clock className="w-4 h-4 text-primary-foreground" />
+              )}
             </div>
             <div>
               <h3 className="font-bold text-base text-foreground leading-tight group-hover:text-primary transition-colors duration-300">
@@ -99,16 +120,6 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
               </div>
             </div>
           </div>
-          
-          {/* Status display */}
-          <div className="bg-gradient-to-r from-accent/80 to-accent/60 rounded-lg px-3 py-1.5 border border-border/50 hover:from-primary/15 hover:to-primary/10 transition-all duration-300 animate-scale-in">
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-primary animate-pulse" />
-              <span className="text-primary font-bold text-sm animate-fade-in">
-                {timeDisplay}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Descrição compacta */}
@@ -118,37 +129,56 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
           </p>
         )}
 
-        {/* Informações de horário */}
-        <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-          <div className="text-blue-700">
-            <div className="font-medium">📅 Período (Brasília):</div>
-            <div className="text-blue-600 mt-1">
-              Início: {formatDateTimeBrasilia(competition.start_date)}<br/>
-              Fim: {formatDateTimeBrasilia(competition.end_date)}
+        {/* Timer regressivo para competições agendadas */}
+        {status === 'scheduled' && timeRemaining && (
+          <div className="mb-3 p-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-200/50 rounded-xl">
+            <div className="flex items-center justify-center gap-2">
+              <Calendar className="w-4 h-4 text-blue-600" />
+              <div className="text-center">
+                <div className="text-blue-700 font-bold text-sm">⏰ Inicia em:</div>
+                <div className="text-blue-800 font-bold text-lg animate-pulse">{timeRemaining}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Informações de período simplificadas */}
+        <div className="mb-3 p-2 bg-slate-50/80 border border-slate-200/50 rounded-lg text-xs">
+          <div className="text-slate-700">
+            <div className="font-medium flex items-center gap-1">
+              <Trophy className="w-3 h-3" />
+              Período da Competição:
+            </div>
+            <div className="text-slate-600 mt-1 text-xs">
+              {formatDateTimeBrasilia(competition.start_date)} até {formatDateTimeBrasilia(competition.end_date)}
             </div>
           </div>
         </div>
 
-        {/* Botão de ação baseado apenas no status do banco */}
+        {/* Botão de ação gamificado */}
         {status === 'active' && (
           <Button 
             onClick={() => onJoin(competition.id)} 
-            className="w-full h-9 text-sm font-bold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary hover:scale-105 transition-all duration-300 animate-bounce-in delay-300 group/button shadow-lg"
+            className="w-full h-10 text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-all duration-300 animate-bounce-in delay-300 group/button shadow-lg border-0"
             size="sm"
           >
             <Play className="w-4 h-4 mr-2 group-hover/button:scale-110 transition-transform duration-200" />
-            <span className="group-hover/button:animate-pulse">🚀 JOGAR AGORA</span>
+            <span className="group-hover/button:animate-pulse flex items-center gap-1">
+              ⚡ JOGAR AGORA ⚡
+            </span>
           </Button>
         )}
 
         {status === 'scheduled' && (
           <Button 
             disabled
-            className="w-full h-9 text-sm font-bold bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed"
+            className="w-full h-10 text-sm font-bold bg-gradient-to-r from-blue-400 to-indigo-500 cursor-not-allowed opacity-75"
             size="sm"
           >
             <Clock className="w-4 h-4 mr-2" />
-            <span>⏰ AGUARDE O INÍCIO</span>
+            <span className="flex items-center gap-1">
+              🎮 AGUARDANDO INÍCIO
+            </span>
           </Button>
         )}
       </CardContent>
