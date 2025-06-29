@@ -6,9 +6,10 @@ import { logger } from '@/utils/logger';
 interface ChallengeProgress {
   id: string;
   user_id: string;
-  challenge_id: string;
+  challenge_id: number; // Corrigido: banco usa number
   current_level: number;
   total_score: number;
+  is_completed: boolean;
   completed_at?: string;
   created_at: string;
   updated_at: string;
@@ -35,11 +36,17 @@ export const useChallengeProgress = (challengeId: string) => {
         throw new Error('Usuário não autenticado');
       }
 
+      // Converter challengeId string para number
+      const challengeIdNumber = parseInt(challengeId, 10);
+      if (isNaN(challengeIdNumber)) {
+        throw new Error('ID do desafio inválido');
+      }
+
       const { data, error: fetchError } = await supabase
         .from('challenge_progress')
         .select('*')
         .eq('user_id', user.id)
-        .eq('challenge_id', challengeId)
+        .eq('challenge_id', challengeIdNumber)
         .maybeSingle();
 
       if (fetchError) {
@@ -73,9 +80,15 @@ export const useChallengeProgress = (challengeId: string) => {
         throw new Error('Usuário não autenticado');
       }
 
+      // Converter challengeId string para number
+      const challengeIdNumber = parseInt(challengeId, 10);
+      if (isNaN(challengeIdNumber)) {
+        throw new Error('ID do desafio inválido');
+      }
+
       const progressData = {
         user_id: user.id,
-        challenge_id: challengeId,
+        challenge_id: challengeIdNumber, // Usar number
         current_level: currentLevel,
         total_score: totalScore,
         updated_at: new Date().toISOString()
@@ -121,11 +134,18 @@ export const useChallengeProgress = (challengeId: string) => {
         throw new Error('Usuário não autenticado');
       }
 
+      // Converter challengeId string para number
+      const challengeIdNumber = parseInt(challengeId, 10);
+      if (isNaN(challengeIdNumber)) {
+        throw new Error('ID do desafio inválido');
+      }
+
       const completionData = {
         user_id: user.id,
-        challenge_id: challengeId,
+        challenge_id: challengeIdNumber, // Usar number
         current_level: 20, // Máximo de níveis
         total_score: finalScore,
+        is_completed: true,
         completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
