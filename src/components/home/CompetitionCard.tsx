@@ -18,7 +18,6 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
     totalSeconds: number;
   }>({ text: '', percentage: 0, totalSeconds: 0 });
   
-  // Confiar completamente no status do banco de dados
   const status = competition.status as 'scheduled' | 'active' | 'completed';
   
   const bgGradient = useMemo(() => {
@@ -41,7 +40,6 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
     return colors[Math.abs(hash) % colors.length];
   }, [competition.id]);
 
-  // Timer e progresso para competições
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
@@ -61,7 +59,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
         
         let text = '';
         if (days > 0) {
-          text = `${days}d ${hours}h ${minutes}m`;
+          text = `${days}d ${hours}h`;
         } else if (hours > 0) {
           text = `${hours}h ${minutes}m`;
         } else {
@@ -84,15 +82,12 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
         const percentage = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
         const hours = Math.floor(remaining / (1000 * 60 * 60));
         const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
         
         let text = '';
         if (hours > 0) {
           text = `${hours}h ${minutes}m`;
-        } else if (minutes > 0) {
-          text = `${minutes}m ${seconds}s`;
         } else {
-          text = `${seconds}s`;
+          text = `${minutes}m`;
         }
         
         setTimeRemaining({ text, percentage, totalSeconds: Math.floor(remaining / 1000) });
@@ -105,42 +100,38 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
     return () => clearInterval(interval);
   }, [status, competition.start_date, competition.end_date]);
 
-  // Só mostrar competições ativas ou agendadas
   if (status === 'completed') {
     return null;
   }
 
-  // Componente de barra circular integrada com tempo
-  const CircularProgressWithTime = ({ percentage, timeText, size = 90 }: { percentage: number; timeText: string; size?: number }) => {
-    const radius = (size - 8) / 2;
+  const CircularProgressWithTime = ({ percentage, timeText, size = 70 }: { percentage: number; timeText: string; size?: number }) => {
+    const radius = (size - 6) / 2;
     const circumference = radius * 2 * Math.PI;
     const strokeDasharray = `${circumference} ${circumference}`;
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
     
     return (
-      <div className="relative flex flex-col items-center" style={{ width: size, height: size + 20 }}>
+      <div className="relative flex flex-col items-center" style={{ width: size, height: size + 16 }}>
         <svg
           className="transform -rotate-90"
           width={size}
           height={size}
         >
-          {/* Background circle */}
           <circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             stroke="currentColor"
-            strokeWidth="4"
+            strokeWidth="3"
             fill="none"
             className="text-gray-200"
           />
-          {/* Progress circle */}
           <circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             stroke="currentColor"
-            strokeWidth="4"
+            strokeWidth="3"
             fill="none"
             strokeDasharray={strokeDasharray}
             strokeDashoffset={strokeDashoffset}
@@ -150,21 +141,19 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
             }}
           />
         </svg>
-        {/* Center content */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             {status === 'active' ? (
-              <Zap className="w-5 h-5 mx-auto text-green-600 mb-1" />
+              <Zap className="w-4 h-4 mx-auto text-green-600 mb-0.5" />
             ) : (
-              <Clock className="w-5 h-5 mx-auto text-blue-600 mb-1" />
+              <Clock className="w-4 h-4 mx-auto text-blue-600 mb-0.5" />
             )}
             <div className="text-xs font-bold text-gray-700">
               {status === 'active' ? Math.round(percentage) + '%' : '⏰'}
             </div>
           </div>
         </div>
-        {/* Tempo restante abaixo da barra */}
-        <div className={`text-center mt-1 font-bold text-sm ${status === 'active' ? 'text-green-700' : 'text-blue-700'}`}>
+        <div className={`text-center mt-1 font-bold text-xs ${status === 'active' ? 'text-green-700' : 'text-blue-700'}`}>
           {timeText}
         </div>
       </div>
@@ -172,82 +161,63 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   };
 
   return (
-    <Card className={`relative border-0 bg-gradient-to-br ${bgGradient} backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] animate-fade-in group overflow-hidden`}>
-      {/* Elementos flutuantes gamificados */}
+    <Card className={`relative border-0 bg-gradient-to-br ${bgGradient} backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] animate-fade-in group overflow-hidden`}>
+      {/* Elementos decorativos gamificados */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Partículas animadas */}
-        <div className="absolute top-2 right-8 w-1 h-1 bg-blue-400/70 rounded-full animate-pulse" style={{ animationDelay: '0s', animationDuration: '2s' }}></div>
-        <div className="absolute top-6 right-12 w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-pulse" style={{ animationDelay: '0.5s', animationDuration: '3s' }}></div>
-        <div className="absolute bottom-8 left-6 w-1 h-1 bg-green-400/60 rounded-full animate-pulse" style={{ animationDelay: '1s', animationDuration: '2.5s' }}></div>
-        <div className="absolute bottom-4 right-6 w-0.5 h-0.5 bg-pink-400/70 rounded-full animate-pulse" style={{ animationDelay: '1.5s', animationDuration: '2s' }}></div>
-        <div className="absolute top-12 left-4 w-2 h-2 bg-orange-400/50 rounded-full animate-pulse" style={{ animationDelay: '2s', animationDuration: '4s' }}></div>
+        <div className="absolute top-2 right-6 w-1 h-1 bg-blue-400/60 rounded-full animate-pulse" style={{ animationDelay: '0s', animationDuration: '2s' }}></div>
+        <div className="absolute top-5 right-10 w-1.5 h-1.5 bg-purple-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.5s', animationDuration: '3s' }}></div>
+        <div className="absolute bottom-6 left-4 w-1 h-1 bg-green-400/50 rounded-full animate-pulse" style={{ animationDelay: '1s', animationDuration: '2.5s' }}></div>
         
-        {/* Símbolos gamificados */}
-        <div className="absolute top-3 left-16 text-xs text-blue-400/60 animate-pulse font-bold" style={{ animationDelay: '0.3s', animationDuration: '4s' }}>⚡</div>
-        <div className="absolute bottom-6 right-16 text-xs text-purple-400/50 animate-pulse font-bold" style={{ animationDelay: '2s', animationDuration: '3s' }}>🎮</div>
-        <div className="absolute top-8 right-20 text-xs text-green-400/45 animate-pulse font-bold" style={{ animationDelay: '1.2s', animationDuration: '3.5s' }}>🏆</div>
-        <div className="absolute bottom-10 left-8 text-sm text-pink-400/40 animate-pulse font-bold" style={{ animationDelay: '3s', animationDuration: '5s' }}>💎</div>
+        <div className="absolute top-2 left-12 text-xs text-blue-400/50 animate-pulse font-bold" style={{ animationDelay: '0.3s', animationDuration: '4s' }}>⚡</div>
+        <div className="absolute bottom-4 right-12 text-xs text-purple-400/40 animate-pulse font-bold" style={{ animationDelay: '2s', animationDuration: '3s' }}>🎮</div>
+        <div className="absolute top-6 right-16 text-xs text-green-400/35 animate-pulse font-bold" style={{ animationDelay: '1.2s', animationDuration: '3.5s' }}>🏆</div>
       </div>
 
-      <CardContent className="p-4 relative">
-        {/* Header compacto */}
-        <div className="flex items-center gap-3 mb-4">
+      <CardContent className="p-3 relative">
+        <div className="flex items-center gap-3 mb-3">
           <div className="flex items-center gap-2 flex-1">
-            <div className="p-1.5 bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <div className="p-1.5 bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-lg shadow-md group-hover:scale-110 transition-transform duration-300">
               {status === 'active' ? (
-                <Zap className="w-4 h-4 text-primary-foreground" />
+                <Zap className="w-3.5 h-3.5 text-primary-foreground" />
               ) : (
-                <Clock className="w-4 h-4 text-primary-foreground" />
+                <Clock className="w-3.5 h-3.5 text-primary-foreground" />
               )}
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-base text-foreground leading-tight group-hover:text-primary transition-colors duration-300">
+              <h3 className="font-bold text-sm text-foreground leading-tight group-hover:text-primary transition-colors duration-300">
                 {competition.title}
               </h3>
             </div>
           </div>
           
-          {/* Barra de progresso circular com tempo integrado */}
           <div className="shrink-0">
             <CircularProgressWithTime 
               percentage={timeRemaining.percentage} 
               timeText={timeRemaining.text}
-              size={80} 
+              size={70} 
             />
           </div>
         </div>
 
-        {/* Descrição compacta (opcional) */}
-        {competition.description && (
-          <p className="text-muted-foreground text-xs mb-3 leading-relaxed line-clamp-2 animate-fade-in delay-100">
-            {competition.description}
-          </p>
-        )}
-
-        {/* Botão de ação gamificado */}
         {status === 'active' && (
           <Button 
             onClick={() => onJoin(competition.id)} 
-            className="w-full h-10 text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-all duration-300 animate-bounce-in delay-300 group/button shadow-lg border-0"
+            className="w-full h-9 text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-all duration-300 shadow-lg border-0"
             size="sm"
           >
-            <Play className="w-4 h-4 mr-2 group-hover/button:scale-110 transition-transform duration-200" />
-            <span className="flex items-center gap-1">
-              🎮 PARTICIPAR AGORA
-            </span>
+            <Play className="w-3.5 h-3.5 mr-2" />
+            🎮 PARTICIPAR AGORA
           </Button>
         )}
 
         {status === 'scheduled' && (
           <Button 
             disabled
-            className="w-full h-10 text-sm font-bold bg-gradient-to-r from-blue-400 to-indigo-500 cursor-not-allowed opacity-75"
+            className="w-full h-9 text-sm font-bold bg-gradient-to-r from-blue-400 to-indigo-500 cursor-not-allowed opacity-75"
             size="sm"
           >
-            <Clock className="w-4 h-4 mr-2" />
-            <span className="flex items-center gap-1">
-              📅 AGUARDANDO INÍCIO
-            </span>
+            <Clock className="w-3.5 h-3.5 mr-2" />
+            📅 AGUARDANDO
           </Button>
         )}
       </CardContent>
