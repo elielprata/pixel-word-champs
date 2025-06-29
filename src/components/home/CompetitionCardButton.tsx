@@ -17,11 +17,11 @@ export const CompetitionCardButton = ({
     return (
       <button 
         onClick={() => onJoin(competitionId)} 
-        className="w-full bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center space-x-2 hover:from-green-500 hover:to-green-600 transition-all"
+        className="w-full bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center space-x-3 hover:from-green-500 hover:to-green-600 transition-all"
       >
-        <span className="text-lg">▶</span>
-        <span className="text-lg">🎮</span>
-        <span className="text-lg">PARTICIPAR AGORA</span>
+        <span className="text-2xl">▶</span>
+        <span className="text-2xl">🎮</span>
+        <span className="text-lg font-bold tracking-wide">PARTICIPAR AGORA</span>
       </button>
     );
   }
