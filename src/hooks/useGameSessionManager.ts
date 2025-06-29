@@ -1,164 +1,221 @@
 
 import { useState, useCallback } from 'react';
-import { gameService } from '@/services/gameService';
-import { gameScoreService } from '@/services/gameScoreService';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { logger } from '@/utils/logger';
 
-interface SessionData {
+interface GameSession {
   sessionId: string;
+  userId: string;
   level: number;
-  board: string[][];
-  wordsFound: string[];
-  totalScore: number;
-  timeElapsed: number;
-  isCompleted: boolean;
+  startedAt: string;
+  boardData: any;
 }
 
-interface ScoreUpdateResult {
-  total_score: number;
-  experience_points: number;
-  games_played: number;
+interface Position {
+  row: number;
+  col: number;
 }
 
 export const useGameSessionManager = () => {
-  const [currentSession, setCurrentSession] = useState<SessionData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [currentSession, setCurrentSession] = useState<GameSession | null>(null);
+  const [isSessionActive, setIsSessionActive] = useState(false);
   const { user } = useAuth();
 
-  const startNewSession = useCallback(async (level: number, competitionId?: string) => {
-    if (!user) {
-      setError('Usuário não autenticado');
+  // ✅ INICIAR nova sessão no banco
+  const startNewSession = useCallback(async (level: number, boardData?: any): Promise<GameSession | null> => {
+    if (!user?.id) {
+      logger.error('❌ Não é possível iniciar sessão sem usuário autenticado', {}, 'SESSION_MANAGER');
       return null;
     }
 
-    setIsLoading(true);
-    setError(null);
-
     try {
-      const response = await gameService.createGameSession({
+      logger.info('🔄 Iniciando nova sessão de jogo no banco', {
+        userId: user.id,
         level,
-        competitionId
-      });
-
-      if (response.success && response.data) {
-        const session: SessionData = {
-          sessionId: response.data.id,
-          level: response.data.level,
-          board: response.data.board,
-          wordsFound: [],
-          totalScore: 0,
-          timeElapsed: 0,
-          isCompleted: false
-        };
-
-        setCurrentSession(session);
-        logger.info('Nova sessão iniciada', { sessionId: session.sessionId, level }, 'SESSION_MANAGER');
-        return session;
-      } else {
-        throw new Error(response.error || 'Erro ao iniciar sessão');
-      }
-    } catch (err) {
-      logger.error('Erro ao iniciar sessão', { error: err, level }, 'SESSION_MANAGER');
-      setError('Erro ao iniciar nova sessão');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
-
-  const addWordFound = useCallback(async (word: string, points: number, positions: any[]) => {
-    if (!currentSession || !user) return false;
-
-    try {
-      const response = await gameService.submitWord(currentSession.sessionId, word, positions, points);
-      
-      if (response.success) {
-        setCurrentSession(prev => prev ? {
-          ...prev,
-          wordsFound: [...prev.wordsFound, word],
-          totalScore: prev.totalScore + points
-        } : null);
-
-        logger.info('Palavra adicionada', { 
-          sessionId: currentSession.sessionId, 
-          word, 
-          points 
-        }, 'SESSION_MANAGER');
-        return true;
-      }
-      return false;
-    } catch (err) {
-      logger.error('Erro ao adicionar palavra', { error: err, word }, 'SESSION_MANAGER');
-      return false;
-    }
-  }, [currentSession, user]);
-
-  const completeSession = useCallback(async (timeElapsed: number, competitionId?: string) => {
-    if (!currentSession || !user) return null;
-
-    setIsLoading(true);
-    try {
-      // Complete the game session
-      const sessionResponse = await gameService.completeGameSession(currentSession.sessionId);
-
-      if (sessionResponse.success) {
-        // Update both temporary and permanent scores using new service
-        const scoreResponse = await gameScoreService.updateGameScore(
-          user.id,
-          currentSession.totalScore,
-          competitionId
-        );
-
-        if (scoreResponse.success && scoreResponse.data) {
-          const scores = scoreResponse.data as ScoreUpdateResult;
-          
-          logger.info('Sessão completada e pontuações atualizadas', {
-            sessionId: currentSession.sessionId,
-            gamePoints: currentSession.totalScore,
-            newTotalScore: scores.total_score,
-            newExperiencePoints: scores.experience_points
-          }, 'SESSION_MANAGER');
-
-          const completedSession = {
-            ...currentSession,
-            timeElapsed,
-            isCompleted: true
-          };
-
-          setCurrentSession(completedSession);
-          return {
-            session: completedSession,
-            scores: scores
-          };
-        } else {
-          throw new Error('Erro ao atualizar pontuações');
-        }
-      } else {
-        throw new Error(sessionResponse.error || 'Erro ao completar sessão');
-      }
-    } catch (err) {
-      logger.error('Erro ao completar sessão', { 
-        error: err, 
-        sessionId: currentSession.sessionId 
+        hasBoardData: !!boardData
       }, 'SESSION_MANAGER');
-      setError('Erro ao completar sessão');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentSession, user]);
 
+      const { data, error } = await supabase
+        .from('game_sessions')
+        .insert({
+          user_id: user.id,
+          level,
+          board: boardData || {},
+          words_found: [],
+          total_score: 0,
+          time_elapsed: 0,
+          is_completed: false,
+          started_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const session: GameSession = {
+        sessionId: data.id,
+        userId: user.id,
+        level,
+        startedAt: data.started_at,
+        boardData: data.board
+      };
+
+      setCurrentSession(session);
+      setIsSessionActive(true);
+
+      logger.info('✅ Sessão criada com sucesso no banco', {
+        sessionId: data.id,
+        userId: user.id,
+        level
+      }, 'SESSION_MANAGER');
+
+      return session;
+
+    } catch (error) {
+      logger.error('❌ Erro ao iniciar sessão no banco', {
+        error,
+        userId: user.id,
+        level
+      }, 'SESSION_MANAGER');
+      return null;
+    }
+  }, [user?.id]);
+
+  // ✅ ADICIONAR palavra encontrada na sessão
+  const addWordFound = useCallback(async (word: string, points: number, positions: Position[]): Promise<boolean> => {
+    if (!currentSession || !user?.id) {
+      logger.error('❌ Não é possível adicionar palavra sem sessão ativa', {
+        hasSession: !!currentSession,
+        hasUser: !!user?.id,
+        word,
+        points
+      }, 'SESSION_MANAGER');
+      return false;
+    }
+
+    try {
+      logger.info('🔄 Adicionando palavra encontrada na sessão', {
+        sessionId: currentSession.sessionId,
+        word,
+        points,
+        positionsCount: positions.length
+      }, 'SESSION_MANAGER');
+
+      // Salvar na tabela words_found
+      const { error: wordError } = await supabase
+        .from('words_found')
+        .insert({
+          session_id: currentSession.sessionId,
+          word,
+          points,
+          positions: positions,
+          found_at: new Date().toISOString()
+        });
+
+      if (wordError) throw wordError;
+
+      logger.info('✅ Palavra salva com sucesso na sessão', {
+        sessionId: currentSession.sessionId,
+        word,
+        points
+      }, 'SESSION_MANAGER');
+
+      return true;
+
+    } catch (error) {
+      logger.error('❌ Erro ao salvar palavra na sessão', {
+        error,
+        sessionId: currentSession?.sessionId,
+        word,
+        points
+      }, 'SESSION_MANAGER');
+      return false;
+    }
+  }, [currentSession, user?.id]);
+
+  // ✅ COMPLETAR sessão e atualizar pontuação total
+  const completeSession = useCallback(async (timeElapsed: number): Promise<boolean> => {
+    if (!currentSession || !user?.id) {
+      logger.error('❌ Não é possível completar sessão sem sessão ativa', {
+        hasSession: !!currentSession,
+        hasUser: !!user?.id
+      }, 'SESSION_MANAGER');
+      return false;
+    }
+
+    try {
+      logger.info('🔄 Completando sessão no banco', {
+        sessionId: currentSession.sessionId,
+        timeElapsed
+      }, 'SESSION_MANAGER');
+
+      // Primeiro, calcular o total de pontos das palavras encontradas
+      const { data: wordsData, error: wordsError } = await supabase
+        .from('words_found')
+        .select('points')
+        .eq('session_id', currentSession.sessionId);
+
+      if (wordsError) throw wordsError;
+
+      const totalScore = wordsData?.reduce((sum, word) => sum + word.points, 0) || 0;
+
+      if (totalScore <= 0) {
+        throw new Error('Sessão não pode ser completada com pontuação zero');
+      }
+
+      if (wordsData?.length < 5) {
+        throw new Error(`Sessão não pode ser completada com apenas ${wordsData?.length} palavras`);
+      }
+
+      // Marcar sessão como completada
+      const { error: sessionError } = await supabase
+        .from('game_sessions')
+        .update({
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+          time_elapsed: timeElapsed,
+          total_score: totalScore
+        })
+        .eq('id', currentSession.sessionId);
+
+      if (sessionError) throw sessionError;
+
+      logger.info('✅ Sessão marcada como completada no banco', {
+        sessionId: currentSession.sessionId,
+        totalScore,
+        wordsCount: wordsData?.length,
+        timeElapsed
+      }, 'SESSION_MANAGER');
+
+      // Limpar sessão atual
+      setCurrentSession(null);
+      setIsSessionActive(false);
+
+      return true;
+
+    } catch (error) {
+      logger.error('❌ Erro ao completar sessão', {
+        error,
+        sessionId: currentSession?.sessionId
+      }, 'SESSION_MANAGER');
+      return false;
+    }
+  }, [currentSession, user?.id]);
+
+  // ✅ RESETAR sessão (limpar estado local)
   const resetSession = useCallback(() => {
+    logger.info('🔄 Resetando sessão local', {
+      hadSession: !!currentSession
+    }, 'SESSION_MANAGER');
+    
     setCurrentSession(null);
-    setError(null);
-  }, []);
+    setIsSessionActive(false);
+  }, [currentSession]);
 
   return {
     currentSession,
-    isLoading,
-    error,
+    isSessionActive,
     startNewSession,
     addWordFound,
     completeSession,
