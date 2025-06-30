@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useOptimizedBoard } from './useOptimizedBoard';
 import { useWordValidation } from './useWordValidation';
@@ -266,39 +267,6 @@ export const useSimplifiedGameLogic = ({
     setIsSelecting(false);
     setStartCell(null);
   }, [selectedCells, validateAndConfirmWord, boardData.board, getPointsForWord]);
-
-  // Usar dica
-  const useHint = useCallback(() => {
-    if (hintsUsed >= 1) return;
-
-    // Encontrar primeira palavra não descoberta (evitar a palavra "extra" de maior pontuação)
-    const foundWordTexts = foundWords.map(fw => fw.word);
-    const availableWords = levelWords.filter(word => !foundWordTexts.includes(word));
-    
-    if (availableWords.length === 0) return;
-
-    // Escolher a palavra mais fácil (menor pontuação, evitando a palavra "extra")
-    const sortedWords = availableWords.sort((a, b) => a.length - b.length);
-    const hintWord = sortedWords[0];
-
-    // Encontrar posições da palavra no tabuleiro
-    const placedWord = boardData.placedWords.find(pw => pw.word === hintWord);
-    if (!placedWord) return;
-
-    setHintHighlightedCells(placedWord.positions);
-    setHintsUsed(1);
-
-    logger.info('💡 Dica usada', { 
-      hintWord, 
-      positions: placedWord.positions,
-      level 
-    }, 'SIMPLIFIED_GAME');
-
-    // Remover destaque após 3 segundos
-    setTimeout(() => {
-      setHintHighlightedCells([]);
-    }, 3000);
-  }, [hintsUsed, foundWords, levelWords, boardData.placedWords, level]);
 
   // Handlers de célula
   const handleCellMouseDown = useCallback((row: number, col: number) => {
