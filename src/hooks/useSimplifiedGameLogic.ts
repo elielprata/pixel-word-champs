@@ -185,14 +185,16 @@ export const useSimplifiedGameLogic = ({
   }, [hintsUsed, foundWords, levelWords, boardData.placedWords, level]);
 
   // Handlers de célula
-  const handleCellMouseDown = useCallback((position: Position) => {
+  const handleCellMouseDown = useCallback((row: number, col: number) => {
+    const position = { row, col };
     setSelectedCells([position]);
     setIsSelecting(true);
   }, []);
 
-  const handleCellMouseEnter = useCallback((position: Position) => {
+  const handleCellMouseEnter = useCallback((row: number, col: number) => {
     if (!isSelecting) return;
     
+    const position = { row, col };
     setSelectedCells(prev => {
       if (prev.some(p => p.row === position.row && p.col === position.col)) {
         return prev;
@@ -244,6 +246,8 @@ export const useSimplifiedGameLogic = ({
     currentLevelScore,
     hintsUsed,
     showValidWord,
+    selectedCells,
+    isSelecting,
     
     // Estados de modais
     showGameOver,

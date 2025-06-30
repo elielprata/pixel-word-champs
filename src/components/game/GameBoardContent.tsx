@@ -76,8 +76,10 @@ const GameBoardContent = ({
 
       <GameBoardMainContent
         boardProps={{
-          boardData: gameLogic.boardData.board,
-          size: gameLogic.size
+          boardData: gameLogic.boardData,
+          size: gameLogic.size,
+          selectedCells: gameLogic.selectedCells,
+          isDragging: gameLogic.isSelecting
         }}
         gameStateProps={{
           foundWords: gameLogic.foundWords,
@@ -86,13 +88,14 @@ const GameBoardContent = ({
           hintsUsed: gameLogic.hintsUsed
         }}
         cellInteractionProps={{
-          onCellMouseDown: gameLogic.handleCellMouseDown,
-          onCellMouseEnter: gameLogic.handleCellMouseEnter,
-          onCellMouseUp: gameLogic.handleCellMouseUp,
+          handleCellStart: gameLogic.handleCellMouseDown,
+          handleCellMove: gameLogic.handleCellMouseEnter,
+          handleCellEnd: gameLogic.handleCellMouseUp,
           isCellSelected: gameLogic.isCellSelected,
-          isCellPartOfFoundWord: gameLogic.isCellPartOfFoundWord,
+          isCellPermanentlyMarked: gameLogic.isCellPartOfFoundWord,
           isCellHintHighlighted: gameLogic.isCellHintHighlighted,
-          showValidWordFeedback: gameLogic.showValidWord
+          getWordColor: () => '#3B82F6',
+          getCellWordIndex: () => -1
         }}
       />
 
