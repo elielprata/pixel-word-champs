@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
+import { debugAuthInfo } from '@/utils/debugAuth';
 
 interface ChallengeProgress {
   id: string;
@@ -23,11 +24,13 @@ interface SaveProgressParams {
   isCompleted?: boolean;
 }
 
-// 🎯 NOVA FUNÇÃO: Disparar evento de atualização de progresso
+// 🎯 FUNÇÃO: Disparar evento de atualização de progresso
 const notifyProgressUpdate = (competitionId: string) => {
-  window.dispatchEvent(new CustomEvent('challenge-progress-updated', { 
+  const event = new CustomEvent('challenge-progress-updated', { 
     detail: { competitionId } 
-  }));
+  });
+  window.dispatchEvent(event);
+  logger.debug('📢 Evento de progresso disparado', { competitionId }, 'CHALLENGE_PROGRESS');
 };
 
 export const challengeProgressService = {
@@ -41,6 +44,9 @@ export const challengeProgressService = {
         competitionId 
       }, 'CHALLENGE_PROGRESS');
 
+      // Debug auth antes da consulta
+      await debugAuthInfo();
+
       const { data, error } = await supabase
         .from('challenge_progress')
         .select('*')
@@ -50,13 +56,23 @@ export const challengeProgressService = {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          // Nenhum registro encontrado - normal para primeira vez
           logger.info('📝 Nenhum progresso encontrado - primeira vez', { 
             userId, 
             competitionId 
           }, 'CHALLENGE_PROGRESS');
           return null;
         }
+        
+        logger.error('❌ Erro na consulta de progresso', {
+          error: {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          },
+          userId,
+          competitionId
+        }, 'CHALLENGE_PROGRESS');
         throw error;
       }
 
@@ -73,7 +89,8 @@ export const challengeProgressService = {
       logger.error('❌ Erro ao buscar progresso', { 
         error: error instanceof Error ? {
           name: error.name,
-          message: error.message
+          message: error.message,
+          stack: error.stack
         } : error,
         userId, 
         competitionId 
@@ -103,13 +120,29 @@ export const challengeProgressService = {
         isCompleted
       }, 'CHALLENGE_PROGRESS');
 
+      // Debug auth antes da operação
+      await debugAuthInfo();
+
       // Tentar atualizar registro existente primeiro
       const { data: existingData, error: selectError } = await supabase
         .from('challenge_progress')
         .select('id')
         .eq('user_id', userId)
         .eq('competition_id', competitionId)
-        .single();
+        .maybeSingle(); // Usar maybeSingle ao invés de single
+
+      if (selectError) {
+        logger.error('❌ Erro ao verificar progresso existente', {
+          error: {
+            code: selectError.code,
+            message: selectError.message,
+            details: selectError.details
+          },
+          userId,
+          competitionId
+        }, 'CHALLENGE_PROGRESS');
+        throw selectError;
+      }
 
       if (existingData) {
         // Atualizar registro existente
@@ -124,14 +157,27 @@ export const challengeProgressService = {
           })
           .eq('id', existingData.id);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          logger.error('❌ Erro ao atualizar progresso', {
+            error: {
+              code: updateError.code,
+              message: updateError.message,
+              details: updateError.details
+            },
+            userId,
+            competitionId,
+            existingId: existingData.id
+          }, 'CHALLENGE_PROGRESS');
+          throw updateError;
+        }
         
         logger.info('🔄 Progresso atualizado com sucesso', { 
           userId, 
           competitionId,
           currentLevel,
           totalScore,
-          isCompleted
+          isCompleted,
+          existingId: existingData.id
         }, 'CHALLENGE_PROGRESS');
       } else {
         // Criar novo registro
@@ -148,7 +194,21 @@ export const challengeProgressService = {
             updated_at: now
           });
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          logger.error('❌ Erro ao inserir novo progresso', {
+            error: {
+              code: insertError.code,
+              message: insertError.message,
+              details: insertError.details,
+              hint: insertError.hint
+            },
+            userId,
+            competitionId,
+            currentLevel,
+            totalScore
+          }, 'CHALLENGE_PROGRESS');
+          throw insertError;
+        }
         
         logger.info('✨ Novo progresso criado com sucesso', { 
           userId, 
@@ -159,7 +219,7 @@ export const challengeProgressService = {
         }, 'CHALLENGE_PROGRESS');
       }
 
-      // 🎯 CORREÇÃO: Notificar atualização de progresso
+      // Notificar atualização de progresso
       notifyProgressUpdate(competitionId);
 
       return true;
@@ -167,7 +227,8 @@ export const challengeProgressService = {
       logger.error('❌ Erro ao salvar progresso', { 
         error: error instanceof Error ? {
           name: error.name,
-          message: error.message
+          message: error.message,
+          stack: error.stack
         } : error,
         userId, 
         competitionId,
@@ -198,7 +259,6 @@ export const challengeProgressService = {
     });
 
     if (result) {
-      // 🎯 CORREÇÃO: Notificar conclusão
       notifyProgressUpdate(competitionId);
     }
 

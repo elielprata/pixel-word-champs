@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { challengeProgressService } from '@/services/challengeProgressService';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -17,13 +17,37 @@ export const useCompetitionStatus = (competitionId: string): CompetitionStatus =
     status: 'not_started',
     loading: true
   });
+  
+  // 🔧 CORREÇÃO: Usar refs para evitar loops infinitos
+  const lastCompetitionId = useRef<string>('');
+  const lastUserId = useRef<string>('');
+  const isRefreshing = useRef<boolean>(false);
 
-  // 🎯 CORREÇÃO: Função para refrescar status
+  // 🔧 CORREÇÃO: Função para refrescar status com proteção contra loops
   const refreshStatus = useCallback(async () => {
+    // Evitar múltiplas execuções simultâneas
+    if (isRefreshing.current) {
+      logger.debug('⚠️ Refresh já em andamento, ignorando', { competitionId }, 'COMPETITION_STATUS');
+      return;
+    }
+
     if (!user || !competitionId) {
       setStatus({ status: 'not_started', loading: false });
       return;
     }
+
+    // Verificar se realmente precisa fazer refresh
+    if (lastCompetitionId.current === competitionId && lastUserId.current === user.id) {
+      logger.debug('🔄 Dados não mudaram, skip refresh', { 
+        competitionId, 
+        userId: user.id 
+      }, 'COMPETITION_STATUS');
+      return;
+    }
+
+    isRefreshing.current = true;
+    lastCompetitionId.current = competitionId;
+    lastUserId.current = user.id;
 
     try {
       logger.debug('🔍 Verificando status da competição', { 
@@ -34,14 +58,12 @@ export const useCompetitionStatus = (competitionId: string): CompetitionStatus =
       const progress = await challengeProgressService.getProgress(user.id, competitionId);
       
       if (!progress) {
-        // Nenhum progresso = não iniciado
         logger.debug('📝 Nenhum progresso encontrado - não iniciado', { 
           competitionId, 
           userId: user.id 
         }, 'COMPETITION_STATUS');
         setStatus({ status: 'not_started', loading: false });
       } else if (progress.is_completed) {
-        // Completado
         logger.debug('🏆 Competição completada', { 
           competitionId, 
           userId: user.id,
@@ -54,7 +76,6 @@ export const useCompetitionStatus = (competitionId: string): CompetitionStatus =
           loading: false 
         });
       } else {
-        // Em progresso
         logger.debug('🎯 Competição em progresso', { 
           competitionId, 
           userId: user.id,
@@ -80,28 +101,42 @@ export const useCompetitionStatus = (competitionId: string): CompetitionStatus =
       
       // Em caso de erro, assumir não iniciado
       setStatus({ status: 'not_started', loading: false });
+    } finally {
+      isRefreshing.current = false;
     }
   }, [competitionId, user]);
 
-  // 🎯 CORREÇÃO: Efeito principal para carregar status
+  // 🔧 CORREÇÃO: Efeito principal controlado
   useEffect(() => {
     refreshStatus();
   }, [refreshStatus]);
 
-  // 🎯 NOVA FUNCIONALIDADE: Listener para mudanças no progresso
+  // 🔧 CORREÇÃO: Listener para mudanças no progresso com throttle
   useEffect(() => {
-    const handleProgressUpdate = () => {
-      logger.debug('🔄 Atualizando status após mudança no progresso', { 
-        competitionId 
-      }, 'COMPETITION_STATUS');
-      refreshStatus();
+    let timeoutId: NodeJS.Timeout;
+    
+    const handleProgressUpdate = (event: CustomEvent) => {
+      const { competitionId: updatedCompetitionId } = event.detail;
+      
+      if (updatedCompetitionId === competitionId) {
+        logger.debug('🔄 Atualizando status após mudança no progresso', { 
+          competitionId 
+        }, 'COMPETITION_STATUS');
+        
+        // Throttle para evitar múltiplas atualizações rápidas
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          refreshStatus();
+        }, 500);
+      }
     };
 
     // Escutar eventos customizados de progresso
-    window.addEventListener('challenge-progress-updated', handleProgressUpdate);
+    window.addEventListener('challenge-progress-updated', handleProgressUpdate as EventListener);
     
     return () => {
-      window.removeEventListener('challenge-progress-updated', handleProgressUpdate);
+      window.removeEventListener('challenge-progress-updated', handleProgressUpdate as EventListener);
+      clearTimeout(timeoutId);
     };
   }, [refreshStatus, competitionId]);
 

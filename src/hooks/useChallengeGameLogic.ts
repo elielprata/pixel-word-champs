@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
@@ -21,9 +21,22 @@ export const useChallengeGameLogic = (challengeId: string) => {
   const [isResuming, setIsResuming] = useState(false);
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
 
+  // 🔧 CORREÇÃO: Usar refs para evitar loops infinitos
+  const initializationRef = useRef<boolean>(false);
+  const lastChallengeId = useRef<string>('');
+
   const maxLevels = 20;
 
   useEffect(() => {
+    // 🔧 CORREÇÃO: Evitar múltiplas inicializações
+    if (initializationRef.current && lastChallengeId.current === challengeId) {
+      logger.debug('⚠️ Inicialização já executada, ignorando', { challengeId }, 'CHALLENGE_GAME_LOGIC');
+      return;
+    }
+
+    initializationRef.current = true;
+    lastChallengeId.current = challengeId;
+    
     initializeGameSession();
   }, [challengeId]);
 
@@ -67,7 +80,6 @@ export const useChallengeGameLogic = (challengeId: string) => {
         
         if (existingProgress) {
           if (existingProgress.is_completed) {
-            // Usuário já completou esta competição
             logger.info('🏆 Usuário já completou esta competição', { 
               challengeId,
               userId: user.id,
@@ -112,7 +124,7 @@ export const useChallengeGameLogic = (challengeId: string) => {
       
       // 🎯 CORREÇÃO: Criar sessão com o nível correto
       const sessionResponse = await gameService.createGameSession({
-        level: levelToUse, // Usar variável local, não state
+        level: levelToUse,
         boardSize: 10,
         competitionId: challengeId
       });
@@ -288,9 +300,6 @@ export const useChallengeGameLogic = (challengeId: string) => {
         totalScore: newTotalScore,
         challengeId
       });
-      
-      // Ainda assim, notificar o usuário sobre o problema
-      // Mas não impedir a continuação do jogo
     }
   };
 
@@ -338,6 +347,11 @@ export const useChallengeGameLogic = (challengeId: string) => {
     setIsResuming(false);
     setCurrentLevel(1);
     setTotalScore(0);
+    
+    // 🔧 CORREÇÃO: Resetar refs para permitir nova inicialização
+    initializationRef.current = false;
+    lastChallengeId.current = '';
+    
     initializeGameSession();
   };
 
