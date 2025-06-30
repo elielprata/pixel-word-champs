@@ -9,6 +9,7 @@ import { WeeklyFinalizationMonitor } from './WeeklyFinalizationMonitor';
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useWeeklyConfigModal } from '@/hooks/useWeeklyConfigModal';
 
 export const WeeklyRankingView = () => {
   const {
@@ -19,6 +20,18 @@ export const WeeklyRankingView = () => {
     error,
     loadConfigurations
   } = useWeeklyConfig();
+
+  const {
+    isOpen: isModalOpen,
+    onOpen: onModalOpen,
+    onClose: onModalClose,
+    newStartDate,
+    newEndDate,
+    onStartDateChange,
+    onEndDateChange,
+    onSubmit: onModalSubmit,
+    isCreating
+  } = useWeeklyConfigModal();
 
   if (isLoading) {
     return (
@@ -52,6 +65,23 @@ export const WeeklyRankingView = () => {
     );
   }
 
+  // Criar stats mockado para WeeklyRankingStats
+  const mockStats = {
+    current_week_start: activeConfig?.start_date || null,
+    current_week_end: activeConfig?.end_date || null,
+    total_participants: 0,
+    total_prize_pool: 0,
+    last_update: new Date().toISOString(),
+    config: activeConfig ? {
+      start_date: activeConfig.start_date,
+      end_date: activeConfig.end_date,
+      status: activeConfig.status
+    } : null,
+    no_active_competition: !activeConfig,
+    competition_status: activeConfig?.status || 'completed',
+    message: activeConfig ? 'Competição ativa' : 'Nenhuma competição ativa'
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -67,21 +97,32 @@ export const WeeklyRankingView = () => {
       <WeeklyFinalizationMonitor />
 
       {/* Estatísticas do Ranking */}
-      <WeeklyRankingStats />
+      <WeeklyRankingStats 
+        stats={mockStats}
+        onConfigUpdated={loadConfigurations}
+      />
 
       {/* Visão Geral das Configurações */}
       <WeeklyConfigOverview 
         activeConfig={activeConfig}
         scheduledConfigs={scheduledConfigs}
-        completedConfigs={completedConfigs}
       />
 
       {/* Agendador de Competições */}
-      <WeeklyConfigScheduler />
+      <WeeklyConfigScheduler
+        isOpen={isModalOpen}
+        onOpen={onModalOpen}
+        onClose={onModalClose}
+        newStartDate={newStartDate}
+        newEndDate={newEndDate}
+        onStartDateChange={onStartDateChange}
+        onEndDateChange={onEndDateChange}
+        onSubmit={onModalSubmit}
+        isCreating={isCreating}
+      />
 
       {/* Histórico de Competições */}
-      <WeeklyConfigHistory completedConfigs={completedConfigs} />
+      <WeeklyConfigHistory configs={completedConfigs} />
     </div>
   );
 };
-

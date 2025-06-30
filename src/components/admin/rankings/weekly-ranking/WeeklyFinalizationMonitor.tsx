@@ -7,15 +7,17 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { AlertTriangle, CheckCircle, Clock, RefreshCw, Play } from "lucide-react";
 
+interface CompetitionDetail {
+  id: string;
+  title?: string;
+  end_date: string;
+  days_overdue: number;
+  needs_finalization: boolean;
+}
+
 interface FinalizationStatus {
   competitions_needing_finalization: number;
-  competitions_details: Array<{
-    id: string;
-    title: string;
-    end_date: string;
-    days_overdue: number;
-    needs_finalization: boolean;
-  }>;
+  competitions_details: CompetitionDetail[];
   checked_at: string;
 }
 
@@ -28,16 +30,37 @@ export const WeeklyFinalizationMonitor = () => {
   const checkFinalizationStatus = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.rpc('check_weekly_competitions_status');
+      const currentDate = new Date().toISOString().split('T')[0];
       
+      // Buscar competições que precisam ser finalizadas
+      const { data: competitions, error } = await supabase
+        .from('weekly_config')
+        .select('id, start_date, end_date, status')
+        .eq('status', 'active')
+        .lt('end_date', currentDate);
+
       if (error) throw error;
       
-      setStatus(data);
+      const competitionsDetails: CompetitionDetail[] = competitions?.map(comp => ({
+        id: comp.id,
+        title: `Competição ${comp.start_date} - ${comp.end_date}`,
+        end_date: comp.end_date,
+        days_overdue: Math.floor((new Date().getTime() - new Date(comp.end_date).getTime()) / (1000 * 60 * 60 * 24)),
+        needs_finalization: true
+      })) || [];
+
+      const statusData: FinalizationStatus = {
+        competitions_needing_finalization: competitions?.length || 0,
+        competitions_details: competitionsDetails,
+        checked_at: new Date().toISOString()
+      };
       
-      if (data.competitions_needing_finalization > 0) {
+      setStatus(statusData);
+      
+      if (statusData.competitions_needing_finalization > 0) {
         toast({
           title: "Competições Pendentes",
-          description: `${data.competitions_needing_finalization} competição(ões) precisam ser finalizadas`,
+          description: `${statusData.competitions_needing_finalization} competição(ões) precisam ser finalizadas`,
           variant: "destructive",
         });
       }
@@ -179,4 +202,3 @@ export const WeeklyFinalizationMonitor = () => {
     </Card>
   );
 };
-
