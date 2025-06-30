@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useOptimizedBoard } from './useOptimizedBoard';
 import { useWordValidation } from './useWordValidation';
@@ -108,7 +107,7 @@ export const useSimplifiedGameLogic = ({
     }
   }, [foundWords.length, showLevelComplete, level, currentLevelScore, onLevelComplete]);
 
-  // Função para salvar pontos imediatamente
+  // 🆕 FUNÇÃO ATUALIZADA: Usar nova RPC limpa
   const savePointsImmediately = useCallback(async (points: number, word: string) => {
     if (!user?.id) {
       logger.warn('Usuário não autenticado - pontos não salvos', { word, points }, 'SIMPLIFIED_GAME');
@@ -116,14 +115,15 @@ export const useSimplifiedGameLogic = ({
     }
 
     try {
-      logger.info('Salvando pontos imediatamente', { 
+      logger.info('💾 Salvando pontos com nova RPC limpa', { 
         userId: user.id, 
         points, 
         word,
         timestamp: getCurrentBrasiliaTime() 
       }, 'SIMPLIFIED_GAME');
 
-      const { data, error } = await supabase.rpc('update_user_score_simple', {
+      // Usar nova função RPC sem ambiguidade de colunas
+      const { data, error } = await supabase.rpc('update_user_points_v2', {
         p_user_id: user.id,
         p_points: points
       });
@@ -132,15 +132,16 @@ export const useSimplifiedGameLogic = ({
         throw error;
       }
 
-      logger.info('Pontos salvos com sucesso', { 
+      logger.info('✅ Pontos salvos com sucesso usando RPC v2', { 
         word, 
         points, 
-        newData: data 
+        newTotalScore: data?.[0]?.total_score,
+        newGamesPlayed: data?.[0]?.games_played
       }, 'SIMPLIFIED_GAME');
 
       return data;
     } catch (error) {
-      logger.error('Erro ao salvar pontos', { error, word, points }, 'SIMPLIFIED_GAME');
+      logger.error('❌ Erro ao salvar pontos com RPC v2', { error, word, points }, 'SIMPLIFIED_GAME');
     }
   }, [user?.id]);
 
