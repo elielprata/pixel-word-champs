@@ -6,7 +6,6 @@ import { WeeklyRankingTable } from './WeeklyRankingTable';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
 import { WeeklyConfigModal } from './WeeklyConfigModal';
 import { PrizeConfigModal } from '../PrizeConfigModal';
-import { RankingIntegrityMonitor } from './RankingIntegrityMonitor';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
@@ -92,9 +91,6 @@ export const WeeklyRankingView = () => {
           </Button>
         </div>
       </div>
-
-      {/* Monitor de Integridade */}
-      <RankingIntegrityMonitor />
 
       {/* Estatísticas Básicas */}
       <WeeklyRankingStats stats={stats} onConfigUpdated={refetch} />
