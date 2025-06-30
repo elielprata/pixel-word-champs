@@ -1,165 +1,114 @@
 
 import React, { useState } from 'react';
-import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
-import { useWeeklyCompetitionHistory } from '@/hooks/useWeeklyCompetitionHistory';
-import { WeeklyConfigOverview } from './WeeklyConfigOverview';
-import { WeeklyConfigScheduler } from './WeeklyConfigScheduler';
-import { WeeklyConfigHistory } from './WeeklyConfigHistory';
-import { WeeklyRankingStats } from './WeeklyRankingStats';
-import { WeeklyFinalizationMonitor } from './WeeklyFinalizationMonitor';
-import { WeeklyConfigModal } from './WeeklyConfigModal';
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Trophy, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RefreshCw, Trophy, Settings, Award } from 'lucide-react';
+import { WeeklyRankingTable } from './WeeklyRankingTable';
+import { WeeklyRankingStats } from './WeeklyRankingStats';
+import { WeeklyConfigModal } from './WeeklyConfigModal';
+import { PrizeConfigModal } from '../PrizeConfigModal';
+import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from 'lucide-react';
 
 export const WeeklyRankingView = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newStartDate, setNewStartDate] = useState('');
-  const [newEndDate, setNewEndDate] = useState('');
-  const [historyPage, setHistoryPage] = useState(1);
+  const { toast } = useToast();
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [prizeConfigModalOpen, setPrizeConfigModalOpen] = useState(false);
+  const { 
+    currentRanking, 
+    stats, 
+    isLoading, 
+    error, 
+    refetch
+  } = useWeeklyRanking();
 
-  const {
-    activeConfig,
-    scheduledConfigs,
-    completedConfigs,
-    isLoading,
-    error,
-    loadConfigurations,
-    scheduleCompetition,
-    finalizeCompetition
-  } = useWeeklyConfig();
-
-  const {
-    historyData,
-    isLoading: isHistoryLoading,
-    totalPages,
-    refetch: refetchHistory
-  } = useWeeklyCompetitionHistory(historyPage, 5);
-
-  const handleOpenModal = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
-
-  const handleSubmit = async () => {
-    if (!newStartDate || !newEndDate) return;
-    
-    const result = await scheduleCompetition(newStartDate, newEndDate);
-    if (result.success) {
-      handleCloseModal();
-      loadConfigurations();
-    }
+  const handleRefresh = () => {
+    refetch();
+    toast({
+      title: "Atualizado",
+      description: "Ranking semanal atualizado com sucesso!",
+    });
   };
 
-  const handleFinalize = async () => {
-    await finalizeCompetition();
-    loadConfigurations();
-  };
-
-  const handleDeleteCompleted = async (competition: any) => {
-    // Implementar lógica de exclusão se necessário
-    console.log('Delete completed competition:', competition);
+  const handleConfigUpdated = () => {
+    refetch();
+    toast({
+      title: "Configuração atualizada",
+      description: "Configurações do ranking semanal foram atualizadas!",
+    });
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <Skeleton className="h-8 w-80 mb-2" />
-            <Skeleton className="h-5 w-48" />
-          </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+          <p className="text-sm text-gray-600">Carregando ranking semanal...</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
-        </div>
-        <Skeleton className="h-96" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-50 rounded-lg border border-slate-200">
-        <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">Erro ao Carregar Dados</h3>
-        <p className="text-slate-600 mb-6 max-w-md">{error}</p>
-        <Button onClick={loadConfigurations} size="lg">
-          Tentar Novamente
-        </Button>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-800">{error}</p>
       </div>
     );
   }
 
-  // Criar stats mockado para WeeklyRankingStats
-  const mockStats = {
-    current_week_start: activeConfig?.start_date || null,
-    current_week_end: activeConfig?.end_date || null,
-    total_participants: 0,
-    total_prize_pool: 0,
-    last_update: new Date().toISOString(),
-    config: activeConfig ? {
-      start_date: activeConfig.start_date,
-      end_date: activeConfig.end_date,
-      status: activeConfig.status
-    } : null,
-    no_active_competition: !activeConfig,
-    competition_status: activeConfig?.status || 'completed',
-    message: activeConfig ? 'Competição ativa' : 'Nenhuma competição ativa'
-  };
-
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Trophy className="w-6 h-6 text-amber-500" />
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Ranking Semanal</h2>
-            <p className="text-slate-600">Gestão completa das competições semanais</p>
-          </div>
+    <div className="space-y-6">
+      {/* Header com botões */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-yellow-600" />
+            Ranking Semanal
+          </h2>
+          <p className="text-sm text-slate-600">Classificação dos jogadores da semana</p>
         </div>
-        <Button onClick={handleOpenModal} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Nova Competição
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setConfigModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Configurar Competição
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setPrizeConfigModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Award className="h-4 w-4" />
+            Configurar Premiação
+          </Button>
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
-      {/* Monitor de Finalização Automática */}
-      <WeeklyFinalizationMonitor />
+      {/* Estatísticas Básicas */}
+      <WeeklyRankingStats stats={stats} onConfigUpdated={refetch} />
 
-      {/* Estatísticas do Ranking */}
-      <WeeklyRankingStats 
-        stats={mockStats}
-        onConfigUpdated={loadConfigurations}
-      />
-
-      {/* Visão Geral das Configurações */}
-      <WeeklyConfigOverview 
-        activeConfig={activeConfig}
-        scheduledConfigs={scheduledConfigs}
-        isLoading={isLoading}
-        onEdit={() => {}}
-        onDelete={() => {}}
-        onActivate={() => {}}
-        isActivating={false}
-      />
-
-      {/* Histórico de Competições */}
-      <WeeklyConfigHistory 
-        historyData={historyData}
-        isLoading={isHistoryLoading}
-        totalPages={totalPages}
-        currentPage={historyPage}
-        onPageChange={setHistoryPage}
-        onDeleteCompleted={handleDeleteCompleted}
-      />
+      {/* Tabela de Ranking */}
+      <WeeklyRankingTable ranking={currentRanking} />
 
       {/* Modal de Configuração */}
       <WeeklyConfigModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        onConfigUpdated={loadConfigurations}
+        open={configModalOpen}
+        onOpenChange={setConfigModalOpen}
+        onConfigUpdated={handleConfigUpdated}
+      />
+
+      {/* Modal de Configuração de Premiação */}
+      <PrizeConfigModal
+        open={prizeConfigModalOpen}
+        onOpenChange={setPrizeConfigModalOpen}
       />
     </div>
   );
