@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { type Position } from "@/utils/boardUtils";
 import { useWordValidation } from "./useWordValidation";
@@ -38,6 +39,28 @@ export const useSimpleSelectionWithValidation = ({
     getPointsForWord
   });
 
+  // Verifica se uma posição forma linha reta com o ponto inicial
+  const isValidLinearDirection = useCallback((start: Position, target: Position): boolean => {
+    if (!start || !target) return false;
+    
+    const deltaRow = target.row - start.row;
+    const deltaCol = target.col - start.col;
+    
+    // Mesma posição é válida
+    if (deltaRow === 0 && deltaCol === 0) return true;
+    
+    // Horizontal (deltaRow = 0)
+    if (deltaRow === 0 && deltaCol !== 0) return true;
+    
+    // Vertical (deltaCol = 0)
+    if (deltaCol === 0 && deltaRow !== 0) return true;
+    
+    // Diagonal (|deltaRow| = |deltaCol|)
+    if (Math.abs(deltaRow) === Math.abs(deltaCol)) return true;
+    
+    return false;
+  }, []);
+
   // Inicia a seleção
   const handleStart = useCallback((row: number, col: number) => {
     if (isProcessingWord) {
@@ -50,12 +73,17 @@ export const useSimpleSelectionWithValidation = ({
     setIsDragging(true);
   }, [isProcessingWord]);
 
-  // Atualiza célula de destino em tempo real
+  // Atualiza célula de destino apenas se formar linha reta
   const handleDrag = useCallback((row: number, col: number) => {
-    if (isDragging && !isProcessingWord) {
-      setCurrentCell({ row, col });
+    if (!isDragging || isProcessingWord || !startCell) return;
+    
+    const targetPosition = { row, col };
+    
+    // Só atualiza se formar linha reta com o ponto inicial
+    if (isValidLinearDirection(startCell, targetPosition)) {
+      setCurrentCell(targetPosition);
     }
-  }, [isDragging, isProcessingWord]);
+  }, [isDragging, isProcessingWord, startCell, isValidLinearDirection]);
 
   // Finaliza e valida/confirma a palavra
   const handleEnd = useCallback(() => {
