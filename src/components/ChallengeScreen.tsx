@@ -30,10 +30,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     markParticipationAsCompleted
   } = useChallengeGameLogic(challengeId);
 
-  const { timeLeft, extendTime, resetTimer } = useIntegratedGameTimer({
-    initialTime: 300,
-    onTimeUp: handleTimeUp
-  });
+  const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(isGameStarted);
 
   const handleStopGame = async () => {
     logger.info('Usuário parou o jogo', { 
@@ -51,7 +48,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
       logger.info('Revive ativado', { 
         challengeId, 
         currentLevel,
-        timeRemaining: timeLeft
+        timeRemaining 
       }, 'CHALLENGE_SCREEN');
     } else {
       logger.warn('Falha ao ativar revive', { 
@@ -130,7 +127,7 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
   return (
     <ChallengeGameSession
       currentLevel={currentLevel}
-      timeRemaining={timeLeft}
+      timeRemaining={timeRemaining}
       onTimeUp={handleTimeUp}
       onLevelComplete={handleLevelComplete}
       onAdvanceLevel={handleAdvanceLevelWithReset}
