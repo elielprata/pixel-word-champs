@@ -32,14 +32,40 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   const { timeRemaining, extendTime, resetTimer } = useIntegratedGameTimer(isGameStarted);
 
+  // 🎯 FUNÇÃO CORRIGIDA: Navegação imediata com marcação em background
   const handleStopGame = async () => {
-    logger.info('Usuário parou o jogo', { 
+    logger.info('🛑 Usuário solicitou parar o jogo', { 
       challengeId, 
       currentLevel,
       totalScore 
     }, 'CHALLENGE_SCREEN');
-    await markParticipationAsCompleted();
-    onBack();
+
+    // 🎯 EXECUTAR NAVEGAÇÃO IMEDIATAMENTE
+    const navigateBack = () => {
+      logger.info('🏠 Navegando de volta ao menu principal');
+      onBack();
+    };
+
+    try {
+      // Tentar marcar participação rapidamente (máximo 2 segundos)
+      const quickTimeout = new Promise((resolve) => setTimeout(resolve, 2000));
+      const markingPromise = markParticipationAsCompleted();
+      
+      // Race entre marcar participação e timeout de 2 segundos
+      await Promise.race([markingPromise, quickTimeout]);
+      
+      logger.info('✅ Participação marcada rapidamente');
+    } catch (error) {
+      logger.warn('⚠️ Marcação de participação demorou muito, mas continuando navegação');
+    } finally {
+      // 🎯 SEMPRE navegar, independentemente do resultado da marcação
+      navigateBack();
+    }
+
+    // 🎯 CONTINUAR marcação em background se necessário
+    markParticipationAsCompleted().catch(error => {
+      logger.error('❌ Erro na marcação em background (não afeta navegação):', error);
+    });
   };
 
   const handleRevive = () => {
@@ -58,28 +84,45 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     }
   };
 
+  // 🎯 FUNÇÃO CORRIGIDA: Navegação imediata com marcação em background
   const handleCompleteGame = async () => {
-    logger.info('Jogo finalizado', { 
+    logger.info('🎉 Jogo finalizado com sucesso', { 
       challengeId, 
       totalScore, 
       currentLevel,
       gameCompleted: true
     }, 'CHALLENGE_SCREEN');
-    await markParticipationAsCompleted();
-    onBack();
+
+    // Executar navegação imediatamente
+    const navigateBack = () => {
+      logger.info('🏠 Navegando de volta após completar jogo');
+      onBack();
+    };
+
+    try {
+      // Tentar marcar participação rapidamente
+      const quickTimeout = new Promise((resolve) => setTimeout(resolve, 2000));
+      await Promise.race([markParticipationAsCompleted(), quickTimeout]);
+    } catch (error) {
+      logger.warn('⚠️ Marcação demorou, mas completando navegação');
+    } finally {
+      navigateBack();
+    }
   };
 
   const handleBackToMenu = () => {
-    logger.info('Retorno ao menu principal', { 
+    logger.info('🔙 Retorno direto ao menu principal', { 
       challengeId,
       currentLevel,
       totalScore 
     }, 'CHALLENGE_SCREEN');
+    
+    // Navegação imediata sem esperar marcação
     onBack();
   };
 
   const handleAdvanceLevelWithReset = () => {
-    logger.debug('Avançando nível com reset', { 
+    logger.debug('⬆️ Avançando nível com reset', { 
       currentLevel,
       nextLevel: currentLevel + 1 
     }, 'CHALLENGE_SCREEN');

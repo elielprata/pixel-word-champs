@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 
 export const useChallengeGameLogic = (challengeId: string) => {
   const { user } = useAuth();
@@ -28,7 +30,7 @@ export const useChallengeGameLogic = (challengeId: string) => {
       setError(null);
       setLoadingStep('Preparando sessão...');
       
-      console.log('🎮 Inicializando sessão de jogo para competição:', challengeId);
+      logger.info('🎮 Inicializando sessão de jogo para competição:', { challengeId });
       
       // Verificar se a competição existe em custom_competitions
       setLoadingStep('Validando competição...');
@@ -39,18 +41,18 @@ export const useChallengeGameLogic = (challengeId: string) => {
         .single();
 
       if (competitionError) {
-        console.error('❌ Competição não encontrada:', competitionError);
+        logger.error('❌ Competição não encontrada:', competitionError);
         setError('Competição não encontrada. Verifique se o ID está correto.');
         return;
       }
 
       if (competition.status !== 'active') {
-        console.error('❌ Competição não está ativa:', competition.status);
+        logger.error('❌ Competição não está ativa:', competition.status);
         setError(`Competição não está ativa: ${competition.status}`);
         return;
       }
 
-      console.log('✅ Competição validada, criando sessão de jogo...');
+      logger.info('✅ Competição validada, criando sessão de jogo...');
       setLoadingStep('Criando sessão de jogo...');
       
       // Criar uma nova sessão de jogo para esta competição
@@ -61,13 +63,13 @@ export const useChallengeGameLogic = (challengeId: string) => {
       });
 
       if (!sessionResponse.success) {
-        console.error('❌ Erro ao criar sessão:', sessionResponse.error);
+        logger.error('❌ Erro ao criar sessão:', sessionResponse.error);
         setError(sessionResponse.error || 'Erro ao criar sessão de jogo');
         return;
       }
 
       const session = sessionResponse.data;
-      console.log('✅ Sessão de jogo criada:', session.id);
+      logger.info('✅ Sessão de jogo criada:', session.id);
       
       setGameSession(session);
       setCurrentLevel(session.level || 1);
@@ -76,41 +78,70 @@ export const useChallengeGameLogic = (challengeId: string) => {
       setLoadingStep('Sessão criada com sucesso!');
       
     } catch (error) {
-      console.error('❌ Erro inesperado ao inicializar sessão:', error);
+      logger.error('❌ Erro inesperado ao inicializar sessão:', error);
       setError('Erro inesperado ao carregar o jogo. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const markParticipationAsCompleted = async () => {
+  // 🎯 FUNÇÃO CORRIGIDA: Melhor tratamento de erro e timeout
+  const markParticipationAsCompleted = async (): Promise<boolean> => {
     if (hasMarkedParticipation || !user) {
-      console.log('Participação já foi marcada como concluída ou usuário não logado');
-      return;
+      logger.info('Participação já foi marcada como concluída ou usuário não logado');
+      return true; // Retorna true se já foi processado
     }
 
+    const timeout = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 10000) // 10 segundos
+    );
+
     try {
-      console.log('🏁 Marcando participação como concluída...');
-      await competitionParticipationService.markUserAsParticipated(challengeId, user.id);
-      if (gameSession?.id) {
-        await gameService.completeGameSession(gameSession.id);
-      }
+      logger.info('🏁 Iniciando marcação de participação como concluída...', {
+        challengeId,
+        userId: user.id,
+        gameSessionId: gameSession?.id
+      });
+
+      // Race entre a operação e o timeout
+      await Promise.race([
+        (async () => {
+          await competitionParticipationService.markUserAsParticipated(challengeId, user.id);
+          if (gameSession?.id) {
+            await gameService.completeGameSession(gameSession.id);
+          }
+        })(),
+        timeout
+      ]);
+
       setHasMarkedParticipation(true);
-      console.log('✅ Participação marcada como concluída');
+      logger.info('✅ Participação marcada como concluída com sucesso');
+      return true;
+
     } catch (error) {
-      console.error('❌ Erro ao marcar participação:', error);
+      logger.error('❌ Erro ao marcar participação (mas continuando navegação):', {
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message
+        } : error,
+        challengeId,
+        userId: user.id
+      });
+      
+      // 🎯 IMPORTANTE: Mesmo com erro, permitir que o usuário saia
+      return false; // Indica que houve erro, mas não impede navegação
     }
   };
 
   const handleTimeUp = () => {
-    console.log('Tempo esgotado!');
+    logger.info('Tempo esgotado!');
   };
 
   const handleLevelComplete = async (levelScore: number) => {
     const newTotalScore = totalScore + levelScore;
     setTotalScore(newTotalScore);
     
-    console.log(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Pontos já registrados no banco de dados.`);
+    logger.info(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Pontos já registrados no banco de dados.`);
   };
 
   const handleAdvanceLevel = () => {
@@ -121,18 +152,19 @@ export const useChallengeGameLogic = (challengeId: string) => {
         setIsGameStarted(true);
       }, 100);
       
-      console.log(`Avançando para o nível ${currentLevel + 1}`);
+      logger.info(`Avançando para o nível ${currentLevel + 1}`);
     } else {
       setGameCompleted(true);
-      console.log('Você completou todos os 20 níveis!');
+      logger.info('Você completou todos os 20 níveis!');
     }
   };
 
   const handleRetry = () => {
-    console.log('🔄 Tentando novamente...');
+    logger.info('🔄 Tentando novamente...');
     setError(null);
     setGameSession(null);
     setIsGameStarted(false);
+    setHasMarkedParticipation(false); // Reset para permitir nova tentativa
     initializeGameSession();
   };
 
