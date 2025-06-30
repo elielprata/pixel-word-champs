@@ -27,7 +27,7 @@ export const WeeklyAutomationStatus = () => {
             <span className="text-sm text-green-700">Execução Diária</span>
             <div className="flex items-center gap-1 text-xs text-green-600">
               <Clock className="h-3 w-3" />
-              00:05 UTC
+              00:05 (Brasília)
             </div>
           </div>
           
@@ -35,7 +35,8 @@ export const WeeklyAutomationStatus = () => {
             <p className="text-xs text-green-700">
               <Settings className="h-3 w-3 inline mr-1" />
               O sistema verifica automaticamente competições vencidas e executa a finalização, 
-              criando snapshots e ativando a próxima competição agendada.
+              criando snapshots e ativando a próxima competição agendada. Executa diariamente 
+              às 00:05 no horário de Brasília.
             </p>
           </div>
         </div>
