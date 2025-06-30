@@ -33,6 +33,29 @@ export const UnifiedCompetitionModal: React.FC<UnifiedCompetitionModalProps> = (
     setRetryKey(prev => prev + 1);
   };
 
+  const handleClose = () => {
+    console.log('🔄 Fechando modal de competição', {
+      timestamp: getCurrentBrasiliaTime()
+    });
+    onOpenChange(false);
+  };
+
+  const handleSuccess = () => {
+    console.log('✅ Competição criada com sucesso - fechando modal', {
+      timestamp: getCurrentBrasiliaTime()
+    });
+    
+    if (onCompetitionCreated) {
+      onCompetitionCreated();
+    }
+  };
+
+  const handleError = (error: any) => {
+    console.error('❌ Erro no formulário de competição:', error, {
+      timestamp: getCurrentBrasiliaTime()
+    });
+  };
+
   React.useEffect(() => {
     if (open) {
       console.log('🎯 Modal de competição aberto', {
@@ -41,6 +64,10 @@ export const UnifiedCompetitionModal: React.FC<UnifiedCompetitionModalProps> = (
       });
     }
   }, [open, competitionTypeFilter]);
+
+  if (!open) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -51,16 +78,16 @@ export const UnifiedCompetitionModal: React.FC<UnifiedCompetitionModalProps> = (
           </DialogTitle>
         </DialogHeader>
         
-        <CompetitionFormErrorBoundary onRetry={handleRetry}>
-          <UnifiedCompetitionForm
-            key={retryKey}
-            onClose={() => onOpenChange(false)}
-            onSuccess={onCompetitionCreated || (() => {})}
-            onError={(error) => {
-              console.error('❌ Erro no formulário de competição:', error);
-            }}
-          />
-        </CompetitionFormErrorBoundary>
+        <div className="mt-4">
+          <CompetitionFormErrorBoundary onRetry={handleRetry}>
+            <UnifiedCompetitionForm
+              key={retryKey}
+              onClose={handleClose}
+              onSuccess={handleSuccess}
+              onError={handleError}
+            />
+          </CompetitionFormErrorBoundary>
+        </div>
       </DialogContent>
     </Dialog>
   );

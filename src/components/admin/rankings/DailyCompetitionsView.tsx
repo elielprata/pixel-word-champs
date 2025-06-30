@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { UnifiedCompetitionsList } from './UnifiedCompetitionsList';
 import { UnifiedCompetitionModal } from './UnifiedCompetitionModal';
 import { UnifiedCompetition } from '@/types/competition';
 import { useToast } from "@/hooks/use-toast";
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 interface DailyCompetitionsViewProps {
   competitions: UnifiedCompetition[];
@@ -47,6 +49,10 @@ export const DailyCompetitionsView = ({ competitions, isLoading, onRefresh }: Da
   };
 
   const handleCompetitionCreated = () => {
+    console.log('✅ Competição criada com sucesso', {
+      timestamp: getCurrentBrasiliaTime()
+    });
+    
     setShowCreateModal(false);
     toast({
       title: "Competição criada",
@@ -57,6 +63,38 @@ export const DailyCompetitionsView = ({ competitions, isLoading, onRefresh }: Da
     if (onRefresh) {
       onRefresh();
     }
+  };
+
+  const handleOpenModal = () => {
+    console.log('🎯 Tentando abrir modal de nova competição', {
+      timestamp: getCurrentBrasiliaTime(),
+      currentModalState: showCreateModal
+    });
+    
+    try {
+      setShowCreateModal(true);
+      console.log('✅ Modal definido como aberto', {
+        timestamp: getCurrentBrasiliaTime()
+      });
+    } catch (error) {
+      console.error('❌ Erro ao abrir modal:', error, {
+        timestamp: getCurrentBrasiliaTime()
+      });
+      
+      toast({
+        title: "Erro",
+        description: "Não foi possível abrir o modal de criação.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCloseModal = (open: boolean) => {
+    console.log('🔄 Alterando estado do modal', {
+      open,
+      timestamp: getCurrentBrasiliaTime()
+    });
+    setShowCreateModal(open);
   };
 
   return (
@@ -74,7 +112,7 @@ export const DailyCompetitionsView = ({ competitions, isLoading, onRefresh }: Da
                 </p>
               </div>
             </div>
-            <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">
+            <Button onClick={handleOpenModal} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Nova Competição
             </Button>
@@ -90,12 +128,14 @@ export const DailyCompetitionsView = ({ competitions, isLoading, onRefresh }: Da
       />
 
       {/* Modal de Criação */}
-      <UnifiedCompetitionModal
-        open={showCreateModal}
-        onOpenChange={setShowCreateModal}
-        onCompetitionCreated={handleCompetitionCreated}
-        competitionTypeFilter="daily"
-      />
+      {showCreateModal && (
+        <UnifiedCompetitionModal
+          open={showCreateModal}
+          onOpenChange={handleCloseModal}
+          onCompetitionCreated={handleCompetitionCreated}
+          competitionTypeFilter="daily"
+        />
+      )}
     </div>
   );
 };
