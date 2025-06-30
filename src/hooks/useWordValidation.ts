@@ -79,8 +79,8 @@ export const useWordValidation = ({
         return false;
       }
 
-      // Extrair a palavra das posições selecionadas
-      const word = selectedPositions.map(pos => {
+      // Extrair a palavra das posições selecionadas (direção normal)
+      const normalWord = selectedPositions.map(pos => {
         if (pos.row >= 0 && pos.row < boardData.board.length && 
             pos.col >= 0 && pos.col < boardData.board[pos.row].length) {
           return boardData.board[pos.row][pos.col];
@@ -88,55 +88,78 @@ export const useWordValidation = ({
         return '';
       }).join('');
 
-      logger.debug('Palavra extraída da seleção', { 
-        word, 
+      // 🆕 NOVA FUNCIONALIDADE: Extrair palavra na direção reversa
+      const reverseWord = selectedPositions.slice().reverse().map(pos => {
+        if (pos.row >= 0 && pos.row < boardData.board.length && 
+            pos.col >= 0 && pos.col < boardData.board[pos.row].length) {
+          return boardData.board[pos.row][pos.col];
+        }
+        return '';
+      }).join('');
+
+      logger.debug('Palavras extraídas da seleção', { 
+        normalWord, 
+        reverseWord,
         positions: selectedPositions,
-        wordLength: word.length 
+        wordLength: normalWord.length 
       });
 
-      // Validação 4: Verificar se a palavra é válida
-      if (!levelWords.includes(word)) {
-        logger.debug('Palavra não encontrada na lista do nível', { 
-          word, 
+      // Validação 4: Verificar se alguma das palavras (normal ou reversa) é válida
+      let validWord = '';
+      let validPositions = selectedPositions;
+
+      if (levelWords.includes(normalWord)) {
+        validWord = normalWord;
+        validPositions = selectedPositions;
+        logger.debug('Palavra válida encontrada (direção normal)', { word: normalWord });
+      } else if (levelWords.includes(reverseWord)) {
+        validWord = reverseWord;
+        validPositions = selectedPositions.slice().reverse();
+        logger.debug('Palavra válida encontrada (direção reversa)', { word: reverseWord });
+      } else {
+        logger.debug('Nenhuma palavra válida encontrada', { 
+          normalWord, 
+          reverseWord,
           availableWordsCount: levelWords.length
         });
         return false;
       }
 
       // Validação 5: PROTEÇÃO CRÍTICA - Verificar duplicação
-      const alreadyFound = foundWords.some(fw => fw.word === word);
+      const alreadyFound = foundWords.some(fw => fw.word === validWord);
       if (alreadyFound) {
         logger.warn('🚨 DUPLICAÇÃO EVITADA - Palavra já encontrada', { 
-          word,
+          word: validWord,
           existingWordsCount: foundWords.length
         });
         return false;
       }
 
       // ✅ PALAVRA VÁLIDA: Processar uma única vez
-      const points = getPointsForWord(word);
+      const points = getPointsForWord(validWord);
       const foundWord: FoundWord = {
-        word,
-        positions: selectedPositions,
+        word: validWord,
+        positions: validPositions,
         points
       };
 
-      const wordId = `${word}-${now}`;
+      const wordId = `${validWord}-${now}`;
       
-      logger.info('✅ PALAVRA VÁLIDA CONFIRMADA - PROCESSANDO UMA ÚNICA VEZ', { 
+      logger.info('✅ PALAVRA VÁLIDA CONFIRMADA (BIDIRECIONAL) - PROCESSANDO UMA ÚNICA VEZ', { 
         wordId,
-        word, 
+        word: validWord,
+        direction: validWord === normalWord ? 'normal' : 'reversa',
         points, 
-        positionsCount: selectedPositions.length,
+        positionsCount: validPositions.length,
         beforeFoundWordsCount: foundWords.length
       });
 
       // ✅ CRÍTICO: Chamar callback para adicionar ao estado APENAS UMA VEZ
       onWordFound(foundWord);
       
-      logger.info('📝 onWordFound executado com sucesso', {
+      logger.info('📝 onWordFound executado com sucesso (bidirecional)', {
         wordId,
-        word,
+        word: validWord,
         points
       });
 

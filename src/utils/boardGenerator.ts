@@ -1,3 +1,4 @@
+
 import { SmartWordDistributionService } from '@/services/smartWordDistributionService';
 import { type Position, getBoardWidth, getMobileBoardWidth } from '@/utils/boardUtils';
 import { isValidGameWord, normalizeText } from '@/utils/levelConfiguration';
@@ -17,7 +18,7 @@ export interface WordPlacementResult {
 export class BoardGenerator {
   static generateSmartBoard(height: number, words: string[]): WordPlacementResult {
     const width = 12; // largura fixa agora é 12
-    logger.log(`🚀 Iniciando geração do tabuleiro ${height}x${width} com distribuição inteligente:`, words);
+    logger.log(`🚀 Iniciando geração do tabuleiro ${height}x${width} com distribuição inteligente (8 direções):`, words);
     
     // Normalizar e validar palavras - ajustar para nova largura máxima
     const normalizedWords = words
@@ -46,7 +47,7 @@ export class BoardGenerator {
       };
     }
     
-    // Usar serviço de distribuição inteligente
+    // Usar serviço de distribuição inteligente com 8 direções
     const distributionService = new SmartWordDistributionService(height, width);
     const result = distributionService.distributeWords(normalizedWords);
     
@@ -54,7 +55,7 @@ export class BoardGenerator {
     if (result.placedWords.length === 0) {
       logger.error(`❌ ERRO: Nenhuma palavra foi colocada no tabuleiro ${height}x${width}`);
     } else {
-      logger.log(`✅ Tabuleiro gerado com distribuição inteligente: ${result.placedWords.length}/${normalizedWords.length} palavras colocadas`);
+      logger.log(`✅ Tabuleiro gerado com distribuição inteligente (8 direções): ${result.placedWords.length}/${normalizedWords.length} palavras colocadas`);
       
       // Log da distribuição final
       const distribution = this.analyzeDistribution(result.placedWords);

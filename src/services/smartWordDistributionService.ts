@@ -1,19 +1,29 @@
 import { type Position, type PlacedWord } from '@/utils/boardUtils';
 import { logger } from '@/utils/logger';
+import { BoardQualityAnalyzer, shuffleArray } from '@/utils/boardQuality';
+
+// Todas as 8 direções possíveis
+type ExtendedDirection = 
+  | 'horizontal-left-right'
+  | 'horizontal-right-left' 
+  | 'vertical-top-bottom'
+  | 'vertical-bottom-top'
+  | 'diagonal-tl-br'
+  | 'diagonal-br-tl'
+  | 'diagonal-tr-bl'
+  | 'diagonal-bl-tr';
 
 interface WordPlacementCandidate {
   word: string;
   row: number;
   col: number;
-  direction: 'horizontal' | 'vertical' | 'diagonal';
+  direction: ExtendedDirection;
   positions: Position[];
   score: number;
 }
 
 interface DistributionMetrics {
-  horizontal: number;
-  vertical: number;
-  diagonal: number;
+  [key: string]: number;
   centerDistance: number;
   wordSeparation: number;
 }
@@ -23,38 +33,61 @@ export class SmartWordDistributionService {
   private width: number;
   private board: string[][];
   private placedWords: PlacedWord[] = [];
+  private qualityAnalyzer: BoardQualityAnalyzer;
+  private readonly MIN_WORD_DISTANCE = 2;
 
   constructor(height: number, width: number = 12) {
     this.height = height;
     this.width = width;
     this.board = Array(height).fill(null).map(() => Array(width).fill(''));
+    this.qualityAnalyzer = new BoardQualityAnalyzer(height, width);
   }
 
   public distributeWords(words: string[]): { board: string[][]; placedWords: PlacedWord[] } {
-    logger.info('🎯 Iniciando distribuição inteligente de palavras', {
+    logger.info('🎯 Iniciando distribuição inteligente com 8 direções', {
       wordsCount: words.length,
       boardSize: `${this.height}x${this.width}`
     }, 'SMART_DISTRIBUTION');
 
-    // Ordenar palavras por tamanho (maiores primeiro para melhor colocação)
-    const sortedWords = [...words].sort((a, b) => b.length - a.length);
+    let attempts = 0;
+    const maxAttempts = 3;
 
-    for (const word of sortedWords) {
-      this.placeWordOptimally(word);
+    while (attempts < maxAttempts) {
+      this.resetBoard();
+      const shuffledWords = shuffleArray(words);
+      
+      for (const word of shuffledWords) {
+        this.placeWordOptimally(word);
+      }
+
+      // Verificar qualidade do tabuleiro
+      if (!this.qualityAnalyzer.shouldRegenerate(this.placedWords) || attempts === maxAttempts - 1) {
+        break;
+      }
+
+      attempts++;
+      logger.info(`🔄 Regenerando tabuleiro (tentativa ${attempts + 1}/${maxAttempts})`, {
+        placedWords: this.placedWords.length
+      }, 'SMART_DISTRIBUTION');
     }
 
-    // Preencher espaços vazios
     this.fillEmptySpaces();
 
     logger.info('✅ Distribuição inteligente concluída', {
       placedWords: this.placedWords.length,
+      attempts: attempts + 1,
       distribution: this.getDistributionStats()
     }, 'SMART_DISTRIBUTION');
 
     return {
       board: this.board.map(row => [...row]),
-      placedWords: [...this.placedWords]
+      placedWords: this.convertToLegacyFormat(this.placedWords)
     };
+  }
+
+  private resetBoard(): void {
+    this.board = Array(this.height).fill(null).map(() => Array(this.width).fill(''));
+    this.placedWords = [];
   }
 
   private placeWordOptimally(word: string): boolean {
@@ -78,16 +111,26 @@ export class SmartWordDistributionService {
 
   private generatePlacementCandidates(word: string): WordPlacementCandidate[] {
     const candidates: WordPlacementCandidate[] = [];
+    const allDirections: ExtendedDirection[] = [
+      'horizontal-left-right',
+      'horizontal-right-left',
+      'vertical-top-bottom', 
+      'vertical-bottom-top',
+      'diagonal-tl-br',
+      'diagonal-br-tl',
+      'diagonal-tr-bl',
+      'diagonal-bl-tr'
+    ];
+
+    // Embaralhar direções para adicionar aleatoriedade
+    const shuffledDirections = shuffleArray(allDirections);
 
     for (let row = 0; row < this.height; row++) {
       for (let col = 0; col < this.width; col++) {
-        // Tentar todas as direções
-        const directions: Array<'horizontal' | 'vertical' | 'diagonal'> = ['horizontal', 'vertical', 'diagonal'];
-        
-        for (const direction of directions) {
+        for (const direction of shuffledDirections) {
           const positions = this.getWordPositions(word, row, col, direction);
           
-          if (this.canPlaceWord(word, positions)) {
+          if (this.canPlaceWord(word, positions) && this.meetsDistanceRequirement(row, col)) {
             const score = this.calculatePlacementScore(word, row, col, direction, positions);
             
             candidates.push({
@@ -106,11 +149,74 @@ export class SmartWordDistributionService {
     return candidates;
   }
 
+  private getWordPositions(
+    word: string, 
+    row: number, 
+    col: number, 
+    direction: ExtendedDirection
+  ): Position[] {
+    const positions: Position[] = [];
+    
+    for (let i = 0; i < word.length; i++) {
+      let newRow = row;
+      let newCol = col;
+      
+      switch (direction) {
+        case 'horizontal-left-right':
+          newCol = col + i;
+          break;
+        case 'horizontal-right-left':
+          newCol = col - i;
+          break;
+        case 'vertical-top-bottom':
+          newRow = row + i;
+          break;
+        case 'vertical-bottom-top':
+          newRow = row - i;
+          break;
+        case 'diagonal-tl-br': // Top-left to bottom-right
+          newRow = row + i;
+          newCol = col + i;
+          break;
+        case 'diagonal-br-tl': // Bottom-right to top-left
+          newRow = row - i;
+          newCol = col - i;
+          break;
+        case 'diagonal-tr-bl': // Top-right to bottom-left
+          newRow = row + i;
+          newCol = col - i;
+          break;
+        case 'diagonal-bl-tr': // Bottom-left to top-right
+          newRow = row - i;
+          newCol = col + i;
+          break;
+      }
+      
+      positions.push({ row: newRow, col: newCol });
+    }
+    
+    return positions;
+  }
+
+  private meetsDistanceRequirement(row: number, col: number): boolean {
+    for (const placedWord of this.placedWords) {
+      const distance = this.qualityAnalyzer.calculateMinimumDistance(
+        { row, col },
+        { row: placedWord.startRow, col: placedWord.startCol }
+      );
+      
+      if (distance < this.MIN_WORD_DISTANCE) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   private calculatePlacementScore(
     word: string, 
     row: number, 
     col: number, 
-    direction: 'horizontal' | 'vertical' | 'diagonal',
+    direction: ExtendedDirection,
     positions: Position[]
   ): number {
     let score = 0;
@@ -141,24 +247,22 @@ export class SmartWordDistributionService {
   }
 
   private calculateDirectionBalance(
-    direction: 'horizontal' | 'vertical' | 'diagonal',
+    direction: ExtendedDirection,
     currentDistribution: DistributionMetrics
   ): number {
-    const total = currentDistribution.horizontal + currentDistribution.vertical + currentDistribution.diagonal;
+    const directionCounts = Object.keys(currentDistribution)
+      .filter(key => key !== 'centerDistance' && key !== 'wordSeparation')
+      .map(key => currentDistribution[key]);
+    
+    const total = directionCounts.reduce((sum, count) => sum + count, 0);
     
     if (total === 0) return 1; // Primeira palavra sempre tem score máximo
     
-    const currentRatio = {
-      horizontal: currentDistribution.horizontal / total,
-      vertical: currentDistribution.vertical / total,
-      diagonal: currentDistribution.diagonal / total
-    };
-
-    // Preferir direção menos utilizada
-    const idealRatio = 1/3; // 33% para cada direção
-    const currentDirectionRatio = currentRatio[direction];
+    const currentCount = currentDistribution[direction] || 0;
+    const idealRatio = 1/8; // 12.5% para cada direção
+    const currentRatio = currentCount / total;
     
-    return Math.max(0, idealRatio - currentDirectionRatio) * 3;
+    return Math.max(0, idealRatio - currentRatio) * 8;
   }
 
   private calculateSeparationScore(positions: Position[]): number {
@@ -178,7 +282,6 @@ export class SmartWordDistributionService {
 
     if (minDistance === Infinity) return 1; // Primeira palavra
 
-    // Bonificar distâncias maiores que 2, penalizar menores
     return Math.min(1, Math.max(0, (minDistance - 1) / 3));
   }
 
@@ -186,7 +289,7 @@ export class SmartWordDistributionService {
     row: number, 
     col: number, 
     wordLength: number, 
-    direction: 'horizontal' | 'vertical' | 'diagonal'
+    direction: ExtendedDirection
   ): number {
     const centerRow = this.height / 2;
     const centerCol = this.width / 2;
@@ -194,16 +297,24 @@ export class SmartWordDistributionService {
     let wordCenterRow = row;
     let wordCenterCol = col;
 
+    // Calcular centro da palavra baseado na direção
     switch (direction) {
-      case 'horizontal':
-        wordCenterCol = col + wordLength / 2;
+      case 'horizontal-left-right':
+      case 'horizontal-right-left':
+        wordCenterCol = col + (direction === 'horizontal-left-right' ? wordLength / 2 : -wordLength / 2);
         break;
-      case 'vertical':
-        wordCenterRow = row + wordLength / 2;
+      case 'vertical-top-bottom':
+      case 'vertical-bottom-top':
+        wordCenterRow = row + (direction === 'vertical-top-bottom' ? wordLength / 2 : -wordLength / 2);
         break;
-      case 'diagonal':
-        wordCenterRow = row + wordLength / 2;
-        wordCenterCol = col + wordLength / 2;
+      case 'diagonal-tl-br':
+      case 'diagonal-br-tl':
+      case 'diagonal-tr-bl':
+      case 'diagonal-bl-tr':
+        const deltaRow = direction.includes('t') && direction.includes('br') ? wordLength / 2 : -wordLength / 2;
+        const deltaCol = direction.includes('l') && direction.includes('tr') ? wordLength / 2 : -wordLength / 2;
+        wordCenterRow = row + deltaRow;
+        wordCenterCol = col + deltaCol;
         break;
     }
 
@@ -215,10 +326,8 @@ export class SmartWordDistributionService {
 
   private calculateCenterScore(distance: number): number {
     const maxDistance = Math.sqrt(Math.pow(this.height/2, 2) + Math.pow(this.width/2, 2));
-    
-    // Preferir posições não muito centrais nem muito nas bordas
     const normalizedDistance = distance / maxDistance;
-    const idealDistance = 0.4; // 40% da distância máxima
+    const idealDistance = 0.4;
     
     return 1 - Math.abs(normalizedDistance - idealDistance);
   }
@@ -248,7 +357,6 @@ export class SmartWordDistributionService {
       }
     }
     
-    // Bonificar intersecções limitadas (máximo 2 por palavra)
     return Math.min(intersections / positions.length, 0.3);
   }
 
@@ -274,37 +382,6 @@ export class SmartWordDistributionService {
     return true;
   }
 
-  private getWordPositions(
-    word: string, 
-    row: number, 
-    col: number, 
-    direction: 'horizontal' | 'vertical' | 'diagonal'
-  ): Position[] {
-    const positions: Position[] = [];
-    
-    for (let i = 0; i < word.length; i++) {
-      let newRow = row;
-      let newCol = col;
-      
-      switch (direction) {
-        case 'horizontal':
-          newCol = col + i;
-          break;
-        case 'vertical':
-          newRow = row + i;
-          break;
-        case 'diagonal':
-          newRow = row + i;
-          newCol = col + i;
-          break;
-      }
-      
-      positions.push({ row: newRow, col: newCol });
-    }
-    
-    return positions;
-  }
-
   private placeWord(candidate: WordPlacementCandidate): void {
     // Colocar letras no tabuleiro
     for (let i = 0; i < candidate.positions.length; i++) {
@@ -322,17 +399,46 @@ export class SmartWordDistributionService {
     });
   }
 
+  private convertToLegacyFormat(placedWords: Array<{
+    word: string;
+    startRow: number;
+    startCol: number;
+    direction: ExtendedDirection;
+    positions: Position[];
+  }>): PlacedWord[] {
+    return placedWords.map(word => ({
+      word: word.word,
+      startRow: word.startRow,
+      startCol: word.startCol,
+      direction: this.mapToLegacyDirection(word.direction),
+      positions: word.positions
+    }));
+  }
+
+  private mapToLegacyDirection(extendedDirection: ExtendedDirection): 'horizontal' | 'vertical' | 'diagonal' {
+    if (extendedDirection.includes('horizontal')) return 'horizontal';
+    if (extendedDirection.includes('vertical')) return 'vertical';
+    return 'diagonal';
+  }
+
   private getDistributionStats(): DistributionMetrics {
-    const stats = {
-      horizontal: 0,
-      vertical: 0,
-      diagonal: 0,
+    const stats: DistributionMetrics = {
+      'horizontal-left-right': 0,
+      'horizontal-right-left': 0,
+      'vertical-top-bottom': 0,
+      'vertical-bottom-top': 0,
+      'diagonal-tl-br': 0,
+      'diagonal-br-tl': 0,
+      'diagonal-tr-bl': 0,
+      'diagonal-bl-tr': 0,
       centerDistance: 0,
       wordSeparation: 0
     };
 
     for (const word of this.placedWords) {
-      stats[word.direction]++;
+      if (word.direction in stats) {
+        stats[word.direction as keyof DistributionMetrics]++;
+      }
     }
 
     return stats;
