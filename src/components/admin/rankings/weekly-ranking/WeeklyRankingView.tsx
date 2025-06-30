@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
+import { useWeeklyCompetitionHistory } from '@/hooks/useWeeklyCompetitionHistory';
 import { WeeklyConfigOverview } from './WeeklyConfigOverview';
 import { WeeklyConfigScheduler } from './WeeklyConfigScheduler';
 import { WeeklyConfigHistory } from './WeeklyConfigHistory';
@@ -15,6 +16,7 @@ export const WeeklyRankingView = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newStartDate, setNewStartDate] = useState('');
   const [newEndDate, setNewEndDate] = useState('');
+  const [historyPage, setHistoryPage] = useState(1);
 
   const {
     activeConfig,
@@ -26,6 +28,13 @@ export const WeeklyRankingView = () => {
     scheduleCompetition,
     finalizeCompetition
   } = useWeeklyConfig();
+
+  const {
+    historyData,
+    isLoading: isHistoryLoading,
+    totalPages,
+    refetch: refetchHistory
+  } = useWeeklyCompetitionHistory(historyPage, 5);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
@@ -43,6 +52,11 @@ export const WeeklyRankingView = () => {
   const handleFinalize = async () => {
     await finalizeCompetition();
     loadConfigurations();
+  };
+
+  const handleDeleteCompleted = async (competition: any) => {
+    // Implementar lógica de exclusão se necessário
+    console.log('Delete completed competition:', competition);
   };
 
   if (isLoading) {
@@ -133,11 +147,12 @@ export const WeeklyRankingView = () => {
 
       {/* Histórico de Competições */}
       <WeeklyConfigHistory 
-        configs={completedConfigs}
-        isLoading={isLoading}
-        onEdit={() => {}}
-        onDelete={() => {}}
-        onView={() => {}}
+        historyData={historyData}
+        isLoading={isHistoryLoading}
+        totalPages={totalPages}
+        currentPage={historyPage}
+        onPageChange={setHistoryPage}
+        onDeleteCompleted={handleDeleteCompleted}
       />
 
       {/* Modal de Configuração */}
