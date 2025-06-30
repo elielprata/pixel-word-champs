@@ -59,7 +59,8 @@ const GameBoardContent = ({
     targetWords: 5,
     currentScore: gameLogic.currentLevelScore,
     showGameOver: gameLogic.showGameOver,
-    showLevelComplete: gameLogic.showLevelComplete
+    showLevelComplete: gameLogic.showLevelComplete,
+    foundWords: gameLogic.foundWords.map(fw => ({ word: fw.word, positions: fw.positions }))
   }, 'GAME_BOARD_CONTENT');
 
   return (
@@ -94,8 +95,8 @@ const GameBoardContent = ({
           isCellSelected: gameLogic.isCellSelected,
           isCellPermanentlyMarked: gameLogic.isCellPartOfFoundWord,
           isCellHintHighlighted: gameLogic.isCellHintHighlighted,
-          getWordColor: () => '#3B82F6',
-          getCellWordIndex: () => -1
+          getWordColor: gameLogic.getWordColor,
+          getCellWordIndex: gameLogic.getCellWordIndex
         }}
       />
 

@@ -51,13 +51,28 @@ export const useSimplifiedGameLogic = ({
 
   // Função para adicionar palavra encontrada
   const handleWordFound = useCallback((foundWord: FoundWord) => {
-    setFoundWords(prev => [...prev, foundWord]);
+    logger.info('🎯 Nova palavra encontrada!', { 
+      word: foundWord.word,
+      points: foundWord.points,
+      positions: foundWord.positions,
+      totalFoundWords: foundWords.length + 1
+    }, 'SIMPLIFIED_GAME');
+
+    setFoundWords(prev => {
+      const updated = [...prev, foundWord];
+      logger.debug('📝 Palavras encontradas atualizadas', { 
+        totalWords: updated.length,
+        words: updated.map(fw => ({ word: fw.word, positions: fw.positions }))
+      }, 'SIMPLIFIED_GAME');
+      return updated;
+    });
+    
     setCurrentLevelScore(prev => prev + foundWord.points);
     setShowValidWord(true);
     
     // Remover feedback visual após 1 segundo
     setTimeout(() => setShowValidWord(false), 1000);
-  }, []);
+  }, [foundWords.length]);
 
   // Configurar validação de palavras
   const { validateAndConfirmWord } = useWordValidation({
@@ -219,12 +234,57 @@ export const useSimplifiedGameLogic = ({
     return selectedCells.some(p => p.row === row && p.col === col);
   }, [selectedCells]);
 
-  // Verificar se célula faz parte de uma palavra encontrada
+  // 🎯 FUNÇÃO CORRIGIDA: Verificar se célula faz parte de uma palavra encontrada
   const isCellPartOfFoundWord = useCallback((row: number, col: number) => {
-    return foundWords.some(fw => 
+    const isPartOfWord = foundWords.some(fw => 
       fw.positions.some(p => p.row === row && p.col === col)
     );
+    
+    // Debug detalhado para identificar problemas
+    if (foundWords.length > 0) {
+      logger.debug('🔍 Verificando célula para marcação', {
+        cellPosition: { row, col },
+        foundWordsCount: foundWords.length,
+        foundWordsPositions: foundWords.map(fw => ({
+          word: fw.word,
+          positions: fw.positions
+        })),
+        isPartOfWord
+      }, 'CELL_MARKING');
+    }
+    
+    return isPartOfWord;
   }, [foundWords]);
+
+  // 🎨 FUNÇÃO CORRIGIDA: Obter índice da palavra para colorir
+  const getCellWordIndex = useCallback((row: number, col: number) => {
+    for (let i = 0; i < foundWords.length; i++) {
+      const word = foundWords[i];
+      if (word.positions.some(p => p.row === row && p.col === col)) {
+        return i;
+      }
+    }
+    return -1;
+  }, [foundWords]);
+
+  // 🌈 FUNÇÃO CORRIGIDA: Obter cor da palavra
+  const getWordColor = useCallback((wordIndex: number) => {
+    const colors = [
+      'bg-gradient-to-br from-blue-500 to-blue-600',
+      'bg-gradient-to-br from-purple-500 to-violet-600', 
+      'bg-gradient-to-br from-emerald-500 to-green-600',
+      'bg-gradient-to-br from-orange-500 to-amber-600',
+      'bg-gradient-to-br from-pink-500 to-rose-600',
+      'bg-gradient-to-br from-cyan-500 to-teal-600'
+    ];
+    
+    if (wordIndex >= 0 && wordIndex < colors.length) {
+      return colors[wordIndex];
+    }
+    
+    // Cor padrão para palavras encontradas
+    return 'bg-gradient-to-br from-blue-500 to-blue-600';
+  }, []);
 
   // Actions para modais
   const closeGameOver = useCallback(() => setShowGameOver(false), []);
@@ -260,6 +320,8 @@ export const useSimplifiedGameLogic = ({
     isCellHintHighlighted,
     isCellSelected,
     isCellPartOfFoundWord,
+    getCellWordIndex,
+    getWordColor,
     
     // Actions
     useHint,
