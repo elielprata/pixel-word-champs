@@ -5,7 +5,7 @@ import { logger } from '@/utils/logger';
 class WeeklyRankingUpdateService {
   async updateWeeklyRankingFromParticipations(): Promise<void> {
     try {
-      logger.info('Iniciando atualização robusta do ranking semanal', undefined, 'WEEKLY_RANKING_UPDATE');
+      logger.info('Iniciando atualização robusta do ranking semanal com premiação dinâmica', undefined, 'WEEKLY_RANKING_UPDATE');
       
       const { error } = await supabase.rpc('update_weekly_ranking');
       
@@ -14,7 +14,7 @@ class WeeklyRankingUpdateService {
         throw error;
       }
       
-      logger.info('Ranking semanal atualizado com sucesso usando UPSERT robusto', undefined, 'WEEKLY_RANKING_UPDATE');
+      logger.info('Ranking semanal atualizado com sucesso usando UPSERT robusto e premiação dinâmica', undefined, 'WEEKLY_RANKING_UPDATE');
     } catch (error: any) {
       logger.error('Erro na atualização robusta do ranking semanal', { error: error.message }, 'WEEKLY_RANKING_UPDATE');
       throw error;
@@ -80,6 +80,49 @@ class WeeklyRankingUpdateService {
       return { hasDuplicates: false, duplicates: [] };
     } catch (error: any) {
       logger.error('Erro ao validar integridade do ranking', { error: error.message }, 'WEEKLY_RANKING_UPDATE');
+      throw error;
+    }
+  }
+
+  async validatePrizeCalculations() {
+    try {
+      logger.info('Validando cálculos de premiação', undefined, 'WEEKLY_RANKING_UPDATE');
+      
+      // Buscar configurações de prêmios ativas
+      const { data: prizeConfigs, error: prizeError } = await supabase
+        .from('prize_configurations')
+        .select('*')
+        .eq('active', true)
+        .order('position', { ascending: true });
+
+      if (prizeError) throw prizeError;
+
+      // Buscar ranking atual
+      const { data: currentRanking, error: rankingError } = await supabase
+        .from('weekly_rankings')
+        .select('position, prize_amount, username')
+        .order('position', { ascending: true })
+        .limit(10);
+
+      if (rankingError) throw rankingError;
+
+      const validationResults = {
+        prizeConfigCount: prizeConfigs?.length || 0,
+        rankingEntriesCount: currentRanking?.length || 0,
+        prizeValidation: currentRanking?.map(entry => ({
+          username: entry.username,
+          position: entry.position,
+          currentPrize: entry.prize_amount,
+          expectedPrize: prizeConfigs?.find(config => 
+            config.type === 'individual' && config.position === entry.position
+          )?.prize_amount || 0
+        })) || []
+      };
+
+      logger.info('Validação de premiação concluída', validationResults, 'WEEKLY_RANKING_UPDATE');
+      return validationResults;
+    } catch (error: any) {
+      logger.error('Erro ao validar cálculos de premiação', { error: error.message }, 'WEEKLY_RANKING_UPDATE');
       throw error;
     }
   }
