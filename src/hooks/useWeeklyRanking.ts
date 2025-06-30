@@ -85,53 +85,6 @@ export const useWeeklyRanking = () => {
     }
   };
 
-  const updateRanking = async () => {
-    try {
-      const { error } = await supabase.rpc('update_weekly_ranking');
-      if (error) throw error;
-      
-      // Recarregar dados após atualização
-      await loadWeeklyRanking();
-      return { success: true };
-    } catch (err: any) {
-      console.error('Erro ao atualizar ranking:', err);
-      return { success: false, error: err.message };
-    }
-  };
-
-  const validateIntegrity = async () => {
-    try {
-      // Buscar todos os registros e detectar duplicatas do lado do cliente
-      const { data: allRankings, error } = await supabase
-        .from('weekly_rankings')
-        .select('user_id, week_start, id')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Detectar duplicatas manualmente
-      const seenKeys = new Set<string>();
-      const duplicates: any[] = [];
-      
-      allRankings?.forEach(ranking => {
-        const key = `${ranking.user_id}-${ranking.week_start}`;
-        if (seenKeys.has(key)) {
-          duplicates.push(ranking);
-        } else {
-          seenKeys.add(key);
-        }
-      });
-
-      return {
-        hasDuplicates: duplicates.length > 0,
-        duplicatesCount: duplicates.length
-      };
-    } catch (err: any) {
-      console.error('Erro ao validar integridade:', err);
-      return { hasDuplicates: false, duplicatesCount: 0, error: err.message };
-    }
-  };
-
   useEffect(() => {
     loadWeeklyRanking();
   }, []);
@@ -141,8 +94,6 @@ export const useWeeklyRanking = () => {
     currentRanking,
     isLoading,
     error,
-    refetch: loadWeeklyRanking,
-    updateRanking,
-    validateIntegrity
+    refetch: loadWeeklyRanking
   };
 };
