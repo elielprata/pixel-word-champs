@@ -74,7 +74,8 @@ export type Database = {
       }
       challenge_progress: {
         Row: {
-          challenge_id: number
+          challenge_id: number | null
+          competition_id: string | null
           completed_at: string | null
           created_at: string | null
           current_level: number | null
@@ -85,7 +86,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          challenge_id: number
+          challenge_id?: number | null
+          competition_id?: string | null
           completed_at?: string | null
           created_at?: string | null
           current_level?: number | null
@@ -96,7 +98,8 @@ export type Database = {
           user_id: string
         }
         Update: {
-          challenge_id?: number
+          challenge_id?: number | null
+          competition_id?: string | null
           completed_at?: string | null
           created_at?: string | null
           current_level?: number | null

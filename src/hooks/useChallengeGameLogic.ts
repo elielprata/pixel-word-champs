@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { gameService } from '@/services/gameService';
 import { competitionParticipationService } from '@/services/competitionParticipationService';
+import { challengeProgressService } from '@/services/challengeProgressService';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
 
@@ -17,6 +18,8 @@ export const useChallengeGameLogic = (challengeId: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingStep, setLoadingStep] = useState<string>('Iniciando...');
+  const [isResuming, setIsResuming] = useState(false);
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
 
   const maxLevels = 20;
 
@@ -52,12 +55,48 @@ export const useChallengeGameLogic = (challengeId: string) => {
         return;
       }
 
+      // Verificar progresso existente do usuário
+      if (user) {
+        setLoadingStep('Verificando progresso...');
+        const existingProgress = await challengeProgressService.getProgress(user.id, challengeId);
+        
+        if (existingProgress) {
+          if (existingProgress.is_completed) {
+            // Usuário já completou esta competição
+            logger.info('🏆 Usuário já completou esta competição', { 
+              challengeId,
+              userId: user.id,
+              finalScore: existingProgress.total_score 
+            });
+            setAlreadyCompleted(true);
+            setTotalScore(existingProgress.total_score);
+            setCurrentLevel(20);
+            setLoadingStep('Competição já concluída!');
+            return;
+          } else {
+            // Usuário tem progresso, mas não completou
+            logger.info('🔄 Retomando progresso existente', { 
+              challengeId,
+              userId: user.id,
+              currentLevel: existingProgress.current_level,
+              totalScore: existingProgress.total_score
+            });
+            setCurrentLevel(existingProgress.current_level);
+            setTotalScore(existingProgress.total_score);
+            setIsResuming(true);
+            setLoadingStep(`Continuando do nível ${existingProgress.current_level}...`);
+          }
+        } else {
+          setLoadingStep('Iniciando novo desafio...');
+        }
+      }
+
       logger.info('✅ Competição validada, criando sessão de jogo...');
       setLoadingStep('Criando sessão de jogo...');
       
       // Criar uma nova sessão de jogo para esta competição
       const sessionResponse = await gameService.createGameSession({
-        level: 1,
+        level: currentLevel,
         boardSize: 10,
         competitionId: challengeId
       });
@@ -72,8 +111,6 @@ export const useChallengeGameLogic = (challengeId: string) => {
       logger.info('✅ Sessão de jogo criada:', session.id);
       
       setGameSession(session);
-      setCurrentLevel(session.level || 1);
-      setTotalScore(session.total_score || 0);
       setIsGameStarted(true);
       setLoadingStep('Sessão criada com sucesso!');
       
@@ -141,21 +178,36 @@ export const useChallengeGameLogic = (challengeId: string) => {
     const newTotalScore = totalScore + levelScore;
     setTotalScore(newTotalScore);
     
-    logger.info(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Pontos já registrados no banco de dados.`);
+    // Salvar progresso após completar nível
+    if (user) {
+      await challengeProgressService.saveProgress({
+        userId: user.id,
+        competitionId: challengeId,
+        currentLevel: currentLevel,
+        totalScore: newTotalScore
+      });
+    }
+    
+    logger.info(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Progresso salvo.`);
   };
 
   const handleAdvanceLevel = () => {
     if (currentLevel < maxLevels) {
-      setCurrentLevel(prev => prev + 1);
+      const nextLevel = currentLevel + 1;
+      setCurrentLevel(nextLevel);
       setIsGameStarted(false);
       setTimeout(() => {
         setIsGameStarted(true);
       }, 100);
       
-      logger.info(`Avançando para o nível ${currentLevel + 1}`);
+      logger.info(`Avançando para o nível ${nextLevel}`);
     } else {
+      // Completou todos os 20 níveis
+      if (user) {
+        challengeProgressService.markAsCompleted(user.id, challengeId, totalScore);
+      }
       setGameCompleted(true);
-      logger.info('Você completou todos os 20 níveis!');
+      logger.info('🎉 Você completou todos os 20 níveis!');
     }
   };
 
@@ -164,7 +216,9 @@ export const useChallengeGameLogic = (challengeId: string) => {
     setError(null);
     setGameSession(null);
     setIsGameStarted(false);
-    setHasMarkedParticipation(false); // Reset para permitir nova tentativa
+    setHasMarkedParticipation(false);
+    setAlreadyCompleted(false);
+    setIsResuming(false);
     initializeGameSession();
   };
 
@@ -177,6 +231,8 @@ export const useChallengeGameLogic = (challengeId: string) => {
     isLoading,
     error,
     loadingStep,
+    isResuming,
+    alreadyCompleted,
     handleTimeUp,
     handleLevelComplete,
     handleAdvanceLevel,

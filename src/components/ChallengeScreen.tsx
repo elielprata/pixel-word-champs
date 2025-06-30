@@ -23,6 +23,8 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     isLoading,
     error,
     loadingStep,
+    isResuming,
+    alreadyCompleted,
     handleTimeUp,
     handleLevelComplete,
     handleAdvanceLevel,
@@ -130,6 +132,39 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
     resetTimer();
   };
 
+  // Tela especial para competição já completada
+  if (alreadyCompleted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-900 via-emerald-800 to-teal-900 flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto">
+          <div className="w-20 h-20 mx-auto mb-6 bg-green-400 rounded-full flex items-center justify-center">
+            <span className="text-4xl">🏆</span>
+          </div>
+          
+          <h1 className="text-3xl font-bold text-white mb-4">
+            Competição Já Concluída!
+          </h1>
+          
+          <p className="text-white/80 text-lg mb-2">
+            Você completou todos os 20 níveis desta competição.
+          </p>
+          
+          <div className="bg-white/10 rounded-lg p-4 mb-6 backdrop-blur-sm border border-white/20">
+            <div className="text-green-400 font-bold text-2xl">{totalScore}</div>
+            <div className="text-white/70">Pontuação Final</div>
+          </div>
+          
+          <button
+            onClick={handleBackToMenu}
+            className="w-full bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-4 rounded-xl shadow-lg hover:from-green-500 hover:to-green-600 transition-all"
+          >
+            Voltar ao Menu
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Tela de erro com opções claras
   if (error) {
     return (
@@ -143,7 +178,13 @@ const ChallengeScreen = ({ challengeId, onBack }: ChallengeScreenProps) => {
 
   // Tela de loading gamificada
   if (isLoading) {
-    return <GameifiedLoadingScreen level={currentLevel} loadingStep={loadingStep || 'Carregando...'} />;
+    return (
+      <GameifiedLoadingScreen 
+        level={currentLevel} 
+        loadingStep={loadingStep || 'Carregando...'} 
+        isResuming={isResuming}
+      />
+    );
   }
 
   // Tela de jogo completado

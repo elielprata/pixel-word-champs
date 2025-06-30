@@ -1,8 +1,10 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Competition } from '@/types';
 import { CompetitionCardButton } from './CompetitionCardButton';
 import { getCompetitionIconConfig } from '@/utils/competitionIcons';
+import { useCompetitionStatus } from '@/hooks/useCompetitionStatus';
 
 interface CompetitionCardProps {
   competition: Competition;
@@ -18,6 +20,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   }>({ text: '', percentage: 0, totalSeconds: 0 });
   
   const status = competition.status as 'scheduled' | 'active' | 'completed';
+  const competitionStatus = useCompetitionStatus(competition.id);
   
   // Obter configuração de ícone única baseada no ID da competição
   const iconConfig = useMemo(() => {
@@ -115,6 +118,21 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
               <p className="text-gray-500 text-sm">
                 {competition.description || 'Caça Palavras'}
               </p>
+              {/* Mostrar status do progresso do usuário */}
+              {!competitionStatus.loading && (
+                <div className="mt-1">
+                  {competitionStatus.status === 'completed' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      ✅ Concluído
+                    </span>
+                  )}
+                  {competitionStatus.status === 'in_progress' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      🎯 Nível {competitionStatus.currentLevel}/20
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           
@@ -157,6 +175,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
         <CompetitionCardButton
           status={status}
           competitionId={competition.id}
+          competitionStatus={competitionStatus}
           onJoin={onJoin}
         />
       </div>
