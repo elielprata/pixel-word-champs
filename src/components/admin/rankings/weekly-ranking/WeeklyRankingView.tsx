@@ -5,6 +5,7 @@ import { Trophy, Settings, Award } from 'lucide-react';
 import { WeeklyRankingTable } from './WeeklyRankingTable';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
 import { WeeklyConfigModal } from './WeeklyConfigModal';
+import { WeeklyAutomationStatus } from './WeeklyAutomationStatus';
 import { PrizeConfigModal } from '../PrizeConfigModal';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 import { Loader2 } from 'lucide-react';
@@ -73,6 +74,9 @@ export const WeeklyRankingView = () => {
           </Button>
         </div>
       </div>
+
+      {/* Status da Automação */}
+      <WeeklyAutomationStatus />
 
       {/* Estatísticas Básicas */}
       <WeeklyRankingStats stats={stats} onConfigUpdated={refetch} />
