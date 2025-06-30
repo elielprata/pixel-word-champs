@@ -1332,6 +1332,10 @@ export type Database = {
         Args: { competition_id: string }
         Returns: Json
       }
+      detect_ranking_duplicates: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       diagnose_ranking_system: {
         Args: Record<PropertyKey, never>
         Returns: Json

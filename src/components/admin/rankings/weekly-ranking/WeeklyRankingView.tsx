@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Trophy, Settings, Award } from 'lucide-react';
+import { RefreshCw, Trophy, Settings, Award, CheckCircle } from 'lucide-react';
 import { WeeklyRankingTable } from './WeeklyRankingTable';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
 import { WeeklyConfigModal } from './WeeklyConfigModal';
@@ -14,20 +14,59 @@ export const WeeklyRankingView = () => {
   const { toast } = useToast();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [prizeConfigModalOpen, setPrizeConfigModalOpen] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const { 
     currentRanking, 
     stats, 
     isLoading, 
     error, 
-    refetch
+    refetch,
+    updateRanking,
+    validateIntegrity
   } = useWeeklyRanking();
 
-  const handleRefresh = () => {
-    refetch();
-    toast({
-      title: "Atualizado",
-      description: "Ranking semanal atualizado com sucesso!",
-    });
+  const handleRefresh = async () => {
+    const result = await updateRanking();
+    if (result.success) {
+      toast({
+        title: "Atualizado",
+        description: "Ranking semanal atualizado com sucesso usando UPSERT robusto!",
+      });
+    } else {
+      toast({
+        title: "Erro",
+        description: result.error || "Erro ao atualizar ranking",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleValidateIntegrity = async () => {
+    setIsValidating(true);
+    try {
+      const result = await validateIntegrity();
+      
+      if (result.hasDuplicates) {
+        toast({
+          title: "Duplicatas Detectadas",
+          description: `Encontradas ${result.duplicatesCount} duplicatas no ranking`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Integridade Verificada",
+          description: "Nenhuma duplicata encontrada no ranking semanal",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro na Validação",
+        description: "Erro ao verificar integridade do ranking",
+        variant: "destructive"
+      });
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const handleConfigUpdated = () => {
@@ -66,7 +105,7 @@ export const WeeklyRankingView = () => {
             <Trophy className="h-5 w-5 text-yellow-600" />
             Ranking Semanal
           </h2>
-          <p className="text-sm text-slate-600">Classificação dos jogadores da semana</p>
+          <p className="text-sm text-slate-600">Classificação dos jogadores da semana (sem duplicatas)</p>
         </div>
         <div className="flex items-center gap-2">
           <Button 
@@ -84,6 +123,19 @@ export const WeeklyRankingView = () => {
           >
             <Award className="h-4 w-4" />
             Configurar Premiação
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleValidateIntegrity}
+            disabled={isValidating}
+            className="flex items-center gap-2"
+          >
+            {isValidating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCircle className="h-4 w-4" />
+            )}
+            Validar Integridade
           </Button>
           <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />

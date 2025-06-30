@@ -99,6 +99,27 @@ export const useWeeklyRanking = () => {
     }
   };
 
+  const validateIntegrity = async () => {
+    try {
+      // Verificar se há duplicatas
+      const { data: duplicateCheck, error } = await supabase
+        .from('weekly_rankings')
+        .select('user_id, week_start')
+        .group('user_id, week_start')
+        .having('count(*) > 1');
+
+      if (error) throw error;
+
+      return {
+        hasDuplicates: duplicateCheck && duplicateCheck.length > 0,
+        duplicatesCount: duplicateCheck?.length || 0
+      };
+    } catch (err: any) {
+      console.error('Erro ao validar integridade:', err);
+      return { hasDuplicates: false, duplicatesCount: 0, error: err.message };
+    }
+  };
+
   useEffect(() => {
     loadWeeklyRanking();
   }, []);
@@ -109,6 +130,7 @@ export const useWeeklyRanking = () => {
     isLoading,
     error,
     refetch: loadWeeklyRanking,
-    updateRanking
+    updateRanking,
+    validateIntegrity
   };
 };

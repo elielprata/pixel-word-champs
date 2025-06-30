@@ -5,7 +5,7 @@ import { logger } from '@/utils/logger';
 class WeeklyRankingUpdateService {
   async updateWeeklyRankingFromParticipations(): Promise<void> {
     try {
-      logger.info('Iniciando atualização do ranking semanal a partir das participações', undefined, 'WEEKLY_RANKING_UPDATE');
+      logger.info('Iniciando atualização robusta do ranking semanal', undefined, 'WEEKLY_RANKING_UPDATE');
       
       const { error } = await supabase.rpc('update_weekly_ranking');
       
@@ -14,18 +14,20 @@ class WeeklyRankingUpdateService {
         throw error;
       }
       
-      logger.info('Ranking semanal atualizado com sucesso', undefined, 'WEEKLY_RANKING_UPDATE');
+      logger.info('Ranking semanal atualizado com sucesso usando UPSERT robusto', undefined, 'WEEKLY_RANKING_UPDATE');
     } catch (error: any) {
-      logger.error('Erro na atualização do ranking semanal', { error: error.message }, 'WEEKLY_RANKING_UPDATE');
+      logger.error('Erro na atualização robusta do ranking semanal', { error: error.message }, 'WEEKLY_RANKING_UPDATE');
       throw error;
     }
   }
 
   async getCurrentWeekStart(): Promise<string> {
+    // Usar horário de Brasília para consistência
     const today = new Date();
-    const dayOfWeek = today.getDay();
-    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    const weekStart = new Date(today.setDate(diff));
+    const brasiliaTime = new Date(today.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const dayOfWeek = brasiliaTime.getDay();
+    const diff = brasiliaTime.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    const weekStart = new Date(brasiliaTime.setDate(diff));
     return weekStart.toISOString().split('T')[0];
   }
 
@@ -38,6 +40,30 @@ class WeeklyRankingUpdateService {
       return data;
     } catch (error: any) {
       logger.error('Erro ao obter estatísticas do ranking semanal', { error: error.message }, 'WEEKLY_RANKING_UPDATE');
+      throw error;
+    }
+  }
+
+  async validateRankingIntegrity() {
+    try {
+      // Verificar se há duplicatas (não deveria mais haver)
+      const { data: duplicates, error } = await supabase
+        .from('weekly_rankings')
+        .select('user_id, week_start, count(*)')
+        .groupBy('user_id, week_start')
+        .having('count(*) > 1');
+
+      if (error) throw error;
+
+      if (duplicates && duplicates.length > 0) {
+        logger.warn('Duplicatas detectadas no ranking semanal', { duplicates }, 'WEEKLY_RANKING_UPDATE');
+        return { hasDuplicates: true, duplicates };
+      }
+
+      logger.info('Integridade do ranking semanal verificada - sem duplicatas', undefined, 'WEEKLY_RANKING_UPDATE');
+      return { hasDuplicates: false, duplicates: [] };
+    } catch (error: any) {
+      logger.error('Erro ao validar integridade do ranking', { error: error.message }, 'WEEKLY_RANKING_UPDATE');
       throw error;
     }
   }
