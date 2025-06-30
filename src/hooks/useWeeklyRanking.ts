@@ -101,18 +101,30 @@ export const useWeeklyRanking = () => {
 
   const validateIntegrity = async () => {
     try {
-      // Verificar se há duplicatas
-      const { data: duplicateCheck, error } = await supabase
+      // Buscar todos os registros e detectar duplicatas do lado do cliente
+      const { data: allRankings, error } = await supabase
         .from('weekly_rankings')
-        .select('user_id, week_start')
-        .group('user_id, week_start')
-        .having('count(*) > 1');
+        .select('user_id, week_start, id')
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      // Detectar duplicatas manualmente
+      const seenKeys = new Set<string>();
+      const duplicates: any[] = [];
+      
+      allRankings?.forEach(ranking => {
+        const key = `${ranking.user_id}-${ranking.week_start}`;
+        if (seenKeys.has(key)) {
+          duplicates.push(ranking);
+        } else {
+          seenKeys.add(key);
+        }
+      });
+
       return {
-        hasDuplicates: duplicateCheck && duplicateCheck.length > 0,
-        duplicatesCount: duplicateCheck?.length || 0
+        hasDuplicates: duplicates.length > 0,
+        duplicatesCount: duplicates.length
       };
     } catch (err: any) {
       console.error('Erro ao validar integridade:', err);

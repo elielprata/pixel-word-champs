@@ -46,16 +46,32 @@ class WeeklyRankingUpdateService {
 
   async validateRankingIntegrity() {
     try {
-      // Verificar se há duplicatas (não deveria mais haver)
-      const { data: duplicates, error } = await supabase
+      // Buscar todos os registros e detectar duplicatas do lado do cliente
+      const { data: allRankings, error } = await supabase
         .from('weekly_rankings')
-        .select('user_id, week_start, count(*)')
-        .groupBy('user_id, week_start')
-        .having('count(*) > 1');
+        .select('user_id, week_start, id, created_at')
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      if (duplicates && duplicates.length > 0) {
+      // Detectar duplicatas manualmente
+      const seenKeys = new Set<string>();
+      const duplicates: any[] = [];
+      
+      allRankings?.forEach(ranking => {
+        const key = `${ranking.user_id}-${ranking.week_start}`;
+        if (seenKeys.has(key)) {
+          duplicates.push({
+            user_id: ranking.user_id,
+            week_start: ranking.week_start,
+            id: ranking.id
+          });
+        } else {
+          seenKeys.add(key);
+        }
+      });
+
+      if (duplicates.length > 0) {
         logger.warn('Duplicatas detectadas no ranking semanal', { duplicates }, 'WEEKLY_RANKING_UPDATE');
         return { hasDuplicates: true, duplicates };
       }
