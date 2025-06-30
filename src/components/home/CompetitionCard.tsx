@@ -3,6 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Competition } from '@/types';
 import { CompetitionCardButton } from './CompetitionCardButton';
+import { getCompetitionIconConfig } from '@/utils/competitionIcons';
 
 interface CompetitionCardProps {
   competition: Competition;
@@ -18,6 +19,11 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   }>({ text: '', percentage: 0, totalSeconds: 0 });
   
   const status = competition.status as 'scheduled' | 'active' | 'completed';
+  
+  // Obter configuração de ícone única para esta competição
+  const iconConfig = useMemo(() => {
+    return getCompetitionIconConfig(competition.title);
+  }, [competition.title]);
 
   useEffect(() => {
     const updateTimer = () => {
@@ -81,25 +87,27 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   }
 
   if (status === 'active') {
+    const IconComponent = iconConfig.icon;
+    
     return (
-      <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl p-4 shadow-lg border border-pink-200 relative overflow-hidden mb-3">
+      <div className={`${iconConfig.colors.background} rounded-2xl p-4 shadow-lg ${iconConfig.colors.border} border relative overflow-hidden mb-3`}>
         {/* Decorações de fundo */}
         <div className="absolute top-2 right-2 opacity-20">
           <div className="flex items-center space-x-1">
-            <div className="w-2 h-2 bg-purple-300 rounded-full"></div>
-            <div className="w-1 h-1 bg-purple-300 rounded-full"></div>
+            <div className="w-2 h-2 bg-current rounded-full"></div>
+            <div className="w-1 h-1 bg-current rounded-full"></div>
           </div>
           <div className="flex space-x-1 mt-1">
-            <div className="w-1 h-1 bg-purple-300 rounded-full"></div>
-            <div className="w-1 h-1 bg-purple-300 rounded-full"></div>
-            <div className="w-1 h-1 bg-purple-300 rounded-full"></div>
+            <div className="w-1 h-1 bg-current rounded-full"></div>
+            <div className="w-1 h-1 bg-current rounded-full"></div>
+            <div className="w-1 h-1 bg-current rounded-full"></div>
           </div>
         </div>
 
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-md">
-              <span className="text-white text-xl">⚡</span>
+            <div className={`w-12 h-12 ${iconConfig.colors.primary} rounded-xl flex items-center justify-center shadow-md`}>
+              <IconComponent className="text-white text-xl w-6 h-6" />
             </div>
             <div>
               <h3 className="font-bold text-gray-800 text-lg">
@@ -134,7 +142,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <span className="text-green-500 text-xs">⚡</span>
+                  <IconComponent className="text-green-500 w-4 h-4 mx-auto mb-1" />
                   <div className="text-green-600 font-bold text-sm">
                     {Math.round(timeRemaining.percentage)}%
                   </div>
@@ -157,15 +165,13 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   }
 
   // Card para competições agendadas (sem card wrapper individual)
+  const IconComponent = iconConfig.icon;
+  
   return (
     <div className="flex justify-between items-center py-4">
       <div className="flex items-center space-x-3">
-        <div className={`w-10 h-10 ${
-          competition.type === 'weekly' ? 'bg-blue-500' : 'bg-orange-500'
-        } rounded-lg flex items-center justify-center`}>
-          <span className="text-white">
-            {competition.type === 'weekly' ? '🏆' : '🔥'}
-          </span>
+        <div className={`w-10 h-10 ${iconConfig.colors.primary} rounded-lg flex items-center justify-center shadow-sm`}>
+          <IconComponent className="text-white w-5 h-5" />
         </div>
         <div>
           <h3 className="font-semibold text-gray-800">

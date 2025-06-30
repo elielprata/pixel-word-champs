@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,11 +14,25 @@ interface CompetitionsListProps {
 }
 
 const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: CompetitionsListProps) => {
-  // Filtrar competições ativas e agendadas
-  const activeCompetitions = competitions.filter(comp => comp.status === 'active');
-  const scheduledCompetitions = competitions
-    .filter(comp => comp.status === 'scheduled')
-    .slice(0, 3); // Limitar a 3 competições agendadas
+  // Filtrar e ordenar competições
+  const { activeCompetitions, scheduledCompetitions } = useMemo(() => {
+    const active = competitions.filter(comp => comp.status === 'active');
+    
+    // Ordenar competições agendadas por tempo restante (menor para maior)
+    const scheduled = competitions
+      .filter(comp => comp.status === 'scheduled')
+      .sort((a, b) => {
+        const now = new Date().getTime();
+        const timeToA = new Date(a.start_date).getTime() - now;
+        const timeToB = new Date(b.start_date).getTime() - now;
+        
+        // Ordenar do menor tempo restante para o maior
+        return timeToA - timeToB;
+      })
+      .slice(0, 3); // Limitar a 3 competições agendadas
+    
+    return { activeCompetitions: active, scheduledCompetitions: scheduled };
+  }, [competitions]);
 
   const handleJoin = (competitionId: string) => {
     onStartChallenge(competitionId);
@@ -65,10 +79,15 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
         </div>
       )}
 
-      {/* Próximas Competições (Agendadas) */}
+      {/* Próximas Competições (Agendadas) - Ordenadas por tempo restante */}
       {scheduledCompetitions.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-gray-800 font-semibold text-lg mb-4">Próximas Competições</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-gray-800 font-semibold text-lg">Próximas Competições</h2>
+            <div className="text-xs text-gray-500">
+              Ordenadas por tempo de início
+            </div>
+          </div>
           
           <div className="bg-white rounded-2xl shadow-md border border-gray-100">
             {scheduledCompetitions.map((competition, index) => (
