@@ -6,52 +6,16 @@ import { logger } from '@/utils/logger';
 interface ScoreUpdateResult {
   total_score: number;
   games_played: number;
+  experience_points?: number;
 }
 
 class GameScoreService {
   /**
-   * 🆕 VERSÃO LIMPA: Atualiza pontuações usando a nova RPC sem ambiguidade
-   */
-  async updateGameScoreClean(userId: string, gamePoints: number) {
-    try {
-      logger.info('💾 Atualizando pontuação com RPC v2 (sem ambiguidade)', { 
-        userId, 
-        gamePoints 
-      }, 'GAME_SCORE_SERVICE_V2');
-
-      // Usar nova RPC que trabalha apenas com profiles
-      const { data, error } = await supabase.rpc('update_user_points_v2', {
-        p_user_id: userId,
-        p_points: gamePoints
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      logger.info('✅ Pontuação atualizada com sucesso (RPC v2)', { 
-        userId,
-        newTotalScore: data?.[0]?.total_score,
-        newGamesPlayed: data?.[0]?.games_played
-      }, 'GAME_SCORE_SERVICE_V2');
-
-      return createSuccessResponse(data?.[0] as ScoreUpdateResult);
-    } catch (error) {
-      logger.error('❌ Erro ao atualizar pontuação (RPC v2)', { 
-        error, 
-        userId, 
-        gamePoints 
-      }, 'GAME_SCORE_SERVICE_V2');
-      return createErrorResponse(handleServiceError(error, 'updateGameScoreClean'));
-    }
-  }
-
-  /**
-   * VERSÃO LEGADA: Mantida para compatibilidade (usar RPC antiga)
+   * Atualizar pontuações usando a RPC update_user_scores
    */
   async updateGameScore(userId: string, gamePoints: number, competitionId?: string) {
     try {
-      logger.info('Atualizando pontuação (RPC legada)', { 
+      logger.info('💾 Atualizando pontuação com update_user_scores', { 
         userId, 
         gamePoints, 
         competitionId 
@@ -60,7 +24,7 @@ class GameScoreService {
       // Converter pontos do jogo para XP permanente (1:1 por enquanto)
       const experiencePointsToAdd = gamePoints;
 
-      // Usar RPC legada para atualizar com expressões SQL
+      // Usar RPC update_user_scores para atualizar com expressões SQL
       const { data, error } = await supabase.rpc('update_user_scores', {
         p_user_id: userId,
         p_game_points: gamePoints,
@@ -71,7 +35,7 @@ class GameScoreService {
         throw error;
       }
 
-      logger.info('Pontuação atualizada com sucesso (RPC legada)', { 
+      logger.info('✅ Pontuação atualizada com sucesso', { 
         userId,
         newTotalScore: data?.[0]?.total_score,
         newExperiencePoints: data?.[0]?.experience_points,
@@ -80,10 +44,11 @@ class GameScoreService {
 
       return createSuccessResponse({
         total_score: data?.[0]?.total_score,
-        games_played: data?.[0]?.games_played
+        games_played: data?.[0]?.games_played,
+        experience_points: data?.[0]?.experience_points
       } as ScoreUpdateResult);
     } catch (error) {
-      logger.error('Erro ao atualizar pontuação (RPC legada)', { 
+      logger.error('❌ Erro ao atualizar pontuação', { 
         error, 
         userId, 
         gamePoints 

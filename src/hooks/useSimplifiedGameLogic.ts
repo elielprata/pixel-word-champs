@@ -150,7 +150,7 @@ export const useSimplifiedGameLogic = ({
     }
   }, [foundWords.length, showLevelComplete, level, currentLevelScore, onLevelComplete]);
 
-  // 🆕 FUNÇÃO NOVA: Salvar pontos da sessão completa (uma vez só)
+  // 🆕 FUNÇÃO ATUALIZADA: Usar update_user_scores ao invés de update_user_points_v2
   const saveGameSessionPoints = useCallback(async (totalPoints: number) => {
     if (!user?.id || totalPoints === 0) {
       logger.warn('Não é possível salvar pontos - usuário não autenticado ou pontuação zero', { 
@@ -169,10 +169,12 @@ export const useSimplifiedGameLogic = ({
         timestamp: getCurrentBrasiliaTime() 
       }, 'SIMPLIFIED_GAME');
 
-      // Usar RPC original - incrementa partida UMA VEZ por sessão
-      const { data, error } = await supabase.rpc('update_user_points_v2', {
+      // Usar RPC update_user_scores - incrementa partida UMA VEZ por sessão
+      // XP permanente = totalPoints (1:1 ratio)
+      const { data, error } = await supabase.rpc('update_user_scores', {
         p_user_id: user.id,
-        p_points: totalPoints
+        p_game_points: totalPoints,
+        p_experience_points: totalPoints
       });
 
       if (error) {
@@ -184,6 +186,7 @@ export const useSimplifiedGameLogic = ({
         level,
         wordsFound: foundWords.length,
         newTotalScore: data?.[0]?.total_score,
+        newExperiencePoints: data?.[0]?.experience_points,
         newGamesPlayed: data?.[0]?.games_played
       }, 'SIMPLIFIED_GAME');
 
