@@ -1,79 +1,142 @@
 
-import React from 'react';
-import GameBoardLayout from './game/GameBoardLayout';
-import GameBoardContent from './game/GameBoardContent';
-import GameBoardLoadingState from './game/GameBoardLoadingState';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import GameBoardErrorState from './game/GameBoardErrorState';
-import { useOptimizedBoard } from '@/hooks/useOptimizedBoard';
+import GameBoardLoadingState from './game/GameBoardLoadingState';
+import SimpleGameBoardContent from './game/SimpleGameBoardContent';
 import { logger } from '@/utils/logger';
 
 interface GameBoardProps {
   level: number;
-  timeLeft: number;
-  onTimeUp: () => void;
+  timeLeft?: number;
+  onTimeUp?: () => void;
   onLevelComplete: (levelScore: number) => void;
-  onAdvanceLevel: () => void;
-  onStopGame: () => void;
+  onAdvanceLevel?: () => void;
+  onStopGame?: () => void;
   canRevive?: boolean;
   onRevive?: () => void;
 }
 
-const GameBoard = ({ 
-  level, 
-  timeLeft, 
-  onTimeUp, 
-  onLevelComplete, 
-  onAdvanceLevel, 
+const GameBoard = ({
+  level,
+  timeLeft: externalTimeLeft,
+  onTimeUp: externalOnTimeUp,
+  onLevelComplete,
+  onAdvanceLevel,
   onStopGame,
-  canRevive = true,
+  canRevive = false,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('🎮 Renderizando GameBoard DEFINITIVO (sem onWordFound)', { 
-    level, 
-    timeLeft, 
-    canRevive 
-  }, 'GAME_BOARD');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { isLoading, error, isWordSelectionError } = useOptimizedBoard(level);
+  // Timer integrado para controle do tempo
+  const {
+    timeLeft: internalTimeLeft,
+    onTimeUp: internalOnTimeUp,
+    startTimer,
+    stopTimer,
+    resetTimer
+  } = useIntegratedGameTimer({
+    initialTime: 300, // 5 minutos
+    onTimeUp: externalOnTimeUp
+  });
+
+  // Usar tempo externo se fornecido, senão usar interno
+  const timeLeft = externalTimeLeft !== undefined ? externalTimeLeft : internalTimeLeft;
+  const onTimeUp = externalOnTimeUp || internalOnTimeUp;
+
+  // Inicializar o jogo
+  useEffect(() => {
+    logger.info('🎮 Inicializando GameBoard', { 
+      level, 
+      hasExternalTimeLeft: externalTimeLeft !== undefined 
+    }, 'GAME_BOARD');
+
+    setIsLoading(true);
+    setError(null);
+
+    // Simular carregamento mínimo
+    const loadingTimer = setTimeout(() => {
+      setIsLoading(false);
+      if (externalTimeLeft === undefined) {
+        startTimer();
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(loadingTimer);
+      if (externalTimeLeft === undefined) {
+        stopTimer();
+      }
+    };
+  }, [level, externalTimeLeft, startTimer, stopTimer]);
+
+  // Limpar timer quando componente for desmontado
+  useEffect(() => {
+    return () => {
+      if (externalTimeLeft === undefined) {
+        stopTimer();
+      }
+    };
+  }, [externalTimeLeft, stopTimer]);
+
+  const handleLevelComplete = useCallback((levelScore: number) => {
+    logger.info('🏆 Nível completado no GameBoard', { 
+      level, 
+      levelScore 
+    }, 'GAME_BOARD');
+    
+    if (externalTimeLeft === undefined) {
+      stopTimer();
+    }
+    onLevelComplete(levelScore);
+  }, [level, onLevelComplete, stopTimer, externalTimeLeft]);
+
+  const handleStopGame = useCallback(() => {
+    logger.info('🛑 Parando jogo', { level }, 'GAME_BOARD');
+    
+    if (externalTimeLeft === undefined) {
+      stopTimer();
+    }
+    if (onStopGame) {
+      onStopGame();
+    }
+  }, [level, onStopGame, stopTimer, externalTimeLeft]);
+
+  const handleRevive = useCallback(() => {
+    logger.info('💖 Revive ativado', { level }, 'GAME_BOARD');
+    
+    if (externalTimeLeft === undefined) {
+      resetTimer();
+      startTimer();
+    }
+    if (onRevive) {
+      onRevive();
+    }
+  }, [level, onRevive, resetTimer, startTimer, externalTimeLeft]);
 
   if (isLoading) {
-    return (
-      <GameBoardLayout>
-        <GameBoardLoadingState 
-          level={level} 
-          debugInfo="Carregando palavras..." 
-        />
-      </GameBoardLayout>
-    );
+    return <GameBoardLoadingState />;
   }
 
   if (error) {
-    return (
-      <GameBoardLayout>
-        <GameBoardErrorState 
-          error={error} 
-          debugInfo={isWordSelectionError ? "Erro na seleção de palavras" : "Erro na geração do tabuleiro"}
-          level={level}
-          isWordSelectionError={isWordSelectionError}
-          onRetry={() => window.location.reload()}
-        />
-      </GameBoardLayout>
-    );
+    return <GameBoardErrorState error={error} />;
   }
 
   return (
-    <GameBoardLayout>
-      <GameBoardContent
+    <div className="game-board-container">
+      <SimpleGameBoardContent
         level={level}
         timeLeft={timeLeft}
         onTimeUp={onTimeUp}
-        onLevelComplete={onLevelComplete}
-        onAdvanceLevel={onAdvanceLevel}
-        onStopGame={onStopGame}
+        onLevelComplete={handleLevelComplete}
+        onAdvanceLevel={onAdvanceLevel || (() => {})}
+        onStopGame={handleStopGame}
         canRevive={canRevive}
-        onRevive={onRevive}
+        onRevive={handleRevive}
       />
-    </GameBoardLayout>
+    </div>
   );
 };
 
