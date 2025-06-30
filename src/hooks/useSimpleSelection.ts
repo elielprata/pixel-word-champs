@@ -20,18 +20,12 @@ export const useSimpleSelection = () => {
     setIsDragging(true);
   }, []);
 
-  // Atualiza célula de destino em tempo real - APENAS SE FOR LINHA RETA
+  // Atualiza célula de destino em tempo real
   const handleDrag = useCallback((row: number, col: number) => {
-    if (isDragging && startCell) {
-      const newCell = { row, col };
-      
-      // Verificar se o movimento forma uma linha reta
-      if (isValidLinearPath(startCell, newCell)) {
-        setCurrentCell(newCell);
-      }
-      // Se não for linha reta, manter a célula atual sem atualizar
+    if (isDragging) {
+      setCurrentCell({ row, col });
     }
-  }, [isDragging, startCell]);
+  }, [isDragging]);
 
   // Finaliza e retorna path reto
   const handleEnd = useCallback(() => {
@@ -44,44 +38,18 @@ export const useSimpleSelection = () => {
     return selection;
   }, [startCell, currentCell]);
 
-  // Verificar se o caminho é uma linha reta válida
-  const isValidLinearPath = (start: Position, end: Position): boolean => {
-    const deltaRow = end.row - start.row;
-    const deltaCol = end.col - start.col;
-    
-    // Mesma célula
-    if (deltaRow === 0 && deltaCol === 0) return true;
-    
-    // Horizontal (mesma linha)
-    if (deltaRow === 0 && deltaCol !== 0) return true;
-    
-    // Vertical (mesma coluna)
-    if (deltaCol === 0 && deltaRow !== 0) return true;
-    
-    // Diagonal (delta absoluto igual)
-    if (Math.abs(deltaRow) === Math.abs(deltaCol)) return true;
-    
-    return false;
-  };
-
   // Calcula todas as posições entre start → end (linha reta: horizontal/vertical/diagonal)
   const getLinearPath = (start: Position, end: Position): Position[] => {
     if (!start || !end) return [];
-    
     const deltaRow = end.row - start.row;
     const deltaCol = end.col - start.col;
-    const stepRow = deltaRow === 0 ? 0 : Math.sign(deltaRow);
-    const stepCol = deltaCol === 0 ? 0 : Math.sign(deltaCol);
+    const stepRow = Math.sign(deltaRow);
+    const stepCol = Math.sign(deltaCol);
     const length = Math.max(Math.abs(deltaRow), Math.abs(deltaCol));
-    
     if (length === 0) return [start];
-    
     const path: Position[] = [];
     for (let i = 0; i <= length; i++) {
-      path.push({ 
-        row: start.row + stepRow * i, 
-        col: start.col + stepCol * i 
-      });
+      path.push({ row: start.row + stepRow * i, col: start.col + stepCol * i });
     }
     return path;
   };
