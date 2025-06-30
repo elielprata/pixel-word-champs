@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,8 +28,31 @@ export const UnifiedCompetitionForm = ({
     hasTitle
   } = useUnifiedCompetitionForm();
 
+  // Debug: Log quando o componente é montado
+  useEffect(() => {
+    console.log('🎯 UnifiedCompetitionForm montado', {
+      timestamp: getCurrentBrasiliaTime(),
+      formData: {
+        title: formData.title,
+        duration: formData.duration
+      }
+    });
+
+    return () => {
+      console.log('🔄 UnifiedCompetitionForm desmontado', {
+        timestamp: getCurrentBrasiliaTime()
+      });
+    };
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('📝 Formulário submetido', {
+      timestamp: getCurrentBrasiliaTime(),
+      hasTitle,
+      isSubmitting
+    });
+    
     submitForm(onSuccess);
   };
 

@@ -6,8 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { UnifiedCompetitionForm } from './UnifiedCompetitionForm';
-import { CompetitionFormErrorBoundary } from './CompetitionFormErrorBoundary';
+import { UnifiedCompetitionFormWrapper } from './UnifiedCompetitionFormWrapper';
 import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 interface UnifiedCompetitionModalProps {
@@ -48,6 +47,9 @@ export const UnifiedCompetitionModal: React.FC<UnifiedCompetitionModalProps> = (
     if (onCompetitionCreated) {
       onCompetitionCreated();
     }
+    
+    // Fechar modal após sucesso
+    onOpenChange(false);
   };
 
   const handleError = (error: any) => {
@@ -79,14 +81,12 @@ export const UnifiedCompetitionModal: React.FC<UnifiedCompetitionModalProps> = (
         </DialogHeader>
         
         <div className="mt-4">
-          <CompetitionFormErrorBoundary onRetry={handleRetry}>
-            <UnifiedCompetitionForm
-              key={retryKey}
-              onClose={handleClose}
-              onSuccess={handleSuccess}
-              onError={handleError}
-            />
-          </CompetitionFormErrorBoundary>
+          <UnifiedCompetitionFormWrapper
+            key={retryKey}
+            onClose={handleClose}
+            onSuccess={handleSuccess}
+            onError={handleError}
+          />
         </div>
       </DialogContent>
     </Dialog>

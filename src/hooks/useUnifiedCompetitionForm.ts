@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { CompetitionFormData, CompetitionValidationResult } from '@/types/competition';
 import { unifiedCompetitionService } from '@/services/unifiedCompetitionService';
@@ -109,11 +109,6 @@ export const useUnifiedCompetitionForm = () => {
   const submitForm = useCallback(async (onSuccess?: () => void) => {
     if (isSubmitting) return;
 
-    console.log('🚀 Iniciando submissão do formulário:', {
-      formData,
-      timestamp: getCurrentBrasiliaTime()
-    });
-
     const validation = validateForm();
     if (!validation.isValid) {
       validation.errors.forEach(error => {
@@ -127,22 +122,29 @@ export const useUnifiedCompetitionForm = () => {
     }
 
     setIsSubmitting(true);
-    secureLogger.info('Iniciando submissão de competição', { 
-      title: formData.title, 
-      type: formData.type,
-      duration: formData.duration
+    secureLogger.info('Criando competição unificada', { 
+      title: formData.title,
+      duration: formData.duration 
     }, 'UNIFIED_COMPETITION_FORM');
 
     try {
-      const result = await unifiedCompetitionService.createCompetition(formData);
+      const result = await unifiedCompetitionService.createCompetition({
+        title: formData.title,
+        description: formData.description,
+        type: 'daily',
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        duration: formData.duration,
+        maxParticipants: formData.maxParticipants
+      });
       
       if (result.success) {
-        secureLogger.info('Competição criada com sucesso', { 
+        secureLogger.info('Competição unificada criada', { 
           id: result.data?.id 
         }, 'UNIFIED_COMPETITION_FORM');
         
         toast({
-          title: "Sucesso!",
+          title: "✅ Sucesso!",
           description: "Competição diária criada com sucesso.",
         });
         
@@ -163,7 +165,7 @@ export const useUnifiedCompetitionForm = () => {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erro ao criar competição";
-      secureLogger.error('Erro na submissão', { error: errorMessage }, 'UNIFIED_COMPETITION_FORM');
+      secureLogger.error('Erro na criação da competição unificada', { error: errorMessage }, 'UNIFIED_COMPETITION_FORM');
       
       toast({
         title: "Erro",
@@ -187,23 +189,16 @@ export const useUnifiedCompetitionForm = () => {
     });
   }, []);
 
+  // Verificar se o formulário tem dados mínimos
+  const hasTitle = useMemo(() => formData.title.trim().length > 0, [formData.title]);
+
   return {
     formData,
     updateField,
     validateForm,
     submitForm,
-    resetForm: useCallback(() => {
-      setFormData({
-        title: '',
-        description: '',
-        type: 'daily',
-        startDate: '',
-        endDate: '',
-        duration: 3,
-        maxParticipants: 0
-      });
-    }, []),
+    resetForm,
     isSubmitting,
-    hasTitle: !!formData.title.trim()
+    hasTitle
   };
 };
