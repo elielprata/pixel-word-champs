@@ -55,6 +55,11 @@ export const useChallengeGameLogic = (challengeId: string) => {
         return;
       }
 
+      // 🎯 CORREÇÃO: Definir variáveis locais para nível e pontuação ANTES de criar sessão  
+      let levelToUse = 1;
+      let scoreToUse = 0;
+      let resuming = false;
+
       // Verificar progresso existente do usuário
       if (user) {
         setLoadingStep('Verificando progresso...');
@@ -74,29 +79,40 @@ export const useChallengeGameLogic = (challengeId: string) => {
             setLoadingStep('Competição já concluída!');
             return;
           } else {
-            // Usuário tem progresso, mas não completou
+            // 🎯 CORREÇÃO: Usar progresso existente nas variáveis locais
+            levelToUse = existingProgress.current_level;
+            scoreToUse = existingProgress.total_score;
+            resuming = true;
+            
             logger.info('🔄 Retomando progresso existente', { 
               challengeId,
               userId: user.id,
-              currentLevel: existingProgress.current_level,
-              totalScore: existingProgress.total_score
+              currentLevel: levelToUse,
+              totalScore: scoreToUse
             });
-            setCurrentLevel(existingProgress.current_level);
-            setTotalScore(existingProgress.total_score);
-            setIsResuming(true);
-            setLoadingStep(`Continuando do nível ${existingProgress.current_level}...`);
+            
+            setLoadingStep(`Continuando do nível ${levelToUse}...`);
           }
         } else {
           setLoadingStep('Iniciando novo desafio...');
         }
       }
 
-      logger.info('✅ Competição validada, criando sessão de jogo...');
+      // 🎯 CORREÇÃO: Definir estados com valores corretos ANTES de criar sessão
+      setCurrentLevel(levelToUse);
+      setTotalScore(scoreToUse);
+      setIsResuming(resuming);
+
+      logger.info('✅ Competição validada, criando sessão de jogo...', {
+        levelToUse,
+        scoreToUse,
+        resuming
+      });
       setLoadingStep('Criando sessão de jogo...');
       
-      // Criar uma nova sessão de jogo para esta competição
+      // 🎯 CORREÇÃO: Criar sessão com o nível correto
       const sessionResponse = await gameService.createGameSession({
-        level: currentLevel,
+        level: levelToUse, // Usar variável local, não state
         boardSize: 10,
         competitionId: challengeId
       });
@@ -108,7 +124,12 @@ export const useChallengeGameLogic = (challengeId: string) => {
       }
 
       const session = sessionResponse.data;
-      logger.info('✅ Sessão de jogo criada:', session.id);
+      logger.info('✅ Sessão de jogo criada:', {
+        sessionId: session.id,
+        level: levelToUse,
+        score: scoreToUse,
+        resuming
+      });
       
       setGameSession(session);
       setIsGameStarted(true);
@@ -126,11 +147,11 @@ export const useChallengeGameLogic = (challengeId: string) => {
   const markParticipationAsCompleted = async (): Promise<boolean> => {
     if (hasMarkedParticipation || !user) {
       logger.info('Participação já foi marcada como concluída ou usuário não logado');
-      return true; // Retorna true se já foi processado
+      return true;
     }
 
     const timeout = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout')), 10000) // 10 segundos
+      setTimeout(() => reject(new Error('Timeout')), 10000)
     );
 
     try {
@@ -140,7 +161,6 @@ export const useChallengeGameLogic = (challengeId: string) => {
         gameSessionId: gameSession?.id
       });
 
-      // Race entre a operação e o timeout
       await Promise.race([
         (async () => {
           await competitionParticipationService.markUserAsParticipated(challengeId, user.id);
@@ -165,8 +185,7 @@ export const useChallengeGameLogic = (challengeId: string) => {
         userId: user.id
       });
       
-      // 🎯 IMPORTANTE: Mesmo com erro, permitir que o usuário saia
-      return false; // Indica que houve erro, mas não impede navegação
+      return false;
     }
   };
 
@@ -178,17 +197,21 @@ export const useChallengeGameLogic = (challengeId: string) => {
     const newTotalScore = totalScore + levelScore;
     setTotalScore(newTotalScore);
     
-    // Salvar progresso após completar nível
+    // 🎯 CORREÇÃO: Salvar progresso com nível atual correto
     if (user) {
-      await challengeProgressService.saveProgress({
+      const saveSuccess = await challengeProgressService.saveProgress({
         userId: user.id,
         competitionId: challengeId,
         currentLevel: currentLevel,
         totalScore: newTotalScore
       });
+      
+      logger.info(`Nível ${currentLevel} completado!`, {
+        levelScore,
+        newTotalScore,
+        progressSaved: saveSuccess
+      });
     }
-    
-    logger.info(`Nível ${currentLevel} completado! Pontuação do nível: ${levelScore}. Total: ${newTotalScore}. Progresso salvo.`);
   };
 
   const handleAdvanceLevel = () => {
@@ -196,6 +219,17 @@ export const useChallengeGameLogic = (challengeId: string) => {
       const nextLevel = currentLevel + 1;
       setCurrentLevel(nextLevel);
       setIsGameStarted(false);
+      
+      // 🎯 CORREÇÃO: Salvar progresso ao avançar nível
+      if (user) {
+        challengeProgressService.saveProgress({
+          userId: user.id,
+          competitionId: challengeId,
+          currentLevel: nextLevel,
+          totalScore: totalScore
+        });
+      }
+      
       setTimeout(() => {
         setIsGameStarted(true);
       }, 100);
@@ -219,6 +253,8 @@ export const useChallengeGameLogic = (challengeId: string) => {
     setHasMarkedParticipation(false);
     setAlreadyCompleted(false);
     setIsResuming(false);
+    setCurrentLevel(1);
+    setTotalScore(0);
     initializeGameSession();
   };
 

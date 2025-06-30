@@ -23,6 +23,13 @@ interface SaveProgressParams {
   isCompleted?: boolean;
 }
 
+// 🎯 NOVA FUNÇÃO: Disparar evento de atualização de progresso
+const notifyProgressUpdate = (competitionId: string) => {
+  window.dispatchEvent(new CustomEvent('challenge-progress-updated', { 
+    detail: { competitionId } 
+  }));
+};
+
 export const challengeProgressService = {
   /**
    * Buscar progresso de uma competição para um usuário
@@ -152,6 +159,9 @@ export const challengeProgressService = {
         }, 'CHALLENGE_PROGRESS');
       }
 
+      // 🎯 CORREÇÃO: Notificar atualização de progresso
+      notifyProgressUpdate(competitionId);
+
       return true;
     } catch (error) {
       logger.error('❌ Erro ao salvar progresso', { 
@@ -179,13 +189,20 @@ export const challengeProgressService = {
       finalScore
     }, 'CHALLENGE_PROGRESS');
 
-    return await this.saveProgress({
+    const result = await this.saveProgress({
       userId,
       competitionId,
       currentLevel: 20, // Nível máximo
       totalScore: finalScore,
       isCompleted: true
     });
+
+    if (result) {
+      // 🎯 CORREÇÃO: Notificar conclusão
+      notifyProgressUpdate(competitionId);
+    }
+
+    return result;
   },
 
   /**
