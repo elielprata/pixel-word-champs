@@ -1,37 +1,49 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
 import { WeeklyConfigOverview } from './WeeklyConfigOverview';
 import { WeeklyConfigScheduler } from './WeeklyConfigScheduler';
 import { WeeklyConfigHistory } from './WeeklyConfigHistory';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
 import { WeeklyFinalizationMonitor } from './WeeklyFinalizationMonitor';
+import { WeeklyConfigModal } from './WeeklyConfigModal';
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Trophy } from "lucide-react";
+import { AlertCircle, Trophy, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useWeeklyConfigModal } from '@/hooks/useWeeklyConfigModal';
 
 export const WeeklyRankingView = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newStartDate, setNewStartDate] = useState('');
+  const [newEndDate, setNewEndDate] = useState('');
+
   const {
     activeConfig,
     scheduledConfigs,
     completedConfigs,
     isLoading,
     error,
-    loadConfigurations
+    loadConfigurations,
+    scheduleCompetition,
+    finalizeCompetition
   } = useWeeklyConfig();
 
-  const {
-    isOpen: isModalOpen,
-    onOpen: onModalOpen,
-    onClose: onModalClose,
-    newStartDate,
-    newEndDate,
-    onStartDateChange,
-    onEndDateChange,
-    onSubmit: onModalSubmit,
-    isCreating
-  } = useWeeklyConfigModal();
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
+
+  const handleSubmit = async () => {
+    if (!newStartDate || !newEndDate) return;
+    
+    const result = await scheduleCompetition(newStartDate, newEndDate);
+    if (result.success) {
+      handleCloseModal();
+      loadConfigurations();
+    }
+  };
+
+  const handleFinalize = async () => {
+    await finalizeCompetition();
+    loadConfigurations();
+  };
 
   if (isLoading) {
     return (
@@ -85,12 +97,18 @@ export const WeeklyRankingView = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
-        <Trophy className="w-6 h-6 text-amber-500" />
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Ranking Semanal</h2>
-          <p className="text-slate-600">Gestão completa das competições semanais</p>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Trophy className="w-6 h-6 text-amber-500" />
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Ranking Semanal</h2>
+            <p className="text-slate-600">Gestão completa das competições semanais</p>
+          </div>
         </div>
+        <Button onClick={handleOpenModal} className="gap-2">
+          <Plus className="w-4 h-4" />
+          Nova Competição
+        </Button>
       </div>
 
       {/* Monitor de Finalização Automática */}
@@ -106,23 +124,28 @@ export const WeeklyRankingView = () => {
       <WeeklyConfigOverview 
         activeConfig={activeConfig}
         scheduledConfigs={scheduledConfigs}
-      />
-
-      {/* Agendador de Competições */}
-      <WeeklyConfigScheduler
-        isOpen={isModalOpen}
-        onOpen={onModalOpen}
-        onClose={onModalClose}
-        newStartDate={newStartDate}
-        newEndDate={newEndDate}
-        onStartDateChange={onStartDateChange}
-        onEndDateChange={onEndDateChange}
-        onSubmit={onModalSubmit}
-        isCreating={isCreating}
+        isLoading={isLoading}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onActivate={() => {}}
+        isActivating={false}
       />
 
       {/* Histórico de Competições */}
-      <WeeklyConfigHistory configs={completedConfigs} />
+      <WeeklyConfigHistory 
+        configs={completedConfigs}
+        isLoading={isLoading}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onView={() => {}}
+      />
+
+      {/* Modal de Configuração */}
+      <WeeklyConfigModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onConfigUpdated={loadConfigurations}
+      />
     </div>
   );
 };
