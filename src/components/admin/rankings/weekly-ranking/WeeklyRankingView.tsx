@@ -1,115 +1,87 @@
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { RefreshCw, Trophy, Settings, Award } from 'lucide-react';
-import { WeeklyRankingTable } from './WeeklyRankingTable';
+import React from 'react';
+import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
+import { WeeklyConfigOverview } from './WeeklyConfigOverview';
+import { WeeklyConfigScheduler } from './WeeklyConfigScheduler';
+import { WeeklyConfigHistory } from './WeeklyConfigHistory';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
-import { WeeklyConfigModal } from './WeeklyConfigModal';
-import { PrizeConfigModal } from '../PrizeConfigModal';
-import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from 'lucide-react';
+import { WeeklyFinalizationMonitor } from './WeeklyFinalizationMonitor';
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle, Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const WeeklyRankingView = () => {
-  const { toast } = useToast();
-  const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [prizeConfigModalOpen, setPrizeConfigModalOpen] = useState(false);
-  const { 
-    currentRanking, 
-    stats, 
-    isLoading, 
-    error, 
-    refetch
-  } = useWeeklyRanking();
-
-  const handleRefresh = () => {
-    refetch();
-    toast({
-      title: "Atualizado",
-      description: "Ranking semanal atualizado com sucesso!",
-    });
-  };
-
-  const handleConfigUpdated = () => {
-    refetch();
-    toast({
-      title: "Configuração atualizada",
-      description: "Configurações do ranking semanal foram atualizadas!",
-    });
-  };
+  const {
+    activeConfig,
+    scheduledConfigs,
+    completedConfigs,
+    isLoading,
+    error,
+    loadConfigurations
+  } = useWeeklyConfig();
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-          <p className="text-sm text-gray-600">Carregando ranking semanal...</p>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <Skeleton className="h-8 w-80 mb-2" />
+            <Skeleton className="h-5 w-48" />
+          </div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+        <Skeleton className="h-96" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">{error}</p>
+      <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-50 rounded-lg border border-slate-200">
+        <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+        <h3 className="text-xl font-semibold text-slate-900 mb-2">Erro ao Carregar Dados</h3>
+        <p className="text-slate-600 mb-6 max-w-md">{error}</p>
+        <Button onClick={loadConfigurations} size="lg">
+          Tentar Novamente
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header com botões */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-6">
+        <Trophy className="w-6 h-6 text-amber-500" />
         <div>
-          <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-600" />
-            Ranking Semanal
-          </h2>
-          <p className="text-sm text-slate-600">Classificação dos jogadores da semana</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => setConfigModalOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            Configurar Competição
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => setPrizeConfigModalOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <Award className="h-4 w-4" />
-            Configurar Premiação
-          </Button>
-          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
+          <h2 className="text-2xl font-bold text-slate-900">Ranking Semanal</h2>
+          <p className="text-slate-600">Gestão completa das competições semanais</p>
         </div>
       </div>
 
-      {/* Estatísticas Básicas */}
-      <WeeklyRankingStats stats={stats} onConfigUpdated={refetch} />
+      {/* Monitor de Finalização Automática */}
+      <WeeklyFinalizationMonitor />
 
-      {/* Tabela de Ranking */}
-      <WeeklyRankingTable ranking={currentRanking} />
+      {/* Estatísticas do Ranking */}
+      <WeeklyRankingStats />
 
-      {/* Modal de Configuração */}
-      <WeeklyConfigModal
-        open={configModalOpen}
-        onOpenChange={setConfigModalOpen}
-        onConfigUpdated={handleConfigUpdated}
+      {/* Visão Geral das Configurações */}
+      <WeeklyConfigOverview 
+        activeConfig={activeConfig}
+        scheduledConfigs={scheduledConfigs}
+        completedConfigs={completedConfigs}
       />
 
-      {/* Modal de Configuração de Premiação */}
-      <PrizeConfigModal
-        open={prizeConfigModalOpen}
-        onOpenChange={setPrizeConfigModalOpen}
-      />
+      {/* Agendador de Competições */}
+      <WeeklyConfigScheduler />
+
+      {/* Histórico de Competições */}
+      <WeeklyConfigHistory completedConfigs={completedConfigs} />
     </div>
   );
 };
+
