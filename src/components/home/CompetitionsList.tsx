@@ -79,14 +79,11 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
         </div>
       )}
 
-      {/* Próximas Competições (Agendadas) - Ordenadas por tempo restante */}
+      {/* Próximas Competições (Agendadas) */}
       {scheduledCompetitions.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-gray-800 font-semibold text-lg">Próximas Competições</h2>
-            <div className="text-xs text-gray-500">
-              Ordenadas por tempo de início
-            </div>
           </div>
           
           <div className="bg-white rounded-2xl shadow-md border border-gray-100">

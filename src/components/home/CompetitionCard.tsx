@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Competition } from '@/types';
@@ -20,10 +19,10 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   
   const status = competition.status as 'scheduled' | 'active' | 'completed';
   
-  // Obter configuração de ícone única para esta competição
+  // Obter configuração de ícone única baseada no ID da competição
   const iconConfig = useMemo(() => {
-    return getCompetitionIconConfig(competition.title);
-  }, [competition.title]);
+    return getCompetitionIconConfig(competition.id);
+  }, [competition.id]);
 
   useEffect(() => {
     const updateTimer = () => {

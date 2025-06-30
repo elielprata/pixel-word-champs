@@ -25,10 +25,9 @@ interface CompetitionIconConfig {
   };
 }
 
-// Mapeamento de ícones baseado no título/tipo da competição
-const competitionIconMap: Record<string, CompetitionIconConfig> = {
-  // Palavras-chave para diferentes tipos de competição
-  'relampago': {
+// Pool expandido de ícones e cores
+const iconPool: CompetitionIconConfig[] = [
+  {
     icon: Zap,
     colors: {
       primary: 'bg-yellow-500',
@@ -37,7 +36,7 @@ const competitionIconMap: Record<string, CompetitionIconConfig> = {
       border: 'border-yellow-200'
     }
   },
-  'furia': {
+  {
     icon: Flame,
     colors: {
       primary: 'bg-red-500',
@@ -46,7 +45,7 @@ const competitionIconMap: Record<string, CompetitionIconConfig> = {
       border: 'border-red-200'
     }
   },
-  'quebra': {
+  {
     icon: Puzzle,
     colors: {
       primary: 'bg-blue-500',
@@ -55,7 +54,7 @@ const competitionIconMap: Record<string, CompetitionIconConfig> = {
       border: 'border-blue-200'
     }
   },
-  'desafio': {
+  {
     icon: Target,
     colors: {
       primary: 'bg-green-500',
@@ -64,7 +63,7 @@ const competitionIconMap: Record<string, CompetitionIconConfig> = {
       border: 'border-green-200'
     }
   },
-  'campeonato': {
+  {
     icon: Crown,
     colors: {
       primary: 'bg-purple-500',
@@ -73,7 +72,7 @@ const competitionIconMap: Record<string, CompetitionIconConfig> = {
       border: 'border-purple-200'
     }
   },
-  'estrela': {
+  {
     icon: Star,
     colors: {
       primary: 'bg-amber-500',
@@ -82,7 +81,7 @@ const competitionIconMap: Record<string, CompetitionIconConfig> = {
       border: 'border-amber-200'
     }
   },
-  'turbo': {
+  {
     icon: Rocket,
     colors: {
       primary: 'bg-cyan-500',
@@ -91,7 +90,16 @@ const competitionIconMap: Record<string, CompetitionIconConfig> = {
       border: 'border-cyan-200'
     }
   },
-  'diamante': {
+  {
+    icon: Trophy,
+    colors: {
+      primary: 'bg-orange-500',
+      secondary: 'from-orange-50 to-orange-100',
+      background: 'bg-gradient-to-br from-orange-50 to-amber-100',
+      border: 'border-orange-200'
+    }
+  },
+  {
     icon: Diamond,
     colors: {
       primary: 'bg-pink-500',
@@ -99,43 +107,55 @@ const competitionIconMap: Record<string, CompetitionIconConfig> = {
       background: 'bg-gradient-to-br from-pink-50 to-rose-100',
       border: 'border-pink-200'
     }
-  }
-};
-
-// Função para obter configuração do ícone baseada no título
-export const getCompetitionIconConfig = (title: string): CompetitionIconConfig => {
-  const titleLower = title.toLowerCase();
-  
-  // Procurar por palavras-chave no título
-  for (const [keyword, config] of Object.entries(competitionIconMap)) {
-    if (titleLower.includes(keyword)) {
-      return config;
+  },
+  {
+    icon: Sword,
+    colors: {
+      primary: 'bg-slate-500',
+      secondary: 'from-slate-50 to-slate-100',
+      background: 'bg-gradient-to-br from-slate-50 to-gray-100',
+      border: 'border-slate-200'
+    }
+  },
+  {
+    icon: Shield,
+    colors: {
+      primary: 'bg-emerald-500',
+      secondary: 'from-emerald-50 to-emerald-100',
+      background: 'bg-gradient-to-br from-emerald-50 to-green-100',
+      border: 'border-emerald-200'
+    }
+  },
+  {
+    icon: Gem,
+    colors: {
+      primary: 'bg-indigo-500',
+      secondary: 'from-indigo-50 to-indigo-100',
+      background: 'bg-gradient-to-br from-indigo-50 to-blue-100',
+      border: 'border-indigo-200'
     }
   }
-  
-  // Fallback baseado no hash do título para consistência
-  const hash = titleLower.split('').reduce((a, b) => {
-    a = ((a << 5) - a) + b.charCodeAt(0);
-    return a & a;
-  }, 0);
-  
-  const fallbackIcons = [
-    competitionIconMap.desafio,
-    competitionIconMap.estrela,
-    competitionIconMap.quebra,
-    competitionIconMap.turbo
-  ];
-  
-  return fallbackIcons[Math.abs(hash) % fallbackIcons.length];
+];
+
+// Função hash melhorada para garantir distribuição uniforme
+const generateHash = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
 };
 
-// Função para gerar ícone único baseado no ID da competição
+// Função para obter configuração única baseada no ID da competição
+export const getCompetitionIconConfig = (competitionId: string): CompetitionIconConfig => {
+  const hash = generateHash(competitionId);
+  const index = hash % iconPool.length;
+  return iconPool[index];
+};
+
+// Manter compatibilidade com função baseada em ID
 export const getCompetitionIconById = (competitionId: string): CompetitionIconConfig => {
-  const icons = Object.values(competitionIconMap);
-  const hash = competitionId.split('').reduce((a, b) => {
-    a = ((a << 5) - a) + b.charCodeAt(0);
-    return a & a;
-  }, 0);
-  
-  return icons[Math.abs(hash) % icons.length];
+  return getCompetitionIconConfig(competitionId);
 };
