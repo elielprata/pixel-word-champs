@@ -28,11 +28,20 @@ interface DistributionMetrics {
   wordSeparation: number;
 }
 
+// 🎯 CORREÇÃO: Interface interna para gerenciar palavras com ExtendedDirection
+interface InternalPlacedWord {
+  word: string;
+  startRow: number;
+  startCol: number;
+  direction: ExtendedDirection;
+  positions: Position[];
+}
+
 export class SmartWordDistributionService {
   private height: number;
   private width: number;
   private board: string[][];
-  private placedWords: PlacedWord[] = [];
+  private placedWords: InternalPlacedWord[] = []; // 🎯 CORRIGIDO: Usar tipo interno
   private qualityAnalyzer: BoardQualityAnalyzer;
   private readonly MIN_WORD_DISTANCE = 2;
 
@@ -60,8 +69,9 @@ export class SmartWordDistributionService {
         this.placeWordOptimally(word);
       }
 
-      // Verificar qualidade do tabuleiro
-      if (!this.qualityAnalyzer.shouldRegenerate(this.placedWords) || attempts === maxAttempts - 1) {
+      // 🎯 CORRIGIDO: Converter para PlacedWord[] antes de passar para shouldRegenerate
+      const convertedWords = this.convertToLegacyFormat(this.placedWords);
+      if (!this.qualityAnalyzer.shouldRegenerate(convertedWords) || attempts === maxAttempts - 1) {
         break;
       }
 
@@ -399,13 +409,8 @@ export class SmartWordDistributionService {
     });
   }
 
-  private convertToLegacyFormat(placedWords: Array<{
-    word: string;
-    startRow: number;
-    startCol: number;
-    direction: ExtendedDirection;
-    positions: Position[];
-  }>): PlacedWord[] {
+  // 🎯 CORRIGIDO: Converter ExtendedDirection para direção legada
+  private convertToLegacyFormat(placedWords: InternalPlacedWord[]): PlacedWord[] {
     return placedWords.map(word => ({
       word: word.word,
       startRow: word.startRow,
