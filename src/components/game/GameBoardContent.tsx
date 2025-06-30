@@ -3,9 +3,8 @@ import React from 'react';
 import GameBoardHeader from './GameBoardHeader';
 import GameBoardMainContent from './GameBoardMainContent';
 import GameModals from './GameModals';
-import { useGameBoard } from '@/hooks/useGameBoard';
+import { useSimplifiedGameLogic } from '@/hooks/useSimplifiedGameLogic';
 import { logger } from '@/utils/logger';
-import { GAME_CONSTANTS } from '@/constants/game';
 
 interface GameBoardContentProps {
   level: number;
@@ -28,16 +27,7 @@ const GameBoardContent = ({
   canRevive,
   onRevive
 }: GameBoardContentProps) => {
-  // Hook consolidado e simplificado
-  const {
-    isLoading,
-    error,
-    boardProps,
-    gameStateProps,
-    modalProps,
-    cellInteractionProps,
-    gameActions
-  } = useGameBoard({
+  const gameLogic = useSimplifiedGameLogic({
     level,
     timeLeft,
     onLevelComplete,
@@ -48,28 +38,28 @@ const GameBoardContent = ({
   const handleReviveClick = () => {
     logger.info('💖 Revive solicitado pelo usuário', { 
       level,
-      foundWords: gameStateProps.foundWords.length,
-      targetWords: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED
+      foundWords: gameLogic.foundWords.length,
+      targetWords: 5
     }, 'GAME_BOARD_CONTENT');
     
     if (onRevive) {
       onRevive();
-      gameActions.closeGameOver();
+      gameLogic.closeGameOver();
     }
   };
 
-  if (isLoading || error) {
+  if (gameLogic.isLoading || gameLogic.error) {
     return null; // Será tratado no componente pai
   }
 
   logger.debug('🎮 Renderizando GameBoardContent SIMPLIFICADO', {
     level,
     timeLeft,
-    foundWordsCount: gameStateProps.foundWords.length,
-    targetWords: GAME_CONSTANTS.TOTAL_WORDS_REQUIRED,
-    currentScore: gameStateProps.currentLevelScore,
-    showGameOver: modalProps.showGameOver,
-    showLevelComplete: modalProps.showLevelComplete
+    foundWordsCount: gameLogic.foundWords.length,
+    targetWords: 5,
+    currentScore: gameLogic.currentLevelScore,
+    showGameOver: gameLogic.showGameOver,
+    showLevelComplete: gameLogic.showLevelComplete
   }, 'GAME_BOARD_CONTENT');
 
   return (
@@ -77,28 +67,44 @@ const GameBoardContent = ({
       <GameBoardHeader
         level={level}
         timeLeft={timeLeft}
-        foundWords={gameStateProps.foundWords}
-        levelWords={gameStateProps.levelWords}
-        hintsUsed={gameStateProps.hintsUsed}
-        currentLevelScore={gameStateProps.currentLevelScore}
-        onUseHint={gameActions.useHint}
+        foundWords={gameLogic.foundWords}
+        levelWords={gameLogic.levelWords}
+        hintsUsed={gameLogic.hintsUsed}
+        currentLevelScore={gameLogic.currentLevelScore}
+        onUseHint={gameLogic.useHint}
       />
 
       <GameBoardMainContent
-        boardProps={boardProps}
-        gameStateProps={gameStateProps}
-        cellInteractionProps={cellInteractionProps}
+        boardProps={{
+          board: gameLogic.boardData.board,
+          size: gameLogic.size
+        }}
+        gameStateProps={{
+          foundWords: gameLogic.foundWords,
+          levelWords: gameLogic.levelWords,
+          currentLevelScore: gameLogic.currentLevelScore,
+          hintsUsed: gameLogic.hintsUsed
+        }}
+        cellInteractionProps={{
+          onCellMouseDown: gameLogic.handleCellMouseDown,
+          onCellMouseEnter: gameLogic.handleCellMouseEnter,
+          onCellMouseUp: gameLogic.handleCellMouseUp,
+          isCellSelected: gameLogic.isCellSelected,
+          isCellPartOfFoundWord: gameLogic.isCellPartOfFoundWord,
+          isCellHintHighlighted: gameLogic.isCellHintHighlighted,
+          showValidWordFeedback: gameLogic.showValidWord
+        }}
       />
 
       <GameModals
-        showGameOver={modalProps.showGameOver}
-        showLevelComplete={modalProps.showLevelComplete}
-        foundWords={gameStateProps.foundWords}
-        totalWords={GAME_CONSTANTS.TOTAL_WORDS_REQUIRED}
+        showGameOver={gameLogic.showGameOver}
+        showLevelComplete={gameLogic.showLevelComplete}
+        foundWords={gameLogic.foundWords}
+        totalWords={5}
         level={level}
         canRevive={canRevive}
         onRevive={handleReviveClick}
-        onGoHome={gameActions.handleGoHome}
+        onGoHome={gameLogic.handleGoHome}
         onAdvanceLevel={onAdvanceLevel}
         onStopGame={onStopGame}
       />
