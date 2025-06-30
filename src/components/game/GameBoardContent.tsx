@@ -76,7 +76,7 @@ const GameBoardContent = ({
 
       <GameBoardMainContent
         boardProps={{
-          board: gameLogic.boardData.board,
+          boardData: gameLogic.boardData.board,
           size: gameLogic.size
         }}
         gameStateProps={{

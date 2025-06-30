@@ -7,6 +7,7 @@ import { useAuth } from './useAuth';
 import { logger } from '@/utils/logger';
 import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 import { type Position } from '@/utils/boardUtils';
+import { useGamePointsConfig } from './useGamePointsConfig';
 
 interface FoundWord {
   word: string;
@@ -31,7 +32,7 @@ export const useSimplifiedGameLogic = ({
 }: UseSimplifiedGameLogicProps) => {
   const { user } = useAuth();
   const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
-  const { validateWord } = useWordValidation(levelWords);
+  const { getPointsForWord } = useGamePointsConfig();
 
   // Estados do jogo
   const [foundWords, setFoundWords] = useState<FoundWord[]>([]);
@@ -47,6 +48,25 @@ export const useSimplifiedGameLogic = ({
   // Estados de modais
   const [showGameOver, setShowGameOver] = useState(false);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
+
+  // Função para adicionar palavra encontrada
+  const handleWordFound = useCallback((foundWord: FoundWord) => {
+    setFoundWords(prev => [...prev, foundWord]);
+    setCurrentLevelScore(prev => prev + foundWord.points);
+    setShowValidWord(true);
+    
+    // Remover feedback visual após 1 segundo
+    setTimeout(() => setShowValidWord(false), 1000);
+  }, []);
+
+  // Configurar validação de palavras
+  const { validateAndConfirmWord } = useWordValidation({
+    boardData,
+    levelWords,
+    foundWords,
+    onWordFound: handleWordFound,
+    getPointsForWord
+  });
 
   // Verificar game over
   useEffect(() => {
@@ -90,7 +110,7 @@ export const useSimplifiedGameLogic = ({
 
       const { data, error } = await supabase.rpc('update_user_score_simple', {
         p_user_id: user.id,
-        p_points_to_add: points
+        p_points: points
       });
 
       if (error) {
@@ -100,7 +120,7 @@ export const useSimplifiedGameLogic = ({
       logger.info('Pontos salvos com sucesso', { 
         word, 
         points, 
-        newTotal: data?.total_score 
+        newData: data 
       }, 'SIMPLIFIED_GAME');
 
       return data;
@@ -113,48 +133,23 @@ export const useSimplifiedGameLogic = ({
   const validateSelectedWord = useCallback(async () => {
     if (selectedCells.length === 0) return;
 
-    const selectedWord = selectedCells
-      .map(pos => boardData.board[pos.row][pos.col])
-      .join('');
-
-    logger.debug('Validando palavra selecionada', { 
-      selectedWord, 
-      selectedCells,
-      levelWords 
-    }, 'SIMPLIFIED_GAME');
-
-    const validationResult = validateWord(selectedWord, selectedCells);
+    const result = validateAndConfirmWord(selectedCells);
     
-    if (validationResult.isValid && !foundWords.some(fw => fw.word === selectedWord)) {
-      const newFoundWord: FoundWord = {
-        word: selectedWord,
-        positions: selectedCells,
-        points: validationResult.points
-      };
-
-      // Atualizar estados
-      setFoundWords(prev => [...prev, newFoundWord]);
-      setCurrentLevelScore(prev => prev + validationResult.points);
-      setShowValidWord(true);
+    if (result) {
+      const selectedWord = selectedCells
+        .map(pos => boardData.board[pos.row][pos.col])
+        .join('');
+      
+      const points = getPointsForWord(selectedWord);
       
       // Salvar pontos imediatamente
-      await savePointsImmediately(validationResult.points, selectedWord);
-
-      logger.info('Palavra válida encontrada!', { 
-        word: selectedWord, 
-        points: validationResult.points,
-        totalWords: foundWords.length + 1,
-        totalScore: currentLevelScore + validationResult.points
-      }, 'SIMPLIFIED_GAME');
-
-      // Remover feedback visual após 1 segundo
-      setTimeout(() => setShowValidWord(false), 1000);
+      await savePointsImmediately(points, selectedWord);
     }
 
     // Limpar seleção
     setSelectedCells([]);
     setIsSelecting(false);
-  }, [selectedCells, boardData.board, validateWord, foundWords, currentLevelScore, savePointsImmediately]);
+  }, [selectedCells, validateAndConfirmWord, boardData.board, getPointsForWord, savePointsImmediately]);
 
   // Usar dica
   const useHint = useCallback(() => {
@@ -213,19 +208,19 @@ export const useSimplifiedGameLogic = ({
   }, [isSelecting, validateSelectedWord]);
 
   // Verificar se célula está destacada por dica
-  const isCellHintHighlighted = useCallback((position: Position) => {
-    return hintHighlightedCells.some(p => p.row === position.row && p.col === position.col);
+  const isCellHintHighlighted = useCallback((row: number, col: number) => {
+    return hintHighlightedCells.some(p => p.row === row && p.col === col);
   }, [hintHighlightedCells]);
 
   // Verificar se célula está selecionada
-  const isCellSelected = useCallback((position: Position) => {
-    return selectedCells.some(p => p.row === position.row && p.col === position.col);
+  const isCellSelected = useCallback((row: number, col: number) => {
+    return selectedCells.some(p => p.row === row && p.col === col);
   }, [selectedCells]);
 
   // Verificar se célula faz parte de uma palavra encontrada
-  const isCellPartOfFoundWord = useCallback((position: Position) => {
+  const isCellPartOfFoundWord = useCallback((row: number, col: number) => {
     return foundWords.some(fw => 
-      fw.positions.some(p => p.row === position.row && p.col === position.col)
+      fw.positions.some(p => p.row === row && p.col === col)
     );
   }, [foundWords]);
 
