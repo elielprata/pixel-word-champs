@@ -3,6 +3,7 @@ import React from 'react';
 import GameBoardHeader from './GameBoardHeader';
 import GameBoardMainContent from './GameBoardMainContent';
 import GameModals from './GameModals';
+import HintBlockedModal from './HintBlockedModal';
 import { useSimplifiedGameLogic } from '@/hooks/useSimplifiedGameLogic';
 import { logger } from '@/utils/logger';
 
@@ -27,14 +28,13 @@ const GameBoardContent = ({
   canRevive,
   onRevive
 }: GameBoardContentProps) => {
-  // 🎯 CORRIGIDO: Passar onStopGame para useSimplifiedGameLogic
   const gameLogic = useSimplifiedGameLogic({
     level,
     timeLeft,
     onLevelComplete,
     canRevive,
     onRevive,
-    onStopGame // 🎯 ADICIONADO: Passar callback para o hook
+    onStopGame
   });
 
   const handleReviveClick = () => {
@@ -50,7 +50,6 @@ const GameBoardContent = ({
     }
   };
 
-  // 🎯 FUNÇÃO CORRIGIDA: handleStopGameFromModal agora usa gameLogic.handleGoHome
   const handleStopGameFromModal = () => {
     logger.info('🛑 Usuário solicitou parar jogo via modal', { 
       level,
@@ -58,12 +57,11 @@ const GameBoardContent = ({
       score: gameLogic.currentLevelScore
     }, 'GAME_BOARD_CONTENT');
     
-    // Usar handleGoHome do gameLogic que já tem toda a lógica correta
     gameLogic.handleGoHome();
   };
 
   if (gameLogic.isLoading || gameLogic.error) {
-    return null; // Será tratado no componente pai
+    return null;
   }
 
   logger.debug('🎮 Renderizando GameBoardContent SIMPLIFICADO', {
@@ -74,6 +72,7 @@ const GameBoardContent = ({
     currentScore: gameLogic.currentLevelScore,
     showGameOver: gameLogic.showGameOver,
     showLevelComplete: gameLogic.showLevelComplete,
+    showHintBlockedModal: gameLogic.showHintBlockedModal,
     foundWords: gameLogic.foundWords.map(fw => ({ word: fw.word, positions: fw.positions }))
   }, 'GAME_BOARD_CONTENT');
 
@@ -125,6 +124,11 @@ const GameBoardContent = ({
         onGoHome={handleStopGameFromModal}
         onAdvanceLevel={onAdvanceLevel}
         onStopGame={handleStopGameFromModal}
+      />
+
+      <HintBlockedModal
+        isOpen={gameLogic.showHintBlockedModal}
+        onClose={gameLogic.closeHintBlockedModal}
       />
     </>
   );

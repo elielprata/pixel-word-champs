@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useOptimizedBoard } from './useOptimizedBoard';
 import { useWordValidation } from './useWordValidation';
+import { useUnifiedHintSystem } from './useUnifiedHintSystem';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { logger } from '@/utils/logger';
@@ -20,7 +21,7 @@ interface UseSimplifiedGameLogicProps {
   onLevelComplete: (levelScore: number) => void;
   canRevive: boolean;
   onRevive?: () => void;
-  onStopGame?: () => void; // 🎯 ADICIONADO: Callback para parar o jogo
+  onStopGame?: () => void;
 }
 
 export const useSimplifiedGameLogic = ({
@@ -29,7 +30,7 @@ export const useSimplifiedGameLogic = ({
   onLevelComplete,
   canRevive,
   onRevive,
-  onStopGame // 🎯 ADICIONADO: Receber callback
+  onStopGame
 }: UseSimplifiedGameLogicProps) => {
   const { user } = useAuth();
   const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
@@ -50,6 +51,16 @@ export const useSimplifiedGameLogic = ({
   // Estados de modais
   const [showGameOver, setShowGameOver] = useState(false);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
+
+  // Hook unificado para sistema de dicas
+  const { useHint, showHintBlockedModal, closeHintBlockedModal } = useUnifiedHintSystem({
+    levelWords,
+    foundWords,
+    boardData,
+    hintsUsed,
+    setHintsUsed,
+    setHintHighlightedCells
+  });
 
   // 🎯 NOVA FUNÇÃO: Verificar se uma posição forma linha reta com o ponto inicial
   const isValidLinearDirection = useCallback((start: Position, target: Position): boolean => {
@@ -440,6 +451,7 @@ export const useSimplifiedGameLogic = ({
     // Estados de modais
     showGameOver,
     showLevelComplete,
+    showHintBlockedModal,
     
     // Handlers de célula
     handleCellMouseDown,
@@ -455,6 +467,7 @@ export const useSimplifiedGameLogic = ({
     useHint,
     closeGameOver,
     closeLevelComplete,
+    closeHintBlockedModal,
     handleGoHome
   };
 };
