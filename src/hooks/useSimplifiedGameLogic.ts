@@ -133,7 +133,7 @@ export const useSimplifiedGameLogic = ({
     }
   }, [timeLeft, foundWords.length, level, currentLevelScore]);
 
-  // Verificar level complete
+  // Verificar level complete e salvar pontos UMA ÚNICA VEZ
   useEffect(() => {
     if (foundWords.length >= 5 && !showLevelComplete) {
       setShowLevelComplete(true);
@@ -142,52 +142,66 @@ export const useSimplifiedGameLogic = ({
         totalScore: currentLevelScore,
         wordsFound: foundWords.length 
       }, 'SIMPLIFIED_GAME');
+      
+      // 🎯 SALVAR PONTOS APENAS AQUI - UMA VEZ POR SESSÃO
+      saveGameSessionPoints(currentLevelScore);
+      
       onLevelComplete(currentLevelScore);
     }
   }, [foundWords.length, showLevelComplete, level, currentLevelScore, onLevelComplete]);
 
-  // 🆕 FUNÇÃO ATUALIZADA: Usar nova RPC limpa
-  const savePointsImmediately = useCallback(async (points: number, word: string) => {
-    if (!user?.id) {
-      logger.warn('Usuário não autenticado - pontos não salvos', { word, points }, 'SIMPLIFIED_GAME');
+  // 🆕 FUNÇÃO NOVA: Salvar pontos da sessão completa (uma vez só)
+  const saveGameSessionPoints = useCallback(async (totalPoints: number) => {
+    if (!user?.id || totalPoints === 0) {
+      logger.warn('Não é possível salvar pontos - usuário não autenticado ou pontuação zero', { 
+        userId: user?.id, 
+        totalPoints 
+      }, 'SIMPLIFIED_GAME');
       return;
     }
 
     try {
-      logger.info('💾 Salvando pontos com nova RPC limpa', { 
+      logger.info('💾 Salvando pontos da sessão completa', { 
         userId: user.id, 
-        points, 
-        word,
+        totalPoints,
+        level,
+        wordsFound: foundWords.length,
         timestamp: getCurrentBrasiliaTime() 
       }, 'SIMPLIFIED_GAME');
 
-      // Usar nova função RPC sem ambiguidade de colunas
+      // Usar RPC original - incrementa partida UMA VEZ por sessão
       const { data, error } = await supabase.rpc('update_user_points_v2', {
         p_user_id: user.id,
-        p_points: points
+        p_points: totalPoints
       });
 
       if (error) {
         throw error;
       }
 
-      logger.info('✅ Pontos salvos com sucesso usando RPC v2', { 
-        word, 
-        points, 
+      logger.info('✅ Pontos da sessão salvos com sucesso', { 
+        totalPoints, 
+        level,
+        wordsFound: foundWords.length,
         newTotalScore: data?.[0]?.total_score,
         newGamesPlayed: data?.[0]?.games_played
       }, 'SIMPLIFIED_GAME');
 
       return data;
     } catch (error) {
-      logger.error('❌ Erro ao salvar pontos com RPC v2', { error, word, points }, 'SIMPLIFIED_GAME');
+      logger.error('❌ Erro ao salvar pontos da sessão', { 
+        error, 
+        totalPoints, 
+        level 
+      }, 'SIMPLIFIED_GAME');
     }
-  }, [user?.id]);
+  }, [user?.id, level, foundWords.length]);
 
   // Validar palavra selecionada
   const validateSelectedWord = useCallback(async () => {
     if (selectedCells.length === 0) return;
 
+    // Apenas validar a palavra - NÃO salvar pontos aqui
     const result = validateAndConfirmWord(selectedCells);
     
     if (result) {
@@ -195,17 +209,17 @@ export const useSimplifiedGameLogic = ({
         .map(pos => boardData.board[pos.row][pos.col])
         .join('');
       
-      const points = getPointsForWord(selectedWord);
-      
-      // Salvar pontos imediatamente
-      await savePointsImmediately(points, selectedWord);
+      logger.debug('🎯 Palavra validada (pontos não salvos ainda)', { 
+        word: selectedWord,
+        points: getPointsForWord(selectedWord)
+      }, 'SIMPLIFIED_GAME');
     }
 
     // Limpar seleção
     setSelectedCells([]);
     setIsSelecting(false);
     setStartCell(null);
-  }, [selectedCells, validateAndConfirmWord, boardData.board, getPointsForWord, savePointsImmediately]);
+  }, [selectedCells, validateAndConfirmWord, boardData.board, getPointsForWord]);
 
   // Usar dica
   const useHint = useCallback(() => {
