@@ -165,8 +165,8 @@ export const useSimpleGameBoard = ({
   // Interações com células
   const cellInteractions = useCellInteractions({
     foundWords,
-    permanentlyMarkedCells: new Set(),
-    hintHighlightedCells: new Set(),
+    permanentlyMarkedCells: [],
+    hintHighlightedCells: [],
     boardData,
     levelWords,
     onWordFound: handleWordFound
