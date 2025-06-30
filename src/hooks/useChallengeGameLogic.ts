@@ -193,12 +193,79 @@ export const useChallengeGameLogic = (challengeId: string) => {
     logger.info('Tempo esgotado!');
   };
 
+  // 🎯 NOVA FUNÇÃO: Salvar progresso com verificação e retry
+  const saveProgressWithRetry = async (levelCompleted: number, scoreToSave: number, maxRetries: number = 3): Promise<boolean> => {
+    if (!user) {
+      logger.error('❌ Usuário não logado, não é possível salvar progresso');
+      return false;
+    }
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        logger.info(`💾 Tentativa ${attempt}/${maxRetries} de salvar progresso`, {
+          level: levelCompleted,
+          score: scoreToSave,
+          challengeId,
+          userId: user.id
+        });
+
+        const saveSuccess = await challengeProgressService.saveProgress({
+          userId: user.id,
+          competitionId: challengeId,
+          currentLevel: levelCompleted,
+          totalScore: scoreToSave,
+          isCompleted: levelCompleted >= maxLevels
+        });
+
+        if (saveSuccess) {
+          logger.info(`✅ Progresso salvo com sucesso na tentativa ${attempt}!`, {
+            level: levelCompleted,
+            score: scoreToSave,
+            challengeId
+          });
+          return true;
+        } else {
+          logger.warn(`⚠️ Falha ao salvar progresso na tentativa ${attempt}`, {
+            level: levelCompleted,
+            score: scoreToSave,
+            challengeId,
+            attemptsRemaining: maxRetries - attempt
+          });
+        }
+      } catch (error) {
+        logger.error(`❌ Erro ao salvar progresso na tentativa ${attempt}:`, {
+          error: error instanceof Error ? {
+            name: error.name,
+            message: error.message
+          } : error,
+          level: levelCompleted,
+          score: scoreToSave,
+          challengeId,
+          attemptsRemaining: maxRetries - attempt
+        });
+      }
+
+      // Esperar antes da próxima tentativa (exceto na última)
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+
+    logger.error('❌ Falha ao salvar progresso após todas as tentativas', {
+      level: levelCompleted,
+      score: scoreToSave,
+      challengeId,
+      maxRetries
+    });
+    return false;
+  };
+
   // 🎯 FUNÇÃO CORRIGIDA: Sempre salvar progresso quando nível for completado
   const handleLevelComplete = async (levelScore: number) => {
     const newTotalScore = totalScore + levelScore;
     setTotalScore(newTotalScore);
     
-    logger.info('🎉 Nível completado - Salvando progresso automaticamente!', {
+    logger.info('🎉 Nível completado - Salvando progresso IMEDIATAMENTE!', {
       level: currentLevel,
       levelScore,
       newTotalScore,
@@ -206,29 +273,24 @@ export const useChallengeGameLogic = (challengeId: string) => {
       userId: user?.id
     });
     
-    // 🎯 CORREÇÃO: SEMPRE salvar progresso quando nível for completado
-    if (user) {
-      const saveSuccess = await challengeProgressService.saveProgress({
-        userId: user.id,
-        competitionId: challengeId,
-        currentLevel: currentLevel,
+    // 🎯 CORREÇÃO: Salvar progresso IMEDIATAMENTE com retry
+    const saveSuccess = await saveProgressWithRetry(currentLevel, newTotalScore);
+    
+    if (saveSuccess) {
+      logger.info('✅ Progresso garantido após completar nível!', {
+        level: currentLevel,
         totalScore: newTotalScore,
-        isCompleted: false // Ainda não completou todos os níveis
+        challengeId
+      });
+    } else {
+      logger.error('❌ CRÍTICO: Falha ao salvar progresso após completar nível', {
+        level: currentLevel,
+        totalScore: newTotalScore,
+        challengeId
       });
       
-      if (saveSuccess) {
-        logger.info('✅ Progresso salvo com sucesso após completar nível!', {
-          level: currentLevel,
-          totalScore: newTotalScore,
-          challengeId
-        });
-      } else {
-        logger.error('❌ Falha ao salvar progresso após completar nível', {
-          level: currentLevel,
-          totalScore: newTotalScore,
-          challengeId
-        });
-      }
+      // Ainda assim, notificar o usuário sobre o problema
+      // Mas não impedir a continuação do jogo
     }
   };
 
@@ -238,19 +300,16 @@ export const useChallengeGameLogic = (challengeId: string) => {
       setCurrentLevel(nextLevel);
       setIsGameStarted(false);
       
-      // 🎯 CORREÇÃO: Salvar progresso ao avançar nível
+      // 🎯 CORREÇÃO: Salvar progresso ao avançar nível com retry
       if (user) {
-        challengeProgressService.saveProgress({
-          userId: user.id,
-          competitionId: challengeId,
-          currentLevel: nextLevel,
-          totalScore: totalScore
-        });
-        
-        logger.info('📈 Avançando para próximo nível e salvando progresso', {
-          nextLevel,
-          totalScore,
-          challengeId
+        saveProgressWithRetry(nextLevel, totalScore).then(success => {
+          if (success) {
+            logger.info('📈 Progresso salvo ao avançar para próximo nível', {
+              nextLevel,
+              totalScore,
+              challengeId
+            });
+          }
         });
       }
       
