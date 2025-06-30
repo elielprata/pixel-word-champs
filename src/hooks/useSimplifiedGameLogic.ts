@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useOptimizedBoard } from './useOptimizedBoard';
 import { useWordValidation } from './useWordValidation';
@@ -21,6 +20,7 @@ interface UseSimplifiedGameLogicProps {
   onLevelComplete: (levelScore: number) => void;
   canRevive: boolean;
   onRevive?: () => void;
+  onStopGame?: () => void; // 🎯 ADICIONADO: Callback para parar o jogo
 }
 
 export const useSimplifiedGameLogic = ({
@@ -28,7 +28,8 @@ export const useSimplifiedGameLogic = ({
   timeLeft,
   onLevelComplete,
   canRevive,
-  onRevive
+  onRevive,
+  onStopGame // 🎯 ADICIONADO: Receber callback
 }: UseSimplifiedGameLogicProps) => {
   const { user } = useAuth();
   const { boardData, size, levelWords, isLoading, error } = useOptimizedBoard(level);
@@ -379,9 +380,46 @@ export const useSimplifiedGameLogic = ({
   // Actions para modais
   const closeGameOver = useCallback(() => setShowGameOver(false), []);
   const closeLevelComplete = useCallback(() => setShowLevelComplete(false), []);
+  
+  // 🎯 FUNÇÃO CORRIGIDA: handleGoHome agora chama onStopGame corretamente
   const handleGoHome = useCallback(() => {
-    logger.info('🏠 Voltando ao menu principal', { level, finalScore: currentLevelScore }, 'SIMPLIFIED_GAME');
-  }, [level, currentLevelScore]);
+    logger.info('🏠 Voltando ao menu principal - Iniciando processo', { 
+      level, 
+      finalScore: currentLevelScore,
+      hasOnStopGame: !!onStopGame 
+    }, 'SIMPLIFIED_GAME');
+
+    try {
+      if (onStopGame) {
+        logger.info('🚀 Executando onStopGame callback', { 
+          level, 
+          finalScore: currentLevelScore 
+        }, 'SIMPLIFIED_GAME');
+        
+        onStopGame();
+        
+        logger.info('✅ onStopGame executado com sucesso!', { 
+          level, 
+          finalScore: currentLevelScore 
+        }, 'SIMPLIFIED_GAME');
+      } else {
+        logger.warn('⚠️ onStopGame callback não encontrado', { 
+          level, 
+          finalScore: currentLevelScore 
+        }, 'SIMPLIFIED_GAME');
+      }
+    } catch (error) {
+      logger.error('❌ Erro ao executar onStopGame', { 
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : error,
+        level, 
+        finalScore: currentLevelScore 
+      }, 'SIMPLIFIED_GAME');
+    }
+  }, [level, currentLevelScore, onStopGame]);
 
   return {
     // Estados do tabuleiro

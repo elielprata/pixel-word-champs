@@ -27,12 +27,14 @@ const GameBoardContent = ({
   canRevive,
   onRevive
 }: GameBoardContentProps) => {
+  // 🎯 CORRIGIDO: Passar onStopGame para useSimplifiedGameLogic
   const gameLogic = useSimplifiedGameLogic({
     level,
     timeLeft,
     onLevelComplete,
     canRevive,
-    onRevive
+    onRevive,
+    onStopGame // 🎯 ADICIONADO: Passar callback para o hook
   });
 
   const handleReviveClick = () => {
@@ -46,6 +48,18 @@ const GameBoardContent = ({
       onRevive();
       gameLogic.closeGameOver();
     }
+  };
+
+  // 🎯 FUNÇÃO CORRIGIDA: handleStopGameFromModal agora usa gameLogic.handleGoHome
+  const handleStopGameFromModal = () => {
+    logger.info('🛑 Usuário solicitou parar jogo via modal', { 
+      level,
+      foundWords: gameLogic.foundWords.length,
+      score: gameLogic.currentLevelScore
+    }, 'GAME_BOARD_CONTENT');
+    
+    // Usar handleGoHome do gameLogic que já tem toda a lógica correta
+    gameLogic.handleGoHome();
   };
 
   if (gameLogic.isLoading || gameLogic.error) {
@@ -108,9 +122,9 @@ const GameBoardContent = ({
         level={level}
         canRevive={canRevive}
         onRevive={handleReviveClick}
-        onGoHome={gameLogic.handleGoHome}
+        onGoHome={handleStopGameFromModal}
         onAdvanceLevel={onAdvanceLevel}
-        onStopGame={onStopGame}
+        onStopGame={handleStopGameFromModal}
       />
     </>
   );
