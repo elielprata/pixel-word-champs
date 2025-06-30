@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
 import { logger } from '@/utils/logger';
@@ -52,10 +51,7 @@ class GameScoreService {
           data
         }, 'GAME_SCORE_SERVICE');
         
-        return createErrorResponse({
-          message: 'Função executou mas não retornou dados',
-          code: 'NO_DATA_RETURNED'
-        });
+        return createErrorResponse('Função executou mas não retornou dados');
       }
 
       logger.info('✅ Pontuação atualizada com sucesso!', { 
