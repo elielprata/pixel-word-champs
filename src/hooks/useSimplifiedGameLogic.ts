@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useOptimizedBoard } from './useOptimizedBoard';
 import { useWordValidation } from './useWordValidation';
@@ -53,8 +52,8 @@ export const useSimplifiedGameLogic = ({
   const [showGameOver, setShowGameOver] = useState(false);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
 
-  // Hook unificado para sistema de dicas
-  const { useHint, showHintBlockedModal, closeHintBlockedModal } = useUnifiedHintSystem({
+  // Hook unificado para sistema de dicas (sem modal)
+  const { useHint } = useUnifiedHintSystem({
     levelWords,
     foundWords,
     boardData,
@@ -416,10 +415,9 @@ export const useSimplifiedGameLogic = ({
     selectedCells,
     isSelecting,
     
-    // Estados de modais
+    // Estados de modais (removido showHintBlockedModal)
     showGameOver,
     showLevelComplete,
-    showHintBlockedModal,
     
     // Handlers de célula
     handleCellMouseDown,
@@ -435,7 +433,6 @@ export const useSimplifiedGameLogic = ({
     useHint,
     closeGameOver,
     closeLevelComplete,
-    closeHintBlockedModal,
     handleGoHome
   };
 };

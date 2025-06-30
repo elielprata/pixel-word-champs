@@ -3,7 +3,6 @@ import React from 'react';
 import GameBoardHeader from './GameBoardHeader';
 import GameBoardMainContent from './GameBoardMainContent';
 import GameModals from './GameModals';
-import HintBlockedModal from './HintBlockedModal';
 import { useSimplifiedGameLogic } from '@/hooks/useSimplifiedGameLogic';
 import { logger } from '@/utils/logger';
 
@@ -72,7 +71,6 @@ const GameBoardContent = ({
     currentScore: gameLogic.currentLevelScore,
     showGameOver: gameLogic.showGameOver,
     showLevelComplete: gameLogic.showLevelComplete,
-    showHintBlockedModal: gameLogic.showHintBlockedModal,
     foundWords: gameLogic.foundWords.map(fw => ({ word: fw.word, positions: fw.positions }))
   }, 'GAME_BOARD_CONTENT');
 
@@ -124,11 +122,6 @@ const GameBoardContent = ({
         onGoHome={handleStopGameFromModal}
         onAdvanceLevel={onAdvanceLevel}
         onStopGame={handleStopGameFromModal}
-      />
-
-      <HintBlockedModal
-        isOpen={gameLogic.showHintBlockedModal}
-        onClose={gameLogic.closeHintBlockedModal}
       />
     </>
   );

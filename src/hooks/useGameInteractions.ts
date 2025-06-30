@@ -21,8 +21,8 @@ export const useGameInteractions = (
   setShowGameOver: (value: boolean) => void,
   onTimeUp: () => void
 ) => {
-  // Usar sistema unificado de dicas
-  const { useHint, showHintBlockedModal, closeHintBlockedModal } = useUnifiedHintSystem({
+  // Usar sistema unificado de dicas (sem modal de bloqueio)
+  const { useHint } = useUnifiedHintSystem({
     levelWords,
     foundWords,
     boardData,
@@ -44,8 +44,6 @@ export const useGameInteractions = (
 
   return {
     useHint,
-    showHintBlockedModal,
-    closeHintBlockedModal,
     handleRevive,
     handleGoHome
   };

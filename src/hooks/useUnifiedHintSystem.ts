@@ -1,5 +1,5 @@
 
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { type Position } from '@/utils/boardUtils';
 import { useGamePointsConfig } from './useGamePointsConfig';
 import { logger } from '@/utils/logger';
@@ -28,22 +28,8 @@ export const useUnifiedHintSystem = ({
   setHintHighlightedCells
 }: UseUnifiedHintSystemProps) => {
   const { getPointsForWord } = useGamePointsConfig();
-  const [showHintBlockedModal, setShowHintBlockedModal] = useState(false);
 
-  // Identificar a palavra "extra" (maior pontuação) que não pode receber dica
-  const getExtraWord = useCallback((): string | null => {
-    if (levelWords.length === 0) return null;
-    
-    const wordsWithPoints = levelWords.map(word => ({
-      word,
-      points: getPointsForWord(word)
-    }));
-    
-    const sorted = [...wordsWithPoints].sort((a, b) => b.points - a.points);
-    return sorted[0]?.word || null;
-  }, [levelWords, getPointsForWord]);
-
-  // Função principal para usar dica
+  // Função principal para usar dica - TODAS as palavras podem receber dica
   const useHint = useCallback(() => {
     // Validação 1: Verificar se ainda há dicas disponíveis
     if (hintsUsed >= 1) {
@@ -54,23 +40,19 @@ export const useUnifiedHintSystem = ({
       return false;
     }
 
-    const extraWord = getExtraWord();
     const foundWordTexts = foundWords.map(fw => fw.word);
     
-    // Encontrar palavras disponíveis para dica (não encontradas + não é palavra extra)
+    // Encontrar palavras disponíveis para dica (qualquer palavra não encontrada)
     const availableWordsForHint = levelWords.filter(word => 
-      !foundWordTexts.includes(word) && word !== extraWord
+      !foundWordTexts.includes(word)
     );
 
     // Validação 2: Verificar se há palavras disponíveis para dica
     if (availableWordsForHint.length === 0) {
-      logger.info('Nenhuma palavra disponível para dica (só resta palavra extra)', {
-        extraWord,
+      logger.info('Nenhuma palavra disponível para dica (todas foram encontradas)', {
         totalWords: levelWords.length,
         foundWords: foundWords.length
       }, 'UNIFIED_HINT_SYSTEM');
-      
-      setShowHintBlockedModal(true);
       return false;
     }
 
@@ -105,7 +87,6 @@ export const useUnifiedHintSystem = ({
       hintWord,
       positions: wordPlacement.positions,
       hintsUsedAfter: hintsUsed + 1,
-      extraWord,
       availableWordsCount: availableWordsForHint.length
     }, 'UNIFIED_HINT_SYSTEM');
 
@@ -117,7 +98,6 @@ export const useUnifiedHintSystem = ({
     return true;
   }, [
     hintsUsed,
-    getExtraWord,
     foundWords,
     levelWords,
     boardData.placedWords,
@@ -126,15 +106,7 @@ export const useUnifiedHintSystem = ({
     getPointsForWord
   ]);
 
-  // Função para fechar o modal de dica bloqueada
-  const closeHintBlockedModal = useCallback(() => {
-    setShowHintBlockedModal(false);
-  }, []);
-
   return {
-    useHint,
-    showHintBlockedModal,
-    closeHintBlockedModal,
-    getExtraWord: getExtraWord()
+    useHint
   };
 };
