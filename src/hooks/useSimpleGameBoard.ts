@@ -101,7 +101,7 @@ export const useSimpleGameBoard = ({
         .insert({
           user_id: user.id,
           level,
-          board: boardData,
+          board: boardData as any, // Cast para Json
           words_found: [],
           total_score: 0,
           time_elapsed: 0,

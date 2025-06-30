@@ -8,12 +8,14 @@ interface TimerConfig {
   reviveTimeBonus: number;
 }
 
-export const useIntegratedGameTimer = (isGameStarted: boolean) => {
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [timerConfig, setTimerConfig] = useState<TimerConfig>({
-    initialTime: 60, // fallback alterado para 60 segundos
-    reviveTimeBonus: 30 // fallback padrão de 30 segundos
-  });
+interface UseIntegratedGameTimerProps {
+  initialTime: number;
+  onTimeUp?: () => void;
+}
+
+export const useIntegratedGameTimer = ({ initialTime, onTimeUp }: UseIntegratedGameTimerProps) => {
+  const [timeLeft, setTimeLeft] = useState(initialTime);
+  const [isActive, setIsActive] = useState(false);
   const { config, loading } = useGamePointsConfig();
 
   // Configurar timer com base nas configurações do backend
@@ -29,77 +31,73 @@ export const useIntegratedGameTimer = (isGameStarted: boolean) => {
 
         if (error) throw error;
 
-        let initialTime = 60; // fallback alterado para 60 segundos
+        let configuredTime = initialTime;
         
         // Procurar pela configuração base_time_limit
         const timerSetting = timerSettings?.find(s => s.setting_key === 'base_time_limit');
         
         if (timerSetting) {
-          initialTime = parseInt(timerSetting.setting_value) || 60;
-          console.log(`⏰ Tempo inicial configurado: ${initialTime} segundos (base_time_limit)`);
+          configuredTime = parseInt(timerSetting.setting_value) || initialTime;
+          console.log(`⏰ Tempo inicial configurado: ${configuredTime} segundos (base_time_limit)`);
         } else {
-          console.log('⚠️ Configuração base_time_limit não encontrada, usando padrão de 60s');
+          console.log(`⚠️ Configuração base_time_limit não encontrada, usando padrão de ${initialTime}s`);
         }
 
-        // Garantir que o revive_time_bonus tenha um valor válido
-        const reviveTimeBonus = config?.revive_time_bonus || 30;
-        console.log(`🔄 Revive time bonus configurado: ${reviveTimeBonus} segundos`);
-
-        setTimerConfig({
-          initialTime,
-          reviveTimeBonus
-        });
-        setTimeRemaining(initialTime);
+        setTimeLeft(configuredTime);
       } catch (error) {
         console.error('Erro ao buscar configuração de timer:', error);
-        // Usar valores padrão em caso de erro
-        const fallbackReviveBonus = config?.revive_time_bonus || 30;
-        setTimerConfig({
-          initialTime: 60, // fallback alterado para 60 segundos
-          reviveTimeBonus: fallbackReviveBonus
-        });
-        setTimeRemaining(60); // fallback alterado para 60 segundos
+        setTimeLeft(initialTime);
       }
     };
 
     if (!loading) {
       fetchTimerConfig();
     }
-  }, [config, loading]);
-
-  // Reset timer when game starts
-  useEffect(() => {
-    if (isGameStarted) {
-      setTimeRemaining(timerConfig.initialTime);
-    }
-  }, [isGameStarted, timerConfig.initialTime]);
+  }, [config, loading, initialTime]);
 
   // Timer countdown
   useEffect(() => {
-    if (isGameStarted && timeRemaining > 0) {
+    if (isActive && timeLeft > 0) {
       const timer = setInterval(() => {
-        setTimeRemaining(prev => Math.max(0, prev - 1));
+        setTimeLeft(prev => {
+          const newTime = Math.max(0, prev - 1);
+          if (newTime === 0 && onTimeUp) {
+            onTimeUp();
+          }
+          return newTime;
+        });
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [isGameStarted, timeRemaining]);
+  }, [isActive, timeLeft, onTimeUp]);
 
-  const extendTime = useCallback(() => {
-    const bonusTime = timerConfig.reviveTimeBonus;
-    console.log(`⏰ Adicionando ${bonusTime} segundos ao tempo restante`);
-    setTimeRemaining(prev => prev + bonusTime);
-    return true;
-  }, [timerConfig.reviveTimeBonus]);
+  const startTimer = useCallback(() => {
+    setIsActive(true);
+  }, []);
+
+  const stopTimer = useCallback(() => {
+    setIsActive(false);
+  }, []);
 
   const resetTimer = useCallback(() => {
-    setTimeRemaining(timerConfig.initialTime);
-  }, [timerConfig.initialTime]);
+    setTimeLeft(initialTime);
+    setIsActive(false);
+  }, [initialTime]);
+
+  const extendTime = useCallback(() => {
+    const bonusTime = config?.revive_time_bonus || 30;
+    console.log(`⏰ Adicionando ${bonusTime} segundos ao tempo restante`);
+    setTimeLeft(prev => prev + bonusTime);
+    return true;
+  }, [config?.revive_time_bonus]);
 
   return {
-    timeRemaining,
-    extendTime,
+    timeLeft,
+    startTimer,
+    stopTimer,
     resetTimer,
-    canRevive: true,
-    timerConfig
+    extendTime,
+    onTimeUp: onTimeUp || (() => {}),
+    canRevive: true
   };
 };

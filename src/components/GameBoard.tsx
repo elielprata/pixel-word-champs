@@ -33,7 +33,6 @@ const GameBoard = ({
   // Timer integrado para controle do tempo
   const {
     timeLeft: internalTimeLeft,
-    onTimeUp: internalOnTimeUp,
     startTimer,
     stopTimer,
     resetTimer
@@ -44,7 +43,7 @@ const GameBoard = ({
 
   // Usar tempo externo se fornecido, senão usar interno
   const timeLeft = externalTimeLeft !== undefined ? externalTimeLeft : internalTimeLeft;
-  const onTimeUp = externalOnTimeUp || internalOnTimeUp;
+  const onTimeUp = externalOnTimeUp || (() => {});
 
   // Inicializar o jogo
   useEffect(() => {
@@ -117,7 +116,7 @@ const GameBoard = ({
   }, [level, onRevive, resetTimer, startTimer, externalTimeLeft]);
 
   if (isLoading) {
-    return <GameBoardLoadingState />;
+    return <GameBoardLoadingState level={level} />;
   }
 
   if (error) {
