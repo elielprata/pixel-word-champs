@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useOptimizedBoard } from './useOptimizedBoard';
 import { useWordValidation } from './useWordValidation';
@@ -137,7 +138,7 @@ export const useSimplifiedGameLogic = ({
   useEffect(() => {
     if (foundWords.length >= 5 && !showLevelComplete) {
       setShowLevelComplete(true);
-      logger.info('Nível completado!', { 
+      logger.info('🎉 Nível completado!', { 
         level, 
         totalScore: currentLevelScore,
         wordsFound: foundWords.length 
@@ -150,18 +151,19 @@ export const useSimplifiedGameLogic = ({
     }
   }, [foundWords.length, showLevelComplete, level, currentLevelScore, onLevelComplete]);
 
-  // 🆕 FUNÇÃO ATUALIZADA: Usar update_user_scores ao invés de update_user_points_v2
+  // 🆕 FUNÇÃO CORRIGIDA: Usar update_user_scores com melhor tratamento de erro
   const saveGameSessionPoints = useCallback(async (totalPoints: number) => {
     if (!user?.id || totalPoints === 0) {
-      logger.warn('Não é possível salvar pontos - usuário não autenticado ou pontuação zero', { 
+      logger.warn('❌ Não é possível salvar pontos', { 
         userId: user?.id, 
-        totalPoints 
+        totalPoints,
+        reason: !user?.id ? 'Usuário não autenticado' : 'Pontuação zero'
       }, 'SIMPLIFIED_GAME');
       return;
     }
 
     try {
-      logger.info('💾 Salvando pontos da sessão completa', { 
+      logger.info('💾 Iniciando salvamento de pontos da sessão', { 
         userId: user.id, 
         totalPoints,
         level,
@@ -169,7 +171,7 @@ export const useSimplifiedGameLogic = ({
         timestamp: getCurrentBrasiliaTime() 
       }, 'SIMPLIFIED_GAME');
 
-      // Usar RPC update_user_scores - incrementa partida UMA VEZ por sessão
+      // Usar RPC update_user_scores corrigida - incrementa partida UMA VEZ por sessão
       // XP permanente = totalPoints (1:1 ratio)
       const { data, error } = await supabase.rpc('update_user_scores', {
         p_user_id: user.id,
@@ -178,25 +180,54 @@ export const useSimplifiedGameLogic = ({
       });
 
       if (error) {
+        logger.error('❌ Erro na RPC update_user_scores', { 
+          error: {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          },
+          userId: user.id,
+          totalPoints
+        }, 'SIMPLIFIED_GAME');
         throw error;
       }
 
-      logger.info('✅ Pontos da sessão salvos com sucesso', { 
+      if (!data || data.length === 0) {
+        logger.warn('⚠️ RPC executou mas não retornou dados', { 
+          userId: user.id,
+          totalPoints,
+          data
+        }, 'SIMPLIFIED_GAME');
+        return;
+      }
+
+      logger.info('✅ Pontos da sessão salvos com sucesso!', { 
         totalPoints, 
         level,
         wordsFound: foundWords.length,
-        newTotalScore: data?.[0]?.total_score,
-        newExperiencePoints: data?.[0]?.experience_points,
-        newGamesPlayed: data?.[0]?.games_played
+        newTotalScore: data[0]?.total_score,
+        newExperiencePoints: data[0]?.experience_points,
+        newGamesPlayed: data[0]?.games_played,
+        increment: totalPoints
       }, 'SIMPLIFIED_GAME');
 
       return data;
     } catch (error) {
-      logger.error('❌ Erro ao salvar pontos da sessão', { 
-        error, 
+      logger.error('❌ Erro crítico ao salvar pontos da sessão', { 
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : error,
         totalPoints, 
-        level 
+        level,
+        userId: user.id,
+        timestamp: getCurrentBrasiliaTime()
       }, 'SIMPLIFIED_GAME');
+      
+      // Ainda assim mostrar que o nível foi completado para o usuário
+      // O erro será logado mas não impedirá a progressão do jogo
     }
   }, [user?.id, level, foundWords.length]);
 
@@ -245,7 +276,7 @@ export const useSimplifiedGameLogic = ({
     setHintHighlightedCells(placedWord.positions);
     setHintsUsed(1);
 
-    logger.info('Dica usada', { 
+    logger.info('💡 Dica usada', { 
       hintWord, 
       positions: placedWord.positions,
       level 
@@ -349,7 +380,7 @@ export const useSimplifiedGameLogic = ({
   const closeGameOver = useCallback(() => setShowGameOver(false), []);
   const closeLevelComplete = useCallback(() => setShowLevelComplete(false), []);
   const handleGoHome = useCallback(() => {
-    logger.info('Voltando ao menu principal', { level, finalScore: currentLevelScore }, 'SIMPLIFIED_GAME');
+    logger.info('🏠 Voltando ao menu principal', { level, finalScore: currentLevelScore }, 'SIMPLIFIED_GAME');
   }, [level, currentLevelScore]);
 
   return {

@@ -11,11 +11,11 @@ interface ScoreUpdateResult {
 
 class GameScoreService {
   /**
-   * Atualizar pontuações usando a RPC update_user_scores
+   * Atualizar pontuações usando a RPC update_user_scores CORRIGIDA
    */
   async updateGameScore(userId: string, gamePoints: number, competitionId?: string) {
     try {
-      logger.info('💾 Atualizando pontuação com update_user_scores', { 
+      logger.info('💾 Atualizando pontuação com update_user_scores CORRIGIDA', { 
         userId, 
         gamePoints, 
         competitionId 
@@ -24,7 +24,7 @@ class GameScoreService {
       // Converter pontos do jogo para XP permanente (1:1 por enquanto)
       const experiencePointsToAdd = gamePoints;
 
-      // Usar RPC update_user_scores para atualizar com expressões SQL
+      // Usar RPC update_user_scores corrigida para atualizar com expressões SQL
       const { data, error } = await supabase.rpc('update_user_scores', {
         p_user_id: userId,
         p_game_points: gamePoints,
@@ -32,24 +32,52 @@ class GameScoreService {
       });
 
       if (error) {
+        logger.error('❌ Erro na RPC update_user_scores', { 
+          error: {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          },
+          userId,
+          gamePoints
+        }, 'GAME_SCORE_SERVICE');
         throw error;
       }
 
-      logger.info('✅ Pontuação atualizada com sucesso', { 
+      if (!data || data.length === 0) {
+        logger.warn('⚠️ RPC executou mas não retornou dados', { 
+          userId,
+          gamePoints,
+          data
+        }, 'GAME_SCORE_SERVICE');
+        
+        return createErrorResponse({
+          message: 'Função executou mas não retornou dados',
+          code: 'NO_DATA_RETURNED'
+        });
+      }
+
+      logger.info('✅ Pontuação atualizada com sucesso!', { 
         userId,
-        newTotalScore: data?.[0]?.total_score,
-        newExperiencePoints: data?.[0]?.experience_points,
-        newGamesPlayed: data?.[0]?.games_played
+        gamePoints,
+        newTotalScore: data[0]?.total_score,
+        newExperiencePoints: data[0]?.experience_points,
+        newGamesPlayed: data[0]?.games_played
       }, 'GAME_SCORE_SERVICE');
 
       return createSuccessResponse({
-        total_score: data?.[0]?.total_score,
-        games_played: data?.[0]?.games_played,
-        experience_points: data?.[0]?.experience_points
+        total_score: data[0]?.total_score,
+        games_played: data[0]?.games_played,
+        experience_points: data[0]?.experience_points
       } as ScoreUpdateResult);
     } catch (error) {
-      logger.error('❌ Erro ao atualizar pontuação', { 
-        error, 
+      logger.error('❌ Erro crítico ao atualizar pontuação', { 
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : error,
         userId, 
         gamePoints 
       }, 'GAME_SCORE_SERVICE');

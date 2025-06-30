@@ -1403,6 +1403,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      test_scoring_functions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       update_active_competition_end_date: {
         Args: { competition_id: string; new_end_date: string }
         Returns: Json
@@ -1454,8 +1458,8 @@ export type Database = {
         }
         Returns: {
           total_score: number
-          experience_points: number
           games_played: number
+          experience_points: number
         }[]
       }
       update_weekly_competitions_status: {
