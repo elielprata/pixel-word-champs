@@ -193,24 +193,42 @@ export const useChallengeGameLogic = (challengeId: string) => {
     logger.info('Tempo esgotado!');
   };
 
+  // 🎯 FUNÇÃO CORRIGIDA: Sempre salvar progresso quando nível for completado
   const handleLevelComplete = async (levelScore: number) => {
     const newTotalScore = totalScore + levelScore;
     setTotalScore(newTotalScore);
     
-    // 🎯 CORREÇÃO: Salvar progresso com nível atual correto
+    logger.info('🎉 Nível completado - Salvando progresso automaticamente!', {
+      level: currentLevel,
+      levelScore,
+      newTotalScore,
+      challengeId,
+      userId: user?.id
+    });
+    
+    // 🎯 CORREÇÃO: SEMPRE salvar progresso quando nível for completado
     if (user) {
       const saveSuccess = await challengeProgressService.saveProgress({
         userId: user.id,
         competitionId: challengeId,
         currentLevel: currentLevel,
-        totalScore: newTotalScore
+        totalScore: newTotalScore,
+        isCompleted: false // Ainda não completou todos os níveis
       });
       
-      logger.info(`Nível ${currentLevel} completado!`, {
-        levelScore,
-        newTotalScore,
-        progressSaved: saveSuccess
-      });
+      if (saveSuccess) {
+        logger.info('✅ Progresso salvo com sucesso após completar nível!', {
+          level: currentLevel,
+          totalScore: newTotalScore,
+          challengeId
+        });
+      } else {
+        logger.error('❌ Falha ao salvar progresso após completar nível', {
+          level: currentLevel,
+          totalScore: newTotalScore,
+          challengeId
+        });
+      }
     }
   };
 
@@ -227,6 +245,12 @@ export const useChallengeGameLogic = (challengeId: string) => {
           competitionId: challengeId,
           currentLevel: nextLevel,
           totalScore: totalScore
+        });
+        
+        logger.info('📈 Avançando para próximo nível e salvando progresso', {
+          nextLevel,
+          totalScore,
+          challengeId
         });
       }
       
