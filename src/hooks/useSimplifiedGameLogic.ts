@@ -43,10 +43,49 @@ export const useSimplifiedGameLogic = ({
   const [selectedCells, setSelectedCells] = useState<Position[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [showValidWord, setShowValidWord] = useState(false);
+  const [startCell, setStartCell] = useState<Position | null>(null);
   
   // Estados de modais
   const [showGameOver, setShowGameOver] = useState(false);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
+
+  // 🎯 NOVA FUNÇÃO: Verificar se uma posição forma linha reta com o ponto inicial
+  const isValidLinearDirection = useCallback((start: Position, target: Position): boolean => {
+    if (!start || !target) return false;
+    
+    const deltaRow = target.row - start.row;
+    const deltaCol = target.col - start.col;
+    
+    // Mesma posição é válida
+    if (deltaRow === 0 && deltaCol === 0) return true;
+    
+    // Horizontal (deltaRow = 0)
+    if (deltaRow === 0 && deltaCol !== 0) return true;
+    
+    // Vertical (deltaCol = 0)
+    if (deltaCol === 0 && deltaRow !== 0) return true;
+    
+    // Diagonal (|deltaRow| = |deltaCol|)
+    if (Math.abs(deltaRow) === Math.abs(deltaCol)) return true;
+    
+    return false;
+  }, []);
+
+  // 🎯 NOVA FUNÇÃO: Calcular caminho linear entre duas posições
+  const getLinearPath = useCallback((start: Position, end: Position): Position[] => {
+    if (!start || !end) return [];
+    const deltaRow = end.row - start.row;
+    const deltaCol = end.col - start.col;
+    const stepRow = Math.sign(deltaRow);
+    const stepCol = Math.sign(deltaCol);
+    const length = Math.max(Math.abs(deltaRow), Math.abs(deltaCol));
+    if (length === 0) return [start];
+    const path: Position[] = [];
+    for (let i = 0; i <= length; i++) {
+      path.push({ row: start.row + stepRow * i, col: start.col + stepCol * i });
+    }
+    return path;
+  }, []);
 
   // Função para adicionar palavra encontrada
   const handleWordFound = useCallback((foundWord: FoundWord) => {
@@ -165,6 +204,7 @@ export const useSimplifiedGameLogic = ({
     // Limpar seleção
     setSelectedCells([]);
     setIsSelecting(false);
+    setStartCell(null);
   }, [selectedCells, validateAndConfirmWord, boardData.board, getPointsForWord, savePointsImmediately]);
 
   // Usar dica
@@ -203,21 +243,22 @@ export const useSimplifiedGameLogic = ({
   // Handlers de célula
   const handleCellMouseDown = useCallback((row: number, col: number) => {
     const position = { row, col };
+    setStartCell(position);
     setSelectedCells([position]);
     setIsSelecting(true);
   }, []);
 
   const handleCellMouseEnter = useCallback((row: number, col: number) => {
-    if (!isSelecting) return;
+    if (!isSelecting || !startCell) return;
     
-    const position = { row, col };
-    setSelectedCells(prev => {
-      if (prev.some(p => p.row === position.row && p.col === position.col)) {
-        return prev;
-      }
-      return [...prev, position];
-    });
-  }, [isSelecting]);
+    const targetPosition = { row, col };
+    
+    // Só atualiza se formar linha reta com o ponto inicial
+    if (isValidLinearDirection(startCell, targetPosition)) {
+      const linearPath = getLinearPath(startCell, targetPosition);
+      setSelectedCells(linearPath);
+    }
+  }, [isSelecting, startCell, isValidLinearDirection, getLinearPath]);
 
   const handleCellMouseUp = useCallback(() => {
     if (isSelecting) {
