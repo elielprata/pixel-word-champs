@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useIntegratedGameTimer } from '@/hooks/useIntegratedGameTimer';
 import GameBoardErrorState from './game/GameBoardErrorState';
 import GameBoardLoadingState from './game/GameBoardLoadingState';
+import GameBoardLayout from './game/GameBoardLayout';
 import SimpleGameBoardContent from './game/SimpleGameBoardContent';
 import { logger } from '@/utils/logger';
 
@@ -116,15 +117,23 @@ const GameBoard = ({
   }, [level, onRevive, resetTimer, startTimer, externalTimeLeft]);
 
   if (isLoading) {
-    return <GameBoardLoadingState level={level} />;
+    return (
+      <GameBoardLayout>
+        <GameBoardLoadingState level={level} />
+      </GameBoardLayout>
+    );
   }
 
   if (error) {
-    return <GameBoardErrorState error={error} />;
+    return (
+      <GameBoardLayout>
+        <GameBoardErrorState error={error} />
+      </GameBoardLayout>
+    );
   }
 
   return (
-    <div className="game-board-container">
+    <GameBoardLayout>
       <SimpleGameBoardContent
         level={level}
         timeLeft={timeLeft}
@@ -135,7 +144,7 @@ const GameBoard = ({
         canRevive={canRevive}
         onRevive={handleRevive}
       />
-    </div>
+    </GameBoardLayout>
   );
 };
 
