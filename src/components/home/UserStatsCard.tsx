@@ -57,7 +57,7 @@ const UserStatsCard = () => {
             const Icon = stat.icon;
             return (
               <div key={index} className="text-center group">
-                <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl mx-auto flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform mb-2`}>
+                <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl mx-auto flex items-center justify-center shadow-sm hover-lift transition-all duration-300 mb-2`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <div className="font-bold text-lg text-gray-900">

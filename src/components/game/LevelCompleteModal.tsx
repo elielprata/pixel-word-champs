@@ -55,7 +55,7 @@ const LevelCompleteModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in-pure modal-safe">
       {/* Partículas de celebração de fundo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '2s' }} />
@@ -66,7 +66,7 @@ const LevelCompleteModal = ({
         <div className="absolute top-3/4 left-1/2 w-2.5 h-2.5 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s', animationDuration: '2.3s' }} />
       </div>
 
-      <Card className="w-96 m-4 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-200 shadow-2xl shadow-amber-500/20 animate-scale-in">
+      <Card className="w-96 m-4 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-200 shadow-2xl shadow-amber-500/20 animate-fade-in-pure">
         <CardContent className="p-8 text-center relative overflow-hidden">
           {/* Fundo decorativo com gradiente animado */}
           <div className="absolute inset-0 bg-gradient-to-br from-amber-100/50 via-yellow-100/30 to-orange-100/50 animate-pulse" />
@@ -91,16 +91,16 @@ const LevelCompleteModal = ({
                 <div className="absolute -bottom-1 -left-2 w-4 h-4 bg-orange-400 rounded-full animate-pulse" />
               </div>
               
-              <h2 className="text-2xl font-bold text-gray-800 mb-2 animate-fade-in">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2 animate-fade-in-pure">
                 🎉 Nível {level} Completado! 🎉
               </h2>
-              <p className="text-gray-600 text-lg font-medium animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <p className="text-gray-600 text-lg font-medium animate-fade-in-pure" style={{ animationDelay: '0.2s' }}>
                 Parabéns! Você encontrou todas as palavras!
               </p>
             </div>
             
             {/* Seção da pontuação com destaque */}
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 mb-6 shadow-lg hover-lift transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 mb-6 shadow-lg hover-lift transition-all duration-300 animate-fade-in-pure" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center justify-center space-x-3">
                 <Trophy className="w-8 h-8 text-yellow-300" />
                 <div>
@@ -117,7 +117,7 @@ const LevelCompleteModal = ({
             </div>
             
             {/* Botões de ação com estilo gamificado - SEM TRANSFORMS */}
-            <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+            <div className="space-y-4 animate-fade-in-pure" style={{ animationDelay: '0.6s' }}>
               <Button 
                 onClick={handleAdvance}
                 className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl hover-lift transition-all duration-300 border-2 border-green-400"

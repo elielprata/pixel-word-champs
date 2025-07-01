@@ -241,26 +241,38 @@
     }
   }
 
-  /* KEYFRAME SCALE-IN SEM SCALE - ALTERNATIVA 100% */
-  @keyframes scale-in-alternative {
+  /* KEYFRAME FADE-IN PURO SEM SCALE - ALTERNATIVA 100% DEFINITIVA */
+  @keyframes fade-in-pure {
     0% {
       opacity: 0;
-      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-      filter: blur(2px);
+      filter: blur(1px);
     }
     100% {
       opacity: 1;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       filter: blur(0);
     }
   }
 
-  .animate-scale-in {
-    animation: scale-in-alternative 0.3s ease-out !important;
+  .animate-fade-in-pure {
+    animation: fade-in-pure 0.3s ease-out !important;
+    /* GARANTIR ZERO transforms */
+    transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
   }
 
   /* PROTEÇÃO 100%: Remover qualquer transform restante */
   .transform-none-final {
+    transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
+    will-change: auto !important;
+  }
+
+  /* PROTEÇÃO EXTRA: Garantir que modais não causem zoom */
+  .modal-safe {
+    touch-action: manipulation !important;
+    overflow: hidden !important;
     transform: none !important;
     -webkit-transform: none !important;
     -ms-transform: none !important;

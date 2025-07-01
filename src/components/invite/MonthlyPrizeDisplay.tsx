@@ -1,15 +1,19 @@
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Crown, Trophy, Medal, Gift } from 'lucide-react';
+
 interface ConfiguredPrize {
   position: number;
   prize_amount: number;
   active: boolean;
   description?: string;
 }
+
 interface MonthlyPrizeDisplayProps {
   configuredPrizes: ConfiguredPrize[];
 }
+
 const MonthlyPrizeDisplay = ({
   configuredPrizes
 }: MonthlyPrizeDisplayProps) => {
@@ -25,6 +29,7 @@ const MonthlyPrizeDisplay = ({
         return <Gift className="w-5 h-5 text-purple-500" />;
     }
   };
+
   const getPrizeColor = (position: number) => {
     switch (position) {
       case 1:
@@ -37,6 +42,7 @@ const MonthlyPrizeDisplay = ({
         return 'text-purple-600 font-bold';
     }
   };
+
   const getPrizeBackground = (position: number) => {
     switch (position) {
       case 1:
@@ -56,9 +62,11 @@ const MonthlyPrizeDisplay = ({
   // Debug: log para verificar se os dados estão chegando
   console.log('MonthlyPrizeDisplay - configuredPrizes:', configuredPrizes);
   console.log('MonthlyPrizeDisplay - activePrizes:', activePrizes);
+
   if (activePrizes.length === 0) {
     // Mostrar um estado padrão enquanto carrega ou se não há prêmios
-    return <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
+    return (
+      <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2 text-gray-800">
             <Crown className="w-4 h-4 text-purple-500" />
@@ -71,9 +79,12 @@ const MonthlyPrizeDisplay = ({
             <p className="text-sm">Carregando prêmios...</p>
           </div>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
-  return <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
+
+  return (
+    <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2 text-gray-800">
           <Crown className="w-4 h-4 text-purple-500" />
@@ -82,16 +93,22 @@ const MonthlyPrizeDisplay = ({
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-3">
-          {activePrizes.map(prize => <div key={prize.position} className={`flex items-center justify-between py-3 px-4 rounded-xl border ${getPrizeBackground(prize.position)} transition-all hover:scale-105`}>
+          {activePrizes.map(prize => (
+            <div 
+              key={prize.position} 
+              className={`flex items-center justify-between py-3 px-4 rounded-xl border ${getPrizeBackground(prize.position)} transition-all hover-lift`}
+            >
               <div className="flex items-center gap-3">
                 {getPrizeIcon(prize.position)}
                 <div>
                   <span className="text-sm font-semibold text-gray-800">
                     {prize.position}º lugar
                   </span>
-                  {prize.description && <p className="text-xs text-gray-600 mt-1">
+                  {prize.description && (
+                    <p className="text-xs text-gray-600 mt-1">
                       {prize.description}
-                    </p>}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="text-right">
@@ -99,10 +116,12 @@ const MonthlyPrizeDisplay = ({
                   R$ {prize.prize_amount.toFixed(2)}
                 </span>
               </div>
-            </div>)}
+            </div>
+          ))}
         </div>
-        
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default MonthlyPrizeDisplay;
