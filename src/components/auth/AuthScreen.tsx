@@ -12,7 +12,6 @@ import { logger } from '@/utils/logger';
 
 const AuthScreen = () => {
   const [activeTab, setActiveTab] = useState('login');
-  const [showPassword, setShowPassword] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -43,7 +42,7 @@ const AuthScreen = () => {
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="grid grid-cols-8 gap-1 p-4 transform rotate-12 scale-150">
-            {['L', 'E', 'T', 'R', 'A', 'S', 'W', 'O', 'R', 'D', 'S'].map((letter, index) => (
+            {['W', 'O', 'R', 'D', 'S', 'E', 'A', 'R'].map((letter, index) => (
               <div key={index} className="w-8 h-8 bg-white rounded border-2 border-gray-300 flex items-center justify-center text-xs font-bold">
                 {letter}
               </div>
@@ -57,8 +56,8 @@ const AuthScreen = () => {
             <div className="w-20 h-20 mx-auto bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl shadow-2xl flex items-center justify-center mb-4 transform rotate-3">
               <Crown className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Letra Arena</h1>
-            <h2 className="text-2xl font-bold text-yellow-400">CAÇA PALAVRAS</h2>
+            <h1 className="text-3xl font-bold text-white mb-2">Caça Palavras</h1>
+            <h2 className="text-2xl font-bold text-yellow-400">ROYALE</h2>
             <p className="text-purple-200 text-sm mt-2">Compete e conquiste a coroa!</p>
           </div>
         </div>
@@ -108,7 +107,7 @@ const AuthScreen = () => {
           </div>
         </div>
 
-        {/* Features Cards - Preservando informações originais */}
+        {/* Features Cards */}
         <div className="px-6 py-4 relative z-10">
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-3">
