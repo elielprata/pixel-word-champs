@@ -44,112 +44,109 @@ class SecureLogger {
     }
   }
 
-  private maskSensitiveData(data: any, visited = new WeakSet(), depth = 0): any {
-    // Proteção contra profundidade excessiva
-    const maxDepth = 10;
-    if (depth > maxDepth) {
-      return '[MAX_DEPTH_REACHED]';
+  private maskSensitiveData(data: any): any {
+    // Em desenvolvimento, retornar dados simplificados sem mascaramento recursivo
+    if (!import.meta.env.PROD) {
+      return this.simplifyDataForDevelopment(data);
     }
 
-    // Verificar tipos primitivos
+    // Em produção, usar mascaramento básico sem recursão profunda
+    return this.basicMaskForProduction(data);
+  }
+
+  private simplifyDataForDevelopment(data: any): any {
+    if (!data) return data;
+
+    // Para valores primitivos, retornar como está
+    if (typeof data !== 'object') {
+      return data;
+    }
+
+    // Para arrays, apenas contar elementos
+    if (Array.isArray(data)) {
+      return `[Array with ${data.length} items]`;
+    }
+
+    // Para objetos React ou complexos, retornar representação simplificada
+    if (this.isComplexObject(data)) {
+      return '[Complex Object]';
+    }
+
+    // Para objetos simples, extrair apenas propriedades básicas
+    try {
+      const keys = Object.keys(data);
+      if (keys.length > 10) {
+        return `[Object with ${keys.length} properties]`;
+      }
+
+      const simplified: any = {};
+      for (const key of keys.slice(0, 5)) { // Apenas primeiras 5 propriedades
+        const value = data[key];
+        if (typeof value === 'object') {
+          simplified[key] = '[Object]';
+        } else {
+          simplified[key] = this.isSensitiveField(key) ? '***' : value;
+        }
+      }
+      
+      if (keys.length > 5) {
+        simplified['...'] = `and ${keys.length - 5} more properties`;
+      }
+
+      return simplified;
+    } catch {
+      return '[Unprocessable Object]';
+    }
+  }
+
+  private basicMaskForProduction(data: any): any {
     if (!data || typeof data !== 'object') {
       return data;
     }
 
-    // Proteção contra referências circulares
-    if (visited.has(data)) {
-      return '[CIRCULAR_REFERENCE]';
+    if (Array.isArray(data)) {
+      return `[Array: ${data.length} items]`;
     }
 
-    // Marcar objeto como visitado
-    visited.add(data);
-
+    // Em produção, retornar apenas informações básicas
     try {
-      // Tratamento especial para arrays
-      if (Array.isArray(data)) {
-        // Limitar arrays muito grandes para evitar problemas de performance
-        if (data.length > 100) {
-          return `[LARGE_ARRAY_${data.length}_ITEMS]`;
-        }
-        return data.map(item => this.maskSensitiveData(item, visited, depth + 1));
-      }
-
-      // Tratamento especial para objetos do React/DOM
-      if (this.isReactObject(data)) {
-        return '[REACT_OBJECT]';
-      }
-
-      // Tratamento especial para funções
-      if (typeof data === 'function') {
-        return '[FUNCTION]';
-      }
-
-      // Tratamento especial para objetos com muitas propriedades
       const keys = Object.keys(data);
-      if (keys.length > 50) {
-        return `[LARGE_OBJECT_${keys.length}_KEYS]`;
-      }
-
-      // Processar objeto normal
-      const masked = {};
-      
-      for (const key of keys) {
-        try {
-          const lowerKey = key.toLowerCase();
-          const isSensitive = this.sensitiveFields.some(field => 
-            lowerKey.includes(field) || lowerKey.endsWith('_key') || lowerKey.endsWith('_token')
-          );
-
-          if (isSensitive && typeof data[key] === 'string') {
-            masked[key] = this.maskString(data[key]);
-          } else {
-            masked[key] = this.maskSensitiveData(data[key], visited, depth + 1);
-          }
-        } catch (error) {
-          masked[key] = '[PROCESSING_ERROR]';
-        }
-      }
-
-      return masked;
-    } catch (error) {
-      return '[MASKING_ERROR]';
-    } finally {
-      // Remover da lista de visitados após processamento
-      visited.delete(data);
+      const maskedCount = keys.filter(key => this.isSensitiveField(key)).length;
+      return {
+        objectType: data.constructor?.name || 'Object',
+        propertyCount: keys.length,
+        maskedFields: maskedCount
+      };
+    } catch {
+      return '[Production Masked Object]';
     }
   }
 
-  private isReactObject(obj: any): boolean {
+  private isComplexObject(obj: any): boolean {
     if (!obj || typeof obj !== 'object') return false;
     
-    // Verificar propriedades típicas de objetos React
-    const reactKeys = ['$$typeof', '_owner', '_store', 'ref', 'key', 'props'];
-    const hasReactKeys = reactKeys.some(key => key in obj);
+    // Verificar propriedades típicas de objetos React/DOM/Hooks
+    const complexIndicators = [
+      '$$typeof', '_owner', '_store', 'ref', 'key', 'props',
+      'current', 'memoizedState', 'next', 'baseState',
+      'Hook', 'Fiber', 'ReactCurrentDispatcher'
+    ];
     
-    // Verificar se é um elemento React
-    const isReactElement = obj.$$typeof && typeof obj.$$typeof === 'symbol';
+    const keys = Object.keys(obj);
     
-    // Verificar se é um objeto com muitas propriedades internas (como hooks)
-    const hasInternalProps = Object.keys(obj).some(key => 
-      key.startsWith('_') || key.includes('Hook') || key.includes('Fiber')
+    // Se tem muitas propriedades ou propriedades internas, é complexo
+    if (keys.length > 20) return true;
+    
+    return complexIndicators.some(indicator => 
+      keys.some(key => key.includes(indicator) || key.startsWith('_'))
     );
-
-    return hasReactKeys || isReactElement || hasInternalProps;
   }
 
-  private maskString(value: string): string {
-    if (!value || typeof value !== 'string') return value;
-    
-    if (value.length <= 4) return '***';
-    
-    // Para emails, mostrar apenas o primeiro e último caractere + domínio mascarado
-    if (value.includes('@')) {
-      const [user, domain] = value.split('@');
-      return `${user[0]}***${user[user.length - 1]}@***`;
-    }
-    
-    // Para outros valores, mostrar apenas primeiros e últimos caracteres
-    return `${value.substring(0, 2)}***${value.substring(value.length - 2)}`;
+  private isSensitiveField(key: string): boolean {
+    const lowerKey = key.toLowerCase();
+    return this.sensitiveFields.some(field => 
+      lowerKey.includes(field) || lowerKey.endsWith('_key') || lowerKey.endsWith('_token')
+    );
   }
 
   private shouldLog(level: number): boolean {
@@ -168,83 +165,107 @@ class SecureLogger {
   }
 
   private logToConsole(entry: LogEntry): void {
-    const logString = `[${entry.level}] ${entry.message}`;
-    const logData = entry.data || '';
+    // Usar formatação mais simples para evitar problemas de recursão
+    const logPrefix = `[${entry.level}] ${entry.message}`;
     
-    switch (entry.level) {
-      case 'ERROR':
-        console.error(logString, logData);
-        break;
-      case 'WARN':
-        console.warn(logString, logData);
-        break;
-      case 'INFO':
-        console.info(logString, logData);
-        break;
-      case 'DEBUG':
-        console.debug(logString, logData);
-        break;
-      case 'PROD':
-        console.log(logString, logData);
-        break;
-      case 'SECURITY':
-        console.warn(`🔒 [SECURITY] ${entry.message}`, logData);
-        break;
-      default:
-        console.log(logString, logData);
+    try {
+      switch (entry.level) {
+        case 'ERROR':
+          console.error(logPrefix, entry.data || '');
+          break;
+        case 'WARN':
+          console.warn(logPrefix, entry.data || '');
+          break;
+        case 'INFO':
+          console.info(logPrefix, entry.data || '');
+          break;
+        case 'DEBUG':
+          console.debug(logPrefix, entry.data || '');
+          break;
+        case 'PROD':
+          console.log(logPrefix, entry.data || '');
+          break;
+        case 'SECURITY':
+          console.warn(`🔒 [SECURITY] ${entry.message}`, entry.data || '');
+          break;
+        default:
+          console.log(logPrefix, entry.data || '');
+      }
+    } catch (error) {
+      // Fallback caso haja erro no console.log
+      console.log(`[LOGGER ERROR] ${entry.message}`);
     }
   }
 
   error(message: string, data?: any, context?: string): void {
     if (this.shouldLog(1)) {
-      const entry = this.formatMessage('ERROR', message, data, context);
-      this.logToConsole(entry);
-      
-      // Em produção, registrar erros críticos
-      if (this.environment === 'production') {
-        // Aqui poderia ser integrado com serviços de monitoramento
-        // como Sentry, LogRocket, etc.
+      try {
+        const entry = this.formatMessage('ERROR', message, data, context);
+        this.logToConsole(entry);
+      } catch {
+        // Fallback absoluto
+        console.error(`[ERROR] ${message}`);
       }
     }
   }
 
   warn(message: string, data?: any, context?: string): void {
     if (this.shouldLog(2)) {
-      const entry = this.formatMessage('WARN', message, data, context);
-      this.logToConsole(entry);
+      try {
+        const entry = this.formatMessage('WARN', message, data, context);
+        this.logToConsole(entry);
+      } catch {
+        // Fallback absoluto
+        console.warn(`[WARN] ${message}`);
+      }
     }
   }
 
   info(message: string, data?: any, context?: string): void {
     if (this.shouldLog(3)) {
-      const entry = this.formatMessage('INFO', message, data, context);
-      this.logToConsole(entry);
+      try {
+        const entry = this.formatMessage('INFO', message, data, context);
+        this.logToConsole(entry);
+      } catch {
+        // Fallback absoluto
+        console.info(`[INFO] ${message}`);
+      }
     }
   }
 
   debug(message: string, data?: any, context?: string): void {
     if (this.shouldLog(4)) {
-      const entry = this.formatMessage('DEBUG', message, data, context);
-      this.logToConsole(entry);
+      try {
+        const entry = this.formatMessage('DEBUG', message, data, context);
+        this.logToConsole(entry);
+      } catch {
+        // Fallback absoluto
+        console.debug(`[DEBUG] ${message}`);
+      }
     }
   }
 
   // Método específico para logs de produção críticos
   production(message: string, data?: any, context?: string): void {
     if (this.environment === 'production') {
-      const entry = this.formatMessage('PROD', message, data, context);
-      this.logToConsole(entry);
+      try {
+        const entry = this.formatMessage('PROD', message, data, context);
+        this.logToConsole(entry);
+      } catch {
+        // Fallback absoluto
+        console.log(`[PROD] ${message}`);
+      }
     }
   }
 
   // Método para auditoria de segurança
   security(message: string, data?: any, context?: string): void {
-    const entry = this.formatMessage('SECURITY', message, data, context);
-    this.logToConsole(entry);
-    
-    // Logs de segurança sempre são registrados independente do nível
-    if (this.environment === 'production') {
-      // Integração com sistemas de auditoria de segurança
+    try {
+      const entry = this.formatMessage('SECURITY', message, data, context);
+      this.logToConsole(entry);
+    } catch {
+      // Fallback absoluto
+      console.warn(`🔒 [SECURITY] ${message}`);
     }
   }
 

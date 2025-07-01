@@ -26,7 +26,8 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   onOpenChange,
   onConfigUpdated
 }) => {
-  console.log('🔍 WeeklyConfigModal - Renderizando', {
+  // Log simplificado apenas com informações básicas
+  console.log('🔍 WeeklyConfigModal - Renderizando modal semanal', {
     open,
     timestamp: getCurrentBrasiliaTime()
   });
@@ -37,11 +38,11 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
 
   let modalLogic;
   try {
-    console.log('🔄 WeeklyConfigModal - Inicializando useWeeklyConfigModal...');
+    console.log('🔄 WeeklyConfigModal - Inicializando hook modal semanal...');
     modalLogic = useWeeklyConfigModal(onConfigUpdated);
-    console.log('✅ WeeklyConfigModal - useWeeklyConfigModal inicializado com sucesso');
+    console.log('✅ WeeklyConfigModal - Hook modal semanal inicializado');
   } catch (error) {
-    console.error('❌ WeeklyConfigModal - Erro ao inicializar useWeeklyConfigModal:', error);
+    console.error('❌ WeeklyConfigModal - Erro ao inicializar hook:', error?.message || 'Erro desconhecido');
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
         <p className="text-red-800">Erro ao carregar configurações do modal</p>
@@ -72,13 +73,12 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   };
 
   try {
-    // Log simplificado sem objetos complexos
-    console.log('🔄 WeeklyConfigModal - Preparando dados do modal...', {
-      historyDataLength: modalLogic.weeklyHistoryData?.data?.length || 0,
-      historyLoading: modalLogic.historyLoading,
-      configsLoading: modalLogic.configsLoading,
+    // Log básico sem objetos complexos
+    console.log('🔄 WeeklyConfigModal - Preparando dados do modal (dados básicos):', {
       hasActiveConfig: !!modalLogic.activeConfig,
-      scheduledConfigsCount: modalLogic.scheduledConfigs?.length || 0
+      scheduledConfigsCount: modalLogic.scheduledConfigs?.length || 0,
+      configsLoading: modalLogic.configsLoading,
+      historyLoading: modalLogic.historyLoading
     });
     
     const modalData = {
@@ -122,7 +122,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
       onModalSuccess: handleModalSuccess
     };
 
-    console.log('✅ WeeklyConfigModal - Dados preparados, renderizando WeeklyConfigModalContainer');
+    console.log('✅ WeeklyConfigModal - Dados preparados, renderizando container');
 
     return (
       <WeeklyConfigModalContainer
@@ -135,7 +135,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
       />
     );
   } catch (error) {
-    console.error('❌ WeeklyConfigModal - Erro ao preparar dados do modal:', error);
+    console.error('❌ WeeklyConfigModal - Erro ao preparar dados:', error?.message || 'Erro desconhecido');
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
         <p className="text-red-800">Erro ao preparar dados do modal</p>
