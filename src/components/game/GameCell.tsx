@@ -32,18 +32,37 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
-  // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS COM BLOQUEIO INTELIGENTE
+  // ✅ PROTEÇÃO ANTI-ZOOM ESPECÍFICA PARA CÉLULAS
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Verificar se o toque está nas extremidades (bloqueio inteligente)
+    // ✅ EDGE DETECTION INTELIGENTE - Coordenadas relativas da célula
     const touch = e.touches[0];
-    const screenWidth = window.innerWidth;
-    const edgeThreshold = 20; // 20px das bordas
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const relativeX = touch.clientX - rect.left;
+    const relativeY = touch.clientY - rect.top;
     
-    if (touch.clientX < edgeThreshold || touch.clientX > screenWidth - edgeThreshold) {
-      return; // Bloquear interação nas extremidades
+    // Bloquear se o toque estiver nas extremidades da célula (primeiros/últimos 20% da célula)
+    const edgeThreshold = cellSize * 0.2;
+    if (relativeX < edgeThreshold || relativeX > cellSize - edgeThreshold ||
+        relativeY < edgeThreshold || relativeY > cellSize - edgeThreshold) {
+      console.log('🚫 Touch bloqueado na extremidade da célula');
+      return;
+    }
+    
+    // ✅ EDGE DETECTION GLOBAL - Coordenadas da tela
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    const globalEdgeThreshold = 30; // 30px das bordas da tela
+    
+    if (touch.clientX < globalEdgeThreshold || 
+        touch.clientX > screenWidth - globalEdgeThreshold ||
+        touch.clientY < globalEdgeThreshold || 
+        touch.clientY > screenHeight - globalEdgeThreshold) {
+      console.log('🚫 Touch bloqueado na extremidade global');
+      return;
     }
     
     onCellStart(rowIndex, colIndex);
@@ -55,12 +74,17 @@ const GameCell = ({
     const touch = e.touches[0];
     if (!touch) return;
     
-    // Verificar bloqueio inteligente nas extremidades
+    // ✅ EDGE DETECTION NO MOVIMENTO
     const screenWidth = window.innerWidth;
-    const edgeThreshold = 20;
+    const screenHeight = window.innerHeight;
+    const globalEdgeThreshold = 30;
     
-    if (touch.clientX < edgeThreshold || touch.clientX > screenWidth - edgeThreshold) {
-      return; // Bloquear movimento nas extremidades
+    if (touch.clientX < globalEdgeThreshold || 
+        touch.clientX > screenWidth - globalEdgeThreshold ||
+        touch.clientY < globalEdgeThreshold || 
+        touch.clientY > screenHeight - globalEdgeThreshold) {
+      console.log('🚫 Touch move bloqueado na extremidade');
+      return;
     }
     
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -98,7 +122,7 @@ const GameCell = ({
 
   // ✅ HIERARQUIA VISUAL GAMIFICADA SEM SCALE - USANDO EFEITOS ALTERNATIVOS
   const getCellClasses = () => {
-    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer safe-interactive no-tap-highlight";
+    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer safe-interactive no-tap-highlight game-cell";
     
     if (isHintHighlighted) {
       return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse hover-glow`;
@@ -136,7 +160,8 @@ const GameCell = ({
         userSelect: "none",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
-        touchAction: "manipulation", // Bloqueio inteligente
+        touchAction: "manipulation", // ✅ BLOQUEIO ANTI-ZOOM ESPECÍFICO
+        WebkitTextSizeAdjust: "none", // ✅ PREVENÇÃO DE ZOOM ADICIONAL
         padding: 0,
         margin: 0,
       }}

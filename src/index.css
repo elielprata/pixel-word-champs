@@ -56,7 +56,7 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   }
   
-  /* BLOQUEIO INTELIGENTE DE EXTREMIDADES - ANTI-ZOOM E ANTI-SCROLL LATERAL */
+  /* ✅ BLOQUEIO INTELIGENTE DE EXTREMIDADES - ANTI-ZOOM E ANTI-SCROLL LATERAL */
   html, body {
     /* Prevenção total de zoom */
     -webkit-text-size-adjust: 100%;
@@ -164,7 +164,7 @@
     user-select: text;
   }
   
-  /* Animação alternativa para modais - SEM SCALE */
+  /* ✅ ANIMAÇÃO MODAL ENTER DEFINIDA - SEM SCALE */
   .animate-modal-enter {
     animation: modal-enter 0.3s ease-out;
   }
@@ -199,6 +199,32 @@
       transform: translateY(0);
     }
   }
+  
+  /* ✅ TABULEIRO DE JOGO - PROTEÇÃO ESPECÍFICA */
+  .game-board-container {
+    /* Prevenção total de zoom no tabuleiro */
+    touch-action: pan-y !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-text-size-adjust: none !important;
+    overflow: hidden !important;
+    
+    /* Prevenção de gestures de zoom */
+    -ms-content-zooming: none !important;
+    -ms-touch-select: none !important;
+  }
+  
+  /* ✅ CÉLULAS DO TABULEIRO - PROTEÇÃO ESPECÍFICA */
+  .game-cell {
+    touch-action: manipulation !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    pointer-events: auto !important;
+  }
 }
 
 @layer utilities {
@@ -209,11 +235,13 @@
     padding-right: env(safe-area-inset-right);
   }
   
-  /* Utilitários para bloqueio inteligente */
+  /* ✅ UTILITÁRIOS PARA BLOQUEIO INTELIGENTE */
   .no-zoom {
     touch-action: manipulation;
     -webkit-user-select: none;
     user-select: none;
+    -webkit-text-size-adjust: none;
+    -ms-text-size-adjust: none;
   }
   
   .vertical-scroll-only {
@@ -224,5 +252,18 @@
   .edge-safe {
     touch-action: manipulation;
     overscroll-behavior: contain;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* ✅ ANTI-ZOOM ROBUSTO PARA TABULEIRO */
+  .anti-zoom-board {
+    touch-action: pan-y !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-text-size-adjust: none !important;
+    -ms-content-zooming: none !important;
+    overflow: hidden !important;
   }
 }
