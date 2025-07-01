@@ -41,7 +41,7 @@ const GameifiedLoadingScreen = ({ level, loadingStep, isResuming = false }: Game
   };
 
   return (
-    <div className={`min-h-screen ${getBackgroundGradient()} flex items-center justify-center p-4 relative overflow-hidden`}>
+    <div className={`min-h-screen ${getBackgroundGradient()} flex items-center justify-center p-4 relative overflow-hidden no-zoom`}>
       {/* Partículas de fundo animadas */}
       <div className="absolute inset-0">
         {[...Array(20)].map((_, i) => (
@@ -70,7 +70,7 @@ const GameifiedLoadingScreen = ({ level, loadingStep, isResuming = false }: Game
             <div className={`w-20 h-20 mx-auto rounded-full border-2 ${isResuming ? 'border-blue-400' : 'border-green-400'} opacity-30`}></div>
           </div>
           <div className="absolute inset-0 animate-pulse" style={{ animationDelay: '0.5s' }}>
-            <div className={`w-24 h-24 mx-auto rounded-full border ${isResuming ? 'border-blue-400' : 'border-green-400'} opacity-20 -translate-x-2 -translate-y-2`}></div>
+            <div className={`w-24 h-24 mx-auto rounded-full border ${isResuming ? 'border-blue-400' : 'border-green-400'} opacity-20 ml-[-8px] mt-[-8px]`}></div>
           </div>
         </div>
 
