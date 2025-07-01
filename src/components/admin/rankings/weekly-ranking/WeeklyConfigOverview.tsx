@@ -2,7 +2,7 @@
 import React from 'react';
 import { CompetitionCard } from './CompetitionCard';
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { CheckCircle, AlertTriangle } from 'lucide-react';
 import { WeeklyConfig } from '@/types/weeklyConfig';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
 
@@ -12,7 +12,7 @@ interface WeeklyConfigOverviewProps {
   isLoading: boolean;
   onEdit: (competition: WeeklyConfig) => void;
   onDelete: (competition: WeeklyConfig) => void;
-  onActivate: () => void;
+  onFinalize: () => void;
   isActivating: boolean;
 }
 
@@ -22,7 +22,7 @@ export const WeeklyConfigOverview: React.FC<WeeklyConfigOverviewProps> = ({
   isLoading,
   onEdit,
   onDelete,
-  onActivate,
+  onFinalize,
   isActivating
 }) => {
   if (isLoading) {
@@ -35,56 +35,75 @@ export const WeeklyConfigOverview: React.FC<WeeklyConfigOverviewProps> = ({
 
   // Verificar se há competições que terminaram (completed) aguardando finalização
   const completedCompetitions = scheduledConfigs.filter(config => config.status === 'completed');
+  const hasCompletedCompetitions = completedCompetitions.length > 0;
+  const hasActiveCompetition = activeConfig !== null;
+  const needsFinalization = hasCompletedCompetitions || hasActiveCompetition;
 
   return (
     <div className="space-y-6">
-      {/* Alerta para competições completed */}
-      {completedCompetitions.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+      {/* Seção de Finalização de Competição */}
+      {needsFinalization && (
+        <div className={`border rounded-lg p-4 ${
+          hasCompletedCompetitions 
+            ? 'bg-amber-50 border-amber-200' 
+            : 'bg-green-50 border-green-200'
+        }`}>
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <h4 className="font-medium text-amber-800">
-              Competições Aguardando Finalização
+            {hasCompletedCompetitions ? (
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+            ) : (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            )}
+            <h4 className={`font-medium ${
+              hasCompletedCompetitions ? 'text-amber-800' : 'text-green-800'
+            }`}>
+              Finalização de Competição
             </h4>
           </div>
-          <p className="text-sm text-amber-700 mb-3">
-            {completedCompetitions.length} competição(ões) terminaram e precisam ser finalizadas manualmente para gerar o snapshot obrigatório.
-          </p>
-          <div className="space-y-2">
-            {completedCompetitions.map(config => (
-              <div key={config.id} className="text-sm text-amber-700">
-                • {formatDateForDisplay(config.start_date)} - {formatDateForDisplay(config.end_date)} (Status: {config.status})
+
+          {hasCompletedCompetitions ? (
+            <>
+              <p className="text-sm text-amber-700 mb-3">
+                {completedCompetitions.length} competição(ões) terminaram e precisam ser finalizadas para gerar o snapshot obrigatório.
+              </p>
+              <div className="space-y-2 mb-3">
+                {completedCompetitions.map(config => (
+                  <div key={config.id} className="text-sm text-amber-700">
+                    • {formatDateForDisplay(config.start_date)} - {formatDateForDisplay(config.end_date)} (Status: {config.status})
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          ) : hasActiveCompetition ? (
+            <p className="text-sm text-green-700 mb-3">
+              Há uma competição ativa que pode ser finalizada manualmente se necessário.
+            </p>
+          ) : null}
+
+          <Button 
+            onClick={onFinalize}
+            disabled={isActivating}
+            size="sm"
+            className={
+              hasCompletedCompetitions 
+                ? "bg-amber-600 hover:bg-amber-700" 
+                : "bg-green-600 hover:bg-green-700"
+            }
+          >
+            {isActivating ? (
+              <>
+                <div className="animate-spin h-4 w-4 border border-current border-t-transparent rounded-full mr-2" />
+                Finalizando...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Finalizar Competição
+              </>
+            )}
+          </Button>
         </div>
       )}
-
-      {/* Seção de Ativação */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-medium text-blue-800 mb-2">Ativação de Competições</h3>
-        <p className="text-sm text-blue-700 mb-3">
-          Clique no botão abaixo para verificar e ativar competições programadas que devem estar ativas.
-        </p>
-        <Button 
-          onClick={onActivate}
-          disabled={isActivating}
-          size="sm"
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          {isActivating ? (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              Verificando...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Verificar Status
-            </>
-          )}
-        </Button>
-      </div>
 
       {/* Competição Ativa */}
       {activeConfig && (

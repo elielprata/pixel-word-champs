@@ -77,8 +77,8 @@ export const WeeklyConfigModalTabs: React.FC<WeeklyConfigModalTabsProps> = ({
           isLoading={configsLoading}
           onEdit={onEdit}
           onDelete={onDelete}
-          onActivate={onActivate}
-          isActivating={isActivating}
+          onFinalize={onFinalize}
+          isActivating={isLoading}
         />
       </TabsContent>
 
