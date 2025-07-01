@@ -92,7 +92,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
     const IconComponent = iconConfig.icon;
     
     return (
-      <div className={`${iconConfig.colors.background} rounded-2xl p-4 shadow-lg ${iconConfig.colors.border} border relative overflow-hidden mb-3 no-zoom hover-lift`}>
+      <div className={`${iconConfig.colors.background} rounded-2xl p-4 shadow-lg ${iconConfig.colors.border} border relative overflow-hidden mb-3`}>
         {/* Decorações de fundo */}
         <div className="absolute top-2 right-2 opacity-20">
           <div className="flex items-center space-x-1">
@@ -108,7 +108,7 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
 
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-3">
-            <div className={`w-12 h-12 ${iconConfig.colors.primary} rounded-xl flex items-center justify-center shadow-md hover-glow`}>
+            <div className={`w-12 h-12 ${iconConfig.colors.primary} rounded-xl flex items-center justify-center shadow-md`}>
               <IconComponent className="text-white text-xl w-6 h-6" />
             </div>
             <div>
@@ -186,9 +186,9 @@ const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
   const IconComponent = iconConfig.icon;
   
   return (
-    <div className="flex justify-between items-center py-4 no-zoom hover-lift">
+    <div className="flex justify-between items-center py-4">
       <div className="flex items-center space-x-3">
-        <div className={`w-10 h-10 ${iconConfig.colors.primary} rounded-lg flex items-center justify-center shadow-sm hover-glow`}>
+        <div className={`w-10 h-10 ${iconConfig.colors.primary} rounded-lg flex items-center justify-center shadow-sm`}>
           <IconComponent className="text-white w-5 h-5" />
         </div>
         <div>

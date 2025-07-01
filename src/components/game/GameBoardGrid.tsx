@@ -1,5 +1,4 @@
-
-import React, { useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import GameCell from "./GameCell";
 import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from "@/utils/boardUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -38,48 +37,12 @@ const GameBoardGrid = ({
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
-  // Calcular largura máxima segura para evitar overflow - CORRIGIDO
-  const safeMaxWidth = Math.min(
-    isMobile ? 360 : 480,
-    window.innerWidth - 32 // 16px padding de cada lado
-  );
-
-  // Layout otimizado para 8x12 sem overflow - REFORÇADO
+  // Layout limpo - ajustado para 8x12
   const gridConfig = {
     gap: "1px",
-    maxWidth: `${safeMaxWidth}px`,
+    maxWidth: isMobile ? "360px" : "480px", // Aumentado para acomodar 12 colunas
     padding: "0px",
   };
-
-  // Verificar e corrigir overflow horizontal - REMOVIDO O BUG scale(0.95)
-  useEffect(() => {
-    if (boardRef.current) {
-      const boardElement = boardRef.current;
-      const boardActualWidth = boardElement.offsetWidth;
-      const parentWidth = boardElement.parentElement?.offsetWidth || window.innerWidth;
-      
-      // Log para debug
-      console.log('🎮 Tabuleiro dimensões:', {
-        actualWidth: boardActualWidth,
-        parentWidth,
-        safeMaxWidth,
-        cellSize,
-        gap: gridConfig.gap,
-        hasOverflow: boardActualWidth > parentWidth - 20
-      });
-      
-      // Detectar overflow e aplicar correção SEM SCALE (CORRIGIDO)
-      if (boardActualWidth > parentWidth - 20) {
-        console.warn('⚠️ Overflow detectado no tabuleiro, aplicando correção sem zoom');
-        boardElement.style.maxWidth = `${parentWidth - 20}px`;
-        // REMOVIDO: boardElement.style.transform = 'scale(0.95)';
-        // REMOVIDO: boardElement.style.transformOrigin = 'center';
-        // Aplicar apenas ajuste de largura máxima sem transforms
-        boardElement.style.width = '100%';
-        boardElement.style.minWidth = '300px';
-      }
-    }
-  }, [safeMaxWidth, cellSize]);
 
   // Função que indica se a célula está atualmente selecionada na linha visual
   const isCellCurrentlySelected = (row: number, col: number) =>
@@ -95,25 +58,16 @@ const GameBoardGrid = ({
   return (
     <div
       ref={boardRef}
-      className="grid mx-auto bg-white game-board-area no-zoom"
+      className="grid mx-auto bg-white"
       style={{
         gridTemplateColumns: `repeat(${boardWidth}, 1fr)`, // 12 colunas
         gridTemplateRows: `repeat(${size}, 1fr)`, // 8 linhas
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: "100%",
-        minWidth: "300px", // Largura mínima para funcionalidade
         touchAction: "none",
         padding: gridConfig.padding,
         background: "white",
-        // Proteção rigorosa contra overflow - REFORÇADA
-        overflow: "hidden",
-        boxSizing: "border-box",
-        overflowX: "hidden",
-        overflowY: "hidden",
-        // Proteção adicional SEM TRANSFORMS
-        willChange: "auto",
-        transform: "none", // GARANTIR que não há transform
       }}
       onTouchEnd={(e) => {
         e.preventDefault();

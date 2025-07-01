@@ -3,7 +3,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Letra Arena - Caça Palavras</title>
     <meta name="description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
     <meta name="author" content="Letra Arena" />
@@ -15,6 +15,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Letra Arena">
 
+    <!-- Prevent zoom on inputs -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <meta property="og:title" content="Letra Arena - Caça Palavras" />
     <meta property="og:description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
     <meta property="og:type" content="website" />
@@ -25,413 +28,44 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <style>
-      /* SISTEMA DE PROTEÇÃO ANTI-ZOOM FINAL - VERSÃO 4.0 DEFINITIVA */
+      /* Prevent text selection and improve mobile experience */
       * {
-        -webkit-touch-callout: none !important;
-        -webkit-user-select: none !important;
-        -khtml-user-select: none !important;
-        -moz-user-select: none !important;
-        -ms-user-select: none !important;
-        user-select: none !important;
-        -webkit-tap-highlight-color: transparent !important;
-        /* Prevenir todos os tipos de zoom */
-        touch-action: manipulation !important;
-        -webkit-text-size-adjust: 100% !important;
-        -ms-text-size-adjust: 100% !important;
-        text-size-adjust: 100% !important;
-        /* PROTEÇÃO FINAL: Eliminar todos os transforms */
-        transform: none !important;
-        -webkit-transform: none !important;
-        -ms-transform: none !important;
-        will-change: auto !important;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
       }
       
-      /* Permitir seleção para inputs essenciais */
+      /* Allow text selection for inputs and specific elements */
       input, textarea, [contenteditable] {
-        -webkit-user-select: text !important;
-        -moz-user-select: text !important;
-        -ms-user-select: text !important;
-        user-select: text !important;
-        touch-action: manipulation !important;
-        font-size: 16px !important;
-        /* Permitir transform apenas para inputs necessários */
-        transform: initial !important;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
       }
       
-      /* Configuração para scroll protegido com detecção rigorosa */
+      /* Prevent bounce effect on iOS */
       html, body {
-        overflow-x: hidden !important;
-        overflow-y: auto !important;
-        overscroll-behavior: contain !important;
-        height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        /* Proteção adicional */
-        -webkit-overflow-scrolling: touch !important;
-        scroll-behavior: smooth !important;
+        overflow-x: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
       }
       
       #root {
-        width: 100% !important;
-        min-height: 100vh !important;
-        overflow-x: hidden !important;
-        overflow-y: auto !important;
-        overscroll-behavior: contain !important;
-        -webkit-overflow-scrolling: touch !important;
-      }
-
-      /* Proteção máxima para áreas do jogo - VERSÃO FINAL */
-      .game-board-area {
-        touch-action: none !important;
-        overscroll-behavior: contain !important;
-        overflow: hidden !important;
-        -webkit-overflow-scrolling: auto !important;
-        /* Garantir que não há scroll interno */
-        max-width: 100vw !important;
-        box-sizing: border-box !important;
-        /* PROTEÇÃO FINAL: Zero transforms */
-        transform: none !important;
-        -webkit-transform: none !important;
-        will-change: auto !important;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
     </style>
   </head>
 
   <body>
     <div id="root"></div>
-    
-    <!-- Sistema de Proteção Anti-Zoom FINAL - VERSÃO 4.0 DEFINITIVA -->
-    <script>
-      // SISTEMA DE PROTEÇÃO FINAL - VERSÃO 4.0 DEFINITIVA
-      
-      // Prevenir zoom programático - REFORÇADO
-      document.addEventListener('gesturestart', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }, { passive: false });
-      
-      document.addEventListener('gesturechange', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }, { passive: false });
-      
-      document.addEventListener('gestureend', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }, { passive: false });
-      
-      // Prevenir zoom por Ctrl+scroll no desktop
-      document.addEventListener('wheel', function(e) {
-        if (e.ctrlKey) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }, { passive: false });
-      
-      // SISTEMA DE DETECÇÃO DE EXTREMIDADES INTELIGENTE FINAL
-      let isAtTop = true;
-      let isAtBottom = false;
-      let touchStartY = 0;
-      let touchStartX = 0;
-      let isInGameArea = false;
-      let lastScrollY = 0;
-      let scrollDirection = 'none';
-      let zoomDetectionActive = true;
-      
-      // Detecção melhorada de posição do scroll
-      function updateScrollPosition() {
-        const currentScrollY = window.scrollY;
-        const maxScrollY = document.documentElement.scrollHeight - window.innerHeight;
-        
-        isAtTop = currentScrollY <= 5; // Margem de 5px para o topo
-        isAtBottom = currentScrollY >= maxScrollY - 5; // Margem de 5px para o fundo
-        
-        // Detectar direção do scroll
-        if (currentScrollY > lastScrollY) {
-          scrollDirection = 'down';
-        } else if (currentScrollY < lastScrollY) {
-          scrollDirection = 'up';
-        }
-        
-        lastScrollY = currentScrollY;
-      }
-      
-      // Monitorar scroll com requestAnimationFrame para performance
-      let scrollUpdateScheduled = false;
-      function scheduleScrollUpdate() {
-        if (!scrollUpdateScheduled) {
-          scrollUpdateScheduled = true;
-          requestAnimationFrame(() => {
-            updateScrollPosition();
-            scrollUpdateScheduled = false;
-          });
-        }
-      }
-      
-      window.addEventListener('scroll', scheduleScrollUpdate, { passive: true });
-      updateScrollPosition();
-      
-      // DETECÇÃO DE ÁREA DO JOGO MELHORADA - VERSÃO FINAL
-      function detectGameArea(element) {
-        return element && (
-          element.classList.contains('game-board-area') ||
-          element.classList.contains('game-cell') ||
-          element.closest('.game-board-area') ||
-          element.closest('[data-cell]')
-        );
-      }
-      
-      // DETECTOR DE ZOOM VISUAL APRIMORADO - VERSÃO FINAL
-      function detectVisualZoom() {
-        const viewport = window.visualViewport;
-        if (viewport) {
-          const scale = viewport.scale;
-          if (scale && scale !== 1) {
-            console.warn('🚨 ZOOM VISUAL DETECTADO - CORREÇÃO AUTOMÁTICA:', {
-              scale: scale,
-              width: viewport.width,
-              height: viewport.height,
-              timestamp: new Date().toISOString()
-            });
-            
-            // Tentar restaurar zoom automaticamente
-            if (viewport.scale > 1.05) {
-              // Scroll suave para forçar restauração do zoom
-              window.scrollTo({
-                top: window.scrollY + 1,
-                behavior: 'auto'
-              });
-              setTimeout(() => {
-                window.scrollTo({
-                  top: window.scrollY - 1,
-                  behavior: 'auto'
-                });
-              }, 50);
-            }
-            
-            return true;
-          }
-        }
-        return false;
-      }
-      
-      // CONTROLE DE TOUCH INTELIGENTE COM PROTEÇÃO MÁXIMA - VERSÃO FINAL
-      let touchEventThrottled = false;
-      let lastTouchTime = 0;
-      const TOUCH_THROTTLE_MS = 16; // 60fps
-      
-      document.addEventListener('touchstart', function(e) {
-        const now = Date.now();
-        if (touchEventThrottled || now - lastTouchTime < TOUCH_THROTTLE_MS) return;
-        
-        lastTouchTime = now;
-        const touch = e.touches[0];
-        touchStartY = touch.clientY;
-        touchStartX = touch.clientX;
-        isInGameArea = detectGameArea(e.target);
-        
-        // Proteção rigorosa nas bordas laterais (aumentada para 60px)
-        const screenWidth = window.innerWidth;
-        const edgeBuffer = 60; // Aumentado para máxima proteção
-        
-        if (touch.clientX < edgeBuffer || touch.clientX > screenWidth - edgeBuffer) {
-          console.log('🛡️ Proteção de borda lateral ativada (60px)');
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-        
-        // Detectar zoom visual no início do toque
-        detectVisualZoom();
-        
-        // Proteção específica para área do jogo
-        if (isInGameArea) {
-          console.log('🎮 Toque em área do jogo detectado - proteção ativa');
-          return;
-        }
-      }, { passive: false });
-      
-      document.addEventListener('touchmove', function(e) {
-        const now = Date.now();
-        if (touchEventThrottled || now - lastTouchTime < TOUCH_THROTTLE_MS) return;
-        
-        // Throttling para performance
-        touchEventThrottled = true;
-        requestAnimationFrame(() => {
-          touchEventThrottled = false;
-        });
-        
-        const touch = e.touches[0];
-        const touchY = touch.clientY;
-        const touchX = touch.clientX;
-        const touchDeltaY = touchY - touchStartY;
-        const touchDeltaX = touchX - touchStartX;
-        
-        // PROTEÇÃO MÁXIMA PARA ÁREA DO JOGO - VERSÃO FINAL
-        if (isInGameArea) {
-          // Permitir apenas movimento mínimo para seleção de palavras
-          if (Math.abs(touchDeltaX) > 25 || Math.abs(touchDeltaY) > 25) {
-            console.log('🛡️ Movimento excessivo em área do jogo bloqueado');
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-          }
-        }
-        
-        // Detectar zoom visual durante movimento
-        if (detectVisualZoom()) {
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-        
-        // Proteção nas bordas com detecção inteligente - REFORÇADA (60px)
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight;
-        const edgeBuffer = 60; // Aumentado para máxima proteção
-        
-        // Bordas laterais - prevenir swipe para navegação
-        if (touch.clientX < edgeBuffer || touch.clientX > screenWidth - edgeBuffer) {
-          if (Math.abs(touchDeltaX) > Math.abs(touchDeltaY)) {
-            console.log('🛡️ Swipe lateral em borda bloqueado (60px)');
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-          }
-        }
-        
-        // Borda superior - prevenir pull-to-refresh REFORÇADO
-        if (isAtTop && touchDeltaY > 0 && touch.clientY < screenHeight * 0.25) {
-          console.log('🛡️ Pull-to-refresh bloqueado');
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-        
-        // Borda inferior - prevenir bounce REFORÇADO
-        if (isAtBottom && touchDeltaY < 0 && touch.clientY > screenHeight * 0.75) {
-          console.log('🛡️ Bounce inferior bloqueado');
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-        
-      }, { passive: false });
-      
-      // SISTEMA DE MONITORAMENTO DE ZOOM FINAL APRIMORADO
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
-          detectVisualZoom();
-        });
-        
-        window.visualViewport.addEventListener('scroll', () => {
-          detectVisualZoom();
-        });
-      }
-      
-      // DETECTOR DE TRANSFORMS RESTANTES FINAL - SISTEMA AUTOMÁTICO
-      function detectAndRemoveTransforms() {
-        const elements = document.querySelectorAll('*');
-        let transformsFound = 0;
-        let transformsRemoved = 0;
-        
-        elements.forEach(el => {
-          const computedStyle = window.getComputedStyle(el);
-          const transform = computedStyle.transform;
-          
-          if (transform && transform !== 'none' && !el.matches('input, textarea, [contenteditable]')) {
-            transformsFound++;
-            
-            // Remover transform automaticamente se estiver em área crítica
-            const isInCriticalArea = el.closest('.game-board-area') || 
-                                   el.classList.contains('game-cell') ||
-                                   el.closest('[data-cell]');
-            
-            if (isInCriticalArea) {
-              el.style.transform = 'none';
-              el.style.webkitTransform = 'none';
-              el.style.msTransform = 'none';
-              el.style.willChange = 'auto';
-              transformsRemoved++;
-              
-              console.log('✅ Transform removido automaticamente:', {
-                element: el.tagName,
-                classes: el.className,
-                originalTransform: transform,
-                timestamp: new Date().toISOString()
-              });
-            } else {
-              console.warn('⚠️ Transform detectado em área não crítica:', {
-                element: el.tagName,
-                classes: el.className,
-                transform: transform,
-                timestamp: new Date().toISOString()
-              });
-            }
-          }
-        });
-        
-        if (transformsFound > 0) {
-          console.log(`🔍 Scan de transforms concluído: ${transformsFound} encontrados, ${transformsRemoved} removidos automaticamente`);
-        }
-        
-        return { found: transformsFound, removed: transformsRemoved };
-      }
-      
-      // Executar detector de transforms a cada 3 segundos (otimizado)
-      setInterval(detectAndRemoveTransforms, 3000);
-      
-      // SISTEMA DE MÉTRICAS DE SUCESSO FINAL
-      let protectionMetrics = {
-        zoomDetections: 0,
-        edgeProtections: 0,
-        transformsRemoved: 0,
-        gameAreaProtections: 0,
-        startTime: Date.now()
-      };
-      
-      function logProtectionMetrics() {
-        const uptime = Date.now() - protectionMetrics.startTime;
-        console.log('📊 MÉTRICAS DE PROTEÇÃO ANTI-ZOOM:', {
-          ...protectionMetrics,
-          uptimeMs: uptime,
-          uptimeMinutes: Math.round(uptime / 60000),
-          successRate: '100%',
-          version: '4.0-FINAL',
-          timestamp: new Date().toISOString()
-        });
-      }
-      
-      // Log de métricas a cada 5 minutos
-      setInterval(logProtectionMetrics, 300000);
-      
-      // Inicializar sistema de proteção
-      console.log('🛡️ Sistema de proteção anti-zoom FINAL 4.0 inicializado', {
-        version: '4.0-FINAL-DEFINITIVO',
-        features: [
-          'anti-zoom-final-100%',
-          'edge-protection-60px',
-          'game-area-protection-max',
-          'visual-zoom-detection-auto-fix',
-          'transform-elimination-automatic',
-          'fallback-system-enhanced',
-          'metrics-monitoring',
-          'performance-optimized'
-        ],
-        edgeBuffer: '60px',
-        throttling: '60fps',
-        autoFix: true,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Executar verificação inicial após carregamento
-      setTimeout(() => {
-        const results = detectAndRemoveTransforms();
-        detectVisualZoom();
-        console.log('✅ Verificação inicial concluída - Sistema 100% operacional');
-      }, 1000);
-    </script>
-    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

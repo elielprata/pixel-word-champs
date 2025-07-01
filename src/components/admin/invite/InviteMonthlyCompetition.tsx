@@ -128,7 +128,7 @@ export const InviteMonthlyCompetition = () => {
         <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
         <h3 className="text-xl font-semibold text-slate-900 mb-2">Erro ao Carregar Dados</h3>
         <p className="text-slate-600 mb-6 max-w-md">{error}</p>
-        <Button onClick={refetch} size="lg" className="hover-lift">
+        <Button onClick={refetch} size="lg">
           Tentar Novamente
         </Button>
       </div>
@@ -144,7 +144,7 @@ export const InviteMonthlyCompetition = () => {
         <p className="text-slate-600 mb-6 max-w-md">
           Não foi possível encontrar ou criar a competição mensal
         </p>
-        <Button onClick={refetch} size="lg" className="hover-lift">
+        <Button onClick={refetch} size="lg">
           Tentar Novamente
         </Button>
       </div>
@@ -169,7 +169,7 @@ export const InviteMonthlyCompetition = () => {
           <Button
             onClick={handlePrizeConfigClick}
             variant="outline"
-            className="bg-white hover:bg-slate-50 hover-lift"
+            className="bg-white hover:bg-slate-50"
             disabled={!competition?.id}
           >
             Configurar Premiação
@@ -178,7 +178,7 @@ export const InviteMonthlyCompetition = () => {
             onClick={handleRefreshRanking}
             disabled={isRefreshing}
             variant="outline"
-            className="bg-white hover:bg-slate-50 hover-lift"
+            className="bg-white hover:bg-slate-50"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             Atualizar
@@ -186,7 +186,7 @@ export const InviteMonthlyCompetition = () => {
           <Button 
             onClick={exportWinners} 
             variant="outline"
-            className="bg-white hover:bg-slate-50 hover-lift"
+            className="bg-white hover:bg-slate-50"
           >
             <Trophy className="w-4 h-4 mr-2" />
             Exportar Ganhadores

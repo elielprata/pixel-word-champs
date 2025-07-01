@@ -45,7 +45,7 @@ const GameOverModal = ({
 
   if (isWatchingAd) {
     return (
-      <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in-pure modal-safe">
+      <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in">
         <Card className="w-80 m-4 bg-gradient-to-br from-gray-800 via-gray-900 to-black border-2 border-gray-700 shadow-2xl shadow-purple-900/30">
           <CardContent className="p-6 text-center relative">
             <Button 
@@ -73,7 +73,7 @@ const GameOverModal = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in-pure modal-safe">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
       {/* Efeitos de chuva melancólica de fundo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-10 left-1/4 w-1 h-8 bg-blue-400/30 rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '3s' }} />
@@ -84,7 +84,7 @@ const GameOverModal = ({
         <div className="absolute top-80 right-1/5 w-0.5 h-5 bg-gray-400/40 rounded-full animate-bounce" style={{ animationDelay: '0.8s', animationDuration: '3.8s' }} />
       </div>
 
-      <Card className="w-96 m-4 bg-gradient-to-br from-slate-700 via-gray-800 to-slate-900 border-2 border-slate-600 shadow-2xl shadow-blue-900/40 animate-fade-in-pure">
+      <Card className="w-96 m-4 bg-gradient-to-br from-slate-700 via-gray-800 to-slate-900 border-2 border-slate-600 shadow-2xl shadow-blue-900/40 animate-scale-in">
         <CardContent className="p-8 text-center relative overflow-hidden">
           {/* Fundo decorativo com nuvens escuras */}
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800/60 via-gray-800/40 to-slate-900/60 animate-pulse" />
@@ -110,20 +110,20 @@ const GameOverModal = ({
                 </div>
                 
                 {/* Gotas de "lágrima" */}
-                <div className="absolute -bottom-2 left-1/2 w-2 h-3 bg-blue-400/60 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
-                <div className="absolute -bottom-4 left-1/2 w-1.5 h-2 bg-blue-500/50 rounded-full animate-bounce" style={{ animationDelay: '0.8s' }} />
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-3 bg-blue-400/60 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
+                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 translate-x-2 w-1.5 h-2 bg-blue-500/50 rounded-full animate-bounce" style={{ animationDelay: '0.8s' }} />
               </div>
               
-              <h2 className="text-2xl font-bold text-gray-200 mb-2 animate-fade-in-pure">
+              <h2 className="text-2xl font-bold text-gray-200 mb-2 animate-fade-in">
                 ⏰ Ops! Tempo Esgotado! ⏰
               </h2>
-              <p className="text-gray-400 text-lg font-medium animate-fade-in-pure" style={{ animationDelay: '0.2s' }}>
+              <p className="text-gray-400 text-lg font-medium animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 Não desista! Você ainda pode continuar...
               </p>
             </div>
             
             {/* Seção da pontuação com tema melancólico */}
-            <div className="bg-gradient-to-r from-slate-600 to-gray-600 rounded-2xl p-6 mb-6 shadow-lg border border-slate-500/30 hover-lift transition-all duration-300 animate-fade-in-pure" style={{ animationDelay: '0.4s' }}>
+            <div className="bg-gradient-to-r from-slate-600 to-gray-600 rounded-2xl p-6 mb-6 shadow-lg border border-slate-500/30 transform hover:scale-105 transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center justify-center space-x-4 mb-4">
                 <CloudRain className="w-6 h-6 text-blue-300" />
                 <div>
@@ -147,12 +147,12 @@ const GameOverModal = ({
               </div>
             </div>
             
-            {/* Botões de ação com estilo melancólico gamificado - SEM TRANSFORMS */}
-            <div className="space-y-4 animate-fade-in-pure" style={{ animationDelay: '0.6s' }}>
+            {/* Botões de ação com estilo melancólico gamificado */}
+            <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
               {canRevive && (
                 <Button 
                   onClick={handleReviveClick}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl hover-lift transition-all duration-300 border-2 border-emerald-500/30"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-emerald-500/30"
                 >
                   <RotateCcw className="w-5 h-5 mr-3" />
                   <span className="font-bold">💪 Reviver (+30s)</span>
@@ -162,7 +162,7 @@ const GameOverModal = ({
               
               <Button 
                 onClick={handleStopGame}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl hover-lift transition-all duration-300 border-2 border-red-500/30"
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-red-500/30"
               >
                 <StopCircle className="w-5 h-5 mr-3" />
                 <span className="font-bold">Finalizar Jogo</span>

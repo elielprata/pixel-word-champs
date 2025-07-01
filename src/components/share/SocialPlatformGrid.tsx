@@ -1,5 +1,14 @@
 
 import React from 'react';
+import { useToast } from "@/hooks/use-toast";
+
+interface SocialPlatform {
+  name: string;
+  key: string;
+  icon: string;
+  color: string;
+  description: string;
+}
 
 interface SocialPlatformGridProps {
   shareText: string;
@@ -8,58 +17,132 @@ interface SocialPlatformGridProps {
 }
 
 const SocialPlatformGrid = ({ shareText, shareUrl, onCopy }: SocialPlatformGridProps) => {
-  const shareOnPlatform = (platform: string) => {
+  const { toast } = useToast();
+
+  const socialPlatforms: SocialPlatform[] = [
+    {
+      name: 'WhatsApp',
+      key: 'whatsapp',
+      icon: '💬',
+      color: 'bg-green-500 hover:bg-green-600',
+      description: 'Grupos'
+    },
+    {
+      name: 'Instagram',
+      key: 'instagram',
+      icon: '📸',
+      color: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
+      description: 'Stories'
+    },
+    {
+      name: 'TikTok',
+      key: 'tiktok',
+      icon: '🎵',
+      color: 'bg-black hover:bg-gray-800',
+      description: 'Vídeos'
+    },
+    {
+      name: 'Facebook',
+      key: 'facebook',
+      icon: '👥',
+      color: 'bg-blue-600 hover:bg-blue-700',
+      description: 'Amigos'
+    },
+    {
+      name: 'X',
+      key: 'twitter',
+      icon: '✖️',
+      color: 'bg-black hover:bg-gray-800',
+      description: 'Timeline'
+    },
+    {
+      name: 'Discord',
+      key: 'discord',
+      icon: '🎮',
+      color: 'bg-indigo-600 hover:bg-indigo-700',
+      description: 'Servers'
+    },
+    {
+      name: 'Telegram',
+      key: 'telegram',
+      icon: '✈️',
+      color: 'bg-blue-500 hover:bg-blue-600',
+      description: 'Chats'
+    }
+  ];
+
+  const shareOnSocial = (platform: string) => {
+    const fullMessage = `${shareText} ${shareUrl}`;
     const encodedText = encodeURIComponent(shareText);
     const encodedUrl = encodeURIComponent(shareUrl);
     
-    let url = '';
+    let shareUrlPlatform = '';
+    
     switch (platform) {
       case 'whatsapp':
-        url = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
+        shareUrlPlatform = `https://wa.me/?text=${encodeURIComponent(fullMessage)}`;
         break;
       case 'telegram':
-        url = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+        shareUrlPlatform = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
         break;
       case 'facebook':
-        url = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
+        shareUrlPlatform = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
         break;
       case 'twitter':
-        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
+        shareUrlPlatform = `https://twitter.com/intent/tweet?text=${encodeURIComponent(fullMessage)}`;
         break;
       case 'instagram':
         onCopy();
+        toast({
+          title: "📸 Texto copiado!",
+          description: "Cole no Instagram Stories ou posts para compartilhar!",
+        });
+        return;
+      case 'tiktok':
+        onCopy();
+        toast({
+          title: "🎵 Texto copiado!",
+          description: "Cole no TikTok e espalhe a diversão!",
+        });
+        return;
+      case 'discord':
+        onCopy();
+        toast({
+          title: "🎮 Texto copiado!",
+          description: "Cole no Discord e chame a galera!",
+        });
         return;
     }
     
-    if (url) {
-      window.open(url, '_blank', 'width=600,height=400');
+    if (shareUrlPlatform) {
+      window.open(shareUrlPlatform, '_blank', 'width=600,height=400');
     }
   };
 
-  const platforms = [
-    { id: 'whatsapp', name: 'WhatsApp', color: 'bg-green-500 hover:bg-green-600', emoji: '📱' },
-    { id: 'telegram', name: 'Telegram', color: 'bg-blue-500 hover:bg-blue-600', emoji: '✈️' },
-    { id: 'facebook', name: 'Facebook', color: 'bg-blue-600 hover:bg-blue-700', emoji: '👥' },
-    { id: 'twitter', name: 'Twitter', color: 'bg-sky-500 hover:bg-sky-600', emoji: '🐦' },
-    { id: 'instagram', name: 'Instagram', color: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600', emoji: '📸' }
-  ];
-
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {platforms.map((platform) => (
-        <button
-          key={platform.id}
-          onClick={() => shareOnPlatform(platform.id)}
-          className={`
-            flex items-center justify-center gap-2 p-3 rounded-xl text-white font-bold text-sm
-            transition-all duration-300 hover-lift active-press shadow-lg hover:shadow-xl
-            ${platform.color}
-          `}
-        >
-          <span className="text-lg">{platform.emoji}</span>
-          <span>{platform.name}</span>
-        </button>
-      ))}
+    <div className="space-y-1">
+      <div className="text-center">
+        <h4 className="text-xs font-semibold text-gray-800">Onde compartilhar?</h4>
+        <p className="text-xs text-gray-600">Escolha sua plataforma favorita</p>
+      </div>
+      
+      <div className="grid grid-cols-1 gap-1">
+        {socialPlatforms.map((platform) => (
+          <button
+            key={platform.key}
+            onClick={() => shareOnSocial(platform.key)}
+            className={`${platform.color} text-white p-1.5 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg active:scale-95`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{platform.icon}</span>
+              <div className="text-left flex-1">
+                <span className="block text-xs font-semibold">{platform.name}</span>
+                <span className="block text-xs opacity-80">{platform.description}</span>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

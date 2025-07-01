@@ -32,28 +32,15 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
-  // Detectar se é célula da borda para proteção extra
-  const isEdgeCell = rowIndex === 0 || colIndex === 0 || rowIndex === 7 || colIndex === 11;
-  
-  // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS COM THROTTLING
-  let eventThrottled = false;
-  
+  // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (eventThrottled) return;
-    
     e.preventDefault();
     e.stopPropagation();
-    
-    eventThrottled = true;
-    requestAnimationFrame(() => {
-      eventThrottled = false;
-    });
-    
     onCellStart(rowIndex, colIndex);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || eventThrottled) return;
+    if (!isDragging) return;
     
     const touch = e.touches[0];
     if (!touch) return;
@@ -70,8 +57,6 @@ const GameCell = ({
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (eventThrottled) return;
-    
     e.preventDefault();
     e.stopPropagation();
     onCellEnd();
@@ -93,24 +78,24 @@ const GameCell = ({
     onCellEnd();
   };
 
-  // Hierarquia visual GAMIFICADA - SEM TRANSFORMS que causam zoom
+  // Hierarquia visual gamificada: Dica > Palavra encontrada > Seleção atual > Normal
   const getCellClasses = () => {
-    const baseClasses = `flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer game-cell no-zoom ${isEdgeCell ? 'game-cell-edge' : ''}`;
+    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95";
     
     if (isHintHighlighted) {
-      return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse hover-glow`;
+      return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse`;
     }
     
     if (isPermanentlyMarked && wordColor) {
-      return `${baseClasses} ${wordColor} text-white shadow-lg animate-bounce-in hover-lift`;
+      return `${baseClasses} ${wordColor} text-white shadow-lg animate-bounce-in`;
     }
     
     if (isSelected) {
-      return `${baseClasses} bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-800 shadow-lg shadow-yellow-500/50 animate-pulse hover-glow`;
+      return `${baseClasses} bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-800 shadow-lg shadow-yellow-500/50 animate-pulse`;
     }
     
-    // Estado normal com hover sem zoom - EFEITOS ALTERNATIVOS
-    return `${baseClasses} bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 hover:from-gray-100 hover:to-gray-200 shadow-md hover-lift active-press`;
+    // Estado normal com gradiente sutil
+    return `${baseClasses} bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 hover:from-gray-100 hover:to-gray-200 shadow-md`;
   };
 
   const fontSize = isMobile
@@ -136,11 +121,6 @@ const GameCell = ({
         touchAction: "none",
         padding: 0,
         margin: 0,
-        // GARANTIR ZERO TRANSFORMS - PROTEÇÃO MÁXIMA
-        transform: "none !important",
-        willChange: "auto",
-        WebkitTransform: "none !important",
-        msTransform: "none !important",
       }}
       onMouseDown={handleMouseDown}
       onMouseEnter={handleMouseEnter}
@@ -151,7 +131,6 @@ const GameCell = ({
       data-cell="true"
       data-row={rowIndex}
       data-col={colIndex}
-      data-edge={isEdgeCell ? "true" : "false"}
     >
       {/* Letra principal */}
       <span className="relative z-10 font-bold tracking-tight">
@@ -172,14 +151,9 @@ const GameCell = ({
         </>
       )}
       
-      {/* Borda brilhante para seleção sem scale */}
+      {/* Borda brilhante para seleção */}
       {isSelected && (
         <div className="absolute inset-0 rounded-lg shadow-lg shadow-yellow-400/30 animate-pulse" />
-      )}
-      
-      {/* Indicador visual sutil para células das bordas */}
-      {isEdgeCell && (
-        <div className="absolute top-0 right-0 w-1 h-1 bg-blue-400/30 rounded-full" />
       )}
     </div>
   );

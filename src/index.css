@@ -49,72 +49,43 @@
 @layer base {
   * {
     @apply border-border;
-    /* PROTEÇÃO ANTI-ZOOM DEFINITIVA - 100% SEM TRANSFORMS DE SCALE */
-    touch-action: manipulation !important;
-    -webkit-touch-callout: none !important;
-    -webkit-user-select: none !important;
-    -khtml-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
-    -webkit-tap-highlight-color: transparent !important;
-    /* PROTEÇÃO 100%: Bloquear APENAS transforms de scale */
-    -webkit-transform-origin: center center !important;
-    transform-origin: center center !important;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-    /* Scroll protegido com suavidade restaurada */
-    overflow-x: hidden !important;
-    overflow-y: auto;
-    overscroll-behavior: contain !important;
-    /* Proteção adicional contra zoom */
-    -webkit-text-size-adjust: 100% !important;
-    -ms-text-size-adjust: 100% !important;
-    text-size-adjust: 100% !important;
   }
   
-  /* Permitir seleção apenas para inputs essenciais */
-  input, textarea, [contenteditable] {
-    -webkit-user-select: text !important;
-    -moz-user-select: text !important;
-    -ms-user-select: text !important;
-    user-select: text !important;
-    touch-action: manipulation !important;
-    font-size: 16px !important; /* Previne zoom automático no iOS */
+  /* Mobile optimizations */
+  .touch-action-none {
+    touch-action: none;
   }
-
-  /* Classe especial para áreas do jogo - PROTEÇÃO 100% DEFINITIVA */
-  .game-board-area {
-    touch-action: none !important;
-    overscroll-behavior: contain !important;
-    overflow: hidden !important;
-    -webkit-overflow-scrolling: auto !important;
+  
+  .select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
-
-  /* Classe para áreas que precisam de scroll normal */
-  .scroll-area {
-    touch-action: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: auto !important;
+  
+  /* Smooth scrolling for mobile */
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
-
-  /* PROTEÇÃO 100%: Proteção específica para células do tabuleiro */
-  .game-cell {
-    touch-action: none !important;
-    -webkit-touch-callout: none !important;
-    -webkit-user-select: none !important;
-    user-select: none !important;
+  
+  /* Custom button active states for mobile */
+  .btn-active:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
   }
-
-  /* PROTEÇÃO 100%: Proteção específica para células das bordas */
-  .game-cell-edge {
-    touch-action: none !important;
-    overscroll-behavior: none !important;
-    -webkit-overflow-scrolling: auto !important;
-    overflow: hidden !important;
+  
+  /* Prevent zoom on input focus in iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea {
+    font-size: 16px;
   }
 }
 
@@ -124,166 +95,5 @@
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
-  }
-
-  /* Utilitário para scroll protegido */
-  .protected-scroll {
-    overscroll-behavior: contain !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-
-  /* Utilitário para áreas sem zoom - PROTEÇÃO 100% DEFINITIVA */
-  .no-zoom {
-    touch-action: manipulation !important;
-    -webkit-touch-callout: none !important;
-    -webkit-tap-highlight-color: transparent !important;
-  }
-
-  /* EFEITOS SUAVES RESTAURADOS - SEM SCALE MAS COM FLUIDEZ */
-  .hover-lift {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-  
-  .hover-lift:hover {
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 6px 12px rgba(0, 0, 0, 0.1) !important;
-    filter: brightness(1.05) saturate(1.1) !important;
-    opacity: 0.95 !important;
-    border-color: rgba(139, 92, 246, 0.4) !important;
-  }
-
-  .hover-glow {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-  
-  .hover-glow:hover {
-    box-shadow: 0 0 30px rgba(139, 92, 246, 0.4), 0 0 15px rgba(139, 92, 246, 0.2) !important;
-    border-color: rgb(139, 92, 246) !important;
-    background-color: rgba(139, 92, 246, 0.06) !important;
-    filter: brightness(1.08) !important;
-  }
-
-  /* EFEITO DE ATIVAÇÃO SUAVE - SEM SCALE */
-  .active-press {
-    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-  
-  .active-press:active {
-    filter: brightness(0.9) saturate(1.2) !important;
-    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    opacity: 0.85 !important;
-  }
-
-  /* ANIMAÇÃO BOUNCE SUAVE RESTAURADA */
-  .animate-bounce-in {
-    animation: bounce-glow-suave 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
-  }
-
-  @keyframes bounce-glow-suave {
-    0% {
-      opacity: 0;
-      filter: blur(2px) brightness(0.8);
-      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-    }
-    50% {
-      opacity: 1;
-      filter: blur(0) brightness(1.1);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
-    }
-    100% {
-      opacity: 1;
-      filter: blur(0) brightness(1);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-  }
-
-  /* FADE-IN MAIS SUAVE E FLUIDO */
-  @keyframes fade-in-fluido {
-    0% {
-      opacity: 0;
-      filter: blur(1px) brightness(0.9);
-      transform: translateY(8px);
-    }
-    100% {
-      opacity: 1;
-      filter: blur(0) brightness(1);
-      transform: translateY(0);
-    }
-  }
-
-  .animate-fade-in-pure {
-    animation: fade-in-fluido 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-
-  /* ANIMAÇÕES DE PARTÍCULAS FLUIDAS PARA LOADING */
-  @keyframes float-suave {
-    0%, 100% {
-      transform: translateY(0) translateX(0);
-      opacity: 0.3;
-      filter: blur(0.5px);
-    }
-    50% {
-      transform: translateY(-12px) translateX(6px);
-      opacity: 0.8;
-      filter: blur(0);
-    }
-  }
-
-  .animate-float {
-    animation: float-suave 3s ease-in-out infinite !important;
-  }
-
-  /* PULSO MAIS ORGÂNICO */
-  @keyframes pulse-organico {
-    0%, 100% {
-      opacity: 1;
-      filter: brightness(1);
-    }
-    50% {
-      opacity: 0.7;
-      filter: brightness(1.15);
-    }
-  }
-
-  .animate-pulse-soft {
-    animation: pulse-organico 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
-  }
-
-  /* CÍRCULOS CONCÊNTRICOS SUAVES */
-  @keyframes ripple-suave {
-    0% {
-      opacity: 1;
-      transform: scale(0.8);
-      filter: blur(0);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(1.4);
-      filter: blur(1px);
-    }
-  }
-
-  .animate-ripple {
-    animation: ripple-suave 2s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
-  }
-
-  /* PROTEÇÃO EXTRA: Garantir que modais não causem zoom */
-  .modal-safe {
-    touch-action: manipulation !important;
-    overflow: hidden !important;
-  }
-
-  /* BOTÕES COM TRANSIÇÕES SUAVES */
-  .btn-smooth {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-
-  .btn-smooth:hover {
-    filter: brightness(1.1) saturate(1.1) !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
-  }
-
-  .btn-smooth:active {
-    filter: brightness(0.95) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
   }
 }

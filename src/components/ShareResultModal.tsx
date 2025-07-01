@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Share2, Copy, Check, X } from 'lucide-react';
@@ -94,10 +93,10 @@ const ShareResultModal = ({ competition, onClose }: ShareResultModalProps) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto animate-fade-in-pure modal-safe">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold text-gray-800">Compartilhar Resultado</h3>
-          <Button variant="ghost" size="icon" onClick={onClose} className="hover-lift">
+          <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -112,7 +111,7 @@ const ShareResultModal = ({ competition, onClose }: ShareResultModalProps) => {
         <Button 
           onClick={copyToClipboard}
           variant="outline"
-          className="w-full mb-4 hover-lift"
+          className="w-full mb-4"
         >
           {copied ? (
             <>
@@ -134,7 +133,7 @@ const ShareResultModal = ({ competition, onClose }: ShareResultModalProps) => {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => shareOnSocial('whatsapp')}
-              className="flex items-center justify-center gap-2 p-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-all duration-300 hover-lift active-press"
+              className="flex items-center justify-center gap-2 p-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
             >
               <span className="font-bold text-sm">W</span>
               <span className="text-sm">WhatsApp</span>
@@ -142,7 +141,7 @@ const ShareResultModal = ({ competition, onClose }: ShareResultModalProps) => {
             
             <button
               onClick={() => shareOnSocial('telegram')}
-              className="flex items-center justify-center gap-2 p-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 hover-lift active-press"
+              className="flex items-center justify-center gap-2 p-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
             >
               <span className="font-bold text-sm">T</span>
               <span className="text-sm">Telegram</span>
@@ -150,7 +149,7 @@ const ShareResultModal = ({ competition, onClose }: ShareResultModalProps) => {
             
             <button
               onClick={() => shareOnSocial('facebook')}
-              className="flex items-center justify-center gap-2 p-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 hover-lift active-press"
+              className="flex items-center justify-center gap-2 p-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             >
               <span className="font-bold text-sm">F</span>
               <span className="text-sm">Facebook</span>
@@ -158,7 +157,7 @@ const ShareResultModal = ({ competition, onClose }: ShareResultModalProps) => {
             
             <button
               onClick={() => shareOnSocial('twitter')}
-              className="flex items-center justify-center gap-2 p-3 rounded-lg bg-sky-500 text-white hover:bg-sky-600 transition-all duration-300 hover-lift active-press"
+              className="flex items-center justify-center gap-2 p-3 rounded-lg bg-sky-500 text-white hover:bg-sky-600 transition-colors"
             >
               <span className="font-bold text-sm">X</span>
               <span className="text-sm">Twitter</span>
@@ -167,7 +166,7 @@ const ShareResultModal = ({ competition, onClose }: ShareResultModalProps) => {
           
           <button
             onClick={() => shareOnSocial('instagram')}
-            className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover-lift active-press"
+            className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-colors"
           >
             <span className="font-bold text-sm">IG</span>
             <span className="text-sm">Instagram</span>
