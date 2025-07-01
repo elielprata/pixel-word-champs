@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 // ✅ SISTEMA DE DETECÇÃO DE BORDA GLOBAL REUTILIZÁVEL
 
 export interface EdgeThresholds {
