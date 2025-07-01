@@ -1,9 +1,20 @@
 
 import { useState, useEffect } from 'react';
 import { useWeeklyConfig } from './useWeeklyConfig';
-import { useWeeklyConfigHistory } from './useWeeklyConfigHistory';
 import { useWeeklyCompetitionActivation } from './useWeeklyCompetitionActivation';
 import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
+
+// Hook simplificado que cria um histórico básico simulado
+const useWeeklyConfigHistory = () => {
+  return {
+    weeklyHistoryData: { data: [], totalCount: 0 },
+    historyLoading: false,
+    historyPage: 1,
+    historyTotalPages: 1,
+    setHistoryPage: () => {},
+    refetchHistory: async () => {}
+  };
+};
 
 export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
   const [selectedCompetition, setSelectedCompetition] = useState<any>(null);

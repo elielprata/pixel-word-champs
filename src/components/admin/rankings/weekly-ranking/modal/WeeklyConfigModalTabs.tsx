@@ -6,17 +6,7 @@ import { WeeklyConfigScheduler } from '../WeeklyConfigScheduler';
 import { WeeklyConfigFinalizer } from '../WeeklyConfigFinalizer';
 import { WeeklyConfigHistory } from '../WeeklyConfigHistory';
 import { AutomationMonitoring } from '../AutomationMonitoring';
-
-interface WeeklyConfig {
-  id: string;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'scheduled' | 'ended' | 'completed';
-  activated_at?: string;
-  completed_at?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { WeeklyConfig } from '@/types/weeklyConfig';
 
 interface WeeklyConfigModalTabsProps {
   activeConfig: WeeklyConfig | null;
@@ -66,14 +56,14 @@ export const WeeklyConfigModalTabs: React.FC<WeeklyConfigModalTabsProps> = ({
   onPageChange
 }) => {
   const hasNoActiveOrScheduled = !activeConfig && scheduledConfigs.length === 0;
-  const hasEndedCompetitions = scheduledConfigs.some(c => c.status === 'ended');
+  const hasCompletedCompetitions = scheduledConfigs.some(c => c.status === 'completed');
 
   return (
     <Tabs defaultValue="overview" className="w-full">
       <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="overview">Visão Geral</TabsTrigger>
         <TabsTrigger value="schedule">Agendar Nova</TabsTrigger>
-        <TabsTrigger value="finalize" className={hasEndedCompetitions ? "bg-amber-100" : ""}>
+        <TabsTrigger value="finalize" className={hasCompletedCompetitions ? "bg-amber-100" : ""}>
           Finalizar Atual
         </TabsTrigger>
         <TabsTrigger value="automation">Monitoramento</TabsTrigger>

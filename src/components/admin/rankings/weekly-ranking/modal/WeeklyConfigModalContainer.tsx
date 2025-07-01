@@ -7,17 +7,7 @@ import { DeleteCompletedCompetitionModal } from '../DeleteCompletedCompetitionMo
 import { WeeklyConfigModalHeader } from './WeeklyConfigModalHeader';
 import { WeeklyConfigModalTabs } from './WeeklyConfigModalTabs';
 import { WeeklyConfigModalActions } from './WeeklyConfigModalActions';
-
-interface WeeklyConfig {
-  id: string;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'scheduled' | 'ended' | 'completed';
-  activated_at?: string;
-  completed_at?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { WeeklyConfig } from '@/types/weeklyConfig';
 
 interface WeeklyConfigModalContainerProps {
   open: boolean;

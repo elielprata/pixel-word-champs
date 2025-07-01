@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { WeeklyConfig } from '@/types/weeklyConfig';
-import { WeeklyConfigService } from '@/services/weeklyConfigService';
+import { WeeklyConfigService } from '@/services/WeeklyConfigService';
 import { useWeeklyConfigOperations } from './useWeeklyConfigOperations';
 import { calculateNextDates } from '@/utils/weeklyConfigCalculations';
 

@@ -23,8 +23,9 @@ export const WeeklyConfigFinalizer: React.FC<WeeklyConfigFinalizerProps> = ({
 }) => {
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
   
-  const endedCompetitions = scheduledConfigs.filter(config => config.status === 'ended');
-  const hasEndedCompetitions = endedCompetitions.length > 0;
+  // Mudar de 'ended' para 'completed' - competições que terminaram mas precisam de snapshot
+  const completedCompetitions = scheduledConfigs.filter(config => config.status === 'completed');
+  const hasCompletedCompetitions = completedCompetitions.length > 0;
 
   const handleFinalizationClick = () => {
     setConfirmationDialogOpen(true);
@@ -47,8 +48,8 @@ export const WeeklyConfigFinalizer: React.FC<WeeklyConfigFinalizerProps> = ({
         </p>
       </div>
 
-      {/* Competições que terminaram (ended) */}
-      {hasEndedCompetitions && (
+      {/* Competições que terminaram (completed) */}
+      {hasCompletedCompetitions && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
@@ -60,7 +61,7 @@ export const WeeklyConfigFinalizer: React.FC<WeeklyConfigFinalizerProps> = ({
             As seguintes competições terminaram e precisam ser finalizadas para gerar o snapshot obrigatório:
           </p>
           <div className="space-y-2 mb-4">
-            {endedCompetitions.map(config => (
+            {completedCompetitions.map(config => (
               <div key={config.id} className="bg-white rounded p-3 border border-amber-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -99,7 +100,7 @@ export const WeeklyConfigFinalizer: React.FC<WeeklyConfigFinalizerProps> = ({
       )}
 
       {/* Competição ativa que pode ser finalizada */}
-      {activeConfig && !hasEndedCompetitions && (
+      {activeConfig && !hasCompletedCompetitions && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-3">
             <Trophy className="h-5 w-5 text-green-600" />
@@ -146,7 +147,7 @@ export const WeeklyConfigFinalizer: React.FC<WeeklyConfigFinalizerProps> = ({
       )}
 
       {/* Estado quando não há nada para finalizar */}
-      {!activeConfig && !hasEndedCompetitions && (
+      {!activeConfig && !hasCompletedCompetitions && (
         <div className="p-8 text-center text-gray-500">
           <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
           <p className="font-medium">Nenhuma competição para finalizar</p>
@@ -166,7 +167,7 @@ export const WeeklyConfigFinalizer: React.FC<WeeklyConfigFinalizerProps> = ({
         onConfirm={handleConfirmFinalization}
         isLoading={isLoading}
         activeConfig={activeConfig}
-        endedCompetitions={endedCompetitions}
+        endedCompetitions={completedCompetitions}
       />
     </div>
   );

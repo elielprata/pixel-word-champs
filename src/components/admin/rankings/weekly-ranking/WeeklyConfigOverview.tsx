@@ -33,13 +33,13 @@ export const WeeklyConfigOverview: React.FC<WeeklyConfigOverviewProps> = ({
     );
   }
 
-  // Verificar se há competições que terminaram (ended) aguardando finalização
-  const endedCompetitions = scheduledConfigs.filter(config => config.status === 'ended');
+  // Verificar se há competições que terminaram (completed) aguardando finalização
+  const completedCompetitions = scheduledConfigs.filter(config => config.status === 'completed');
 
   return (
     <div className="space-y-6">
-      {/* Alerta para competições ended */}
-      {endedCompetitions.length > 0 && (
+      {/* Alerta para competições completed */}
+      {completedCompetitions.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
@@ -48,10 +48,10 @@ export const WeeklyConfigOverview: React.FC<WeeklyConfigOverviewProps> = ({
             </h4>
           </div>
           <p className="text-sm text-amber-700 mb-3">
-            {endedCompetitions.length} competição(ões) terminaram e precisam ser finalizadas manualmente para gerar o snapshot obrigatório.
+            {completedCompetitions.length} competição(ões) terminaram e precisam ser finalizadas manualmente para gerar o snapshot obrigatório.
           </p>
           <div className="space-y-2">
-            {endedCompetitions.map(config => (
+            {completedCompetitions.map(config => (
               <div key={config.id} className="text-sm text-amber-700">
                 • {formatDateForDisplay(config.start_date)} - {formatDateForDisplay(config.end_date)} (Status: {config.status})
               </div>
@@ -116,7 +116,7 @@ export const WeeklyConfigOverview: React.FC<WeeklyConfigOverviewProps> = ({
       )}
 
       {/* Estado vazio */}
-      {!activeConfig && scheduledConfigs.filter(config => config.status === 'scheduled').length === 0 && endedCompetitions.length === 0 && (
+      {!activeConfig && scheduledConfigs.filter(config => config.status === 'scheduled').length === 0 && completedCompetitions.length === 0 && (
         <div className="p-8 text-center text-gray-500">
           <p>Nenhuma competição configurada ainda.</p>
           <p className="text-sm mt-1">Use a aba "Agendar Nova" para criar uma competição.</p>
