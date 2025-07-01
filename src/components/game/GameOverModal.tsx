@@ -123,7 +123,7 @@ const GameOverModal = ({
             </div>
             
             {/* Seção da pontuação com tema melancólico */}
-            <div className="bg-gradient-to-r from-slate-600 to-gray-600 rounded-2xl p-6 mb-6 shadow-lg border border-slate-500/30 transform hover:scale-105 transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="bg-gradient-to-r from-slate-600 to-gray-600 rounded-2xl p-6 mb-6 shadow-lg border border-slate-500/30 hover-lift transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center justify-center space-x-4 mb-4">
                 <CloudRain className="w-6 h-6 text-blue-300" />
                 <div>
@@ -147,12 +147,12 @@ const GameOverModal = ({
               </div>
             </div>
             
-            {/* Botões de ação com estilo melancólico gamificado */}
+            {/* Botões de ação com estilo melancólico gamificado - SEM TRANSFORMS */}
             <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
               {canRevive && (
                 <Button 
                   onClick={handleReviveClick}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-emerald-500/30"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl hover-lift transition-all duration-300 border-2 border-emerald-500/30"
                 >
                   <RotateCcw className="w-5 h-5 mr-3" />
                   <span className="font-bold">💪 Reviver (+30s)</span>
@@ -162,7 +162,7 @@ const GameOverModal = ({
               
               <Button 
                 onClick={handleStopGame}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-red-500/30"
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl hover-lift transition-all duration-300 border-2 border-red-500/30"
               >
                 <StopCircle className="w-5 h-5 mr-3" />
                 <span className="font-bold">Finalizar Jogo</span>

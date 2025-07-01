@@ -49,7 +49,7 @@
 @layer base {
   * {
     @apply border-border;
-    /* Anti-zoom robusto - MÁXIMA PROTEÇÃO FINAL */
+    /* PROTEÇÃO ANTI-ZOOM DEFINITIVA - 100% SEM TRANSFORMS */
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
@@ -58,7 +58,7 @@
     -ms-user-select: none !important;
     user-select: none !important;
     -webkit-tap-highlight-color: transparent !important;
-    /* PROTEÇÃO FINAL: Garantir que transforms não causem zoom */
+    /* PROTEÇÃO 100%: Garantir ZERO transforms */
     transform: none !important;
     -webkit-transform: none !important;
     -ms-transform: none !important;
@@ -90,13 +90,13 @@
     transform: initial !important;
   }
 
-  /* Classe especial para áreas do jogo - PROTEÇÃO MÁXIMA FINAL */
+  /* Classe especial para áreas do jogo - PROTEÇÃO 100% DEFINITIVA */
   .game-board-area {
     touch-action: none !important;
     overscroll-behavior: contain !important;
     overflow: hidden !important;
     -webkit-overflow-scrolling: auto !important;
-    /* Proteção adicional contra transforms */
+    /* Proteção 100% contra transforms */
     will-change: auto !important;
     -webkit-transform: none !important;
     transform: none !important;
@@ -110,28 +110,27 @@
     overscroll-behavior: auto !important;
   }
 
-  /* PROTEÇÃO FINAL: Proteção específica para células do tabuleiro */
+  /* PROTEÇÃO 100%: Proteção específica para células do tabuleiro */
   .game-cell {
     touch-action: none !important;
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
     user-select: none !important;
-    /* Remover qualquer possibilidade de zoom por transform */
+    /* GARANTIR 100% - ZERO transforms */
     transform: none !important;
     will-change: auto !important;
-    /* Garantir que não há scale */
     -webkit-transform: none !important;
     -ms-transform: none !important;
   }
 
-  /* PROTEÇÃO FINAL: Proteção específica para células das bordas */
+  /* PROTEÇÃO 100%: Proteção específica para células das bordas */
   .game-cell-edge {
     touch-action: none !important;
     overscroll-behavior: none !important;
     /* Proteção extra para bordas */
     -webkit-overflow-scrolling: auto !important;
     overflow: hidden !important;
-    /* Anti-transform rigoroso */
+    /* Anti-transform 100% */
     transform: none !important;
     -webkit-transform: none !important;
     -ms-transform: none !important;
@@ -152,32 +151,31 @@
     -webkit-overflow-scrolling: touch !important;
   }
 
-  /* Utilitário para áreas sem zoom - MÁXIMA PROTEÇÃO FINAL */
+  /* Utilitário para áreas sem zoom - PROTEÇÃO 100% DEFINITIVA */
   .no-zoom {
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
     -webkit-tap-highlight-color: transparent !important;
-    /* Remover transforms que podem causar zoom */
+    /* GARANTIR 100% - ZERO transforms */
     transform: none !important;
     will-change: auto !important;
-    /* Garantir que não há scale */
     -webkit-transform: none !important;
     -ms-transform: none !important;
   }
 
-  /* EFEITOS ALTERNATIVOS SEM ZOOM - VERSÃO FINAL */
+  /* EFEITOS ALTERNATIVOS 100% SEM ZOOM - VERSÃO DEFINITIVA */
   .hover-lift {
     transition: box-shadow 0.2s ease, opacity 0.2s ease, border-color 0.2s ease !important;
-    /* GARANTIR que não há transform */
+    /* GARANTIR 100% que não há transform */
     transform: none !important;
     -webkit-transform: none !important;
     -ms-transform: none !important;
   }
   
   .hover-lift:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important;
-    opacity: 0.95 !important;
-    /* NÃO usar transform */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18) !important;
+    opacity: 0.92 !important;
+    /* GARANTIR 100% - NÃO usar transform */
     transform: none !important;
     -webkit-transform: none !important;
     -ms-transform: none !important;
@@ -185,47 +183,47 @@
 
   .hover-glow {
     transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease !important;
-    /* GARANTIR que não há transform */
+    /* GARANTIR 100% que não há transform */
     transform: none !important;
     -webkit-transform: none !important;
     -ms-transform: none !important;
   }
   
   .hover-glow:hover {
-    box-shadow: 0 0 24px rgba(139, 92, 246, 0.4) !important;
+    box-shadow: 0 0 28px rgba(139, 92, 246, 0.5) !important;
     border-color: rgb(139, 92, 246) !important;
-    background-color: rgba(139, 92, 246, 0.05) !important;
-    /* NÃO usar transform */
+    background-color: rgba(139, 92, 246, 0.08) !important;
+    /* GARANTIR 100% - NÃO usar transform */
     transform: none !important;
     -webkit-transform: none !important;
     -ms-transform: none !important;
   }
 
-  /* EFEITO DE ATIVAÇÃO SEM SCALE - VERSÃO FINAL */
+  /* EFEITO DE ATIVAÇÃO 100% SEM SCALE - VERSÃO DEFINITIVA */
   .active-press {
     transition: opacity 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease !important;
-    /* GARANTIR que não há transform */
+    /* GARANTIR 100% que não há transform */
     transform: none !important;
     -webkit-transform: none !important;
     -ms-transform: none !important;
   }
   
   .active-press:active {
-    opacity: 0.8 !important;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.15) !important;
-    background-color: rgba(0, 0, 0, 0.05) !important;
-    /* NÃO usar transform */
+    opacity: 0.75 !important;
+    box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.2) !important;
+    background-color: rgba(0, 0, 0, 0.08) !important;
+    /* GARANTIR 100% - NÃO usar transform */
     transform: none !important;
     -webkit-transform: none !important;
     -ms-transform: none !important;
   }
 
-  /* ANIMAÇÃO BOUNCE SEM SCALE - VERSÃO FINAL */
+  /* ANIMAÇÃO BOUNCE 100% SEM SCALE - VERSÃO DEFINITIVA */
   .animate-bounce-in {
-    animation: bounce-glow-final 0.6s ease-out !important;
+    animation: bounce-glow-definitivo 0.6s ease-out !important;
   }
 
-  @keyframes bounce-glow-final {
+  @keyframes bounce-glow-definitivo {
     0% {
       opacity: 0;
       box-shadow: 0 0 0 rgba(0, 0, 0, 0);
@@ -233,17 +231,35 @@
     }
     50% {
       opacity: 1;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
       background-color: rgba(255, 255, 255, 1);
     }
     100% {
       opacity: 1;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
       background-color: rgba(255, 255, 255, 0.95);
     }
   }
 
-  /* PROTEÇÃO ADICIONAL: Remover qualquer transform restante */
+  /* KEYFRAME SCALE-IN SEM SCALE - ALTERNATIVA 100% */
+  @keyframes scale-in-alternative {
+    0% {
+      opacity: 0;
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      filter: blur(2px);
+    }
+    100% {
+      opacity: 1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      filter: blur(0);
+    }
+  }
+
+  .animate-scale-in {
+    animation: scale-in-alternative 0.3s ease-out !important;
+  }
+
+  /* PROTEÇÃO 100%: Remover qualquer transform restante */
   .transform-none-final {
     transform: none !important;
     -webkit-transform: none !important;

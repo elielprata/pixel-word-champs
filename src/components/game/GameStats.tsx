@@ -34,11 +34,11 @@ const GameStats = ({ timeLeft, hintsUsed, levelScore, onUseHint }: GameStatsProp
 
   return (
     <div className="flex justify-between items-center gap-3">
-      {/* Botão de Dica Gamificado */}
+      {/* Botão de Dica Gamificado - SEM TRANSFORMS */}
       <Button 
         size="sm" 
         variant="outline" 
-        className={`rounded-xl h-10 px-4 font-bold shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+        className={`rounded-xl h-10 px-4 font-bold shadow-lg transition-all duration-300 hover-lift active-press ${
           hasHintsAvailable 
             ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 hover:from-yellow-500 hover:to-orange-600 shadow-yellow-500/30' 
             : 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
@@ -70,8 +70,8 @@ const GameStats = ({ timeLeft, hintsUsed, levelScore, onUseHint }: GameStatsProp
         </span>
       </div>
       
-      {/* Pontuação Gamificada */}
-      <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 px-4 py-2 rounded-xl shadow-lg text-white font-bold shadow-amber-500/30">
+      {/* Pontuação Gamificada - SEM TRANSFORMS */}
+      <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 px-4 py-2 rounded-xl shadow-lg text-white font-bold shadow-amber-500/30 relative">
         <Trophy className="w-4 h-4" />
         <span className="text-sm font-mono">
           {levelScore}
