@@ -245,7 +245,7 @@ export type Database = {
             foreignKeyName: "competition_participations_competition_id_fkey"
             columns: ["competition_id"]
             isOneToOne: false
-            referencedRelation: "competitions"
+            referencedRelation: "custom_competitions"
             referencedColumns: ["id"]
           },
         ]
