@@ -1,5 +1,5 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import GameCell from "./GameCell";
 import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from "@/utils/boardUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -38,12 +38,46 @@ const GameBoardGrid = ({
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
-  // Layout limpo - ajustado para 8x12
+  // Calcular largura máxima segura para evitar overflow
+  const safeMaxWidth = Math.min(
+    isMobile ? 360 : 480,
+    window.innerWidth - 32 // 16px padding de cada lado
+  );
+
+  // Layout otimizado para 8x12 sem overflow
   const gridConfig = {
     gap: "1px",
-    maxWidth: isMobile ? "360px" : "480px", // Aumentado para acomodar 12 colunas
+    maxWidth: `${safeMaxWidth}px`,
     padding: "0px",
   };
+
+  // Verificar e corrigir overflow horizontal
+  useEffect(() => {
+    if (boardRef.current) {
+      const boardElement = boardRef.current;
+      const computedStyle = window.getComputedStyle(boardElement);
+      const boardActualWidth = boardElement.offsetWidth;
+      const parentWidth = boardElement.parentElement?.offsetWidth || window.innerWidth;
+      
+      // Log para debug
+      console.log('🎮 Tabuleiro dimensões:', {
+        actualWidth: boardActualWidth,
+        parentWidth,
+        safeMaxWidth,
+        cellSize,
+        gap: gridConfig.gap,
+        hasOverflow: boardActualWidth > parentWidth - 20
+      });
+      
+      // Detectar overflow e aplicar correção
+      if (boardActualWidth > parentWidth - 20) {
+        console.warn('⚠️ Overflow detectado no tabuleiro, aplicando correção');
+        boardElement.style.maxWidth = `${parentWidth - 20}px`;
+        boardElement.style.transform = 'scale(0.95)';
+        boardElement.style.transformOrigin = 'center';
+      }
+    }
+  }, [safeMaxWidth, cellSize]);
 
   // Função que indica se a célula está atualmente selecionada na linha visual
   const isCellCurrentlySelected = (row: number, col: number) =>
@@ -66,9 +100,19 @@ const GameBoardGrid = ({
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: "100%",
-        touchAction: "none", // Bloqueio total para o tabuleiro do jogo
+        minWidth: "300px", // Largura mínima para funcionalidade
+        touchAction: "none",
         padding: gridConfig.padding,
         background: "white",
+        // Proteção rigorosa contra overflow
+        overflow: "hidden",
+        boxSizing: "border-box",
+        // Garantir que não transborde
+        overflowX: "hidden",
+        overflowY: "hidden",
+        // Proteção adicional
+        willChange: "auto",
+        transform: "none",
       }}
       onTouchEnd={(e) => {
         e.preventDefault();

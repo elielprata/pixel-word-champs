@@ -49,45 +49,50 @@
 @layer base {
   * {
     @apply border-border;
-    /* Anti-zoom robusto */
+    /* Anti-zoom robusto - FORTALECIDO */
     touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-    /* Permitir scroll normal com proteção nas extremidades */
+    /* Scroll protegido com detecção rigorosa */
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    /* Proteção adicional contra zoom */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   
-  /* Otimizações móveis mantidas */
-  .smooth-scroll {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-  }
-  
-  .btn-active:active {
-    transform: scale(0.95);
-    transition: transform 0.1s ease;
-  }
-  
-  /* Prevenir zoom no foco de inputs iOS mas manter funcionalidade */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  textarea {
-    font-size: 16px; /* Previne zoom automático no iOS */
+  /* Permitir seleção apenas para inputs essenciais */
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
     touch-action: manipulation;
+    font-size: 16px; /* Previne zoom automático no iOS */
   }
 
-  /* Classe especial para áreas do jogo - bloqueio total */
+  /* Classe especial para áreas do jogo - PROTEÇÃO MÁXIMA */
   .game-board-area {
     touch-action: none !important;
     overscroll-behavior: contain !important;
     overflow: hidden !important;
     -webkit-overflow-scrolling: auto;
+    /* Proteção adicional contra transforms */
+    will-change: auto;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
 
   /* Classe para áreas que precisam de scroll normal */
@@ -95,6 +100,26 @@
     touch-action: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: auto;
+  }
+
+  /* NOVA: Proteção específica para células do tabuleiro */
+  .game-cell {
+    touch-action: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    /* Remover qualquer possibilidade de zoom por transform */
+    transform: none !important;
+    will-change: auto;
+  }
+
+  /* NOVA: Proteção específica para células das bordas */
+  .game-cell-edge {
+    touch-action: none !important;
+    overscroll-behavior: none !important;
+    /* Proteção extra para bordas */
+    -webkit-overflow-scrolling: auto !important;
+    overflow: hidden !important;
   }
 }
 
@@ -112,8 +137,42 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Utilitário para áreas sem zoom */
+  /* Utilitário para áreas sem zoom - FORTALECIDO */
   .no-zoom {
     touch-action: manipulation !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    /* Remover transforms que podem causar zoom */
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  /* NOVA: Alternativas aos hover:scale sem zoom */
+  .hover-lift {
+    transition: box-shadow 0.2s ease, opacity 0.2s ease;
+  }
+  
+  .hover-lift:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0.95;
+  }
+
+  .hover-glow {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    border-color: rgb(139, 92, 246);
+  }
+
+  /* NOVA: Efeito de ativação sem scale */
+  .active-press {
+    transition: opacity 0.1s ease, box-shadow 0.1s ease;
+  }
+  
+  .active-press:active {
+    opacity: 0.8;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }

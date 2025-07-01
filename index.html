@@ -25,7 +25,7 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <style>
-      /* Anti-zoom e scroll inteligente - apenas nas extremidades */
+      /* Proteção anti-zoom e scroll inteligente - VERSÃO FORTALECIDA */
       * {
         -webkit-touch-callout: none;
         -webkit-user-select: none;
@@ -34,27 +34,34 @@
         -ms-user-select: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
-        /* Prevenir zoom por double-tap */
+        /* Prevenir todos os tipos de zoom */
         touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
       }
       
-      /* Permitir seleção para inputs */
+      /* Permitir seleção para inputs essenciais */
       input, textarea, [contenteditable] {
         -webkit-user-select: text;
         -moz-user-select: text;
         -ms-user-select: text;
         user-select: text;
         touch-action: manipulation;
+        font-size: 16px;
       }
       
-      /* Configuração para scroll normal mas com proteção nas extremidades */
+      /* Configuração para scroll protegido com detecção rigorosa */
       html, body {
-        overflow-x: hidden; /* Prevenir scroll horizontal */
-        overflow-y: auto; /* Permitir scroll vertical normal */
-        overscroll-behavior: contain; /* Prevenir pull-to-refresh e bounce */
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
         height: 100%;
         margin: 0;
         padding: 0;
+        /* Proteção adicional */
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
       }
       
       #root {
@@ -66,11 +73,15 @@
         -webkit-overflow-scrolling: touch;
       }
 
-      /* Proteção específica para áreas do jogo */
+      /* Proteção máxima para áreas do jogo */
       .game-board-area {
         touch-action: none !important;
-        overscroll-behavior: contain;
-        overflow: hidden;
+        overscroll-behavior: contain !important;
+        overflow: hidden !important;
+        -webkit-overflow-scrolling: auto !important;
+        /* Garantir que não há scroll interno */
+        max-width: 100vw;
+        box-sizing: border-box;
       }
     </style>
   </head>
@@ -78,8 +89,10 @@
   <body>
     <div id="root"></div>
     
-    <!-- Script para proteção anti-zoom e controle de extremidades -->
+    <!-- Script para proteção anti-zoom e controle inteligente de extremidades -->
     <script>
+      // SISTEMA DE PROTEÇÃO FORTALECIDO
+      
       // Prevenir zoom programático
       document.addEventListener('gesturestart', function(e) {
         e.preventDefault();
@@ -100,44 +113,191 @@
         }
       }, { passive: false });
       
-      // Controle inteligente de scroll nas extremidades
+      // SISTEMA DE DETECÇÃO DE EXTREMIDADES INTELIGENTE
       let isAtTop = true;
+      let isAtBottom = false;
       let touchStartY = 0;
+      let touchStartX = 0;
+      let isInGameArea = false;
+      let lastScrollY = 0;
+      let scrollDirection = 'none';
       
-      // Detectar posição do scroll
+      // Detecção melhorada de posição do scroll
       function updateScrollPosition() {
-        isAtTop = window.scrollY <= 0;
+        const currentScrollY = window.scrollY;
+        const maxScrollY = document.documentElement.scrollHeight - window.innerHeight;
+        
+        isAtTop = currentScrollY <= 5; // Margem de 5px para o topo
+        isAtBottom = currentScrollY >= maxScrollY - 5; // Margem de 5px para o fundo
+        
+        // Detectar direção do scroll
+        if (currentScrollY > lastScrollY) {
+          scrollDirection = 'down';
+        } else if (currentScrollY < lastScrollY) {
+          scrollDirection = 'up';
+        }
+        
+        lastScrollY = currentScrollY;
       }
       
-      // Monitorar scroll
-      window.addEventListener('scroll', updateScrollPosition);
+      // Monitorar scroll com requestAnimationFrame para performance
+      let scrollUpdateScheduled = false;
+      function scheduleScrollUpdate() {
+        if (!scrollUpdateScheduled) {
+          scrollUpdateScheduled = true;
+          requestAnimationFrame(() => {
+            updateScrollPosition();
+            scrollUpdateScheduled = false;
+          });
+        }
+      }
+      
+      window.addEventListener('scroll', scheduleScrollUpdate);
       updateScrollPosition();
       
-      // Controle de touch para prevenir pull-to-refresh apenas no topo
+      // DETECÇÃO DE ÁREA DO JOGO MELHORADA
+      function detectGameArea(element) {
+        return element && (
+          element.classList.contains('game-board-area') ||
+          element.classList.contains('game-cell') ||
+          element.closest('.game-board-area') ||
+          element.closest('[data-cell]')
+        );
+      }
+      
+      // CONTROLE DE TOUCH INTELIGENTE COM PROTEÇÃO FORTALECIDA
+      let touchEventThrottled = false;
+      
       document.addEventListener('touchstart', function(e) {
-        touchStartY = e.touches[0].clientY;
-      }, { passive: true });
+        if (touchEventThrottled) return;
+        
+        const touch = e.touches[0];
+        touchStartY = touch.clientY;
+        touchStartX = touch.clientX;
+        isInGameArea = detectGameArea(e.target);
+        
+        // Proteção rigorosa nas bordas laterais (aumentada para 50px)
+        const screenWidth = window.innerWidth;
+        const edgeBuffer = 50;
+        
+        if (touch.clientX < edgeBuffer || touch.clientX > screenWidth - edgeBuffer) {
+          e.preventDefault();
+          return;
+        }
+        
+        // Proteção específica para área do jogo
+        if (isInGameArea) {
+          // Permitir apenas movimento mínimo para seleção de palavras
+          return;
+        }
+      }, { passive: false });
       
       document.addEventListener('touchmove', function(e) {
-        const touchY = e.touches[0].clientY;
-        const touchDelta = touchY - touchStartY;
+        if (touchEventThrottled) return;
         
-        // Se estiver no topo e tentando puxar para baixo (pull-to-refresh)
-        if (isAtTop && touchDelta > 0) {
-          e.preventDefault();
+        // Throttling para performance
+        touchEventThrottled = true;
+        requestAnimationFrame(() => {
+          touchEventThrottled = false;
+        });
+        
+        const touch = e.touches[0];
+        const touchY = touch.clientY;
+        const touchX = touch.clientX;
+        const touchDeltaY = touchY - touchStartY;
+        const touchDeltaX = touchX - touchStartX;
+        
+        // PROTEÇÃO MÁXIMA PARA ÁREA DO JOGO
+        if (isInGameArea) {
+          // Prevenir qualquer scroll durante seleção de palavras
+          if (Math.abs(touchDeltaX) > 30 || Math.abs(touchDeltaY) > 30) {
+            e.preventDefault();
+            return;
+          }
         }
+        
+        // Proteção nas bordas com detecção inteligente
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        const edgeBuffer = 50;
+        
+        // Bordas laterais - prevenir swipe para navegação
+        if (touch.clientX < edgeBuffer || touch.clientX > screenWidth - edgeBuffer) {
+          if (Math.abs(touchDeltaX) > Math.abs(touchDeltaY)) {
+            e.preventDefault();
+            return;
+          }
+        }
+        
+        // Borda superior - prevenir pull-to-refresh
+        if (isAtTop && touchDeltaY > 0 && touch.clientY < screenHeight * 0.3) {
+          e.preventDefault();
+          return;
+        }
+        
+        // Borda inferior - prevenir bounce
+        if (isAtBottom && touchDeltaY < 0 && touch.clientY > screenHeight * 0.7) {
+          e.preventDefault();
+          return;
+        }
+        
       }, { passive: false });
       
-      // Prevenir navegação por swipe lateral nas bordas
-      document.addEventListener('touchstart', function(e) {
-        const touch = e.touches[0];
-        const screenWidth = window.innerWidth;
+      // SISTEMA DE FALLBACK PARA DETECÇÃO DE MOVIMENTO INDESEJADO
+      let lastKnownScrollPosition = 0;
+      let undesiredMovementDetected = false;
+      
+      function detectUndesiredMovement() {
+        const currentScroll = window.scrollY;
+        const scrollDifference = Math.abs(currentScroll - lastKnownScrollPosition);
         
-        // Se o toque começar muito próximo das bordas laterais
-        if (touch.clientX < 20 || touch.clientX > screenWidth - 20) {
-          e.preventDefault();
+        // Se houve movimento significativo durante interação com o jogo
+        if (isInGameArea && scrollDifference > 10) {
+          undesiredMovementDetected = true;
+          
+          // Restaurar posição anterior
+          window.scrollTo(0, lastKnownScrollPosition);
+          
+          // Log para monitoramento
+          console.log('🛡️ Movimento indesejado detectado e corrigido', {
+            scrollDifference,
+            currentScroll,
+            lastKnownScrollPosition,
+            timestamp: new Date().toISOString()
+          });
         }
-      }, { passive: false });
+        
+        // Atualizar posição conhecida apenas se não houver interação com o jogo
+        if (!isInGameArea && !undesiredMovementDetected) {
+          lastKnownScrollPosition = currentScroll;
+        }
+        
+        // Resetar flag após correção
+        setTimeout(() => {
+          undesiredMovementDetected = false;
+        }, 100);
+      }
+      
+      // Monitorar movimento indesejado
+      window.addEventListener('scroll', detectUndesiredMovement);
+      
+      // LOG PARA MONITORAMENTO EM PRODUÇÃO
+      const logProtectionEvent = (event, details) => {
+        console.log(`🛡️ Proteção ativada: ${event}`, {
+          ...details,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent.substring(0, 50),
+          screenSize: `${window.innerWidth}x${window.innerHeight}`
+        });
+      };
+      
+      // Inicializar sistema de proteção
+      console.log('🛡️ Sistema de proteção anti-zoom e anti-scroll inicializado', {
+        version: '2.0',
+        features: ['anti-zoom', 'edge-protection', 'game-area-protection', 'fallback-system'],
+        edgeBuffer: '50px',
+        timestamp: new Date().toISOString()
+      });
     </script>
     
     <script type="module" src="/src/main.tsx"></script>
