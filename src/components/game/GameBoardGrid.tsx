@@ -56,27 +56,25 @@ const GameBoardGrid = ({
     return wordIndex >= 0 ? getWordColor(wordIndex) : undefined;
   };
 
-  // ✅ BLOQUEIO ANTI-ZOOM INTELIGENTE: Detectar edges nas coordenadas relativas do tabuleiro
-  const isEdgeTouch = (clientX: number, clientY: number) => {
-    if (!boardRef.current) return false;
-    
-    const rect = boardRef.current.getBoundingClientRect();
-    const relativeX = clientX - rect.left;
-    const relativeY = clientY - rect.top;
-    const edgeThreshold = 30; // 30px das bordas do tabuleiro
+  // ✅ EDGE DETECTION GLOBAL REAL - Coordenadas absolutas da tela
+  const isGlobalEdgeTouch = (clientX: number, clientY: number) => {
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    const globalEdgeThreshold = 30; // 30px das bordas globais da tela
     
     return (
-      relativeX < edgeThreshold || 
-      relativeX > rect.width - edgeThreshold ||
-      relativeY < edgeThreshold ||
-      relativeY > rect.height - edgeThreshold
+      clientX < globalEdgeThreshold || 
+      clientX > screenWidth - globalEdgeThreshold ||
+      clientY < globalEdgeThreshold ||
+      clientY > screenHeight - globalEdgeThreshold
     );
   };
 
   // ✅ GLOBAL TOUCH PREVENTION: Prevenir gestures nas extremidades globais
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
-    if (touch && isEdgeTouch(touch.clientX, touch.clientY)) {
+    if (touch && isGlobalEdgeTouch(touch.clientX, touch.clientY)) {
+      console.log('🚫 Touch bloqueado na extremidade global da tela');
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -85,7 +83,8 @@ const GameBoardGrid = ({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
-    if (touch && isEdgeTouch(touch.clientX, touch.clientY)) {
+    if (touch && isGlobalEdgeTouch(touch.clientX, touch.clientY)) {
+      console.log('🚫 Touch move bloqueado na extremidade global da tela');
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -95,20 +94,21 @@ const GameBoardGrid = ({
   return (
     <div
       ref={boardRef}
-      className="grid mx-auto bg-white edge-safe vertical-scroll-only no-zoom"
+      className="grid mx-auto bg-white anti-zoom-board"
       style={{
         gridTemplateColumns: `repeat(${boardWidth}, 1fr)`,
         gridTemplateRows: `repeat(${size}, 1fr)`,
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: "100%",
-        touchAction: "pan-y", // ✅ CORREÇÃO: Apenas scroll vertical
+        touchAction: "pan-y", // ✅ HIERARQUIA CORRETA: Permitir apenas scroll vertical
         padding: gridConfig.padding,
         background: "white",
         userSelect: "none",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
         overflow: "hidden", // ✅ Previne overflow que pode causar zoom
+        WebkitTextSizeAdjust: "none", // ✅ ANTI-ZOOM ROBUSTO
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}

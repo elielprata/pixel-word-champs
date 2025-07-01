@@ -32,36 +32,29 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
+  
+  // ✅ EDGE DETECTION GLOBAL REAL nas células
+  const isGlobalEdgeTouch = (clientX: number, clientY: number) => {
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    const globalEdgeThreshold = 30; // 30px das bordas globais da tela
+    
+    return (
+      clientX < globalEdgeThreshold || 
+      clientX > screenWidth - globalEdgeThreshold ||
+      clientY < globalEdgeThreshold ||
+      clientY > screenHeight - globalEdgeThreshold
+    );
+  };
+
   // ✅ PROTEÇÃO ANTI-ZOOM ESPECÍFICA PARA CÉLULAS
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // ✅ EDGE DETECTION INTELIGENTE - Coordenadas relativas da célula
     const touch = e.touches[0];
-    const target = e.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const relativeX = touch.clientX - rect.left;
-    const relativeY = touch.clientY - rect.top;
-    
-    // Bloquear se o toque estiver nas extremidades da célula (primeiros/últimos 20% da célula)
-    const edgeThreshold = cellSize * 0.2;
-    if (relativeX < edgeThreshold || relativeX > cellSize - edgeThreshold ||
-        relativeY < edgeThreshold || relativeY > cellSize - edgeThreshold) {
-      console.log('🚫 Touch bloqueado na extremidade da célula');
-      return;
-    }
-    
-    // ✅ EDGE DETECTION GLOBAL - Coordenadas da tela
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    const globalEdgeThreshold = 30; // 30px das bordas da tela
-    
-    if (touch.clientX < globalEdgeThreshold || 
-        touch.clientX > screenWidth - globalEdgeThreshold ||
-        touch.clientY < globalEdgeThreshold || 
-        touch.clientY > screenHeight - globalEdgeThreshold) {
-      console.log('🚫 Touch bloqueado na extremidade global');
+    if (touch && isGlobalEdgeTouch(touch.clientX, touch.clientY)) {
+      console.log('🚫 Touch bloqueado na célula - extremidade global');
       return;
     }
     
@@ -75,15 +68,8 @@ const GameCell = ({
     if (!touch) return;
     
     // ✅ EDGE DETECTION NO MOVIMENTO
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    const globalEdgeThreshold = 30;
-    
-    if (touch.clientX < globalEdgeThreshold || 
-        touch.clientX > screenWidth - globalEdgeThreshold ||
-        touch.clientY < globalEdgeThreshold || 
-        touch.clientY > screenHeight - globalEdgeThreshold) {
-      console.log('🚫 Touch move bloqueado na extremidade');
+    if (isGlobalEdgeTouch(touch.clientX, touch.clientY)) {
+      console.log('🚫 Touch move bloqueado na célula - extremidade global');
       return;
     }
     
@@ -160,8 +146,8 @@ const GameCell = ({
         userSelect: "none",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
-        touchAction: "manipulation", // ✅ BLOQUEIO ANTI-ZOOM ESPECÍFICO
-        WebkitTextSizeAdjust: "none", // ✅ PREVENÇÃO DE ZOOM ADICIONAL
+        touchAction: "none", // ✅ HIERARQUIA CORRETA: Bloquear completamente zoom nas células
+        WebkitTextSizeAdjust: "none", // ✅ PREVENÇÃO DE ZOOM ADICIONAL ROBUSTA
         padding: 0,
         margin: 0,
       }}

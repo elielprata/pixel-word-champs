@@ -56,19 +56,19 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   }
   
-  /* ✅ BLOQUEIO INTELIGENTE DE EXTREMIDADES - ANTI-ZOOM E ANTI-SCROLL LATERAL */
+  /* ✅ BLOQUEIO INTELIGENTE FINAL - TOUCH ACTION HIERARCHY CORRETA */
   html, body {
     /* Prevenção total de zoom */
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
     
-    /* Controle inteligente de touch - apenas scroll vertical no centro */
+    /* Controle inteligente de touch - apenas scroll vertical */
     touch-action: pan-y;
     
     /* Prevenção de overscroll e pull-to-refresh */
     overscroll-behavior: contain;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: auto;
     overscroll-behavior-x: none;
     
     /* Bloqueio de seleção para evitar zoom acidental */
@@ -76,18 +76,11 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    
-    /* Posicionamento fixo para evitar bounce */
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
   }
   
   #root {
     width: 100%;
-    height: 100%;
-    overflow-y: auto;
+    min-height: 100vh;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     
@@ -199,32 +192,6 @@
       transform: translateY(0);
     }
   }
-  
-  /* ✅ TABULEIRO DE JOGO - PROTEÇÃO ESPECÍFICA */
-  .game-board-container {
-    /* Prevenção total de zoom no tabuleiro */
-    touch-action: pan-y !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
-    -webkit-touch-callout: none !important;
-    -webkit-text-size-adjust: none !important;
-    overflow: hidden !important;
-    
-    /* Prevenção de gestures de zoom */
-    -ms-content-zooming: none !important;
-    -ms-touch-select: none !important;
-  }
-  
-  /* ✅ CÉLULAS DO TABULEIRO - PROTEÇÃO ESPECÍFICA */
-  .game-cell {
-    touch-action: manipulation !important;
-    -webkit-user-select: none !important;
-    user-select: none !important;
-    -webkit-touch-callout: none !important;
-    pointer-events: auto !important;
-  }
 }
 
 @layer utilities {
@@ -256,7 +223,7 @@
     user-select: none;
   }
   
-  /* ✅ ANTI-ZOOM ROBUSTO PARA TABULEIRO */
+  /* ✅ ANTI-ZOOM ROBUSTO PARA TABULEIRO - HIERARQUIA FINAL */
   .anti-zoom-board {
     touch-action: pan-y !important;
     -webkit-user-select: none !important;
@@ -265,5 +232,19 @@
     -webkit-text-size-adjust: none !important;
     -ms-content-zooming: none !important;
     overflow: hidden !important;
+    
+    /* Prevenção de gestures de zoom específicos */
+    -ms-touch-select: none !important;
+    -webkit-user-drag: none !important;
+  }
+  
+  /* ✅ CÉLULAS DO TABULEIRO - PROTEÇÃO ESPECÍFICA FINAL */
+  .game-cell {
+    touch-action: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    pointer-events: auto !important;
+    -webkit-text-size-adjust: none !important;
   }
 }
