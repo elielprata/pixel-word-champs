@@ -83,18 +83,18 @@ const RegisterForm = () => {
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           <FormField
             control={form.control}
             name="username"
             render={({ field }) => (
-              <FormItem className="space-y-2">
+              <FormItem className="space-y-1">
                 <label className="text-gray-700 font-medium text-sm">Nome de usuário</label>
                 <FormControl>
                   <div className="relative">
                     <Input 
                       placeholder="meu_username" 
-                      className={`w-full px-4 py-4 bg-gray-50 border-2 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12 ${
+                      className={`w-full px-4 py-3 bg-gray-50 border-2 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12 ${
                         watchedUsername && usernameCheck.exists 
                           ? 'border-red-300 bg-red-50' 
                           : watchedUsername && usernameCheck.available 
@@ -122,14 +122,14 @@ const RegisterForm = () => {
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="space-y-2">
+              <FormItem className="space-y-1">
                 <label className="text-gray-700 font-medium text-sm">Email</label>
                 <FormControl>
                   <div className="relative">
                     <Input 
                       placeholder="seu@email.com" 
                       type="email"
-                      className={`w-full px-4 py-4 bg-gray-50 border-2 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12 ${
+                      className={`w-full px-4 py-3 bg-gray-50 border-2 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12 ${
                         watchedEmail && emailCheck.exists 
                           ? 'border-red-300 bg-red-50' 
                           : watchedEmail && emailCheck.available 
@@ -157,14 +157,14 @@ const RegisterForm = () => {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="space-y-2">
+              <FormItem className="space-y-1">
                 <label className="text-gray-700 font-medium text-sm">Senha</label>
                 <FormControl>
                   <div className="relative">
                     <Input 
                       placeholder="••••••••" 
                       type={showPassword ? "text" : "password"}
-                      className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12 pr-12"
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12 pr-12"
                       {...field}
                     />
                     <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -186,14 +186,14 @@ const RegisterForm = () => {
             control={form.control}
             name="confirmPassword"
             render={({ field }) => (
-              <FormItem className="space-y-2">
+              <FormItem className="space-y-1">
                 <label className="text-gray-700 font-medium text-sm">Confirmar senha</label>
                 <FormControl>
                   <div className="relative">
                     <Input 
                       placeholder="••••••••" 
                       type={showConfirmPassword ? "text" : "password"}
-                      className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12 pr-12"
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12 pr-12"
                       {...field}
                     />
                     <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -215,13 +215,13 @@ const RegisterForm = () => {
             control={form.control}
             name="inviteCode"
             render={({ field }) => (
-              <FormItem className="space-y-2">
+              <FormItem className="space-y-1">
                 <label className="text-gray-700 font-medium text-sm">Código de convite (opcional)</label>
                 <FormControl>
                   <div className="relative">
                     <Input 
                       placeholder="ABC123" 
-                      className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12"
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12"
                       {...field}
                     />
                     <Gift className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -247,7 +247,7 @@ const RegisterForm = () => {
               usernameCheck.checking ||
               emailCheck.checking
             }
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 py-4 rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 py-3 rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
           >
             {isLoading ? (
               <>
