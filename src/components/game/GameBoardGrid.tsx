@@ -110,16 +110,6 @@ const GameBoardGrid = ({
         e.stopPropagation();
         return false;
       }}
-      onGestureStart={(e: any) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }}
-      onGestureChange={(e: any) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }}
     >
       {boardData.board.map((row, rowIndex) =>
         row.map((letter, colIndex) => (
