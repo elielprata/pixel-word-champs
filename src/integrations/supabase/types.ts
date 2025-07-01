@@ -1327,10 +1327,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
-      debug_auth_info: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       delete_completed_competition: {
         Args: { competition_id: string }
         Returns: Json

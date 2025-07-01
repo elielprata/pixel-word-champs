@@ -2,7 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
-import { debugAuthInfo } from '@/utils/debugAuth';
 
 interface ChallengeProgress {
   id: string;
@@ -43,9 +42,6 @@ export const challengeProgressService = {
         userId, 
         competitionId 
       }, 'CHALLENGE_PROGRESS');
-
-      // Debug auth antes da consulta
-      await debugAuthInfo();
 
       const { data, error } = await supabase
         .from('challenge_progress')
@@ -122,16 +118,13 @@ export const challengeProgressService = {
         note: 'currentLevel representa o PRÓXIMO nível a jogar'
       }, 'CHALLENGE_PROGRESS');
 
-      // Debug auth antes da operação
-      await debugAuthInfo();
-
       // Tentar atualizar registro existente primeiro
       const { data: existingData, error: selectError } = await supabase
         .from('challenge_progress')
         .select('id')
         .eq('user_id', userId)
         .eq('competition_id', competitionId)
-        .maybeSingle(); // Usar maybeSingle ao invés de single
+        .maybeSingle();
 
       if (selectError) {
         logger.error('❌ Erro ao verificar progresso existente', {
