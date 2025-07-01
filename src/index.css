@@ -56,53 +56,64 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   }
   
-  /* ✅ BLOQUEIO INTELIGENTE - SCROLL VERTICAL PERMITIDO */
+  /* ✅ BLOQUEIO TOTAL DEFINITIVO - HIERARQUIA CSS FORTIFICADA */
   html, body {
     /* Prevenção total de zoom */
-    -webkit-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+    -webkit-text-size-adjust: none !important;
+    -ms-text-size-adjust: none !important;
+    text-size-adjust: none !important;
     
-    /* Controle inteligente de touch - scroll vertical + bloqueio navegação */
-    touch-action: pan-y;
+    /* Controle total de touch - nível 1 */
+    touch-action: pan-y !important;
     
-    /* Prevenção de overscroll horizontal e pull-to-refresh lateral */
-    overscroll-behavior-x: none;
-    overscroll-behavior-y: auto;
+    /* Overscroll behavior otimizado */
+    overscroll-behavior: none !important;
+    overscroll-behavior-x: none !important;
+    overscroll-behavior-y: none !important;
     
-    /* Bloqueio de seleção para evitar zoom acidental */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    /* Bloqueio de seleção global */
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    
+    /* Bloqueio de gestos iOS */
+    -webkit-user-drag: none !important;
+    -webkit-user-modify: read-only !important;
+    -webkit-touch-callout: none !important;
   }
   
   #root {
-    width: 100%;
-    min-height: 100vh;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    width: 100% !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
     
-    /* Controle inteligente de scroll - vertical permitido, horizontal bloqueado */
-    overscroll-behavior-x: none;
-    overscroll-behavior-y: auto;
+    /* Overscroll behavior nível 2 */
+    overscroll-behavior: none !important;
+    overscroll-behavior-x: none !important;
+    overscroll-behavior-y: contain !important;
+    
+    /* Touch action nível 2 */
+    touch-action: pan-y !important;
   }
   
-  /* Classe para elementos interativos seguros */
+  /* ✅ ELEMENTOS INTERATIVOS SEGUROS */
   .safe-interactive {
-    touch-action: manipulation;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    touch-action: manipulation !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
   }
   
-  /* Prevenção de tap highlighting */
+  /* ✅ PREVENÇÃO DE TAP HIGHLIGHTING */
   .no-tap-highlight {
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: transparent !important;
   }
   
-  /* Efeitos visuais alternativos ao transform scale */
+  /* ✅ EFEITOS VISUAIS ALTERNATIVOS - SEM SCALE */
   .hover-glow:hover {
     filter: brightness(1.1) drop-shadow(0 0 8px rgba(139, 92, 246, 0.3));
     transition: filter 0.2s ease;
@@ -118,22 +129,33 @@
     transition: box-shadow 0.2s ease;
   }
   
-  /* Mobile optimizations */
-  .touch-action-none {
-    touch-action: none;
+  /* ✅ PROTEÇÃO GLOBAL EDGE */
+  .edge-protected {
+    touch-action: pan-y !important;
+    overscroll-behavior: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-text-size-adjust: none !important;
   }
   
-  .select-none {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+  /* ✅ TABULEIRO - BLOQUEIO TOTAL */
+  .board-container {
+    touch-action: none !important;
+    overscroll-behavior: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
   }
   
-  /* Smooth scrolling for mobile */
-  .smooth-scroll {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
+  /* ✅ CÉLULAS DO TABULEIRO - PROTEÇÃO MÁXIMA */
+  .game-cell {
+    touch-action: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    pointer-events: auto !important;
+    -webkit-text-size-adjust: none !important;
   }
   
   /* Custom button active states for mobile - SEM SCALE */
@@ -149,13 +171,14 @@
   textarea {
     font-size: 16px;
     /* Permitir seleção apenas em inputs */
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-    user-select: text;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    touch-action: manipulation !important;
   }
   
-  /* ✅ ANIMAÇÃO MODAL ENTER DEFINIDA - SEM SCALE */
+  /* ✅ ANIMAÇÃO MODAL ENTER - SEM SCALE */
   .animate-modal-enter {
     animation: modal-enter 0.3s ease-out;
   }
@@ -171,7 +194,7 @@
     }
   }
   
-  /* Bounce alternativo sem scale */
+  /* ✅ BOUNCE ALTERNATIVO SEM SCALE */
   .animate-bounce-in {
     animation: bounce-in 0.6s ease-out;
   }
@@ -200,48 +223,57 @@
     padding-right: env(safe-area-inset-right);
   }
   
-  /* ✅ UTILITÁRIOS PARA BLOQUEIO INTELIGENTE DE EXTREMIDADES */
+  /* ✅ UTILITÁRIOS PARA BLOQUEIO TOTAL */
   .no-zoom {
-    touch-action: manipulation;
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-text-size-adjust: none;
-    -ms-text-size-adjust: none;
+    touch-action: manipulation !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-text-size-adjust: none !important;
+    -ms-text-size-adjust: none !important;
   }
   
   .vertical-scroll-only {
-    touch-action: pan-y;
-    overscroll-behavior-x: none;
-  }
-  
-  .edge-safe {
-    touch-action: manipulation;
-    overscroll-behavior-x: none;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  
-  /* ✅ BLOQUEIO INTELIGENTE PARA TABULEIRO - SCROLL VERTICAL PERMITIDO */
-  .smart-board-protection {
     touch-action: pan-y !important;
+    overscroll-behavior-x: none !important;
+  }
+  
+  .total-edge-protection {
+    touch-action: pan-y !important;
+    overscroll-behavior: none !important;
     -webkit-user-select: none !important;
     user-select: none !important;
     -webkit-touch-callout: none !important;
     -webkit-text-size-adjust: none !important;
-    overflow-x: hidden !important;
-    
-    /* Prevenção de gestures de zoom específicos */
+  }
+  
+  /* ✅ BLOQUEIO TOTAL PARA TABULEIRO */
+  .board-total-protection {
+    touch-action: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    -webkit-text-size-adjust: none !important;
     -ms-touch-select: none !important;
     -webkit-user-drag: none !important;
   }
   
-  /* ✅ CÉLULAS DO TABULEIRO - PROTEÇÃO INTELIGENTE */
-  .game-cell {
+  /* ✅ CÉLULAS DO TABULEIRO - HIERARQUIA MÁXIMA */
+  .cell-maximum-protection {
     touch-action: none !important;
     -webkit-user-select: none !important;
     user-select: none !important;
     -webkit-touch-callout: none !important;
     pointer-events: auto !important;
     -webkit-text-size-adjust: none !important;
+  }
+  
+  /* ✅ NAVEGAÇÃO SEGURA */
+  .navigation-safe {
+    touch-action: manipulation !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
   }
 }

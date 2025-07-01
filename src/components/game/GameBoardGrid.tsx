@@ -3,6 +3,7 @@ import React, { useRef } from "react";
 import GameCell from "./GameCell";
 import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from "@/utils/boardUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEdgeProtection } from "@/utils/edgeProtection";
 
 interface GameBoardGridProps {
   boardData: { board: string[][] };
@@ -38,6 +39,9 @@ const GameBoardGrid = ({
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
+  // ✅ APLICAR PROTEÇÃO DE BORDA NO TABULEIRO
+  useEdgeProtection(boardRef, true);
+
   // Layout limpo - ajustado para 8x12
   const gridConfig = {
     gap: "1px",
@@ -56,63 +60,19 @@ const GameBoardGrid = ({
     return wordIndex >= 0 ? getWordColor(wordIndex) : undefined;
   };
 
-  // ✅ EDGE DETECTION INTELIGENTE - Apenas extremidades perigosas (30px)
-  const isEdgeTouchDangerous = (clientX: number, clientY: number) => {
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    const edgeThreshold = 30; // 30px das bordas extremas
-    
-    const isLeftEdge = clientX < edgeThreshold;
-    const isRightEdge = clientX > screenWidth - edgeThreshold;
-    const isTopEdge = clientY < edgeThreshold;
-    const isBottomEdge = clientY > screenHeight - edgeThreshold;
-    
-    // Bloquear apenas gestos que podem causar navegação
-    return isLeftEdge || isRightEdge || (isTopEdge && clientY < 20) || (isBottomEdge && clientY > screenHeight - 20);
-  };
-
-  // ✅ SMART TOUCH PREVENTION: Prevenir apenas gestures perigosos
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    if (touch && isEdgeTouchDangerous(touch.clientX, touch.clientY)) {
-      console.log('🚫 Touch bloqueado na extremidade perigosa da tela');
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    if (touch && isEdgeTouchDangerous(touch.clientX, touch.clientY)) {
-      console.log('🚫 Touch move bloqueado na extremidade perigosa da tela');
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-  };
-
   return (
     <div
       ref={boardRef}
-      className="grid mx-auto bg-white smart-board-protection"
+      className="grid mx-auto bg-white board-container board-total-protection"
       style={{
         gridTemplateColumns: `repeat(${boardWidth}, 1fr)`,
         gridTemplateRows: `repeat(${size}, 1fr)`,
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: "100%",
-        touchAction: "pan-y", // ✅ INTELIGENTE: Permitir scroll vertical
         padding: gridConfig.padding,
         background: "white",
-        userSelect: "none",
-        WebkitUserSelect: "none",
-        WebkitTouchCallout: "none",
-        overflowX: "hidden", // ✅ Previne overflow horizontal apenas
-        WebkitTextSizeAdjust: "none", // ✅ ANTI-ZOOM ROBUSTO
       }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
       onTouchEnd={(e) => {
         e.preventDefault();
         handleCellEnd();

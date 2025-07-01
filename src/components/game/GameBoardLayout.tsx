@@ -1,17 +1,26 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { GAME_CONSTANTS } from '@/constants/game';
+import { useEdgeProtection } from '@/utils/edgeProtection';
 
 interface GameBoardLayoutProps {
   children: React.ReactNode;
 }
 
 const GameBoardLayout = ({ children }: GameBoardLayoutProps) => {
+  const layoutRef = useRef<HTMLDivElement>(null);
+  
+  // ✅ APLICAR PROTEÇÃO DE BORDA NO LAYOUT DO TABULEIRO
+  useEdgeProtection(layoutRef, true);
+
   // Selecionar tema de fundo aleatório (ou baseado no nível)
   const backgroundTheme = GAME_CONSTANTS.BACKGROUND_THEMES[0]; // Pode ser dinâmico baseado no nível
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${backgroundTheme} p-2 relative overflow-hidden`}>
+    <div 
+      ref={layoutRef}
+      className={`min-h-screen bg-gradient-to-br ${backgroundTheme} p-2 relative overflow-hidden total-edge-protection`}
+    >
       {/* Efeitos de fundo gamificados */}
       <div className="absolute inset-0 bg-black/10" />
       

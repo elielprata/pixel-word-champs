@@ -1,5 +1,6 @@
 
 import React from "react";
+import { isEdgeTouchDangerous } from "@/utils/edgeProtection";
 
 interface GameCellProps {
   letter: string;
@@ -32,23 +33,8 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
-  
-  // ✅ EDGE DETECTION INTELIGENTE - Apenas extremidades perigosas
-  const isEdgeTouchDangerous = (clientX: number, clientY: number) => {
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    const edgeThreshold = 30; // 30px das bordas extremas
-    
-    const isLeftEdge = clientX < edgeThreshold;
-    const isRightEdge = clientX > screenWidth - edgeThreshold;
-    const isTopEdge = clientY < edgeThreshold;
-    const isBottomEdge = clientY > screenHeight - edgeThreshold;
-    
-    // Bloquear apenas gestos que podem causar navegação
-    return isLeftEdge || isRightEdge || (isTopEdge && clientY < 20) || (isBottomEdge && clientY > screenHeight - 20);
-  };
 
-  // ✅ PROTEÇÃO INTELIGENTE ESPECÍFICA PARA CÉLULAS
+  // ✅ PROTEÇÃO TOTAL ESPECÍFICA PARA CÉLULAS
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -68,7 +54,7 @@ const GameCell = ({
     const touch = e.touches[0];
     if (!touch) return;
     
-    // ✅ EDGE DETECTION NO MOVIMENTO
+    // ✅ DETECÇÃO DE BORDA NO MOVIMENTO
     if (isEdgeTouchDangerous(touch.clientX, touch.clientY)) {
       console.log('🚫 Touch move bloqueado na célula - extremidade perigosa');
       return;
@@ -109,7 +95,7 @@ const GameCell = ({
 
   // ✅ HIERARQUIA VISUAL GAMIFICADA SEM SCALE - USANDO EFEITOS ALTERNATIVOS
   const getCellClasses = () => {
-    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer safe-interactive no-tap-highlight game-cell";
+    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 cursor-pointer cell-maximum-protection game-cell no-tap-highlight";
     
     if (isHintHighlighted) {
       return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse hover-glow`;
@@ -144,11 +130,6 @@ const GameCell = ({
         height: `${cellSize}px`,
         fontSize: `${fontSize}px`,
         borderRadius,
-        userSelect: "none",
-        WebkitUserSelect: "none",
-        WebkitTouchCallout: "none",
-        touchAction: "none", // ✅ HIERARQUIA CORRETA: Bloquear completamente zoom nas células
-        WebkitTextSizeAdjust: "none", // ✅ PREVENÇÃO DE ZOOM ADICIONAL ROBUSTA
         padding: 0,
         margin: 0,
       }}

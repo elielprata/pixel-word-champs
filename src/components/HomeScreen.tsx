@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
 import { useOptimizedCompetitions } from '@/hooks/useOptimizedCompetitions';
+import { useEdgeProtection } from '@/utils/edgeProtection';
 import HomeHeader from './home/HomeHeader';
 import UserStatsCard from './home/UserStatsCard';
 import CompetitionsList from './home/CompetitionsList';
@@ -19,6 +20,10 @@ interface HomeScreenProps {
 
 const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) => {
   const { user } = useAuth();
+  const homeRef = useRef<HTMLDivElement>(null);
+  
+  // ✅ APLICAR PROTEÇÃO DE BORDA NA HOME
+  useEdgeProtection(homeRef, true);
   
   // Usar o hook otimizado que já inclui competições ativas e agendadas
   const { competitions, isLoading, error, refetch } = useOptimizedCompetitions();
@@ -38,7 +43,10 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
+    <div 
+      ref={homeRef}
+      className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20 total-edge-protection"
+    >
       <div className="max-w-md mx-auto space-y-4">
         <HomeHeader />
         <UserStatsCard />
