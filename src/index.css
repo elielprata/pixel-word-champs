@@ -49,7 +49,7 @@
 @layer base {
   * {
     @apply border-border;
-    /* PROTEÇÃO ANTI-ZOOM DEFINITIVA - 100% SEM TRANSFORMS */
+    /* PROTEÇÃO ANTI-ZOOM DEFINITIVA - 100% SEM TRANSFORMS DE SCALE */
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
@@ -58,17 +58,15 @@
     -ms-user-select: none !important;
     user-select: none !important;
     -webkit-tap-highlight-color: transparent !important;
-    /* PROTEÇÃO 100%: Garantir ZERO transforms */
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
-    will-change: auto !important;
+    /* PROTEÇÃO 100%: Bloquear APENAS transforms de scale */
+    -webkit-transform-origin: center center !important;
+    transform-origin: center center !important;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-    /* Scroll protegido com detecção rigorosa */
+    /* Scroll protegido com suavidade restaurada */
     overflow-x: hidden !important;
     overflow-y: auto;
     overscroll-behavior: contain !important;
@@ -86,8 +84,6 @@
     user-select: text !important;
     touch-action: manipulation !important;
     font-size: 16px !important; /* Previne zoom automático no iOS */
-    /* Permitir transform apenas para inputs críticos */
-    transform: initial !important;
   }
 
   /* Classe especial para áreas do jogo - PROTEÇÃO 100% DEFINITIVA */
@@ -96,11 +92,6 @@
     overscroll-behavior: contain !important;
     overflow: hidden !important;
     -webkit-overflow-scrolling: auto !important;
-    /* Proteção 100% contra transforms */
-    will-change: auto !important;
-    -webkit-transform: none !important;
-    transform: none !important;
-    -ms-transform: none !important;
   }
 
   /* Classe para áreas que precisam de scroll normal */
@@ -116,24 +107,14 @@
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
     user-select: none !important;
-    /* GARANTIR 100% - ZERO transforms */
-    transform: none !important;
-    will-change: auto !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
   }
 
   /* PROTEÇÃO 100%: Proteção específica para células das bordas */
   .game-cell-edge {
     touch-action: none !important;
     overscroll-behavior: none !important;
-    /* Proteção extra para bordas */
     -webkit-overflow-scrolling: auto !important;
     overflow: hidden !important;
-    /* Anti-transform 100% */
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
   }
 }
 
@@ -156,126 +137,153 @@
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
     -webkit-tap-highlight-color: transparent !important;
-    /* GARANTIR 100% - ZERO transforms */
-    transform: none !important;
-    will-change: auto !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
   }
 
-  /* EFEITOS ALTERNATIVOS 100% SEM ZOOM - VERSÃO DEFINITIVA */
+  /* EFEITOS SUAVES RESTAURADOS - SEM SCALE MAS COM FLUIDEZ */
   .hover-lift {
-    transition: box-shadow 0.2s ease, opacity 0.2s ease, border-color 0.2s ease !important;
-    /* GARANTIR 100% que não há transform */
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
   
   .hover-lift:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18) !important;
-    opacity: 0.92 !important;
-    /* GARANTIR 100% - NÃO usar transform */
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 6px 12px rgba(0, 0, 0, 0.1) !important;
+    filter: brightness(1.05) saturate(1.1) !important;
+    opacity: 0.95 !important;
+    border-color: rgba(139, 92, 246, 0.4) !important;
   }
 
   .hover-glow {
-    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease !important;
-    /* GARANTIR 100% que não há transform */
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
   
   .hover-glow:hover {
-    box-shadow: 0 0 28px rgba(139, 92, 246, 0.5) !important;
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.4), 0 0 15px rgba(139, 92, 246, 0.2) !important;
     border-color: rgb(139, 92, 246) !important;
-    background-color: rgba(139, 92, 246, 0.08) !important;
-    /* GARANTIR 100% - NÃO usar transform */
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
+    background-color: rgba(139, 92, 246, 0.06) !important;
+    filter: brightness(1.08) !important;
   }
 
-  /* EFEITO DE ATIVAÇÃO 100% SEM SCALE - VERSÃO DEFINITIVA */
+  /* EFEITO DE ATIVAÇÃO SUAVE - SEM SCALE */
   .active-press {
-    transition: opacity 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease !important;
-    /* GARANTIR 100% que não há transform */
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
   
   .active-press:active {
-    opacity: 0.75 !important;
-    box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.2) !important;
-    background-color: rgba(0, 0, 0, 0.08) !important;
-    /* GARANTIR 100% - NÃO usar transform */
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
+    filter: brightness(0.9) saturate(1.2) !important;
+    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    opacity: 0.85 !important;
   }
 
-  /* ANIMAÇÃO BOUNCE 100% SEM SCALE - VERSÃO DEFINITIVA */
+  /* ANIMAÇÃO BOUNCE SUAVE RESTAURADA */
   .animate-bounce-in {
-    animation: bounce-glow-definitivo 0.6s ease-out !important;
+    animation: bounce-glow-suave 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
   }
 
-  @keyframes bounce-glow-definitivo {
+  @keyframes bounce-glow-suave {
     0% {
       opacity: 0;
+      filter: blur(2px) brightness(0.8);
       box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-      background-color: rgba(255, 255, 255, 0.8);
     }
     50% {
       opacity: 1;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-      background-color: rgba(255, 255, 255, 1);
+      filter: blur(0) brightness(1.1);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
     }
     100% {
       opacity: 1;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-      background-color: rgba(255, 255, 255, 0.95);
+      filter: blur(0) brightness(1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
   }
 
-  /* KEYFRAME FADE-IN PURO SEM SCALE - ALTERNATIVA 100% DEFINITIVA */
-  @keyframes fade-in-pure {
+  /* FADE-IN MAIS SUAVE E FLUIDO */
+  @keyframes fade-in-fluido {
     0% {
       opacity: 0;
-      filter: blur(1px);
+      filter: blur(1px) brightness(0.9);
+      transform: translateY(8px);
     }
     100% {
       opacity: 1;
-      filter: blur(0);
+      filter: blur(0) brightness(1);
+      transform: translateY(0);
     }
   }
 
   .animate-fade-in-pure {
-    animation: fade-in-pure 0.3s ease-out !important;
-    /* GARANTIR ZERO transforms */
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
+    animation: fade-in-fluido 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 
-  /* PROTEÇÃO 100%: Remover qualquer transform restante */
-  .transform-none-final {
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
-    will-change: auto !important;
+  /* ANIMAÇÕES DE PARTÍCULAS FLUIDAS PARA LOADING */
+  @keyframes float-suave {
+    0%, 100% {
+      transform: translateY(0) translateX(0);
+      opacity: 0.3;
+      filter: blur(0.5px);
+    }
+    50% {
+      transform: translateY(-12px) translateX(6px);
+      opacity: 0.8;
+      filter: blur(0);
+    }
+  }
+
+  .animate-float {
+    animation: float-suave 3s ease-in-out infinite !important;
+  }
+
+  /* PULSO MAIS ORGÂNICO */
+  @keyframes pulse-organico {
+    0%, 100% {
+      opacity: 1;
+      filter: brightness(1);
+    }
+    50% {
+      opacity: 0.7;
+      filter: brightness(1.15);
+    }
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-organico 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+  }
+
+  /* CÍRCULOS CONCÊNTRICOS SUAVES */
+  @keyframes ripple-suave {
+    0% {
+      opacity: 1;
+      transform: scale(0.8);
+      filter: blur(0);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.4);
+      filter: blur(1px);
+    }
+  }
+
+  .animate-ripple {
+    animation: ripple-suave 2s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
   }
 
   /* PROTEÇÃO EXTRA: Garantir que modais não causem zoom */
   .modal-safe {
     touch-action: manipulation !important;
     overflow: hidden !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-    -ms-transform: none !important;
-    will-change: auto !important;
+  }
+
+  /* BOTÕES COM TRANSIÇÕES SUAVES */
+  .btn-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .btn-smooth:hover {
+    filter: brightness(1.1) saturate(1.1) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .btn-smooth:active {
+    filter: brightness(0.95) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
   }
 }
