@@ -62,8 +62,6 @@ const InviteScreen = () => {
         
         <MyInvitedFriends 
           invitedFriends={invitedFriends}
-          isLoading={isLoading}
-          onRefresh={refetch}
         />
         
         <HowItWorksCard />

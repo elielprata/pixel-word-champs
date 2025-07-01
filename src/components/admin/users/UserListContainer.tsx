@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { UserListHeader } from './UserListHeader';
@@ -84,6 +85,13 @@ export const UserListContainer = () => {
     }
   };
 
+  const handleDeleteUserAction = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      handleDeleteUser(user);
+    }
+  };
+
   const getUserStatusBadge = (user: AllUsersData) => {
     if (user.is_banned) {
       return <span className="text-red-600 text-xs">Banido</span>;
@@ -129,7 +137,7 @@ export const UserListContainer = () => {
                 onBanUser={handleBanUserAction}
                 onUnbanUser={handleUnbanUserAction}
                 onEditUser={handleEditUser}
-                onDeleteUser={handleDeleteUser}
+                onDeleteUser={handleDeleteUserAction}
                 isBanningUser={false}
                 isUnbanningUser={false}
                 getUserStatusBadge={getUserStatusBadge}

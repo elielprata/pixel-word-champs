@@ -40,6 +40,15 @@ const RankingScreen = () => {
     totalPlayers: rankingData?.length || 0
   }, 'RANKING_SCREEN');
 
+  const getPrizeAmount = (position: number) => {
+    // Lógica simples de prêmios baseada na posição
+    if (position === 1) return 100;
+    if (position === 2) return 50;
+    if (position === 3) return 25;
+    if (position <= 10) return 10;
+    return 0;
+  };
+
   return (
     <div 
       ref={rankingRef}
@@ -53,10 +62,17 @@ const RankingScreen = () => {
         
         {userRankingData && (
           <UserPositionCard
+            userWeeklyPosition={userPosition + 1}
+            weeklyRanking={rankingData?.map((player, index) => ({
+              pos: index + 1,
+              user_id: player.user_id,
+              name: player.username,
+              avatar_url: '',
+              score: player.total_score,
+              prize: getPrizeAmount(index + 1)
+            })) || []}
             user={user}
-            userPosition={userPosition + 1}
-            userData={userRankingData}
-            totalPlayers={rankingData?.length || 0}
+            getPrizeAmount={getPrizeAmount}
           />
         )}
 
@@ -65,9 +81,17 @@ const RankingScreen = () => {
         />
 
         <RankingList
-          players={rankingData || []}
-          currentUserId={user?.id}
-          isLoading={isLoading}
+          weeklyRanking={rankingData?.map((player, index) => ({
+            pos: index + 1,
+            user_id: player.user_id,
+            name: player.username,
+            avatar_url: '',
+            score: player.total_score,
+            prize: getPrizeAmount(index + 1)
+          })) || []}
+          user={user}
+          totalWeeklyPlayers={rankingData?.length || 0}
+          getPrizeAmount={getPrizeAmount}
         />
       </div>
     </div>
