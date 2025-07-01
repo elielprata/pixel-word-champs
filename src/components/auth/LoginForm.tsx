@@ -1,14 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { useAuth } from '@/hooks/useAuth';
 import { LoginForm as LoginFormType } from '@/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { logger } from '@/utils/logger';
 
@@ -19,6 +19,8 @@ const loginSchema = z.object({
 
 const LoginForm = () => {
   const { login, isLoading, error } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   
   const form = useForm<LoginFormType>({
@@ -34,7 +36,6 @@ const LoginForm = () => {
       logger.info('Tentativa de login iniciada', { email: data.email }, 'LOGIN_FORM');
       await login(data);
       
-      // Redirecionar para home após login bem-sucedido
       logger.info('Login realizado, redirecionando para home', undefined, 'LOGIN_FORM');
       navigate('/');
     } catch (err: any) {
@@ -44,20 +45,24 @@ const LoginForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
+            <FormItem className="space-y-2">
+              <label className="text-gray-700 font-medium text-sm">Email</label>
               <FormControl>
-                <Input 
-                  placeholder="seu@email.com" 
-                  type="email"
-                  autoComplete="email"
-                  {...field}
-                />
+                <div className="relative">
+                  <Input 
+                    placeholder="seu@email.com" 
+                    type="email"
+                    autoComplete="email"
+                    className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12"
+                    {...field}
+                  />
+                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -68,34 +73,69 @@ const LoginForm = () => {
           control={form.control}
           name="password"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Senha</FormLabel>
+            <FormItem className="space-y-2">
+              <label className="text-gray-700 font-medium text-sm">Senha</label>
               <FormControl>
-                <Input 
-                  placeholder="••••••••" 
-                  type="password"
-                  autoComplete="current-password"
-                  {...field}
-                />
+                <div className="relative">
+                  <Input 
+                    placeholder="••••••••" 
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors text-gray-800 pl-12 pr-12"
+                    {...field}
+                  />
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
+        <div className="flex items-center justify-between text-sm">
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+            />
+            <span className="text-gray-600">Lembrar-me</span>
+          </label>
+          <span className="text-purple-600 font-medium cursor-pointer hover:text-purple-700 transition-colors">
+            Esqueci a senha
+          </span>
+        </div>
+
         {error && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-xl border border-red-200">
             {error}
           </div>
         )}
 
         <Button 
           type="submit" 
-          className="w-full" 
           disabled={isLoading}
+          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 py-4 rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
         >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Entrar
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Entrando...
+            </>
+          ) : (
+            <>
+              <LogIn className="mr-2 h-4 w-4" />
+              Entrar na Batalha
+            </>
+          )}
         </Button>
       </form>
     </Form>
