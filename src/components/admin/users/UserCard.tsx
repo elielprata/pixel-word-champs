@@ -1,119 +1,148 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserCheck, UserX, Edit, Trash2, Crown } from 'lucide-react';
+import { Eye, Edit, Ban, Trash2, UserCheck, Users } from 'lucide-react';
+import { AllUsersData } from '@/hooks/useAllUsers';
+import { logger } from '@/utils/logger';
+import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 
 interface UserCardProps {
-  user: any;
-  onBanUser: (userId: string, reason: string) => void;
-  onUnbanUser: (userId: string) => void;
-  onEditUser: (user: any) => void;
-  onDeleteUser: (userId: string) => void;
-  isBanningUser: boolean;
-  isUnbanningUser: boolean;
-  getUserStatusBadge: (user: any) => React.ReactNode;
+  user: AllUsersData;
+  onViewUser: (user: AllUsersData) => void;
+  onEditUser: (user: AllUsersData) => void;
+  onBanUser: (user: AllUsersData) => void;
+  onDeleteUser: (user: AllUsersData) => void;
 }
 
-export const UserCard = ({
-  user,
-  onBanUser,
-  onUnbanUser,
-  onEditUser,
-  onDeleteUser,
-  isBanningUser,
-  isUnbanningUser,
-  getUserStatusBadge
-}: UserCardProps) => {
-  const isAdmin = user.roles?.includes('admin');
-  const isBanned = user.is_banned;
+export const UserCard = ({ user, onViewUser, onEditUser, onBanUser, onDeleteUser }: UserCardProps) => {
+  const handleViewUser = () => {
+    logger.info('Visualizando detalhes do usuário', { userId: user.id }, 'USER_CARD');
+    onViewUser(user);
+  };
+
+  const handleEditUser = () => {
+    logger.info('Editando usuário', { userId: user.id }, 'USER_CARD');
+    onEditUser(user);
+  };
+
+  const handleBanUser = () => {
+    const action = user.is_banned ? 'desbanindo' : 'banindo';
+    logger.info(`Ação de ${action} usuário`, { userId: user.id, currentlyBanned: user.is_banned }, 'USER_CARD');
+    onBanUser(user);
+  };
+
+  const handleDeleteUser = () => {
+    logger.info('Excluindo usuário', { userId: user.id }, 'USER_CARD');
+    onDeleteUser(user);
+  };
 
   return (
-    <Card className="hover-shadow transition-all duration-200">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={user.avatar_url} />
-              <AvatarFallback className="bg-purple-100 text-purple-700 font-semibold">
-                {user.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm">{user.username || 'Sem nome'}</h3>
-                {isAdmin && <Crown className="w-3 h-3 text-yellow-500" />}
-              </div>
-              <p className="text-xs text-gray-500 truncate max-w-[150px]">{user.email}</p>
+    <div className={`px-4 py-3 transition-colors hover:bg-slate-50/80 ${user.is_banned ? 'bg-red-50/30' : ''}`}>
+      <div className="flex items-center justify-between">
+        {/* Informações do usuário */}
+        <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+              <Users className="w-4 h-4 text-blue-600" />
             </div>
           </div>
-          {getUserStatusBadge(user)}
-        </div>
-      </CardHeader>
-      
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-          <div>
-            <span className="text-gray-500">XP:</span>
-            <span className="ml-1 font-medium">{user.total_score || 0}</span>
-          </div>
-          <div>
-            <span className="text-gray-500">Jogos:</span>
-            <span className="ml-1 font-medium">{user.games_played || 0}</span>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className={`font-medium text-sm truncate ${user.is_banned ? 'text-red-700' : 'text-slate-900'}`}>
+                {user.username}
+              </span>
+              
+              <div className="flex items-center space-x-1">
+                {user.roles.includes('admin') && (
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 border-purple-200">
+                    Admin
+                  </Badge>
+                )}
+                {user.is_banned && (
+                  <Badge variant="destructive" className="text-xs px-1.5 py-0.5">
+                    Banido
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            <div className="text-xs text-slate-600 truncate">
+              {user.email}
+            </div>
+            
+            <div className="flex items-center space-x-3 text-xs text-slate-500 mt-1">
+              <span>{user.games_played} jogos</span>
+              <span>•</span>
+              <span>{user.total_score} pts</span>
+              <span>•</span>
+              <span>{formatBrasiliaDate(new Date(user.created_at), false)}</span>
+            </div>
+            
+            {user.is_banned && user.ban_reason && (
+              <div className="text-xs text-red-600 mt-1 truncate">
+                Motivo: {user.ban_reason}
+              </div>
+            )}
           </div>
         </div>
         
-        <div className="flex gap-1">
+        {/* Botões de ação */}
+        <div className="flex items-center space-x-1 flex-shrink-0 ml-3">
           <Button
+            variant="ghost"
             size="sm"
-            variant="outline"
-            onClick={() => onEditUser(user)}
-            className="flex-1 h-7 text-xs hover-glow"
+            onClick={handleViewUser}
+            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            title="Visualizar"
           >
-            <Edit className="w-3 h-3 mr-1" />
-            Editar
+            <Eye className="h-3.5 w-3.5" />
           </Button>
           
-          {!isAdmin && (
-            <>
-              {isBanned ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onUnbanUser(user.id)}
-                  disabled={isUnbanningUser}
-                  className="flex-1 h-7 text-xs text-green-600 border-green-200 hover:bg-green-50 hover-glow"
-                >
-                  <UserCheck className="w-3 h-3 mr-1" />
-                  {isUnbanningUser ? '...' : 'Desbanir'}
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onBanUser(user.id, 'Banimento via painel admin')}
-                  disabled={isBanningUser}
-                  className="flex-1 h-7 text-xs text-red-600 border-red-200 hover:bg-red-50 hover-glow"
-                >
-                  <UserX className="w-3 h-3 mr-1" />
-                  {isBanningUser ? '...' : 'Banir'}
-                </Button>
-              )}
-              
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onDeleteUser(user.id)}
-                className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50 hover-glow"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleEditUser}
+            className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+            title="Editar"
+          >
+            <Edit className="h-3.5 w-3.5" />
+          </Button>
+          
+          {user.is_banned ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBanUser}
+              className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+              title="Desbanir"
+            >
+              <UserCheck className="h-3.5 w-3.5" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBanUser}
+              className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+              title="Banir"
+            >
+              <Ban className="h-3.5 w-3.5" />
+            </Button>
           )}
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDeleteUser}
+            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+            title="Excluir"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

@@ -70,35 +70,6 @@ export const UserListContainer = () => {
     setSelectedUser(null);
   };
 
-  const handleBanUserAction = (userId: string, reason: string) => {
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      handleBanUser(user);
-    }
-  };
-
-  const handleUnbanUserAction = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      // Handle unban logic here
-      console.log('Unban user:', userId);
-    }
-  };
-
-  const handleDeleteUserAction = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      handleDeleteUser(user);
-    }
-  };
-
-  const getUserStatusBadge = (user: AllUsersData) => {
-    if (user.is_banned) {
-      return <span className="text-red-600 text-xs">Banido</span>;
-    }
-    return <span className="text-green-600 text-xs">Ativo</span>;
-  };
-
   if (isLoading) {
     return (
       <Card className="shadow-sm">
@@ -134,13 +105,10 @@ export const UserListContainer = () => {
               <UserCard
                 key={user.id}
                 user={user}
-                onBanUser={handleBanUserAction}
-                onUnbanUser={handleUnbanUserAction}
+                onViewUser={handleViewUser}
                 onEditUser={handleEditUser}
-                onDeleteUser={handleDeleteUserAction}
-                isBanningUser={false}
-                isUnbanningUser={false}
-                getUserStatusBadge={getUserStatusBadge}
+                onBanUser={handleBanUser}
+                onDeleteUser={handleDeleteUser}
               />
             ))}
           </div>

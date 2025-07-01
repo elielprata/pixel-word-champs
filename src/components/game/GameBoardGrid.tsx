@@ -1,9 +1,7 @@
-
 import React, { useRef } from "react";
 import GameCell from "./GameCell";
 import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from "@/utils/boardUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useEdgeProtection } from "@/utils/edgeProtection";
 
 interface GameBoardGridProps {
   boardData: { board: string[][] };
@@ -39,13 +37,10 @@ const GameBoardGrid = ({
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
-  // ✅ APLICAR PROTEÇÃO DE BORDA NO TABULEIRO
-  useEdgeProtection(boardRef, true);
-
   // Layout limpo - ajustado para 8x12
   const gridConfig = {
     gap: "1px",
-    maxWidth: isMobile ? "360px" : "480px",
+    maxWidth: isMobile ? "360px" : "480px", // Aumentado para acomodar 12 colunas
     padding: "0px",
   };
 
@@ -63,13 +58,14 @@ const GameBoardGrid = ({
   return (
     <div
       ref={boardRef}
-      className="grid mx-auto bg-white board-container board-total-protection"
+      className="grid mx-auto bg-white"
       style={{
-        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`,
-        gridTemplateRows: `repeat(${size}, 1fr)`,
+        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`, // 12 colunas
+        gridTemplateRows: `repeat(${size}, 1fr)`, // 8 linhas
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: "100%",
+        touchAction: "none",
         padding: gridConfig.padding,
         background: "white",
       }}

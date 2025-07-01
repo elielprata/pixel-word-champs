@@ -39,8 +39,8 @@ const SocialShareModal = ({ isOpen, onClose, inviteCode, shareText, shareUrl }: 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-3 backdrop-blur-sm safe-interactive">
-      <Card className="w-full max-w-md max-h-[85vh] overflow-y-auto border-0 bg-white shadow-2xl animate-modal-enter">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-3 backdrop-blur-sm">
+      <Card className="w-full max-w-md max-h-[85vh] overflow-y-auto border-0 bg-white shadow-2xl animate-scale-in">
         <ShareHeader onClose={handleClose} />
         
         <CardContent className="p-2 space-y-2">

@@ -34,11 +34,11 @@ const GameStats = ({ timeLeft, hintsUsed, levelScore, onUseHint }: GameStatsProp
 
   return (
     <div className="flex justify-between items-center gap-3">
-      {/* Botão de Dica Gamificado - SEM SCALE */}
+      {/* Botão de Dica Gamificado */}
       <Button 
         size="sm" 
         variant="outline" 
-        className={`rounded-xl h-10 px-4 font-bold shadow-lg transition-all duration-300 hover-glow active-dim safe-interactive ${
+        className={`rounded-xl h-10 px-4 font-bold shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 ${
           hasHintsAvailable 
             ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 hover:from-yellow-500 hover:to-orange-600 shadow-yellow-500/30' 
             : 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'

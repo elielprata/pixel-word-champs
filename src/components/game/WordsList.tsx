@@ -61,7 +61,7 @@ const WordsList = ({ levelWords, foundWords, getWordColor }: WordsListProps) => 
             <div 
               key={index}
               className={`
-                relative flex items-center justify-between px-1.5 py-1 rounded-lg transition-all duration-300 hover-shadow border text-xs
+                relative flex items-center justify-between px-1.5 py-1 rounded-lg transition-all duration-300 transform hover:scale-[1.02] border text-xs
                 ${isFound 
                   ? `bg-gradient-to-r ${getWordColor(foundWordIndex)} text-white shadow-sm border-white/30 animate-bounce-in` 
                   : isHidden

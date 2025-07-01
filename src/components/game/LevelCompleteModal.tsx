@@ -21,6 +21,7 @@ const LevelCompleteModal = ({
   onStay 
 }: LevelCompleteModalProps) => {
   
+  // Log sempre que o componente renderiza
   logger.debug('🏆 LevelCompleteModal renderizado', { 
     isOpen, 
     level, 
@@ -65,7 +66,7 @@ const LevelCompleteModal = ({
         <div className="absolute top-3/4 left-1/2 w-2.5 h-2.5 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s', animationDuration: '2.3s' }} />
       </div>
 
-      <Card className="w-96 m-4 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-200 shadow-2xl shadow-amber-500/20 animate-modal-enter">
+      <Card className="w-96 m-4 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-200 shadow-2xl shadow-amber-500/20 animate-scale-in">
         <CardContent className="p-8 text-center relative overflow-hidden">
           {/* Fundo decorativo com gradiente animado */}
           <div className="absolute inset-0 bg-gradient-to-br from-amber-100/50 via-yellow-100/30 to-orange-100/50 animate-pulse" />
@@ -99,7 +100,7 @@ const LevelCompleteModal = ({
             </div>
             
             {/* Seção da pontuação com destaque */}
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 mb-6 shadow-lg hover-glow transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 mb-6 shadow-lg transform hover:scale-105 transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center justify-center space-x-3">
                 <Trophy className="w-8 h-8 text-yellow-300" />
                 <div>
@@ -115,11 +116,11 @@ const LevelCompleteModal = ({
               </div>
             </div>
             
-            {/* Botões de ação com estilo gamificado - SEM SCALE */}
+            {/* Botões de ação com estilo gamificado */}
             <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
               <Button 
                 onClick={handleAdvance}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-lg py-4 rounded-xl shadow-lg hover-shadow transition-all duration-300 border-2 border-green-400 safe-interactive"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-green-400"
               >
                 <ArrowRight className="w-5 h-5 mr-3" />
                 <span className="font-bold">Próximo Nível</span>
@@ -128,7 +129,7 @@ const LevelCompleteModal = ({
               
               <Button 
                 onClick={handleStay}
-                className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white text-lg py-4 rounded-xl shadow-lg hover-shadow transition-all duration-300 border-2 border-red-400 safe-interactive"
+                className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-red-400"
               >
                 <StopCircle className="w-5 h-5 mr-3" />
                 <span className="font-bold">Finalizar Jogo</span>

@@ -1,3 +1,4 @@
+
 // Corrigir tipagem inconsistente da interface User
 export interface User {
   id: string;
@@ -14,7 +15,6 @@ export interface User {
   experience_points?: number; // Adicionar campo de XP
   created_at: string;
   updated_at: string;
-  invite_code?: string; // Adicionar campo de código de convite
 }
 
 export interface GameSession {

@@ -3,7 +3,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0, interactive-widget=resizes-content, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Letra Arena - Caça Palavras</title>
     <meta name="description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
     <meta name="author" content="Letra Arena" />
@@ -12,24 +12,11 @@
     <!-- PWA Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Letra Arena">
-    <meta name="apple-touch-fullscreen" content="yes">
 
-    <!-- ✅ BLOQUEIO TOTAL ANTI-ZOOM - META TAGS FORTIFICADAS -->
-    <meta name="format-detection" content="telephone=no">
-    <meta name="msapplication-tap-highlight" content="no">
-    <meta name="HandheldFriendly" content="true">
-    <meta name="MobileOptimized" content="width">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="robots" content="noindex, nofollow">
-    
-    <!-- ✅ SEGURANÇA E PREVENÇÃO ADICIONAL -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; frame-ancestors 'none';">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-touch-fullscreen" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
+    <!-- Prevent zoom on inputs -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <meta property="og:title" content="Letra Arena - Caça Palavras" />
     <meta property="og:description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
@@ -41,229 +28,44 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <style>
-      /* ✅ BLOQUEIO TOTAL DEFINITIVO - CSS GLOBAL ANTI-ZOOM MÁXIMA ESPECIFICIDADE */
-      *, *::before, *::after {
-        /* Prevenção total de zoom e seleção - NÍVEL MÁXIMO */
-        -webkit-touch-callout: none !important;
-        -webkit-user-select: none !important;
-        -khtml-user-select: none !important;
-        -moz-user-select: none !important;
-        -ms-user-select: none !important;
-        user-select: none !important;
-        -webkit-tap-highlight-color: transparent !important;
-        
-        /* Touch action hierárquico controlado - NÍVEL MÁXIMO */
-        touch-action: pan-y !important;
-        
-        /* Prevenção de zoom CSS robusto - NÍVEL MÁXIMO */
-        -webkit-text-size-adjust: none !important;
-        -ms-text-size-adjust: none !important;
-        text-size-adjust: none !important;
-        
-        /* Bloqueio de transform scale - NÍVEL MÁXIMO */
-        transform: none !important;
+      /* Prevent text selection and improve mobile experience */
+      * {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
       }
       
-      /* ✅ PERMITIR SELEÇÃO APENAS EM INPUTS E TEXTAREAS */
-      input, textarea, [contenteditable], input *, textarea *, [contenteditable] * {
-        -webkit-user-select: text !important;
-        -moz-user-select: text !important;
-        -ms-user-select: text !important;
-        user-select: text !important;
-        touch-action: manipulation !important;
+      /* Allow text selection for inputs and specific elements */
+      input, textarea, [contenteditable] {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
       }
       
-      /* ✅ HIERARQUIA CSS DEFINITIVA - NÍVEL 1 - MÁXIMA ESPECIFICIDADE */
-      html, body, html *, body * {
-        /* Controle total de scroll e zoom */
-        overflow-x: hidden !important;
-        width: 100% !important;
-        
-        /* Overscroll behavior otimizado */
-        overscroll-behavior: none !important;
-        overscroll-behavior-x: none !important;
-        overscroll-behavior-y: none !important;
-        
-        /* Touch action nível 1 */
-        touch-action: pan-y !important;
-        
-        /* Prevenção de zoom adicional */
-        -webkit-text-size-adjust: none !important;
-        -ms-text-size-adjust: none !important;
-        text-size-adjust: none !important;
-        
-        /* Bloqueio de gestos iOS */
-        -webkit-user-drag: none !important;
-        -webkit-user-modify: read-only !important;
+      /* Prevent bounce effect on iOS */
+      html, body {
+        overflow-x: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
       }
       
-      body {
-        overflow-y: auto !important;
-        height: 100% !important;
-      }
-      
-      /* ✅ HIERARQUIA CSS DEFINITIVA - NÍVEL 2 - MÁXIMA ESPECIFICIDADE */
-      #root, #root * {
-        width: 100% !important;
-        min-height: 100vh !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch !important;
-        
-        /* Overscroll behavior nível 2 */
-        overscroll-behavior: none !important;
-        overscroll-behavior-x: none !important;
-        overscroll-behavior-y: contain !important;
-        
-        /* Touch action nível 2 */
-        touch-action: pan-y !important;
-      }
-      
-      /* ✅ PROTEÇÃO GLOBAL ANTI-NAVEGAÇÃO - MÁXIMA ESPECIFICIDADE */
-      .edge-protected, .edge-protected * {
-        touch-action: pan-y !important;
-        overscroll-behavior: none !important;
-        -webkit-user-select: none !important;
-        user-select: none !important;
-        -webkit-touch-callout: none !important;
-        -webkit-text-size-adjust: none !important;
-      }
-      
-      /* ✅ ÁREA DE TABULEIRO - BLOQUEIO TOTAL - MÁXIMA ESPECIFICIDADE */
-      .board-container, .board-container * {
-        touch-action: none !important;
-        overscroll-behavior: none !important;
-        -webkit-user-select: none !important;
-        user-select: none !important;
-        -webkit-touch-callout: none !important;
-      }
-      
-      /* ✅ CÉLULAS - PROTEÇÃO MÁXIMA - MÁXIMA ESPECIFICIDADE */
-      .game-cell, .game-cell * {
-        touch-action: none !important;
-        -webkit-user-select: none !important;
-        user-select: none !important;
-        -webkit-touch-callout: none !important;
-        -webkit-text-size-adjust: none !important;
-        pointer-events: auto !important;
-      }
-      
-      /* ✅ ELEMENTOS INTERATIVOS SEGUROS - MÁXIMA ESPECIFICIDADE */
-      .safe-interactive, .safe-interactive * {
-        touch-action: manipulation !important;
-        -webkit-user-select: none !important;
-        user-select: none !important;
-        -webkit-touch-callout: none !important;
-      }
-      
-      /* ✅ BLOQUEIO DE CONTEXT MENU - MÁXIMA ESPECIFICIDADE */
-      .no-context-menu, .no-context-menu * {
-        -webkit-touch-callout: none !important;
-        -webkit-user-select: none !important;
-        user-select: none !important;
+      #root {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
     </style>
   </head>
 
-  <body class="edge-protected no-context-menu">
-    <div id="root" class="edge-protected"></div>
+  <body>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- ✅ SCRIPT GLOBAL ANTI-NAVEGAÇÃO E EDGE PROTECTION MÁXIMA -->
-    <script>
-      // ✅ BLOQUEIO GLOBAL DE GESTOS PERIGOSOS - NÍVEL MÁXIMO
-      document.addEventListener('gesturestart', function(e) {
-        console.log('🚫 Gesture start bloqueado globalmente');
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      }, { passive: false, capture: true });
-      
-      document.addEventListener('gesturechange', function(e) {
-        console.log('🚫 Gesture change bloqueado globalmente');
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      }, { passive: false, capture: true });
-      
-      document.addEventListener('gestureend', function(e) {
-        console.log('🚫 Gesture end bloqueado globalmente');
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      }, { passive: false, capture: true });
-      
-      // ✅ BLOQUEIO DE CONTEXT MENU GLOBAL
-      document.addEventListener('contextmenu', function(e) {
-        console.log('🚫 Context menu bloqueado globalmente');
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();  
-      }, { passive: false, capture: true });
-      
-      // ✅ DETECÇÃO DE BORDA GLOBAL FORTIFICADA
-      function isEdgeTouchDangerous(clientX, clientY) {
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight;
-        const topBottomThreshold = 20; // 20px para top/bottom
-        const sideThreshold = 30; // 30px para laterais
-        
-        const isLeftEdge = clientX < sideThreshold;
-        const isRightEdge = clientX > screenWidth - sideThreshold;
-        const isTopEdge = clientY < topBottomThreshold;
-        const isBottomEdge = clientY > screenHeight - topBottomThreshold;
-        
-        return isLeftEdge || isRightEdge || isTopEdge || isBottomEdge;
-      }
-      
-      // ✅ EVENT LISTENER GLOBAL PARA DETECTAR EDGE TOUCHES - NÍVEL MÁXIMO
-      document.addEventListener('touchstart', function(e) {
-        const touch = e.touches[0];
-        if (touch && isEdgeTouchDangerous(touch.clientX, touch.clientY)) {
-          console.log('🚫 Edge touch bloqueado globalmente - NÍVEL MÁXIMO');
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-        }
-      }, { passive: false, capture: true });
-      
-      document.addEventListener('touchmove', function(e) {
-        const touch = e.touches[0];
-        if (touch && isEdgeTouchDangerous(touch.clientX, touch.clientY)) {
-          console.log('🚫 Edge move bloqueado globalmente - NÍVEL MÁXIMO');
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-        }
-      }, { passive: false, capture: true });
-      
-      // ✅ BLOQUEIO DE SCROLL HORIZONTAL GLOBAL
-      document.addEventListener('wheel', function(e) {
-        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-          console.log('🚫 Scroll horizontal bloqueado globalmente');
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-        }
-      }, { passive: false, capture: true });
-      
-      // ✅ PREVENÇÃO DE PULL-TO-REFRESH EM BORDAS
-      let touchStartY = 0;
-      document.addEventListener('touchstart', function(e) {
-        touchStartY = e.touches[0].clientY;
-      }, { passive: true });
-      
-      document.addEventListener('touchmove', function(e) {
-        const touchY = e.touches[0].clientY;
-        const touchDiff = touchY - touchStartY;
-        
-        // Se está no topo da página e tentando puxar para baixo
-        if (window.scrollY === 0 && touchDiff > 0) {
-          console.log('🚫 Pull-to-refresh bloqueado globalmente');
-          e.preventDefault();
-        }
-      }, { passive: false });
-      
-      console.log('✅ Sistema de bloqueio global ativado - NÍVEL MÁXIMO');
-    </script>
   </body>
 </html>

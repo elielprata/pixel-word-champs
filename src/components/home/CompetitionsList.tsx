@@ -34,6 +34,14 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
     return { activeCompetitions: active, scheduledCompetitions: scheduled };
   }, [competitions]);
 
+  const handleJoin = (competitionId: string) => {
+    onStartChallenge(competitionId);
+  };
+
+  const handleViewRanking = (competitionId: string) => {
+    console.log('Ver ranking da competição:', competitionId);
+  };
+
   const totalCompetitions = activeCompetitions.length + scheduledCompetitions.length;
 
   if (totalCompetitions === 0) {
@@ -63,7 +71,8 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
               <CompetitionCard
                 key={competition.id}
                 competition={competition}
-                onStartChallenge={onStartChallenge}
+                onJoin={handleJoin}
+                onViewRanking={handleViewRanking}
               />
             ))}
           </div>
@@ -83,7 +92,8 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
                 <div className="px-4">
                   <CompetitionCard
                     competition={competition}
-                    onStartChallenge={onStartChallenge}
+                    onJoin={handleJoin}
+                    onViewRanking={handleViewRanking}
                   />
                 </div>
                 {index < scheduledCompetitions.length - 1 && (

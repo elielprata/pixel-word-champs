@@ -35,7 +35,7 @@ const GameOverModal = ({
   const handleCloseAd = () => {
     console.log('Anúncio fechado - ativando revive e adicionando tempo');
     setIsWatchingAd(false);
-    onRevive();
+    onRevive(); // Isso adiciona o tempo e fecha o modal do Game Over
   };
 
   const handleStopGame = () => {
@@ -50,7 +50,7 @@ const GameOverModal = ({
           <CardContent className="p-6 text-center relative">
             <Button 
               onClick={handleCloseAd}
-              className="absolute top-2 right-2 w-8 h-8 p-0 bg-gray-600 hover:bg-gray-700 safe-interactive"
+              className="absolute top-2 right-2 w-8 h-8 p-0 bg-gray-600 hover:bg-gray-700"
               variant="secondary"
             >
               <X className="w-4 h-4" />
@@ -84,7 +84,7 @@ const GameOverModal = ({
         <div className="absolute top-80 right-1/5 w-0.5 h-5 bg-gray-400/40 rounded-full animate-bounce" style={{ animationDelay: '0.8s', animationDuration: '3.8s' }} />
       </div>
 
-      <Card className="w-96 m-4 bg-gradient-to-br from-slate-700 via-gray-800 to-slate-900 border-2 border-slate-600 shadow-2xl shadow-blue-900/40 animate-modal-enter">
+      <Card className="w-96 m-4 bg-gradient-to-br from-slate-700 via-gray-800 to-slate-900 border-2 border-slate-600 shadow-2xl shadow-blue-900/40 animate-scale-in">
         <CardContent className="p-8 text-center relative overflow-hidden">
           {/* Fundo decorativo com nuvens escuras */}
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800/60 via-gray-800/40 to-slate-900/60 animate-pulse" />
@@ -123,7 +123,7 @@ const GameOverModal = ({
             </div>
             
             {/* Seção da pontuação com tema melancólico */}
-            <div className="bg-gradient-to-r from-slate-600 to-gray-600 rounded-2xl p-6 mb-6 shadow-lg border border-slate-500/30 hover-glow transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="bg-gradient-to-r from-slate-600 to-gray-600 rounded-2xl p-6 mb-6 shadow-lg border border-slate-500/30 transform hover:scale-105 transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center justify-center space-x-4 mb-4">
                 <CloudRain className="w-6 h-6 text-blue-300" />
                 <div>
@@ -147,12 +147,12 @@ const GameOverModal = ({
               </div>
             </div>
             
-            {/* Botões de ação com estilo melancólico gamificado - SEM SCALE */}
+            {/* Botões de ação com estilo melancólico gamificado */}
             <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
               {canRevive && (
                 <Button 
                   onClick={handleReviveClick}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-lg py-4 rounded-xl shadow-lg hover-shadow transition-all duration-300 border-2 border-emerald-500/30 safe-interactive"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-emerald-500/30"
                 >
                   <RotateCcw className="w-5 h-5 mr-3" />
                   <span className="font-bold">💪 Reviver (+30s)</span>
@@ -162,7 +162,7 @@ const GameOverModal = ({
               
               <Button 
                 onClick={handleStopGame}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-lg py-4 rounded-xl shadow-lg hover-shadow transition-all duration-300 border-2 border-red-500/30 safe-interactive"
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-red-500/30"
               >
                 <StopCircle className="w-5 h-5 mr-3" />
                 <span className="font-bold">Finalizar Jogo</span>
