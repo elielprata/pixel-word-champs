@@ -32,10 +32,20 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
-  // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS
+  // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS COM BLOQUEIO INTELIGENTE
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Verificar se o toque está nas extremidades (bloqueio inteligente)
+    const touch = e.touches[0];
+    const screenWidth = window.innerWidth;
+    const edgeThreshold = 20; // 20px das bordas
+    
+    if (touch.clientX < edgeThreshold || touch.clientX > screenWidth - edgeThreshold) {
+      return; // Bloquear interação nas extremidades
+    }
+    
     onCellStart(rowIndex, colIndex);
   };
 
@@ -44,6 +54,14 @@ const GameCell = ({
     
     const touch = e.touches[0];
     if (!touch) return;
+    
+    // Verificar bloqueio inteligente nas extremidades
+    const screenWidth = window.innerWidth;
+    const edgeThreshold = 20;
+    
+    if (touch.clientX < edgeThreshold || touch.clientX > screenWidth - edgeThreshold) {
+      return; // Bloquear movimento nas extremidades
+    }
     
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     if (!element) return;
@@ -78,24 +96,24 @@ const GameCell = ({
     onCellEnd();
   };
 
-  // Hierarquia visual gamificada: Dica > Palavra encontrada > Seleção atual > Normal
+  // ✅ HIERARQUIA VISUAL GAMIFICADA SEM SCALE - USANDO EFEITOS ALTERNATIVOS
   const getCellClasses = () => {
-    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95";
+    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer safe-interactive no-tap-highlight";
     
     if (isHintHighlighted) {
-      return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse`;
+      return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse hover-glow`;
     }
     
     if (isPermanentlyMarked && wordColor) {
-      return `${baseClasses} ${wordColor} text-white shadow-lg animate-bounce-in`;
+      return `${baseClasses} ${wordColor} text-white shadow-lg animate-bounce-in hover-glow`;
     }
     
     if (isSelected) {
-      return `${baseClasses} bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-800 shadow-lg shadow-yellow-500/50 animate-pulse`;
+      return `${baseClasses} bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-800 shadow-lg shadow-yellow-500/50 animate-pulse hover-glow`;
     }
     
-    // Estado normal com gradiente sutil
-    return `${baseClasses} bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 hover:from-gray-100 hover:to-gray-200 shadow-md`;
+    // Estado normal com efeitos alternativos
+    return `${baseClasses} bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 hover:from-gray-100 hover:to-gray-200 shadow-md hover-shadow active-dim`;
   };
 
   const fontSize = isMobile
@@ -118,7 +136,7 @@ const GameCell = ({
         userSelect: "none",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
-        touchAction: "none",
+        touchAction: "manipulation", // Bloqueio inteligente
         padding: 0,
         margin: 0,
       }}

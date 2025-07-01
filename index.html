@@ -3,7 +3,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Letra Arena - Caça Palavras</title>
     <meta name="description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
     <meta name="author" content="Letra Arena" />
@@ -15,8 +15,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Letra Arena">
 
-    <!-- Prevent zoom on inputs -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- BLOQUEIO INTELIGENTE DE EXTREMIDADES - META TAGS OTIMIZADAS -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
 
     <meta property="og:title" content="Letra Arena - Caça Palavras" />
     <meta property="og:description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
@@ -28,8 +29,9 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <style>
-      /* Prevent text selection and improve mobile experience */
+      /* BLOQUEIO INTELIGENTE DE EXTREMIDADES - ESTILOS CRÍTICOS */
       * {
+        /* Prevenção total de zoom e seleção */
         -webkit-touch-callout: none;
         -webkit-user-select: none;
         -khtml-user-select: none;
@@ -37,29 +39,46 @@
         -ms-user-select: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
+        
+        /* Touch action inteligente */
+        touch-action: manipulation;
       }
       
-      /* Allow text selection for inputs and specific elements */
+      /* Permitir seleção apenas em inputs */
       input, textarea, [contenteditable] {
         -webkit-user-select: text;
         -moz-user-select: text;
         -ms-user-select: text;
         user-select: text;
+        touch-action: manipulation;
       }
       
-      /* Prevent bounce effect on iOS */
+      /* Controle total de scroll e posicionamento */
       html, body {
         overflow-x: hidden;
         position: fixed;
         width: 100%;
         height: 100%;
+        
+        /* Prevenção de overscroll inteligente */
+        overscroll-behavior: contain;
+        overscroll-behavior-x: none;
+        overscroll-behavior-y: contain;
+        
+        /* Touch action para scroll vertical apenas */
+        touch-action: pan-y;
       }
       
       #root {
         width: 100%;
         height: 100%;
         overflow-y: auto;
+        overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
+        
+        /* Controle inteligente de overscroll */
+        overscroll-behavior-x: none;
+        overscroll-behavior-y: auto;
       }
     </style>
   </head>
