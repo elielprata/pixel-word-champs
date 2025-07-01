@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
@@ -89,6 +88,27 @@ export const authService = {
       return { error: null };
     } catch (error) {
       logger.error('Erro no processo de logout', { error });
+      return { error };
+    }
+  },
+
+  async resetPassword(email: string) {
+    try {
+      logger.info('Iniciando processo de recuperação de senha', { email }, 'AUTH_SERVICE');
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) {
+        logger.error('Erro na recuperação de senha', { error: error.message }, 'AUTH_SERVICE');
+        throw error;
+      }
+
+      logger.info('Email de recuperação enviado com sucesso', { email }, 'AUTH_SERVICE');
+      return { error: null };
+    } catch (error) {
+      logger.error('Erro no processo de recuperação de senha', { error }, 'AUTH_SERVICE');
       return { error };
     }
   },

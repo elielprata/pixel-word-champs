@@ -11,6 +11,7 @@ import { LoginForm as LoginFormType } from '@/types';
 import { Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { logger } from '@/utils/logger';
+import ForgotPasswordForm from './ForgotPasswordForm';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
@@ -21,6 +22,7 @@ const LoginForm = () => {
   const { login, isLoading, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   
   const form = useForm<LoginFormType>({
@@ -42,6 +44,10 @@ const LoginForm = () => {
       logger.error('Erro no login', { error: err.message }, 'LOGIN_FORM');
     }
   };
+
+  if (showForgotPassword) {
+    return <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />;
+  }
 
   return (
     <Form {...form}>
@@ -109,9 +115,13 @@ const LoginForm = () => {
             />
             <span className="text-gray-600">Lembrar-me</span>
           </label>
-          <span className="text-purple-600 font-medium cursor-pointer hover:text-purple-700 transition-colors">
+          <button
+            type="button"
+            onClick={() => setShowForgotPassword(true)}
+            className="text-purple-600 font-medium cursor-pointer hover:text-purple-700 transition-colors"
+          >
             Esqueci a senha
-          </span>
+          </button>
         </div>
 
         {error && (

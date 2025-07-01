@@ -123,9 +123,47 @@ export const useAuthOperations = (
     }
   }, [setUser, setIsAuthenticated, setError, isMountedRef]);
 
+  const resetPassword = useCallback(async (email: string) => {
+    if (!isMountedRef.current) return;
+    
+    setIsLoading(true);
+    setError('');
+
+    try {
+      logger.info('Iniciando recuperação de senha', { email }, 'AUTH_OPERATIONS');
+      
+      const response = await authService.resetPassword(email);
+      
+      if (!isMountedRef.current) return;
+
+      if (response.error) {
+        const errorMessage = response.error.message || 'Erro ao enviar email de recuperação';
+        setError(errorMessage);
+        logger.error('Falha na recuperação de senha', { error: errorMessage }, 'AUTH_OPERATIONS');
+        return { success: false, error: errorMessage };
+      } else {
+        setError('');
+        logger.info('Email de recuperação enviado com sucesso', { email }, 'AUTH_OPERATIONS');
+        return { success: true };
+      }
+    } catch (error: any) {
+      if (!isMountedRef.current) return;
+      
+      const errorMessage = error.message || 'Erro de conexão';
+      setError(errorMessage);
+      logger.error('Erro durante recuperação de senha', { error: errorMessage }, 'AUTH_OPERATIONS');
+      return { success: false, error: errorMessage };
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [setIsLoading, setError, isMountedRef]);
+
   return {
     login,
     register,
     logout,
+    resetPassword,
   };
 };
