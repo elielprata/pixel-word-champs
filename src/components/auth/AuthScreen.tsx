@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import SocialLogin from './SocialLogin';
+import DailyCompetitionCard from './DailyCompetitionCard';
 import { Crown, Gamepad2, Trophy, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -60,6 +60,11 @@ const AuthScreen = () => {
             <h2 className="text-2xl font-bold text-yellow-400">ROYALE</h2>
             <p className="text-purple-200 text-sm mt-1">Compete e conquiste a coroa!</p>
           </div>
+        </div>
+
+        {/* Competição Diária - Nova seção */}
+        <div className="px-6 relative z-10">
+          <DailyCompetitionCard />
         </div>
 
         {/* Login Form Section - Container scrollável */}
