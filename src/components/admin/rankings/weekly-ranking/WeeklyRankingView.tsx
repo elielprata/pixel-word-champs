@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Settings, Award } from 'lucide-react';
 import { WeeklyRankingTable } from './WeeklyRankingTable';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
-import { WeeklyConfigModal } from './WeeklyConfigModal';
+import { WeeklyConfigModalWrapper } from './WeeklyConfigModalWrapper';
 import { WeeklyAutomationStatus } from './WeeklyAutomationStatus';
 import { PrizeConfigModal } from '../PrizeConfigModal';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 import { Loader2 } from 'lucide-react';
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 export const WeeklyRankingView = () => {
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -22,7 +23,25 @@ export const WeeklyRankingView = () => {
   } = useWeeklyRanking();
 
   const handleConfigUpdated = () => {
+    console.log('✅ Configuração semanal atualizada', {
+      timestamp: getCurrentBrasiliaTime()
+    });
     refetch();
+  };
+
+  const handleConfigModalOpen = () => {
+    console.log('🎯 Abrindo modal de configuração semanal', {
+      timestamp: getCurrentBrasiliaTime()
+    });
+    setConfigModalOpen(true);
+  };
+
+  const handleConfigModalClose = (open: boolean) => {
+    console.log('🔄 Modal de configuração semanal:', { 
+      open,
+      timestamp: getCurrentBrasiliaTime()
+    });
+    setConfigModalOpen(open);
   };
 
   if (isLoading) {
@@ -58,7 +77,7 @@ export const WeeklyRankingView = () => {
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
-            onClick={() => setConfigModalOpen(true)}
+            onClick={handleConfigModalOpen}
             className="flex items-center gap-2"
           >
             <Settings className="h-4 w-4" />
@@ -84,10 +103,10 @@ export const WeeklyRankingView = () => {
       {/* Tabela de Ranking */}
       <WeeklyRankingTable ranking={currentRanking} />
 
-      {/* Modal de Configuração */}
-      <WeeklyConfigModal
+      {/* Modal de Configuração com Wrapper */}
+      <WeeklyConfigModalWrapper
         open={configModalOpen}
-        onOpenChange={setConfigModalOpen}
+        onOpenChange={handleConfigModalClose}
         onConfigUpdated={handleConfigUpdated}
       />
 

@@ -1,81 +1,84 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw } from 'lucide-react';
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
-  errorInfo?: string;
-}
+import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 interface WeeklyConfigErrorBoundaryProps {
   children: React.ReactNode;
   onRetry?: () => void;
 }
 
+interface WeeklyConfigErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
 export class WeeklyConfigErrorBoundary extends React.Component<
   WeeklyConfigErrorBoundaryProps,
-  ErrorBoundaryState
+  WeeklyConfigErrorBoundaryState
 > {
   constructor(props: WeeklyConfigErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    console.error('🚨 WeeklyConfigModal Error Boundary capturou erro:', error);
-    return {
-      hasError: true,
-      error,
-      errorInfo: error.stack
-    };
+  static getDerivedStateFromError(error: Error): WeeklyConfigErrorBoundaryState {
+    console.error('❌ WeeklyConfigErrorBoundary capturou erro:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: getCurrentBrasiliaTime()
+    });
+    
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('🚨 Detalhes completos do erro no WeeklyConfigModal:', {
+    console.error('❌ WeeklyConfigErrorBoundary - detalhes do erro:', {
       error: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack
+      componentStack: errorInfo.componentStack,
+      timestamp: getCurrentBrasiliaTime()
     });
   }
+
+  handleRetry = () => {
+    console.log('🔄 WeeklyConfigErrorBoundary - tentando novamente...', {
+      timestamp: getCurrentBrasiliaTime()
+    });
+    
+    this.setState({ hasError: false, error: null });
+    
+    if (this.props.onRetry) {
+      this.props.onRetry();
+    }
+  };
 
   render() {
     if (this.state.hasError) {
       return (
-        <Card className="w-full max-w-md mx-auto border-red-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-5 w-5" />
-              Erro na Configuração Semanal
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Ocorreu um erro ao carregar o modal de configuração.
+        <div className="flex flex-col items-center justify-center p-8 space-y-4 bg-red-50 border border-red-200 rounded-lg">
+          <AlertTriangle className="h-12 w-12 text-red-600" />
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-semibold text-red-900">
+              Erro no Modal de Configuração Semanal
+            </h3>
+            <p className="text-sm text-red-700">
+              Ocorreu um erro ao carregar o modal de configuração semanal.
             </p>
-            
-            <div className="bg-red-50 p-3 rounded text-xs font-mono text-red-800">
-              {this.state.error?.message || 'Erro desconhecido'}
-            </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  this.setState({ hasError: false });
-                  this.props.onRetry?.();
-                }}
-                className="flex items-center gap-1"
-              >
-                <RefreshCw className="h-3 w-3" />
-                Tentar Novamente
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            {this.state.error && (
+              <details className="text-xs text-red-600 mt-2">
+                <summary className="cursor-pointer font-medium">Detalhes do erro</summary>
+                <pre className="mt-2 p-2 bg-red-100 border border-red-300 rounded text-left overflow-auto max-w-md">
+                  {this.state.error.message}
+                </pre>
+              </details>
+            )}
+          </div>
+          <Button onClick={this.handleRetry} variant="outline" className="flex items-center gap-2">
+            <RotateCcw className="h-4 w-4" />
+            Tentar Novamente
+          </Button>
+        </div>
       );
     }
 
