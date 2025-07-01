@@ -56,20 +56,19 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   }
   
-  /* ✅ BLOQUEIO INTELIGENTE FINAL - TOUCH ACTION HIERARCHY CORRETA */
+  /* ✅ BLOQUEIO INTELIGENTE - SCROLL VERTICAL PERMITIDO */
   html, body {
     /* Prevenção total de zoom */
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
     
-    /* Controle inteligente de touch - apenas scroll vertical */
+    /* Controle inteligente de touch - scroll vertical + bloqueio navegação */
     touch-action: pan-y;
     
-    /* Prevenção de overscroll e pull-to-refresh */
-    overscroll-behavior: contain;
-    overscroll-behavior-y: auto;
+    /* Prevenção de overscroll horizontal e pull-to-refresh lateral */
     overscroll-behavior-x: none;
+    overscroll-behavior-y: auto;
     
     /* Bloqueio de seleção para evitar zoom acidental */
     -webkit-user-select: none;
@@ -84,10 +83,9 @@
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     
-    /* Controle inteligente de scroll - apenas vertical */
-    overscroll-behavior: contain;
-    overscroll-behavior-y: auto;
+    /* Controle inteligente de scroll - vertical permitido, horizontal bloqueado */
     overscroll-behavior-x: none;
+    overscroll-behavior-y: auto;
   }
   
   /* Classe para elementos interativos seguros */
@@ -202,7 +200,7 @@
     padding-right: env(safe-area-inset-right);
   }
   
-  /* ✅ UTILITÁRIOS PARA BLOQUEIO INTELIGENTE */
+  /* ✅ UTILITÁRIOS PARA BLOQUEIO INTELIGENTE DE EXTREMIDADES */
   .no-zoom {
     touch-action: manipulation;
     -webkit-user-select: none;
@@ -218,27 +216,26 @@
   
   .edge-safe {
     touch-action: manipulation;
-    overscroll-behavior: contain;
+    overscroll-behavior-x: none;
     -webkit-user-select: none;
     user-select: none;
   }
   
-  /* ✅ ANTI-ZOOM ROBUSTO PARA TABULEIRO - HIERARQUIA FINAL */
-  .anti-zoom-board {
+  /* ✅ BLOQUEIO INTELIGENTE PARA TABULEIRO - SCROLL VERTICAL PERMITIDO */
+  .smart-board-protection {
     touch-action: pan-y !important;
     -webkit-user-select: none !important;
     user-select: none !important;
     -webkit-touch-callout: none !important;
     -webkit-text-size-adjust: none !important;
-    -ms-content-zooming: none !important;
-    overflow: hidden !important;
+    overflow-x: hidden !important;
     
     /* Prevenção de gestures de zoom específicos */
     -ms-touch-select: none !important;
     -webkit-user-drag: none !important;
   }
   
-  /* ✅ CÉLULAS DO TABULEIRO - PROTEÇÃO ESPECÍFICA FINAL */
+  /* ✅ CÉLULAS DO TABULEIRO - PROTEÇÃO INTELIGENTE */
   .game-cell {
     touch-action: none !important;
     -webkit-user-select: none !important;

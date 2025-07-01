@@ -33,28 +33,29 @@ const GameCell = ({
   isMobile = false,
 }: GameCellProps) => {
   
-  // ✅ EDGE DETECTION GLOBAL REAL nas células
-  const isGlobalEdgeTouch = (clientX: number, clientY: number) => {
+  // ✅ EDGE DETECTION INTELIGENTE - Apenas extremidades perigosas
+  const isEdgeTouchDangerous = (clientX: number, clientY: number) => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
-    const globalEdgeThreshold = 30; // 30px das bordas globais da tela
+    const edgeThreshold = 30; // 30px das bordas extremas
     
-    return (
-      clientX < globalEdgeThreshold || 
-      clientX > screenWidth - globalEdgeThreshold ||
-      clientY < globalEdgeThreshold ||
-      clientY > screenHeight - globalEdgeThreshold
-    );
+    const isLeftEdge = clientX < edgeThreshold;
+    const isRightEdge = clientX > screenWidth - edgeThreshold;
+    const isTopEdge = clientY < edgeThreshold;
+    const isBottomEdge = clientY > screenHeight - edgeThreshold;
+    
+    // Bloquear apenas gestos que podem causar navegação
+    return isLeftEdge || isRightEdge || (isTopEdge && clientY < 20) || (isBottomEdge && clientY > screenHeight - 20);
   };
 
-  // ✅ PROTEÇÃO ANTI-ZOOM ESPECÍFICA PARA CÉLULAS
+  // ✅ PROTEÇÃO INTELIGENTE ESPECÍFICA PARA CÉLULAS
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
     const touch = e.touches[0];
-    if (touch && isGlobalEdgeTouch(touch.clientX, touch.clientY)) {
-      console.log('🚫 Touch bloqueado na célula - extremidade global');
+    if (touch && isEdgeTouchDangerous(touch.clientX, touch.clientY)) {
+      console.log('🚫 Touch bloqueado na célula - extremidade perigosa');
       return;
     }
     
@@ -68,8 +69,8 @@ const GameCell = ({
     if (!touch) return;
     
     // ✅ EDGE DETECTION NO MOVIMENTO
-    if (isGlobalEdgeTouch(touch.clientX, touch.clientY)) {
-      console.log('🚫 Touch move bloqueado na célula - extremidade global');
+    if (isEdgeTouchDangerous(touch.clientX, touch.clientY)) {
+      console.log('🚫 Touch move bloqueado na célula - extremidade perigosa');
       return;
     }
     

@@ -56,25 +56,26 @@ const GameBoardGrid = ({
     return wordIndex >= 0 ? getWordColor(wordIndex) : undefined;
   };
 
-  // ✅ EDGE DETECTION GLOBAL REAL - Coordenadas absolutas da tela
-  const isGlobalEdgeTouch = (clientX: number, clientY: number) => {
+  // ✅ EDGE DETECTION INTELIGENTE - Apenas extremidades perigosas (30px)
+  const isEdgeTouchDangerous = (clientX: number, clientY: number) => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
-    const globalEdgeThreshold = 30; // 30px das bordas globais da tela
+    const edgeThreshold = 30; // 30px das bordas extremas
     
-    return (
-      clientX < globalEdgeThreshold || 
-      clientX > screenWidth - globalEdgeThreshold ||
-      clientY < globalEdgeThreshold ||
-      clientY > screenHeight - globalEdgeThreshold
-    );
+    const isLeftEdge = clientX < edgeThreshold;
+    const isRightEdge = clientX > screenWidth - edgeThreshold;
+    const isTopEdge = clientY < edgeThreshold;
+    const isBottomEdge = clientY > screenHeight - edgeThreshold;
+    
+    // Bloquear apenas gestos que podem causar navegação
+    return isLeftEdge || isRightEdge || (isTopEdge && clientY < 20) || (isBottomEdge && clientY > screenHeight - 20);
   };
 
-  // ✅ GLOBAL TOUCH PREVENTION: Prevenir gestures nas extremidades globais
+  // ✅ SMART TOUCH PREVENTION: Prevenir apenas gestures perigosos
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
-    if (touch && isGlobalEdgeTouch(touch.clientX, touch.clientY)) {
-      console.log('🚫 Touch bloqueado na extremidade global da tela');
+    if (touch && isEdgeTouchDangerous(touch.clientX, touch.clientY)) {
+      console.log('🚫 Touch bloqueado na extremidade perigosa da tela');
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -83,8 +84,8 @@ const GameBoardGrid = ({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
-    if (touch && isGlobalEdgeTouch(touch.clientX, touch.clientY)) {
-      console.log('🚫 Touch move bloqueado na extremidade global da tela');
+    if (touch && isEdgeTouchDangerous(touch.clientX, touch.clientY)) {
+      console.log('🚫 Touch move bloqueado na extremidade perigosa da tela');
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -94,20 +95,20 @@ const GameBoardGrid = ({
   return (
     <div
       ref={boardRef}
-      className="grid mx-auto bg-white anti-zoom-board"
+      className="grid mx-auto bg-white smart-board-protection"
       style={{
         gridTemplateColumns: `repeat(${boardWidth}, 1fr)`,
         gridTemplateRows: `repeat(${size}, 1fr)`,
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: "100%",
-        touchAction: "pan-y", // ✅ HIERARQUIA CORRETA: Permitir apenas scroll vertical
+        touchAction: "pan-y", // ✅ INTELIGENTE: Permitir scroll vertical
         padding: gridConfig.padding,
         background: "white",
         userSelect: "none",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
-        overflow: "hidden", // ✅ Previne overflow que pode causar zoom
+        overflowX: "hidden", // ✅ Previne overflow horizontal apenas
         WebkitTextSizeAdjust: "none", // ✅ ANTI-ZOOM ROBUSTO
       }}
       onTouchStart={handleTouchStart}
