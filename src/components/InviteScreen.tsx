@@ -1,93 +1,63 @@
 
-import React from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { useInvites } from '@/hooks/useInvites';
+import React, { useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import LoadingState from './home/LoadingState';
-import MonthlyInviteCompetition from './MonthlyInviteCompetition';
+import { useInvites } from '@/hooks/useInvites';
+import { useEdgeProtection } from '@/utils/edgeProtection';
 import { logger } from '@/utils/logger';
 import InviteHeader from './invite/InviteHeader';
-import UnauthenticatedView from './invite/UnauthenticatedView';
-import ErrorView from './invite/ErrorView';
-import MyInviteRanking from './invite/MyInviteRanking';
+import MyInviteCode from './invite/MyInviteCode';
+import InviteStatsCards from './invite/InviteStatsCards';
 import MyInvitedFriends from './invite/MyInvitedFriends';
-import MonthlyPrizeDisplay from './invite/MonthlyPrizeDisplay';
-import CompactInviteInfo from './invite/CompactInviteInfo';
-import { useMonthlyInviteCompetitionSimplified } from '@/hooks/useMonthlyInviteCompetitionSimplified';
+import HowItWorksCard from './invite/HowItWorksCard';
+import UnauthenticatedView from './invite/UnauthenticatedView';
 
 const InviteScreen = () => {
-  const { toast } = useToast();
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useAuth();
+  const inviteRef = useRef<HTMLDivElement>(null);
+  
+  // ✅ APLICAR PROTEÇÃO DE BORDA NO CONVITE
+  useEdgeProtection(inviteRef, true);
+  
   const {
-    inviteCode,
+    inviteStats,
     invitedFriends,
-    stats,
     isLoading,
-    error
+    error,
+    refetch
   } = useInvites();
 
-  // Buscar dados da competição mensal
-  const { data: monthlyData, isLoading: monthlyLoading } = useMonthlyInviteCompetitionSimplified();
+  logger.debug('Renderizando InviteScreen', { 
+    userId: user?.id,
+    hasInviteCode: !!user?.invite_code,
+    totalInvites: inviteStats?.total_invites || 0
+  }, 'INVITE_SCREEN');
 
-  const handleCopyCode = () => {
-    if (!inviteCode) return;
-    
-    navigator.clipboard.writeText(inviteCode);
-    logger.info('Código de convite copiado', { 
-      userId: user?.id,
-      inviteCode: inviteCode?.substring(0, 4) + '***'
-    }, 'INVITE_SCREEN');
-    
-    toast({
-      title: "Código copiado!",
-      description: "Compartilhe com seus amigos para ambos ganharem 50XP!",
-    });
-  };
-
-  if (!isAuthenticated) {
+  if (!user) {
     return <UnauthenticatedView />;
   }
 
-  if (isLoading) {
-    return <LoadingState />;
-  }
-
-  if (error) {
-    logger.error('Erro na tela de convites', { 
-      error,
-      userId: user?.id 
-    }, 'INVITE_SCREEN');
-    
-    return <ErrorView error={error} />;
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-3 pb-20">
+    <div 
+      ref={inviteRef}
+      className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-3 pb-20 total-edge-protection"
+    >
       <div className="max-w-md mx-auto space-y-4">
         <InviteHeader />
-
-        {/* Premiação do Mês - SEMPRE exibir, mesmo durante carregamento */}
-        <MonthlyPrizeDisplay 
-          configuredPrizes={monthlyData?.stats?.configuredPrizes || []}
+        
+        <MyInviteCode inviteCode={user.invite_code} />
+        
+        <InviteStatsCards 
+          stats={inviteStats}
+          isLoading={isLoading}
         />
-
-        {/* Minha Posição no Ranking */}
-        <MyInviteRanking />
-
-        {/* Estatísticas Compactas com Código de Convite */}
-        <CompactInviteInfo 
-          stats={stats}
-          inviteCode={inviteCode}
-          onCopyCode={handleCopyCode}
+        
+        <MyInvitedFriends 
+          friends={invitedFriends}
+          isLoading={isLoading}
+          onRefresh={refetch}
         />
-
-        {/* Competição Mensal */}
-        <div className="mb-6">
-          <MonthlyInviteCompetition suppressLoading={true} />
-        </div>
-
-        {/* Meus Amigos Indicados */}
-        <MyInvitedFriends invitedFriends={invitedFriends} />
+        
+        <HowItWorksCard />
       </div>
     </div>
   );

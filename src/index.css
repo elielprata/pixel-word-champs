@@ -56,8 +56,8 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   }
   
-  /* ✅ BLOQUEIO TOTAL DEFINITIVO - HIERARQUIA CSS FORTIFICADA */
-  html, body {
+  /* ✅ BLOQUEIO TOTAL DEFINITIVO - HIERARQUIA CSS FORTIFICADA - MÁXIMA ESPECIFICIDADE */
+  html, body, html *, body *, #root, #root * {
     /* Prevenção total de zoom */
     -webkit-text-size-adjust: none !important;
     -ms-text-size-adjust: none !important;
@@ -81,6 +81,17 @@
     -webkit-user-drag: none !important;
     -webkit-user-modify: read-only !important;
     -webkit-touch-callout: none !important;
+  }
+  
+  html, body {
+    width: 100% !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  body {
+    min-height: 100vh !important;
+    overflow-y: auto !important;
   }
   
   #root {
@@ -223,7 +234,7 @@
     padding-right: env(safe-area-inset-right);
   }
   
-  /* ✅ UTILITÁRIOS PARA BLOQUEIO TOTAL */
+  /* ✅ UTILITÁRIOS PARA BLOQUEIO TOTAL - MÁXIMA ESPECIFICIDADE */
   .no-zoom {
     touch-action: manipulation !important;
     -webkit-user-select: none !important;

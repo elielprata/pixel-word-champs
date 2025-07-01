@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerLevel } from '@/hooks/usePlayerLevel';
 import { useWeeklyPositionManager } from '@/hooks/useWeeklyPositionManager';
+import { useEdgeProtection } from '@/utils/edgeProtection';
 import { logger } from '@/utils/logger';
 import { formatBrasiliaDate } from '@/utils/brasiliaTimeUnified';
 import MyDataSection from './profile/MyDataSection';
@@ -22,8 +23,12 @@ interface ProfileScreenProps {
 const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAchievements }: ProfileScreenProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const profileRef = useRef<HTMLDivElement>(null);
   const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url);
   const [showMyData, setShowMyData] = useState(false);
+
+  // ✅ APLICAR PROTEÇÃO DE BORDA NO PERFIL
+  useEdgeProtection(profileRef, true);
 
   // Usar o novo sistema de XP
   const { currentLevel, nextLevel, progress } = usePlayerLevel(user?.total_score || 0);
@@ -101,7 +106,10 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
 
   if (showMyData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-3 pb-20">
+      <div 
+        ref={profileRef}
+        className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-3 pb-20 total-edge-protection"
+      >
         <div className="max-w-md mx-auto space-y-4">
           {/* Header com botão voltar */}
           <div className="flex items-center gap-3 mb-6">
@@ -121,7 +129,10 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-3 pb-20">
+    <div 
+      ref={profileRef}
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-3 pb-20 total-edge-protection"
+    >
       <div className="max-w-md mx-auto space-y-4">
         {/* Header */}
         <div className="text-center mb-6">

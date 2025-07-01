@@ -1,207 +1,68 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Competition } from '@/types';
-import { CompetitionCardButton } from './CompetitionCardButton';
-import { getCompetitionIconConfig } from '@/utils/competitionIcons';
-import { useCompetitionStatus } from '@/hooks/useCompetitionStatus';
+import CompetitionCardHeader from './CompetitionCardHeader';
+import CompetitionCardButton from './CompetitionCardButton';
+import CompetitionCardDecorations from './CompetitionCardDecorations';
+import CircularProgressTimer from './CircularProgressTimer';
+import { Competition } from '@/types/competition';
 
 interface CompetitionCardProps {
   competition: Competition;
-  onJoin: (competitionId: string) => void;
-  onViewRanking: (competitionId: string) => void;
+  onStartChallenge: (challengeId: string) => void;
 }
 
-const CompetitionCard = ({ competition, onJoin }: CompetitionCardProps) => {
-  const [timeRemaining, setTimeRemaining] = useState<{
-    text: string;
-    percentage: number;
-    totalSeconds: number;
-  }>({ text: '', percentage: 0, totalSeconds: 0 });
-  
-  const status = competition.status as 'scheduled' | 'active' | 'completed';
-  const competitionStatus = useCompetitionStatus(competition.id);
-  
-  // Obter configuração de ícone única baseada no ID da competição
-  const iconConfig = useMemo(() => {
-    return getCompetitionIconConfig(competition.id);
-  }, [competition.id]);
+const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps) => {
+  const isActive = competition.status === 'active';
+  const isScheduled = competition.status === 'scheduled';
+  const isCompleted = competition.status === 'completed';
 
-  useEffect(() => {
-    const updateTimer = () => {
-      const now = new Date();
-      
-      if (status === 'scheduled') {
-        const start = new Date(competition.start_date);
-        const diff = start.getTime() - now.getTime();
-        
-        if (diff <= 0) {
-          setTimeRemaining({ text: 'Iniciando...', percentage: 100, totalSeconds: 0 });
-          return;
-        }
-        
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        
-        let text = '';
-        if (hours > 0) {
-          text = `Inicia em ${hours}h ${minutes}m`;
-        } else {
-          text = `Inicia em ${minutes}m`;
-        }
-        
-        setTimeRemaining({ text, percentage: 0, totalSeconds: Math.floor(diff / 1000) });
-      } else if (status === 'active') {
-        const start = new Date(competition.start_date);
-        const end = new Date(competition.end_date);
-        const totalDuration = end.getTime() - start.getTime();
-        const elapsed = now.getTime() - start.getTime();
-        const remaining = end.getTime() - now.getTime();
-        
-        if (remaining <= 0) {
-          setTimeRemaining({ text: 'Finalizado', percentage: 100, totalSeconds: 0 });
-          return;
-        }
-        
-        const percentage = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-        const hours = Math.floor(remaining / (1000 * 60 * 60));
-        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-        
-        let text = '';
-        if (hours > 0) {
-          text = `${hours}h ${minutes}m`;
-        } else {
-          text = `${minutes}m`;
-        }
-        
-        setTimeRemaining({ text, percentage, totalSeconds: Math.floor(remaining / 1000) });
-      }
-    };
-    
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    
-    return () => clearInterval(interval);
-  }, [status, competition.start_date, competition.end_date]);
+  const handleStartChallenge = () => {
+    if (isActive) {
+      onStartChallenge(competition.id);
+    }
+  };
 
-  if (status === 'completed') {
-    return null;
-  }
+  const cardClasses = `
+    relative overflow-hidden transition-all duration-300 safe-interactive no-tap-highlight
+    ${isActive 
+      ? 'bg-gradient-to-br from-purple-50 to-indigo-100 border-purple-200 hover-shadow hover:brightness-105' 
+      : isScheduled 
+        ? 'bg-gradient-to-br from-yellow-50 to-orange-100 border-orange-200 hover-shadow'
+        : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200'
+    }
+  `;
 
-  if (status === 'active') {
-    const IconComponent = iconConfig.icon;
-    
-    return (
-      <div className={`${iconConfig.colors.background} rounded-2xl p-4 shadow-lg ${iconConfig.colors.border} border relative overflow-hidden mb-3`}>
-        {/* Decorações de fundo */}
-        <div className="absolute top-2 right-2 opacity-20">
-          <div className="flex items-center space-x-1">
-            <div className="w-2 h-2 bg-current rounded-full"></div>
-            <div className="w-1 h-1 bg-current rounded-full"></div>
-          </div>
-          <div className="flex space-x-1 mt-1">
-            <div className="w-1 h-1 bg-current rounded-full"></div>
-            <div className="w-1 h-1 bg-current rounded-full"></div>
-            <div className="w-1 h-1 bg-current rounded-full"></div>
-          </div>
-        </div>
-
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center space-x-3">
-            <div className={`w-12 h-12 ${iconConfig.colors.primary} rounded-xl flex items-center justify-center shadow-md`}>
-              <IconComponent className="text-white text-xl w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-800 text-lg">
-                {competition.title}
-              </h3>
-              <p className="text-gray-500 text-sm">
-                {competition.description || 'Caça Palavras'}
-              </p>
-              {/* Mostrar status do progresso do usuário */}
-              {!competitionStatus.loading && (
-                <div className="mt-1">
-                  {competitionStatus.status === 'completed' && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      ✅ Concluído
-                    </span>
-                  )}
-                  {competitionStatus.status === 'in_progress' && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      🎯 Nível {competitionStatus.currentLevel}/20
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Indicador de progresso circular */}
-          <div className="text-center">
-            <div className="relative w-16 h-16">
-              <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
-                <path
-                  className="text-gray-200"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path
-                  className="text-green-400"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeDasharray={`${timeRemaining.percentage * 0.96}, 96`}
-                  strokeLinecap="round"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <IconComponent className="text-green-500 w-4 h-4 mx-auto mb-1" />
-                  <div className="text-green-600 font-bold text-sm">
-                    {Math.round(timeRemaining.percentage)}%
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="text-green-600 font-semibold text-sm mt-1">
-              {timeRemaining.text}
-            </div>
-          </div>
-        </div>
-
-        <CompetitionCardButton
-          status={status}
-          competitionId={competition.id}
-          competitionStatus={competitionStatus}
-          onJoin={onJoin}
-        />
-      </div>
-    );
-  }
-
-  // Card para competições agendadas (sem card wrapper individual)
-  const IconComponent = iconConfig.icon;
-  
   return (
-    <div className="flex justify-between items-center py-4">
-      <div className="flex items-center space-x-3">
-        <div className={`w-10 h-10 ${iconConfig.colors.primary} rounded-lg flex items-center justify-center shadow-sm`}>
-          <IconComponent className="text-white w-5 h-5" />
+    <Card className={cardClasses}>
+      <CardContent className="p-4 relative">
+        <CompetitionCardDecorations 
+          isActive={isActive}
+          isScheduled={isScheduled}
+          isCompleted={isCompleted}
+        />
+
+        <div className="relative z-10">
+          <CompetitionCardHeader competition={competition} />
+          
+          <div className="flex items-center justify-between mt-4">
+            <CircularProgressTimer 
+              competition={competition}
+              size="small"
+            />
+            
+            <CompetitionCardButton
+              competition={competition}
+              onStartChallenge={handleStartChallenge}
+              isActive={isActive}
+              isScheduled={isScheduled}
+              isCompleted={isCompleted}
+            />
+          </div>
         </div>
-        <div>
-          <h3 className="font-semibold text-gray-800">
-            {competition.title}
-          </h3>
-          <p className="text-gray-500 text-sm">
-            {timeRemaining.text}
-          </p>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
-export default React.memo(CompetitionCard);
+export default CompetitionCard;
