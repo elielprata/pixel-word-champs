@@ -72,7 +72,7 @@ export const UserListContainer = () => {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="shadow-sm">
         <UserListHeader 
           userCount={0} 
           searchTerm={searchTerm}
@@ -80,8 +80,8 @@ export const UserListContainer = () => {
           users={[]}
         />
         <div className="p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-slate-600">Carregando usuários...</p>
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent mx-auto"></div>
+          <p className="mt-3 text-sm text-slate-600">Carregando usuários...</p>
         </div>
       </Card>
     );
@@ -89,7 +89,7 @@ export const UserListContainer = () => {
 
   return (
     <>
-      <Card>
+      <Card className="shadow-sm border-slate-200">
         <UserListHeader 
           userCount={filteredUsers.length} 
           searchTerm={searchTerm}
@@ -100,19 +100,17 @@ export const UserListContainer = () => {
         {filteredUsers.length === 0 ? (
           <UserListEmpty searchTerm={searchTerm} />
         ) : (
-          <div className="p-6">
-            <div className="grid gap-4">
-              {filteredUsers.map((user) => (
-                <UserCard
-                  key={user.id}
-                  user={user}
-                  onViewUser={handleViewUser}
-                  onEditUser={handleEditUser}
-                  onBanUser={handleBanUser}
-                  onDeleteUser={handleDeleteUser}
-                />
-              ))}
-            </div>
+          <div className="divide-y divide-slate-100">
+            {filteredUsers.map((user) => (
+              <UserCard
+                key={user.id}
+                user={user}
+                onViewUser={handleViewUser}
+                onEditUser={handleEditUser}
+                onBanUser={handleBanUser}
+                onDeleteUser={handleDeleteUser}
+              />
+            ))}
           </div>
         )}
       </Card>
