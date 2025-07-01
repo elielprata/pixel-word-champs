@@ -32,15 +32,26 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
-  // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS
+  // FASE 3: Proteção rigorosa contra gestos na célula
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    // FASE 1: Verificar se é gesto multi-touch
+    if (e.touches && e.touches.length > 1) {
+      return false;
+    }
     onCellStart(rowIndex, colIndex);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
+    
+    // FASE 1: Bloquear gestos multi-touch
+    if (e.touches && e.touches.length > 1) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
     
     const touch = e.touches[0];
     if (!touch) return;
@@ -78,24 +89,32 @@ const GameCell = ({
     onCellEnd();
   };
 
-  // Hierarquia visual gamificada: Dica > Palavra encontrada > Seleção atual > Normal
+  // FASE 4: Bloquear context menu
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+
+  // FASE 6: Hierarquia visual preservada com animações sem zoom
   const getCellClasses = () => {
-    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95";
+    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer webkit-optimized";
     
     if (isHintHighlighted) {
       return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse`;
     }
     
     if (isPermanentlyMarked && wordColor) {
-      return `${baseClasses} ${wordColor} text-white shadow-lg animate-bounce-in`;
+      // FASE 6: Substituir hover:scale por filter
+      return `${baseClasses} ${wordColor} text-white shadow-lg animate-bounce-in brightness-110`;
     }
     
     if (isSelected) {
       return `${baseClasses} bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-800 shadow-lg shadow-yellow-500/50 animate-pulse`;
     }
     
-    // Estado normal com gradiente sutil
-    return `${baseClasses} bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 hover:from-gray-100 hover:to-gray-200 shadow-md`;
+    // FASE 6: Estado normal com efeitos visuais sem zoom
+    return `${baseClasses} bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 hover:brightness-110 hover:contrast-105 shadow-md`;
   };
 
   const fontSize = isMobile
@@ -104,7 +123,6 @@ const GameCell = ({
 
   const borderRadius = isMobile ? "8px" : "10px";
 
-  // Efeito de partículas para célula encontrada
   const showParticleEffect = isPermanentlyMarked && wordColor;
 
   return (
@@ -115,10 +133,13 @@ const GameCell = ({
         height: `${cellSize}px`,
         fontSize: `${fontSize}px`,
         borderRadius,
+        // FASE 3: Proteção total na célula
         userSelect: "none",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
         touchAction: "none",
+        // FASE 2: Overscroll bloqueado
+        overscrollBehavior: "none",
         padding: 0,
         margin: 0,
       }}
@@ -128,6 +149,7 @@ const GameCell = ({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onContextMenu={handleContextMenu}
       data-cell="true"
       data-row={rowIndex}
       data-col={colIndex}
@@ -137,12 +159,11 @@ const GameCell = ({
         {letter}
       </span>
       
-      {/* Efeito de brilho para dica */}
+      {/* FASE 6: Efeitos visuais preservados */}
       {isHintHighlighted && (
         <div className="absolute inset-0 bg-gradient-to-br from-purple-300/50 to-transparent rounded-lg animate-pulse" />
       )}
       
-      {/* Efeito de celebração para palavra encontrada */}
       {showParticleEffect && (
         <>
           <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping" />
@@ -151,7 +172,6 @@ const GameCell = ({
         </>
       )}
       
-      {/* Borda brilhante para seleção */}
       {isSelected && (
         <div className="absolute inset-0 rounded-lg shadow-lg shadow-yellow-400/30 animate-pulse" />
       )}

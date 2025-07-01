@@ -3,7 +3,8 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <!-- FASE 1: Meta tag consolidada com bloqueio total de zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Letra Arena - Caça Palavras</title>
     <meta name="description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
     <meta name="author" content="Letra Arena" />
@@ -15,9 +16,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Letra Arena">
 
-    <!-- Prevent zoom on inputs -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <meta property="og:title" content="Letra Arena - Caça Palavras" />
     <meta property="og:description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
     <meta property="og:type" content="website" />
@@ -28,7 +26,7 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <style>
-      /* Prevent text selection and improve mobile experience */
+      /* FASE 1 & 4: Bloqueio total de zoom e gestos */
       * {
         -webkit-touch-callout: none;
         -webkit-user-select: none;
@@ -37,9 +35,12 @@
         -ms-user-select: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
+        /* FASE 5: Proteção específica WebKit */
+        -webkit-text-size-adjust: none;
+        -webkit-font-smoothing: antialiased;
       }
       
-      /* Allow text selection for inputs and specific elements */
+      /* Permitir seleção apenas em inputs específicos */
       input, textarea, [contenteditable] {
         -webkit-user-select: text;
         -moz-user-select: text;
@@ -47,12 +48,17 @@
         user-select: text;
       }
       
-      /* Prevent bounce effect on iOS */
+      /* FASE 2: Bloqueio total de overscroll e scroll nas extremidades */
       html, body {
         overflow-x: hidden;
         position: fixed;
         width: 100%;
         height: 100%;
+        overscroll-behavior: none;
+        overscroll-behavior-x: none;
+        overscroll-behavior-y: none;
+        /* FASE 1: Touch action global */
+        touch-action: manipulation;
       }
       
       #root {
@@ -60,8 +66,102 @@
         height: 100%;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        /* FASE 2: Scroll controlado apenas vertical */
+        overscroll-behavior: none;
+        overscroll-behavior-x: none;
+        scroll-behavior: smooth;
+      }
+
+      /* FASE 3: Proteção específica para área de jogo */
+      [data-game-area="true"], .game-board, .game-grid {
+        touch-action: none !important;
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
+        user-select: none !important;
+        overscroll-behavior: none !important;
       }
     </style>
+
+    <script>
+      // FASE 1, 2, 4: Script de proteção total contra zoom e gestos
+      (function() {
+        'use strict';
+        
+        // FASE 1: Bloquear todos os gestos de zoom
+        function preventZoom(e) {
+          var disableZoom = function (e) {
+            if (e.touches && e.touches.length > 1) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+          };
+          
+          if (e.touches && e.touches.length > 1) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+        }
+        
+        // FASE 4: Bloquear context menu
+        function preventContextMenu(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        
+        // FASE 2: Bloquear pull-to-refresh e scroll extremo
+        function preventRefresh(e) {
+          var startY = e.touches ? e.touches[0].clientY : e.clientY;
+          if (startY <= 10 && document.body.scrollTop === 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+        }
+        
+        // FASE 5: Bloquear double-tap zoom específico
+        var lastTouchEnd = 0;
+        function preventDoubleTapZoom(e) {
+          var now = (new Date()).getTime();
+          if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+          lastTouchEnd = now;
+        }
+        
+        // Event listeners quando DOM carregar
+        document.addEventListener('DOMContentLoaded', function() {
+          // FASE 1: Bloqueio de gestos de zoom
+          document.addEventListener('gesturestart', preventZoom, { passive: false });
+          document.addEventListener('gesturechange', preventZoom, { passive: false });
+          document.addEventListener('gestureend', preventZoom, { passive: false });
+          document.addEventListener('touchstart', preventZoom, { passive: false });
+          document.addEventListener('touchmove', preventZoom, { passive: false });
+          
+          // FASE 4: Bloqueio de context menu
+          document.addEventListener('contextmenu', preventContextMenu, { passive: false });
+          
+          // FASE 2: Bloqueio de pull-to-refresh
+          document.addEventListener('touchstart', preventRefresh, { passive: false });
+          
+          // FASE 5: Bloqueio de double-tap zoom
+          document.addEventListener('touchend', preventDoubleTapZoom, { passive: false });
+          
+          // FASE 2: Proteção adicional contra scroll horizontal
+          document.addEventListener('wheel', function(e) {
+            if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+          }, { passive: false });
+        });
+      })();
+    </script>
   </head>
 
   <body>

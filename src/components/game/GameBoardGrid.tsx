@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import GameCell from "./GameCell";
 import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from "@/utils/boardUtils";
@@ -37,45 +38,87 @@ const GameBoardGrid = ({
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
-  // Layout limpo - ajustado para 8x12
   const gridConfig = {
     gap: "1px",
-    maxWidth: isMobile ? "360px" : "480px", // Aumentado para acomodar 12 colunas
+    maxWidth: isMobile ? "360px" : "480px",
     padding: "0px",
   };
 
-  // Função que indica se a célula está atualmente selecionada na linha visual
   const isCellCurrentlySelected = (row: number, col: number) =>
     selectedCells.some((pos) => pos.row === row && pos.col === col);
 
-  // Função para obter a cor da palavra se a célula estiver marcada permanentemente
   const getCellWordColor = (row: number, col: number) => {
     if (!isCellPermanentlyMarked(row, col)) return undefined;
     const wordIndex = getCellWordIndex(row, col);
     return wordIndex >= 0 ? getWordColor(wordIndex) : undefined;
   };
 
+  // FASE 3: Event handlers com proteção rigorosa contra gestos
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Verificar se é gesto multi-touch (zoom)
+    if (e.touches && e.touches.length > 1) {
+      return false;
+    }
+    handleCellEnd();
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleCellEnd();
+  };
+
+  // FASE 2: Bloqueio específico de scroll no grid
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+
   return (
     <div
       ref={boardRef}
-      className="grid mx-auto bg-white"
+      className="grid mx-auto bg-white game-area-protection webkit-optimized"
+      data-game-area="true"
       style={{
-        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`, // 12 colunas
-        gridTemplateRows: `repeat(${size}, 1fr)`, // 8 linhas
+        gridTemplateColumns: `repeat(${boardWidth}, 1fr)`,
+        gridTemplateRows: `repeat(${size}, 1fr)`,
         gap: gridConfig.gap,
         maxWidth: gridConfig.maxWidth,
         width: "100%",
+        // FASE 3: Touch action mais rigoroso
         touchAction: "none",
+        // FASE 2: Overscroll bloqueado
+        overscrollBehavior: "none",
+        overscrollBehaviorX: "none",
+        overscrollBehaviorY: "none",
         padding: gridConfig.padding,
         background: "white",
+        // FASE 5: WebKit otimizações
+        WebkitTouchCallout: "none",
+        WebkitUserSelect: "none",
+        userSelect: "none",
       }}
-      onTouchEnd={(e) => {
+      onTouchEnd={handleTouchEnd}
+      onMouseUp={handleMouseUp}
+      onWheel={handleWheel}
+      // FASE 4: Proteção adicional contra gestos
+      onContextMenu={(e) => {
         e.preventDefault();
-        handleCellEnd();
+        e.stopPropagation();
+        return false;
       }}
-      onMouseUp={(e) => {
+      onGestureStart={(e: any) => {
         e.preventDefault();
-        handleCellEnd();
+        e.stopPropagation();
+        return false;
+      }}
+      onGestureChange={(e: any) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
       }}
     >
       {boardData.board.map((row, rowIndex) =>
