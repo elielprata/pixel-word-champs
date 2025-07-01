@@ -62,7 +62,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
     newStartDate: modalLogic.newStartDate,
     newEndDate: modalLogic.newEndDate,
     historyPage: modalLogic.historyPage,
-    weeklyHistoryData: modalLogic.weeklyHistoryData,
+    weeklyHistoryData: modalLogic.weeklyHistoryData.data || [],
     historyLoading: modalLogic.historyLoading,
     historyTotalPages: modalLogic.historyTotalPages,
     selectedCompetition: modalLogic.selectedCompetition
