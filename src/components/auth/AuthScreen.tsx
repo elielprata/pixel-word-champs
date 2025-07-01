@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +7,7 @@ import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import SocialLogin from './SocialLogin';
 import DailyCompetitionCard from './DailyCompetitionCard';
-import { Crown, Gamepad2, Trophy, Users } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
 
@@ -109,33 +110,6 @@ const AuthScreen = () => {
                 <RegisterForm />
               </TabsContent>
             </Tabs>
-          </div>
-        </div>
-
-        {/* Features Cards - Informações enriquecidas sobre prêmios */}
-        <div className="px-6 py-3 relative z-10">
-          <div className="grid grid-cols-3 gap-3 mb-3">
-            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-3">
-              <div className="w-8 h-8 mx-auto mb-2 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
-                <Gamepad2 className="w-4 h-4 text-white" />
-              </div>
-              <p className="text-white text-xs font-medium">Desafios Diários</p>
-              <p className="text-purple-200 text-[10px] mt-1">Novos todos os dias</p>
-            </div>
-            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-3">
-              <div className="w-8 h-8 mx-auto mb-2 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                <Trophy className="w-4 h-4 text-white" />
-              </div>
-              <p className="text-white text-xs font-medium">Prêmios Reais</p>
-              <p className="text-purple-200 text-[10px] mt-1">Até R$ 1.000</p>
-            </div>
-            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-3">
-              <div className="w-8 h-8 mx-auto mb-2 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
-                <Users className="w-4 h-4 text-white" />
-              </div>
-              <p className="text-white text-xs font-medium">Competições</p>
-              <p className="text-purple-200 text-[10px] mt-1">Semanais e mensais</p>
-            </div>
           </div>
         </div>
 
