@@ -109,7 +109,7 @@ const GameCell = ({
       return `${baseClasses} bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-800 shadow-lg shadow-yellow-500/50 animate-pulse hover-glow`;
     }
     
-    // Estado normal com hover sem zoom
+    // Estado normal com hover sem zoom - EFEITOS ALTERNATIVOS
     return `${baseClasses} bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 hover:from-gray-100 hover:to-gray-200 shadow-md hover-lift active-press`;
   };
 
@@ -136,9 +136,11 @@ const GameCell = ({
         touchAction: "none",
         padding: 0,
         margin: 0,
-        // Garantir que não há transforms
-        transform: "none",
+        // GARANTIR ZERO TRANSFORMS - PROTEÇÃO MÁXIMA
+        transform: "none !important",
         willChange: "auto",
+        WebkitTransform: "none !important",
+        msTransform: "none !important",
       }}
       onMouseDown={handleMouseDown}
       onMouseEnter={handleMouseEnter}

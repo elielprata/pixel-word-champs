@@ -49,64 +49,68 @@
 @layer base {
   * {
     @apply border-border;
-    /* Anti-zoom robusto - MÁXIMA PROTEÇÃO */
-    touch-action: manipulation;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    /* NOVO: Garantir que transforms não causem zoom */
+    /* Anti-zoom robusto - MÁXIMA PROTEÇÃO FINAL */
+    touch-action: manipulation !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -khtml-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    /* PROTEÇÃO FINAL: Garantir que transforms não causem zoom */
     transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
+    will-change: auto !important;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     /* Scroll protegido com detecção rigorosa */
-    overflow-x: hidden;
+    overflow-x: hidden !important;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: contain !important;
     /* Proteção adicional contra zoom */
-    -webkit-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100% !important;
+    -ms-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
   }
   
   /* Permitir seleção apenas para inputs essenciais */
   input, textarea, [contenteditable] {
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-    user-select: text;
-    touch-action: manipulation;
-    font-size: 16px; /* Previne zoom automático no iOS */
-    /* Permitir transform apenas para inputs */
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    touch-action: manipulation !important;
+    font-size: 16px !important; /* Previne zoom automático no iOS */
+    /* Permitir transform apenas para inputs críticos */
     transform: initial !important;
   }
 
-  /* Classe especial para áreas do jogo - PROTEÇÃO MÁXIMA REFORÇADA */
+  /* Classe especial para áreas do jogo - PROTEÇÃO MÁXIMA FINAL */
   .game-board-area {
     touch-action: none !important;
     overscroll-behavior: contain !important;
     overflow: hidden !important;
-    -webkit-overflow-scrolling: auto;
+    -webkit-overflow-scrolling: auto !important;
     /* Proteção adicional contra transforms */
-    will-change: auto;
+    will-change: auto !important;
     -webkit-transform: none !important;
     transform: none !important;
+    -ms-transform: none !important;
   }
 
   /* Classe para áreas que precisam de scroll normal */
   .scroll-area {
-    touch-action: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: auto;
+    touch-action: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: auto !important;
   }
 
-  /* REFORÇADA: Proteção específica para células do tabuleiro */
+  /* PROTEÇÃO FINAL: Proteção específica para células do tabuleiro */
   .game-cell {
     touch-action: none !important;
     -webkit-touch-callout: none !important;
@@ -114,13 +118,13 @@
     user-select: none !important;
     /* Remover qualquer possibilidade de zoom por transform */
     transform: none !important;
-    will-change: auto;
+    will-change: auto !important;
     /* Garantir que não há scale */
     -webkit-transform: none !important;
     -ms-transform: none !important;
   }
 
-  /* REFORÇADA: Proteção específica para células das bordas */
+  /* PROTEÇÃO FINAL: Proteção específica para células das bordas */
   .game-cell-edge {
     touch-action: none !important;
     overscroll-behavior: none !important;
@@ -130,6 +134,7 @@
     /* Anti-transform rigoroso */
     transform: none !important;
     -webkit-transform: none !important;
+    -ms-transform: none !important;
   }
 }
 
@@ -143,11 +148,11 @@
 
   /* Utilitário para scroll protegido */
   .protected-scroll {
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
-  /* Utilitário para áreas sem zoom - MÁXIMA PROTEÇÃO */
+  /* Utilitário para áreas sem zoom - MÁXIMA PROTEÇÃO FINAL */
   .no-zoom {
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
@@ -160,64 +165,89 @@
     -ms-transform: none !important;
   }
 
-  /* CORRIGIDAS: Alternativas aos hover:scale sem zoom */
+  /* EFEITOS ALTERNATIVOS SEM ZOOM - VERSÃO FINAL */
   .hover-lift {
-    transition: box-shadow 0.2s ease, opacity 0.2s ease;
+    transition: box-shadow 0.2s ease, opacity 0.2s ease, border-color 0.2s ease !important;
     /* GARANTIR que não há transform */
     transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
   }
   
   .hover-lift:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    opacity: 0.95;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important;
+    opacity: 0.95 !important;
     /* NÃO usar transform */
     transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
   }
 
   .hover-glow {
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease !important;
     /* GARANTIR que não há transform */
     transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
   }
   
   .hover-glow:hover {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-    border-color: rgb(139, 92, 246);
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.4) !important;
+    border-color: rgb(139, 92, 246) !important;
+    background-color: rgba(139, 92, 246, 0.05) !important;
     /* NÃO usar transform */
     transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
   }
 
-  /* CORRIGIDA: Efeito de ativação sem scale */
+  /* EFEITO DE ATIVAÇÃO SEM SCALE - VERSÃO FINAL */
   .active-press {
-    transition: opacity 0.1s ease, box-shadow 0.1s ease;
+    transition: opacity 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease !important;
     /* GARANTIR que não há transform */
     transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
   }
   
   .active-press:active {
-    opacity: 0.8;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    opacity: 0.8 !important;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
     /* NÃO usar transform */
     transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
   }
 
-  /* NOVA: Animação bounce sem scale */
+  /* ANIMAÇÃO BOUNCE SEM SCALE - VERSÃO FINAL */
   .animate-bounce-in {
-    animation: bounce-glow 0.6s ease-out;
+    animation: bounce-glow-final 0.6s ease-out !important;
   }
 
-  @keyframes bounce-glow {
+  @keyframes bounce-glow-final {
     0% {
       opacity: 0;
       box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      background-color: rgba(255, 255, 255, 0.8);
     }
     50% {
       opacity: 1;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      background-color: rgba(255, 255, 255, 1);
     }
     100% {
       opacity: 1;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      background-color: rgba(255, 255, 255, 0.95);
     }
+  }
+
+  /* PROTEÇÃO ADICIONAL: Remover qualquer transform restante */
+  .transform-none-final {
+    transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
+    will-change: auto !important;
   }
 }
