@@ -83,8 +83,18 @@ const GameCell = ({
     onCellEnd();
   };
 
-  // PREVENT ALL SCROLL EVENTS
-  const preventScroll = (e: React.WheelEvent | React.DragEvent) => {
+  // PREVENT SCROLL EVENTS - Handlers específicos por tipo de evento
+  const preventWheelScroll = (e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const preventDragStart = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const preventContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
   };
@@ -141,9 +151,9 @@ const GameCell = ({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      onWheel={preventScroll}
-      onDragStart={preventScroll}
-      onContextMenu={preventScroll}
+      onWheel={preventWheelScroll}
+      onDragStart={preventDragStart}
+      onContextMenu={preventContextMenu}
       data-cell="true"
       data-row={rowIndex}
       data-col={colIndex}
