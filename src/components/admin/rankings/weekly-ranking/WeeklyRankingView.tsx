@@ -30,14 +30,24 @@ export const WeeklyRankingView = () => {
   };
 
   const handleConfigModalOpen = () => {
-    console.log('🎯 Abrindo modal de configuração semanal', {
-      timestamp: getCurrentBrasiliaTime()
+    console.log('🎯 WeeklyRankingView - Abrindo modal de configuração semanal', {
+      timestamp: getCurrentBrasiliaTime(),
+      currentState: {
+        configModalOpen,
+        prizeConfigModalOpen
+      }
     });
-    setConfigModalOpen(true);
+    
+    try {
+      setConfigModalOpen(true);
+      console.log('✅ WeeklyRankingView - Modal state atualizado para true');
+    } catch (error) {
+      console.error('❌ WeeklyRankingView - Erro ao abrir modal:', error);
+    }
   };
 
   const handleConfigModalClose = (open: boolean) => {
-    console.log('🔄 Modal de configuração semanal:', { 
+    console.log('🔄 WeeklyRankingView - Modal de configuração semanal:', { 
       open,
       timestamp: getCurrentBrasiliaTime()
     });
@@ -62,6 +72,11 @@ export const WeeklyRankingView = () => {
       </div>
     );
   }
+
+  console.log('🎯 WeeklyRankingView - Renderizando componente', {
+    configModalOpen,
+    timestamp: getCurrentBrasiliaTime()
+  });
 
   return (
     <div className="space-y-6">
@@ -104,6 +119,7 @@ export const WeeklyRankingView = () => {
       <WeeklyRankingTable ranking={currentRanking} />
 
       {/* Modal de Configuração com Wrapper */}
+      {console.log('🔍 WeeklyRankingView - Renderizando WeeklyConfigModalWrapper', { configModalOpen })}
       <WeeklyConfigModalWrapper
         open={configModalOpen}
         onOpenChange={handleConfigModalClose}

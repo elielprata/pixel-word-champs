@@ -35,11 +35,20 @@ export const WeeklyConfigModalWrapper: React.FC<WeeklyConfigModalWrapperProps> =
 
   React.useEffect(() => {
     if (open) {
-      console.log('🎯 WeeklyConfigModalWrapper aberto', {
+      console.log('🎯 WeeklyConfigModalWrapper - Modal aberto', {
+        timestamp: getCurrentBrasiliaTime()
+      });
+    } else {
+      console.log('📴 WeeklyConfigModalWrapper - Modal fechado', {
         timestamp: getCurrentBrasiliaTime()
       });
     }
   }, [open]);
+
+  console.log('🔍 WeeklyConfigModalWrapper - Renderizando', {
+    open,
+    timestamp: getCurrentBrasiliaTime()
+  });
 
   return (
     <WeeklyConfigErrorBoundary onRetry={handleRetry}>
