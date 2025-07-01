@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Trophy } from 'lucide-react';
+import { Trophy, Medal, Award } from 'lucide-react';
 import { useAdvancedWeeklyStats } from '@/hooks/useAdvancedWeeklyStats';
 
 const DailyCompetitionCard = () => {
@@ -45,62 +45,62 @@ const DailyCompetitionCard = () => {
   const topPlayers = weeklyStats?.top_3_players || [];
 
   return (
-    <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-xl p-3 shadow-md mb-4">
-      {/* Header Compacto */}
-      <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-            <Trophy className="w-3 h-3 text-white" />
+    <div className="mb-4">
+      {/* Header Principal - Gradiente amarelo para laranja exatamente como na imagem */}
+      <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl p-4 mb-3">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-white font-bold text-lg mb-1">Competição Semanal</h3>
+            <p className="text-white/90 text-sm">Prêmio: {(topPlayers[0]?.prize || 1000) + (topPlayers[1]?.prize || 500) + (topPlayers[2]?.prize || 250)} moedas</p>
           </div>
-          <h3 className="text-white font-semibold text-sm">Competição Semanal</h3>
-        </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1">
-          <span className="text-white font-mono text-xs">{timeRemaining}</span>
+          <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2">
+            <span className="text-white font-mono text-sm font-medium">{timeRemaining}</span>
+          </div>
         </div>
       </div>
 
-      {/* Prêmios em linha compacta */}
-      <div className="flex justify-between gap-2">
+      {/* Cards de Prêmios - Fundo roxo/azul como na imagem */}
+      <div className="flex gap-3">
         {/* 1º Lugar */}
-        <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center">
-          <div className="w-5 h-5 mx-auto mb-1 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded flex items-center justify-center">
-            <Trophy className="w-2.5 h-2.5 text-yellow-900" />
+        <div className="flex-1 bg-gradient-to-br from-purple-600/80 to-blue-700/80 backdrop-blur-sm rounded-2xl p-4 text-center">
+          <div className="mb-3">
+            <Trophy className="w-8 h-8 mx-auto text-yellow-400" />
           </div>
-          <p className="text-white text-[10px] font-medium">1º</p>
-          <p className="text-yellow-200 text-[10px] flex items-center justify-center gap-1">
-            <span className="font-semibold">{topPlayers[0]?.prize || 1000}</span>
-            <span className="w-2 h-2 bg-yellow-400 rounded-full flex items-center justify-center">
-              <span className="text-[6px] font-bold text-yellow-900">$</span>
-            </span>
-          </p>
+          <h4 className="text-white font-bold text-base mb-2">1º Lugar</h4>
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-yellow-400 font-bold text-lg">{topPlayers[0]?.prize || 1000}</span>
+            <div className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
+              <span className="text-xs font-bold text-yellow-900">$</span>
+            </div>
+          </div>
         </div>
 
         {/* 2º Lugar */}
-        <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center">
-          <div className="w-5 h-5 mx-auto mb-1 bg-gradient-to-br from-gray-300 to-gray-500 rounded flex items-center justify-center">
-            <Trophy className="w-2.5 h-2.5 text-gray-700" />
+        <div className="flex-1 bg-gradient-to-br from-purple-600/80 to-blue-700/80 backdrop-blur-sm rounded-2xl p-4 text-center">
+          <div className="mb-3">
+            <Medal className="w-8 h-8 mx-auto text-gray-300" />
           </div>
-          <p className="text-white text-[10px] font-medium">2º</p>
-          <p className="text-yellow-200 text-[10px] flex items-center justify-center gap-1">
-            <span className="font-semibold">{topPlayers[1]?.prize || 500}</span>
-            <span className="w-2 h-2 bg-yellow-400 rounded-full flex items-center justify-center">
-              <span className="text-[6px] font-bold text-yellow-900">$</span>
-            </span>
-          </p>
+          <h4 className="text-white font-bold text-base mb-2">2º Lugar</h4>
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-yellow-400 font-bold text-lg">{topPlayers[1]?.prize || 500}</span>
+            <div className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
+              <span className="text-xs font-bold text-yellow-900">$</span>
+            </div>
+          </div>
         </div>
 
         {/* 3º Lugar */}
-        <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center">
-          <div className="w-5 h-5 mx-auto mb-1 bg-gradient-to-br from-orange-400 to-orange-600 rounded flex items-center justify-center">
-            <Trophy className="w-2.5 h-2.5 text-orange-800" />
+        <div className="flex-1 bg-gradient-to-br from-purple-600/80 to-blue-700/80 backdrop-blur-sm rounded-2xl p-4 text-center">
+          <div className="mb-3">
+            <Award className="w-8 h-8 mx-auto text-orange-400" />
           </div>
-          <p className="text-white text-[10px] font-medium">3º</p>
-          <p className="text-yellow-200 text-[10px] flex items-center justify-center gap-1">
-            <span className="font-semibold">{topPlayers[2]?.prize || 250}</span>
-            <span className="w-2 h-2 bg-yellow-400 rounded-full flex items-center justify-center">
-              <span className="text-[6px] font-bold text-yellow-900">$</span>
-            </span>
-          </p>
+          <h4 className="text-white font-bold text-base mb-2">3º Lugar</h4>
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-yellow-400 font-bold text-lg">{topPlayers[2]?.prize || 250}</span>
+            <div className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
+              <span className="text-xs font-bold text-yellow-900">$</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
