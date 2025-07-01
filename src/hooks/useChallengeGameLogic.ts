@@ -224,14 +224,16 @@ export const useChallengeGameLogic = (challengeId: string) => {
         const saveSuccess = await challengeProgressService.saveProgress({
           userId: user.id,
           competitionId: challengeId,
-          currentLevel: levelCompleted,
+          // 🎯 CORREÇÃO CRÍTICA: Salvar próximo nível, não o nível completado
+          currentLevel: levelCompleted < maxLevels ? levelCompleted + 1 : levelCompleted,
           totalScore: scoreToSave,
           isCompleted: levelCompleted >= maxLevels
         });
 
         if (saveSuccess) {
           logger.info(`✅ Progresso salvo com sucesso na tentativa ${attempt}!`, {
-            level: levelCompleted,
+            completedLevel: levelCompleted,
+            nextLevel: levelCompleted < maxLevels ? levelCompleted + 1 : levelCompleted,
             score: scoreToSave,
             challengeId
           });
@@ -278,19 +280,20 @@ export const useChallengeGameLogic = (challengeId: string) => {
     setTotalScore(newTotalScore);
     
     logger.info('🎉 Nível completado - Salvando progresso IMEDIATAMENTE!', {
-      level: currentLevel,
+      completedLevel: currentLevel,
       levelScore,
       newTotalScore,
       challengeId,
       userId: user?.id
     });
     
-    // 🎯 CORREÇÃO: Salvar progresso IMEDIATAMENTE com retry
+    // 🎯 CORREÇÃO: Salvar próximo nível (currentLevel + 1) ou marcar como completo se foi o último
     const saveSuccess = await saveProgressWithRetry(currentLevel, newTotalScore);
     
     if (saveSuccess) {
       logger.info('✅ Progresso garantido após completar nível!', {
-        level: currentLevel,
+        completedLevel: currentLevel,
+        nextLevel: currentLevel < maxLevels ? currentLevel + 1 : currentLevel,
         totalScore: newTotalScore,
         challengeId
       });
@@ -309,18 +312,8 @@ export const useChallengeGameLogic = (challengeId: string) => {
       setCurrentLevel(nextLevel);
       setIsGameStarted(false);
       
-      // 🎯 CORREÇÃO: Salvar progresso ao avançar nível com retry
-      if (user) {
-        saveProgressWithRetry(nextLevel, totalScore).then(success => {
-          if (success) {
-            logger.info('📈 Progresso salvo ao avançar para próximo nível', {
-              nextLevel,
-              totalScore,
-              challengeId
-            });
-          }
-        });
-      }
+      // 🎯 CORREÇÃO: Progresso já foi salvo em handleLevelComplete
+      // Não precisamos salvar novamente aqui
       
       setTimeout(() => {
         setIsGameStarted(true);

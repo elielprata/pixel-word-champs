@@ -101,6 +101,7 @@ export const challengeProgressService = {
 
   /**
    * Salvar ou atualizar progresso de uma competição
+   * 🎯 CORREÇÃO: currentLevel agora representa o PRÓXIMO nível a jogar
    */
   async saveProgress({
     userId,
@@ -117,7 +118,8 @@ export const challengeProgressService = {
         competitionId,
         currentLevel,
         totalScore,
-        isCompleted
+        isCompleted,
+        note: 'currentLevel representa o PRÓXIMO nível a jogar'
       }, 'CHALLENGE_PROGRESS');
 
       // Debug auth antes da operação
@@ -149,7 +151,7 @@ export const challengeProgressService = {
         const { error: updateError } = await supabase
           .from('challenge_progress')
           .update({
-            current_level: currentLevel,
+            current_level: currentLevel, // 🎯 PRÓXIMO nível a jogar
             total_score: totalScore,
             is_completed: isCompleted,
             completed_at: isCompleted ? now : null,
@@ -177,7 +179,8 @@ export const challengeProgressService = {
           currentLevel,
           totalScore,
           isCompleted,
-          existingId: existingData.id
+          existingId: existingData.id,
+          note: 'currentLevel = próximo nível a jogar'
         }, 'CHALLENGE_PROGRESS');
       } else {
         // Criar novo registro
@@ -186,7 +189,7 @@ export const challengeProgressService = {
           .insert({
             user_id: userId,
             competition_id: competitionId,
-            current_level: currentLevel,
+            current_level: currentLevel, // 🎯 PRÓXIMO nível a jogar
             total_score: totalScore,
             is_completed: isCompleted,
             completed_at: isCompleted ? now : null,
@@ -215,7 +218,8 @@ export const challengeProgressService = {
           competitionId,
           currentLevel,
           totalScore,
-          isCompleted
+          isCompleted,
+          note: 'currentLevel = próximo nível a jogar'
         }, 'CHALLENGE_PROGRESS');
       }
 
