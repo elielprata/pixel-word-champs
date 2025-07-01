@@ -3,23 +3,20 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <!-- VIEWPORT OTIMIZADO -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
-    
-    <!-- PREVENT iOS BOUNCE/RUBBER BAND -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Letra Arena">
-    <meta name="mobile-web-app-capable" content="yes">
-    
-    <!-- PREVENT ZOOM AND UNWANTED BEHAVIORS -->
-    <meta name="format-detection" content="telephone=no">
-    <meta name="msapplication-tap-highlight" content="no">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Letra Arena - Caça Palavras</title>
     <meta name="description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
     <meta name="author" content="Letra Arena" />
     <meta name="theme-color" content="#8B5CF6" />
+
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Letra Arena">
+
+    <!-- Prevent zoom on inputs -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <meta property="og:title" content="Letra Arena - Caça Palavras" />
     <meta property="og:description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
@@ -31,78 +28,38 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <style>
-      /* INTELLIGENT SCROLL SYSTEM - Allow normal scroll, prevent only overscroll */
-      html, body {
-        /* Allow normal scroll */
-        overflow: auto !important;
-        position: relative !important;
-        width: 100% !important;
-        height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        
-        /* Prevent overscroll effects (pull-to-refresh, rubber band) */
-        overscroll-behavior: contain !important;
-        
-        /* iOS SPECIFIC - Prevent rubber band */
-        -webkit-overflow-scrolling: touch !important;
-        
-        /* Basic styling */
-        background-color: hsl(var(--background));
-        color: hsl(var(--foreground));
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-      }
-      
-      /* ROOT CONTAINER - Allow scroll */
-      #root {
-        width: 100% !important;
-        min-height: 100vh !important;
-        overflow: visible !important;
-        overscroll-behavior: contain !important;
-        position: relative !important;
-      }
-      
-      /* HIDE SCROLLBARS (visual only) */
-      ::-webkit-scrollbar {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-      }
-      
-      /* FIREFOX SCROLLBAR HIDE */
-      html {
-        scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
-      }
-      
-      /* PREVENT TEXT SELECTION GLOBALLY (except inputs) */
+      /* Prevent text selection and improve mobile experience */
       * {
-        -webkit-user-select: none !important;
-        -moz-user-select: none !important;
-        -ms-user-select: none !important;
-        user-select: none !important;
-        -webkit-touch-callout: none !important;
-        -webkit-tap-highlight-color: transparent !important;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
       }
       
-      /* ALLOW TEXT SELECTION ONLY FOR INPUTS */
+      /* Allow text selection for inputs and specific elements */
       input, textarea, [contenteditable] {
-        -webkit-user-select: text !important;
-        -moz-user-select: text !important;
-        -ms-user-select: text !important;
-        user-select: text !important;
-        touch-action: manipulation !important;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
       }
       
-      /* GAME AREAS - Special touch handling for game interactions */
-      .game-board-area {
-        touch-action: none !important;
+      /* Prevent bounce effect on iOS */
+      html, body {
+        overflow-x: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
       }
       
-      /* SCROLLABLE AREAS - Allow normal touch for scrolling */
-      .scrollable-area {
-        touch-action: auto !important;
-        overflow: auto !important;
+      #root {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
     </style>
   </head>
@@ -110,140 +67,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- INTELLIGENT SCROLL PREVENTION SCRIPT -->
-    <script>
-      // Smart overscroll prevention - only block at limits
-      let isAtTop = false;
-      let isAtBottom = false;
-      let isAtLeft = false;
-      let isAtRight = false;
-      
-      function updateScrollLimits() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-        const windowHeight = window.innerHeight;
-        const windowWidth = window.innerWidth;
-        const documentHeight = Math.max(
-          document.body.scrollHeight,
-          document.documentElement.scrollHeight
-        );
-        const documentWidth = Math.max(
-          document.body.scrollWidth,
-          document.documentElement.scrollWidth
-        );
-        
-        isAtTop = scrollTop <= 0;
-        isAtBottom = scrollTop + windowHeight >= documentHeight - 1;
-        isAtLeft = scrollLeft <= 0;
-        isAtRight = scrollLeft + windowWidth >= documentWidth - 1;
-      }
-      
-      // Update limits on scroll
-      window.addEventListener('scroll', updateScrollLimits, { passive: true });
-      window.addEventListener('resize', updateScrollLimits, { passive: true });
-      updateScrollLimits(); // Initial check
-      
-      // Prevent pull-to-refresh only at top
-      document.addEventListener('touchstart', function(e) {
-        if (e.touches.length > 1) {
-          e.preventDefault(); // Prevent pinch zoom
-        }
-      }, { passive: false });
-      
-      document.addEventListener('touchmove', function(e) {
-        // Allow normal scrolling unless we're in a game area
-        if (e.target.closest('.game-board-area')) {
-          e.preventDefault();
-          return;
-        }
-        
-        // Allow scrolling in scrollable areas
-        if (e.target.closest('.scrollable-area')) {
-          return;
-        }
-        
-        // Prevent overscroll only at limits
-        const touch = e.touches[0];
-        const deltaY = touch.clientY - (touch.previousY || touch.clientY);
-        const deltaX = touch.clientX - (touch.previousX || touch.clientX);
-        
-        // Prevent pull-to-refresh at top
-        if (isAtTop && deltaY > 0) {
-          e.preventDefault();
-        }
-        
-        // Prevent overscroll at bottom
-        if (isAtBottom && deltaY < 0) {
-          e.preventDefault();
-        }
-        
-        // Store previous touch position
-        touch.previousY = touch.clientY;
-        touch.previousX = touch.clientX;
-      }, { passive: false });
-      
-      // Prevent wheel scroll overscroll
-      document.addEventListener('wheel', function(e) {
-        // Allow normal wheel scroll unless in game area
-        if (e.target.closest('.game-board-area')) {
-          e.preventDefault();
-          return;
-        }
-        
-        // Prevent overscroll at limits
-        if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
-          e.preventDefault();
-        }
-        if ((isAtLeft && e.deltaX < 0) || (isAtRight && e.deltaX > 0)) {
-          e.preventDefault();
-        }
-      }, { passive: false });
-      
-      // Prevent gestural navigation (iOS Safari) at limits only
-      document.addEventListener('gesturestart', function(e) {
-        if (isAtTop || isAtBottom || isAtLeft || isAtRight) {
-          e.preventDefault();
-        }
-      }, { passive: false });
-      
-      document.addEventListener('gesturechange', function(e) {
-        if (isAtTop || isAtBottom || isAtLeft || isAtRight) {
-          e.preventDefault();
-        }
-      }, { passive: false });
-      
-      document.addEventListener('gestureend', function(e) {
-        if (isAtTop || isAtBottom || isAtLeft || isAtRight) {
-          e.preventDefault();
-        }
-      }, { passive: false });
-      
-      // Prevent context menu on long press in game areas only
-      document.addEventListener('contextmenu', function(e) {
-        if (e.target.closest('.game-board-area')) {
-          e.preventDefault();
-        }
-      });
-      
-      // Prevent drag and drop in game areas only
-      document.addEventListener('dragstart', function(e) {
-        if (e.target.closest('.game-board-area')) {
-          e.preventDefault();
-        }
-      });
-      
-      document.addEventListener('drop', function(e) {
-        if (e.target.closest('.game-board-area')) {
-          e.preventDefault();
-        }
-      });
-      
-      // FORCE VIEWPORT ON RESIZE
-      window.addEventListener('resize', function() {
-        const viewport = document.querySelector('meta[name=viewport]');
-        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover');
-      });
-    </script>
   </body>
 </html>
