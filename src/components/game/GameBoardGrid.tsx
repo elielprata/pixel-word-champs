@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import GameCell from "./GameCell";
 import { getCellSize, getBoardWidth, getMobileBoardWidth, type Position } from "@/utils/boardUtils";
@@ -58,7 +59,7 @@ const GameBoardGrid = ({
   return (
     <div
       ref={boardRef}
-      className="grid mx-auto bg-white"
+      className="grid mx-auto bg-white no-scroll touch-none no-overscroll"
       style={{
         gridTemplateColumns: `repeat(${boardWidth}, 1fr)`, // 12 colunas
         gridTemplateRows: `repeat(${size}, 1fr)`, // 8 linhas
@@ -68,14 +69,26 @@ const GameBoardGrid = ({
         touchAction: "none",
         padding: gridConfig.padding,
         background: "white",
+        overflow: "hidden",
+        overscrollBehavior: "none"
       }}
       onTouchEnd={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         handleCellEnd();
       }}
       onMouseUp={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         handleCellEnd();
+      }}
+      onTouchMove={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      onWheel={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
       }}
     >
       {boardData.board.map((row, rowIndex) =>

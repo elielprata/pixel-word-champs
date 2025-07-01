@@ -32,7 +32,7 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
-  // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS
+  // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS E SCROLL
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -40,6 +40,9 @@ const GameCell = ({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!isDragging) return;
     
     const touch = e.touches[0];
@@ -64,6 +67,7 @@ const GameCell = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     onCellStart(rowIndex, colIndex);
   };
 
@@ -75,12 +79,19 @@ const GameCell = ({
 
   const handleMouseUp = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     onCellEnd();
+  };
+
+  // PREVENT ALL SCROLL EVENTS
+  const preventScroll = (e: React.WheelEvent | React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   // Hierarquia visual gamificada: Dica > Palavra encontrada > Seleção atual > Normal
   const getCellClasses = () => {
-    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95";
+    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95 touch-none no-scroll no-overscroll";
     
     if (isHintHighlighted) {
       return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse`;
@@ -121,6 +132,8 @@ const GameCell = ({
         touchAction: "none",
         padding: 0,
         margin: 0,
+        overflow: "hidden",
+        overscrollBehavior: "none"
       }}
       onMouseDown={handleMouseDown}
       onMouseEnter={handleMouseEnter}
@@ -128,32 +141,35 @@ const GameCell = ({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onWheel={preventScroll}
+      onDragStart={preventScroll}
+      onContextMenu={preventScroll}
       data-cell="true"
       data-row={rowIndex}
       data-col={colIndex}
     >
       {/* Letra principal */}
-      <span className="relative z-10 font-bold tracking-tight">
+      <span className="relative z-10 font-bold tracking-tight touch-none">
         {letter}
       </span>
       
       {/* Efeito de brilho para dica */}
       {isHintHighlighted && (
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-300/50 to-transparent rounded-lg animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-300/50 to-transparent rounded-lg animate-pulse touch-none" />
       )}
       
       {/* Efeito de celebração para palavra encontrada */}
       {showParticleEffect && (
         <>
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping" />
-          <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/20 to-transparent rounded-lg" />
+          <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping touch-none" />
+          <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-white rounded-full animate-bounce touch-none" />
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/20 to-transparent rounded-lg touch-none" />
         </>
       )}
       
       {/* Borda brilhante para seleção */}
       {isSelected && (
-        <div className="absolute inset-0 rounded-lg shadow-lg shadow-yellow-400/30 animate-pulse" />
+        <div className="absolute inset-0 rounded-lg shadow-lg shadow-yellow-400/30 animate-pulse touch-none" />
       )}
     </div>
   );
