@@ -6,6 +6,7 @@ import { WeeklyRankingTable } from './WeeklyRankingTable';
 import { WeeklyRankingStats } from './WeeklyRankingStats';
 import { WeeklyConfigModalWrapper } from './WeeklyConfigModalWrapper';
 import { WeeklyAutomationStatus } from './WeeklyAutomationStatus';
+import { WeeklyCompetitionDiagnostic } from './WeeklyCompetitionDiagnostic';
 import { PrizeConfigModal } from '../PrizeConfigModal';
 import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 import { Loader2 } from 'lucide-react';
@@ -109,6 +110,9 @@ export const WeeklyRankingView = () => {
           </Button>
         </div>
       </div>
+
+      {/* Diagnóstico do Sistema */}
+      <WeeklyCompetitionDiagnostic />
 
       {/* Status da Automação */}
       <WeeklyAutomationStatus />
