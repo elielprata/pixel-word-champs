@@ -72,9 +72,13 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   };
 
   try {
+    // Log simplificado sem objetos complexos
     console.log('🔄 WeeklyConfigModal - Preparando dados do modal...', {
       historyDataLength: modalLogic.weeklyHistoryData?.data?.length || 0,
-      historyLoading: modalLogic.historyLoading
+      historyLoading: modalLogic.historyLoading,
+      configsLoading: modalLogic.configsLoading,
+      hasActiveConfig: !!modalLogic.activeConfig,
+      scheduledConfigsCount: modalLogic.scheduledConfigs?.length || 0
     });
     
     const modalData = {

@@ -44,31 +44,97 @@ class SecureLogger {
     }
   }
 
-  private maskSensitiveData(data: any): any {
+  private maskSensitiveData(data: any, visited = new WeakSet(), depth = 0): any {
+    // Proteção contra profundidade excessiva
+    const maxDepth = 10;
+    if (depth > maxDepth) {
+      return '[MAX_DEPTH_REACHED]';
+    }
+
+    // Verificar tipos primitivos
     if (!data || typeof data !== 'object') {
       return data;
     }
 
-    if (Array.isArray(data)) {
-      return data.map(item => this.maskSensitiveData(item));
+    // Proteção contra referências circulares
+    if (visited.has(data)) {
+      return '[CIRCULAR_REFERENCE]';
     }
 
-    const masked = { ...data };
-    
-    Object.keys(masked).forEach(key => {
-      const lowerKey = key.toLowerCase();
-      const isSensitive = this.sensitiveFields.some(field => 
-        lowerKey.includes(field) || lowerKey.endsWith('_key') || lowerKey.endsWith('_token')
-      );
+    // Marcar objeto como visitado
+    visited.add(data);
 
-      if (isSensitive && typeof masked[key] === 'string') {
-        masked[key] = this.maskString(masked[key]);
-      } else if (typeof masked[key] === 'object') {
-        masked[key] = this.maskSensitiveData(masked[key]);
+    try {
+      // Tratamento especial para arrays
+      if (Array.isArray(data)) {
+        // Limitar arrays muito grandes para evitar problemas de performance
+        if (data.length > 100) {
+          return `[LARGE_ARRAY_${data.length}_ITEMS]`;
+        }
+        return data.map(item => this.maskSensitiveData(item, visited, depth + 1));
       }
-    });
 
-    return masked;
+      // Tratamento especial para objetos do React/DOM
+      if (this.isReactObject(data)) {
+        return '[REACT_OBJECT]';
+      }
+
+      // Tratamento especial para funções
+      if (typeof data === 'function') {
+        return '[FUNCTION]';
+      }
+
+      // Tratamento especial para objetos com muitas propriedades
+      const keys = Object.keys(data);
+      if (keys.length > 50) {
+        return `[LARGE_OBJECT_${keys.length}_KEYS]`;
+      }
+
+      // Processar objeto normal
+      const masked = {};
+      
+      for (const key of keys) {
+        try {
+          const lowerKey = key.toLowerCase();
+          const isSensitive = this.sensitiveFields.some(field => 
+            lowerKey.includes(field) || lowerKey.endsWith('_key') || lowerKey.endsWith('_token')
+          );
+
+          if (isSensitive && typeof data[key] === 'string') {
+            masked[key] = this.maskString(data[key]);
+          } else {
+            masked[key] = this.maskSensitiveData(data[key], visited, depth + 1);
+          }
+        } catch (error) {
+          masked[key] = '[PROCESSING_ERROR]';
+        }
+      }
+
+      return masked;
+    } catch (error) {
+      return '[MASKING_ERROR]';
+    } finally {
+      // Remover da lista de visitados após processamento
+      visited.delete(data);
+    }
+  }
+
+  private isReactObject(obj: any): boolean {
+    if (!obj || typeof obj !== 'object') return false;
+    
+    // Verificar propriedades típicas de objetos React
+    const reactKeys = ['$$typeof', '_owner', '_store', 'ref', 'key', 'props'];
+    const hasReactKeys = reactKeys.some(key => key in obj);
+    
+    // Verificar se é um elemento React
+    const isReactElement = obj.$$typeof && typeof obj.$$typeof === 'symbol';
+    
+    // Verificar se é um objeto com muitas propriedades internas (como hooks)
+    const hasInternalProps = Object.keys(obj).some(key => 
+      key.startsWith('_') || key.includes('Hook') || key.includes('Fiber')
+    );
+
+    return hasReactKeys || isReactElement || hasInternalProps;
   }
 
   private maskString(value: string): string {
