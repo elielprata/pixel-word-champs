@@ -55,7 +55,7 @@ const UseInviteCodeModal = ({ isOpen, onClose }: UseInviteCodeModalProps) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-3 backdrop-blur-sm">
-      <Card className="w-full max-w-md border-0 bg-white shadow-2xl animate-scale-in">
+      <Card className="w-full max-w-md border-0 bg-white shadow-2xl animate-fade-in-pure modal-safe">
         <CardHeader className="pb-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-t-lg p-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -71,7 +71,7 @@ const UseInviteCodeModal = ({ isOpen, onClose }: UseInviteCodeModalProps) => {
               variant="ghost" 
               size="icon" 
               onClick={onClose} 
-              className="text-white hover:bg-white/20 h-8 w-8"
+              className="text-white hover:bg-white/20 h-8 w-8 hover-lift"
               disabled={isLoading}
             >
               <X className="w-4 h-4" />
@@ -108,7 +108,7 @@ const UseInviteCodeModal = ({ isOpen, onClose }: UseInviteCodeModalProps) => {
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="flex-1"
+                className="flex-1 hover-lift"
                 disabled={isLoading}
               >
                 Cancelar
@@ -116,7 +116,7 @@ const UseInviteCodeModal = ({ isOpen, onClose }: UseInviteCodeModalProps) => {
               <Button
                 type="submit"
                 disabled={!code.trim() || isLoading}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                className="flex-1 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 hover-lift"
               >
                 {isLoading ? (
                   <>
