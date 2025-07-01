@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { gameService } from '@/services/gameService';
@@ -155,7 +154,7 @@ export const useChallengeGameLogic = (challengeId: string) => {
     }
   };
 
-  // 🎯 FUNÇÃO CORRIGIDA: Melhor tratamento de erro e timeout
+  // 🎯 FUNÇÃO CORRIGIDA: Melhor tratamento de erro e timeout - SEM completar sessão para desafios
   const markParticipationAsCompleted = async (): Promise<boolean> => {
     if (hasMarkedParticipation || !user) {
       logger.info('Participação já foi marcada como concluída ou usuário não logado');
@@ -175,10 +174,10 @@ export const useChallengeGameLogic = (challengeId: string) => {
 
       await Promise.race([
         (async () => {
+          // 🎯 CORREÇÃO CRÍTICA: Não chamar completeGameSession para desafios
+          // Apenas marcar participação, sessão de desafio não precisa ser "completada" no banco
           await competitionParticipationService.markUserAsParticipated(challengeId, user.id);
-          if (gameSession?.id) {
-            await gameService.completeGameSession(gameSession.id);
-          }
+          logger.info('✅ Participação marcada sem completar sessão (desafio)');
         })(),
         timeout
       ]);

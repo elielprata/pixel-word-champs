@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
@@ -35,6 +34,7 @@ const notifyProgressUpdate = (competitionId: string) => {
 export const challengeProgressService = {
   /**
    * Buscar progresso de uma competição para um usuário
+   * 🎯 CORREÇÃO: Otimizada para evitar erro 406
    */
   async getProgress(userId: string, competitionId: string): Promise<ChallengeProgress | null> {
     try {
@@ -43,22 +43,15 @@ export const challengeProgressService = {
         competitionId 
       }, 'CHALLENGE_PROGRESS');
 
+      // 🎯 CORREÇÃO: Usar maybeSingle() ao invés de single() para evitar erro 406
       const { data, error } = await supabase
         .from('challenge_progress')
         .select('*')
         .eq('user_id', userId)
         .eq('competition_id', competitionId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          logger.info('📝 Nenhum progresso encontrado - primeira vez', { 
-            userId, 
-            competitionId 
-          }, 'CHALLENGE_PROGRESS');
-          return null;
-        }
-        
         logger.error('❌ Erro na consulta de progresso', {
           error: {
             code: error.code,
@@ -70,6 +63,14 @@ export const challengeProgressService = {
           competitionId
         }, 'CHALLENGE_PROGRESS');
         throw error;
+      }
+
+      if (!data) {
+        logger.info('📝 Nenhum progresso encontrado - primeira vez', { 
+          userId, 
+          competitionId 
+        }, 'CHALLENGE_PROGRESS');
+        return null;
       }
 
       logger.info('✅ Progresso encontrado', { 
@@ -118,103 +119,47 @@ export const challengeProgressService = {
         note: 'currentLevel representa o PRÓXIMO nível a jogar'
       }, 'CHALLENGE_PROGRESS');
 
-      // Tentar atualizar registro existente primeiro
-      const { data: existingData, error: selectError } = await supabase
+      // 🎯 CORREÇÃO: Usar upsert para evitar problemas de concorrência
+      const { error } = await supabase
         .from('challenge_progress')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('competition_id', competitionId)
-        .maybeSingle();
+        .upsert({
+          user_id: userId,
+          competition_id: competitionId,
+          current_level: currentLevel, // 🎯 PRÓXIMO nível a jogar
+          total_score: totalScore,
+          is_completed: isCompleted,
+          completed_at: isCompleted ? now : null,
+          created_at: now,
+          updated_at: now
+        }, {
+          onConflict: 'user_id,competition_id',
+          ignoreDuplicates: false
+        });
 
-      if (selectError) {
-        logger.error('❌ Erro ao verificar progresso existente', {
+      if (error) {
+        logger.error('❌ Erro ao salvar progresso', {
           error: {
-            code: selectError.code,
-            message: selectError.message,
-            details: selectError.details
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
           },
           userId,
-          competitionId
-        }, 'CHALLENGE_PROGRESS');
-        throw selectError;
-      }
-
-      if (existingData) {
-        // Atualizar registro existente
-        const { error: updateError } = await supabase
-          .from('challenge_progress')
-          .update({
-            current_level: currentLevel, // 🎯 PRÓXIMO nível a jogar
-            total_score: totalScore,
-            is_completed: isCompleted,
-            completed_at: isCompleted ? now : null,
-            updated_at: now
-          })
-          .eq('id', existingData.id);
-
-        if (updateError) {
-          logger.error('❌ Erro ao atualizar progresso', {
-            error: {
-              code: updateError.code,
-              message: updateError.message,
-              details: updateError.details
-            },
-            userId,
-            competitionId,
-            existingId: existingData.id
-          }, 'CHALLENGE_PROGRESS');
-          throw updateError;
-        }
-        
-        logger.info('🔄 Progresso atualizado com sucesso', { 
-          userId, 
           competitionId,
           currentLevel,
-          totalScore,
-          isCompleted,
-          existingId: existingData.id,
-          note: 'currentLevel = próximo nível a jogar'
+          totalScore
         }, 'CHALLENGE_PROGRESS');
-      } else {
-        // Criar novo registro
-        const { error: insertError } = await supabase
-          .from('challenge_progress')
-          .insert({
-            user_id: userId,
-            competition_id: competitionId,
-            current_level: currentLevel, // 🎯 PRÓXIMO nível a jogar
-            total_score: totalScore,
-            is_completed: isCompleted,
-            completed_at: isCompleted ? now : null,
-            created_at: now,
-            updated_at: now
-          });
-
-        if (insertError) {
-          logger.error('❌ Erro ao inserir novo progresso', {
-            error: {
-              code: insertError.code,
-              message: insertError.message,
-              details: insertError.details,
-              hint: insertError.hint
-            },
-            userId,
-            competitionId,
-            currentLevel,
-            totalScore
-          }, 'CHALLENGE_PROGRESS');
-          throw insertError;
-        }
-        
-        logger.info('✨ Novo progresso criado com sucesso', { 
-          userId, 
-          competitionId,
-          currentLevel,
-          totalScore,
-          isCompleted,
-          note: 'currentLevel = próximo nível a jogar'
-        }, 'CHALLENGE_PROGRESS');
+        throw error;
       }
+      
+      logger.info('✅ Progresso salvo com sucesso', { 
+        userId, 
+        competitionId,
+        currentLevel,
+        totalScore,
+        isCompleted,
+        note: 'currentLevel = próximo nível a jogar'
+      }, 'CHALLENGE_PROGRESS');
 
       // Notificar atualização de progresso
       notifyProgressUpdate(competitionId);

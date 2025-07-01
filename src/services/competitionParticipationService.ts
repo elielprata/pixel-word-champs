@@ -16,12 +16,16 @@ class CompetitionParticipationService {
     try {
       logger.info('Usuário entrando na competição', { competitionId, userId });
 
+      // 🎯 CORREÇÃO: Usar upsert para evitar erro 409 (Conflict)
       const { error } = await supabase
         .from('competition_participations')
-        .insert({
+        .upsert({
           user_id: userId,
           competition_id: competitionId,
           created_at: createBrasiliaTimestamp(new Date().toString())
+        }, {
+          onConflict: 'user_id,competition_id',
+          ignoreDuplicates: true
         });
 
       if (error) {
@@ -163,12 +167,16 @@ class CompetitionParticipationService {
     try {
       logger.info('Marcando usuário como participante', { competitionId, userId });
 
+      // 🎯 CORREÇÃO: Usar upsert para evitar erro 409 (Conflict)
       const { error } = await supabase
         .from('competition_participations')
         .upsert({
           user_id: userId,
           competition_id: competitionId,
           created_at: createBrasiliaTimestamp(new Date().toString())
+        }, {
+          onConflict: 'user_id,competition_id',
+          ignoreDuplicates: true
         });
 
       if (error) {
