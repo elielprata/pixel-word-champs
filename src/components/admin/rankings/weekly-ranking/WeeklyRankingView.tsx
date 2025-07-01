@@ -73,6 +73,7 @@ export const WeeklyRankingView = () => {
     );
   }
 
+  // Log de renderização fora do JSX
   console.log('🎯 WeeklyRankingView - Renderizando componente', {
     configModalOpen,
     timestamp: getCurrentBrasiliaTime()
@@ -119,7 +120,6 @@ export const WeeklyRankingView = () => {
       <WeeklyRankingTable ranking={currentRanking} />
 
       {/* Modal de Configuração com Wrapper */}
-      {console.log('🔍 WeeklyRankingView - Renderizando WeeklyConfigModalWrapper', { configModalOpen })}
       <WeeklyConfigModalWrapper
         open={configModalOpen}
         onOpenChange={handleConfigModalClose}
