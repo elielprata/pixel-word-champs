@@ -3,7 +3,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Letra Arena - Caça Palavras</title>
     <meta name="description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
     <meta name="author" content="Letra Arena" />
@@ -15,9 +15,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Letra Arena">
 
-    <!-- Prevent zoom on inputs -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <meta property="og:title" content="Letra Arena - Caça Palavras" />
     <meta property="og:description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
     <meta property="og:type" content="website" />
@@ -28,7 +25,7 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <style>
-      /* Prevent text selection and improve mobile experience */
+      /* Anti-zoom e scroll inteligente - apenas nas extremidades */
       * {
         -webkit-touch-callout: none;
         -webkit-user-select: none;
@@ -37,35 +34,112 @@
         -ms-user-select: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
+        /* Prevenir zoom por double-tap */
+        touch-action: manipulation;
       }
       
-      /* Allow text selection for inputs and specific elements */
+      /* Permitir seleção para inputs */
       input, textarea, [contenteditable] {
         -webkit-user-select: text;
         -moz-user-select: text;
         -ms-user-select: text;
         user-select: text;
+        touch-action: manipulation;
       }
       
-      /* Prevent bounce effect on iOS */
+      /* Configuração para scroll normal mas com proteção nas extremidades */
       html, body {
-        overflow-x: hidden;
-        position: fixed;
-        width: 100%;
+        overflow-x: hidden; /* Prevenir scroll horizontal */
+        overflow-y: auto; /* Permitir scroll vertical normal */
+        overscroll-behavior: contain; /* Prevenir pull-to-refresh e bounce */
         height: 100%;
+        margin: 0;
+        padding: 0;
       }
       
       #root {
         width: 100%;
-        height: 100%;
+        min-height: 100vh;
+        overflow-x: hidden;
         overflow-y: auto;
+        overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
+      }
+
+      /* Proteção específica para áreas do jogo */
+      .game-board-area {
+        touch-action: none !important;
+        overscroll-behavior: contain;
+        overflow: hidden;
       }
     </style>
   </head>
 
   <body>
     <div id="root"></div>
+    
+    <!-- Script para proteção anti-zoom e controle de extremidades -->
+    <script>
+      // Prevenir zoom programático
+      document.addEventListener('gesturestart', function(e) {
+        e.preventDefault();
+      });
+      
+      document.addEventListener('gesturechange', function(e) {
+        e.preventDefault();
+      });
+      
+      document.addEventListener('gestureend', function(e) {
+        e.preventDefault();
+      });
+      
+      // Prevenir zoom por Ctrl+scroll no desktop
+      document.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Controle inteligente de scroll nas extremidades
+      let isAtTop = true;
+      let touchStartY = 0;
+      
+      // Detectar posição do scroll
+      function updateScrollPosition() {
+        isAtTop = window.scrollY <= 0;
+      }
+      
+      // Monitorar scroll
+      window.addEventListener('scroll', updateScrollPosition);
+      updateScrollPosition();
+      
+      // Controle de touch para prevenir pull-to-refresh apenas no topo
+      document.addEventListener('touchstart', function(e) {
+        touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+      
+      document.addEventListener('touchmove', function(e) {
+        const touchY = e.touches[0].clientY;
+        const touchDelta = touchY - touchStartY;
+        
+        // Se estiver no topo e tentando puxar para baixo (pull-to-refresh)
+        if (isAtTop && touchDelta > 0) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Prevenir navegação por swipe lateral nas bordas
+      document.addEventListener('touchstart', function(e) {
+        const touch = e.touches[0];
+        const screenWidth = window.innerWidth;
+        
+        // Se o toque começar muito próximo das bordas laterais
+        if (touch.clientX < 20 || touch.clientX > screenWidth - 20) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    </script>
+    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

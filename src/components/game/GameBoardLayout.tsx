@@ -11,7 +11,7 @@ const GameBoardLayout = ({ children }: GameBoardLayoutProps) => {
   const backgroundTheme = GAME_CONSTANTS.BACKGROUND_THEMES[0]; // Pode ser dinâmico baseado no nível
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${backgroundTheme} p-2 relative overflow-hidden`}>
+    <div className={`min-h-screen bg-gradient-to-br ${backgroundTheme} p-2 relative overflow-hidden game-board-area`}>
       {/* Efeitos de fundo gamificados */}
       <div className="absolute inset-0 bg-black/10" />
       
@@ -25,8 +25,8 @@ const GameBoardLayout = ({ children }: GameBoardLayoutProps) => {
       <div className="absolute top-20 right-4 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse" />
       <div className="absolute bottom-20 left-4 w-40 h-40 bg-white/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
       
-      {/* Conteúdo principal */}
-      <div className="relative z-10 max-w-sm mx-auto space-y-3">
+      {/* Conteúdo principal com proteção anti-zoom */}
+      <div className="relative z-10 max-w-sm mx-auto space-y-3 no-zoom">
         {children}
       </div>
     </div>

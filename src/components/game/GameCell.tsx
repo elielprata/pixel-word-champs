@@ -80,7 +80,7 @@ const GameCell = ({
 
   // Hierarquia visual gamificada: Dica > Palavra encontrada > Seleção atual > Normal
   const getCellClasses = () => {
-    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95";
+    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95 no-zoom";
     
     if (isHintHighlighted) {
       return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse`;
@@ -118,7 +118,7 @@ const GameCell = ({
         userSelect: "none",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
-        touchAction: "none",
+        touchAction: "none", // Bloqueio total para células do jogo
         padding: 0,
         margin: 0,
       }}
