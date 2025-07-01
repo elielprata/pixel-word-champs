@@ -132,9 +132,7 @@ export const WeeklyRankingView = () => {
 
       {/* Modal de Configuração de Premiação */}
       <PrizeConfigModal
-        open={prizeConfigModal
-
-Open}
+        open={prizeConfigModalOpen}
         onOpenChange={setPrizeConfigModalOpen}
       />
     </div>
