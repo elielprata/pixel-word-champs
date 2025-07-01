@@ -2,11 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Calendar, Users, Trophy, RefreshCw, AlertCircle, Settings, Play } from 'lucide-react';
+import { Calendar, Users, Trophy, RefreshCw, AlertCircle } from 'lucide-react';
 import { formatDateForDisplay } from '@/utils/dateFormatters';
-import { useWeeklyCompetitionActivation } from '@/hooks/useWeeklyCompetitionActivation';
-import { useToast } from "@/hooks/use-toast";
 
 interface WeeklyRankingStatsProps {
   stats: {
@@ -31,34 +28,6 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
   stats,
   onConfigUpdated
 }) => {
-  const { toast } = useToast();
-  const { activateWeeklyCompetitions, isActivating } = useWeeklyCompetitionActivation();
-
-  const handleActivateCompetitions = async () => {
-    const result = await activateWeeklyCompetitions();
-    
-    if (result.success && result.data) {
-      if (result.data.updated_count > 0) {
-        toast({
-          title: "Competições Atualizadas!",
-          description: `${result.data.updated_count} competição(ões) foram atualizadas com sucesso.`,
-        });
-        onConfigUpdated(); // Recarregar dados
-      } else {
-        toast({
-          title: "Nenhuma Atualização",
-          description: "Todas as competições já estão com o status correto.",
-        });
-      }
-    } else {
-      toast({
-        title: "Erro",
-        description: `Erro ao ativar competições: ${result.error}`,
-        variant: "destructive",
-      });
-    }
-  };
-
   if (!stats) {
     return (
       <Card>
@@ -83,7 +52,7 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
-            <Settings className="h-12 w-12 text-orange-400 mx-auto mb-4" />
+            <AlertCircle className="h-12 w-12 text-orange-400 mx-auto mb-4" />
             <p className="text-orange-700 mb-4">
               Não há competições semanais configuradas no momento.
             </p>
@@ -98,7 +67,6 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
 
   // Estado com competição finalizada mas sem ativa
   const isCompetitionCompleted = stats.competition_status === 'completed' && stats.no_active_competition;
-  const isCompetitionScheduled = stats.competition_status === 'scheduled';
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -124,23 +92,6 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
               <div>{formatDateForDisplay(stats.config.start_date)} até</div>
               <div>{formatDateForDisplay(stats.config.end_date)}</div>
             </div>
-          )}
-          {/* Botão de Ativação para competições agendadas */}
-          {isCompetitionScheduled && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleActivateCompetitions}
-              disabled={isActivating}
-              className="mt-2 w-full text-xs"
-            >
-              {isActivating ? (
-                <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Play className="h-3 w-3 mr-1" />
-              )}
-              {isActivating ? 'Ativando...' : 'Ativar Agora'}
-            </Button>
           )}
         </CardContent>
       </Card>
@@ -193,14 +144,6 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
               {new Date(stats.last_update).toLocaleString('pt-BR')}
             </span>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onConfigUpdated}
-            className="mt-2 text-xs"
-          >
-            Atualizar dados
-          </Button>
         </CardContent>
       </Card>
 
@@ -218,35 +161,6 @@ export const WeeklyRankingStats: React.FC<WeeklyRankingStatsProps> = ({
           </CardContent>
         </Card>
       )}
-
-      {/* Botão manual de ativação para administradores */}
-      <Card className="md:col-span-2 lg:col-span-4 border-green-200 bg-green-50">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-green-800">
-                <Settings className="h-5 w-5" />
-                <span className="font-medium">Controle Manual</span>
-              </div>
-              <p className="text-green-700 text-sm mt-1">
-                Use este botão para verificar e ativar manualmente competições que deveriam estar ativas.
-              </p>
-            </div>
-            <Button
-              onClick={handleActivateCompetitions}
-              disabled={isActivating}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              {isActivating ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Play className="h-4 w-4 mr-2" />
-              )}
-              {isActivating ? 'Verificando...' : 'Verificar e Ativar'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
