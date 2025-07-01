@@ -72,7 +72,10 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
   };
 
   try {
-    console.log('🔄 WeeklyConfigModal - Preparando dados do modal...');
+    console.log('🔄 WeeklyConfigModal - Preparando dados do modal...', {
+      historyDataLength: modalLogic.weeklyHistoryData?.data?.length || 0,
+      historyLoading: modalLogic.historyLoading
+    });
     
     const modalData = {
       activeConfig: modalLogic.activeConfig,
@@ -84,7 +87,7 @@ export const WeeklyConfigModal: React.FC<WeeklyConfigModalProps> = ({
       newStartDate: modalLogic.newStartDate,
       newEndDate: modalLogic.newEndDate,
       historyPage: modalLogic.historyPage,
-      weeklyHistoryData: modalLogic.weeklyHistoryData.data || [],
+      weeklyHistoryData: modalLogic.weeklyHistoryData?.data || [],
       historyLoading: modalLogic.historyLoading,
       historyTotalPages: modalLogic.historyTotalPages,
       selectedCompetition: modalLogic.selectedCompetition

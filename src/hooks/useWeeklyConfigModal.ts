@@ -2,25 +2,15 @@
 import { useState, useEffect } from 'react';
 import { useWeeklyConfig } from './useWeeklyConfig';
 import { useWeeklyCompetitionActivation } from './useWeeklyCompetitionActivation';
+import { useWeeklyCompetitionHistory } from './useWeeklyCompetitionHistory';
 import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
-
-// Hook simplificado que cria um histórico básico simulado
-const useWeeklyConfigHistory = () => {
-  return {
-    weeklyHistoryData: { data: [], totalCount: 0 },
-    historyLoading: false,
-    historyPage: 1,
-    historyTotalPages: 1,
-    setHistoryPage: () => {},
-    refetchHistory: async () => {}
-  };
-};
 
 export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
   const [selectedCompetition, setSelectedCompetition] = useState<any>(null);
   const [newStartDate, setNewStartDate] = useState('');
   const [newEndDate, setNewEndDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
 
   const {
     activeConfig,
@@ -34,14 +24,13 @@ export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
     calculateNextDates
   } = useWeeklyConfig();
 
+  // Usar o histórico real de competições semanais
   const {
-    weeklyHistoryData,
-    historyLoading,
-    historyPage,
-    historyTotalPages,
-    setHistoryPage,
-    refetchHistory
-  } = useWeeklyConfigHistory();
+    historyData: weeklyHistoryData,
+    isLoading: historyLoading,
+    totalPages: historyTotalPages,
+    refetch: refetchHistory
+  } = useWeeklyCompetitionHistory(historyPage, 5);
 
   const { activateWeeklyCompetitions, isActivating } = useWeeklyCompetitionActivation();
 
@@ -62,6 +51,7 @@ export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
     if (result.success) {
       console.log('✅ Competições ativadas com sucesso:', result.data);
       await loadConfigurations();
+      await refetchHistory();
       onConfigUpdated();
     } else {
       console.error('❌ Erro ao ativar competições:', result.error);
@@ -80,6 +70,7 @@ export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
       if (result.success) {
         console.log('✅ Nova competição agendada com sucesso');
         await loadConfigurations();
+        await refetchHistory();
         onConfigUpdated();
       } else {
         console.error('❌ Erro ao agendar competição:', result.error);
@@ -128,8 +119,8 @@ export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
     newStartDate,
     newEndDate,
     
-    // Histórico
-    weeklyHistoryData,
+    // Histórico - agora usando dados reais
+    weeklyHistoryData: { data: weeklyHistoryData, totalCount: weeklyHistoryData.length },
     historyLoading,
     historyPage,
     historyTotalPages,
