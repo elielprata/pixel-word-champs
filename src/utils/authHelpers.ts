@@ -19,7 +19,9 @@ export const createFallbackUser = (session: any): User => {
     created_at: session.user.created_at || new Date().toISOString(),
     updated_at: session.user.updated_at || new Date().toISOString(),
     total_score: 0,
-    games_played: 0
+    games_played: 0,
+    // XP SEMPRE 0 no fallback - deve vir da base de dados
+    experience_points: 0
   };
 
   logger.info('Usuário fallback criado', { 

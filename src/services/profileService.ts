@@ -1,5 +1,3 @@
-
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, ApiResponse } from '@/types';
 import { createSuccessResponse, createErrorResponse, handleServiceError } from '@/utils/apiHelpers';
@@ -17,9 +15,24 @@ class ProfileService {
         throw new Error('Usuário não autenticado');
       }
 
+      // Buscar TODOS os campos necessários incluindo experience_points
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          id,
+          username,
+          avatar_url,
+          total_score,
+          games_played,
+          best_daily_position,
+          best_weekly_position,
+          pix_key,
+          pix_holder_name,
+          phone,
+          experience_points,
+          created_at,
+          updated_at
+        `)
         .eq('id', user.id)
         .single();
 
@@ -29,7 +42,10 @@ class ProfileService {
       }
 
       const userData = mapUserFromProfile(data, user);
-      logger.info('Perfil atual carregado com sucesso', { userId: user.id }, 'PROFILE_SERVICE');
+      logger.info('Perfil atual carregado com sucesso', { 
+        userId: user.id, 
+        experiencePoints: data.experience_points 
+      }, 'PROFILE_SERVICE');
       return createSuccessResponse(userData);
     } catch (error) {
       logger.error('Erro ao obter perfil atual', { error }, 'PROFILE_SERVICE');
@@ -98,4 +114,3 @@ class ProfileService {
 }
 
 export const profileService = new ProfileService();
-

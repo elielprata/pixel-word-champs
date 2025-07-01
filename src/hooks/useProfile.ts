@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect } from 'react';
 import { profileService } from '@/services/profileService';
 import { User } from '@/types';
@@ -57,12 +56,8 @@ export const useProfile = () => {
     fetchProfile();
   }, [isAuthenticated, user?.id]);
 
-  // Sincronizar profile com user quando user é atualizado externamente
-  useEffect(() => {
-    if (user && !profile) {
-      setProfile(user);
-    }
-  }, [user, profile]);
+  // REMOVER sincronização automática que pode sobrescrever dados corretos
+  // Agora o perfil vem SEMPRE da base de dados via fetchProfile
 
   return {
     profile,
@@ -72,4 +67,3 @@ export const useProfile = () => {
     refetch: fetchProfile
   };
 };
-

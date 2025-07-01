@@ -1,5 +1,4 @@
 
-
 import { User } from '@/types';
 
 export const mapUserFromProfile = (profile: any, authUser?: any): User => {
@@ -14,10 +13,10 @@ export const mapUserFromProfile = (profile: any, authUser?: any): User => {
     best_weekly_position: profile.best_weekly_position,
     pix_key: profile.pix_key,
     pix_holder_name: profile.pix_holder_name,
-    phone: profile.phone, // Mapear campo de telefone
-    experience_points: profile.experience_points || 0, // Mapear campo de XP
+    phone: profile.phone,
+    // XP deve vir EXCLUSIVAMENTE de experience_points, sem fallback
+    experience_points: profile.experience_points || 0,
     created_at: profile.created_at || '',
     updated_at: profile.updated_at || ''
   };
 };
-
