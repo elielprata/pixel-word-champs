@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Play, Clock, CheckCircle } from 'lucide-react';
-import { Competition } from '@/types/competition';
+import { Competition } from '@/types';
 
 interface CompetitionCardButtonProps {
   competition: Competition;

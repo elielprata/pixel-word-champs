@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import CompetitionCardHeader from './CompetitionCardHeader';
+import { CompetitionCardHeader } from './CompetitionCardHeader';
 import CompetitionCardButton from './CompetitionCardButton';
-import CompetitionCardDecorations from './CompetitionCardDecorations';
-import CircularProgressTimer from './CircularProgressTimer';
-import { Competition } from '@/types/competition';
+import { CompetitionCardDecorations } from './CompetitionCardDecorations';
+import { CircularProgressTimer } from './CircularProgressTimer';
+import { Competition } from '@/types';
 
 interface CompetitionCardProps {
   competition: Competition;

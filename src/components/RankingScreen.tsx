@@ -21,7 +21,7 @@ const RankingScreen = () => {
     queryKey: ['weekly-ranking'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('weekly_ranking')
+        .from('weekly_rankings')
         .select('*')
         .order('total_score', { ascending: false })
         .limit(100);
@@ -46,20 +46,26 @@ const RankingScreen = () => {
       className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-3 pb-20 total-edge-protection"
     >
       <div className="max-w-md mx-auto space-y-4">
-        <RankingHeader />
+        <RankingHeader 
+          weeklyCompetition={null}
+          totalWeeklyPlayers={rankingData?.length || 0}
+        />
         
         {userRankingData && (
           <UserPositionCard
-            position={userPosition + 1}
+            user={user}
+            userPosition={userPosition + 1}
             userData={userRankingData}
             totalPlayers={rankingData?.length || 0}
           />
         )}
 
-        <PrizeDistribution />
+        <PrizeDistribution 
+          weeklyCompetition={null}
+        />
 
         <RankingList
-          rankingData={rankingData || []}
+          players={rankingData || []}
           currentUserId={user?.id}
           isLoading={isLoading}
         />

@@ -19,7 +19,8 @@ const InviteScreen = () => {
   useEdgeProtection(inviteRef, true);
   
   const {
-    inviteStats,
+    inviteCode,
+    stats,
     invitedFriends,
     isLoading,
     error,
@@ -28,13 +29,19 @@ const InviteScreen = () => {
 
   logger.debug('Renderizando InviteScreen', { 
     userId: user?.id,
-    hasInviteCode: !!user?.invite_code,
-    totalInvites: inviteStats?.total_invites || 0
+    hasInviteCode: !!inviteCode,
+    totalInvites: stats?.totalInvites || 0
   }, 'INVITE_SCREEN');
 
   if (!user) {
     return <UnauthenticatedView />;
   }
+
+  const handleCopyCode = () => {
+    if (inviteCode) {
+      navigator.clipboard.writeText(inviteCode);
+    }
+  };
 
   return (
     <div 
@@ -44,15 +51,17 @@ const InviteScreen = () => {
       <div className="max-w-md mx-auto space-y-4">
         <InviteHeader />
         
-        <MyInviteCode inviteCode={user.invite_code} />
+        <MyInviteCode 
+          inviteCode={inviteCode} 
+          onCopyCode={handleCopyCode}
+        />
         
         <InviteStatsCards 
-          stats={inviteStats}
-          isLoading={isLoading}
+          stats={stats}
         />
         
         <MyInvitedFriends 
-          friends={invitedFriends}
+          invitedFriends={invitedFriends}
           isLoading={isLoading}
           onRefresh={refetch}
         />
