@@ -12,14 +12,15 @@ const GameBoardLayout = ({ children }: GameBoardLayoutProps) => {
 
   return (
     <div 
-      className={`min-h-screen bg-gradient-to-br ${backgroundTheme} p-2 relative no-scroll touch-none no-overscroll`}
+      className={`min-h-screen bg-gradient-to-br ${backgroundTheme} p-2 relative game-board-area`}
       style={{
+        // Game board specific - block all scroll and touch
         overflow: 'hidden',
         overscrollBehavior: 'none',
         touchAction: 'none',
         position: 'relative',
         width: '100%',
-        height: '100vh'
+        minHeight: '100vh'
       }}
     >
       {/* Efeitos de fundo gamificados */}
@@ -35,9 +36,9 @@ const GameBoardLayout = ({ children }: GameBoardLayoutProps) => {
       <div className="absolute top-20 right-4 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse touch-none" />
       <div className="absolute bottom-20 left-4 w-40 h-40 bg-white/5 rounded-full blur-xl animate-pulse touch-none" style={{ animationDelay: '1s' }} />
       
-      {/* Conteúdo principal - NO SCROLL CONTAINER */}
+      {/* Conteúdo principal - GAME AREA with no scroll */}
       <div 
-        className="relative z-10 max-w-sm mx-auto space-y-3 no-scroll touch-none"
+        className="relative z-10 max-w-sm mx-auto space-y-3 game-board-area"
         style={{
           overflow: 'hidden',
           overscrollBehavior: 'none',

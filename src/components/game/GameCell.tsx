@@ -32,7 +32,7 @@ const GameCell = ({
   isDragging,
   isMobile = false,
 }: GameCellProps) => {
-  // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS E SCROLL
+  // ✅ GAME CELL SPECIFIC EVENT HANDLERS - Only for game interactions
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -83,7 +83,7 @@ const GameCell = ({
     onCellEnd();
   };
 
-  // PREVENT SCROLL EVENTS - Handlers específicos por tipo de evento
+  // GAME-SPECIFIC EVENT BLOCKERS
   const preventWheelScroll = (e: React.WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -101,7 +101,7 @@ const GameCell = ({
 
   // Hierarquia visual gamificada: Dica > Palavra encontrada > Seleção atual > Normal
   const getCellClasses = () => {
-    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95 touch-none no-scroll no-overscroll";
+    const baseClasses = "flex items-center justify-center font-bold relative transition-all duration-300 select-none cursor-pointer transform hover:scale-105 active:scale-95 touch-none game-board-area";
     
     if (isHintHighlighted) {
       return `${baseClasses} bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse`;

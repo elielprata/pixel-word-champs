@@ -59,7 +59,7 @@ const GameBoardGrid = ({
   return (
     <div
       ref={boardRef}
-      className="grid mx-auto bg-white no-scroll touch-none no-overscroll"
+      className="grid mx-auto bg-white game-board-area"
       style={{
         gridTemplateColumns: `repeat(${boardWidth}, 1fr)`, // 12 colunas
         gridTemplateRows: `repeat(${size}, 1fr)`, // 8 linhas

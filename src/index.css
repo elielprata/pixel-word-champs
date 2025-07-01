@@ -47,38 +47,35 @@
 }
 
 @layer base {
-  /* GLOBAL NO-SCROLL ENFORCEMENT */
+  /* INTELLIGENT SCROLL SYSTEM - Allow normal scroll, prevent only overscroll */
   html, body {
-    overflow: hidden !important;
-    overscroll-behavior: none !important;
-    position: fixed !important;
+    /* Allow normal scrolling */
+    overflow: auto !important;
+    position: relative !important;
     width: 100% !important;
-    height: 100% !important;
+    min-height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    
+    /* Prevent overscroll effects only */
+    overscroll-behavior: contain !important;
+    
+    /* Basic styling */
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-    
-    /* iOS RUBBER BAND PREVENTION */
-    -webkit-overflow-scrolling: none !important;
-    
-    /* ANDROID PULL-TO-REFRESH PREVENTION */
-    overscroll-behavior-y: contain !important;
-    overscroll-behavior-x: contain !important;
   }
   
-  /* ROOT CONTAINER NO-SCROLL */
+  /* ROOT CONTAINER - Allow scroll */
   #root {
     width: 100% !important;
-    height: 100% !important;
-    overflow: hidden !important;
-    overscroll-behavior: none !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    overscroll-behavior: contain !important;
     position: relative !important;
-    touch-action: none !important;
   }
   
-  /* UNIVERSAL NO-SCROLL FOR ALL ELEMENTS */
+  /* UNIVERSAL SETTINGS */
   * {
     @apply border-border;
     -webkit-user-select: none !important;
@@ -87,8 +84,6 @@
     user-select: none !important;
     -webkit-touch-callout: none !important;
     -webkit-tap-highlight-color: transparent !important;
-    touch-action: none !important;
-    overscroll-behavior: none !important;
   }
   
   /* ALLOW INTERACTION ONLY ON INPUTS */
@@ -107,7 +102,7 @@
     transition: transform 0.1s ease;
   }
   
-  /* HIDE ALL SCROLLBARS */
+  /* HIDE ALL SCROLLBARS (visual only) */
   ::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
@@ -119,19 +114,21 @@
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
   }
-  
-  /* DISABLE SMOOTH SCROLLING (CONTRADICTORY) */
-  * {
-    scroll-behavior: auto !important;
-  }
 }
 
 @layer utilities {
-  /* NO-SCROLL UTILITY CLASS */
-  .no-scroll {
+  /* GAME BOARD AREA - No scroll, no touch */
+  .game-board-area {
     overflow: hidden !important;
     overscroll-behavior: none !important;
     touch-action: none !important;
+  }
+  
+  /* SCROLLABLE AREAS - Allow normal scroll */
+  .scrollable-area {
+    overflow: auto !important;
+    overscroll-behavior: contain !important;
+    touch-action: auto !important;
   }
   
   /* SAFE AREA INSETS */
@@ -149,6 +146,12 @@
   
   /* PREVENT OVERSCROLL */
   .no-overscroll {
+    overscroll-behavior: none !important;
+  }
+  
+  /* DEPRECATED CLASSES - Keeping for backward compatibility */
+  .no-scroll {
+    /* Now only prevents overscroll, allows normal scroll */
     overscroll-behavior: none !important;
   }
 }
