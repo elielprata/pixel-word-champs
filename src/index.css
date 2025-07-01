@@ -49,7 +49,7 @@
 @layer base {
   * {
     @apply border-border;
-    /* Anti-zoom robusto - FORTALECIDO */
+    /* Anti-zoom robusto - MÁXIMA PROTEÇÃO */
     touch-action: manipulation;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -58,6 +58,8 @@
     -ms-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    /* NOVO: Garantir que transforms não causem zoom */
+    transform: none !important;
   }
 
   body {
@@ -81,9 +83,11 @@
     user-select: text;
     touch-action: manipulation;
     font-size: 16px; /* Previne zoom automático no iOS */
+    /* Permitir transform apenas para inputs */
+    transform: initial !important;
   }
 
-  /* Classe especial para áreas do jogo - PROTEÇÃO MÁXIMA */
+  /* Classe especial para áreas do jogo - PROTEÇÃO MÁXIMA REFORÇADA */
   .game-board-area {
     touch-action: none !important;
     overscroll-behavior: contain !important;
@@ -91,8 +95,8 @@
     -webkit-overflow-scrolling: auto;
     /* Proteção adicional contra transforms */
     will-change: auto;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+    -webkit-transform: none !important;
+    transform: none !important;
   }
 
   /* Classe para áreas que precisam de scroll normal */
@@ -102,7 +106,7 @@
     overscroll-behavior: auto;
   }
 
-  /* NOVA: Proteção específica para células do tabuleiro */
+  /* REFORÇADA: Proteção específica para células do tabuleiro */
   .game-cell {
     touch-action: none !important;
     -webkit-touch-callout: none !important;
@@ -111,15 +115,21 @@
     /* Remover qualquer possibilidade de zoom por transform */
     transform: none !important;
     will-change: auto;
+    /* Garantir que não há scale */
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
   }
 
-  /* NOVA: Proteção específica para células das bordas */
+  /* REFORÇADA: Proteção específica para células das bordas */
   .game-cell-edge {
     touch-action: none !important;
     overscroll-behavior: none !important;
     /* Proteção extra para bordas */
     -webkit-overflow-scrolling: auto !important;
     overflow: hidden !important;
+    /* Anti-transform rigoroso */
+    transform: none !important;
+    -webkit-transform: none !important;
   }
 }
 
@@ -137,7 +147,7 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Utilitário para áreas sem zoom - FORTALECIDO */
+  /* Utilitário para áreas sem zoom - MÁXIMA PROTEÇÃO */
   .no-zoom {
     touch-action: manipulation !important;
     -webkit-touch-callout: none !important;
@@ -145,34 +155,69 @@
     /* Remover transforms que podem causar zoom */
     transform: none !important;
     will-change: auto !important;
+    /* Garantir que não há scale */
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
   }
 
-  /* NOVA: Alternativas aos hover:scale sem zoom */
+  /* CORRIGIDAS: Alternativas aos hover:scale sem zoom */
   .hover-lift {
     transition: box-shadow 0.2s ease, opacity 0.2s ease;
+    /* GARANTIR que não há transform */
+    transform: none !important;
   }
   
   .hover-lift:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     opacity: 0.95;
+    /* NÃO usar transform */
+    transform: none !important;
   }
 
   .hover-glow {
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    /* GARANTIR que não há transform */
+    transform: none !important;
   }
   
   .hover-glow:hover {
     box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
     border-color: rgb(139, 92, 246);
+    /* NÃO usar transform */
+    transform: none !important;
   }
 
-  /* NOVA: Efeito de ativação sem scale */
+  /* CORRIGIDA: Efeito de ativação sem scale */
   .active-press {
     transition: opacity 0.1s ease, box-shadow 0.1s ease;
+    /* GARANTIR que não há transform */
+    transform: none !important;
   }
   
   .active-press:active {
     opacity: 0.8;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* NÃO usar transform */
+    transform: none !important;
+  }
+
+  /* NOVA: Animação bounce sem scale */
+  .animate-bounce-in {
+    animation: bounce-glow 0.6s ease-out;
+  }
+
+  @keyframes bounce-glow {
+    0% {
+      opacity: 0;
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    100% {
+      opacity: 1;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
   }
 }

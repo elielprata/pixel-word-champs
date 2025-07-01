@@ -28,7 +28,7 @@ const GameBoard = ({
   canRevive = true,
   onRevive
 }: GameBoardProps) => {
-  logger.debug('🎮 Renderizando GameBoard DEFINITIVO (sem onWordFound)', { 
+  logger.debug('🎮 Renderizando GameBoard DEFINITIVO (sem zoom)', { 
     level, 
     timeLeft, 
     canRevive 

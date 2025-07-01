@@ -38,24 +38,23 @@ const GameBoardGrid = ({
   const cellSize = getCellSize(size, isMobile);
   const boardWidth = isMobile ? getMobileBoardWidth(1) : getBoardWidth(1);
 
-  // Calcular largura máxima segura para evitar overflow
+  // Calcular largura máxima segura para evitar overflow - CORRIGIDO
   const safeMaxWidth = Math.min(
     isMobile ? 360 : 480,
     window.innerWidth - 32 // 16px padding de cada lado
   );
 
-  // Layout otimizado para 8x12 sem overflow
+  // Layout otimizado para 8x12 sem overflow - REFORÇADO
   const gridConfig = {
     gap: "1px",
     maxWidth: `${safeMaxWidth}px`,
     padding: "0px",
   };
 
-  // Verificar e corrigir overflow horizontal
+  // Verificar e corrigir overflow horizontal - REMOVIDO O BUG scale(0.95)
   useEffect(() => {
     if (boardRef.current) {
       const boardElement = boardRef.current;
-      const computedStyle = window.getComputedStyle(boardElement);
       const boardActualWidth = boardElement.offsetWidth;
       const parentWidth = boardElement.parentElement?.offsetWidth || window.innerWidth;
       
@@ -69,12 +68,15 @@ const GameBoardGrid = ({
         hasOverflow: boardActualWidth > parentWidth - 20
       });
       
-      // Detectar overflow e aplicar correção
+      // Detectar overflow e aplicar correção SEM SCALE (CORRIGIDO)
       if (boardActualWidth > parentWidth - 20) {
-        console.warn('⚠️ Overflow detectado no tabuleiro, aplicando correção');
+        console.warn('⚠️ Overflow detectado no tabuleiro, aplicando correção sem zoom');
         boardElement.style.maxWidth = `${parentWidth - 20}px`;
-        boardElement.style.transform = 'scale(0.95)';
-        boardElement.style.transformOrigin = 'center';
+        // REMOVIDO: boardElement.style.transform = 'scale(0.95)';
+        // REMOVIDO: boardElement.style.transformOrigin = 'center';
+        // Aplicar apenas ajuste de largura máxima sem transforms
+        boardElement.style.width = '100%';
+        boardElement.style.minWidth = '300px';
       }
     }
   }, [safeMaxWidth, cellSize]);
@@ -104,15 +106,14 @@ const GameBoardGrid = ({
         touchAction: "none",
         padding: gridConfig.padding,
         background: "white",
-        // Proteção rigorosa contra overflow
+        // Proteção rigorosa contra overflow - REFORÇADA
         overflow: "hidden",
         boxSizing: "border-box",
-        // Garantir que não transborde
         overflowX: "hidden",
         overflowY: "hidden",
-        // Proteção adicional
+        // Proteção adicional SEM TRANSFORMS
         willChange: "auto",
-        transform: "none",
+        transform: "none", // GARANTIR que não há transform
       }}
       onTouchEnd={(e) => {
         e.preventDefault();
