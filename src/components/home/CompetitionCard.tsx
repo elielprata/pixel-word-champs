@@ -36,26 +36,22 @@ const CompetitionCard = ({ competition, onStartChallenge }: CompetitionCardProps
   return (
     <Card className={cardClasses}>
       <CardContent className="p-4 relative">
-        <CompetitionCardDecorations 
-          isActive={isActive}
-          isScheduled={isScheduled}
-          isCompleted={isCompleted}
-        />
+        <CompetitionCardDecorations />
 
         <div className="relative z-10">
           <CompetitionCardHeader 
             title={competition.title}
             description={competition.description}
             theme={competition.theme}
-            status={competition.status}
+            status={competition.status as "active" | "scheduled" | "completed"}
           />
           
           <div className="flex items-center justify-between mt-4">
             <CircularProgressTimer 
               startDate={competition.start_date}
               endDate={competition.end_date}
-              status={competition.status}
-              size="small"
+              status={competition.status as "active" | "scheduled" | "completed"}
+              size={70}
             />
             
             <CompetitionCardButton
