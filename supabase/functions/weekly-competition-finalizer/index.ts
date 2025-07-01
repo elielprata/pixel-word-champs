@@ -54,11 +54,11 @@ Deno.serve(async (req) => {
   try {
     logger.info('Iniciando verificação de finalização automática de competições');
 
-    // Verificar se existe competição ativa ou ended que precisa ser finalizada
+    // Verificar se existe competição completed que precisa ser finalizada (snapshot)
     const { data: competitionsToCheck, error: checkError } = await supabase
       .from('weekly_config')
       .select('*')
-      .in('status', ['active', 'ended'])
+      .in('status', ['active', 'completed'])
       .order('end_date', { ascending: true });
 
     if (checkError) {
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     }
 
     if (!competitionsToCheck || competitionsToCheck.length === 0) {
-      logger.info('Nenhuma competição ativa ou ended encontrada');
+      logger.info('Nenhuma competição ativa ou completed encontrada');
       return new Response(JSON.stringify({ 
         message: 'Nenhuma competição para finalizar',
         status: 'no_action_needed'
@@ -83,31 +83,72 @@ Deno.serve(async (req) => {
       });
     }
 
-    const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    let competitionToFinalize = null;
+    // Primeiro, executar atualização de status para marcar competições expiradas como 'completed'
+    logger.info('Executando atualização de status de competições semanais');
+    
+    const { data: statusUpdateResult, error: statusUpdateError } = await supabase
+      .rpc('update_weekly_competitions_status');
 
-    // Procurar competição que deve ser finalizada (data atual > data de fim)
-    for (const comp of competitionsToCheck) {
-      if (currentDate > comp.end_date) {
+    if (statusUpdateError) {
+      logger.error('Erro na atualização de status', { error: statusUpdateError });
+    } else {
+      logger.info('Atualização de status executada', { result: statusUpdateResult });
+    }
+
+    // Agora procurar competições 'completed' que precisam de snapshot
+    const { data: completedCompetitions, error: completedError } = await supabase
+      .from('weekly_config')
+      .select('*')
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: true });
+
+    if (completedError) {
+      logger.error('Erro ao buscar competições completed', { error: completedError });
+      return new Response(JSON.stringify({ 
+        error: 'Erro ao buscar competições finalizadas',
+        details: completedError.message 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (!completedCompetitions || completedCompetitions.length === 0) {
+      logger.info('Nenhuma competição completed precisa de snapshot');
+      return new Response(JSON.stringify({ 
+        message: 'Nenhuma competição completed precisa de finalização',
+        status: 'no_action_needed'
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Verificar se alguma das competições completed ainda não tem snapshot
+    let competitionToFinalize = null;
+    
+    for (const comp of completedCompetitions) {
+      // Verificar se já existe snapshot
+      const { data: existingSnapshot } = await supabase
+        .from('weekly_competitions_snapshot')
+        .select('id')
+        .eq('competition_id', comp.id)
+        .single();
+      
+      if (!existingSnapshot) {
         competitionToFinalize = comp;
+        logger.info('Encontrada competição completed sem snapshot', {
+          competition_id: comp.id,
+          end_date: comp.end_date
+        });
         break;
       }
     }
 
     if (!competitionToFinalize) {
-      logger.info('Nenhuma competição precisa ser finalizada hoje', {
-        current_date: currentDate,
-        competitions: competitionsToCheck.map(c => ({
-          id: c.id,
-          status: c.status,
-          end_date: c.end_date
-        }))
-      });
-      
+      logger.info('Todas as competições completed já possuem snapshot');
       return new Response(JSON.stringify({ 
-        message: 'Nenhuma competição precisa ser finalizada hoje',
-        current_date: currentDate,
-        next_end_dates: competitionsToCheck.map(c => c.end_date),
+        message: 'Todas as competições completed já foram finalizadas',
         status: 'no_action_needed'
       }), {
         status: 200,
@@ -118,8 +159,7 @@ Deno.serve(async (req) => {
     // Executar a finalização completa usando a função SQL existente
     logger.info('Executando finalização automática da competição', {
       competition_id: competitionToFinalize.id,
-      end_date: competitionToFinalize.end_date,
-      current_date: currentDate
+      end_date: competitionToFinalize.end_date
     });
 
     const { data: finalizationResult, error: finalizationError } = await supabase
@@ -169,8 +209,7 @@ Deno.serve(async (req) => {
       success: true,
       message: 'Competição finalizada automaticamente com sucesso',
       finalization_result: finalizationResult,
-      executed_at: new Date().toISOString(),
-      current_date: currentDate
+      executed_at: new Date().toISOString()
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

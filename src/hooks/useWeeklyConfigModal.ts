@@ -1,33 +1,20 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { useWeeklyConfig } from '@/hooks/useWeeklyConfig';
-import { useWeeklyCompetitionHistory } from '@/hooks/useWeeklyCompetitionHistory';
-import { useWeeklyCompetitionActivation } from '@/hooks/useWeeklyCompetitionActivation';
-import { formatDateForDisplay } from '@/utils/dateFormatters';
-
-interface WeeklyConfig {
-  id: string;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'scheduled' | 'ended' | 'completed';
-  activated_at?: string;
-  completed_at?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { useWeeklyConfig } from './useWeeklyConfig';
+import { useWeeklyConfigHistory } from './useWeeklyConfigHistory';
+import { useWeeklyCompetitionActivation } from './useWeeklyCompetitionActivation';
+import { getCurrentBrasiliaTime } from '@/utils/brasiliaTimeUnified';
 
 export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedCompetition, setSelectedCompetition] = useState<any>(null);
   const [newStartDate, setNewStartDate] = useState('');
   const [newEndDate, setNewEndDate] = useState('');
-  const [historyPage, setHistoryPage] = useState(1);
-  const [selectedCompetition, setSelectedCompetition] = useState<WeeklyConfig | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     activeConfig,
     scheduledConfigs,
+    completedConfigs,
     lastCompletedConfig,
     isLoading: configsLoading,
     loadConfigurations,
@@ -36,153 +23,114 @@ export const useWeeklyConfigModal = (onConfigUpdated: () => void) => {
     calculateNextDates
   } = useWeeklyConfig();
 
+  const {
+    weeklyHistoryData,
+    historyLoading,
+    historyPage,
+    historyTotalPages,
+    setHistoryPage,
+    refetchHistory
+  } = useWeeklyConfigHistory();
+
   const { activateWeeklyCompetitions, isActivating } = useWeeklyCompetitionActivation();
 
-  const {
-    historyData: weeklyHistoryData,
-    isLoading: historyLoading,
-    totalPages: historyTotalPages,
-    refetch: refetchHistory
-  } = useWeeklyCompetitionHistory(historyPage, 10);
+  // Calcular próximas datas automaticamente
+  useEffect(() => {
+    const nextDates = calculateNextDates();
+    setNewStartDate(nextDates.startDate);
+    setNewEndDate(nextDates.endDate);
+  }, [scheduledConfigs, activeConfig, lastCompletedConfig]);
 
   const handleActivateCompetitions = async () => {
+    console.log('🎯 Ativando competições semanais manualmente', {
+      timestamp: getCurrentBrasiliaTime()
+    });
+
     const result = await activateWeeklyCompetitions();
     
-    if (result.success && result.data) {
-      if (result.data.updated_count > 0) {
-        toast({
-          title: "Competições Atualizadas!",
-          description: `${result.data.updated_count} competição(ões) foram atualizadas com sucesso.`,
-        });
-        await loadConfigurations();
-        onConfigUpdated();
-      } else {
-        toast({
-          title: "Nenhuma Atualização",
-          description: "Todas as competições já estão com o status correto.",
-        });
-      }
+    if (result.success) {
+      console.log('✅ Competições ativadas com sucesso:', result.data);
+      await loadConfigurations();
+      onConfigUpdated();
     } else {
-      toast({
-        title: "Erro",
-        description: `Erro ao ativar competições: ${result.error}`,
-        variant: "destructive",
-      });
+      console.error('❌ Erro ao ativar competições:', result.error);
     }
   };
 
   const handleScheduleNew = async () => {
+    if (!newStartDate || !newEndDate) {
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-
       const result = await scheduleCompetition(newStartDate, newEndDate);
-
+      
       if (result.success) {
-        toast({
-          title: "Sucesso!",
-          description: `Nova competição agendada de ${formatDateForDisplay(newStartDate)} a ${formatDateForDisplay(newEndDate)}`,
-        });
-
+        console.log('✅ Nova competição agendada com sucesso');
+        await loadConfigurations();
         onConfigUpdated();
-        
-        const nextStart = new Date(newEndDate);
-        nextStart.setDate(nextStart.getDate() + 1);
-        const nextEnd = new Date(nextStart);
-        nextEnd.setDate(nextEnd.getDate() + 6);
-        
-        setNewStartDate(nextStart.toISOString().split('T')[0]);
-        setNewEndDate(nextEnd.toISOString().split('T')[0]);
       } else {
-        throw new Error(result.error);
+        console.error('❌ Erro ao agendar competição:', result.error);
       }
-
-    } catch (error: any) {
-      console.error('Erro ao agendar nova competição:', error);
-      toast({
-        title: "Erro",
-        description: `Erro ao agendar competição: ${error.message}`,
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error('❌ Erro ao agendar competição:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleFinalize = async () => {
-    if (!activeConfig && !scheduledConfigs.some(c => c.status === 'ended')) {
-      toast({
-        title: "Erro",
-        description: "Nenhuma competição ativa ou finalizada para processar",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      setIsLoading(true);
+      console.log('🏁 Finalizando competição semanal manualmente', {
+        timestamp: getCurrentBrasiliaTime()
+      });
 
       const result = await finalizeCompetition();
-
+      
       if (result.success) {
-        toast({
-          title: "Competição Finalizada!",
-          description: `Competição finalizada com ${result.data.winners_count || 0} ganhadores. Snapshot criado com sucesso.`,
-        });
-
+        console.log('✅ Competição finalizada com sucesso:', result.data);
+        await loadConfigurations();
+        await refetchHistory();
         onConfigUpdated();
-        refetchHistory();
       } else {
-        throw new Error(result.error);
+        console.error('❌ Erro ao finalizar competição:', result.error);
       }
-
-    } catch (error: any) {
-      console.error('Erro ao finalizar competição:', error);
-      toast({
-        title: "Erro",
-        description: `Erro ao finalizar competição: ${error.message}`,
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error('❌ Erro ao finalizar competição:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Calcular próximas datas quando o modal abre
-  useEffect(() => {
-    if (!newStartDate && !newEndDate) {
-      const nextDates = calculateNextDates();
-      setNewStartDate(nextDates.startDate);
-      setNewEndDate(nextDates.endDate);
-    }
-  }, [activeConfig, scheduledConfigs, lastCompletedConfig, calculateNextDates, newStartDate, newEndDate]);
-
   return {
     // Estados
-    isLoading,
-    newStartDate,
-    newEndDate,
-    historyPage,
-    selectedCompetition,
-    // Configurações
     activeConfig,
     scheduledConfigs,
+    completedConfigs,
     lastCompletedConfig,
     configsLoading,
     isActivating,
-    // Dados do histórico
+    isLoading,
+    selectedCompetition,
+    newStartDate,
+    newEndDate,
+    
+    // Histórico
     weeklyHistoryData,
     historyLoading,
+    historyPage,
     historyTotalPages,
-    // Setters
+    
+    // Ações
+    setSelectedCompetition,
     setNewStartDate,
     setNewEndDate,
     setHistoryPage,
-    setSelectedCompetition,
-    // Handlers
     handleActivateCompetitions,
     handleScheduleNew,
     handleFinalize,
-    // Funções auxiliares
     loadConfigurations,
     refetchHistory
   };
