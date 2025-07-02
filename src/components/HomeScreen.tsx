@@ -127,12 +127,50 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
             
             <div className="flex-1">
               <p className="text-sm text-slate-600 mb-1">Posição atual</p>
-              <p className="text-xl font-bold text-slate-800">
+              <p className="text-xl font-bold text-slate-800 mb-2">
                 {stats?.position ? `${stats.position}º lugar mundial` : 'Posição não disponível'}
               </p>
               
+              {/* Informação de Premiação */}
+              {stats?.position && (
+                <div className="mb-3">
+                  {(() => {
+                    const position = stats.position;
+                    let prizeAmount = 0;
+                    let prizeText = '';
+                    
+                    if (position === 1) {
+                      prizeAmount = 100;
+                      prizeText = 'R$ 100,00';
+                    } else if (position === 2) {
+                      prizeAmount = 50;
+                      prizeText = 'R$ 50,00';
+                    } else if (position === 3) {
+                      prizeAmount = 25;
+                      prizeText = 'R$ 25,00';
+                    } else if (position <= 10) {
+                      prizeAmount = 10;
+                      prizeText = 'R$ 10,00';
+                    }
+                    
+                    return (
+                      <div className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                        prizeAmount > 0 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {prizeAmount > 0 
+                          ? `🎁 Premiação: ${prizeText}` 
+                          : '💰 Sem premiação nesta posição'
+                        }
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+              
               {/* Barra de progresso simulada */}
-              <div className="mt-3">
+              <div>
                 <div className="bg-slate-200 rounded-full h-3 mb-2">
                   <div 
                     className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-full h-3 transition-all duration-500"
