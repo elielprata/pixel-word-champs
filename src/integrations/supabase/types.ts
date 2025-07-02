@@ -1378,6 +1378,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_system_or_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       recalculate_competition_prize_pool: {
         Args: { comp_id: string }
         Returns: number
