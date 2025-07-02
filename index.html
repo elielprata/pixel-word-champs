@@ -6,6 +6,12 @@
     <!-- FASE 1: Meta tag consolidada com bloqueio total de zoom -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta http-equiv="Permissions-Policy" content="vr=(), ambient-light-sensor=(), battery=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" />
+    <!-- FASE 3: Headers de segurança para produção -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains" />
     <title>Caça Palavras Royale</title>
     <meta name="description" content="O melhor jogo de caça-palavras do Brasil! Participe de desafios diários e ganhe prêmios reais." />
     <meta name="author" content="Caça Palavras Royale" />

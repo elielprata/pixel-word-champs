@@ -6,6 +6,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App.tsx";
 import "./index.css";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { initializeProductionSecurity } from '@/utils/productionSecurity';
+import { productionLogger } from '@/utils/productionLogger';
+
+// Inicializar configurações de segurança de produção
+const securityInitialized = initializeProductionSecurity();
+
+if (!securityInitialized) {
+  productionLogger.error('Falha na inicialização de segurança - aplicação pode estar vulnerável');
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
