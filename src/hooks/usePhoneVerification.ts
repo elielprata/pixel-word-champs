@@ -47,9 +47,9 @@ export const usePhoneVerification = (phone: string, currentUserPhone?: string) =
           available: data.phone_available || false,
           exists: data.phone_exists || false
         });
-      } catch (error) {
-        console.error('Erro ao verificar telefone:', error);
-        setPhoneCheck({ checking: false, available: true, exists: false });
+        } catch (error) {
+          // Erro silencioso em produção
+          setPhoneCheck({ checking: false, available: true, exists: false });
       }
     };
 

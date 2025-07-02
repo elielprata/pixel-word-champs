@@ -37,7 +37,7 @@ export const useEmailVerification = (email: string) => {
           exists: data.email_exists || false
         });
       } catch (error) {
-        console.error('Erro ao verificar email:', error);
+        // Erro silencioso em produção
         setEmailCheck({ checking: false, available: true, exists: false });
       }
     };
