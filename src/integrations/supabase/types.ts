@@ -496,13 +496,6 @@ export type Database = {
             foreignKeyName: "fk_invites_used_by_profiles"
             columns: ["used_by"]
             isOneToOne: false
-            referencedRelation: "mv_current_weekly_ranking"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "fk_invites_used_by_profiles"
-            columns: ["used_by"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -622,13 +615,6 @@ export type Database = {
             foreignKeyName: "monthly_invite_points_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "mv_current_weekly_ranking"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "monthly_invite_points_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -728,13 +714,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "monthly_invite_competitions"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "monthly_invite_rankings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "mv_current_weekly_ranking"
-            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "monthly_invite_rankings_user_id_fkey"
@@ -1289,18 +1268,7 @@ export type Database = {
       }
     }
     Views: {
-      mv_current_weekly_ranking: {
-        Row: {
-          last_updated: string | null
-          pix_holder_name: string | null
-          pix_key: string | null
-          position: number | null
-          total_score: number | null
-          user_id: string | null
-          username: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       calculate_monthly_invite_ranking: {
