@@ -1,1 +1,10 @@
 project_id = "oqzpkqbmcnpxpegshlcm"
+
+[functions.admin-rate-limiter]
+verify_jwt = true
+
+[functions.admin-session-validator]
+verify_jwt = true
+
+[functions.admin-update-password]
+verify_jwt = true
