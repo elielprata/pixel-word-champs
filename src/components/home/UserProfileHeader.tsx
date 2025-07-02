@@ -8,7 +8,8 @@ import { usePlayerLevel } from '@/hooks/usePlayerLevel';
 import { useUserStats } from '@/hooks/useUserStats';
 const UserProfileHeader = () => {
   const {
-    isAuthenticated
+    isAuthenticated,
+    user
   } = useAuth();
   const {
     profile,
@@ -22,6 +23,17 @@ const UserProfileHeader = () => {
     isLoading: statsLoading
   } = useUserStats();
   const isLoading = profileLoading || statsLoading;
+
+  // Debug logs
+  console.log('🏠 UserProfileHeader Debug:', {
+    isAuthenticated,
+    userId: user?.id,
+    profile,
+    profileLoading,
+    stats,
+    statsLoading,
+    currentLevel
+  });
 
   // Não renderizar nada se não estiver autenticado
   if (!isAuthenticated) {
