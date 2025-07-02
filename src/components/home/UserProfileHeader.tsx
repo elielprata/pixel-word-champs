@@ -54,44 +54,43 @@ const UserProfileHeader = () => {
         </div>
       </div>;
   }
-  return <div className="bg-gradient-to-r from-purple-500 to-purple-700 p-6 rounded-xl text-white">
+  return <div className="bg-gradient-to-r from-primary to-primary/80 p-4 rounded-xl text-primary-foreground">
       {/* Seção do perfil */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
-          <Avatar className="w-16 h-16 border-2 border-white/30">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <Avatar className="w-12 h-12 border-2 border-primary-foreground/30">
             <AvatarImage src={profile?.avatar_url || ''} alt={profile?.username || 'Usuário'} />
-            <AvatarFallback className="bg-white/20 text-white text-lg font-bold">
+            <AvatarFallback className="bg-primary-foreground/20 text-primary-foreground text-sm font-bold">
               {profile?.username?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-xl font-bold text-white">{profile?.username || 'Usuário'}</h2>
-            <p className="text-purple-100 text-sm">Nível {currentLevel.level} - {currentLevel.title}</p>
+            <h2 className="text-lg font-bold">{profile?.username || 'Usuário'}</h2>
+            <p className="text-primary-foreground/80 text-xs">Nível {currentLevel.level} - {currentLevel.title}</p>
           </div>
         </div>
-        
       </div>
       
       {/* Seção integrada de pontos e posição */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+      <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg p-3">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-              <Coins className="w-5 h-5 text-white" />
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 bg-accent rounded-full flex items-center justify-center">
+              <Coins className="w-4 h-4 text-accent-foreground" />
             </div>
             <div>
-              <div className="text-lg font-bold text-white">
+              <div className="text-sm font-bold">
                 {stats.totalScore.toLocaleString()} pontos
               </div>
             </div>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-              <Trophy className="w-5 h-5 text-white" />
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 bg-accent rounded-full flex items-center justify-center">
+              <Trophy className="w-4 h-4 text-accent-foreground" />
             </div>
             <div>
-              <div className="text-lg font-bold text-white">
+              <div className="text-sm font-bold">
                 #{stats.position || '?'}
               </div>
             </div>

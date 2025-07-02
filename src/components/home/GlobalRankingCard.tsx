@@ -60,35 +60,35 @@ const GlobalRankingCard = () => {
   const progress = pointsNeeded > 0 ? Math.min(95, (currentScore / nextPositionScore) * 100) : 100;
 
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm">
-      <CardHeader className="pb-4">
+    <Card className="bg-card border border-border shadow-sm">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-bold text-gray-900">Ranking Global</CardTitle>
-          <TrendingUp className="w-5 h-5 text-purple-600" />
+          <CardTitle className="text-base font-bold text-card-foreground">Ranking Global</CardTitle>
+          <TrendingUp className="w-4 h-4 text-primary" />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center">
-            <div className="text-white font-bold text-lg">
+      <CardContent className="pt-0">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center">
+            <div className="text-primary-foreground font-bold text-sm">
               #{currentPosition}
             </div>
           </div>
           <div className="flex-1">
-            <div className="text-sm text-gray-600 mb-1">Posição atual</div>
-            <div className="text-xl font-bold text-gray-900 mb-3">
+            <div className="text-xs text-muted-foreground mb-1">Posição atual</div>
+            <div className="text-lg font-bold text-card-foreground mb-2">
               {currentPosition}º lugar mundial
             </div>
             {pointsNeeded > 0 && (
               <>
-                <Progress value={progress} className="h-2 mb-2" />
-                <div className="text-sm text-gray-600">
+                <Progress value={progress} className="h-1.5 mb-1" />
+                <div className="text-xs text-muted-foreground">
                   {pointsNeeded.toLocaleString()} pts para o {currentPosition - 1}º lugar
                 </div>
               </>
             )}
             {pointsNeeded === 0 && currentPosition === 1 && (
-              <div className="text-sm text-green-600 font-medium">
+              <div className="text-xs text-green-600 font-medium">
                 🏆 Você está em 1º lugar!
               </div>
             )}
