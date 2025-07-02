@@ -140,7 +140,10 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
                   />
                 </div>
                 <p className="text-sm text-slate-500">
-                  {stats?.totalScore ? `${stats.totalScore.toLocaleString()} pts` : '0 pts'} para o próximo nível
+                  {stats?.position && stats.position > 1 
+                    ? `${Math.max(100, Math.ceil((stats.totalScore || 0) * 0.1)).toLocaleString()} pts para subir no ranking`
+                    : 'Você está no topo!'
+                  }
                 </p>
               </div>
             </div>
