@@ -1271,6 +1271,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      backup_critical_settings: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       calculate_monthly_invite_ranking: {
         Args: { target_month?: string }
         Returns: Json
@@ -1320,6 +1324,10 @@ export type Database = {
         Returns: Json
       }
       fix_orphaned_scores: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_advanced_analytics: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
@@ -1385,6 +1393,10 @@ export type Database = {
       sync_user_scores_to_weekly_ranking: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      system_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       test_scoring_functions: {
         Args: Record<PropertyKey, never>
@@ -1458,6 +1470,10 @@ export type Database = {
         Returns: undefined
       }
       validate_scoring_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      validate_system_integrity: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
