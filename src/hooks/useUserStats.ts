@@ -38,8 +38,6 @@ export const useUserStats = () => {
 
     setIsLoading(true);
     try {
-      console.log('📊 Carregando estatísticas do usuário:', user.id);
-
       // Buscar perfil do usuário
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -61,7 +59,7 @@ export const useUserStats = () => {
         .select('position')
         .eq('user_id', user.id)
         .eq('week_start', weekStartStr)
-        .maybeSingle();
+        .single();
 
       if (weeklyError && weeklyError.code !== 'PGRST116') {
         console.warn('Erro ao buscar ranking semanal:', weeklyError);
@@ -110,7 +108,6 @@ export const useUserStats = () => {
         bestWeeklyPosition: profile?.best_weekly_position || null
       };
 
-      console.log('📊 Estatísticas do usuário carregadas:', userStats);
       setStats(userStats);
     } catch (error) {
       console.error('❌ Erro ao carregar estatísticas do usuário:', error);

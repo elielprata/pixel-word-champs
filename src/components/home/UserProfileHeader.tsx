@@ -23,10 +23,6 @@ const UserProfileHeader = () => {
   } = useUserStats();
   const isLoading = profileLoading || statsLoading;
 
-  // Não renderizar nada se não estiver autenticado
-  if (!isAuthenticated) {
-    return null;
-  }
   if (isLoading) {
     return <div className="bg-gradient-to-r from-primary to-primary/80 p-4 rounded-xl text-primary-foreground">
         <div className="flex items-center justify-between mb-4">
@@ -58,7 +54,7 @@ const UserProfileHeader = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Avatar className="w-12 h-12 border-2 border-primary-foreground/30">
-            <AvatarImage src={profile?.avatar_url || ''} alt={profile?.username || 'Usuário'} />
+            <AvatarImage src={profile?.avatar_url || ''} alt={profile?.username || 'Usuário'} className="object-cover" />
             <AvatarFallback className="bg-primary-foreground/20 text-primary-foreground text-sm font-bold">
               {profile?.username?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
