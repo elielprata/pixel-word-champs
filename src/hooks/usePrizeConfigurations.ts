@@ -4,10 +4,12 @@ import { logger } from '@/utils/logger';
 
 interface PrizeConfiguration {
   id: string;
-  position: number;
+  position: number | null;
   prize_amount: number;
   type: string;
   active: boolean;
+  position_range: string | null;
+  total_winners: number;
 }
 
 export const usePrizeConfigurations = () => {
@@ -18,10 +20,8 @@ export const usePrizeConfigurations = () => {
       
       const { data, error } = await supabase
         .from('prize_configurations')
-        .select('id, position, prize_amount, type, active')
-        .eq('type', 'individual')
+        .select('id, position, prize_amount, type, active, position_range, total_winners')
         .eq('active', true)
-        .in('position', [1, 2, 3])
         .order('position', { ascending: true });
       
       if (error) {

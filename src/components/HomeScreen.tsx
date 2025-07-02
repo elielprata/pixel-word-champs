@@ -8,6 +8,7 @@ import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetit
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
 import { useOptimizedCompetitions } from '@/hooks/useOptimizedCompetitions';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
+import { usePrizeConfigurations } from '@/hooks/usePrizeConfigurations';
 import HomeHeader from './home/HomeHeader';
 import UserStatsCard from './home/UserStatsCard';
 import CompetitionsList from './home/CompetitionsList';
@@ -29,6 +30,9 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   
   // Usar o hook otimizado que já inclui competições ativas e agendadas
   const { competitions, isLoading, error, refetch } = useOptimizedCompetitions();
+  
+  // Buscar configurações de prêmios reais
+  const { data: prizeConfigurations, isLoading: prizesLoading } = usePrizeConfigurations();
 
   // Manter participação automática e atualização de ranking semanal
   useWeeklyCompetitionAutoParticipation();
@@ -37,6 +41,40 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   // Usar sistema real de níveis e títulos baseado nos experience_points
   const totalXP = profile?.experience_points || 0;
   const { currentLevel, progress } = usePlayerLevel(totalXP);
+
+  // Função para calcular prêmio baseado na posição real
+  const calculatePrizeForPosition = (position: number) => {
+    if (!prizeConfigurations) return { amount: 0, text: '' };
+
+    // Buscar prêmio individual para a posição específica
+    const individualPrize = prizeConfigurations.find(
+      config => config.type === 'individual' && config.position === position
+    );
+
+    if (individualPrize) {
+      return {
+        amount: individualPrize.prize_amount,
+        text: `R$ ${individualPrize.prize_amount.toFixed(2).replace('.', ',')}`
+      };
+    }
+
+    // Buscar prêmio de grupo que inclua esta posição
+    const groupPrize = prizeConfigurations.find(config => {
+      if (config.type !== 'group' || !config.position_range) return false;
+      
+      const [start, end] = config.position_range.split('-').map(Number);
+      return position >= start && position <= end;
+    });
+
+    if (groupPrize) {
+      return {
+        amount: groupPrize.prize_amount,
+        text: `R$ ${groupPrize.prize_amount.toFixed(2).replace('.', ',')}`
+      };
+    }
+
+    return { amount: 0, text: '' };
+  };
 
   logger.info('🏠 HomeScreen renderizado', { 
     userId: user?.id,
@@ -132,35 +170,20 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
               </p>
               
               {/* Informação de Premiação */}
-              {stats?.position && (
+              {stats?.position && !prizesLoading && (
                 <div className="mb-3">
                   {(() => {
                     const position = stats.position;
-                    let prizeAmount = 0;
-                    let prizeText = '';
-                    
-                    if (position === 1) {
-                      prizeAmount = 100;
-                      prizeText = 'R$ 100,00';
-                    } else if (position === 2) {
-                      prizeAmount = 50;
-                      prizeText = 'R$ 50,00';
-                    } else if (position === 3) {
-                      prizeAmount = 25;
-                      prizeText = 'R$ 25,00';
-                    } else if (position <= 10) {
-                      prizeAmount = 10;
-                      prizeText = 'R$ 10,00';
-                    }
+                    const prizeInfo = calculatePrizeForPosition(position);
                     
                     return (
                       <div className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                        prizeAmount > 0 
+                        prizeInfo.amount > 0 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-gray-100 text-gray-600'
                       }`}>
-                        {prizeAmount > 0 
-                          ? `🎁 Premiação: ${prizeText}` 
+                        {prizeInfo.amount > 0 
+                          ? `🎁 Premiação: ${prizeInfo.text}` 
                           : '💰 Sem premiação nesta posição'
                         }
                       </div>
