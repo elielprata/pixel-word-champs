@@ -1291,6 +1291,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      cleanup_old_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       cleanup_orphaned_rankings: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -1327,6 +1331,10 @@ export type Database = {
         Args: { target_month?: string }
         Returns: Json
       }
+      get_user_stats_optimized: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       get_users_with_real_emails: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1355,6 +1363,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_admin_cached: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
@@ -1438,6 +1450,10 @@ export type Database = {
         Returns: Json
       }
       update_weekly_ranking: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_weekly_ranking_optimized: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
