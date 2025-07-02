@@ -71,38 +71,21 @@ const DailyCompetitionCard = () => {
       </div>
 
       {/* Cards de Prêmios */}
-      <div className="flex gap-2">
-        {/* 1º Lugar */}
-        <div className="flex-1 bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-600 rounded-xl p-2.5 text-center shadow-md border border-yellow-300/50">
-          <div className="mb-1">
-            <Trophy className="w-5 h-5 mx-auto text-yellow-900" />
-          </div>
-          <h4 className="text-yellow-900 font-bold text-[10px] mb-1">1º LUGAR</h4>
-          <div className="flex items-center justify-center">
-            <span className="text-yellow-900 font-bold text-sm">R$ {getPrizeAmount(1)}</span>
-          </div>
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
+          <Trophy className="text-yellow-400 text-lg mb-1 mx-auto" />
+          <p className="text-white text-xs font-medium">1º Lugar</p>
+          <p className="text-yellow-400 text-xs">{getPrizeAmount(1)} 💰</p>
         </div>
-
-        {/* 2º Lugar */}
-        <div className="flex-1 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 rounded-xl p-2.5 text-center shadow-md border border-gray-300/50">
-          <div className="mb-1">
-            <Medal className="w-5 h-5 mx-auto text-gray-700" />
-          </div>
-          <h4 className="text-gray-800 font-bold text-[10px] mb-1">2º LUGAR</h4>
-          <div className="flex items-center justify-center">
-            <span className="text-gray-800 font-bold text-sm">R$ {getPrizeAmount(2)}</span>
-          </div>
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
+          <Medal className="text-gray-300 text-lg mb-1 mx-auto" />
+          <p className="text-white text-xs font-medium">2º Lugar</p>
+          <p className="text-yellow-400 text-xs">{getPrizeAmount(2)} 💰</p>
         </div>
-
-        {/* 3º Lugar */}
-        <div className="flex-1 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 rounded-xl p-2.5 text-center shadow-md border border-orange-300/50">
-          <div className="mb-1">
-            <Award className="w-5 h-5 mx-auto text-orange-900" />
-          </div>
-          <h4 className="text-orange-900 font-bold text-[10px] mb-1">3º LUGAR</h4>
-          <div className="flex items-center justify-center">
-            <span className="text-orange-900 font-bold text-sm">R$ {getPrizeAmount(3)}</span>
-          </div>
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
+          <Award className="text-orange-400 text-lg mb-1 mx-auto" />
+          <p className="text-white text-xs font-medium">3º Lugar</p>
+          <p className="text-yellow-400 text-xs">{getPrizeAmount(3)} 💰</p>
         </div>
       </div>
     </div>
