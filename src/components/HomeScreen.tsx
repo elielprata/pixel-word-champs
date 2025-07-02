@@ -1,9 +1,11 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserStats } from '@/hooks/useUserStats';
 import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
 import { useOptimizedCompetitions } from '@/hooks/useOptimizedCompetitions';
+import { useAppNavigation } from '@/hooks/useAppNavigation';
 import HomeHeader from './home/HomeHeader';
 import UserStatsCard from './home/UserStatsCard';
 import CompetitionsList from './home/CompetitionsList';
@@ -19,6 +21,8 @@ interface HomeScreenProps {
 
 const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) => {
   const { user } = useAuth();
+  const { stats, isLoading: statsLoading } = useUserStats();
+  const { setActiveTab } = useAppNavigation();
   
   // Usar o hook otimizado que já inclui competições ativas e agendadas
   const { competitions, isLoading, error, refetch } = useOptimizedCompetitions();
@@ -27,13 +31,31 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   useWeeklyCompetitionAutoParticipation();
   useWeeklyRankingUpdater();
 
+  // Calcular nível baseado na pontuação
+  const getUserLevel = (totalScore: number) => {
+    return Math.max(1, Math.floor(totalScore / 1000) + 1);
+  };
+
+  // Determinar título do nível
+  const getLevelTitle = (level: number) => {
+    if (level >= 50) return 'LENDA';
+    if (level >= 25) return 'MESTRE';
+    if (level >= 15) return 'EXPERT';
+    if (level >= 10) return 'AVANÇADO';
+    if (level >= 5) return 'INTERMEDIÁRIO';
+    return 'INICIANTE';
+  };
+
+  const userLevel = getUserLevel(stats?.totalScore || 0);
+  const levelTitle = getLevelTitle(userLevel);
+
   logger.info('🏠 HomeScreen renderizado', { 
     userId: user?.id,
     competitionsCount: competitions.length,
     timestamp: new Date().toISOString()
   }, 'HOME_SCREEN');
 
-  if (isLoading) {
+  if (isLoading || statsLoading) {
     return <LoadingState />;
   }
 
@@ -49,20 +71,23 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
                 <span className="text-xl font-bold">👤</span>
               </div>
               <div>
-                <div className="flex items-center space-x-2">
-                  <h2 className="text-xl font-bold">{user?.username || 'Usuário'}</h2>
-                  <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    MESTRE
+                <h2 className="text-xl font-bold">{user?.username || 'Usuário'}</h2>
+                <div className="flex items-center space-x-2 mt-1">
+                  <p className="text-purple-200 text-sm">Nv. {userLevel}</p>
+                  <span className="bg-yellow-400 text-black px-2 py-0.5 rounded-full text-xs font-bold">
+                    {levelTitle}
                   </span>
                 </div>
-                <p className="text-purple-200 text-sm">Nv. 23</p>
               </div>
             </div>
             <div className="flex space-x-3">
               <button className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 🔔
               </button>
-              <button className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <button 
+                onClick={() => setActiveTab('profile')}
+                className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+              >
                 ⚙️
               </button>
             </div>
@@ -75,14 +100,16 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
                 <span className="text-yellow-400">🪙</span>
                 <span className="text-sm text-purple-200">Pontos Totais</span>
               </div>
-              <p className="text-2xl font-bold">18,750</p>
+              <p className="text-2xl font-bold">{(stats?.totalScore || 0).toLocaleString()}</p>
             </div>
             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
               <div className="flex items-center space-x-2 mb-2">
                 <span className="text-yellow-400">🏆</span>
                 <span className="text-sm text-purple-200">Ranking Global</span>
               </div>
-              <p className="text-2xl font-bold">#3</p>
+              <p className="text-2xl font-bold">
+                {stats?.position ? `#${stats.position}` : 'N/A'}
+              </p>
             </div>
           </div>
         </div>
