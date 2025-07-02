@@ -3,6 +3,7 @@ import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useProfile } from '@/hooks/useProfile';
+import { usePlayerLevel } from '@/hooks/usePlayerLevel';
 import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
 import { useOptimizedCompetitions } from '@/hooks/useOptimizedCompetitions';
@@ -33,37 +34,9 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   useWeeklyCompetitionAutoParticipation();
   useWeeklyRankingUpdater();
 
-  // Calcular nível baseado nos experience_points ou total_score
-  const getUserLevel = (experiencePoints: number, totalScore: number) => {
-    if (experiencePoints > 0) {
-      return Math.max(1, Math.floor(experiencePoints / 100) + 1);
-    }
-    return Math.max(1, Math.floor(totalScore / 1000) + 1);
-  };
-
-  // Determinar título do nível baseado nos dados reais
-  const getLevelTitle = (level: number, experiencePoints: number) => {
-    // Se tem experience_points, usar sistema mais refinado
-    if (experiencePoints > 0) {
-      if (experiencePoints >= 1000) return 'LENDA';
-      if (experiencePoints >= 500) return 'MESTRE';
-      if (experiencePoints >= 300) return 'EXPERT';
-      if (experiencePoints >= 150) return 'AVANÇADO';
-      if (experiencePoints >= 50) return 'INTERMEDIÁRIO';
-      return 'INICIANTE';
-    }
-    
-    // Fallback para sistema baseado em nível
-    if (level >= 50) return 'LENDA';
-    if (level >= 25) return 'MESTRE';
-    if (level >= 15) return 'EXPERT';
-    if (level >= 10) return 'AVANÇADO';
-    if (level >= 5) return 'INTERMEDIÁRIO';
-    return 'INICIANTE';
-  };
-
-  const userLevel = getUserLevel(profile?.experience_points || 0, stats?.totalScore || 0);
-  const levelTitle = getLevelTitle(userLevel, profile?.experience_points || 0);
+  // Usar sistema real de níveis e títulos baseado nos experience_points
+  const totalXP = profile?.experience_points || 0;
+  const { currentLevel, progress } = usePlayerLevel(totalXP);
 
   logger.info('🏠 HomeScreen renderizado', { 
     userId: user?.id,
@@ -97,9 +70,9 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
               <div>
                 <h2 className="text-xl font-bold">{user?.username || 'Usuário'}</h2>
                 <div className="flex items-center space-x-2 mt-1">
-                  <p className="text-purple-200 text-sm">Nv. {userLevel}</p>
+                  <p className="text-purple-200 text-sm">Nv. {currentLevel.level}</p>
                   <span className="bg-yellow-400 text-black px-2 py-0.5 rounded-full text-xs font-bold">
-                    {levelTitle}
+                    {currentLevel.title}
                   </span>
                 </div>
               </div>
