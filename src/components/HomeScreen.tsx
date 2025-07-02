@@ -40,8 +40,52 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
       <div className="max-w-md mx-auto space-y-4">
-        <HomeHeader />
-        <UserStatsCard />
+        {/* Header roxo com informações do usuário */}
+        <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
+          {/* Topo do header com avatar, nome e ícones */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                <span className="text-xl font-bold">👤</span>
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h2 className="text-xl font-bold">{user?.username || 'Usuário'}</h2>
+                  <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    MESTRE
+                  </span>
+                </div>
+                <p className="text-purple-200 text-sm">Nv. 23</p>
+              </div>
+            </div>
+            <div className="flex space-x-3">
+              <button className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                🔔
+              </button>
+              <button className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                ⚙️
+              </button>
+            </div>
+          </div>
+          
+          {/* Cards de estatísticas */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex items-center space-x-2 mb-2">
+                <span className="text-yellow-400">🪙</span>
+                <span className="text-sm text-purple-200">Pontos Totais</span>
+              </div>
+              <p className="text-2xl font-bold">18,750</p>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex items-center space-x-2 mb-2">
+                <span className="text-yellow-400">🏆</span>
+                <span className="text-sm text-purple-200">Ranking Global</span>
+              </div>
+              <p className="text-2xl font-bold">#3</p>
+            </div>
+          </div>
+        </div>
 
         {error && (
           <ErrorState error={error} onRetry={refetch} />
