@@ -155,22 +155,25 @@ const HomeScreen = ({
             </div>
           </div>
           
-          {/* Cards de estatísticas interativos */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <StatsCard
-              icon={<Coins className="w-4 h-4 text-accent" />}
-              label="Pontos Totais"
-              value={stats?.totalScore || 0}
-              onClick={handleViewTotalScore}
-              loading={statsLoading}
-            />
-            <StatsCard
-              icon={<Trophy className="w-4 h-4 text-accent" />}
-              label="Ranking Global"
-              value={stats?.position ? `#${stats.position}` : 'N/A'}
-              onClick={handleViewRanking}
-              loading={statsLoading}
-            />
+          {/* Estatísticas em linha única */}
+          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Coins className="w-4 h-4 text-accent" />
+                <span className="text-xs text-white/90 font-medium">Pontos Totais</span>
+                <span className="text-lg font-bold text-white">
+                  {statsLoading ? '...' : (stats?.totalScore || 0).toLocaleString()}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Trophy className="w-4 h-4 text-accent" />
+                <span className="text-xs text-white/90 font-medium">Ranking</span>
+                <span className="text-lg font-bold text-white">
+                  {statsLoading ? '...' : (stats?.position ? `#${stats.position}` : 'N/A')}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
