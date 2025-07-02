@@ -8,7 +8,11 @@ export const createFallbackUser = (session: any): User => {
     throw new Error('Sessão inválida para criar usuário fallback');
   }
 
-  logger.debug('Criando usuário fallback', { userId: session.user.id }, 'AUTH_HELPERS');
+  logger.debug('👤 Criando usuário fallback', { 
+    userId: session.user.id,
+    email: session.user.email,
+    hasUserMetadata: !!session.user.user_metadata
+  }, 'AUTH_HELPERS');
 
   const fallbackUser: User = {
     id: session.user.id,
@@ -24,9 +28,10 @@ export const createFallbackUser = (session: any): User => {
     experience_points: 0
   };
 
-  logger.info('Usuário fallback criado', { 
+  logger.info('✅ Usuário fallback criado com sucesso', { 
     userId: fallbackUser.id, 
-    username: fallbackUser.username 
+    username: fallbackUser.username,
+    email: fallbackUser.email
   }, 'AUTH_HELPERS');
 
   return fallbackUser;
@@ -35,8 +40,12 @@ export const createFallbackUser = (session: any): User => {
 export const createTimeoutPromise = (timeoutMs: number): Promise<never> => {
   return new Promise((_, reject) => 
     setTimeout(() => {
-      logger.warn('Timeout de operação atingido', { timeoutMs }, 'AUTH_HELPERS');
-      reject(new Error('Timeout'));
+      logger.warn('⏰ Timeout de operação atingido', { 
+        timeoutMs,
+        timeoutSeconds: timeoutMs / 1000,
+        timestamp: new Date().toISOString()
+      }, 'AUTH_HELPERS');
+      reject(new Error(`Timeout após ${timeoutMs / 1000}s`));
     }, timeoutMs)
   );
 };

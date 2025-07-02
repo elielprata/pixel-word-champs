@@ -19,15 +19,35 @@ export const processUserAuthentication = async (
   const { setUser, setIsAuthenticated, setIsLoading, setError } = callbacks;
 
   try {
-    logger.debug('Processando autenticação do usuário', { 
+    logger.info('🔐 INICIANDO PROCESSAMENTO DE AUTENTICAÇÃO', { 
       userId: session.user?.id,
-      hasSession: !!session 
+      hasSession: !!session,
+      timestamp: new Date().toISOString()
     }, 'AUTH_PROCESSOR');
 
-    setIsLoading(true);
-    setError(undefined);
+    // PRIORIDADE 1: Definir autenticado IMEDIATAMENTE se há sessão válida
+    if (session?.user?.id) {
+      logger.info('✅ SESSÃO VÁLIDA DETECTADA - AUTENTICANDO IMEDIATAMENTE', { 
+        userId: session.user.id 
+      }, 'AUTH_PROCESSOR');
+      
+      setIsAuthenticated(true);
+      setError(undefined);
+      setIsLoading(true);
 
-    // Buscar perfil com timeout de 3 segundos
+      // Criar usuário fallback temporário para evitar null state
+      const tempUser = createFallbackUser(session);
+      setUser(tempUser);
+      
+      logger.info('👤 USUÁRIO TEMPORÁRIO CRIADO', { 
+        userId: tempUser.id,
+        username: tempUser.username 
+      }, 'AUTH_PROCESSOR');
+    }
+
+    // PRIORIDADE 2: Buscar perfil completo em background (timeout 10s)
+    logger.debug('📊 Iniciando busca de perfil completo...', undefined, 'AUTH_PROCESSOR');
+    
     const profilePromise = supabase
       .from('profiles')
       .select('*')
@@ -37,54 +57,51 @@ export const processUserAuthentication = async (
     try {
       const { data: profile, error: profileError } = await Promise.race([
         profilePromise,
-        createTimeoutPromise(3000)
+        createTimeoutPromise(10000) // Aumentado para 10 segundos
       ]);
 
       if (!isMountedRef.current) {
-        logger.debug('Componente desmontado durante busca de perfil', undefined, 'AUTH_PROCESSOR');
+        logger.debug('⚠️ Componente desmontado durante busca de perfil', undefined, 'AUTH_PROCESSOR');
         return;
       }
 
       if (profileError && profileError.code !== 'PGRST116') {
-        logger.warn('Erro ao buscar perfil, usando fallback', { 
-          error: profileError.message 
+        logger.warn('⚠️ Erro ao buscar perfil, mantendo fallback', { 
+          error: profileError.message,
+          code: profileError.code
         }, 'AUTH_PROCESSOR');
       }
 
-      const userData = profile ? mapUserFromProfile(profile, session.user) : createFallbackUser(session);
-      
-      setUser(userData);
-      setIsAuthenticated(true);
-      setError(undefined);
-
-      logger.info('Usuário autenticado com sucesso', { 
-        userId: userData.id,
-        username: userData.username,
-        hasProfile: !!profile
-      }, 'AUTH_PROCESSOR');
+      // PRIORIDADE 3: Atualizar com dados completos do perfil se disponível
+      if (profile) {
+        const fullUserData = mapUserFromProfile(profile, session.user);
+        setUser(fullUserData);
+        
+        logger.info('🎯 PERFIL COMPLETO CARREGADO', { 
+          userId: fullUserData.id,
+          username: fullUserData.username,
+          experiencePoints: fullUserData.experience_points,
+          totalScore: fullUserData.total_score
+        }, 'AUTH_PROCESSOR');
+      } else {
+        logger.info('📝 MANTENDO DADOS FALLBACK - perfil não encontrado', undefined, 'AUTH_PROCESSOR');
+      }
 
     } catch (timeoutError) {
-      logger.warn('Timeout ou erro - usando fallback direto', { 
-        error: timeoutError instanceof Error ? timeoutError.message : 'Timeout' 
+      logger.warn('⏰ TIMEOUT NA BUSCA DE PERFIL - mantendo autenticação ativa', { 
+        error: timeoutError instanceof Error ? timeoutError.message : 'Timeout após 10s',
+        fallbackActive: true
       }, 'AUTH_PROCESSOR');
 
+      // Usuário continua autenticado com dados fallback
       if (!isMountedRef.current) return;
-
-      const fallbackUser = createFallbackUser(session);
-      setUser(fallbackUser);
-      setIsAuthenticated(true);
-      setError(undefined);
-
-      logger.info('Usuário autenticado com fallback', { 
-        userId: fallbackUser.id,
-        username: fallbackUser.username 
-      }, 'AUTH_PROCESSOR');
     }
 
   } catch (error: any) {
-    logger.error('Erro crítico na autenticação', { 
+    logger.error('❌ ERRO CRÍTICO NA AUTENTICAÇÃO', { 
       error: error.message,
-      userId: session.user?.id 
+      userId: session?.user?.id,
+      stack: error.stack
     }, 'AUTH_PROCESSOR');
 
     if (!isMountedRef.current) return;
@@ -95,6 +112,9 @@ export const processUserAuthentication = async (
   } finally {
     if (isMountedRef.current) {
       setIsLoading(false);
+      logger.info('🏁 PROCESSAMENTO DE AUTENTICAÇÃO FINALIZADO', { 
+        timestamp: new Date().toISOString()
+      }, 'AUTH_PROCESSOR');
     }
   }
 };

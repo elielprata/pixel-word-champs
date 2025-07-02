@@ -32,41 +32,48 @@ export const useAuthEffects = (
       try {
         // Configurar listener primeiro
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            logger.info('=== EVENTO DE AUTENTICAÇÃO DETECTADO ===', { 
+          (event, session) => {
+            logger.info('🔔 EVENTO DE AUTENTICAÇÃO DETECTADO', { 
               event, 
               hasSession: !!session,
               userId: session?.user?.id,
               email: session?.user?.email,
-              provider: session?.user?.app_metadata?.provider
+              provider: session?.user?.app_metadata?.provider,
+              timestamp: new Date().toISOString()
             }, 'AUTH_EFFECTS');
 
-            // Log detalhado da sessão
+            // Log detalhado da sessão apenas se necessário
             if (session) {
-              logger.debug('Detalhes da sessão:', {
+              logger.debug('📋 Detalhes da sessão:', {
                 accessToken: session.access_token ? 'presente' : 'ausente',
                 refreshToken: session.refresh_token ? 'presente' : 'ausente',
                 expiresAt: session.expires_at,
+                isExpired: session.expires_at ? (session.expires_at < Date.now() / 1000) : false,
                 userMetadata: session.user?.user_metadata,
                 appMetadata: session.user?.app_metadata
               }, 'AUTH_EFFECTS');
             }
 
-            // Processar autenticação de forma assíncrona com timeout
-            setTimeout(async () => {
-              const callback = async () => {
-                try {
-                  await processAuthentication(session);
-                } catch (error: any) {
-                  logger.error('Erro no processamento de autenticação', { 
-                    error: error.message,
-                    event,
-                    userId: session?.user?.id 
-                  }, 'AUTH_EFFECTS');
-                }
-              };
+            // Processar autenticação de forma síncrona e direta
+            if (!isMountedRef.current) {
+              logger.warn('⚠️ Componente desmontado - ignorando evento de auth', undefined, 'AUTH_EFFECTS');
+              return;
+            }
+
+            // Usar setTimeout para evitar problemas de deadlock
+            setTimeout(() => {
+              if (!isMountedRef.current) return;
               
-              await callback();
+              try {
+                processAuthentication(session);
+              } catch (error: any) {
+                logger.error('❌ Erro no processamento de autenticação', { 
+                  error: error.message,
+                  event,
+                  userId: session?.user?.id,
+                  stack: error.stack
+                }, 'AUTH_EFFECTS');
+              }
             }, 0);
           }
         );
@@ -90,9 +97,12 @@ export const useAuthEffects = (
         }
 
         if (session) {
-          await processAuthentication(session);
+          logger.info('🔍 SESSÃO INICIAL ENCONTRADA - processando...', { 
+            userId: session.user?.id 
+          }, 'AUTH_EFFECTS');
+          processAuthentication(session);
         } else {
-          logger.debug('Nenhuma sessão inicial encontrada - definindo loading como false', undefined, 'AUTH_EFFECTS');
+          logger.debug('❌ Nenhuma sessão inicial encontrada - definindo loading como false', undefined, 'AUTH_EFFECTS');
           setIsLoading(false);
         }
 
