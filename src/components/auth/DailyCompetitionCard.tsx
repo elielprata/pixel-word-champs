@@ -59,13 +59,13 @@ const DailyCompetitionCard = () => {
   return (
     <div className="mb-2">
       {/* Header Principal */}
-      <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-2xl p-3 mb-2 shadow-lg">
+      <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-2xl p-2 mb-2 shadow-lg">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-white font-bold text-base mb-0 drop-shadow">🏆 Competição Semanal</h3>
+            <h3 className="text-white font-bold text-sm drop-shadow">🏆 Competição Semanal</h3>
           </div>
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-white/20">
-            <span className="text-white font-mono text-sm font-bold drop-shadow">{timeRemaining}</span>
+          <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1">
+            <span className="text-white font-mono text-xs font-bold drop-shadow">{timeRemaining}</span>
           </div>
         </div>
       </div>
