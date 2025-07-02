@@ -111,6 +111,42 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
           </div>
         </div>
 
+        {/* Card de Ranking Global */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-800">Ranking Global</h3>
+            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+              🏆
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+              #{stats?.position || 'N/A'}
+            </div>
+            
+            <div className="flex-1">
+              <p className="text-sm text-slate-600 mb-1">Posição atual</p>
+              <p className="text-xl font-bold text-slate-800">
+                {stats?.position ? `${stats.position}º lugar mundial` : 'Posição não disponível'}
+              </p>
+              
+              {/* Barra de progresso simulada */}
+              <div className="mt-3">
+                <div className="bg-slate-200 rounded-full h-3 mb-2">
+                  <div 
+                    className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-full h-3 transition-all duration-500"
+                    style={{ width: '65%' }}
+                  />
+                </div>
+                <p className="text-sm text-slate-500">
+                  {stats?.totalScore ? `${stats.totalScore.toLocaleString()} pts` : '0 pts'} para o próximo nível
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {error && (
           <ErrorState error={error} onRetry={refetch} />
         )}
