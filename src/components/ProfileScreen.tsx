@@ -25,8 +25,8 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
   const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url);
   const [showMyData, setShowMyData] = useState(false);
 
-  // Usar o novo sistema de XP
-  const { currentLevel, nextLevel, progress } = usePlayerLevel(user?.total_score || 0);
+  // Usar o novo sistema de XP baseado nos experience_points
+  const { currentLevel, nextLevel, progress } = usePlayerLevel(user?.experience_points || 0);
 
   // Integrar gerenciamento automático das melhores posições
   const { forceUpdatePositions } = useWeeklyPositionManager();
