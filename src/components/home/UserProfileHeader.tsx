@@ -16,7 +16,7 @@ const UserProfileHeader = () => {
   } = useProfile();
   const {
     currentLevel
-  } = usePlayerLevel(profile?.experience_points || 0);
+  } = usePlayerLevel(profile?.total_score || 0);
   const {
     stats,
     isLoading: statsLoading
@@ -28,27 +28,26 @@ const UserProfileHeader = () => {
     return null;
   }
   if (isLoading) {
-    return <div className="bg-gradient-to-r from-purple-500 to-purple-700 p-6 rounded-xl text-white">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-white/20 rounded-full animate-pulse"></div>
+    return <div className="bg-gradient-to-r from-primary to-primary/80 p-4 rounded-xl text-primary-foreground">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-primary-foreground/20 rounded-full animate-pulse"></div>
             <div className="space-y-2">
-              <div className="h-6 w-32 bg-white/20 rounded animate-pulse"></div>
-              <div className="h-4 w-24 bg-white/20 rounded animate-pulse"></div>
+              <div className="h-5 w-32 bg-primary-foreground/20 rounded animate-pulse"></div>
+              <div className="h-3 w-24 bg-primary-foreground/20 rounded animate-pulse"></div>
             </div>
           </div>
-          <div className="w-8 h-8 bg-white/20 rounded animate-pulse"></div>
         </div>
         
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+        <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg p-3">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded animate-pulse"></div>
-              <div className="h-6 w-32 bg-white/20 rounded animate-pulse"></div>
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-primary-foreground/20 rounded-full animate-pulse"></div>
+              <div className="h-4 w-24 bg-primary-foreground/20 rounded animate-pulse"></div>
             </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded animate-pulse"></div>
-              <div className="h-6 w-16 bg-white/20 rounded animate-pulse"></div>
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-primary-foreground/20 rounded-full animate-pulse"></div>
+              <div className="h-4 w-16 bg-primary-foreground/20 rounded animate-pulse"></div>
             </div>
           </div>
         </div>
