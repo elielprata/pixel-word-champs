@@ -1,11 +1,12 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import CompetitionCard from './CompetitionCard';
 import EmptyCompetitionsState from './EmptyCompetitionsState';
 import { Competition } from '@/types';
+import { cleanupInactiveCompetitionIcons } from '@/utils/competitionIcons';
 
 interface CompetitionsListProps {
   competitions: Competition[];
@@ -33,6 +34,12 @@ const CompetitionsList = ({ competitions, onStartChallenge, onRefresh }: Competi
     
     return { activeCompetitions: active, scheduledCompetitions: scheduled };
   }, [competitions]);
+
+  // Limpar ícones de competições inativas sempre que a lista mudar
+  useEffect(() => {
+    const allActiveCompetitionIds = [...activeCompetitions, ...scheduledCompetitions].map(comp => comp.id);
+    cleanupInactiveCompetitionIcons(allActiveCompetitionIds);
+  }, [activeCompetitions, scheduledCompetitions]);
 
   const handleJoin = (competitionId: string) => {
     onStartChallenge(competitionId);

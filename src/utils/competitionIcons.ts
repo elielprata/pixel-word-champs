@@ -137,6 +137,9 @@ const iconPool: CompetitionIconConfig[] = [
   }
 ];
 
+// Estado global para rastrear ícones em uso por competições ativas
+const activeCompetitionIcons = new Map<string, number>();
+
 // Função hash melhorada para garantir distribuição uniforme
 const generateHash = (str: string): number => {
   let hash = 0;
@@ -148,11 +151,57 @@ const generateHash = (str: string): number => {
   return Math.abs(hash);
 };
 
+// Função para encontrar um índice de ícone único para competições ativas
+const findUniqueIconIndex = (competitionId: string, usedIndices: Set<number>): number => {
+  let hash = generateHash(competitionId);
+  let index = hash % iconPool.length;
+  let attempts = 0;
+  
+  // Se o índice já está em uso, encontrar o próximo disponível
+  while (usedIndices.has(index) && attempts < iconPool.length) {
+    hash = generateHash(`${competitionId}_${attempts}`);
+    index = hash % iconPool.length;
+    attempts++;
+  }
+  
+  return index;
+};
+
 // Função para obter configuração única baseada no ID da competição
 export const getCompetitionIconConfig = (competitionId: string): CompetitionIconConfig => {
-  const hash = generateHash(competitionId);
-  const index = hash % iconPool.length;
-  return iconPool[index];
+  // Se já tem um ícone atribuído, usar o mesmo
+  if (activeCompetitionIcons.has(competitionId)) {
+    const storedIndex = activeCompetitionIcons.get(competitionId)!;
+    return iconPool[storedIndex];
+  }
+  
+  // Obter todos os índices já em uso
+  const usedIndices = new Set(Array.from(activeCompetitionIcons.values()));
+  
+  // Encontrar um índice único
+  const uniqueIndex = findUniqueIconIndex(competitionId, usedIndices);
+  
+  // Armazenar o índice para esta competição
+  activeCompetitionIcons.set(competitionId, uniqueIndex);
+  
+  return iconPool[uniqueIndex];
+};
+
+// Função para liberar um ícone quando uma competição termina
+export const releaseCompetitionIcon = (competitionId: string): void => {
+  activeCompetitionIcons.delete(competitionId);
+};
+
+// Função para limpar ícones de competições inativas
+export const cleanupInactiveCompetitionIcons = (activeCompetitionIds: string[]): void => {
+  const activeIds = new Set(activeCompetitionIds);
+  
+  // Remover ícones de competições que não estão mais ativas
+  for (const [competitionId] of activeCompetitionIcons) {
+    if (!activeIds.has(competitionId)) {
+      activeCompetitionIcons.delete(competitionId);
+    }
+  }
 };
 
 // Manter compatibilidade com função baseada em ID
