@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, createCustomStorageClient } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 import { createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
 
@@ -51,11 +51,14 @@ export const authService = {
     }
   },
 
-  async signIn(email: string, password: string) {
+  async signIn(email: string, password: string, rememberMe: boolean = false) {
     try {
-      logger.info('Iniciando processo de login', { email });
+      logger.info('Iniciando processo de login', { email, rememberMe });
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Usar cliente personalizado baseado na preferência do usuário
+      const client = rememberMe ? supabase : createCustomStorageClient(true);
+
+      const { data, error } = await client.auth.signInWithPassword({
         email,
         password
       });
@@ -65,7 +68,19 @@ export const authService = {
         throw error;
       }
 
-      logger.info('Login realizado com sucesso', { userId: data.user?.id });
+      // Se não for "lembrar-me", transferir sessão para sessionStorage
+      if (!rememberMe && data.session) {
+        // Logout do cliente padrão para não manter no localStorage
+        await supabase.auth.signOut();
+        
+        // Definir sessão no cliente com sessionStorage
+        await createCustomStorageClient(true).auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        });
+      }
+
+      logger.info('Login realizado com sucesso', { userId: data.user?.id, rememberMe });
       return { data, error: null };
     } catch (error) {
       logger.error('Erro no processo de login', { error });

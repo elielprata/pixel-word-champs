@@ -28,7 +28,7 @@ export const useAuthOperations = (
     try {
       logger.info('Iniciando processo de login', { email: credentials.email }, 'AUTH_OPERATIONS');
       
-      const response = await authService.signIn(credentials.email, credentials.password);
+      const response = await authService.signIn(credentials.email, credentials.password, credentials.rememberMe);
       
       if (!isMountedRef.current) return;
 

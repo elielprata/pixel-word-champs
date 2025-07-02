@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { useAuth } from '@/hooks/useAuth';
 import { LoginForm as LoginFormType } from '@/types';
@@ -15,13 +16,18 @@ import ForgotPasswordModal from './ForgotPasswordModal';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  rememberMe: z.boolean().optional()
 });
 
 const LoginForm = () => {
   const { login, isLoading, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    // Carregar preferência do localStorage
+    const saved = localStorage.getItem('loginRememberMe');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const navigate = useNavigate();
   
@@ -29,14 +35,24 @@ const LoginForm = () => {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
-      password: ''
+      password: '',
+      rememberMe: false
     }
   });
 
+  // Efeito para salvar preferência no localStorage
+  useEffect(() => {
+    localStorage.setItem('loginRememberMe', JSON.stringify(rememberMe));
+  }, [rememberMe]);
+
   const onSubmit = async (data: LoginFormType) => {
     try {
-      logger.info('Tentativa de login iniciada', { email: data.email }, 'LOGIN_FORM');
-      await login(data);
+      logger.info('Tentativa de login iniciada', { email: data.email, rememberMe }, 'LOGIN_FORM');
+      await login({ 
+        email: data.email, 
+        password: data.password, 
+        rememberMe 
+      });
       
       logger.info('Login realizado, redirecionando para home', undefined, 'LOGIN_FORM');
       navigate('/');
@@ -103,15 +119,20 @@ const LoginForm = () => {
         />
 
         <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input 
-              type="checkbox" 
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="rememberMe"
               checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
+              onCheckedChange={setRememberMe}
               className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
             />
-            <span className="text-gray-600">Lembrar-me</span>
-          </label>
+            <label 
+              htmlFor="rememberMe" 
+              className="text-gray-600 cursor-pointer select-none"
+            >
+              Manter-me conectado
+            </label>
+          </div>
           <button
             type="button"
             onClick={() => setShowForgotPasswordModal(true)}

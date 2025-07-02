@@ -8,4 +8,22 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Função para criar clientes com storage personalizado
+const createCustomStorageClient = (useSessionStorage = false) => {
+  const storage = useSessionStorage ? {
+    getItem: (key: string) => sessionStorage.getItem(key),
+    setItem: (key: string, value: string) => sessionStorage.setItem(key, value),
+    removeItem: (key: string) => sessionStorage.removeItem(key),
+  } : undefined; // undefined usa localStorage por padrão
+
+  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      storage: storage,
+      autoRefreshToken: true,
+      persistSession: true,
+    }
+  });
+};
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export { createCustomStorageClient };
