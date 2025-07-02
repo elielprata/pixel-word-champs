@@ -8,8 +8,7 @@ import { usePlayerLevel } from '@/hooks/usePlayerLevel';
 import { useUserStats } from '@/hooks/useUserStats';
 const UserProfileHeader = () => {
   const {
-    isAuthenticated,
-    user
+    isAuthenticated
   } = useAuth();
   const {
     profile,
@@ -23,17 +22,6 @@ const UserProfileHeader = () => {
     isLoading: statsLoading
   } = useUserStats();
   const isLoading = profileLoading || statsLoading;
-
-  // Debug logs
-  console.log('🏠 UserProfileHeader Debug:', {
-    isAuthenticated,
-    userId: user?.id,
-    profile,
-    profileLoading,
-    stats,
-    statsLoading,
-    currentLevel
-  });
 
   // Não renderizar nada se não estiver autenticado
   if (!isAuthenticated) {
@@ -70,7 +58,7 @@ const UserProfileHeader = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Avatar className="w-12 h-12 border-2 border-primary-foreground/30">
-            <AvatarImage src={profile?.avatar_url || ''} alt={profile?.username || 'Usuário'} className="object-cover" />
+            <AvatarImage src={profile?.avatar_url || ''} alt={profile?.username || 'Usuário'} />
             <AvatarFallback className="bg-primary-foreground/20 text-primary-foreground text-sm font-bold">
               {profile?.username?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
