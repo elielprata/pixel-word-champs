@@ -106,89 +106,93 @@ const HomeScreen = ({
   }
   return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
       <div className="max-w-md mx-auto space-y-4">
-        {/* Header roxo com informações do usuário */}
-        <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
+        {/* Header compacto roxo com informações do usuário */}
+        <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl p-4 text-white shadow-lg">
           {/* Topo do header com avatar, nome e ícones */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
-                {profile?.avatar_url ? <img src={profile.avatar_url} alt={`Avatar de ${user?.username || 'Usuário'}`} className="w-full h-full object-cover rounded-full" /> : <span className="text-xl font-bold">👤</span>}
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                {profile?.avatar_url ? <img src={profile.avatar_url} alt={`Avatar de ${user?.username || 'Usuário'}`} className="w-full h-full object-cover rounded-full" /> : <span className="text-lg font-bold">👤</span>}
               </div>
               <div>
-                <h2 className="text-xl font-bold">{user?.username || 'Usuário'}</h2>
-                <div className="flex items-center space-x-2 mt-1">
-                  <p className="text-purple-200 text-sm">Nv. {currentLevel.level}</p>
+                <h2 className="text-lg font-bold">{user?.username || 'Usuário'}</h2>
+                <div className="flex items-center space-x-2">
+                  <p className="text-purple-200 text-xs">Nv. {currentLevel.level}</p>
                   <span className="bg-yellow-400 text-black px-2 py-0.5 rounded-full text-xs font-bold">
                     {currentLevel.title}
                   </span>
                 </div>
               </div>
             </div>
-            <div className="flex space-x-3">
-              <button className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+            <div className="flex space-x-2">
+              <button className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm">
                 🔔
               </button>
-              <button onClick={() => setActiveTab('profile')} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+              <button onClick={() => setActiveTab('profile')} className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors text-sm">
                 ⚙️
               </button>
             </div>
           </div>
           
-          {/* Cards de estatísticas */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
-              <div className="flex items-center space-x-2 mb-2">
-                <span className="text-yellow-400">🪙</span>
-                <span className="text-sm text-purple-200">Pontos Totais</span>
+          {/* Cards de estatísticas compactos */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-yellow-400 text-sm">🪙</span>
+                <span className="text-xs text-purple-200">Pontos Totais</span>
               </div>
-              <p className="text-2xl font-bold">{(stats?.totalScore || 0).toLocaleString()}</p>
+              <p className="text-xl font-bold">{(stats?.totalScore || 0).toLocaleString()}</p>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
-              <div className="flex items-center space-x-2 mb-2">
-                <span className="text-yellow-400">🏆</span>
-                <span className="text-sm text-purple-200">Ranking Global</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-yellow-400 text-sm">🏆</span>
+                <span className="text-xs text-purple-200">Ranking Global</span>
               </div>
-              <p className="text-2xl font-bold">
+              <p className="text-xl font-bold">
                 {stats?.position ? `#${stats.position}` : 'N/A'}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Card de Ranking Global */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-          
-          
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+        {/* Card de Ranking Global compacto */}
+        <div className="bg-white rounded-2xl p-4 shadow-lg border border-slate-200">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
               #{stats?.position || 'N/A'}
             </div>
             
             <div className="flex-1">
-              <p className="text-sm text-slate-600 mb-1">Posição atual</p>
-              <p className="text-xl font-bold text-slate-800 mb-2">
-                {stats?.position ? `${stats.position}º lugar mundial` : 'Posição não disponível'}
-              </p>
-              
-              {/* Informação de Premiação */}
-              {stats?.position && !prizesLoading && <div className="mb-3">
-                  {(() => {
-                const position = stats.position;
-                const prizeInfo = calculatePrizeForPosition(position);
-                return <div className={`px-3 py-2 rounded-lg text-sm font-medium ${prizeInfo.amount > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {prizeInfo.amount > 0 ? `🎁 Premiação: ${prizeInfo.text}` : '💰 Sem premiação nesta posição'}
-                      </div>;
-              })()}
-                </div>}
-              
-              {/* Barra de progresso simulada */}
-              <div>
-                <div className="bg-slate-200 rounded-full h-3 mb-2">
-                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-full h-3 transition-all duration-500" style={{
-                  width: '65%'
-                }} />
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-xs text-slate-600">Posição atual</p>
+                  <p className="text-lg font-bold text-slate-800">
+                    {stats?.position ? `${stats.position}º lugar mundial` : 'Posição não disponível'}
+                  </p>
                 </div>
-                <p className="text-sm text-slate-500">
+                
+                {/* Informação de Premiação inline */}
+                {stats?.position && !prizesLoading && (
+                  <div className="text-right">
+                    {(() => {
+                      const position = stats.position;
+                      const prizeInfo = calculatePrizeForPosition(position);
+                      return <div className={`px-2 py-1 rounded-lg text-xs font-medium ${prizeInfo.amount > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {prizeInfo.amount > 0 ? `🎁 ${prizeInfo.text}` : '💰 Sem premiação'}
+                      </div>;
+                    })()}
+                  </div>
+                )}
+              </div>
+              
+              {/* Barra de progresso compacta */}
+              <div>
+                <div className="bg-slate-200 rounded-full h-2 mb-1">
+                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-full h-2 transition-all duration-500" style={{
+                    width: '65%'
+                  }} />
+                </div>
+                <p className="text-xs text-slate-500">
                   {stats?.position && stats.position > 1 ? `${Math.max(100, Math.ceil((stats.totalScore || 0) * 0.1)).toLocaleString()} pts para subir no ranking` : 'Você está no topo!'}
                 </p>
               </div>
