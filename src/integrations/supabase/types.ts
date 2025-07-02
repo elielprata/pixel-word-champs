@@ -769,6 +769,45 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_metrics: {
+        Row: {
+          correlation_id: string | null
+          endpoint: string
+          id: string
+          ip_address: unknown | null
+          method: string
+          recorded_at: string
+          response_time_ms: number
+          status_code: number
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          correlation_id?: string | null
+          endpoint: string
+          id?: string
+          ip_address?: unknown | null
+          method: string
+          recorded_at?: string
+          response_time_ms: number
+          status_code: number
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          correlation_id?: string | null
+          endpoint?: string
+          id?: string
+          ip_address?: unknown | null
+          method?: string
+          recorded_at?: string
+          response_time_ms?: number
+          status_code?: number
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       prize_configurations: {
         Row: {
           active: boolean
@@ -907,6 +946,111 @@ export type Database = {
           total_score?: number | null
           updated_at?: string | null
           username?: string
+        }
+        Relationships: []
+      }
+      rate_limits_global: {
+        Row: {
+          attempts: number
+          blocked_until: string | null
+          created_at: string
+          endpoint: string
+          id: string
+          identifier: string
+          identifier_type: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          attempts?: number
+          blocked_until?: string | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          identifier: string
+          identifier_type: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          attempts?: number
+          blocked_until?: string | null
+          created_at?: string
+          endpoint?: string
+          id?: string
+          identifier?: string
+          identifier_type?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      system_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          title: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          severity: string
+          status?: string
+          title: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      system_health_checks: {
+        Row: {
+          check_type: string
+          checked_at: string
+          details: Json | null
+          id: string
+          response_time_ms: number | null
+          status: string
+        }
+        Insert: {
+          check_type: string
+          checked_at?: string
+          details?: Json | null
+          id?: string
+          response_time_ms?: number | null
+          status: string
+        }
+        Update: {
+          check_type?: string
+          checked_at?: string
+          details?: Json | null
+          id?: string
+          response_time_ms?: number | null
+          status?: string
         }
         Relationships: []
       }
