@@ -69,8 +69,15 @@ export const useSystemHealth = (autoRefresh = false, interval = 30000) => {
   const [data, setData] = useState<SystemHealthData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetch, setLastFetch] = useState<number>(0);
 
   const fetchSystemHealth = useCallback(async () => {
+    // Evitar chamadas duplicadas em menos de 5 segundos
+    const now = Date.now();
+    if (now - lastFetch < 5000) {
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -81,22 +88,43 @@ export const useSystemHealth = (autoRefresh = false, interval = 30000) => {
       if (healthError) throw healthError;
       
       setData(healthData as unknown as SystemHealthData);
-      logger.debug('System health data fetched successfully', healthData, 'SYSTEM_HEALTH');
+      setLastFetch(now);
+      logger.debug('System health data fetched successfully', undefined, 'SYSTEM_HEALTH');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar dados de saúde';
       setError(errorMessage);
       logger.error('Error fetching system health', err, 'SYSTEM_HEALTH');
+      
+      // Fallback data em caso de erro
+      setData({
+        timestamp: new Date().toISOString(),
+        overall_status: 'warning',
+        metrics: {
+          active_users_7d: 0,
+          total_sessions: 0,
+          completed_sessions: 0,
+          completion_rate: 0,
+          active_competitions: 0,
+          ranking_integrity: false,
+        },
+        performance: {
+          active_connections: 0,
+          cache_hit_ratio: 0,
+          total_database_size: 'N/A',
+        },
+        recommendations: ['Sistema temporariamente indisponível'],
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [lastFetch]);
 
   useEffect(() => {
     fetchSystemHealth();
   }, [fetchSystemHealth]);
 
   useEffect(() => {
-    if (autoRefresh) {
+    if (autoRefresh && interval >= 10000) { // Mínimo 10 segundos
       const intervalId = setInterval(fetchSystemHealth, interval);
       return () => clearInterval(intervalId);
     }
@@ -121,11 +149,29 @@ export const useSystemIntegrity = () => {
       if (integrityError) throw integrityError;
       
       setData(integrityData as unknown as SystemIntegrityData);
-      logger.debug('System integrity data fetched successfully', integrityData, 'SYSTEM_INTEGRITY');
+      logger.debug('System integrity validation completed', undefined, 'SYSTEM_INTEGRITY');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao validar integridade';
       setError(errorMessage);
       logger.error('Error validating system integrity', err, 'SYSTEM_INTEGRITY');
+      
+      // Fallback data em caso de erro
+      setData({
+        validation_timestamp: new Date().toISOString(),
+        system_status: 'major_issues',
+        issues_count: 1,
+        issues_found: [{
+          type: 'Erro de Conexão',
+          count: 1,
+          solution: 'Verifique a conectividade com o banco de dados'
+        }],
+        summary: {
+          orphaned_sessions: 0,
+          invalid_rankings: 0,
+          missing_profiles: 0,
+          duplicate_invites: 0,
+        },
+      });
     } finally {
       setLoading(false);
     }
@@ -150,11 +196,39 @@ export const useAdvancedAnalytics = () => {
       if (analyticsError) throw analyticsError;
       
       setData(analyticsData as unknown as AdvancedAnalyticsData);
-      logger.debug('Advanced analytics data fetched successfully', analyticsData, 'ADVANCED_ANALYTICS');
+      logger.debug('Advanced analytics fetched successfully', undefined, 'ADVANCED_ANALYTICS');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar analytics';
       setError(errorMessage);
       logger.error('Error fetching advanced analytics', err, 'ADVANCED_ANALYTICS');
+      
+      // Fallback data em caso de erro
+      setData({
+        generated_at: new Date().toISOString(),
+        period: 'current',
+        user_engagement: {
+          total_users: 0,
+          active_users: 0,
+          engaged_users: 0,
+          engagement_rate: 0,
+          avg_games_per_user: 0,
+          weekly_active_users: 0,
+          monthly_active_users: 0,
+          retention_rate: 0,
+        },
+        competition_stats: {
+          total_competitions: 0,
+          active_competitions: 0,
+          completed_competitions: 0,
+          avg_duration_days: 0,
+        },
+        growth_metrics: {
+          new_users_this_week: 0,
+          new_users_this_month: 0,
+          activated_users_this_week: 0,
+          activation_rate: 0,
+        },
+      });
     } finally {
       setLoading(false);
     }

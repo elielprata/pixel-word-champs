@@ -80,7 +80,7 @@ export const SystemMonitoringTab = () => {
     loading: healthLoading, 
     error: healthError, 
     refresh: refreshHealth 
-  } = useSystemHealth(true, 30000); // Auto-refresh a cada 30 segundos
+  } = useSystemHealth(true, 60000); // Auto-refresh a cada 60 segundos
 
   const { 
     data: integrityData, 
@@ -98,9 +98,13 @@ export const SystemMonitoringTab = () => {
 
   useEffect(() => {
     logger.debug('Iniciando monitoramento do sistema', undefined, 'SYSTEM_MONITORING_TAB');
-    validateIntegrity();
-    refreshAnalytics();
-  }, []);
+    // Carregar dados iniciais com delay para evitar sobrecarga
+    const loadInitialData = async () => {
+      await validateIntegrity();
+      setTimeout(() => refreshAnalytics(), 1000);
+    };
+    loadInitialData();
+  }, [validateIntegrity, refreshAnalytics]);
 
   const isLoading = healthLoading || integrityLoading || analyticsLoading;
   const hasError = healthError || integrityError || analyticsError;
