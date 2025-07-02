@@ -1,18 +1,22 @@
 import React from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, Coins, Trophy } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/hooks/useProfile';
 import { usePlayerLevel } from '@/hooks/usePlayerLevel';
+import { useUserStats } from '@/hooks/useUserStats';
 
 const UserProfileHeader = () => {
-  const { profile, isLoading } = useProfile();
+  const { profile, isLoading: profileLoading } = useProfile();
   const { currentLevel } = usePlayerLevel(profile?.experience_points || 0);
+  const { stats, isLoading: statsLoading } = useUserStats();
+
+  const isLoading = profileLoading || statsLoading;
 
   if (isLoading) {
     return (
-      <div className="bg-gradient-to-r from-purple-500 to-purple-700 p-6 rounded-xl">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-purple-500 to-purple-700 p-6 rounded-xl text-white">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-white/20 rounded-full animate-pulse"></div>
             <div className="space-y-2">
@@ -22,13 +26,27 @@ const UserProfileHeader = () => {
           </div>
           <div className="w-8 h-8 bg-white/20 rounded animate-pulse"></div>
         </div>
+        
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-white/20 rounded animate-pulse"></div>
+              <div className="h-6 w-32 bg-white/20 rounded animate-pulse"></div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-white/20 rounded animate-pulse"></div>
+              <div className="h-6 w-16 bg-white/20 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="bg-gradient-to-r from-purple-500 to-purple-700 p-6 rounded-xl text-white">
-      <div className="flex items-center justify-between">
+      {/* Seção do perfil */}
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
           <Avatar className="w-16 h-16 border-2 border-white/30">
             <AvatarImage src={profile?.avatar_url || ''} alt={profile?.username || 'Usuário'} />
@@ -37,13 +55,40 @@ const UserProfileHeader = () => {
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-xl font-bold">{profile?.username || 'Usuário'}</h2>
+            <h2 className="text-xl font-bold text-white">{profile?.username || 'Usuário'}</h2>
             <p className="text-purple-100 text-sm">Nível {currentLevel.level} - {currentLevel.title}</p>
           </div>
         </div>
         <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
           <Settings className="w-6 h-6" />
         </Button>
+      </div>
+      
+      {/* Seção integrada de pontos e posição */}
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+              <Coins className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="text-lg font-bold text-white">
+                {stats.totalScore.toLocaleString()} pontos
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+              <Trophy className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="text-lg font-bold text-white">
+                #{stats.position || '?'}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

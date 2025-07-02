@@ -5,7 +5,6 @@ import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetit
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
 import { useOptimizedCompetitions } from '@/hooks/useOptimizedCompetitions';
 import UserProfileHeader from './home/UserProfileHeader';
-import UserStatsOverview from './home/UserStatsOverview';
 import GlobalRankingCard from './home/GlobalRankingCard';
 import CompetitionsList from './home/CompetitionsList';
 import LoadingState from './home/LoadingState';
@@ -42,7 +41,6 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
       <div className="max-w-md mx-auto space-y-4">
         <UserProfileHeader />
-        <UserStatsOverview />
         <GlobalRankingCard />
 
         {error && (
