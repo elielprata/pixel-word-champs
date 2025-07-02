@@ -26,7 +26,10 @@ export const useUserStats = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadUserStats = useCallback(async (retryCount = 0) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('❌ DIAGNÓSTICO: Sem user.id disponível', { user, hasUser: !!user, userId: user?.id });
+      return;
+    }
 
     setIsLoading(true);
     
@@ -35,28 +38,75 @@ export const useUserStats = () => {
     const retryDelay = (retryCount + 1) * 1000; // 1s, 2s, 3s
     
     try {
-      console.log('📊 Carregando estatísticas do usuário:', user.id);
+      console.log('🔍 DIAGNÓSTICO INÍCIO - Estado completo do usuário:', {
+        userId: user.id,
+        userEmail: user.email,
+        username: user.username,
+        userObject: user,
+        retryAttempt: retryCount,
+        timestamp: new Date().toISOString()
+      });
+
+      // Verificar sessão ativa
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('🔍 DIAGNÓSTICO - Estado da sessão:', {
+        hasSession: !!session,
+        sessionUserId: session?.user?.id,
+        sessionError,
+        sessionMatchesUser: session?.user?.id === user.id
+      });
+
+      // Query de verificação direta - verificar se dados existem
+      console.log('🔍 DIAGNÓSTICO - Fazendo query de verificação direta dos dados...');
+      const { data: directCheck, error: directError } = await supabase
+        .from('profiles')
+        .select('id, username, total_score, games_played, best_daily_position, best_weekly_position')
+        .eq('id', user.id);
+      
+      console.log('🔍 DIAGNÓSTICO - Resultado da query direta:', {
+        directCheckData: directCheck,
+        directError,
+        queryUsedId: user.id,
+        dataExists: !!directCheck && directCheck.length > 0
+      });
 
       // Buscar perfil do usuário com retry logic
       let profile = null;
       let profileError = null;
       
       for (let attempt = 1; attempt <= 3; attempt++) {
+        console.log(`🔍 DIAGNÓSTICO - Tentativa ${attempt}/3 de buscar perfil para userId: ${user.id}`);
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('id, total_score, games_played, best_daily_position, best_weekly_position')
           .eq('id', user.id)
           .maybeSingle();
 
+        console.log(`🔍 DIAGNÓSTICO - Resultado tentativa ${attempt}:`, {
+          data,
+          error,
+          hasData: !!data,
+          errorCode: error?.code,
+          errorMessage: error?.message,
+          queryFilter: { id: user.id }
+        });
+
         if (error && error.code !== 'PGRST116') {
           profileError = error;
-          console.warn(`⚠️ Tentativa ${attempt} falhada ao buscar perfil:`, error);
+          console.warn(`⚠️ DIAGNÓSTICO - Tentativa ${attempt} falhada:`, {
+            error,
+            errorCode: error.code,
+            errorMessage: error.message,
+            willRetry: attempt < 3
+          });
           if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           continue;
         }
         
         profile = data;
         profileError = null;
+        console.log(`✅ DIAGNÓSTICO - Perfil encontrado na tentativa ${attempt}:`, profile);
         break;
       }
 
@@ -76,8 +126,14 @@ export const useUserStats = () => {
       }
 
       if (!profile) {
-        console.warn('⚠️ Perfil não encontrado, usando valores padrão');
-        // Criar perfil padrão se não existir
+        console.log('🔍 DIAGNÓSTICO - Perfil não encontrado após 3 tentativas:', {
+          userId: user.id,
+          username: user.username,
+          directCheckResult: directCheck,
+          shouldHaveData: directCheck && directCheck.length > 0
+        });
+        
+        console.warn('⚠️ Perfil não encontrado, criando perfil padrão');
         const { error: insertError } = await supabase
           .from('profiles')
           .insert({
@@ -86,6 +142,8 @@ export const useUserStats = () => {
             total_score: 0,
             games_played: 0
           });
+        
+        console.log('🔍 DIAGNÓSTICO - Resultado da criação de perfil:', { insertError });
         
         if (insertError) {
           console.error('❌ Erro ao criar perfil padrão:', insertError);
@@ -98,6 +156,14 @@ export const useUserStats = () => {
           best_daily_position: null,
           best_weekly_position: null
         };
+      } else {
+        console.log('🔍 DIAGNÓSTICO - Perfil encontrado, comparando com dados esperados:', {
+          profileData: profile,
+          expectedScore: 54,
+          expectedGames: 8,
+          scoresMatch: profile.total_score === 54,
+          gamesMatch: profile.games_played === 8
+        });
       }
 
       // Buscar posição no ranking semanal atual usando horário de Brasília
@@ -107,12 +173,25 @@ export const useUserStats = () => {
       const weekStart = new Date(today.setDate(diff));
       const weekStartStr = weekStart.toISOString().split('T')[0];
 
+      console.log('🔍 DIAGNÓSTICO - Buscando ranking semanal:', {
+        userId: user.id,
+        weekStartStr,
+        weekStart,
+        today
+      });
+
       const { data: weeklyRanking, error: weeklyError } = await supabase
         .from('weekly_rankings')
         .select('position')
         .eq('user_id', user.id)
         .eq('week_start', weekStartStr)
         .maybeSingle();
+
+      console.log('🔍 DIAGNÓSTICO - Resultado ranking semanal:', {
+        weeklyRanking,
+        weeklyError,
+        hasPosition: !!weeklyRanking?.position
+      });
 
       if (weeklyError && weeklyError.code !== 'PGRST116') {
         console.warn('Erro ao buscar ranking semanal:', weeklyError);
@@ -122,6 +201,12 @@ export const useUserStats = () => {
       const sevenDaysAgo = getCurrentBrasiliaDate();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+      console.log('🔍 DIAGNÓSTICO - Buscando sessões recentes:', {
+        userId: user.id,
+        sevenDaysAgo,
+        timestampUsed: createBrasiliaTimestamp(sevenDaysAgo.toString())
+      });
+
       const { data: recentSessions, error: sessionsError } = await supabase
         .from('game_sessions')
         .select('completed_at, is_completed')
@@ -129,6 +214,12 @@ export const useUserStats = () => {
         .eq('is_completed', true)
         .gte('completed_at', createBrasiliaTimestamp(sevenDaysAgo.toString()))
         .order('completed_at', { ascending: false });
+
+      console.log('🔍 DIAGNÓSTICO - Resultado sessões recentes:', {
+        recentSessions,
+        sessionsError,
+        sessionsCount: recentSessions?.length || 0
+      });
 
       if (sessionsError) {
         console.warn('Erro ao buscar sessões:', sessionsError);
@@ -142,10 +233,20 @@ export const useUserStats = () => {
         ) || []
       );
 
+      console.log('🔍 DIAGNÓSTICO - Calculando streak:', {
+        completedDates: Array.from(completedDates),
+        totalUniqueDays: completedDates.size
+      });
+
       for (let i = 0; i < 7; i++) {
         const checkDate = getCurrentBrasiliaDate();
         checkDate.setDate(checkDate.getDate() - i);
-        if (completedDates.has(checkDate.toDateString())) {
+        const dateStr = checkDate.toDateString();
+        const hasActivity = completedDates.has(dateStr);
+        
+        console.log(`🔍 DIAGNÓSTICO - Dia ${i}: ${dateStr} - Atividade: ${hasActivity}`);
+        
+        if (hasActivity) {
           streak++;
         } else if (i > 0) {
           break; // Quebra na primeira data sem atividade (exceto hoje)
@@ -161,7 +262,19 @@ export const useUserStats = () => {
         bestWeeklyPosition: profile?.best_weekly_position || null
       };
 
-      console.log('📊 Estatísticas do usuário carregadas:', userStats);
+      console.log('🔍 DIAGNÓSTICO FINAL - Estatísticas construídas:', {
+        userStats,
+        sources: {
+          totalScore: { from: 'profile', value: profile?.total_score, expected: 54 },
+          gamesPlayed: { from: 'profile', value: profile?.games_played, expected: 8 },
+          position: { from: 'weeklyRanking', value: weeklyRanking?.position },
+          winStreak: { from: 'calculated', value: streak },
+          bestDaily: { from: 'profile', value: profile?.best_daily_position },
+          bestWeekly: { from: 'profile', value: profile?.best_weekly_position, expected: 1 }
+        },
+        profileObject: profile,
+        weeklyRankingObject: weeklyRanking
+      });
       setStats(userStats);
     } catch (error) {
       console.error('❌ Erro ao carregar estatísticas do usuário:', error);
