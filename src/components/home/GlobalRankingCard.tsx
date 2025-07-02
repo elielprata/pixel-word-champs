@@ -2,14 +2,21 @@ import React from 'react';
 import { TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/hooks/useAuth';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useRankingData } from '@/hooks/useRankingData';
 
 const GlobalRankingCard = () => {
+  const { isAuthenticated } = useAuth();
   const { stats, isLoading: statsLoading } = useUserStats();
   const { weeklyRanking, isLoading: rankingLoading } = useRankingData();
 
   const isLoading = statsLoading || rankingLoading;
+
+  // Não renderizar se não estiver autenticado
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (isLoading) {
     return (

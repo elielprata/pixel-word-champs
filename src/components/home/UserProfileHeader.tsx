@@ -2,16 +2,23 @@ import React from 'react';
 import { Settings, Coins, Trophy } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { usePlayerLevel } from '@/hooks/usePlayerLevel';
 import { useUserStats } from '@/hooks/useUserStats';
 
 const UserProfileHeader = () => {
+  const { isAuthenticated } = useAuth();
   const { profile, isLoading: profileLoading } = useProfile();
   const { currentLevel } = usePlayerLevel(profile?.experience_points || 0);
   const { stats, isLoading: statsLoading } = useUserStats();
 
   const isLoading = profileLoading || statsLoading;
+
+  // Não renderizar nada se não estiver autenticado
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (isLoading) {
     return (
