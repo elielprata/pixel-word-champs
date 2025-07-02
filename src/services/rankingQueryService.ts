@@ -6,14 +6,14 @@ import { logger } from '@/utils/logger';
 export class RankingQueryService {
   async getWeeklyRanking(): Promise<RankingPlayer[]> {
     try {
-      logger.debug('Buscando ranking semanal usando função segura', undefined, 'RANKING_QUERY_SERVICE');
+      logger.debug('Buscando ranking semanal usando função pública', undefined, 'RANKING_QUERY_SERVICE');
       
-      // Usar a nova função segura get_current_weekly_ranking
+      // Usar a função pública get_current_weekly_ranking (agora permite acesso público)
       const { data: rankingData, error: rankingError } = await supabase
         .rpc('get_current_weekly_ranking');
 
       if (rankingError) {
-        logger.error('Erro ao buscar ranking da função segura', { error: rankingError }, 'RANKING_QUERY_SERVICE');
+        logger.warn('Erro ao buscar ranking da função, tentando fallback', { error: rankingError }, 'RANKING_QUERY_SERVICE');
       }
 
       if (rankingData && rankingData.length > 0) {
@@ -25,7 +25,7 @@ export class RankingQueryService {
           user_id: item.user_id
         }));
 
-        logger.info('Ranking semanal carregado da função segura', { count: rankings.length }, 'RANKING_QUERY_SERVICE');
+        logger.info('Ranking semanal carregado da função', { count: rankings.length }, 'RANKING_QUERY_SERVICE');
         return rankings;
       }
 
