@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserStats } from '@/hooks/useUserStats';
+import { useProfile } from '@/hooks/useProfile';
 import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
 import { useOptimizedCompetitions } from '@/hooks/useOptimizedCompetitions';
@@ -22,6 +23,7 @@ interface HomeScreenProps {
 const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) => {
   const { user } = useAuth();
   const { stats, isLoading: statsLoading } = useUserStats();
+  const { profile, isLoading: profileLoading } = useProfile();
   const { setActiveTab } = useAppNavigation();
   
   // Usar o hook otimizado que já inclui competições ativas e agendadas
@@ -31,13 +33,27 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   useWeeklyCompetitionAutoParticipation();
   useWeeklyRankingUpdater();
 
-  // Calcular nível baseado na pontuação
-  const getUserLevel = (totalScore: number) => {
+  // Calcular nível baseado nos experience_points ou total_score
+  const getUserLevel = (experiencePoints: number, totalScore: number) => {
+    if (experiencePoints > 0) {
+      return Math.max(1, Math.floor(experiencePoints / 100) + 1);
+    }
     return Math.max(1, Math.floor(totalScore / 1000) + 1);
   };
 
-  // Determinar título do nível
-  const getLevelTitle = (level: number) => {
+  // Determinar título do nível baseado nos dados reais
+  const getLevelTitle = (level: number, experiencePoints: number) => {
+    // Se tem experience_points, usar sistema mais refinado
+    if (experiencePoints > 0) {
+      if (experiencePoints >= 1000) return 'LENDA';
+      if (experiencePoints >= 500) return 'MESTRE';
+      if (experiencePoints >= 300) return 'EXPERT';
+      if (experiencePoints >= 150) return 'AVANÇADO';
+      if (experiencePoints >= 50) return 'INTERMEDIÁRIO';
+      return 'INICIANTE';
+    }
+    
+    // Fallback para sistema baseado em nível
     if (level >= 50) return 'LENDA';
     if (level >= 25) return 'MESTRE';
     if (level >= 15) return 'EXPERT';
@@ -46,8 +62,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
     return 'INICIANTE';
   };
 
-  const userLevel = getUserLevel(stats?.totalScore || 0);
-  const levelTitle = getLevelTitle(userLevel);
+  const userLevel = getUserLevel(profile?.experience_points || 0, stats?.totalScore || 0);
+  const levelTitle = getLevelTitle(userLevel, profile?.experience_points || 0);
 
   logger.info('🏠 HomeScreen renderizado', { 
     userId: user?.id,
@@ -55,7 +71,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
     timestamp: new Date().toISOString()
   }, 'HOME_SCREEN');
 
-  if (isLoading || statsLoading) {
+  if (isLoading || statsLoading || profileLoading) {
     return <LoadingState />;
   }
 
@@ -67,8 +83,16 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
           {/* Topo do header com avatar, nome e ícones */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-xl font-bold">👤</span>
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt={`Avatar de ${user?.username || 'Usuário'}`}
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <span className="text-xl font-bold">👤</span>
+                )}
               </div>
               <div>
                 <h2 className="text-xl font-bold">{user?.username || 'Usuário'}</h2>
