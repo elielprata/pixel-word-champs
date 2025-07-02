@@ -22,15 +22,16 @@ class SecureLogger {
   private sensitiveFields = [
     'password', 'token', 'secret', 'key', 'auth', 'credential',
     'email', 'phone', 'cpf', 'cnpj', 'pix', 'card', 'credit',
-    'access_token', 'refresh_token', 'session', 'authorization'
+    'access_token', 'refresh_token', 'session', 'authorization',
+    'userid', 'user_id', 'id', 'targetuserid', 'inviteduserid'
   ];
 
   constructor() {
     this.environment = import.meta.env.PROD ? 'production' : 'development';
     
-    // Configuração de níveis por ambiente
+    // Configuração MAIS RESTRITIVA de níveis por ambiente para produção
     if (import.meta.env.PROD) {
-      this.logLevel = 2; // WARN e ERROR apenas em produção
+      this.logLevel = 1; // APENAS ERROR em produção
     } else {
       this.logLevel = 4; // DEBUG completo em desenvolvimento
     }

@@ -27,7 +27,6 @@ export const useUserStats = () => {
 
   const loadUserStats = useCallback(async (retryCount = 0) => {
     if (!user?.id) {
-      console.log('❌ DIAGNÓSTICO: Sem user.id disponível', { user, hasUser: !!user, userId: user?.id });
       return;
     }
 
@@ -38,108 +37,55 @@ export const useUserStats = () => {
     const retryDelay = (retryCount + 1) * 1000; // 1s, 2s, 3s
     
     try {
-      console.log('🔍 DIAGNÓSTICO INÍCIO - Estado completo do usuário:', {
-        userId: user.id,
-        userEmail: user.email,
-        username: user.username,
-        userObject: user,
-        retryAttempt: retryCount,
-        timestamp: new Date().toISOString()
-      });
+      // Estado do usuário verificado
 
-      // AGUARDAR SESSÃO ATIVA - correção crítica para timing
+      // Verificar sessão ativa
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      console.log('🔍 DIAGNÓSTICO - Estado da sessão:', {
-        hasSession: !!session,
-        sessionUserId: session?.user?.id,
-        sessionError,
-        sessionMatchesUser: session?.user?.id === user.id
-      });
 
       // Se não há sessão ativa, aguardar e tentar novamente
       if (!session?.user?.id || session.user.id !== user.id) {
-        console.log('⏳ SESSÃO NÃO PRONTA - aguardando sessão ativa', {
-          hasSession: !!session,
-          sessionUserId: session?.user?.id,
-          expectedUserId: user.id,
-          retryAttempt: retryCount
-        });
-        
         if (retryCount < maxRetries) {
-          console.log(`🔄 Aguardando sessão - tentativa ${retryCount + 1}/${maxRetries} em ${retryDelay}ms`);
           setTimeout(() => {
             loadUserStats(retryCount + 1);
           }, retryDelay);
           return;
         } else {
-          console.log('❌ Sessão não estabelecida após múltiplas tentativas');
           setIsLoading(false);
           return;
         }
       }
 
-      console.log('✅ SESSÃO ATIVA CONFIRMADA - prosseguindo com queries');
-
-      // Query de verificação direta - verificar se dados existem
-      console.log('🔍 DIAGNÓSTICO - Fazendo query de verificação direta dos dados...');
+      // Query de verificação direta
       const { data: directCheck, error: directError } = await supabase
         .from('profiles')
         .select('id, username, total_score, games_played, best_daily_position, best_weekly_position')
         .eq('id', user.id);
-      
-      console.log('🔍 DIAGNÓSTICO - Resultado da query direta:', {
-        directCheckData: directCheck,
-        directError,
-        queryUsedId: user.id,
-        dataExists: !!directCheck && directCheck.length > 0
-      });
 
       // Buscar perfil do usuário com retry logic
       let profile = null;
       let profileError = null;
       
       for (let attempt = 1; attempt <= 3; attempt++) {
-        console.log(`🔍 DIAGNÓSTICO - Tentativa ${attempt}/3 de buscar perfil para userId: ${user.id}`);
-        
         const { data, error } = await supabase
           .from('profiles')
           .select('id, total_score, games_played, best_daily_position, best_weekly_position')
           .eq('id', user.id)
           .maybeSingle();
 
-        console.log(`🔍 DIAGNÓSTICO - Resultado tentativa ${attempt}:`, {
-          data,
-          error,
-          hasData: !!data,
-          errorCode: error?.code,
-          errorMessage: error?.message,
-          queryFilter: { id: user.id }
-        });
-
         if (error && error.code !== 'PGRST116') {
           profileError = error;
-          console.warn(`⚠️ DIAGNÓSTICO - Tentativa ${attempt} falhada:`, {
-            error,
-            errorCode: error.code,
-            errorMessage: error.message,
-            willRetry: attempt < 3
-          });
           if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           continue;
         }
         
         profile = data;
         profileError = null;
-        console.log(`✅ DIAGNÓSTICO - Perfil encontrado na tentativa ${attempt}:`, profile);
         break;
       }
 
       if (profileError) {
-        console.error('❌ Erro persistente ao buscar perfil após 3 tentativas:', profileError);
-        
         // Se ainda há tentativas restantes, retry com delay
         if (retryCount < maxRetries) {
-          console.log(`🔄 Tentativa ${retryCount + 1}/${maxRetries} em ${retryDelay}ms`);
           setTimeout(() => {
             loadUserStats(retryCount + 1);
           }, retryDelay);
@@ -150,14 +96,7 @@ export const useUserStats = () => {
       }
 
       if (!profile) {
-        console.log('🔍 DIAGNÓSTICO - Perfil não encontrado após 3 tentativas:', {
-          userId: user.id,
-          username: user.username,
-          directCheckResult: directCheck,
-          shouldHaveData: directCheck && directCheck.length > 0
-        });
-        
-        console.warn('⚠️ Perfil não encontrado, criando perfil padrão');
+        // Criar perfil padrão se não existir
         const { error: insertError } = await supabase
           .from('profiles')
           .insert({
@@ -167,12 +106,6 @@ export const useUserStats = () => {
             games_played: 0
           });
         
-        console.log('🔍 DIAGNÓSTICO - Resultado da criação de perfil:', { insertError });
-        
-        if (insertError) {
-          console.error('❌ Erro ao criar perfil padrão:', insertError);
-        }
-        
         profile = {
           id: user.id,
           total_score: 0,
@@ -180,14 +113,6 @@ export const useUserStats = () => {
           best_daily_position: null,
           best_weekly_position: null
         };
-      } else {
-        console.log('🔍 DIAGNÓSTICO - Perfil encontrado, comparando com dados esperados:', {
-          profileData: profile,
-          expectedScore: 54,
-          expectedGames: 8,
-          scoresMatch: profile.total_score === 54,
-          gamesMatch: profile.games_played === 8
-        });
       }
 
       // Buscar posição no ranking semanal atual usando horário de Brasília
@@ -197,12 +122,7 @@ export const useUserStats = () => {
       const weekStart = new Date(today.setDate(diff));
       const weekStartStr = weekStart.toISOString().split('T')[0];
 
-      console.log('🔍 DIAGNÓSTICO - Buscando ranking semanal:', {
-        userId: user.id,
-        weekStartStr,
-        weekStart,
-        today
-      });
+      // Buscar ranking semanal
 
       const { data: weeklyRanking, error: weeklyError } = await supabase
         .from('weekly_rankings')
@@ -211,25 +131,13 @@ export const useUserStats = () => {
         .eq('week_start', weekStartStr)
         .maybeSingle();
 
-      console.log('🔍 DIAGNÓSTICO - Resultado ranking semanal:', {
-        weeklyRanking,
-        weeklyError,
-        hasPosition: !!weeklyRanking?.position
-      });
-
-      if (weeklyError && weeklyError.code !== 'PGRST116') {
-        console.warn('Erro ao buscar ranking semanal:', weeklyError);
-      }
+      // Ignorar erros de dados não encontrados
 
       // Calcular sequência de vitórias baseada em jogos completados recentemente
       const sevenDaysAgo = getCurrentBrasiliaDate();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      console.log('🔍 DIAGNÓSTICO - Buscando sessões recentes:', {
-        userId: user.id,
-        sevenDaysAgo,
-        timestampUsed: createBrasiliaTimestamp(sevenDaysAgo.toString())
-      });
+      // Buscar sessões recentes
 
       const { data: recentSessions, error: sessionsError } = await supabase
         .from('game_sessions')
@@ -239,15 +147,7 @@ export const useUserStats = () => {
         .gte('completed_at', createBrasiliaTimestamp(sevenDaysAgo.toString()))
         .order('completed_at', { ascending: false });
 
-      console.log('🔍 DIAGNÓSTICO - Resultado sessões recentes:', {
-        recentSessions,
-        sessionsError,
-        sessionsCount: recentSessions?.length || 0
-      });
-
-      if (sessionsError) {
-        console.warn('Erro ao buscar sessões:', sessionsError);
-      }
+      // Ignorar erros na busca de sessões
 
       // Calcular sequência contínua de dias com jogos
       let streak = 0;
@@ -257,18 +157,13 @@ export const useUserStats = () => {
         ) || []
       );
 
-      console.log('🔍 DIAGNÓSTICO - Calculando streak:', {
-        completedDates: Array.from(completedDates),
-        totalUniqueDays: completedDates.size
-      });
+      // Calcular streak de atividade
 
       for (let i = 0; i < 7; i++) {
         const checkDate = getCurrentBrasiliaDate();
         checkDate.setDate(checkDate.getDate() - i);
         const dateStr = checkDate.toDateString();
         const hasActivity = completedDates.has(dateStr);
-        
-        console.log(`🔍 DIAGNÓSTICO - Dia ${i}: ${dateStr} - Atividade: ${hasActivity}`);
         
         if (hasActivity) {
           streak++;
@@ -286,26 +181,11 @@ export const useUserStats = () => {
         bestWeeklyPosition: profile?.best_weekly_position || null
       };
 
-      console.log('🔍 DIAGNÓSTICO FINAL - Estatísticas construídas:', {
-        userStats,
-        sources: {
-          totalScore: { from: 'profile', value: profile?.total_score, expected: 54 },
-          gamesPlayed: { from: 'profile', value: profile?.games_played, expected: 8 },
-          position: { from: 'weeklyRanking', value: weeklyRanking?.position },
-          winStreak: { from: 'calculated', value: streak },
-          bestDaily: { from: 'profile', value: profile?.best_daily_position },
-          bestWeekly: { from: 'profile', value: profile?.best_weekly_position, expected: 1 }
-        },
-        profileObject: profile,
-        weeklyRankingObject: weeklyRanking
-      });
+      // Definir estatísticas finais
       setStats(userStats);
     } catch (error) {
-      console.error('❌ Erro ao carregar estatísticas do usuário:', error);
-      
       // Se ainda há tentativas restantes, retry com delay
       if (retryCount < maxRetries) {
-        console.log(`🔄 Retry ${retryCount + 1}/${maxRetries} em ${retryDelay}ms após erro`);
         setTimeout(() => {
           loadUserStats(retryCount + 1);
         }, retryDelay);

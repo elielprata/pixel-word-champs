@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export const useUserActions = (userId: string, username: string, onUserUpdated: () => void) => {
   const { toast } = useToast();
@@ -11,7 +12,8 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
   const updateUserRole = async (newRole: 'admin' | 'user') => {
     try {
       setIsLoading(true);
-      console.log(`🔄 Atualizando role para ${newRole} do usuário:`, userId);
+      // Log para auditoria sem dados sensíveis
+      logger.info('Atualizando role de usuário', { newRole }, 'USER_ROLE_UPDATE');
 
       // Verificar roles atuais antes de modificar
       const { data: currentRoles, error: fetchError } = await supabase
@@ -20,11 +22,9 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
         .eq('user_id', userId);
 
       if (fetchError) {
-        console.error('❌ Erro ao buscar roles atuais:', fetchError);
+        logger.error('Erro ao buscar roles atuais', { error: fetchError.message }, 'USER_ROLE_UPDATE');
         throw fetchError;
       }
-
-      console.log('📋 Roles atuais:', currentRoles);
 
       // Primeiro, remover todos os roles existentes
       const { error: deleteError } = await supabase
@@ -33,11 +33,9 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
         .eq('user_id', userId);
 
       if (deleteError) {
-        console.error('❌ Erro ao remover roles existentes:', deleteError);
+        logger.error('Erro ao remover roles existentes', { error: deleteError.message }, 'USER_ROLE_UPDATE');
         throw deleteError;
       }
-
-      console.log('✅ Roles existentes removidos');
 
       // Depois, adicionar o novo role
       const { error: insertError } = await supabase
@@ -48,11 +46,9 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
         });
 
       if (insertError) {
-        console.error('❌ Erro ao adicionar novo role:', insertError);
+        logger.error('Erro ao adicionar novo role', { error: insertError.message }, 'USER_ROLE_UPDATE');
         throw insertError;
       }
-
-      console.log('✅ Novo role adicionado:', newRole);
 
       toast({
         title: "Sucesso!",
@@ -65,7 +61,7 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
       }, 500);
 
     } catch (error: any) {
-      console.error('❌ Erro completo:', error);
+      logger.error('Erro ao atualizar role de usuário', { error: error.message }, 'USER_ROLE_UPDATE');
       toast({
         title: "Erro",
         description: `Erro ao atualizar permissão: ${error.message || 'Erro desconhecido'}`,
@@ -88,7 +84,8 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
 
     try {
       setIsUpdatingProfile(true);
-      console.log('🔄 Atualizando perfil do usuário:', userId);
+      // Log para auditoria sem dados sensíveis
+      logger.info('Atualizando perfil de usuário', { hasUsername: !!newUsername }, 'USER_PROFILE_UPDATE');
 
       // Preparar dados para atualização - apenas username por enquanto
       const updateData: any = { 
@@ -102,11 +99,9 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
         .eq('id', userId);
 
       if (profileError) {
-        console.error('❌ Erro ao atualizar perfil:', profileError);
+        logger.error('Erro ao atualizar perfil', { error: profileError.message }, 'USER_PROFILE_UPDATE');
         throw profileError;
       }
-
-      console.log('✅ Perfil atualizado com sucesso');
 
       // Tentar atualizar email via Edge Function se disponível e for um email real
       if (newEmail && newEmail !== 'Email não disponível' && newEmail.includes('@') && !newEmail.endsWith('@sistema.local')) {
@@ -121,13 +116,11 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
             });
 
             if (error) {
-              console.warn('⚠️ Erro ao atualizar email no auth:', error);
-            } else {
-              console.log('✅ Email atualizado no auth com sucesso');
+              logger.warn('Erro ao atualizar email via edge function', { hasError: !!error }, 'USER_PROFILE_UPDATE');
             }
           }
         } catch (emailError) {
-          console.warn('⚠️ Não foi possível atualizar email no auth:', emailError);
+          // Email update falhou - silencioso em produção
         }
       }
 
@@ -141,7 +134,7 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
       }, 500);
 
     } catch (error: any) {
-      console.error('❌ Erro ao atualizar perfil:', error);
+      logger.error('Erro ao atualizar perfil de usuário', { error: error.message }, 'USER_PROFILE_UPDATE');
       toast({
         title: "Erro",
         description: `Erro ao atualizar perfil: ${error.message || 'Erro desconhecido'}`,
@@ -164,7 +157,8 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
 
     try {
       setIsChangingPassword(true);
-      console.log('🔐 Atualizando senha do usuário via Edge Function:', userId);
+      // Log para auditoria sem dados sensíveis
+      logger.security('Tentativa de alteração de senha', { timestamp: new Date().toISOString() }, 'PASSWORD_UPDATE');
 
       // Get current session to send auth header
       const { data: { session } } = await supabase.auth.getSession();
@@ -182,7 +176,7 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
       });
 
       if (error) {
-        console.error('❌ Erro da Edge Function:', error);
+        logger.error('Erro na edge function de senha', { hasError: !!error }, 'PASSWORD_UPDATE');
         throw error;
       }
 
@@ -190,7 +184,7 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
         throw new Error(data.error || 'Erro desconhecido');
       }
 
-      console.log('✅ Senha atualizada com sucesso:', data.message);
+      // Senha atualizada com sucesso - silencioso
 
       toast({
         title: "Sucesso!",
@@ -203,7 +197,7 @@ export const useUserActions = (userId: string, username: string, onUserUpdated: 
       }, 500);
 
     } catch (error: any) {
-      console.error('❌ Erro ao atualizar senha:', error);
+      logger.error('Erro ao atualizar senha', { error: error.message }, 'PASSWORD_UPDATE');
       toast({
         title: "Erro",
         description: `Erro ao atualizar senha: ${error.message || 'Erro desconhecido'}`,
