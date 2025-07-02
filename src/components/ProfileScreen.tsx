@@ -125,8 +125,7 @@ const ProfileScreen = ({ onNavigateToSettings, onNavigateToHelp, onNavigateToAch
       <div className="max-w-md mx-auto space-y-4">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">Seu Perfil</h1>
-          <p className="text-sm text-gray-600">Estatísticas e progressão</p>
+          <h1 className="text-2xl font-bold text-gray-800">Seu Perfil</h1>
         </div>
 
         {/* Card principal do jogador com novo sistema XP */}
