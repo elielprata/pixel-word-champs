@@ -1431,9 +1431,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      check_system_health: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       check_user_availability: {
         Args: { check_username?: string; check_email?: string }
         Returns: Json
+      }
+      cleanup_expired_rate_limits: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       cleanup_invalid_sessions: {
         Args: Record<PropertyKey, never>
