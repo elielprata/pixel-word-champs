@@ -34,39 +34,11 @@ class ProfileService {
           updated_at
         `)
         .eq('id', user.id)
-        .maybeSingle();
+        .single();
 
       if (error) {
         logger.error('Erro ao buscar perfil no banco', { error: error.message, userId: user.id }, 'PROFILE_SERVICE');
         throw error;
-      }
-
-      // Se o perfil não existe, criar um novo
-      if (!data) {
-        logger.info('Perfil não encontrado, criando novo perfil', { userId: user.id }, 'PROFILE_SERVICE');
-        
-        const newProfile = {
-          id: user.id,
-          username: user.email?.split('@')[0] || `user_${user.id.slice(-8)}`,
-          total_score: 0,
-          games_played: 0,
-          experience_points: 0
-        };
-
-        const { data: createdProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert(newProfile)
-          .select()
-          .single();
-
-        if (createError) {
-          logger.error('Erro ao criar perfil', { error: createError.message, userId: user.id }, 'PROFILE_SERVICE');
-          throw createError;
-        }
-
-        const userData = mapUserFromProfile(createdProfile, user);
-        logger.info('Novo perfil criado com sucesso', { userId: user.id }, 'PROFILE_SERVICE');
-        return createSuccessResponse(userData);
       }
 
       const userData = mapUserFromProfile(data, user);
