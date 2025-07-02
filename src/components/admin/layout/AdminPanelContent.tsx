@@ -7,6 +7,7 @@ import { GameContentTab } from "@/components/admin/GameContentTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { IntegrationsTab } from '@/components/admin/IntegrationsTab';
 import { AdvancedSystemTab } from '@/components/admin/AdvancedSystemTab';
+import { SystemMonitoringTab } from '@/components/admin/SystemMonitoringTab';
 import { ValidationTabContent } from '@/components/admin/layout/ValidationTabContent';
 import { InviteDashboard } from '@/components/admin/InviteDashboard';
 import { logger } from '@/utils/logger';
@@ -42,6 +43,10 @@ export const AdminPanelContent: React.FC = () => {
 
       <TabsContent value="support">
         <SupportTab />
+      </TabsContent>
+
+      <TabsContent value="monitoring">
+        <SystemMonitoringTab />
       </TabsContent>
     </>
   );
