@@ -22,29 +22,25 @@ export const useIsAdminRobust = () => {
         const { data, error } = await supabase.rpc('is_admin');
         
         if (error) {
-          logger.warn('Erro ao usar função is_admin, tentando fallback', { error: error.message }, 'USE_IS_ADMIN_ROBUST');
+          logger.error('Erro ao verificar se é admin', { error: error.message }, 'USE_IS_ADMIN_ROBUST');
           
-          // Fallback mais robusto: verificar diretamente na tabela user_roles
-          try {
-            const { data: roleData, error: roleError } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', user.id)
-              .eq('role', 'admin')
-              .maybeSingle(); // Usar maybeSingle para evitar erro se não encontrar
-            
-            if (roleError) {
-              logger.error('Fallback também falhou', { error: roleError.message }, 'USE_IS_ADMIN_ROBUST');
-              return false; // Em caso de erro, assumir não-admin por segurança
-            }
-            
-            const isAdminFallback = !!roleData;
-            logger.debug('Resultado do fallback', { isAdmin: isAdminFallback }, 'USE_IS_ADMIN_ROBUST');
-            return isAdminFallback;
-          } catch (fallbackError: any) {
-            logger.error('Fallback crítico falhou', { error: fallbackError.message }, 'USE_IS_ADMIN_ROBUST');
-            return false;
+          // Fallback: verificar diretamente na tabela user_roles
+          logger.info('Tentando fallback de verificação admin', undefined, 'USE_IS_ADMIN_ROBUST');
+          const { data: roleData, error: roleError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .eq('role', 'admin')
+            .single();
+          
+          if (roleError && roleError.code !== 'PGRST116') {
+            logger.error('Fallback também falhou', { error: roleError.message }, 'USE_IS_ADMIN_ROBUST');
+            throw roleError;
           }
+          
+          const isAdminFallback = !!roleData;
+          logger.debug('Resultado do fallback', { isAdmin: isAdminFallback }, 'USE_IS_ADMIN_ROBUST');
+          return isAdminFallback;
         }
         
         logger.debug('Resultado da verificação de admin', { isAdmin: data }, 'USE_IS_ADMIN_ROBUST');
@@ -58,8 +54,7 @@ export const useIsAdminRobust = () => {
     enabled: !!user?.id && isAuthenticated,
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
     gcTime: 10 * 60 * 1000, // Manter no cache por 10 minutos
-    retry: 2, // Reduzir tentativas para não atrasar muito
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Backoff exponencial mais rápido
-    retryOnMount: true,
+    retry: 3, // Tentar 3 vezes em caso de falha
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
   });
 };

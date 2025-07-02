@@ -14,7 +14,7 @@ interface UserStats {
 }
 
 export const useUserStats = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [stats, setStats] = useState<UserStats>({
     position: null,
     totalScore: 0,
@@ -26,12 +26,10 @@ export const useUserStats = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (user) {
       loadUserStats();
-    } else if (!isAuthenticated) {
-      setIsLoading(false);
     }
-  }, [user, isAuthenticated]);
+  }, [user]);
 
   const loadUserStats = async () => {
     if (!user) return;

@@ -4,8 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
 import { useOptimizedCompetitions } from '@/hooks/useOptimizedCompetitions';
-import UserProfileHeader from './home/UserProfileHeader';
-import GlobalRankingCard from './home/GlobalRankingCard';
+import HomeHeader from './home/HomeHeader';
+import UserStatsCard from './home/UserStatsCard';
 import CompetitionsList from './home/CompetitionsList';
 import LoadingState from './home/LoadingState';
 import ErrorState from './home/ErrorState';
@@ -40,8 +40,8 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
       <div className="max-w-md mx-auto space-y-4">
-        <UserProfileHeader />
-        <GlobalRankingCard />
+        <HomeHeader />
+        <UserStatsCard />
 
         {error && (
           <ErrorState error={error} onRetry={refetch} />

@@ -1351,18 +1351,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
-      get_current_weekly_ranking: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          user_id: string
-          username: string
-          total_score: number
-          position: number
-          week_start: string
-          week_end: string
-          avatar_url: string
-        }[]
-      }
       get_invite_data_optimized: {
         Args: { user_uuid: string }
         Returns: Json

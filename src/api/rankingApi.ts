@@ -6,31 +6,42 @@ import { logger } from '@/utils/logger';
 export const rankingApi = {
   async getWeeklyRanking(): Promise<RankingPlayer[]> {
     try {
-      logger.debug('Buscando ranking semanal usando função pública', undefined, 'RANKING_API');
+      logger.debug('Buscando ranking semanal global', undefined, 'RANKING_API');
       
-      // Usar a função pública get_current_weekly_ranking (agora permite acesso público)
-      const { data: rankingData, error: rankingError } = await supabase
-        .rpc('get_current_weekly_ranking');
+      // Calcular semana atual
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekStart = new Date(today.setDate(diff));
+      const weekStartStr = weekStart.toISOString().split('T')[0];
 
-      if (rankingError) {
-        logger.warn('Erro ao buscar ranking da função, tentando fallback', { error: rankingError }, 'RANKING_API');
+      // Buscar do ranking semanal primeiro
+      const { data: weeklyData, error: weeklyError } = await supabase
+        .from('weekly_rankings')
+        .select('user_id, username, position, total_score')
+        .eq('week_start', weekStartStr)
+        .order('position', { ascending: true })
+        .limit(100);
+
+      if (weeklyError) {
+        logger.error('Erro ao buscar weekly_rankings', { error: weeklyError }, 'RANKING_API');
       }
 
-      if (rankingData && rankingData.length > 0) {
-        const rankings = rankingData.map((item: any) => ({
+      if (weeklyData && weeklyData.length > 0) {
+        const rankings = weeklyData.map((item) => ({
           pos: item.position,
           name: item.username || 'Usuário',
           score: item.total_score || 0,
           user_id: item.user_id,
-          avatar_url: item.avatar_url || undefined
+          avatar_url: undefined
         }));
 
-        logger.info('Ranking semanal carregado da função', { count: rankings.length }, 'RANKING_API');
+        logger.info('Ranking semanal carregado do weekly_rankings', { count: rankings.length }, 'RANKING_API');
         return rankings;
       }
 
-      // Fallback: buscar diretamente dos perfis se não houver ranking ativo
-      logger.info('Ranking da função vazio, buscando dos perfis', undefined, 'RANKING_API');
+      // Fallback: buscar diretamente dos perfis se weekly_rankings estiver vazio
+      logger.info('Weekly_rankings vazio, buscando dos perfis', undefined, 'RANKING_API');
       
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
