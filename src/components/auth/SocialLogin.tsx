@@ -27,34 +27,13 @@ const SocialLogin = () => {
     }
   };
 
-  const handleFacebookLogin = async () => {
-    try {
-      logger.info('Iniciando login com Facebook', undefined, 'SOCIAL_LOGIN');
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'facebook',
-        options: {
-          redirectTo: `${window.location.origin}/`
-        }
-      });
-
-      if (error) {
-        logger.error('Erro no login com Facebook', { error: error.message }, 'SOCIAL_LOGIN');
-        toast.error('Erro ao fazer login com Facebook');
-      }
-    } catch (err: any) {
-      logger.error('Erro inesperado no login com Facebook', { error: err.message }, 'SOCIAL_LOGIN');
-      toast.error('Erro inesperado ao fazer login');
-    }
-  };
-
   return (
-    <div className="mt-6 grid grid-cols-2 gap-3">
+    <div className="mt-6">
       <Button 
         type="button"
         variant="outline"
         onClick={handleGoogleLogin}
-        className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-colors"
       >
         <svg className="w-5 h-5 text-red-500" viewBox="0 0 24 24">
           <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -63,18 +42,6 @@ const SocialLogin = () => {
           <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
         </svg>
         <span className="ml-2 text-gray-700 font-medium">Google</span>
-      </Button>
-      
-      <Button 
-        type="button"
-        variant="outline"
-        onClick={handleFacebookLogin}
-        className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-colors"
-      >
-        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-        </svg>
-        <span className="ml-2 text-gray-700 font-medium">Facebook</span>
       </Button>
     </div>
   );
