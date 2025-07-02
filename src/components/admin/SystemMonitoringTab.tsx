@@ -223,7 +223,7 @@ export const SystemMonitoringTab = () => {
                   className="flex items-center gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700"
                 >
                   <Shield className="h-4 w-4" />
-                  Validação
+                  Time Zone
                 </TabsTrigger>
                 <TabsTrigger 
                   value="analytics" 
