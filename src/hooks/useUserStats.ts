@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentBrasiliaDate, createBrasiliaTimestamp } from '@/utils/brasiliaTimeUnified';
@@ -25,26 +25,17 @@ export const useUserStats = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadUserStats();
-    }
-  }, [user]);
-
-  const loadUserStats = async () => {
-    if (!user) return;
+  const loadUserStats = useCallback(async (retryCount = 0) => {
+    if (!user?.id) return;
 
     setIsLoading(true);
+    
+    // Retry inteligente - máximo 3 tentativas com delay crescente
+    const maxRetries = 3;
+    const retryDelay = (retryCount + 1) * 1000; // 1s, 2s, 3s
+    
     try {
       console.log('📊 Carregando estatísticas do usuário:', user.id);
-
-      // Verificar se há sessão ativa antes de fazer a query
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.warn('⚠️ Tentativa de carregar stats sem sessão ativa');
-        setIsLoading(false);
-        return;
-      }
 
       // Buscar perfil do usuário com retry logic
       let profile = null;
@@ -71,6 +62,16 @@ export const useUserStats = () => {
 
       if (profileError) {
         console.error('❌ Erro persistente ao buscar perfil após 3 tentativas:', profileError);
+        
+        // Se ainda há tentativas restantes, retry com delay
+        if (retryCount < maxRetries) {
+          console.log(`🔄 Tentativa ${retryCount + 1}/${maxRetries} em ${retryDelay}ms`);
+          setTimeout(() => {
+            loadUserStats(retryCount + 1);
+          }, retryDelay);
+          return;
+        }
+        
         throw profileError;
       }
 
@@ -164,10 +165,37 @@ export const useUserStats = () => {
       setStats(userStats);
     } catch (error) {
       console.error('❌ Erro ao carregar estatísticas do usuário:', error);
+      
+      // Se ainda há tentativas restantes, retry com delay
+      if (retryCount < maxRetries) {
+        console.log(`🔄 Retry ${retryCount + 1}/${maxRetries} em ${retryDelay}ms após erro`);
+        setTimeout(() => {
+          loadUserStats(retryCount + 1);
+        }, retryDelay);
+        return;
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  // Debounced loading para evitar timing issues
+  const debouncedLoadStats = useCallback(() => {
+    const timeoutId = setTimeout(() => {
+      loadUserStats();
+    }, 300); // 300ms debounce para permitir consolidação da sessão
+    
+    return () => clearTimeout(timeoutId);
+  }, [loadUserStats]);
+
+  useEffect(() => {
+    if (user?.id) {
+      const cleanup = debouncedLoadStats();
+      return cleanup;
+    } else {
+      setIsLoading(false);
+    }
+  }, [user?.id, debouncedLoadStats]);
 
   return {
     stats,
