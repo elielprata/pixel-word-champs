@@ -118,14 +118,7 @@ const HomeScreen = ({
   }, 'HOME_SCREEN');
   
   if (isLoading || statsLoading || profileLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
-        <div className="max-w-md mx-auto space-y-4">
-          <UserCardSkeleton />
-          <LoadingState />
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
   return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
       <div className="max-w-md mx-auto space-y-4">
