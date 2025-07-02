@@ -61,17 +61,60 @@ export const useWeeklyRanking = () => {
 
       // Carregar ranking atual se houver configuração
       if (convertedStats && convertedStats.current_week_start && !convertedStats.no_active_competition) {
-        const { data: rankingData, error: rankingError } = await supabase
-          .from('weekly_rankings')
-          .select('*')
-          .eq('week_start', convertedStats.current_week_start)
-          .order('position', { ascending: true });
+        // Tentar usar a função segura primeiro
+        try {
+          const { data: secureRankingData, error: secureError } = await supabase
+            .rpc('get_current_weekly_ranking');
+          
+          if (secureError) {
+            throw secureError;
+          }
+          
+          if (secureRankingData && secureRankingData.length > 0) {
+            // Mapear os dados da função segura
+            const mappedRanking = secureRankingData.map((item: any) => ({
+              id: `${item.user_id}-${item.week_start}`, // ID sintético
+              user_id: item.user_id,
+              username: item.username,
+              position: item.position,
+              total_score: item.total_score,
+              prize_amount: 0, // Será calculado separadamente se necessário
+              payment_status: 'not_eligible',
+              pix_key: undefined,
+              pix_holder_name: undefined
+            }));
+            
+            setCurrentRanking(mappedRanking);
+          } else {
+            // Fallback para weekly_rankings se a função não retornar dados
+            const { data: rankingData, error: rankingError } = await supabase
+              .from('weekly_rankings')
+              .select('*')
+              .eq('week_start', convertedStats.current_week_start)
+              .order('position', { ascending: true });
 
-        if (rankingError) {
-          throw rankingError;
+            if (rankingError) {
+              throw rankingError;
+            }
+
+            setCurrentRanking(rankingData || []);
+          }
+        } catch (err) {
+          // Em caso de erro com a função segura, usar weekly_rankings
+          console.warn('Erro ao usar função segura, usando fallback:', err);
+          
+          const { data: rankingData, error: rankingError } = await supabase
+            .from('weekly_rankings')
+            .select('*')
+            .eq('week_start', convertedStats.current_week_start)
+            .order('position', { ascending: true });
+
+          if (rankingError) {
+            throw rankingError;
+          }
+
+          setCurrentRanking(rankingData || []);
         }
-
-        setCurrentRanking(rankingData || []);
       } else {
         // Se não há competição ativa, limpar ranking
         setCurrentRanking([]);

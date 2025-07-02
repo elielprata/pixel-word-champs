@@ -22,7 +22,7 @@ export const rankingApi = {
           name: item.username || 'Usuário',
           score: item.total_score || 0,
           user_id: item.user_id,
-          avatar_url: undefined
+          avatar_url: item.avatar_url || undefined
         }));
 
         logger.info('Ranking semanal carregado da função segura', { count: rankings.length }, 'RANKING_API');

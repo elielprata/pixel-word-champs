@@ -1360,6 +1360,7 @@ export type Database = {
           position: number
           week_start: string
           week_end: string
+          avatar_url: string
         }[]
       }
       get_invite_data_optimized: {

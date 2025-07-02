@@ -21,7 +21,7 @@ export class RankingQueryService {
           pos: item.position,
           name: item.username || 'Usuário',
           score: item.total_score || 0,
-          avatar_url: undefined, // A função não retorna avatar_url
+          avatar_url: item.avatar_url || undefined,
           user_id: item.user_id
         }));
 
