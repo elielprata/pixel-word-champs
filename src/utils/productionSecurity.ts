@@ -164,10 +164,9 @@ export const applySecurityHeaders = () => {
 export const disableDevFeatures = () => {
   if (!isProduction) return;
 
-  // Desabilitar React DevTools
-  if (typeof window !== 'undefined') {
-    (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__?.onCommitFiberRoot = undefined;
-    (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__?.onCommitFiberUnmount = undefined;
+  if (typeof window !== 'undefined' && (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+    (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot = undefined;
+    (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberUnmount = undefined;
   }
 
   // Limpar variáveis de desenvolvimento
