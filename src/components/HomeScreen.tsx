@@ -1,4 +1,5 @@
 import React from 'react';
+import { Coins, Trophy } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useProfile } from '@/hooks/useProfile';
@@ -13,6 +14,9 @@ import UserStatsCard from './home/UserStatsCard';
 import CompetitionsList from './home/CompetitionsList';
 import LoadingState from './home/LoadingState';
 import ErrorState from './home/ErrorState';
+import { UserCardSkeleton } from '@/components/ui/SkeletonLoader';
+import { UserAvatar } from '@/components/ui/UserAvatar';
+import { StatsCard } from '@/components/ui/StatsCard';
 import { logger } from '@/utils/logger';
 interface HomeScreenProps {
   onStartChallenge: (challengeId: string) => void;
@@ -97,29 +101,53 @@ const HomeScreen = ({
       text: ''
     };
   };
+
+  // Handlers para interações com as stats
+  const handleViewTotalScore = () => {
+    setActiveTab('ranking');
+  };
+
+  const handleViewRanking = () => {
+    onViewFullRanking();
+  };
+  
   logger.info('🏠 HomeScreen renderizado', {
     userId: user?.id,
     competitionsCount: competitions.length,
     timestamp: new Date().toISOString()
   }, 'HOME_SCREEN');
+  
   if (isLoading || statsLoading || profileLoading) {
-    return <LoadingState />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
+        <div className="max-w-md mx-auto space-y-4">
+          <UserCardSkeleton />
+          <LoadingState />
+        </div>
+      </div>
+    );
   }
   return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
       <div className="max-w-md mx-auto space-y-4">
         {/* Header compacto roxo com informações do usuário */}
-        <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl p-4 text-white shadow-lg">
-          {/* Topo do header com avatar, nome e ícones */}
+        <div className="bg-gradient-to-br from-primary to-primary-darker rounded-2xl p-4 text-white shadow-lg ring-1 ring-white/10">
+          {/* Topo do header com avatar, nome e nível */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
-                {profile?.avatar_url ? <img src={profile.avatar_url} alt={`Avatar de ${user?.username || 'Usuário'}`} className="w-full h-full object-cover rounded-full" /> : <span className="text-lg font-bold">👤</span>}
-              </div>
-              <div>
-                <h2 className="text-lg font-bold">{user?.username || 'Usuário'}</h2>
-                <div className="flex items-center space-x-2">
-                  <p className="text-purple-200 text-xs">Nv. {currentLevel.level}</p>
-                  <span className="bg-yellow-400 text-black px-2 py-0.5 rounded-full text-xs font-bold">
+              <UserAvatar 
+                src={profile?.avatar_url}
+                alt={`Avatar de ${user?.username || 'Usuário'}`}
+                size="md"
+              />
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-bold text-white truncate">
+                  {user?.username || 'Usuário'}
+                </h2>
+                <div className="flex items-center space-x-2 mt-0.5">
+                  <p className="text-white/80 text-xs font-medium">
+                    Nv. {currentLevel.level}
+                  </p>
+                  <span className="bg-accent text-accent-foreground px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">
                     {currentLevel.title}
                   </span>
                 </div>
@@ -127,66 +155,82 @@ const HomeScreen = ({
             </div>
           </div>
           
-          {/* Cards de estatísticas compactos */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
-              <div className="flex items-center space-x-2 mb-1">
-                <span className="text-yellow-400 text-sm">🪙</span>
-                <span className="text-xs text-purple-200">Pontos Totais</span>
-              </div>
-              <p className="text-xl font-bold">{(stats?.totalScore || 0).toLocaleString()}</p>
-            </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
-              <div className="flex items-center space-x-2 mb-1">
-                <span className="text-yellow-400 text-sm">🏆</span>
-                <span className="text-xs text-purple-200">Ranking Global</span>
-              </div>
-              <p className="text-xl font-bold">
-                {stats?.position ? `#${stats.position}` : 'N/A'}
-              </p>
-            </div>
+          {/* Cards de estatísticas interativos */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <StatsCard
+              icon={<Coins className="w-4 h-4 text-accent" />}
+              label="Pontos Totais"
+              value={stats?.totalScore || 0}
+              onClick={handleViewTotalScore}
+              loading={statsLoading}
+            />
+            <StatsCard
+              icon={<Trophy className="w-4 h-4 text-accent" />}
+              label="Ranking Global"
+              value={stats?.position ? `#${stats.position}` : 'N/A'}
+              onClick={handleViewRanking}
+              loading={statsLoading}
+            />
           </div>
         </div>
 
-        {/* Card de Ranking Global compacto */}
-        <div className="bg-white rounded-2xl p-4 shadow-lg border border-slate-200">
+        {/* Card de Ranking Global aprimorado */}
+        <div className="bg-card rounded-2xl p-4 shadow-lg border border-border transition-all duration-200 hover:shadow-xl">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-darker rounded-full flex items-center justify-center text-primary-foreground font-bold text-lg shadow-sm">
               #{stats?.position || 'N/A'}
             </div>
             
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="text-xs text-slate-600">Posição atual</p>
-                  <p className="text-lg font-bold text-slate-800">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground font-medium">Posição atual</p>
+                  <p className="text-lg font-bold text-foreground truncate">
                     {stats?.position ? `${stats.position}º lugar mundial` : 'Posição não disponível'}
                   </p>
                 </div>
                 
-                {/* Informação de Premiação inline */}
+                {/* Informação de Premiação compacta */}
                 {stats?.position && !prizesLoading && (
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0 ml-2">
                     {(() => {
                       const position = stats.position;
                       const prizeInfo = calculatePrizeForPosition(position);
-                      return <div className={`px-2 py-1 rounded-lg text-xs font-medium ${prizeInfo.amount > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {prizeInfo.amount > 0 ? `🎁 ${prizeInfo.text}` : '💰 Sem premiação'}
-                      </div>;
+                      return (
+                        <div 
+                          className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                            prizeInfo.amount > 0 
+                              ? 'bg-green-50 text-green-700 border border-green-200' 
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                          title={prizeInfo.amount > 0 ? `Premiação: ${prizeInfo.text}` : 'Sem premiação nesta posição'}
+                        >
+                          {prizeInfo.amount > 0 ? `🎁 ${prizeInfo.text}` : '💰 Sem premiação'}
+                        </div>
+                      );
                     })()}
                   </div>
                 )}
               </div>
               
-              {/* Barra de progresso compacta */}
-              <div>
-                <div className="bg-slate-200 rounded-full h-2 mb-1">
-                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-full h-2 transition-all duration-500" style={{
-                    width: '65%'
-                  }} />
+              {/* Barra de progresso aprimorada */}
+              <div className="space-y-1">
+                <div className="bg-secondary rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-primary to-primary-darker rounded-full h-2 transition-all duration-500 ease-out" 
+                    style={{ width: '65%' }}
+                    role="progressbar"
+                    aria-valuenow={65}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label="Progresso no ranking"
+                  />
                 </div>
-                <p className="text-xs text-slate-500">
-                  {stats?.position && stats.position > 1 ? `${Math.max(100, Math.ceil((stats.totalScore || 0) * 0.1)).toLocaleString()} pts para subir no ranking` : 'Você está no topo!'}
+                <p className="text-xs text-muted-foreground">
+                  {stats?.position && stats.position > 1 
+                    ? `${Math.max(100, Math.ceil((stats.totalScore || 0) * 0.1)).toLocaleString()} pts para subir no ranking` 
+                    : 'Você está no topo!'
+                  }
                 </p>
               </div>
             </div>
