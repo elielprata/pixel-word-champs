@@ -26,7 +26,7 @@ export const useRealUserStats = () => {
       // Buscar total de usuários
       const { count: totalUsers } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true });
 
       // Buscar usuários ativos únicos (últimas 24h - horário de Brasília)
       const today = getCurrentBrasiliaDate();
@@ -47,19 +47,19 @@ export const useRealUserStats = () => {
       // Buscar total de sessões
       const { count: totalSessions } = await supabase
         .from('game_sessions')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true });
 
       // Usuários criados hoje
       const { count: newUsersToday } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .gte('created_at', createBrasiliaTimestamp(today.toString()))
         .lte('created_at', createBrasiliaTimestamp(endOfToday.toString()));
 
       // Sessões criadas hoje
       const { count: sessionsToday } = await supabase
         .from('game_sessions')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .gte('started_at', createBrasiliaTimestamp(today.toString()))
         .lte('started_at', createBrasiliaTimestamp(endOfToday.toString()));
 
@@ -76,7 +76,7 @@ export const useRealUserStats = () => {
       // Buscar total de admins
       const { count: totalAdmins } = await supabase
         .from('user_roles')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('role', 'admin');
 
       // Calcular retenção real D1, D3, D7

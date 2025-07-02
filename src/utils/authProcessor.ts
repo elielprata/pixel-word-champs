@@ -50,7 +50,21 @@ export const processUserAuthentication = async (
     
     const profilePromise = supabase
       .from('profiles')
-      .select('*')
+      .select(`
+        id,
+        username,
+        avatar_url,
+        total_score,
+        games_played,
+        best_daily_position,
+        best_weekly_position,
+        pix_key,
+        pix_holder_name,
+        phone,
+        experience_points,
+        created_at,
+        updated_at
+      `)
       .eq('id', session.user.id)
       .single();
 

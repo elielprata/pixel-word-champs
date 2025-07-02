@@ -41,7 +41,7 @@ export const useUserStats = () => {
       // Buscar perfil do usuário
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, total_score, games_played, best_daily_position, best_weekly_position')
         .eq('id', user.id)
         .single();
 
