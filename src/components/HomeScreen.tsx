@@ -256,7 +256,7 @@ const HomeScreen = ({
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {stats?.position && stats.position > 1 
-                    ? `${Math.max(100, Math.ceil((stats.totalScore || 0) * 0.1)).toLocaleString()} pts para subir no ranking` 
+                    ? `${Math.max(500, Math.ceil(stats.position * 200)).toLocaleString()} pts para subir no ranking` 
                     : 'Você está no topo!'
                   }
                 </p>
