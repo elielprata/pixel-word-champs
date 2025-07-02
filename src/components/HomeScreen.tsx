@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserStats } from '@/hooks/useUserStats';
@@ -15,24 +14,43 @@ import CompetitionsList from './home/CompetitionsList';
 import LoadingState from './home/LoadingState';
 import ErrorState from './home/ErrorState';
 import { logger } from '@/utils/logger';
-
 interface HomeScreenProps {
   onStartChallenge: (challengeId: string) => void;
   onViewFullRanking: () => void;
   onViewChallengeRanking: (challengeId: number) => void;
 }
+const HomeScreen = ({
+  onStartChallenge,
+  onViewFullRanking
+}: HomeScreenProps) => {
+  const {
+    user
+  } = useAuth();
+  const {
+    stats,
+    isLoading: statsLoading
+  } = useUserStats();
+  const {
+    profile,
+    isLoading: profileLoading
+  } = useProfile();
+  const {
+    setActiveTab
+  } = useAppNavigation();
 
-const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) => {
-  const { user } = useAuth();
-  const { stats, isLoading: statsLoading } = useUserStats();
-  const { profile, isLoading: profileLoading } = useProfile();
-  const { setActiveTab } = useAppNavigation();
-  
   // Usar o hook otimizado que já inclui competições ativas e agendadas
-  const { competitions, isLoading, error, refetch } = useOptimizedCompetitions();
-  
+  const {
+    competitions,
+    isLoading,
+    error,
+    refetch
+  } = useOptimizedCompetitions();
+
   // Buscar configurações de prêmios reais
-  const { data: prizeConfigurations, isLoading: prizesLoading } = usePrizeConfigurations();
+  const {
+    data: prizeConfigurations,
+    isLoading: prizesLoading
+  } = usePrizeConfigurations();
 
   // Manter participação automática e atualização de ranking semanal
   useWeeklyCompetitionAutoParticipation();
@@ -40,17 +58,20 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
 
   // Usar sistema real de níveis e títulos baseado nos experience_points
   const totalXP = profile?.experience_points || 0;
-  const { currentLevel, progress } = usePlayerLevel(totalXP);
+  const {
+    currentLevel,
+    progress
+  } = usePlayerLevel(totalXP);
 
   // Função para calcular prêmio baseado na posição real
   const calculatePrizeForPosition = (position: number) => {
-    if (!prizeConfigurations) return { amount: 0, text: '' };
+    if (!prizeConfigurations) return {
+      amount: 0,
+      text: ''
+    };
 
     // Buscar prêmio individual para a posição específica
-    const individualPrize = prizeConfigurations.find(
-      config => config.type === 'individual' && config.position === position
-    );
-
+    const individualPrize = prizeConfigurations.find(config => config.type === 'individual' && config.position === position);
     if (individualPrize) {
       return {
         amount: individualPrize.prize_amount,
@@ -61,33 +82,29 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
     // Buscar prêmio de grupo que inclua esta posição
     const groupPrize = prizeConfigurations.find(config => {
       if (config.type !== 'group' || !config.position_range) return false;
-      
       const [start, end] = config.position_range.split('-').map(Number);
       return position >= start && position <= end;
     });
-
     if (groupPrize) {
       return {
         amount: groupPrize.prize_amount,
         text: `R$ ${groupPrize.prize_amount.toFixed(2).replace('.', ',')}`
       };
     }
-
-    return { amount: 0, text: '' };
+    return {
+      amount: 0,
+      text: ''
+    };
   };
-
-  logger.info('🏠 HomeScreen renderizado', { 
+  logger.info('🏠 HomeScreen renderizado', {
     userId: user?.id,
     competitionsCount: competitions.length,
     timestamp: new Date().toISOString()
   }, 'HOME_SCREEN');
-
   if (isLoading || statsLoading || profileLoading) {
     return <LoadingState />;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
+  return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 pb-20">
       <div className="max-w-md mx-auto space-y-4">
         {/* Header roxo com informações do usuário */}
         <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
@@ -95,15 +112,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
-                {profile?.avatar_url ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt={`Avatar de ${user?.username || 'Usuário'}`}
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                ) : (
-                  <span className="text-xl font-bold">👤</span>
-                )}
+                {profile?.avatar_url ? <img src={profile.avatar_url} alt={`Avatar de ${user?.username || 'Usuário'}`} className="w-full h-full object-cover rounded-full" /> : <span className="text-xl font-bold">👤</span>}
               </div>
               <div>
                 <h2 className="text-xl font-bold">{user?.username || 'Usuário'}</h2>
@@ -119,10 +128,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
               <button className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 🔔
               </button>
-              <button 
-                onClick={() => setActiveTab('profile')}
-                className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
-              >
+              <button onClick={() => setActiveTab('profile')} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
                 ⚙️
               </button>
             </div>
@@ -151,12 +157,7 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
 
         {/* Card de Ranking Global */}
         <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-800">Ranking Global</h3>
-            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-              🏆
-            </div>
-          </div>
+          
           
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
@@ -170,59 +171,35 @@ const HomeScreen = ({ onStartChallenge, onViewFullRanking }: HomeScreenProps) =>
               </p>
               
               {/* Informação de Premiação */}
-              {stats?.position && !prizesLoading && (
-                <div className="mb-3">
+              {stats?.position && !prizesLoading && <div className="mb-3">
                   {(() => {
-                    const position = stats.position;
-                    const prizeInfo = calculatePrizeForPosition(position);
-                    
-                    return (
-                      <div className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                        prizeInfo.amount > 0 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {prizeInfo.amount > 0 
-                          ? `🎁 Premiação: ${prizeInfo.text}` 
-                          : '💰 Sem premiação nesta posição'
-                        }
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
+                const position = stats.position;
+                const prizeInfo = calculatePrizeForPosition(position);
+                return <div className={`px-3 py-2 rounded-lg text-sm font-medium ${prizeInfo.amount > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {prizeInfo.amount > 0 ? `🎁 Premiação: ${prizeInfo.text}` : '💰 Sem premiação nesta posição'}
+                      </div>;
+              })()}
+                </div>}
               
               {/* Barra de progresso simulada */}
               <div>
                 <div className="bg-slate-200 rounded-full h-3 mb-2">
-                  <div 
-                    className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-full h-3 transition-all duration-500"
-                    style={{ width: '65%' }}
-                  />
+                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-full h-3 transition-all duration-500" style={{
+                  width: '65%'
+                }} />
                 </div>
                 <p className="text-sm text-slate-500">
-                  {stats?.position && stats.position > 1 
-                    ? `${Math.max(100, Math.ceil((stats.totalScore || 0) * 0.1)).toLocaleString()} pts para subir no ranking`
-                    : 'Você está no topo!'
-                  }
+                  {stats?.position && stats.position > 1 ? `${Math.max(100, Math.ceil((stats.totalScore || 0) * 0.1)).toLocaleString()} pts para subir no ranking` : 'Você está no topo!'}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {error && (
-          <ErrorState error={error} onRetry={refetch} />
-        )}
+        {error && <ErrorState error={error} onRetry={refetch} />}
 
-        <CompetitionsList
-          competitions={competitions}
-          onStartChallenge={onStartChallenge}
-          onRefresh={refetch}
-        />
+        <CompetitionsList competitions={competitions} onStartChallenge={onStartChallenge} onRefresh={refetch} />
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default HomeScreen;
