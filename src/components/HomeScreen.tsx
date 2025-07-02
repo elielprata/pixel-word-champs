@@ -35,7 +35,8 @@ const HomeScreen = ({
     isLoading: profileLoading
   } = useProfile();
   const {
-    setActiveTab
+    setActiveTab,
+    handleNavigateToSettings
   } = useAppNavigation();
 
   // Usar o hook otimizado que já inclui competições ativas e agendadas
@@ -128,7 +129,7 @@ const HomeScreen = ({
               <button className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm">
                 🔔
               </button>
-              <button onClick={() => setActiveTab('profile')} className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors text-sm">
+              <button onClick={handleNavigateToSettings} className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors text-sm">
                 ⚙️
               </button>
             </div>
