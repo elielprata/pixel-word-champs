@@ -139,7 +139,7 @@ export const authService = {
           updated_at: createBrasiliaTimestamp(new Date().toString())
         })
         .eq('id', userId)
-        .select()
+        .select('id, username, avatar_url, total_score, games_played, experience_points, pix_key, pix_holder_name, phone, created_at, updated_at')
         .single();
 
       if (error) {
