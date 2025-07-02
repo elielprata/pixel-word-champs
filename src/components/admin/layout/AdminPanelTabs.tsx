@@ -15,7 +15,7 @@ import {
 
 export const AdminPanelTabs: React.FC = () => {
   return (
-    <TabsList className="grid w-full grid-cols-8 mb-8">
+    <TabsList className="grid w-full grid-cols-7 mb-8">
       <TabsTrigger value="users" className="flex items-center gap-2">
         <Users className="h-4 w-4" />
         <span className="hidden sm:inline">Usuários</span>
@@ -35,10 +35,6 @@ export const AdminPanelTabs: React.FC = () => {
       <TabsTrigger value="integrations" className="flex items-center gap-2">
         <Zap className="h-4 w-4" />
         <span className="hidden sm:inline">Integrações</span>
-      </TabsTrigger>
-      <TabsTrigger value="validation" className="flex items-center gap-2">
-        <Shield className="h-4 w-4" />
-        <span className="hidden sm:inline">Validação</span>
       </TabsTrigger>
       <TabsTrigger value="support" className="flex items-center gap-2">
         <Bug className="h-4 w-4" />

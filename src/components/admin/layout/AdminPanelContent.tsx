@@ -37,10 +37,6 @@ export const AdminPanelContent: React.FC = () => {
         <IntegrationsTab />
       </TabsContent>
 
-      <TabsContent value="validation">
-        <ValidationTabContent />
-      </TabsContent>
-
       <TabsContent value="support">
         <SupportTab />
       </TabsContent>

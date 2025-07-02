@@ -19,6 +19,7 @@ import {
 import { useSystemHealth, useSystemIntegrity, useAdvancedAnalytics } from '@/hooks/useSystemMonitoring';
 import { Skeleton } from "@/components/ui/skeleton";
 import { logger } from '@/utils/logger';
+import { ValidationTabContent } from '@/components/admin/layout/ValidationTabContent';
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const getStatusConfig = (status: string) => {
@@ -202,7 +203,7 @@ export const SystemMonitoringTab = () => {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <Tabs defaultValue="health" className="w-full">
             <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-              <TabsList className="grid grid-cols-3 bg-white border border-slate-200">
+              <TabsList className="grid grid-cols-4 bg-white border border-slate-200">
                 <TabsTrigger 
                   value="health" 
                   className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
@@ -218,8 +219,15 @@ export const SystemMonitoringTab = () => {
                   Integridade
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="analytics" 
+                  value="validation" 
                   className="flex items-center gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700"
+                >
+                  <Shield className="h-4 w-4" />
+                  Validação
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="analytics" 
+                  className="flex items-center gap-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700"
                 >
                   <TrendingUp className="h-4 w-4" />
                   Analytics Avançados
@@ -351,6 +359,10 @@ export const SystemMonitoringTab = () => {
                     )}
                   </>
                 ) : null}
+              </TabsContent>
+
+              <TabsContent value="validation" className="space-y-6 mt-0">
+                <ValidationTabContent />
               </TabsContent>
 
               <TabsContent value="analytics" className="space-y-6 mt-0">
