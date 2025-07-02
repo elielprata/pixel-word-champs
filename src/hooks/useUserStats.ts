@@ -47,7 +47,7 @@ export const useUserStats = () => {
         timestamp: new Date().toISOString()
       });
 
-      // Verificar sessão ativa
+      // AGUARDAR SESSÃO ATIVA - correção crítica para timing
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       console.log('🔍 DIAGNÓSTICO - Estado da sessão:', {
         hasSession: !!session,
@@ -55,6 +55,30 @@ export const useUserStats = () => {
         sessionError,
         sessionMatchesUser: session?.user?.id === user.id
       });
+
+      // Se não há sessão ativa, aguardar e tentar novamente
+      if (!session?.user?.id || session.user.id !== user.id) {
+        console.log('⏳ SESSÃO NÃO PRONTA - aguardando sessão ativa', {
+          hasSession: !!session,
+          sessionUserId: session?.user?.id,
+          expectedUserId: user.id,
+          retryAttempt: retryCount
+        });
+        
+        if (retryCount < maxRetries) {
+          console.log(`🔄 Aguardando sessão - tentativa ${retryCount + 1}/${maxRetries} em ${retryDelay}ms`);
+          setTimeout(() => {
+            loadUserStats(retryCount + 1);
+          }, retryDelay);
+          return;
+        } else {
+          console.log('❌ Sessão não estabelecida após múltiplas tentativas');
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      console.log('✅ SESSÃO ATIVA CONFIRMADA - prosseguindo com queries');
 
       // Query de verificação direta - verificar se dados existem
       console.log('🔍 DIAGNÓSTICO - Fazendo query de verificação direta dos dados...');
