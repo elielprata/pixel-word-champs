@@ -2,16 +2,50 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { logger } from '@/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const SocialLogin = () => {
-  const handleGoogleLogin = () => {
-    logger.info('Tentativa de login com Google', undefined, 'SOCIAL_LOGIN');
-    // TODO: Implementar login com Google
+  const handleGoogleLogin = async () => {
+    try {
+      logger.info('Iniciando login com Google', undefined, 'SOCIAL_LOGIN');
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        logger.error('Erro no login com Google', { error: error.message }, 'SOCIAL_LOGIN');
+        toast.error('Erro ao fazer login com Google');
+      }
+    } catch (err: any) {
+      logger.error('Erro inesperado no login com Google', { error: err.message }, 'SOCIAL_LOGIN');
+      toast.error('Erro inesperado ao fazer login');
+    }
   };
 
-  const handleFacebookLogin = () => {
-    logger.info('Tentativa de login com Facebook', undefined, 'SOCIAL_LOGIN');
-    // TODO: Implementar login com Facebook
+  const handleFacebookLogin = async () => {
+    try {
+      logger.info('Iniciando login com Facebook', undefined, 'SOCIAL_LOGIN');
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        logger.error('Erro no login com Facebook', { error: error.message }, 'SOCIAL_LOGIN');
+        toast.error('Erro ao fazer login com Facebook');
+      }
+    } catch (err: any) {
+      logger.error('Erro inesperado no login com Facebook', { error: err.message }, 'SOCIAL_LOGIN');
+      toast.error('Erro inesperado ao fazer login');
+    }
   };
 
   return (
