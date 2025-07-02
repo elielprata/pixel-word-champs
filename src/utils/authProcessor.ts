@@ -66,7 +66,7 @@ export const processUserAuthentication = async (
         updated_at
       `)
       .eq('id', session.user.id)
-      .single();
+      .maybeSingle();
 
     try {
       const { data: profile, error: profileError } = await Promise.race([

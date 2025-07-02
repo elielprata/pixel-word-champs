@@ -77,7 +77,7 @@ class GameService {
 
       const { data, error } = await supabase
         .from('game_sessions')
-        .select('*')
+        .select('id, user_id, total_score, is_completed, competition_id, completed_at')
         .eq('id', sessionId)
         .single();
 

@@ -23,7 +23,7 @@ export const useWordCategories = () => {
       
       const { data, error } = await supabase
         .from('word_categories')
-        .select('*')
+        .select('id, name, description, is_active, created_at, updated_at')
         .eq('is_active', true)
         .order('name');
 

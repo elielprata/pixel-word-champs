@@ -6,7 +6,7 @@ export class WeeklyConfigService {
   static async loadActiveConfig(): Promise<WeeklyConfig | null> {
     const { data, error } = await supabase
       .from('weekly_config')
-      .select('*')
+      .select('id, start_date, end_date, status, created_at, updated_at')
       .eq('status', 'active')
       .maybeSingle();
 
@@ -20,7 +20,7 @@ export class WeeklyConfigService {
   static async loadScheduledConfigs(): Promise<WeeklyConfig[]> {
     const { data, error } = await supabase
       .from('weekly_config')
-      .select('*')
+      .select('id, start_date, end_date, status, created_at, updated_at')
       .eq('status', 'scheduled')
       .order('start_date', { ascending: true });
 
@@ -34,7 +34,7 @@ export class WeeklyConfigService {
   static async loadCompletedConfigs(): Promise<WeeklyConfig[]> {
     const { data, error } = await supabase
       .from('weekly_config')
-      .select('*')
+      .select('id, start_date, end_date, status, created_at, updated_at')
       .eq('status', 'completed')
       .order('completed_at', { ascending: false })
       .limit(10);

@@ -11,7 +11,7 @@ export class CompetitionQueryService {
 
       const { data, error } = await supabase
         .from('custom_competitions')
-        .select('*')
+        .select('id, start_date, end_date, status, competition_type, title, description')
         .eq('competition_type', 'challenge')
         .eq('status', 'active');
 

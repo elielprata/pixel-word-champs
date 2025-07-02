@@ -38,14 +38,66 @@ export const useUserStats = () => {
     try {
       console.log('📊 Carregando estatísticas do usuário:', user.id);
 
-      // Buscar perfil do usuário
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, total_score, games_played, best_daily_position, best_weekly_position')
-        .eq('id', user.id)
-        .single();
+      // Verificar se há sessão ativa antes de fazer a query
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.warn('⚠️ Tentativa de carregar stats sem sessão ativa');
+        setIsLoading(false);
+        return;
+      }
 
-      if (profileError) throw profileError;
+      // Buscar perfil do usuário com retry logic
+      let profile = null;
+      let profileError = null;
+      
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, total_score, games_played, best_daily_position, best_weekly_position')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          profileError = error;
+          console.warn(`⚠️ Tentativa ${attempt} falhada ao buscar perfil:`, error);
+          if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+        
+        profile = data;
+        profileError = null;
+        break;
+      }
+
+      if (profileError) {
+        console.error('❌ Erro persistente ao buscar perfil após 3 tentativas:', profileError);
+        throw profileError;
+      }
+
+      if (!profile) {
+        console.warn('⚠️ Perfil não encontrado, usando valores padrão');
+        // Criar perfil padrão se não existir
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            username: user.username || 'Usuário',
+            total_score: 0,
+            games_played: 0
+          });
+        
+        if (insertError) {
+          console.error('❌ Erro ao criar perfil padrão:', insertError);
+        }
+        
+        profile = {
+          id: user.id,
+          total_score: 0,
+          games_played: 0,
+          best_daily_position: null,
+          best_weekly_position: null
+        };
+      }
 
       // Buscar posição no ranking semanal atual usando horário de Brasília
       const today = getCurrentBrasiliaDate();

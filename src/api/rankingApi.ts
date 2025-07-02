@@ -78,7 +78,7 @@ export const rankingApi = {
       
       const { data: history, error } = await supabase
         .from('competition_history')
-        .select('*')
+        .select('id, user_id, final_position, final_score, total_participants, prize_earned, competition_title')
         .eq('user_id', userId)
         .order('finalized_at', { ascending: false })
         .limit(10);

@@ -63,7 +63,7 @@ export const useWeeklyRanking = () => {
       if (convertedStats && convertedStats.current_week_start && !convertedStats.no_active_competition) {
         const { data: rankingData, error: rankingError } = await supabase
           .from('weekly_rankings')
-          .select('*')
+          .select('id, user_id, position, total_score, prize_amount, username, payment_status')
           .eq('week_start', convertedStats.current_week_start)
           .order('position', { ascending: true });
 

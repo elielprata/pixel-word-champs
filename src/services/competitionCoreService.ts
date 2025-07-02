@@ -11,7 +11,7 @@ export class CompetitionCoreService {
 
       const { data, error } = await supabase
         .from('custom_competitions')
-        .select('*')
+        .select('id, start_date, end_date, status, competition_type, title, description, theme, prize_pool, max_participants, created_at, updated_at')
         .in('status', ['active', 'scheduled']) // Incluir competições agendadas
         .order('created_at', { ascending: false });
 
@@ -53,7 +53,7 @@ export class CompetitionCoreService {
 
       const { data, error } = await supabase
         .from('custom_competitions')
-        .select('*')
+        .select('id, start_date, end_date, status, competition_type, title, description, theme, prize_pool, max_participants, created_at, updated_at')
         .eq('competition_type', 'challenge')
         .eq('status', 'active')
         .single();
@@ -92,7 +92,7 @@ export class CompetitionCoreService {
 
       const { data, error } = await supabase
         .from('custom_competitions')
-        .select('*')
+        .select('id, start_date, end_date, status, competition_type, title, description, theme, prize_pool, max_participants, created_at, updated_at')
         .eq('competition_type', 'tournament')
         .eq('status', 'active')
         .single();

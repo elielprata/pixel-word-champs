@@ -22,7 +22,7 @@ export const useGameSettings = () => {
     try {
       const { data, error } = await supabase
         .from('game_settings')
-        .select('*')
+        .select('id, setting_key, setting_value, setting_type, description, category')
         .in('category', ['scoring', 'gameplay'])
         .order('category', { ascending: true })
         .order('setting_key', { ascending: true });
