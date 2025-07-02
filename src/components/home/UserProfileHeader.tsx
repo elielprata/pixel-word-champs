@@ -6,23 +6,29 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { usePlayerLevel } from '@/hooks/usePlayerLevel';
 import { useUserStats } from '@/hooks/useUserStats';
-
 const UserProfileHeader = () => {
-  const { isAuthenticated } = useAuth();
-  const { profile, isLoading: profileLoading } = useProfile();
-  const { currentLevel } = usePlayerLevel(profile?.experience_points || 0);
-  const { stats, isLoading: statsLoading } = useUserStats();
-
+  const {
+    isAuthenticated
+  } = useAuth();
+  const {
+    profile,
+    isLoading: profileLoading
+  } = useProfile();
+  const {
+    currentLevel
+  } = usePlayerLevel(profile?.experience_points || 0);
+  const {
+    stats,
+    isLoading: statsLoading
+  } = useUserStats();
   const isLoading = profileLoading || statsLoading;
 
   // Não renderizar nada se não estiver autenticado
   if (!isAuthenticated) {
     return null;
   }
-
   if (isLoading) {
-    return (
-      <div className="bg-gradient-to-r from-purple-500 to-purple-700 p-6 rounded-xl text-white">
+    return <div className="bg-gradient-to-r from-purple-500 to-purple-700 p-6 rounded-xl text-white">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-white/20 rounded-full animate-pulse"></div>
@@ -46,12 +52,9 @@ const UserProfileHeader = () => {
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="bg-gradient-to-r from-purple-500 to-purple-700 p-6 rounded-xl text-white">
+  return <div className="bg-gradient-to-r from-purple-500 to-purple-700 p-6 rounded-xl text-white">
       {/* Seção do perfil */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
@@ -66,9 +69,7 @@ const UserProfileHeader = () => {
             <p className="text-purple-100 text-sm">Nível {currentLevel.level} - {currentLevel.title}</p>
           </div>
         </div>
-        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-          <Settings className="w-6 h-6" />
-        </Button>
+        
       </div>
       
       {/* Seção integrada de pontos e posição */}
@@ -97,8 +98,6 @@ const UserProfileHeader = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default UserProfileHeader;
