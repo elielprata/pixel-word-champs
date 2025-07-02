@@ -125,14 +125,6 @@ const HomeScreen = ({
                 </div>
               </div>
             </div>
-            <div className="flex space-x-2">
-              <button className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm">
-                🔔
-              </button>
-              <button onClick={handleNavigateToSettings} className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors text-sm">
-                ⚙️
-              </button>
-            </div>
           </div>
           
           {/* Cards de estatísticas compactos */}
