@@ -8,22 +8,33 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Função para criar clientes com storage personalizado
-const createCustomStorageClient = (useSessionStorage = false) => {
-  const storage = useSessionStorage ? {
-    getItem: (key: string) => sessionStorage.getItem(key),
-    setItem: (key: string, value: string) => sessionStorage.setItem(key, value),
-    removeItem: (key: string) => sessionStorage.removeItem(key),
-  } : undefined; // undefined usa localStorage por padrão
-
-  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: {
-      storage: storage,
-      autoRefreshToken: true,
-      persistSession: true,
+// Cliente principal com localStorage (padrão para "manter conectado")
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    storage: {
+      getItem: (key: string) => {
+        // Verificar se deve usar sessionStorage ou localStorage
+        const useSessionOnly = sessionStorage.getItem('use-session-only') === 'true';
+        return useSessionOnly ? sessionStorage.getItem(key) : localStorage.getItem(key);
+      },
+      setItem: (key: string, value: string) => {
+        const useSessionOnly = sessionStorage.getItem('use-session-only') === 'true';
+        if (useSessionOnly) {
+          sessionStorage.setItem(key, value);
+          // Limpar do localStorage se existir
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, value);
+          // Limpar do sessionStorage se existir
+          sessionStorage.removeItem(key);
+        }
+      },
+      removeItem: (key: string) => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      },
     }
-  });
-};
-
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-export { createCustomStorageClient };
+  }
+});

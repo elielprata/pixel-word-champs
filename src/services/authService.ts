@@ -55,6 +55,15 @@ export const authService = {
     try {
       logger.info('Iniciando processo de login', { email, rememberMe });
 
+      // Configurar o tipo de armazenamento antes do login
+      if (rememberMe) {
+        // Usar localStorage (persistir entre sessões)
+        sessionStorage.removeItem('use-session-only');
+      } else {
+        // Usar sessionStorage (expirar ao fechar browser)
+        sessionStorage.setItem('use-session-only', 'true');
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password

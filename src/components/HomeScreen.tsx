@@ -6,6 +6,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { usePlayerLevel } from '@/hooks/usePlayerLevel';
 import { useWeeklyCompetitionAutoParticipation } from '@/hooks/useWeeklyCompetitionAutoParticipation';
 import { useWeeklyRankingUpdater } from '@/hooks/useWeeklyRankingUpdater';
+import { useWeeklyRanking } from '@/hooks/useWeeklyRanking';
 import { useOptimizedCompetitions } from '@/hooks/useOptimizedCompetitions';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
 import { usePrizeConfigurations } from '@/hooks/usePrizeConfigurations';
@@ -61,12 +62,31 @@ const HomeScreen = ({
   useWeeklyCompetitionAutoParticipation();
   useWeeklyRankingUpdater();
 
+  // Buscar ranking semanal para calcular diferença real
+  const { currentRanking } = useWeeklyRanking();
+
   // Usar sistema real de níveis e títulos baseado nos experience_points
   const totalXP = profile?.experience_points || 0;
   const {
     currentLevel,
     progress
   } = usePlayerLevel(totalXP);
+
+  // Função para calcular pontos necessários para subir no ranking
+  const calculatePointsToNextPosition = () => {
+    if (!stats?.position || !user?.id || !currentRanking.length) return 0;
+    
+    const currentUserPosition = stats.position;
+    const currentUserScore = stats.totalScore;
+    
+    // Encontrar o jogador na posição imediatamente acima
+    const playerAbove = currentRanking.find(player => player.position === currentUserPosition - 1);
+    
+    if (!playerAbove) return 0;
+    
+    // Calcular diferença + 1 para ultrapassar
+    return Math.max(0, playerAbove.total_score - currentUserScore + 1);
+  };
 
   // Função para calcular prêmio baseado na posição real
   const calculatePrizeForPosition = (position: number) => {
@@ -256,7 +276,7 @@ const HomeScreen = ({
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {stats?.position && stats.position > 1 
-                    ? `${Math.max(100, Math.ceil((stats.totalScore || 0) * 0.1)).toLocaleString()} pts para subir no ranking` 
+                    ? `${calculatePointsToNextPosition().toLocaleString()} pts para subir no ranking` 
                     : 'Você está no topo!'
                   }
                 </p>
