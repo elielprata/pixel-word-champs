@@ -65,6 +65,23 @@ export const authService = {
         throw error;
       }
 
+      // Implementar lógica do "Manter-me conectado"
+      if (data.session) {
+        const authTokenKey = 'sb-oqzpkqbmcnpxpegshlcm-auth-token';
+        
+        if (rememberMe) {
+          // Manter sessão persistente no localStorage
+          localStorage.setItem(authTokenKey, JSON.stringify(data.session));
+          // Remover do sessionStorage se existir
+          sessionStorage.removeItem(authTokenKey);
+        } else {
+          // Usar apenas sessionStorage (expira ao fechar o browser)
+          sessionStorage.setItem(authTokenKey, JSON.stringify(data.session));
+          // Remover do localStorage para não persistir
+          localStorage.removeItem(authTokenKey);
+        }
+      }
+
       logger.info('Login realizado com sucesso', { userId: data.user?.id, rememberMe });
       return { data, error: null };
     } catch (error) {
