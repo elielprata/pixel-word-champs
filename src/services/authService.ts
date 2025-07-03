@@ -55,6 +55,15 @@ export const authService = {
     try {
       logger.info('Iniciando processo de login', { email, rememberMe });
 
+      // Configurar o tipo de armazenamento antes do login
+      if (rememberMe) {
+        // Usar localStorage (persistir entre sessões)
+        sessionStorage.removeItem('use-session-only');
+      } else {
+        // Usar sessionStorage (expirar ao fechar browser)
+        sessionStorage.setItem('use-session-only', 'true');
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -63,23 +72,6 @@ export const authService = {
       if (error) {
         logger.error('Erro no login', { error: error.message });
         throw error;
-      }
-
-      // Implementar lógica do "Manter-me conectado"
-      if (data.session) {
-        const authTokenKey = 'sb-oqzpkqbmcnpxpegshlcm-auth-token';
-        
-        if (rememberMe) {
-          // Manter sessão persistente no localStorage
-          localStorage.setItem(authTokenKey, JSON.stringify(data.session));
-          // Remover do sessionStorage se existir
-          sessionStorage.removeItem(authTokenKey);
-        } else {
-          // Usar apenas sessionStorage (expira ao fechar o browser)
-          sessionStorage.setItem(authTokenKey, JSON.stringify(data.session));
-          // Remover do localStorage para não persistir
-          localStorage.removeItem(authTokenKey);
-        }
       }
 
       logger.info('Login realizado com sucesso', { userId: data.user?.id, rememberMe });
